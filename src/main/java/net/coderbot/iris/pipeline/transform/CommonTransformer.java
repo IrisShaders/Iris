@@ -72,7 +72,6 @@ public class CommonTransformer {
 
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
 	private static final List<Long> replaceIndexes = new ArrayList<>();
-	private static boolean hasGtexture = false;
 
 	private static void renameFunctionCall(Root root, String oldName, String newName) {
 		root.process(root.identifierIndex.getStream(oldName)
@@ -186,7 +185,6 @@ public class CommonTransformer {
 		// used as a function call.
 		// it only does this if they are declared as samplers and makes sure that there
 		// is only one sampler declaration.
-		hasGtexture = false;
 		RenameTargetResult gcolorResult = getGtextureRenameTargets("gcolor", root);
 		RenameTargetResult textureResult = getGtextureRenameTargets("texture", root);
 		DeclarationMember samplerDeclarationMember = null;
