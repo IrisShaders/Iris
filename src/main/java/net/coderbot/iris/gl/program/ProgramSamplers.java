@@ -93,8 +93,8 @@ public class ProgramSamplers {
 		private final ImmutableList.Builder<SamplerBinding> samplers;
 		private final ImmutableList.Builder<ValueUpdateNotifier> notifiersToReset;
 		private final List<GlUniform1iCall> calls;
-		private Object2IntMap<TextureType> remainingUnits;
-		private Object2IntMap<TextureType> nextUnit;
+		private int remainingUnits;
+		private int nextUnit;
 
 		private Builder(int program, Set<Integer> reservedTextureUnits) {
 			this.program = program;
@@ -113,16 +113,10 @@ public class ProgramSamplers {
 				}
 			}
 
-			this.remainingUnits = new Object2IntArrayMap<>();
-			this.nextUnit = new Object2IntArrayMap<>();
-			for (TextureType type : TextureType.values()) {
-				this.remainingUnits.put(type, maxTextureUnits - reservedTextureUnits.size());
-			}
+			this.remainingUnits = maxTextureUnits - reservedTextureUnits.size();
 
-			while (reservedTextureUnits.contains(nextUnit.getOrDefault(TextureType.TEXTURE_2D, 0))) {
-				for (TextureType type : TextureType.values()) {
-					this.nextUnit.put(type, this.nextUnit.getOrDefault(type, 0) + 1);
-				}
+			while (reservedTextureUnits.contains(nextUnit)) {
+				this.nextUnit++;
 			}
 
 			//System.out.println("Begin building samplers. Reserved texture units are " + reservedTextureUnits +
@@ -157,7 +151,7 @@ public class ProgramSamplers {
 
 		@Override
 		public boolean addDefaultSampler(IntSupplier sampler, String... names) {
-			if (nextUnit.getOrDefault(TextureType.TEXTURE_2D, 0) != 0) {
+			if (nextUnit != 0) {
 				// TODO: Relax this restriction!
 				throw new IllegalStateException("Texture unit 0 is already used.");
 			}
@@ -188,7 +182,6 @@ public class ProgramSamplers {
 				notifiersToReset.add(notifier);
 			}
 
-			int nextUnitForType = nextUnit.getOrDefault(type, 0);
 			for (String name : names) {
 				int location = IrisRenderSystem.getUniformLocation(program, name);
 
@@ -198,14 +191,14 @@ public class ProgramSamplers {
 				}
 
 				// Make sure that we aren't out of texture units.
-				if (remainingUnits.getOrDefault(type, 0) <= 0) {
+				if (remainingUnits <= 0) {
 					throw new IllegalStateException("No more available texture units while activating sampler " + name);
 				}
 
-				//System.out.println("Binding dynamic sampler " + name + " to texture unit " + nextUnit);
+				System.out.println("Binding dynamic sampler " + name + " with type " + type.name() + " to texture unit " + nextUnit);
 
 				// Set up this sampler uniform to use this particular texture unit.
-				calls.add(new GlUniform1iCall(location, nextUnitForType));
+				calls.add(new GlUniform1iCall(location, nextUnit));
 
 				// And mark this texture unit as used.
 				used = true;
@@ -215,16 +208,14 @@ public class ProgramSamplers {
 				return false;
 			}
 
-			samplers.add(new SamplerBinding(type, nextUnitForType, sampler, notifier));
+			samplers.add(new SamplerBinding(type, nextUnit, sampler, notifier));
 
-			remainingUnits.put(type, remainingUnits.getOrDefault(type, 0) - 1);
-			nextUnitForType++;
+			remainingUnits--;
+			nextUnit++;
 
-			while (remainingUnits.getOrDefault(type, 0) > 0 && reservedTextureUnits.contains(nextUnitForType)) {
-				nextUnitForType += 1;
+			while (remainingUnits > 0 && reservedTextureUnits.contains(nextUnit)) {
+				nextUnit += 1;
 			}
-
-			nextUnit.put(type, nextUnitForType);
 
 			//System.out.println("The next unit is " + nextUnit + ", there are " + remainingUnits + " units remaining.");
 

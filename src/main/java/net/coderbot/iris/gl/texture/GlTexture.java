@@ -3,6 +3,9 @@ package net.coderbot.iris.gl.texture;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL13C;
+import org.lwjgl.opengl.GL20C;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -20,6 +23,18 @@ public class GlTexture extends GlResource implements TextureAccess {
 		buffer.flip();
 		target.apply(this.getGlId(), sizeX, sizeY, sizeZ, internalFormat, format, pixelType, buffer);
 		MemoryUtil.memFree(buffer);
+
+		int texture = this.getGlId();
+
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_REPEAT);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_REPEAT);
+
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAX_LEVEL, 0);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_LOD, 0);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAX_LOD,0);
+		IrisRenderSystem.texParameterf(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_LOD_BIAS, 0.0F);
 
 		IrisRenderSystem.bindTextureForSetup(target.getGlType(), 0);
 
