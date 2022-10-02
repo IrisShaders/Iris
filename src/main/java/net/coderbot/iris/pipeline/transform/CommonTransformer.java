@@ -298,8 +298,8 @@ public class CommonTransformer {
 				gtextureTargets.remove(gtextureTargets.size() - 1);
 				continue;
 			}
-			// we found a declaration using this name but it's not a sampler, renaming this
-			// name is disabled
+			// we found a declaration using this name, but it's not a sampler,
+			// renaming this name is disabled
 			return null;
 		}
 		if (samplerDeclaration == null) {
@@ -309,7 +309,7 @@ public class CommonTransformer {
 		return new RenameTargetResult(samplerDeclaration, samplerDeclarationMember, gtextureTargets.stream());
 	}
 
-	public static void fixVersion(TranslationUnit tree, boolean isCompute) {
+	private static void fixVersion(TranslationUnit tree, boolean isCompute) {
 		VersionStatement versionStatement = tree.getVersionStatement();
 		if (versionStatement == null) {
 			throw new IllegalStateException("Missing the version statement!");
