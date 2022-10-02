@@ -12,8 +12,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
+import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
+import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
@@ -47,7 +49,7 @@ public class TransformPatcher {
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	private static EnumASTTransformer<Parameters, PatchShaderType> transformer;
 	private static final boolean useCache = true;
-	private static final Map<CacheKey, Map<PatchShaderType, String>> cache =  new LRUCache<>(400);
+	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = new LRUCache<>(400);
 
 	private static class CacheKey {
 		final Parameters parameters;
@@ -147,7 +149,7 @@ public class TransformPatcher {
 				}
 				Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 				if (version.number >= 200) {
-					version = Version.GL33;
+					version = Version.GLSL33;
 				}
 				transformer.getLexer().version = version;
 
@@ -178,24 +180,58 @@ public class TransformPatcher {
 				});
 
 				Root.indexBuildSession(tree, () -> {
+					VersionStatement versionStatement = tree.getVersionStatement();
+					if (versionStatement == null) {
+						throw new IllegalStateException("Missing the version statement!");
+					}
+					Profile profile = versionStatement.profile;
 					switch (parameters.patch) {
 						case ATTRIBUTES:
 							AttributeTransformer.transform(transformer, tree, root, (AttributeParameters) parameters);
 							break;
-						case COMPOSITE:
-							CompositeTransformer.transform(transformer, tree, root, parameters);
-							break;
 						case COMPUTE:
+							// we can assume the version is at least 400 because it's a compute shader
+							versionStatement.profile = Profile.CORE;
 							CommonTransformer.transform(transformer, tree, root, parameters);
 							break;
-						case SODIUM:
-							SodiumParameters sodiumParameters = (SodiumParameters) parameters;
-							sodiumParameters.setAlphaFor(type);
-							SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
-							break;
-						case VANILLA:
-							VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
-							break;
+						default:
+							if (profile == Profile.CORE) {
+								throw new IllegalStateException(
+										"Transforming a shader that is already built against the core profile???");
+							}
+							if (versionStatement.version.number >= 330) {
+								if (profile != Profile.COMPATIBILITY) {
+									throw new IllegalStateException(
+											"Expected \"compatibility\" after the GLSL version: #version " + versionStatement.version + " "
+													+ profile);
+								}
+								// enable this and disable the code above if shaders that aren't declaring
+								// compatibility profile should be allowed
+								// // don't patch no profile is set (by exclusion it can't be core here)
+								// // TODO: Implement Optifine's special core profile mode
+								// if (profile == null) {
+								// break;
+								// }
+								versionStatement.profile = Profile.CORE;
+							} else {
+								versionStatement.version = Version.GLSL33;
+								versionStatement.profile = Profile.CORE;
+							}
+							switch (parameters.patch) {
+								case COMPOSITE:
+									CompositeTransformer.transform(transformer, tree, root, parameters);
+									break;
+								case SODIUM:
+									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
+									sodiumParameters.setAlphaFor(type);
+									SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
+									break;
+								case VANILLA:
+									VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+									break;
+								default:
+									throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
+							}
 					}
 					CompatibilityTransformer.transformEach(transformer, tree, root, parameters);
 				});
@@ -293,7 +329,8 @@ public class TransformPatcher {
 			AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale) {
 		return transform(vertex, geometry, fragment,
-				new SodiumParameters(Patch.SODIUM, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset, textureScale));
+				new SodiumParameters(Patch.SODIUM, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset,
+						textureScale));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
