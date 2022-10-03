@@ -42,6 +42,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 
 public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
@@ -86,7 +87,13 @@ public class CompatibilityTransformer {
 				// TODO: integrate into debug mode (allow user to disable this behavior for
 				// debugging purposes)
 				unusedFunctions.add(definition);
-				LOGGER.warn("Removing unused function " + functionName);
+				if (PatchedShaderPrinter.prettyPrintShaders) {
+					LOGGER.warn("Removing unused function " + functionName);
+				} else if (unusedFunctions.size() == 1) {
+					LOGGER.warn(
+							"Removing unused function " + functionName
+									+ " and omitting further such messages outside of debug mode.");
+				}
 				continue;
 			}
 
@@ -200,9 +207,8 @@ public class CompatibilityTransformer {
 			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
 		}
 
-		@Override
-		public boolean matches(ExternalDeclaration tree) {
-			boolean result = super.matches(tree);
+		public boolean matchesSpecialized(ExternalDeclaration tree, ShaderType shaderType) {
+			boolean result = super.matchesExtract(tree);
 			if (!result) {
 				return false;
 			}
@@ -210,7 +216,14 @@ public class CompatibilityTransformer {
 			for (TypeQualifierPart part : qualifier.getParts()) {
 				if (part instanceof StorageQualifier) {
 					StorageQualifier storageQualifier = (StorageQualifier) part;
-					if (storageQualifier.storageType == storageType) {
+					StorageType qualifierStorageType = storageQualifier.storageType;
+					// TODO: investigate the specified behavior of varying in geometry shaders and
+					// the combination of varying with in or out qualifiers
+					if (qualifierStorageType == storageType ||
+							qualifierStorageType == StorageType.VARYING &&
+									(shaderType == ShaderType.VERTEX && storageType == StorageType.OUT ||
+											shaderType == ShaderType.GEOMETRY && storageType == StorageType.OUT ||
+											shaderType == ShaderType.FRAGMENT && storageType == StorageType.IN)) {
 						return true;
 					}
 				}
@@ -220,14 +233,12 @@ public class CompatibilityTransformer {
 	}
 
 	private static final ShaderType[] pipeline = { ShaderType.VERTEX, ShaderType.GEOMETRY, ShaderType.FRAGMENT };
-	private static final AutoHintedMatcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(
-			StorageType.VARYING);
-	private static final AutoHintedMatcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(
-			StorageType.VARYING);
+	private static final DeclarationMatcher outDeclarationMatcher = new DeclarationMatcher(StorageType.OUT);
+	private static final DeclarationMatcher inDeclarationMatcher = new DeclarationMatcher(StorageType.IN);
 
 	private static final String tagPrefix = "iris_template_";
 	private static final Template<ExternalDeclaration> declarationTemplate = Template
-			.withExternalDeclaration("varying __type __name;");
+			.withExternalDeclaration("out __type __name;");
 	private static final Template<Statement> initTemplate = Template.withStatement("__decl = __value;");
 	private static final Template<ExternalDeclaration> variableTemplate = Template
 			.withExternalDeclaration("__type __internalDecl;");
@@ -237,6 +248,7 @@ public class CompatibilityTransformer {
 			.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
 
 	static {
+		declarationTemplate.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getOne(TypeQualifier.class));
 		declarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
 		declarationTemplate.markIdentifierReplacement("__name");
 		initTemplate.markIdentifierReplacement("__decl");
@@ -263,6 +275,18 @@ public class CompatibilityTransformer {
 						: Root.indexNodes(root, () -> new FunctionCallExpression(
 								new Identifier(type.getMostCompactName()),
 								Stream.of(LiteralExpression.getDefaultValue(type)))));
+	}
+
+	private static TypeQualifier makeQualifierOut(TypeQualifier typeQualifier) {
+		for (TypeQualifierPart qualifierPart : typeQualifier.getParts()) {
+			if (qualifierPart instanceof StorageQualifier) {
+				StorageQualifier storageQualifier = (StorageQualifier) qualifierPart;
+				if (((StorageQualifier) qualifierPart).storageType == StorageType.IN) {
+					storageQualifier.storageType = StorageType.OUT;
+				}
+			}
+		}
+		return typeQualifier;
 	}
 
 	// does transformations that require cross-shader type data
@@ -321,7 +345,7 @@ public class CompatibilityTransformer {
 			// find out declarations
 			Map<String, BuiltinNumericTypeSpecifier> outDeclarations = new HashMap<>();
 			for (DeclarationExternalDeclaration declaration : prevRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
-				if (outDeclarationMatcher.matchesExtract(declaration)) {
+				if (outDeclarationMatcher.matchesSpecialized(declaration, prevType)) {
 					BuiltinNumericTypeSpecifier extractedType = outDeclarationMatcher.getNodeMatch("type",
 							BuiltinNumericTypeSpecifier.class);
 					for (DeclarationMember member : outDeclarationMatcher
@@ -342,7 +366,7 @@ public class CompatibilityTransformer {
 				Root currentRoot = currentTree.getRoot();
 
 				for (ExternalDeclaration declaration : currentRoot.nodeIndex.get(DeclarationExternalDeclaration.class)) {
-					if (!inDeclarationMatcher.matchesExtract(declaration)) {
+					if (!inDeclarationMatcher.matchesSpecialized(declaration, currentType.glShaderType)) {
 						continue;
 					}
 
@@ -370,7 +394,13 @@ public class CompatibilityTransformer {
 							}
 							Type inType = inTypeSpecifier.type;
 
+							// insert the new out declaration but copy over the type qualifiers, except for
+							// the in/out qualifier
+							TypeQualifier outQualifier = (TypeQualifier) inDeclarationMatcher
+									.getNodeMatch("qualifier").cloneInto(prevRoot);
+							makeQualifierOut(outQualifier);
 							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, declarationTemplate.getInstanceFor(prevRoot,
+									outQualifier,
 									inTypeSpecifier.cloneInto(prevRoot),
 									new Identifier(name)));
 
@@ -452,7 +482,10 @@ public class CompatibilityTransformer {
 								outMember.detach();
 								outTypeSpecifier = outTypeSpecifier.cloneInto(prevRoot);
 								DeclarationExternalDeclaration singleOutDeclaration = (DeclarationExternalDeclaration) declarationTemplate
-										.getInstanceFor(prevRoot, outTypeSpecifier, new Identifier(name));
+										.getInstanceFor(prevRoot,
+												makeQualifierOut(outDeclaration.getType().getTypeQualifier().cloneInto(prevRoot)),
+												outTypeSpecifier,
+												new Identifier(name));
 								((TypeAndInitDeclaration) singleOutDeclaration.getDeclaration()).getMembers().set(0, outMember);
 								prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, singleOutDeclaration);
 							}
