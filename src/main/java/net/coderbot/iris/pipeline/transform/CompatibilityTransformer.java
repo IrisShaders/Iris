@@ -235,8 +235,6 @@ public class CompatibilityTransformer {
 	private static final String tagPrefix = "iris_template_";
 	private static final Template<ExternalDeclaration> declarationTemplate = Template
 			.withExternalDeclaration("out __type __name;");
-	private static final Template<ExternalDeclaration> fixedDeclarationTemplate = Template
-			.withExternalDeclaration("out __type __name;");
 	private static final Template<Statement> initTemplate = Template.withStatement("__decl = __value;");
 	private static final Template<ExternalDeclaration> variableTemplate = Template
 			.withExternalDeclaration("__type __internalDecl;");
@@ -479,7 +477,7 @@ public class CompatibilityTransformer {
 							if (outMembers.size() > 1) {
 								outMember.detach();
 								outTypeSpecifier = outTypeSpecifier.cloneInto(prevRoot);
-								DeclarationExternalDeclaration singleOutDeclaration = (DeclarationExternalDeclaration) fixedDeclarationTemplate
+								DeclarationExternalDeclaration singleOutDeclaration = (DeclarationExternalDeclaration) declarationTemplate
 										.getInstanceFor(prevRoot,
 												makeQualifierOut(outDeclaration.getType().getTypeQualifier().cloneInto(prevRoot)),
 												outTypeSpecifier,
