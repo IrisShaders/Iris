@@ -121,7 +121,7 @@ public class RenderTargets {
 		return noHand;
 	}
 
-	public boolean resizeIfNeeded(int newDepthBufferVersion, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat) {
+	public boolean resizeIfNeeded(int newDepthBufferVersion, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat, PackDirectives packDirectives) {
 		boolean recreateDepth = false;
 		if (cachedDepthBufferVersion != newDepthBufferVersion) {
 			recreateDepth = true;
@@ -169,8 +169,8 @@ public class RenderTargets {
 			cachedWidth = newWidth;
 			cachedHeight = newHeight;
 
-			for (RenderTarget target : targets) {
-				target.resize(newWidth, newHeight);
+			for (int i = 0; i < targets.length; i++) {
+				targets[i].resize(packDirectives.getTextureScaleOverride(i, newWidth, newHeight));
 			}
 
 			fullClearRequired = true;

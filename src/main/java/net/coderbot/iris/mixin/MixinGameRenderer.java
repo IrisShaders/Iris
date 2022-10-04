@@ -209,9 +209,6 @@ public class MixinGameRenderer {
 			"getRendertypeEntityCutoutNoCullZOffsetShader",
 			"getRendertypeEntityDecalShader",
 			"getRendertypeEntitySmoothCutoutShader",
-			"getRendertypeEntityTranslucentShader",
-			"getRendertypeEntityTranslucentCullShader",
-			"getRendertypeItemEntityTranslucentCullShader",
 			"getRendertypeArmorCutoutNoCullShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
@@ -228,6 +225,19 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
+		"getRendertypeEntityTranslucentShader",
+		"getRendertypeEntityTranslucentCullShader",
+		"getRendertypeItemEntityTranslucentCullShader",
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntityTranslucentShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (shouldOverrideShaders()) {
+			override(ShaderKey.ENTITIES_TRANSLUCENT, cir);
+		}
+	}
+
+		@Inject(method = {
 			"getRendertypeEnergySwirlShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEnergySwirlShader(CallbackInfoReturnable<ShaderInstance> cir) {

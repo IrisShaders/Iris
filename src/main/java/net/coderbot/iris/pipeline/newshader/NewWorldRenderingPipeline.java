@@ -46,6 +46,7 @@ import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.shaderpack.ComputeSource;
+import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramFallbackResolver;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -146,6 +147,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private boolean shouldBindPBR;
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
+	private PackDirectives packDirectives;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		PatchedShaderPrinter.resetPrintState();
@@ -156,6 +158,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderParticlesBeforeDeferred = programSet.getPackDirectives().areParticlesBeforeDeferred();
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
+		this.packDirectives = programSet.getPackDirectives();
 
 		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
@@ -674,7 +677,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
 		boolean changed = renderTargets.resizeIfNeeded(((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthTextureId, main.width,
-			main.height, depthBufferFormat);
+			main.height, depthBufferFormat, packDirectives);
 
 		if (changed) {
 			prepareRenderer.recalculateSizes();
