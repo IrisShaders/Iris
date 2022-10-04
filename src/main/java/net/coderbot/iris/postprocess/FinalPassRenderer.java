@@ -119,7 +119,7 @@ public class FinalPassRenderer {
 			swap.target = target;
 			swap.width = target1.getWidth();
 			swap.height = target1.getHeight();
-			swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {target});
+			swap.from = renderTargets.createColorFramebuffer(ImmutableSet.of(), new int[] {target});
 			// NB: This is handled in RenderTargets now.
 			//swap.from.readBuffer(target);
 			swap.targetTexture = renderTargets.get(target).getMainTexture();

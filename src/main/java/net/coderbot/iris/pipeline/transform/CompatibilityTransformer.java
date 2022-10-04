@@ -294,12 +294,12 @@ public class CompatibilityTransformer {
 		 * find attributes that are declared as "in" in geometry or fragment but not
 		 * declared as "out" in the previous stage. The missing "out" declarations for
 		 * these attributes are added and initialized.
-		 * 
+		 *
 		 * It doesn't bother with array specifiers because they are only legal in
 		 * geometry shaders, but then also only as an in declaration. The out
 		 * declaration in the vertex shader is still just a single value. Missing out
 		 * declarations in the geometry shader are also just normal.
-		 * 
+		 *
 		 * TODO:
 		 * - fix issues where Iris' own declarations are detected and patched like
 		 * iris_FogFragCoord if there are geometry shaders present
