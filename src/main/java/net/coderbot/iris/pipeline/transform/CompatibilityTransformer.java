@@ -92,7 +92,7 @@ public class CompatibilityTransformer {
 				} else if (unusedFunctions.size() == 1) {
 					LOGGER.warn(
 							"Removing unused function " + functionName
-									+ " and omitting further such messages outside of debug mode.");
+									+ " and omitting further such messages outside of debug mode. See debugging.md for more information.");
 				}
 				continue;
 			}
@@ -183,7 +183,7 @@ public class CompatibilityTransformer {
 
 		if (constDeclarationHit) {
 			LOGGER.warn(
-					"Removed the const keyword from declarations that use const parameters. Const declarations usually require constant initializer expresions which immutable parameters are not. This is done to ensure better compatibility drivers' varying behavior at different versions. See Section 4.3.2 on Constant Qualifiers and Section 4.3.3 on Constant Expressions in the GLSL 4.1 and 4.2 specifications for more information. Additionally, see https://wiki.shaderlabs.org/wiki/Compiler_Behavior_Notes for the varying behavior of drivers.");
+					"Removed the const keyword from declarations that use const parameters. See debugging.md for more information.");
 		}
 
 		// remove empty external declarations
@@ -192,7 +192,7 @@ public class CompatibilityTransformer {
 				ASTNode::detachAndDelete);
 		if (emptyDeclarationHit) {
 			LOGGER.warn(
-					"Removed empty external declarations (\";\"). Lone semicolons in the global scope, also when placed after an unrelated function definition, are an empty external declaration which constitutes a syntax error for some drivers.");
+					"Removed empty external declarations (\";\").");
 		}
 	}
 
@@ -385,7 +385,7 @@ public class CompatibilityTransformer {
 								LOGGER.warn(
 										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 												+ " shader that has a missing corresponding out declaration in the previous stage "
-												+ prevType.name() + " has a non-numeric type and could not be compatibility-patched.");
+												+ prevType.name() + " has a non-numeric type and could not be compatibility-patched. See debugging.md for more information.");
 								continue;
 							}
 							Type inType = inTypeSpecifier.type;
@@ -409,7 +409,7 @@ public class CompatibilityTransformer {
 							LOGGER.warn(
 									"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 											+ " shader is missing a corresponding out declaration in the previous stage "
-											+ prevType.name() + " and has been compatibility-patched.");
+											+ prevType.name() + " and has been compatibility-patched. See debugging.md for more information.");
 						}
 
 						// patch mismatching declaration with a local variable and a cast
@@ -444,7 +444,7 @@ public class CompatibilityTransformer {
 								LOGGER.warn(
 										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 												+ " shader has a mismatching dimensionality (scalar/vector/matrix) with the out declaration in the previous stage "
-												+ prevType.name() + " and could not be compatibility-patched.");
+												+ prevType.name() + " and could not be compatibility-patched. See debugging.md for more information.");
 								continue;
 							}
 
@@ -511,7 +511,7 @@ public class CompatibilityTransformer {
 											+ " shader has a different type " + outType.getMostCompactName()
 											+ " than the corresponding in declaration of type " + inType.getMostCompactName()
 											+ " in the following stage " + currentType.glShaderType.name()
-											+ " and has been compatibility-patched.");
+											+ " and has been compatibility-patched. See debugging.md for more information.");
 						}
 					}
 				}
