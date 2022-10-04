@@ -27,6 +27,7 @@ import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.postprocess.BufferFlipper;
@@ -150,6 +151,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private boolean shouldBindPBR;
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
+	private PackDirectives packDirectives;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -165,6 +167,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.shouldRenderPrepareBeforeShadow = programs.getPackDirectives().isPrepareBeforeShadow();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
+
+		this.packDirectives = programs.getPackDirectives();
 
 		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
@@ -263,6 +267,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				ProgramId.Block, ProgramId.Block, ProgramId.Block,
 				ProgramId.BeaconBeam, ProgramId.BeaconBeam, ProgramId.BeaconBeam,
 				ProgramId.Entities, ProgramId.Entities, ProgramId.Entities,
+				ProgramId.EntitiesTrans, ProgramId.EntitiesTrans, ProgramId.EntitiesTrans,
 				null, ProgramId.ArmorGlint, ProgramId.ArmorGlint,
 				null, ProgramId.SpiderEyes, ProgramId.SpiderEyes,
 				ProgramId.Hand, ProgramId.Hand, ProgramId.Hand,
@@ -516,7 +521,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			case TERRAIN_CUTOUT_MIPPED:
 				return RenderCondition.TERRAIN_OPAQUE;
 			case ENTITIES:
-				return RenderCondition.ENTITIES;
+				if (GlStateManagerAccessor.getBLEND().srcRgb == GlStateManager.SourceFactor.SRC_ALPHA.value && GlStateManagerAccessor.getBLEND().dstRgb == GlStateManager.SourceFactor.ONE_MINUS_SRC_ALPHA.value && GlStateManagerAccessor.getBLEND().srcAlpha == GlStateManager.SourceFactor.ONE.value && GlStateManagerAccessor.getBLEND().dstAlpha == GlStateManager.SourceFactor.ONE_MINUS_SRC_ALPHA.value) {
+					return RenderCondition.ENTITIES_TRANSLUCENT;
+				} else {
+					return RenderCondition.ENTITIES;
+				}
 			case BLOCK_ENTITIES:
 				return RenderCondition.BLOCK_ENTITIES;
 			case DESTROY:
@@ -587,7 +596,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		// TODO: Properly handle empty shaders?
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchAttributes(
 			source.getVertexSource().orElseThrow(NullPointerException::new),
-			source.getGeometrySource().orElse(null), 
+			source.getGeometrySource().orElse(null),
 			source.getFragmentSource().orElseThrow(NullPointerException::new),
 			availability);
 		String vertex = transformed.get(PatchShaderType.VERTEX);
@@ -882,7 +891,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
 		boolean changed = renderTargets.resizeIfNeeded(mainExt.iris$getDepthBufferVersion(), depthTextureId, main.width,
-			main.height, depthBufferFormat);
+			main.height, depthBufferFormat, packDirectives);
 
 		if (changed) {
 			prepareRenderer.recalculateSizes();
