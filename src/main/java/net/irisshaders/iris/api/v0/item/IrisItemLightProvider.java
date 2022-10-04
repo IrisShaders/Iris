@@ -1,6 +1,7 @@
 package net.irisshaders.iris.api.v0.item;
 
 import com.mojang.math.Vector3f;
+import net.coderbot.iris.compat.lambdynlights.ILambDynLightsCompat;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +17,7 @@ public interface IrisItemLightProvider {
 			return item.getBlock().defaultBlockState().getLightEmission();
 		}
 
-		return 0;
+		return ILambDynLightsCompat.INSTANCE.getLuminance(stack, player.isUnderWater()).orElse(0);
 	}
 
 	default Vector3f getLightColor(Player player, ItemStack stack) {
