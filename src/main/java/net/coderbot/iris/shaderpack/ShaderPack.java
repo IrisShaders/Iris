@@ -24,8 +24,6 @@ import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
-import net.coderbot.iris.shaderpack.transform.line.LineTransform;
-import net.coderbot.iris.shaderpack.transform.line.VersionDirectiveNormalizer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TextComponent;
@@ -191,9 +189,6 @@ public class ShaderPack {
 			if (lines == null) {
 				return null;
 			}
-
-			// Normalize version directives.
-			lines = LineTransform.apply(lines, VersionDirectiveNormalizer.INSTANCE);
 
 			StringBuilder builder = new StringBuilder();
 

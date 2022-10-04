@@ -50,6 +50,8 @@
   "options.iris.shadowDistance": "Max Shadow Distance",
   "options.iris.shadowDistance.enabled": "Allows you to change the maximum distance for shadows. Terrain and entities beyond this distance will not cast shadows. Lowering the shadow distance can significantly increase performance.",
   "options.iris.shadowDistance.disabled": "Your current shader pack has already set a render distance for shadows; you cannot change it.",
+  "options.iris.gui.hide": "Hide GUI",
+  "options.iris.gui.show": "Show GUI",
 
   "pack.iris.select.title": "Select",
   "pack.iris.configure.title": "Configure",

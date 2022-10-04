@@ -19,8 +19,17 @@ import net.minecraft.world.phys.Vec3;
 // mostly working under Iris.
 public class HardcodedCustomUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
+	private static Biome storedBiome;
 
 	public static void addHardcodedCustomUniforms(UniformHolder holder, FrameUpdateNotifier updateNotifier) {
+		updateNotifier.addListener(() -> {
+			if (Minecraft.getInstance().level != null) {
+				storedBiome = Minecraft.getInstance().level.getBiome(Minecraft.getInstance().getCameraEntity().blockPosition());
+			} else {
+				storedBiome = null;
+			}
+		});
+
 		CameraUniforms.CameraPositionTracker tracker = new CameraUniforms.CameraPositionTracker(updateNotifier);
 
 		SmoothedFloat eyeInCave = new SmoothedFloat(6, 12, HardcodedCustomUniforms::getEyeInCave, updateNotifier);
@@ -47,6 +56,22 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTimeSmooth", new SmoothedFloat(5, 5, SystemTimeUniforms.TIMER::getLastFrameTime, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "eyeBrightnessM", new SmoothedFloat(5, 5, HardcodedCustomUniforms::getEyeBrightnessM, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "rainFactor", rainStrengthS);
+
+		// The following uniforms are Sildur's specific.
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "inSwamp", new SmoothedFloat(5, 5, () -> {
+			if (storedBiome == null) {
+				return 0;
+			} else {
+				return storedBiome.getBiomeCategory() == Biome.BiomeCategory.SWAMP ? 1 : 0;
+			}
+		}, updateNotifier));
+		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "BiomeTemp", () -> {
+			if (storedBiome == null) {
+				return 0;
+			} else {
+				return storedBiome.getTemperature(Minecraft.getInstance().getCameraEntity().blockPosition());
+			}
+		});
 
 		// The following uniforms are specific to Super Duper Vanilla Shaders.
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "day", HardcodedCustomUniforms::getDay);
@@ -153,10 +178,10 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getRawPrecipitation() {
-		if (Minecraft.getInstance().level == null) {
+		if (storedBiome == null) {
 			return 0;
 		}
-		Biome.Precipitation precipitation = Minecraft.getInstance().level.getBiome(Minecraft.getInstance().getCameraEntity().blockPosition()).getPrecipitation();
+		Biome.Precipitation precipitation = storedBiome.getPrecipitation();
 		switch (precipitation) {
 			case RAIN:
 				return 1;

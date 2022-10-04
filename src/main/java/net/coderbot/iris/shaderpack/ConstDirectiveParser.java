@@ -67,6 +67,12 @@ public class ConstDirectiveParser {
 		} else if (line.startsWith("float")) {
 			type = Type.FLOAT;
 			line = line.substring("float".length());
+		} else if (line.startsWith("vec2")) {
+			type = Type.VEC2;
+			line = line.substring("vec2".length());
+		} else if (line.startsWith("ivec3")) {
+			type = Type.IVEC3;
+			line = line.substring("ivec3".length());
 		} else if (line.startsWith("vec4")) {
 			type = Type.VEC4;
 			line = line.substring("vec4".length());
@@ -164,6 +170,8 @@ public class ConstDirectiveParser {
 	public enum Type {
 		INT,
 		FLOAT,
+		VEC2,
+		IVEC3,
 		VEC4,
 		BOOL
 	}
