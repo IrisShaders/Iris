@@ -11,6 +11,7 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public class IrisExclusiveUniforms {
@@ -101,6 +102,7 @@ public class IrisExclusiveUniforms {
 	}
 
 	private static Vector3d getEyePosition() {
-		return new Vector3d(Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getEyeY(), Minecraft.getInstance().player.getZ());
+		Objects.requireNonNull(Minecraft.getInstance().getCameraEntity());
+		return new Vector3d(Minecraft.getInstance().getCameraEntity().getX(), Minecraft.getInstance().getCameraEntity().getEyeY(), Minecraft.getInstance().getCameraEntity().getZ());
 	}
 }

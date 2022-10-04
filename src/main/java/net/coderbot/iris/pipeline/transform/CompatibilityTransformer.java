@@ -42,6 +42,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 
 public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
@@ -86,7 +87,13 @@ public class CompatibilityTransformer {
 				// TODO: integrate into debug mode (allow user to disable this behavior for
 				// debugging purposes)
 				unusedFunctions.add(definition);
-				LOGGER.warn("Removing unused function " + functionName);
+				if (PatchedShaderPrinter.prettyPrintShaders) {
+					LOGGER.warn("Removing unused function " + functionName);
+				} else if (unusedFunctions.size() == 1) {
+					LOGGER.warn(
+							"Removing unused function " + functionName
+									+ " and omitting further such messages outside of debug mode.");
+				}
 				continue;
 			}
 
@@ -201,8 +208,8 @@ public class CompatibilityTransformer {
 		}
 
 		@Override
-		public boolean matches(ExternalDeclaration tree) {
-			boolean result = super.matches(tree);
+		public boolean matchesExtract(ExternalDeclaration tree) {
+			boolean result = super.matchesExtract(tree);
 			if (!result) {
 				return false;
 			}
@@ -237,6 +244,7 @@ public class CompatibilityTransformer {
 			.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
 
 	static {
+		declarationTemplate.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getOne(TypeQualifier.class));
 		declarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
 		declarationTemplate.markIdentifierReplacement("__name");
 		initTemplate.markIdentifierReplacement("__decl");
@@ -265,6 +273,18 @@ public class CompatibilityTransformer {
 								Stream.of(LiteralExpression.getDefaultValue(type)))));
 	}
 
+	private static TypeQualifier makeQualifierOut(TypeQualifier typeQualifier) {
+		for (TypeQualifierPart qualifierPart : typeQualifier.getParts()) {
+			if (qualifierPart instanceof StorageQualifier) {
+				StorageQualifier storageQualifier = (StorageQualifier) qualifierPart;
+				if (((StorageQualifier) qualifierPart).storageType == StorageType.IN) {
+					storageQualifier.storageType = StorageType.OUT;
+				}
+			}
+		}
+		return typeQualifier;
+	}
+
 	// does transformations that require cross-shader type data
 	public static void transformGrouped(
 			ASTParser t,
@@ -274,12 +294,12 @@ public class CompatibilityTransformer {
 		 * find attributes that are declared as "in" in geometry or fragment but not
 		 * declared as "out" in the previous stage. The missing "out" declarations for
 		 * these attributes are added and initialized.
-		 * 
+		 *
 		 * It doesn't bother with array specifiers because they are only legal in
 		 * geometry shaders, but then also only as an in declaration. The out
 		 * declaration in the vertex shader is still just a single value. Missing out
 		 * declarations in the geometry shader are also just normal.
-		 * 
+		 *
 		 * TODO:
 		 * - fix issues where Iris' own declarations are detected and patched like
 		 * iris_FogFragCoord if there are geometry shaders present
@@ -370,7 +390,13 @@ public class CompatibilityTransformer {
 							}
 							Type inType = inTypeSpecifier.type;
 
+							// insert the new out declaration but copy over the type qualifiers, except for
+							// the in/out qualifier
+							TypeQualifier outQualifier = (TypeQualifier) inDeclarationMatcher
+									.getNodeMatch("qualifier").cloneInto(prevRoot);
+							makeQualifierOut(outQualifier);
 							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, declarationTemplate.getInstanceFor(prevRoot,
+									outQualifier,
 									inTypeSpecifier.cloneInto(prevRoot),
 									new Identifier(name)));
 
@@ -452,7 +478,10 @@ public class CompatibilityTransformer {
 								outMember.detach();
 								outTypeSpecifier = outTypeSpecifier.cloneInto(prevRoot);
 								DeclarationExternalDeclaration singleOutDeclaration = (DeclarationExternalDeclaration) declarationTemplate
-										.getInstanceFor(prevRoot, outTypeSpecifier, new Identifier(name));
+										.getInstanceFor(prevRoot,
+												makeQualifierOut(outDeclaration.getType().getTypeQualifier().cloneInto(prevRoot)),
+												outTypeSpecifier,
+												new Identifier(name));
 								((TypeAndInitDeclaration) singleOutDeclaration.getDeclaration()).getMembers().set(0, outMember);
 								prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, singleOutDeclaration);
 							}

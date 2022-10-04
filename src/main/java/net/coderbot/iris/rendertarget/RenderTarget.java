@@ -5,6 +5,7 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 
@@ -59,6 +60,10 @@ public class RenderTarget {
 
 	private void resizeTexture(int texture, int width, int height) {
 		IrisRenderSystem.texImage2D(texture, GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
+	}
+
+	void resize(Vector2i textureScaleOverride) {
+		this.resize(textureScaleOverride.x, textureScaleOverride.y);
 	}
 
 	// Package private, call CompositeRenderTargets#resizeIfNeeded instead.
