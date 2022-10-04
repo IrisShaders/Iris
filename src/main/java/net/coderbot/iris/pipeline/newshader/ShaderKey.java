@@ -31,6 +31,7 @@ public enum ShaderKey {
 	ENTITIES_SOLID_BRIGHT  (ProgramId.Entities,    AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
 	ENTITIES_CUTOUT        (ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	ENTITIES_CUTOUT_DIFFUSE(ProgramId.Entities,    AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
+	ENTITIES_TRANSLUCENT   (ProgramId.EntitiesTrans,AlphaTests.ONE_TENTH_ALPHA,IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	ENTITIES_EYES          (ProgramId.SpiderEyes,  AlphaTests.NON_ZERO_ALPHA,  IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
 	HAND_CUTOUT            (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	HAND_CUTOUT_BRIGHT     (ProgramId.Hand,        AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
