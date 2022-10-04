@@ -109,9 +109,12 @@ public class VanillaTransformer {
 				"mat3(transpose(inverse(gl_ModelViewMatrix)))");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-					"in vec3 iris_Position;",
-					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"in vec3 iris_Position;");
+			if (root.identifierIndex.has("ftransform")) {
+				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+						"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+			}
 
 			if (parameters.inputs.isNewLines()) {
 				root.replaceReferenceExpressions(t, "gl_Vertex",
@@ -161,15 +164,17 @@ public class VanillaTransformer {
 				"(gl_ProjectionMatrix * gl_ModelViewMatrix)");
 
 		if (parameters.hasChunkOffset) {
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-					"uniform vec3 iris_ChunkOffset;",
-					"mat4 _iris_internal_translate(vec3 offset) {" +
-							"return mat4(1.0, 0.0, 0.0, 0.0," +
-							"0.0, 1.0, 0.0, 0.0," +
-							"0.0, 0.0, 1.0, 0.0," +
-							"offset.x, offset.y, offset.z, 1.0); }");
-			root.replaceReferenceExpressions(t, "gl_ModelViewMatrix",
+			boolean doInjection = root.replaceReferenceExpressionsReport(t, "gl_ModelViewMatrix",
 					"(iris_ModelViewMat * _iris_internal_translate(iris_ChunkOffset))");
+			if (doInjection) {
+				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+						"uniform vec3 iris_ChunkOffset;",
+						"mat4 _iris_internal_translate(vec3 offset) {" +
+								"return mat4(1.0, 0.0, 0.0, 0.0," +
+								"0.0, 1.0, 0.0, 0.0," +
+								"0.0, 0.0, 1.0, 0.0," +
+								"offset.x, offset.y, offset.z, 1.0); }");
+			}
 		} else if (parameters.inputs.isNewLines()) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					"const float iris_VIEW_SHRINK = 1.0 - (1.0 / 256.0);",

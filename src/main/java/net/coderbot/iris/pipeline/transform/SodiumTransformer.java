@@ -78,7 +78,10 @@ public class SodiumTransformer {
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to
 			// chunks.
-
+			if (root.identifierIndex.has("ftransform")) {
+				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+						"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+			}
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 					// translated from sodium's chunk_vertex.glsl
 					"vec3 _vert_position;",
@@ -110,12 +113,8 @@ public class SodiumTransformer {
 					"uniform mat4 iris_ModelViewMatrix;",
 					"uniform vec3 u_RegionOffset;",
 					// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-					"vec4 getVertexPosition() { return vec4(u_RegionOffset + Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }",
-					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
-
+					"vec4 getVertexPosition() { return vec4(u_RegionOffset + Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }");
 			tree.prependMain(t, "_vert_init();");
-			root.replaceReferenceExpressions(t, "iris_ModelViewProjectionMatrix",
-					"(iris_ProjectionMatrix * iris_ModelViewMatrix)");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 		} else {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
