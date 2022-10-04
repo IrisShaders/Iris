@@ -1,29 +1,60 @@
 package net.coderbot.iris.features;
 
+import net.coderbot.iris.gl.IrisRenderSystem;
+import net.minecraft.client.resources.language.I18n;
+import org.apache.commons.lang3.text.WordUtils;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public enum FeatureFlags {
-	SEPARATE_HW_SAMPLERS("Separate Shadow Hardware Samplers", () -> true),
-	// STUB: Not implemented yet, added for the names
-	CUSTOM_UNIFORMS("Custom Uniforms", () -> false),
-	PER_BUFFER_BLENDING("Per-Buffer Blending", () -> false),
-	COMPUTE_SHADERS("Compute Shaders", () -> false),
-	SHADOWCOMP("Shadow Composites", () -> false);
+	SEPARATE_HARDWARE_SAMPLERS(() -> true, () -> true),
+	CUSTOM_UNIFORMS(() -> false, () -> true),
+	PER_BUFFER_BLENDING(() -> true, IrisRenderSystem::supportsBufferBlending),
+	COMPUTE_SHADERS(() -> true, IrisRenderSystem::supportsCompute),
+	ENTITY_TRANSLUCENT(() -> true, () -> true),
+	ITEM_COLOR(() -> true, () -> true),
+	SHADOWCOMP(() -> false, () -> true),
+	UNKNOWN(() -> true, () -> true);
 
-	private final String name;
-	private final BooleanSupplier optionalRequirement;
+	private final BooleanSupplier irisRequirement;
+	private final BooleanSupplier hardwareRequirement;
 
-	FeatureFlags(String name, BooleanSupplier optionalRequirement) {
-		this.name = name;
-		this.optionalRequirement = optionalRequirement;
+	FeatureFlags(BooleanSupplier irisRequirement, BooleanSupplier hardwareRequirement) {
+		this.irisRequirement = irisRequirement;
+		this.hardwareRequirement = hardwareRequirement;
 	}
 
-	public String getName() {
-		return name;
+	public static String getInvalidStatus(List<FeatureFlags> invalidFeatureFlags) {
+		boolean unsupportedHardware = false, unsupportedIris = false;
+		FeatureFlags[] flags = invalidFeatureFlags.toArray(new FeatureFlags[0]);
+		for (FeatureFlags flag : flags) {
+			unsupportedIris |= !flag.irisRequirement.getAsBoolean();
+			unsupportedHardware |= !flag.hardwareRequirement.getAsBoolean();
+		}
+
+		if (unsupportedIris) {
+			if (unsupportedHardware) {
+				return I18n.get("iris.unsupported.irisorpc");
+			}
+
+			return I18n.get("iris.unsupported.iris");
+		} else if (unsupportedHardware) {
+			return I18n.get("iris.unsupported.pc");
+		} else {
+			return null;
+		}
+	}
+
+	public String getHumanReadableName() {
+		return WordUtils.capitalize(name().replace("_", " ").toLowerCase());
 	}
 
 	public boolean isUsable() {
-		return optionalRequirement.getAsBoolean();
+		return irisRequirement.getAsBoolean() && hardwareRequirement.getAsBoolean();
 	}
 
 	public static boolean isInvalid(String name) {
@@ -34,11 +65,11 @@ public enum FeatureFlags {
 		}
 	}
 
-	public static String getNameOfValue(String name) {
+	public static FeatureFlags getValue(String value) {
 		try {
-			return FeatureFlags.valueOf(name).getName();
+			return FeatureFlags.valueOf(value);
 		} catch (IllegalArgumentException e) {
-			return name;
+			return FeatureFlags.UNKNOWN;
 		}
 	}
 }

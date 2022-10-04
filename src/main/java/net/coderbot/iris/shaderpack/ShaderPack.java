@@ -27,6 +27,7 @@ import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
@@ -46,6 +47,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ShaderPack {
 	private static final Gson GSON = new Gson();
@@ -120,11 +122,12 @@ public class ShaderPack {
 				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
 				.orElseGet(ShaderProperties::empty);
 
-		List<String> invalidFeatureFlags = shaderProperties.getRequiredFeatureFlags().stream().filter(FeatureFlags::isInvalid).map(FeatureFlags::getNameOfValue).collect(Collectors.toList());
+		List<FeatureFlags> invalidFlagList = shaderProperties.getRequiredFeatureFlags().stream().filter(FeatureFlags::isInvalid).map(FeatureFlags::getValue).collect(Collectors.toList());
+		List<String> invalidFeatureFlags = invalidFlagList.stream().map(FeatureFlags::getHumanReadableName).collect(Collectors.toList());
 
 		if (!invalidFeatureFlags.isEmpty()) {
 			if (Minecraft.getInstance().screen instanceof ShaderPackScreen) {
-				Minecraft.getInstance().setScreen(new FeatureMissingErrorScreen(Minecraft.getInstance().screen, new TextComponent("Shaderpack incompatible!"), new TextComponent("The shaderpack you are trying to load contains features unsupported by Iris or your PC. Please try another pack. List" + invalidFeatureFlags.stream()
+				Minecraft.getInstance().setScreen(new FeatureMissingErrorScreen(Minecraft.getInstance().screen, new TranslatableComponent("iris.unsupported.pack"), new TranslatableComponent("iris.unsupported.pack.description", FeatureFlags.getInvalidStatus(invalidFlagList), invalidFeatureFlags.stream()
 					.collect(Collectors.joining(", ", ": ", ".")))));
 			}
 			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(false);
