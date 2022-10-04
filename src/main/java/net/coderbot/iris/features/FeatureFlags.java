@@ -12,13 +12,11 @@ import java.util.stream.Stream;
 
 public enum FeatureFlags {
 	SEPARATE_HARDWARE_SAMPLERS(() -> true, () -> true),
-	CUSTOM_UNIFORMS(() -> false, () -> true),
 	PER_BUFFER_BLENDING(() -> true, IrisRenderSystem::supportsBufferBlending),
 	COMPUTE_SHADERS(() -> true, IrisRenderSystem::supportsCompute),
 	ENTITY_TRANSLUCENT(() -> true, () -> true),
 	ITEM_COLOR(() -> true, () -> true),
-	SHADOWCOMP(() -> false, () -> true),
-	UNKNOWN(() -> true, () -> true);
+	UNKNOWN(() -> false, () -> false);
 
 	private final BooleanSupplier irisRequirement;
 	private final BooleanSupplier hardwareRequirement;
