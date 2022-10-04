@@ -62,8 +62,11 @@ public class CompositeTransformer {
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix", "mat3(1.0)");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec3 Position;",
-					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 Position;");
+			if (root.identifierIndex.has("ftransform")) {
+				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+						"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+			}
 			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(Position, 1.0)");
 		}
 
