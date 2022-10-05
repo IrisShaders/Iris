@@ -20,6 +20,9 @@ Roughly, glsl-transformer parses the GLSL code into an internal representation c
 
 Since the internal representation omits formatting, comments, whitespace and preprocessor directives (not including extensions and the version marker of course), none of these are preserved when printing the code back into a string. Because of this, the code that is printed back out is not necessarily the same as the code that was originally provided. This can make debugging shader packs a bit more difficult, since the line numbers in the error messages will not match up with the line numbers in the source code. A feature called line annotation is being worked on in glsl-transformer that aims to fix this issue by inserting `#line` directives into the code. In the interim, enabling the printing of the patched code provides a workaround for this issue (See [Pretty Printing](#pretty-printing)). Additionally, non-essential whitespace is omitted from the output for better performance, this can also be enabled by the user if required.
 
+- The version statement is required. See [Version Statement](#version-statement) for more information.
+- It is forbidden to use Iris internals, namely variables and functions prefixed with `iris_`, `irisMain` or `moj_import`. An exception will be thrown if these are encountered in the source code.
+
 ### Compatibility Patches
 
 Since Iris aims to be compatible with many shader packs, hardware configurations and software environments, it is necessary to apply some compatibility patches to the shader packs to ensure wide compatibility. All known graphics drivers have some bugs or quirks that can cause issues with shader packs, and Iris aims to work around these issues where it is feasible.
@@ -35,6 +38,12 @@ The following is a list of the compatibility patches that are applied to shader 
 - When an input variable, declared with `in`, is declared and used in a geometry or fragment shader, but there is no corresponding output variable in the shader of the previous stage, some drivers will error. To mitigate this, the missing declaration is inserted and initialized with a default value at the top of the `main` function.
 - When the types of declared and used input and output variables don't match, some drivers will error. To mitigate this, the type of the declaration is changed to match the type in the later stage (the fragment shader). An internal variable with the original type is added so that the code can assign a value to it. At the end of the `main` function this value is either truncated or padded to patch the expected type.
 - Unused functions are removed. Some drivers don't do certain semantic checks on unused functions which may result in errors when the code is then compiled with stricter drivers that do perform these checks before unused code removal. This heuristic is not perfect and may fail to remove unreachable functions that are used in another unreachable function.
+
+### Version Statement
+
+The version statement `#version <number> <profile>` where the number is required, but the profile is optionally one of `core` or `compatibility` is patched on versions starting with 1.17. For reference, the relevant code can be found in [`TransformPatcher`](/src/main/java/net/coderbot/iris/pipeline/transform/TransformPatcher.java) in the section afer `Root.indexBuildSession`. If the core profile is used or the profile is missing, and the version is at least 150, then only compatibility patches are applied, as long as the shader is not a vertex shader. On vertex shaders an exception is thrown in this case. They are required to either use a version lower than 330, which is then changed to be exactly 330, or declare the compatibility profile, which is then changed to the core profile.
+
+The profile of compute shaders is always set to core.
 
 ## Debugging Features
 
