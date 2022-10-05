@@ -29,9 +29,10 @@ public final class IdMapUniforms {
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId", mainHandSupplier::getIntID)
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2", offHandSupplier::getIntID)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", mainHandSupplier::getLightValue)
-			.uniform1i(PER_FRAME, "heldBlockLightValue2", offHandSupplier::getLightValue)
-			.uniformVanilla3f(PER_FRAME, "heldBlockLightColor", mainHandSupplier::getLightColor)
-			.uniformVanilla3f(PER_FRAME, "heldBlockLightColor2", offHandSupplier::getLightColor);
+			.uniform1i(PER_FRAME, "heldBlockLightValue2", offHandSupplier::getLightValue);
+		// TODO: Figure out API.
+			//.uniformVanilla3f(PER_FRAME, "heldBlockLightColor", mainHandSupplier::getLightColor)
+			//.uniformVanilla3f(PER_FRAME, "heldBlockLightColor2", offHandSupplier::getLightColor);
 
 		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity,
 				CapturedRenderingState.INSTANCE.getEntityIdNotifier());
@@ -69,21 +70,23 @@ public final class IdMapUniforms {
 
 			ItemStack heldStack = Minecraft.getInstance().player.getItemInHand(hand);
 
-			if (applyOldHandLight) {
-				lightValue = ((IrisItemLightProvider) heldStack.getItem()).getLightEmission(Minecraft.getInstance().player, heldStack);
-				ItemStack offHandStack = Minecraft.getInstance().player.getItemInHand(InteractionHand.OFF_HAND);
-				if (lightValue < (((IrisItemLightProvider) offHandStack.getItem()).getLightEmission(Minecraft.getInstance().player, Minecraft.getInstance().player.getItemInHand(InteractionHand.OFF_HAND)))) {
-					heldStack = offHandStack;
-					lightValue = (((IrisItemLightProvider) offHandStack.getItem()).getLightEmission(Minecraft.getInstance().player, Minecraft.getInstance().player.getItemInHand(InteractionHand.OFF_HAND)));
+			if (heldStack != null) {
+				if (applyOldHandLight) {
+					lightValue = ((IrisItemLightProvider) heldStack.getItem()).getLightEmission(Minecraft.getInstance().player, heldStack);
+					ItemStack offHandStack = Minecraft.getInstance().player.getItemInHand(InteractionHand.OFF_HAND);
+					if (lightValue < (((IrisItemLightProvider) offHandStack.getItem()).getLightEmission(Minecraft.getInstance().player, Minecraft.getInstance().player.getItemInHand(InteractionHand.OFF_HAND)))) {
+						heldStack = offHandStack;
+						lightValue = (((IrisItemLightProvider) offHandStack.getItem()).getLightEmission(Minecraft.getInstance().player, Minecraft.getInstance().player.getItemInHand(InteractionHand.OFF_HAND)));
+					}
+				} else {
+					lightValue = ((IrisItemLightProvider) heldStack.getItem()).getLightEmission(Minecraft.getInstance().player, heldStack);
 				}
-			} else {
-				lightValue = ((IrisItemLightProvider) heldStack.getItem()).getLightEmission(Minecraft.getInstance().player, heldStack);
+
+				lightColor = ((IrisItemLightProvider) heldStack.getItem()).getLightColor(Minecraft.getInstance().player, heldStack);
+
+				ResourceLocation heldItemId = Registry.ITEM.getKey(heldStack.getItem());
+				intID = itemIdMap.applyAsInt(new NamespacedId(heldItemId.getNamespace(), heldItemId.getPath()));
 			}
-
-			lightColor = ((IrisItemLightProvider)heldStack.getItem()).getLightColor(Minecraft.getInstance().player, heldStack);
-
-			ResourceLocation heldItemId = Registry.ITEM.getKey(heldStack.getItem());
-			intID = itemIdMap.applyAsInt(new NamespacedId(heldItemId.getNamespace(), heldItemId.getPath()));
 		}
 
 		public int getIntID() {
