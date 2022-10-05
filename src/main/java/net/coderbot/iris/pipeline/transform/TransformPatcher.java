@@ -78,10 +78,10 @@ public class TransformPatcher {
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((fragment == null) ? 0 : fragment.hashCode());
-			result = prime * result + ((geometry == null) ? 0 : geometry.hashCode());
 			result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
 			result = prime * result + ((vertex == null) ? 0 : vertex.hashCode());
+			result = prime * result + ((geometry == null) ? 0 : geometry.hashCode());
+			result = prime * result + ((fragment == null) ? 0 : fragment.hashCode());
 			result = prime * result + ((compute == null) ? 0 : compute.hashCode());
 			return result;
 		}
@@ -95,16 +95,6 @@ public class TransformPatcher {
 			if (getClass() != obj.getClass())
 				return false;
 			CacheKey other = (CacheKey) obj;
-			if (fragment == null) {
-				if (other.fragment != null)
-					return false;
-			} else if (!fragment.equals(other.fragment))
-				return false;
-			if (geometry == null) {
-				if (other.geometry != null)
-					return false;
-			} else if (!geometry.equals(other.geometry))
-				return false;
 			if (parameters == null) {
 				if (other.parameters != null)
 					return false;
@@ -114,6 +104,16 @@ public class TransformPatcher {
 				if (other.vertex != null)
 					return false;
 			} else if (!vertex.equals(other.vertex))
+				return false;
+			if (geometry == null) {
+				if (other.geometry != null)
+					return false;
+			} else if (!geometry.equals(other.geometry))
+				return false;
+			if (fragment == null) {
+				if (other.fragment != null)
+					return false;
+			} else if (!fragment.equals(other.fragment))
 				return false;
 			if (compute == null) {
 				if (other.compute != null)
