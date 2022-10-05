@@ -232,6 +232,10 @@ public class MixinGameRenderer {
 	private static void iris$overrideEntityTranslucentShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
+		} else if (isBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_TRANSLUCENT, cir);
 		}
