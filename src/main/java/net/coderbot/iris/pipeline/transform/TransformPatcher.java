@@ -145,7 +145,7 @@ public class TransformPatcher {
 				// parser can be set to the correct version
 				Matcher matcher = versionPattern.matcher(input);
 				if (!matcher.find()) {
-					throw new IllegalArgumentException("No #version directive found in source code!");
+					throw new IllegalArgumentException("No #version directive found in source code! See debugging.md for more information.");
 				}
 				Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 				if (version.number >= 200) {
@@ -176,7 +176,7 @@ public class TransformPatcher {
 				violation.ifPresent(id -> {
 					throw new SemanticException(
 							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
-									+ id.getName());
+									+ id.getName() + ". See debugging.md for more information.");
 				});
 
 				Root.indexBuildSession(tree, () -> {
@@ -200,7 +200,7 @@ public class TransformPatcher {
 							if (profile == Profile.CORE || version.number >= 150 && profile == null) {
 								if (parameters.type == PatchShaderType.VERTEX) {
 									throw new IllegalStateException(
-											"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless)");
+											"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless) See debugging.md for more information.");
 								} else {
 									break;
 								}
@@ -209,7 +209,7 @@ public class TransformPatcher {
 								if (profile != Profile.COMPATIBILITY) {
 									throw new IllegalStateException(
 											"Expected \"compatibility\" after the GLSL version: #version " + version + " "
-													+ profile);
+													+ profile + ". See debugging.md for more information.");
 								}
 								versionStatement.profile = Profile.CORE;
 							} else {
