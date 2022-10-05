@@ -196,6 +196,7 @@ public class TransformPatcher {
 							CommonTransformer.transform(transformer, tree, root, parameters);
 							break;
 						default:
+							// TODO: Implement Optifine's special core profile mode
 							if (profile == Profile.CORE || version.number >= 150 && profile == null) {
 								if (parameters.type == PatchShaderType.VERTEX) {
 									throw new IllegalStateException(
@@ -210,13 +211,6 @@ public class TransformPatcher {
 											"Expected \"compatibility\" after the GLSL version: #version " + version + " "
 													+ profile);
 								}
-								// enable this and disable the code above if shaders that aren't declaring
-								// compatibility profile should be allowed
-								// // don't patch no profile is set (by exclusion it can't be core here)
-								// // TODO: Implement Optifine's special core profile mode
-								// if (profile == null) {$
-								// break;
-								// }
 								versionStatement.profile = Profile.CORE;
 							} else {
 								versionStatement.version = Version.GLSL33;
