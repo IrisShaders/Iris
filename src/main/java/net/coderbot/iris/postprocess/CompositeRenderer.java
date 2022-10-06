@@ -167,6 +167,8 @@ public class CompositeRenderer {
 				passWidth = target.getWidth();
 				passHeight = target.getHeight();
 			}
+			renderTargets.destroyFramebuffer(pass.framebuffer);
+			pass.framebuffer = renderTargets.createColorFramebuffer(pass.stageReadsFromAlt, pass.drawBuffers);
 			pass.viewWidth = passWidth;
 			pass.viewHeight = passHeight;
 		}

@@ -264,8 +264,11 @@ public class FinalPassRenderer {
 	public void recalculateSwapPassSize() {
 		for (SwapPass swapPass : swapPasses) {
 			RenderTarget target = renderTargets.get(swapPass.target);
+			renderTargets.destroyFramebuffer(swapPass.from);
+			swapPass.from = renderTargets.createColorFramebuffer(ImmutableSet.of(), new int[] {swapPass.target});
 			swapPass.width = target.getWidth();
 			swapPass.height = target.getHeight();
+			swapPass.targetTexture = target.getMainTexture();
 		}
 	}
 

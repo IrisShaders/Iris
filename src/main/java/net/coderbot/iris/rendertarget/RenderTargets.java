@@ -327,6 +327,11 @@ public class RenderTargets {
 		return framebuffer;
 	}
 
+	public void destroyFramebuffer(GlFramebuffer framebuffer) {
+		framebuffer.destroy();
+		ownedFramebuffers.remove(framebuffer);
+	}
+
 	public int getCurrentWidth() {
 		return cachedWidth;
 	}
