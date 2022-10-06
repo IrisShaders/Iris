@@ -3,10 +3,14 @@ package net.coderbot.iris.pipeline.newshader;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
 import com.mojang.blaze3d.shaders.Program;
+import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.shaders.Uniform;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -18,6 +22,7 @@ import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
+import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -25,54 +30,61 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL32C;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
-public class ExtendedShader extends ShaderInstance implements SamplerHolder, ImageHolder, ShaderInstanceInterface {
+public class ExtendedShader extends ShaderInstance implements ShaderInstanceInterface {
 	private final boolean intensitySwizzle;
-	private final ProgramImages.Builder imageBuilder;
 	private final List<BufferBlendOverride> bufferBlendOverrides;
 	private final boolean hasOverrides;
 	NewWorldRenderingPipeline parent;
 	ProgramUniforms uniforms;
+	ProgramSamplers samplers;
+	ProgramImages images;
 	GlFramebuffer writingToBeforeTranslucent;
 	GlFramebuffer writingToAfterTranslucent;
 	GlFramebuffer baseline;
 	BlendModeOverride blendModeOverride;
-	HashMap<String, IntSupplier> dynamicSamplers;
 	float alphaTest;
-	private ProgramImages currentImages;
 	private Program geometry;
 	private final ShaderAttributeInputs inputs;
 
+	private static final BlendModeOverride defaultBlend = new BlendModeOverride(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0));
+
+	private static ExtendedShader lastApplied;
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
-						  Consumer<DynamicUniformHolder> uniformCreator, boolean isIntensity,
+						  Consumer<DynamicUniformHolder> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
 						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs, @Nullable List<BufferBlendOverride> bufferBlendOverrides) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
 
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
+		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		uniformCreator.accept(uniformBuilder);
+		ProgramImages.Builder builder = ProgramImages.builder(programId);
+		samplerCreator.accept(samplerBuilder, builder);
 
 		uniforms = uniformBuilder.buildUniforms();
+		samplers = samplerBuilder.build();
+		images = builder.build();
 		this.writingToBeforeTranslucent = writingToBeforeTranslucent;
 		this.writingToAfterTranslucent = writingToAfterTranslucent;
 		this.baseline = baseline;
 		this.blendModeOverride = blendModeOverride;
 		this.bufferBlendOverrides = bufferBlendOverrides;
 		this.hasOverrides = bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty();
-		this.dynamicSamplers = new HashMap<>();
 		this.alphaTest = alphaTest.getReference();
 		this.parent = parent;
-		this.imageBuilder = ProgramImages.builder(programId);
-		this.currentImages = null;
 		this.inputs = inputs;
 
 		this.intensitySwizzle = isIntensity;
@@ -86,7 +98,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	public void clear() {
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
-		super.clear();
+		lastApplied = null;
 
 		if (this.blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();
@@ -97,27 +109,22 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 	@Override
 	public void apply() {
-		dynamicSamplers.forEach((name, supplier) -> this.addIrisSampler(name, supplier.getAsInt()));
-
 		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest);
 
-		if (!inputs.hasTex()) {
-			setSampler("Sampler0", parent.getWhitePixel().getId());
+		if (lastApplied != this) {
+			lastApplied = this;
+			ProgramManager.glUseProgram(this.getId());
 		}
 
-		if (!inputs.hasLight()) {
-			setSampler("Sampler2", parent.getWhitePixel().getId());
-		}
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
+		// This is what is expected by the rest of rendering state, failure to do this will cause blurry textures on particles.
+		GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
 
-		super.apply();
+		samplers.update();
 		uniforms.update();
-
-		if (currentImages == null) {
-			// rebuild if needed
-			currentImages = imageBuilder.build();
-		}
-
-		currentImages.update();
+		images.update();
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
@@ -133,15 +140,6 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 			writingToAfterTranslucent.bind();
 		}
 	}
-
-	public void addIrisSampler(String name, int id) {
-		super.setSampler(name, id);
-	}
-
-	public void addIrisSampler(String name, IntSupplier supplier) {
-		dynamicSamplers.put(name, supplier);
-	}
-
 	@Override
 	public void setSampler(String name, Object sampler) {
 		// Translate vanilla sampler names to Iris / ShadersMod sampler names
@@ -174,66 +172,6 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 		return super.getUniform("iris_" + name);
 	}
 
-	// TODO: This is kind of a mess. The interface might need some cleanup here.
-	@Override
-	public void addExternalSampler(int textureUnit, String... names) {
-		throw new UnsupportedOperationException("not yet implemented");
-	}
-
-	@Override
-	public boolean hasSampler(String name) {
-		return GlStateManager._glGetUniformLocation(this.getId(), name) != -1;
-	}
-
-	@Override
-	public boolean addDefaultSampler(IntSupplier sampler, String... names) {
-		throw new UnsupportedOperationException("addDefaultSampler is not yet implemented");
-	}
-
-	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, String... names) {
-		boolean used = false;
-
-		for (String name : names) {
-			if (hasSampler(name)) {
-				used = true;
-			}
-
-			addIrisSampler(name, sampler);
-		}
-
-		return used;
-	}
-
-	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
-		// TODO: This isn't right, but it should work due to how 1.17+ handles samplers?
-		boolean used = false;
-
-		for (String name : names) {
-			if (hasSampler(name)) {
-				used = true;
-			}
-
-			addIrisSampler(name, sampler);
-		}
-
-		return used;
-	}
-
-	@Override
-	public boolean hasImage(String name) {
-		return imageBuilder.hasImage(name);
-	}
-
-	@Override
-	public void addTextureImage(IntSupplier textureID, InternalTextureFormat internalFormat, String name) {
-		imageBuilder.addTextureImage(textureID, internalFormat, name);
-
-		// mark for rebuild if needed
-		this.currentImages = null;
-	}
-
 	@Override
 	public void attachToProgram() {
 		super.attachToProgram();
@@ -258,5 +196,9 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 	public Program getGeometry() {
 		return this.geometry;
+	}
+
+	public boolean hasActiveImages() {
+		return images.getActiveImages() > 0;
 	}
 }
