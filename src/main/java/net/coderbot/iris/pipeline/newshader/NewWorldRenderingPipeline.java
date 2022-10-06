@@ -20,7 +20,6 @@ import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
-import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
@@ -374,8 +373,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			boolean shadowUsesImages = false;
 
 			if (shader instanceof ExtendedShader) {
-				ExtendedShader shader2 = (ExtendedShader) shader;
-				shadowUsesImages = shader2.hasActiveImages();
+				ImageHolder holder = (ExtendedShader) shader;
+
+				// TODO: Use getActiveImages instead like what 1.16.x does?
+				shadowUsesImages = IrisImages.hasShadowImages(holder)
+					|| IrisImages.hasRenderTargetImages(holder, renderTargets);
 			}
 
 			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
@@ -464,13 +466,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
-		Supplier<ImmutableSet<Integer>> flipped =
-			() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
-
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent,
-				baseline, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, fogMode, isIntensity, isFullbright, false);
+				baseline, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, fogMode, isIntensity, isFullbright);
 
 		loadedShaders.add(extendedShader);
+
+		Supplier<ImmutableSet<Integer>> flipped =
+				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
+
+		addGbufferOrShadowSamplers(extendedShader, flipped, false);
 
 		return extendedShader;
 	}
@@ -514,32 +518,36 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlFramebuffer framebuffer = this.shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
-		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
-
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
-				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, FogMode.PER_VERTEX, isIntensity, isFullbright, true);
+				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, FogMode.PER_VERTEX, isIntensity, isFullbright);
 
 		loadedShaders.add(extendedShader);
+
+		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
+
+		addGbufferOrShadowSamplers(extendedShader, flipped, true);
 
 		return extendedShader;
 	}
 
-	public void addGbufferOrShadowSamplers(SamplerHolder samplers, ImageHolder images, Supplier<ImmutableSet<Integer>> flipped,
-										   boolean isShadowPass, InputAvailability availability) {
+	private void addGbufferOrShadowSamplers(ExtendedShader extendedShader, Supplier<ImmutableSet<Integer>> flipped,
+											boolean isShadowPass) {
 		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
 
 		ProgramSamplers.CustomTextureSamplerInterceptor samplerHolder =
-				ProgramSamplers.customTextureSamplerInterceptor(samplers,
+				ProgramSamplers.customTextureSamplerInterceptor(extendedShader,
 						customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
 
 		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false);
-		IrisImages.addRenderTargetImages(images, flipped, renderTargets);
+		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
 
 		if (!shouldBindPBR) {
 			shouldBindPBR = IrisSamplers.hasPBRSamplers(samplerHolder);
 		}
 
-		IrisSamplers.addLevelSamplers(samplers, this, whitePixel, availability);
+		samplerHolder.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
+		samplerHolder.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
+
 		IrisSamplers.addWorldDepthSamplers(samplerHolder, this.renderTargets);
 		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
 
@@ -551,10 +559,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			IrisSamplers.addShadowSamplers(samplerHolder, Objects.requireNonNull(shadowRenderTargets));
 		}
 
-		if (isShadowPass || IrisImages.hasShadowImages(images)) {
+		if (isShadowPass || IrisImages.hasShadowImages(extendedShader)) {
 			// Note: hasShadowSamplers currently queries for shadow images too, so the shadow render targets will be
 			// created by this point... that's sorta ugly, though.
-			IrisImages.addShadowColorImages(images, Objects.requireNonNull(shadowRenderTargets));
+			IrisImages.addShadowColorImages(extendedShader, Objects.requireNonNull(shadowRenderTargets));
 		}
 	}
 
