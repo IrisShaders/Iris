@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import com.google.common.collect.ImmutableSet;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -12,6 +13,7 @@ import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.VanillaUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
@@ -24,13 +26,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class NewShaderTests {
 	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, ShaderAttributeInputs inputs, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isIntensity,
-										boolean isFullbright) throws IOException {
+										NewWorldRenderingPipeline parent, Supplier<ImmutableSet<Integer>> flipped, FogMode fogMode, boolean isIntensity,
+										boolean isFullbright, boolean isShadowPass) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
 
@@ -58,55 +61,6 @@ public class NewShaderTests {
 				"        \"UV1\",\n" +
 				"        \"UV2\",\n" +
 				"        \"Normal\"\n" +
-				"    ],\n" +
-				"    \"samplers\": [\n" +
-				// TODO: Don't duplicate these definitions!
-				"        { \"name\": \"gtexture\" },\n" +
-				"        { \"name\": \"texture\" },\n" +
-				"        { \"name\": \"tex\" },\n" +
-				"        { \"name\": \"iris_overlay\" },\n" +
-				"        { \"name\": \"lightmap\" },\n" +
-				"        { \"name\": \"normals\" },\n" +
-				"        { \"name\": \"specular\" },\n" +
-				"        { \"name\": \"shadow\" },\n" +
-				"        { \"name\": \"watershadow\" },\n" +
-				"        { \"name\": \"shadowtex0\" },\n" +
-				"        { \"name\": \"shadowtex0HW\" },\n" +
-				"        { \"name\": \"shadowtex1\" },\n" +
-				"        { \"name\": \"shadowtex1HW\" },\n" +
-				"        { \"name\": \"depthtex0\" },\n" +
-				"        { \"name\": \"depthtex1\" },\n" +
-				"        { \"name\": \"noisetex\" },\n");
-
-		// TODO: SamplerHolder should really be responsible for this...
-		for (int buffer : PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS) {
-			if (buffer >= 4 && buffer < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
-				shaderJson.append("        { \"name\": \"");
-				shaderJson.append(PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(buffer));
-				shaderJson.append("\" },\n");
-			}
-
-			shaderJson.append("        { \"name\": \"colortex");
-			shaderJson.append(buffer);
-			shaderJson.append("\" },\n");
-		}
-
-		shaderJson.append(
-				"        { \"name\": \"shadowcolor\" },\n" +
-				"        { \"name\": \"shadowcolor0\" },\n" +
-				"        { \"name\": \"shadowcolor1\" }\n" +
-				"    ],\n" +
-				"    \"uniforms\": [\n" +
-				"        { \"name\": \"iris_TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
-				"        { \"name\": \"iris_ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
-				"        { \"name\": \"iris_FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-				"        { \"name\": \"iris_LineWidth\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-				"        { \"name\": \"iris_ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
 				"    ]\n" +
 				"}");
 
@@ -121,6 +75,9 @@ public class NewShaderTests {
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
+			VanillaUniforms.addVanillaUniforms(uniforms);
+		}, (samplerHolder, imageHolder) -> {
+			parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.toAvailability());
 		}, isIntensity, parent, inputs, source.getDirectives().getBufferBlendOverrides());
 	}
 
