@@ -142,7 +142,9 @@ public class RenderTargets {
 					continue;
 				}
 
-				framebuffer.addDepthAttachment(newDepthTextureId);
+				if (framebuffer.hasDepthAttachment()) {
+					framebuffer.addDepthAttachment(newDepthTextureId);
+				}
 			}
 		}
 
