@@ -7,7 +7,9 @@ import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -67,6 +69,8 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private static ExtendedShader lastApplied;
 	private Runnable chunkOffsetListener;
 	private final Vector3f chunkOffset = new Vector3f();
+	private Matrix4f projectionOverride;
+	private PoseStack modelViewOverride;
 
 	public static ValueUpdateNotifier getShaderApplyNotifier() {
 		return listener -> onApplyShader = listener;
@@ -75,7 +79,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
-						  TriConsumer<DynamicUniformHolder, Supplier<Vector3f>, ValueUpdateNotifier> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
+						  Consumer<DynamicUniformHolder> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
 						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs, @Nullable List<BufferBlendOverride> bufferBlendOverrides) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
@@ -83,7 +87,8 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
 		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-		uniformCreator.accept(uniformBuilder, this::getChunkOffset, getChunkOffsetNotifier());
+		uniformCreator.accept(uniformBuilder);
+		addDynamicUniforms(uniformBuilder);
 		ProgramImages.Builder builder = ProgramImages.builder(programId);
 		samplerCreator.accept(samplerBuilder, builder);
 
@@ -103,6 +108,24 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.intensitySwizzle = isIntensity;
 	}
 
+	private void addDynamicUniforms(DynamicUniformHolder uniformBuilder) {
+		uniformBuilder.uniform3f("iris_ChunkOffset", this::getChunkOffset, getChunkOffsetNotifier());
+		uniformBuilder.uniformMatrix("iris_ProjMat", () -> {
+			if (projectionOverride != null) {
+				return projectionOverride;
+			} else {
+				return RenderSystem.getProjectionMatrix();
+			}
+		}, listener -> {});
+		uniformBuilder.uniformMatrix("iris_ModelViewMat", () -> {
+			if (modelViewOverride != null) {
+				return modelViewOverride.last().pose();
+			} else {
+				return RenderSystem.getModelViewMatrix();
+			}
+		}, listener -> {});
+	}
+
 	public boolean isIntensitySwizzle() {
 		return intensitySwizzle;
 	}
@@ -112,6 +135,8 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
 		lastApplied = null;
+		projectionOverride = null;
+		modelViewOverride = null;
 
 		if (this.blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();
@@ -233,4 +258,9 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private Vector3f getChunkOffset() {
 		return chunkOffset;
 	}
+
+    public void setProjectionModelViewOverride(PoseStack arg2, Matrix4f arg3) {
+		this.projectionOverride = arg3;
+		this.modelViewOverride = arg2;
+    }
 }

@@ -1,5 +1,6 @@
 package net.coderbot.iris.gl.uniform;
 
+import com.mojang.math.Matrix4f;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3f;
@@ -19,4 +20,6 @@ public interface DynamicUniformHolder extends UniformHolder {
 	DynamicUniformHolder uniform3f(String name, Supplier<Vector3f> value, ValueUpdateNotifier notifier);
 	DynamicUniformHolder uniform4f(String name, Supplier<Vector4f> value, ValueUpdateNotifier notifier);
 	DynamicUniformHolder uniform4i(String name, Supplier<Vector4i> value, ValueUpdateNotifier notifier);
+	DynamicUniformHolder uniformMatrix(String name, Supplier<Matrix4f> value, ValueUpdateNotifier notifier);
+
 }

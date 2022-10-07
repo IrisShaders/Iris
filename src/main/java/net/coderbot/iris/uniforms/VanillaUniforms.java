@@ -11,8 +11,6 @@ import net.coderbot.iris.vendored.joml.Vector2i;
 
 public class VanillaUniforms {
 	public static void addVanillaUniforms(DynamicUniformHolder uniforms) {
-		uniforms.uniformMatrix(UniformUpdateFrequency.PER_FRAME, "iris_ProjMat", RenderSystem::getProjectionMatrix);
-		uniforms.uniformMatrix(UniformUpdateFrequency.PER_FRAME, "iris_ModelViewMat", RenderSystem::getModelViewMatrix);
 		uniforms.uniformMatrix(UniformUpdateFrequency.PER_FRAME, "iris_TextureMat", RenderSystem::getTextureMatrix);
 		uniforms.uniform4fArray(UniformUpdateFrequency.PER_FRAME, "iris_ColorModulator", RenderSystem::getShaderColor);
 		Vector2f cachedScreenSize = new Vector2f();
