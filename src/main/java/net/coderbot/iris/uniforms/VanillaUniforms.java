@@ -11,10 +11,11 @@ import net.coderbot.iris.vendored.joml.Vector2i;
 
 public class VanillaUniforms {
 	public static void addVanillaUniforms(DynamicUniformHolder uniforms) {
-		uniforms.uniformMatrix(UniformUpdateFrequency.PER_FRAME, "iris_TextureMat", RenderSystem::getTextureMatrix);
-		uniforms.uniform4fArray(UniformUpdateFrequency.PER_FRAME, "iris_ColorModulator", RenderSystem::getShaderColor);
 		Vector2f cachedScreenSize = new Vector2f();
-		uniforms.uniform1f("iris_LineWidth", RenderSystem::getShaderLineWidth, ExtendedShader.getShaderApplyNotifier());
-		uniforms.uniform2f(UniformUpdateFrequency.PER_FRAME, "iris_ScreenSize", () -> cachedScreenSize.set(GlStateManager.Viewport.width(), GlStateManager.Viewport.height()));
+		// listener -> {} dictates we want this to run on every shader update, not just on a new frame. These are dynamic.
+		uniforms.uniformMatrix("iris_TextureMat", RenderSystem::getTextureMatrix, listener -> {});
+		uniforms.uniform4fArray("iris_ColorModulator", RenderSystem::getShaderColor, listener -> {});
+		uniforms.uniform1f("iris_LineWidth", RenderSystem::getShaderLineWidth, listener -> {});
+		uniforms.uniform2f("iris_ScreenSize", () -> cachedScreenSize.set(GlStateManager.Viewport.width(), GlStateManager.Viewport.height()), listener -> {});
 	}
 }

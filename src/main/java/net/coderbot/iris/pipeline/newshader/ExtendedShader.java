@@ -63,18 +63,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private Program geometry;
 	private final ShaderAttributeInputs inputs;
 
-	private static final BlendModeOverride defaultBlend = new BlendModeOverride(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0));
-
-	private static Runnable onApplyShader;
 	private static ExtendedShader lastApplied;
 	private Runnable chunkOffsetListener;
 	private final Vector3f chunkOffset = new Vector3f();
 	private Matrix4f projectionOverride;
 	private PoseStack modelViewOverride;
-
-	public static ValueUpdateNotifier getShaderApplyNotifier() {
-		return listener -> onApplyShader = listener;
-	}
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
@@ -157,16 +150,10 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
-		// This is what is expected by the rest of rendering state, failure to do this will cause blurry textures on particles.
-		GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
 
 		samplers.update();
 		uniforms.update();
 		images.update();
-
-		if (onApplyShader != null) {
-			onApplyShader.run();
-		}
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
@@ -181,37 +168,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		} else {
 			writingToAfterTranslucent.bind();
 		}
-	}
-	@Override
-	public void setSampler(String name, Object sampler) {
-		// Translate vanilla sampler names to Iris / ShadersMod sampler names
-		if (name.equals("Sampler0")) {
-			name = "gtexture";
-
-			// "tex" and "texture" are also valid sampler names.
-			super.setSampler("texture", sampler);
-			super.setSampler("tex", sampler);
-		} else if (name.equals("Sampler1")) {
-			name = "iris_overlay";
-		} else if (name.equals("Sampler2")) {
-			name = "lightmap";
-		} else if (name.startsWith("Sampler")) {
-			// We only care about the texture, lightmap, and overlay for now from vanilla.
-			// All other samplers will be coming from Iris.
-			return;
-		} else {
-			Iris.logger.warn("Iris: didn't recognize the sampler name " + name + " in addSampler, please use addIrisSampler for custom Iris-specific samplers instead.");
-			return;
-		}
-
-		super.setSampler(name, sampler);
-	}
-
-	@Nullable
-	@Override
-	public Uniform getUniform(String name) {
-		// Prefix all uniforms with Iris to help avoid conflicts with existing names within the shader.
-		return super.getUniform("iris_" + name);
 	}
 
 	@Override

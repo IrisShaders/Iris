@@ -2,6 +2,7 @@ package net.coderbot.iris.gl.uniform;
 
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
+import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vendored.joml.Vector4f;
@@ -38,6 +39,12 @@ public interface DynamicLocationalUniformHolder extends LocationalUniformHolder,
 		return this;
 	}
 
+	default DynamicLocationalUniformHolder uniform2f(String name, Supplier<Vector2f> value, ValueUpdateNotifier notifier) {
+		location(name, UniformType.VEC2).ifPresent(id -> addDynamicUniform(new Vector2Uniform(id, value, notifier), notifier));
+
+		return this;
+	}
+
 	default DynamicLocationalUniformHolder uniform2i(String name, Supplier<Vector2i> value, ValueUpdateNotifier notifier) {
 		location(name, UniformType.VEC2I).ifPresent(id -> addDynamicUniform(new Vector2IntegerJomlUniform(id, value, notifier), notifier));
 
@@ -52,6 +59,12 @@ public interface DynamicLocationalUniformHolder extends LocationalUniformHolder,
 
 	default DynamicUniformHolder uniform4f(String name, Supplier<Vector4f> value, ValueUpdateNotifier notifier) {
 		location(name, UniformType.VEC4).ifPresent(id -> addDynamicUniform(new Vector4Uniform(id, value, notifier), notifier));
+
+		return this;
+	}
+
+	default DynamicUniformHolder uniform4fArray(String name, Supplier<float[]> value, ValueUpdateNotifier notifier) {
+		location(name, UniformType.VEC4).ifPresent(id -> addDynamicUniform(new Vector4ArrayUniform(id, value, notifier), notifier));
 
 		return this;
 	}

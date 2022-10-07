@@ -253,11 +253,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				shouldBindPBR = IrisSamplers.hasPBRSamplers(customTextureSamplerInterceptor);
 			}
 
-			// This must be done, as there's no Vanilla binding for Sodium shaders.
-			customTextureSamplerInterceptor.addExternalSampler(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, "lightmap");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
-
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -295,11 +291,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				shouldBindPBR = IrisSamplers.hasPBRSamplers(customTextureSamplerInterceptor);
 			}
 
-			// This must be done, as there's no Vanilla binding for Sodium shaders.
-			customTextureSamplerInterceptor.addExternalSampler(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, "lightmap");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
-
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
 			// Only initialize these samplers if the shadow map renderer exists.
