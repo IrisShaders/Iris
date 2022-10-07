@@ -63,9 +63,14 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	private static final BlendModeOverride defaultBlend = new BlendModeOverride(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0));
 
+	private static Runnable onApplyShader;
 	private static ExtendedShader lastApplied;
 	private Runnable chunkOffsetListener;
 	private final Vector3f chunkOffset = new Vector3f();
+
+	public static ValueUpdateNotifier getShaderApplyNotifier() {
+		return listener -> onApplyShader = listener;
+	}
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
@@ -133,6 +138,10 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		samplers.update();
 		uniforms.update();
 		images.update();
+
+		if (onApplyShader != null) {
+			onApplyShader.run();
+		}
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
