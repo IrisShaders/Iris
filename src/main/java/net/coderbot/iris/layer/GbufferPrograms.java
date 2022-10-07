@@ -5,6 +5,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import org.lwjgl.opengl.GL43C;
 
 public class GbufferPrograms {
 	private static boolean entities;
@@ -37,6 +38,7 @@ public class GbufferPrograms {
 	public static void beginOutline() {
 		checkReentrancy();
 		setPhase(WorldRenderingPhase.OUTLINE);
+		GL43C.glPushDebugGroup(GL43C.GL_DEBUG_SOURCE_APPLICATION, 1, "LINES");
 		outline = true;
 	}
 
@@ -44,6 +46,7 @@ public class GbufferPrograms {
 		if (!outline) {
 			throw new IllegalStateException("GbufferPrograms in weird state, tried to call endOutline when outline = false");
 		}
+		GL43C.glPopDebugGroup();
 
 		setPhase(WorldRenderingPhase.NONE);
 		outline = false;

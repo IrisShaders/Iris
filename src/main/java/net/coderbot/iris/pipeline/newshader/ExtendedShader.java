@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import com.ibm.icu.impl.ICUNotifier;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
 import com.mojang.blaze3d.shaders.Program;
@@ -24,11 +25,14 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.vendored.joml.FrustumRayBuilder;
+import net.coderbot.iris.vendored.joml.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32C;
@@ -39,6 +43,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class ExtendedShader extends ShaderInstance implements ShaderInstanceInterface {
 	private final boolean intensitySwizzle;
@@ -59,10 +64,13 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private static final BlendModeOverride defaultBlend = new BlendModeOverride(new BlendMode(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0));
 
 	private static ExtendedShader lastApplied;
+	private Runnable chunkOffsetListener;
+	private final Vector3f chunkOffset = new Vector3f();
+
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
-						  Consumer<DynamicUniformHolder> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
+						  TriConsumer<DynamicUniformHolder, Supplier<Vector3f>, ValueUpdateNotifier> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
 						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs, @Nullable List<BufferBlendOverride> bufferBlendOverrides) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
@@ -70,7 +78,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
 		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-		uniformCreator.accept(uniformBuilder);
+		uniformCreator.accept(uniformBuilder, this::getChunkOffset, getChunkOffsetNotifier());
 		ProgramImages.Builder builder = ProgramImages.builder(programId);
 		samplerCreator.accept(samplerBuilder, builder);
 
@@ -200,5 +208,20 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	public boolean hasActiveImages() {
 		return images.getActiveImages() > 0;
+	}
+
+    public void setChunkOffset(float x, float y, float z) {
+		chunkOffset.set(x, y, z);
+		if (this.chunkOffsetListener != null) {
+			chunkOffsetListener.run();
+		}
+    }
+
+	private ValueUpdateNotifier getChunkOffsetNotifier() {
+		return listener -> this.chunkOffsetListener = listener;
+	}
+
+	private Vector3f getChunkOffset() {
+		return chunkOffset;
 	}
 }

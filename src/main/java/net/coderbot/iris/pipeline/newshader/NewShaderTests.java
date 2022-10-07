@@ -70,12 +70,13 @@ public class NewShaderTests {
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, geometry, fragment);
 
-		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, alpha, uniforms -> {
+		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, alpha, (uniforms, chunkOffset, listener) -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, fogMode);
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 			VanillaUniforms.addVanillaUniforms(uniforms);
+			uniforms.uniform3f("iris_ChunkOffset", chunkOffset, listener);
 		}, (samplerHolder, imageHolder) -> {
 			parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.toAvailability());
 		}, isIntensity, parent, inputs, source.getDirectives().getBufferBlendOverrides());

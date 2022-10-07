@@ -1,6 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vendored.joml.Vector4f;
@@ -13,6 +14,13 @@ public class Vector3Uniform extends Uniform {
 
 	Vector3Uniform(int location, Supplier<Vector3f> value) {
 		super(location);
+
+		this.cachedValue = new Vector3f();
+		this.value = value;
+	}
+
+	Vector3Uniform(int location, Supplier<Vector3f> value, ValueUpdateNotifier notifier) {
+		super(location, notifier);
 
 		this.cachedValue = new Vector3f();
 		this.value = value;
@@ -44,6 +52,14 @@ public class Vector3Uniform extends Uniform {
 
 	@Override
 	public void update() {
+		updateValue();
+
+		if (notifier != null) {
+			notifier.setListener(this::updateValue);
+		}
+	}
+
+	private void updateValue() {
 		Vector3f newValue = value.get();
 
 		if (!newValue.equals(cachedValue)) {
