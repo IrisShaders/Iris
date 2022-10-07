@@ -160,20 +160,20 @@ Iris and Sodium are made with high mod compatibility in mind, so they should be 
 If you are using **ANY** of the following mods:  
 
 - Applied Energistics 2
-- Tech Reborn
-- Industrial Revolution
-- Modern Industrialization
-- Bits and Chisels
-- Ignis Fatuus
-- Requiem
-- Campanion
-- Continuity
-- ConnectedTexturesMod
-- LambdaBetterGrass
-- Enhanced Block Entities
 - Art of Alchemy
+- Bits and Chisels
+- Campanion
+- ConnectedTexturesMod
+- Continuity
+- Enhanced Block Entities
+- Ignis Fatuus
+- Industrial Revolution
+- LambdaBetterGrass
 - Materialisation
+- Modern Industrialization
+- Requiem
 - Simple BC Pipes
+- Tech Reborn
 
 ... and many others which could possibly utilize the Fabric Rendering API, **you will experience issues when playing the game**.
 
