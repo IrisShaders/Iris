@@ -1,20 +1,15 @@
 package net.coderbot.iris.pipeline.transform;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-class AttributeParameters extends Parameters {
-	public final boolean hasGeometry;
-	public final InputAvailability inputs;
+class SodiumParameters extends Parameters {
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 
-	public AttributeParameters(Patch patch, boolean hasGeometry, InputAvailability inputs, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+	public SodiumParameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		super(patch);
-		this.hasGeometry = hasGeometry;
-		this.inputs = inputs;
 		this.textureMap = textureMap;
 	}
 
@@ -26,8 +21,6 @@ class AttributeParameters extends Parameters {
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + (hasGeometry ? 1231 : 1237);
-		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
 		result = prime * result + ((textureMap == null) ? 0 : textureMap.hashCode());
 		return result;
 	}
@@ -40,14 +33,7 @@ class AttributeParameters extends Parameters {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		AttributeParameters other = (AttributeParameters) obj;
-		if (hasGeometry != other.hasGeometry)
-			return false;
-		if (inputs == null) {
-			if (other.inputs != null)
-				return false;
-		} else if (!inputs.equals(other.inputs))
-			return false;
-		return true;
+		SodiumParameters other = (SodiumParameters) obj;
+		return textureMap.equals(other.textureMap);
 	}
 }

@@ -23,6 +23,7 @@ import net.coderbot.iris.gl.texture.TextureDefinition;
 import net.coderbot.iris.gl.texture.TextureScaleOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -50,6 +51,7 @@ import java.util.function.Consumer;
  * values in here & the values parsed from shader source code.
  */
 public class ShaderProperties {
+	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dynamicHandLight = OptionalBoolean.DEFAULT;
@@ -89,6 +91,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, ArrayList<BufferBlendOverride>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> customTextures = new EnumMap<>(TextureStage.class);
+	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureDefinition> irisCustomTextures = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
@@ -285,12 +288,6 @@ public class ShaderProperties {
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
 				String[] parts = value.split(" ");
 
-				// TODO: Support raw textures
-				if (parts.length > 1) {
-					Iris.logger.warn("Custom texture directive for stage " + stageName + ", sampler " + samplerName + " contains more parts than we expected: " + value);
-					return;
-				}
-
 				Optional<TextureStage> optionalTextureStage = TextureStage.parse(stageName);
 
 				if (!optionalTextureStage.isPresent()) {
@@ -299,6 +296,32 @@ public class ShaderProperties {
 				}
 
 				TextureStage stage = optionalTextureStage.get();
+
+				if (parts.length > 1) {
+					String newSamplerName = "customtex" + customTexAmount;
+					customTexAmount++;
+					TextureType type = null;
+					// Raw texture handling
+					if (parts.length == 6) {
+						// 1D texture handling
+						type = TextureType.TEXTURE_1D;
+						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
+					} else if (parts.length == 7) {
+						// 2D texture handling
+						type = TextureType.TEXTURE_2D;
+						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+					} else if (parts.length == 8) {
+						// 3D texture handling
+						type = TextureType.TEXTURE_3D;
+						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
+					} else {
+						Iris.logger.warn("Unknown texture directive for " + key + ": " + value);
+					}
+
+					customTexturePatching.put(new Tri<>(samplerName, type, stage), newSamplerName);
+
+					return;
+				}
 
 				customTextures.computeIfAbsent(stage, _stage -> new Object2ObjectOpenHashMap<>())
 						.put(samplerName, new TextureDefinition.PNGDefinition(value));
@@ -599,6 +622,11 @@ public class ShaderProperties {
 
 	public EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> getCustomTextures() {
 		return customTextures;
+	}
+
+	public Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getCustomTexturePatching() {
+
+		return customTexturePatching;
 	}
 
 	public Object2ObjectMap<String, TextureDefinition> getIrisCustomTextures() {

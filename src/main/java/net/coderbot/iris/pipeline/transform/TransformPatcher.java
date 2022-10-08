@@ -6,6 +6,10 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.helpers.Tri;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -28,7 +32,7 @@ import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
  * do shader transformation.
- * 
+ *
  * The TransformPatcher does caching on the source string and associated
  * parameters. For this to work, all objects contained in a parameter must have
  * an equals method and they must never be changed after having been used for
@@ -158,12 +162,15 @@ public class TransformPatcher {
 					switch (parameters.patch) {
 						case ATTRIBUTES:
 							AttributeTransformer.transform(transformer, tree, root, (AttributeParameters) parameters);
+							TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, ((AttributeParameters) parameters).getTextureMap());
 							break;
 						case SODIUM_TERRAIN:
 							SodiumTerrainTransformer.transform(transformer, tree, root, parameters);
+							TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, ((SodiumParameters) parameters).getTextureMap());
 							break;
 						case COMPOSITE:
 							CompositeTransformer.transform(transformer, tree, root);
+							TextureTransformer.transform(transformer, tree, root, ((CompositeParameters) parameters).stage, ((CompositeParameters) parameters).getTextureMap());
 							break;
 					}
 					CompatibilityTransformer.transformEach(transformer, tree, root, parameters);
@@ -210,15 +217,15 @@ public class TransformPatcher {
 		return result;
 	}
 
-	public static Map<PatchShaderType, String> patchAttributes(String vertex, String geometry, String fragment, InputAvailability inputs) {
-		return transform(vertex, geometry, fragment, new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs));
+	public static Map<PatchShaderType, String> patchAttributes(String vertex, String geometry, String fragment, InputAvailability inputs, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(vertex, geometry, fragment, new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs, textureMap));
 	}
 
-	public static Map<PatchShaderType, String> patchSodiumTerrain(String vertex, String geometry, String fragment) {
-		return transform(vertex, geometry, fragment, new Parameters(Patch.SODIUM_TERRAIN));
+	public static Map<PatchShaderType, String> patchSodiumTerrain(String vertex, String geometry, String fragment, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(vertex, geometry, fragment, new SodiumParameters(Patch.SODIUM_TERRAIN, textureMap));
 	}
 
-	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
-		return transform(vertex, geometry, fragment, new Parameters(Patch.COMPOSITE));
+	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment, TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE, stage, textureMap));
 	}
 }

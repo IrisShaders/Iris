@@ -7,6 +7,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.TextureScaleOverride;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.helpers.Tri;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.vendored.joml.Vector2i;
 
 import java.util.Set;
@@ -33,6 +36,7 @@ public class PackDirectives {
 	private boolean prepareBeforeShadow;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, TextureScaleOverride> scaleOverrides = new Object2ObjectOpenHashMap<>();
+	private Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
@@ -65,6 +69,7 @@ public class PackDirectives {
 		scaleOverrides = properties.getTextureScaleOverrides();
 		particlesBeforeDeferred = properties.getParticlesBeforeDeferred().orElse(false);
 		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
+		textureMap = properties.getCustomTexturePatching();
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -77,6 +82,7 @@ public class PackDirectives {
 		scaleOverrides = directives.scaleOverrides;
 		particlesBeforeDeferred = directives.particlesBeforeDeferred;
 		prepareBeforeShadow = directives.prepareBeforeShadow;
+		textureMap = directives.textureMap;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -153,6 +159,10 @@ public class PackDirectives {
 
 	public boolean isPrepareBeforeShadow() {
 		return prepareBeforeShadow;
+	}
+
+	public Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap() {
+		return textureMap;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {
