@@ -66,7 +66,7 @@ The paid versions are not supported, but Continuum 2.0.4 works decently.
 * [Super Duper Vanilla Shaders](https://www.curseforge.com/minecraft/customization/super-duper-vanilla-shaders)
   * Supported in Iris 1.2.5
 * [Oceano Shaders 3.0](https://www.curseforge.com/minecraft/customization/oceano-shaders)
-* [Skylec v4.0](https://www.curseforge.com/minecraft/customization/skylec-shader)
+* Skylec v4.0
 * [RRe36's Shader](https://www.curseforge.com/minecraft/customization/rre36s-shader)
 * [Tea V1.5.3](https://www.curseforge.com/minecraft/customization/beyondbelief-vanilla-reborn)
 * [XorDev's shaders](https://github.com/XorDev/Minecraft-Shaderpacks)
