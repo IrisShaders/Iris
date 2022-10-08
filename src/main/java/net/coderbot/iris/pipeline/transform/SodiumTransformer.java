@@ -48,7 +48,7 @@ public class SodiumTransformer {
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			if (parameters.inputs.hasNormal()) {
 				root.rename("gl_Normal", "iris_Normal");
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec3 iris_Normal;");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
@@ -58,7 +58,7 @@ public class SodiumTransformer {
 		// computed on the CPU-side of things
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix",
 				"mat3(iris_NormalMatrix)");
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform mat4 iris_NormalMatrix;");
 
 		// TODO: All of the transformed variants of the input matrices, preferably
@@ -107,7 +107,7 @@ public class SodiumTransformer {
 			tree.prependMain(t, "_vert_init();");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 		} else {
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform mat4 iris_ModelViewMatrix;",
 					"uniform mat4 iris_ProjectionMatrix;");
 		}

@@ -46,7 +46,7 @@ public class CompositeTransformer {
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 					"vec4(UV0, 0.0, 1.0)");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "in vec2 UV0;");
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec2 UV0;");
 			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 1, 7);
 		}
 
