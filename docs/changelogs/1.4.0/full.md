@@ -5,6 +5,7 @@ This release also includes a few bug fixes and DSA support for performance impro
 
 This release was developed by douira and IMS.
 
+**There is a new document for debugging; see [debugging.md](docs/usage/debugging.md).
 ## Features
 
 - Added GLSL Transformer (douira)
