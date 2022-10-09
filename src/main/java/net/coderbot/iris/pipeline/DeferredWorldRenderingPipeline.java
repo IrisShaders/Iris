@@ -63,6 +63,7 @@ import net.coderbot.iris.texture.pbr.PBRTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import net.coderbot.iris.texture.pbr.PBRType;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
@@ -78,6 +79,12 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.*;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.function.IntFunction;
+import java.util.function.Supplier;
 import org.lwjgl.opengl.GL43C;
 
 import java.util.Collections;
@@ -159,6 +166,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private int currentSpecularTexture;
 	private PackDirectives packDirectives;
 
+	private final CustomUniforms customUniforms;
+
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
 
@@ -223,6 +232,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.flippedBeforeShadow = ImmutableSet.of();
 
+		this.customUniforms = programs.getPack().customUniforms.build(
+			holder -> CommonUniforms.addNonDynamicUniforms(holder, programs.getPack().getIdMap(), programs.getPackDirectives(), this.updateNotifier)
+		);
+
 		BufferFlipper flipper = new BufferFlipper();
 
 		this.centerDepthSampler = new CenterDepthSampler(renderTargets, programs.getPackDirectives().getCenterDepthHalfLife());
@@ -242,25 +255,25 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.prepareRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getPrepare(), programs.getPrepareCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.PREPARE),
-				programs.getPackDirectives().getExplicitFlips("prepare_pre"));
+				programs.getPackDirectives().getExplicitFlips("prepare_pre"), customUniforms);
 
 		flippedAfterPrepare = flipper.snapshot();
 
 		this.deferredRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getDeferred(), programs.getDeferredCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.DEFERRED),
-				programs.getPackDirectives().getExplicitFlips("deferred_pre"));
+				programs.getPackDirectives().getExplicitFlips("deferred_pre"), customUniforms);
 
 		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(programs.getPackDirectives(), programs.getComposite(), programs.getCompositeCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.COMPOSITE_AND_FINAL),
-				programs.getPackDirectives().getExplicitFlips("composite_pre"));
+				programs.getPackDirectives().getExplicitFlips("composite_pre"), customUniforms);
 		this.finalPassRenderer = new FinalPassRenderer(programs, renderTargets, customTextureManager.getNoiseTexture(), updateNotifier, flipper.snapshot(),
 				centerDepthSampler, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.COMPOSITE_AND_FINAL),
-				this.compositeRenderer.getFlippedAtLeastOnceFinal());
+				this.compositeRenderer.getFlippedAtLeastOnceFinal(), customUniforms);
 
 		// [(textured=false,lightmap=false), (textured=true,lightmap=false), (textured=true,lightmap=true)]
 		ProgramId[] ids = new ProgramId[] {
@@ -299,7 +312,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
 
 			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
-				programs.getPackDirectives(), shadowRenderTargets, false);
+				programs.getPackDirectives(), shadowRenderTargets, customUniforms);
 		} else {
 			this.shadowClearPasses = ImmutableList.of();
 			this.shadowClearPassesFull = ImmutableList.of();
@@ -351,11 +364,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				}
 			});
 		});
-
-		if (shadowRenderer != null) {
-			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
-			shadowRenderer.setUsesImages(shadowProgram != null && shadowProgram.getActiveImages() > 0);
-		}
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programs.getPackDirectives().getRenderTargetDirectives());
@@ -426,7 +434,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
 			shadowRenderTargets == null ? null : createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedAfterPrepare, flippedAfterTranslucent,
-			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 }) : null);
+			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 }) : null, customUniforms);
+
+		// first optimization pass
+		this.customUniforms.optimise();
 	}
 
 	private void checkWorld() {
@@ -620,7 +631,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private Pass createPassInner(ProgramBuilder builder, IdMap map, ProgramDirectives programDirectives,
 								 PackDirectives packDirectives, InputAvailability availability, boolean shadow) {
 
-		CommonUniforms.addCommonUniforms(builder, map, packDirectives, updateNotifier, null);
+		CommonUniforms.addDynamicUniforms(builder, FogMode.PER_VERTEX);
+		this.customUniforms.assignTo(builder);
 
 		Supplier<ImmutableSet<Integer>> flipped;
 
@@ -684,8 +696,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		AlphaTest alphaTestOverride = programDirectives.getAlphaTestOverride().orElse(null);
 
-		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
+		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
 				programDirectives.getBlendModeOverride(), programDirectives.getBufferBlendOverrides(), shadow);
+
+		// tell the customUniforms that those locations belong to this pass
+		this.customUniforms.mapholderToPass(builder, pass);
+
+		return pass;
 	}
 
 	private boolean isPostChain;
@@ -757,10 +774,12 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				RenderSystem.viewport(0, 0, main.width, main.height);
 			}
 
-			if (program != null && !sodiumTerrainRendering) {
+			if (program != null) {
 				program.use();
 			}
 
+			// push the custom uniforms
+			DeferredWorldRenderingPipeline.this.customUniforms.push(this);
 			if (alphaTestOverride != null) {
 				AlphaTestStorage.overrideAlphaTest(alphaTestOverride);
 			} else {
@@ -825,7 +844,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
 
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
-
 		// Destroy our render targets
 		//
 		// While it's possible to just clear them instead and reuse them, we'd need to investigate whether or not this
@@ -1098,9 +1116,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		}
 
 		updateNotifier.onNewFrame();
-
 		// Get ready for world rendering
 		prepareRenderTargets();
+
+		// Update custom uniforms
+		DeferredWorldRenderingPipeline.this.customUniforms.update();
 
 		setPhase(WorldRenderingPhase.SKY);
 
