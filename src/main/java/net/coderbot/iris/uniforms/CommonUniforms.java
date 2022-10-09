@@ -135,7 +135,7 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
 			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
 			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
-			.uniform4f(ONCE, "entityColor", Vector4f::new)
+			.uniform4f(ONCE, "entityColor", () -> new Vector4f(0, 0, 0, 0))
 			.uniform1f(ONCE, "pi", () -> Math.PI)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
