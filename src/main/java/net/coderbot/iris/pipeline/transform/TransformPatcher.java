@@ -126,7 +126,7 @@ public class TransformPatcher {
 				// parser can be set to the correct version
 				Matcher matcher = versionPattern.matcher(input);
 				if (!matcher.find()) {
-					throw new IllegalArgumentException("No #version directive found in source code!");
+					throw new IllegalArgumentException("No #version directive found in source code! See debugging.md for more information.");
 				}
 				Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 				transformer.getLexer().version = version;
@@ -151,7 +151,7 @@ public class TransformPatcher {
 				violation.ifPresent(id -> {
 					throw new SemanticException(
 							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_ and irisMain). This isn't currently supported. Violation: "
-									+ id.getName());
+									+ id.getName() + ". See debugging.md for more information.");
 				});
 
 				Root.indexBuildSession(tree, () -> {
