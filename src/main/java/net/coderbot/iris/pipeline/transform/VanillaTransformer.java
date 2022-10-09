@@ -30,7 +30,7 @@ public class VanillaTransformer {
 			if (parameters.inputs.hasTex()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 						"vec4(iris_UV0, 0.0, 1.0)");
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 						"in vec2 iris_UV0;");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
@@ -40,7 +40,7 @@ public class VanillaTransformer {
 			if (parameters.inputs.hasLight()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
 						"vec4(iris_UV2, 0.0, 1.0)");
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 						"in ivec2 iris_UV2;");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
@@ -55,7 +55,7 @@ public class VanillaTransformer {
 			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
 		}
 
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform vec4 iris_ColorModulator;");
 
 		if (parameters.inputs.hasColor()) {
@@ -69,7 +69,7 @@ public class VanillaTransformer {
 			}
 
 			if (parameters.type.glShaderType == ShaderType.VERTEX) {
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 						"in vec4 iris_Color;");
 			}
 		} else {
@@ -86,7 +86,7 @@ public class VanillaTransformer {
 							"vec3(0.0, 0.0, 1.0)");
 				}
 
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 						"in vec3 iris_Normal;");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_Normal",
@@ -94,7 +94,7 @@ public class VanillaTransformer {
 			}
 		}
 
-		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform mat4 iris_LightmapTextureMatrix;",
 				"uniform mat4 iris_TextureMat;",
 				"uniform mat4 iris_ModelViewMat;");
@@ -125,7 +125,7 @@ public class VanillaTransformer {
 				// TRANSFORM: this is fine since the AttributeTransformer has a different name
 				// in the vertex shader
 				root.rename("main", "irisMain");
-				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 						"vec3 iris_vertex_offset = vec3(0.0);");
 				tree.parseAndInjectNodes(t, ASTInjectionPoint.END,
 						"uniform vec2 iris_ScreenSize;",
@@ -176,7 +176,7 @@ public class VanillaTransformer {
 								"offset.x, offset.y, offset.z, 1.0); }");
 			}
 		} else if (parameters.inputs.isNewLines()) {
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"const float iris_VIEW_SHRINK = 1.0 - (1.0 / 256.0);",
 					"const mat4 iris_VIEW_SCALE = mat4(" +
 							"iris_VIEW_SHRINK, 0.0, 0.0, 0.0," +
@@ -190,7 +190,7 @@ public class VanillaTransformer {
 		}
 
 		root.rename("gl_ProjectionMatrix", "iris_ProjMat");
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform mat4 iris_ProjMat;");
 	}
 }
