@@ -52,10 +52,10 @@ public class SodiumTerrainPipeline {
 		terrainSource.ifPresent(sources -> {
 			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
 				sources.getVertexSource().orElse(null),
-				null, 
+				sources.getGeometrySource().orElse(null), 
 				sources.getFragmentSource().orElse(null));
 			terrainVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
-			terrainGeometry = sources.getGeometrySource();
+			terrainGeometry = Optional.ofNullable(result.get(PatchShaderType.GEOMETRY));
 			terrainFragment = Optional.ofNullable(result.get(PatchShaderType.FRAGMENT));
 
 			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", 
@@ -65,10 +65,10 @@ public class SodiumTerrainPipeline {
 		translucentSource.ifPresent(sources -> {
 			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
 				sources.getVertexSource().orElse(null),
-				null,
+				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null));
 			translucentVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
-			translucentGeometry = sources.getGeometrySource();
+			translucentGeometry = Optional.ofNullable(result.get(PatchShaderType.GEOMETRY));
 			translucentFragment = Optional.ofNullable(result.get(PatchShaderType.FRAGMENT));
 
 			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium",
@@ -78,10 +78,10 @@ public class SodiumTerrainPipeline {
 		shadowSource.ifPresent(sources -> {
 			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
 				sources.getVertexSource().orElse(null),
-				null,
+				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null));
 			shadowVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
-			shadowGeometry = sources.getGeometrySource();
+			shadowGeometry = Optional.ofNullable(result.get(PatchShaderType.GEOMETRY));
 			shadowFragment = Optional.ofNullable(result.get(PatchShaderType.FRAGMENT));
 
 			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium",
