@@ -72,7 +72,7 @@ public class SodiumTransformer {
 				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 						"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 			}
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					// translated from sodium's chunk_vertex.glsl
 					"vec3 _vert_position;",
 					"vec2 _vert_tex_diffuse_coord;",
