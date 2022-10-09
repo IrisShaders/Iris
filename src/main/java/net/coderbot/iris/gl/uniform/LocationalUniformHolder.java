@@ -75,6 +75,13 @@ public interface LocationalUniformHolder extends UniformHolder {
 	}
 
 	@Override
+	default LocationalUniformHolder uniformVanilla3f(UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Vector3f> value) {
+		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, new VanillaVector3Uniform(id, value)));
+
+		return this;
+	}
+
+	@Override
 	default LocationalUniformHolder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
 		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.truncated(id, value)));
 

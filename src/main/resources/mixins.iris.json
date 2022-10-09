@@ -27,7 +27,6 @@
     "MixinItem",
     "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
-    "MixinKeyMapping",
     "MixinLevelRenderer",
     "MixinMinecraft_Keybinds",
     "MixinMinecraft_Images",

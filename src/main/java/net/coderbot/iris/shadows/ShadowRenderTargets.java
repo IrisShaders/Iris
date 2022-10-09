@@ -124,9 +124,7 @@ public class ShadowRenderTargets {
 	public void copyPreTranslucentDepth() {
 		if (translucentDepthDirty) {
 			translucentDepthDirty = false;
-			depthSourceFb.bindAsReadBuffer();
-			noTranslucentsDestFb.bindAsDrawBuffer();
-			GlStateManager._glBlitFrameBuffer(0, 0, resolution, resolution,
+			IrisRenderSystem.blitFramebuffer(depthSourceFb.getId(), noTranslucentsDestFb.getId(), 0, 0, resolution, resolution,
 				0, 0, resolution, resolution,
 				GL30C.GL_DEPTH_BUFFER_BIT,
 				GL30C.GL_NEAREST);

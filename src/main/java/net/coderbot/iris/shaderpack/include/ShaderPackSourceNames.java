@@ -39,7 +39,7 @@ public class ShaderPackSourceNames {
 
 		return anyFound;
 	}
-	
+
 	private static ImmutableList<String> findPotentialStarts() {
 		ImmutableList.Builder<String> potentialFileNames = ImmutableList.builder();
 
@@ -53,18 +53,18 @@ public class ShaderPackSourceNames {
 					suffix = Integer.toString(i);
 				}
 
-				addCompositeStarts(potentialFileNames, name + suffix);
+				addComputeStarts(potentialFileNames, name + suffix);
 			}
 		}
 
 		for (ProgramId programId : ProgramId.values()) {
-			if (programId == ProgramId.Final) {
-				addCompositeStarts(potentialFileNames, programId.getSourceName());
+			if (programId == ProgramId.Final || programId == ProgramId.Shadow) {
+				addComputeStarts(potentialFileNames, programId.getSourceName());
 			} else {
 				addStarts(potentialFileNames, programId.getSourceName());
 			}
 		}
-		
+
 		return potentialFileNames.build();
 	}
 
@@ -74,7 +74,7 @@ public class ShaderPackSourceNames {
 		potentialFileNames.add(baseName + ".fsh");
 	}
 
-	private static void addCompositeStarts(ImmutableList.Builder<String> potentialFileNames, String baseName) {
+	private static void addComputeStarts(ImmutableList.Builder<String> potentialFileNames, String baseName) {
 		addStarts(potentialFileNames, baseName);
 
 		for (int j = 0; j < 27; j++) {

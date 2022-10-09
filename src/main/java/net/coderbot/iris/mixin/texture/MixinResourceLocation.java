@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin.texture;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
@@ -10,22 +11,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value = ResourceLocation.class, priority = 1010)
 public class MixinResourceLocation {
 	@Inject(method = "isValidPath", at = @At("HEAD"), cancellable = true)
-	private static void iris$allowInvalidPaths(String path, CallbackInfoReturnable<Boolean> cir) {
-		if (path.equals("DUMMY") || path.equals("\u0001")) {
-			// This is here to solve a weird case in DFU that expects minecraft:DUMMY to be invalid, or cases where people pass an "empty" string that is actually \u0001.
+	private static void iris$blockDUMMY(String string, CallbackInfoReturnable<Boolean> cir) {
+		if (string.equals("DUMMY")) {
 			cir.setReturnValue(false);
-			return;
 		}
+	}
 
-		for (int i = 0; i < path.length(); ++i) {
-			if (ResourceLocation.validPathChar(path.charAt(i))) {
-				continue;
-			}
-
-			Iris.logger.warn("Detected invalid path '" + path + "'. Iris allows this path to be used, but the resource pack developer should fix it!");
-			break;
+	@Inject(method = "validPathChar", at = @At("HEAD"), cancellable = true)
+	private static void iris$allowInvalidPaths(char c, CallbackInfoReturnable<Boolean> cir) {
+		if (c >= 'A' && c <= 'Z') {
+			cir.setReturnValue(true);
 		}
-
-		cir.setReturnValue(true);
 	}
 }

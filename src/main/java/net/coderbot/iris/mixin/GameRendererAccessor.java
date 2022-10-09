@@ -20,7 +20,4 @@ public interface GameRendererAccessor {
 
 	@Invoker
 	void invokeBobHurt(PoseStack poseStack, float tickDelta);
-
-	@Invoker
-	double invokeGetFov(Camera camera, float tickDelta, boolean bobView);
 }
