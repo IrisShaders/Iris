@@ -107,9 +107,9 @@ public final class CommonUniforms {
 		uniforms.uniform1i("renderStage", () -> GbufferPrograms.getCurrentPhase().ordinal(), StateUpdateNotifiers.phaseChangeNotifier);
 	}
 
-	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier) {
+	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier, FogMode fogMode) {
 		CommonUniforms.addNonDynamicUniforms(uniforms, idMap, directives, updateNotifier);
-		CommonUniforms.addDynamicUniforms(uniforms);
+		CommonUniforms.addDynamicUniforms(uniforms, fogMode);
 	}
 
 	public static void addNonDynamicUniforms(UniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier) {

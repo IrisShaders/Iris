@@ -17,16 +17,16 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public class BiomeParameters {
 	private static final Minecraft client = Minecraft.getInstance();
-	
+
 	public static void addBiomeUniforms(UniformHolder uniforms) {
-		
+
 		uniforms
 				.uniform1i(PER_TICK, "biome", playerI(player ->
-						BuiltinRegistries.BIOME.getId(player.level.getBiome(player.blockPosition()))))
+						BuiltinRegistries.BIOME.getId(player.level.getBiome(player.blockPosition()).value())))
 				.uniform1i(PER_TICK, "biome_category", playerI(player ->
-						player.level.getBiome(player.blockPosition()).getBiomeCategory().ordinal()))
+						Biome.getBiomeCategory(player.level.getBiome(player.blockPosition())).ordinal()))
 				.uniform1i(PER_TICK, "biome_precipitation", playerI(player -> {
-					Biome.Precipitation precipitation = player.level.getBiome(player.blockPosition()).getPrecipitation();
+					Biome.Precipitation precipitation = player.level.getBiome(player.blockPosition()).value().getPrecipitation();
 					switch (precipitation){
 						case NONE: return 0;
 						case RAIN: return 1;
@@ -35,23 +35,23 @@ public class BiomeParameters {
 					throw new IllegalStateException("Unknown precipitation type:" + precipitation);
 				}))
 				.uniform1f(PER_TICK, "rainfall", playerF(player ->
-						player.level.getBiome(player.blockPosition()).getDownfall()))
+						player.level.getBiome(player.blockPosition()).value().getDownfall()))
 				.uniform1f(PER_TICK, "temperature", playerF(player ->
-						player.level.getBiome(player.blockPosition()).getTemperature(player.blockPosition())))
-				
-				
+						player.level.getBiome(player.blockPosition()).value().getBaseTemperature()))
+
+
 				.uniform1i(ONCE, "PPT_NONE", () -> 0)
 				.uniform1i(ONCE, "PPT_RAIN", () -> 1)
 				.uniform1i(ONCE, "PPT_SNOW", () -> 2);
-		
-		
-		
-		
+
+
+
+
 		addBiomes(uniforms);
 		addCategories(uniforms);
-		
+
 	}
-	
+
 	public static void addBiomes(UniformHolder uniforms) {
 		for (Biome biome : BuiltinRegistries.BIOME) {
 			ResourceLocation id = BuiltinRegistries.BIOME.getKey(biome);
@@ -62,7 +62,7 @@ public class BiomeParameters {
 			uniforms.uniform1i(ONCE, "BIOME_" + id.getPath().toUpperCase(Locale.ROOT), () -> rawId);
 		}
 	}
-	
+
 	public static void addCategories(UniformHolder uniforms) {
 		Biome.BiomeCategory[] categories = Biome.BiomeCategory.values();
 		for (int i = 0; i < categories.length; i++) {
@@ -70,7 +70,7 @@ public class BiomeParameters {
 			uniforms.uniform1i(ONCE, "CAT_" + categories[i].getName().toUpperCase(Locale.ROOT), () -> finalI);
 		}
 	}
-	
+
 	static IntSupplier playerI(ToIntFunction<LocalPlayer> function) {
 		return () -> {
 			LocalPlayer player = client.player;
@@ -81,7 +81,7 @@ public class BiomeParameters {
 			}
 		};
 	}
-	
+
 	static FloatSupplier playerF(ToFloatFunction<LocalPlayer> function) {
 		return () -> {
 			LocalPlayer player = client.player;
@@ -92,7 +92,7 @@ public class BiomeParameters {
 			}
 		};
 	}
-	
+
 	@FunctionalInterface
 	public interface ToFloatFunction<T> {
 		/**

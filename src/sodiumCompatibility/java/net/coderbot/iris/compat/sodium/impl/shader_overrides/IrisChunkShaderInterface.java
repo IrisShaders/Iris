@@ -15,6 +15,7 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32C;
@@ -41,14 +42,16 @@ public class IrisChunkShaderInterface {
 	private final ProgramImages irisProgramImages;
 	private final List<BufferBlendOverride> bufferBlendOverrides;
 	private final boolean hasOverrides;
+	private CustomUniforms customUniforms;
 
 	public IrisChunkShaderInterface(int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
-									boolean isShadowPass, BlendModeOverride blendModeOverride, List<BufferBlendOverride> bufferOverrides, float alpha) {
+									boolean isShadowPass, BlendModeOverride blendModeOverride, List<BufferBlendOverride> bufferOverrides, float alpha, CustomUniforms customUniforms) {
 		this.uniformModelViewMatrix = contextExt.bindUniformIfPresent("iris_ModelViewMatrix", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("iris_ProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformRegionOffset = contextExt.bindUniformIfPresent("u_RegionOffset", GlUniformFloat3v::new);
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("iris_NormalMatrix", GlUniformMatrix4f::new);
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
+		this.customUniforms = customUniforms;
 
 		this.alpha = alpha;
 
@@ -57,7 +60,9 @@ public class IrisChunkShaderInterface {
 		this.hasOverrides = bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty();
 		this.fogShaderComponent = new IrisShaderFogComponent(contextExt);
 
-		this.irisProgramUniforms = pipeline.initUniforms(handle);
+		ProgramUniforms.Builder builder = pipeline.initUniforms(handle);
+		customUniforms.mapholderToPass(builder, this);
+		this.irisProgramUniforms = builder.buildUniforms();
 		this.irisProgramSamplers
 				= isShadowPass? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
 		this.irisProgramImages = isShadowPass ? pipeline.initShadowImages(handle) : pipeline.initTerrainImages(handle);
@@ -84,6 +89,8 @@ public class IrisChunkShaderInterface {
 		irisProgramUniforms.update();
 		irisProgramSamplers.update();
 		irisProgramImages.update();
+
+		customUniforms.push(this);
 	}
 
 	public void restore() {

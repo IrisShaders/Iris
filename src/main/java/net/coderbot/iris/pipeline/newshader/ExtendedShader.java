@@ -17,8 +17,10 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.gl.uniform.DynamicLocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
@@ -37,6 +39,7 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	private final ProgramImages.Builder imageBuilder;
 	private final List<BufferBlendOverride> bufferBlendOverrides;
 	private final boolean hasOverrides;
+	private final CustomUniforms customUniforms;
 	NewWorldRenderingPipeline parent;
 	ProgramUniforms uniforms;
 	GlFramebuffer writingToBeforeTranslucent;
@@ -52,16 +55,18 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
-						  Consumer<DynamicUniformHolder> uniformCreator, boolean isIntensity,
-						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs, @Nullable List<BufferBlendOverride> bufferBlendOverrides) throws IOException {
+						  Consumer<DynamicLocationalUniformHolder> uniformCreator, boolean isIntensity,
+						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs, @Nullable List<BufferBlendOverride> bufferBlendOverrides, CustomUniforms customUniforms) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
 
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
 		uniformCreator.accept(uniformBuilder);
+		customUniforms.mapholderToPass(uniformBuilder, this);
 
 		uniforms = uniformBuilder.buildUniforms();
+		this.customUniforms = customUniforms;
 		this.writingToBeforeTranslucent = writingToBeforeTranslucent;
 		this.writingToAfterTranslucent = writingToAfterTranslucent;
 		this.baseline = baseline;
@@ -111,6 +116,8 @@ public class ExtendedShader extends ShaderInstance implements SamplerHolder, Ima
 
 		super.apply();
 		uniforms.update();
+
+		customUniforms.push(this);
 
 		if (currentImages == null) {
 			// rebuild if needed
