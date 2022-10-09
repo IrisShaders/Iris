@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline.transform;
 import java.util.stream.Stream;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
+import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
@@ -23,6 +24,16 @@ class AttributeTransformer {
 			TranslationUnit tree,
 			Root root,
 			AttributeParameters parameters) {
+
+		boolean isCore = (tree.getVersionStatement().profile == Profile.CORE || (tree.getVersionStatement().profile == null && tree.getVersionStatement().version.number > 140));
+
+		if (isCore) {
+			if (parameters.type == PatchShaderType.VERTEX) {
+				throw new IllegalStateException("Vertex shaders must be in the compatibility profile to run properly!");
+			}
+			return;
+		}
+
 		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both ways to refer to the
 		// lightmap texture coordinate.
 		// See https://github.com/IrisShaders/Iris/issues/1149
