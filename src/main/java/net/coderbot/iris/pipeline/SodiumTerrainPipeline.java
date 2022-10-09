@@ -52,13 +52,13 @@ public class SodiumTerrainPipeline {
 		terrainSource.ifPresent(sources -> {
 			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
 				sources.getVertexSource().orElse(null),
-				sources.getGeometrySource().orElse(null), 
+				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null));
 			terrainVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
 			terrainGeometry = Optional.ofNullable(result.get(PatchShaderType.GEOMETRY));
 			terrainFragment = Optional.ofNullable(result.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", 
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium",
 				terrainVertex.orElse(null), terrainGeometry.orElse(null), terrainFragment.orElse(null));
 		});
 
