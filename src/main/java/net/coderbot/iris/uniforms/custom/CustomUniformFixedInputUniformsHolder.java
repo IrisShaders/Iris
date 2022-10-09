@@ -108,6 +108,11 @@ public class CustomUniformFixedInputUniformsHolder {
 		}
 
 		@Override
+		public UniformHolder uniformVanilla3f(UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Vector3f> value) {
+			return this.put(name, new Float3VanillaVectorCachedUniform(name, updateFrequency, value));
+		}
+
+		@Override
 		public Builder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
 			Vector3f held = new Vector3f();
 			return this.put(name, new Float3VectorCachedUniform(name, updateFrequency, () -> {

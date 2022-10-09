@@ -306,7 +306,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
 
 			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
-				programs.getPackDirectives(), shadowRenderTargets);
+				programs.getPackDirectives(), shadowRenderTargets, customUniforms);
 		} else {
 			this.shadowClearPasses = ImmutableList.of();
 			this.shadowClearPassesFull = ImmutableList.of();
