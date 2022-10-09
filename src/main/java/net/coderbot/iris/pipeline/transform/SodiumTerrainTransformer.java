@@ -25,7 +25,9 @@ class SodiumTerrainTransformer {
 			Root root,
 			Parameters parameters) {
 		switch (parameters.type) {
+			// For Sodium patching, treat fragment and geometry the same
 			case FRAGMENT:
+			case GEOMETRY:
 				transformFragment(t, tree, root, parameters);
 				break;
 			case VERTEX:

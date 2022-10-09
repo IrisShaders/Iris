@@ -52,20 +52,20 @@ public class SodiumTerrainPipeline {
 		terrainSource.ifPresent(sources -> {
 			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
 				sources.getVertexSource().orElse(null),
-				null, 
+				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null));
 			terrainVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
 			terrainGeometry = sources.getGeometrySource();
 			terrainFragment = Optional.ofNullable(result.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", 
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium",
 				terrainVertex.orElse(null), terrainGeometry.orElse(null), terrainFragment.orElse(null));
 		});
 
 		translucentSource.ifPresent(sources -> {
 			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
 				sources.getVertexSource().orElse(null),
-				null,
+				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null));
 			translucentVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
 			translucentGeometry = sources.getGeometrySource();
@@ -78,7 +78,7 @@ public class SodiumTerrainPipeline {
 		shadowSource.ifPresent(sources -> {
 			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
 				sources.getVertexSource().orElse(null),
-				null,
+				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null));
 			shadowVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
 			shadowGeometry = sources.getGeometrySource();
