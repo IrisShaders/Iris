@@ -140,6 +140,8 @@ public class TransformPatcher {
 				if (tree == null) {
 					continue;
 				}
+				tree.outputOptions.enablePrintInfo();
+
 				parameters.type = type;
 				Root root = tree.getRoot();
 
