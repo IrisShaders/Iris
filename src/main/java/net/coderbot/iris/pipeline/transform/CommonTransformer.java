@@ -99,10 +99,10 @@ public class CommonTransformer {
 
 		// TODO: This doesn't handle geometry shaders... How do we do that?
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"out float iris_FogFragCoord;");
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in float iris_FogFragCoord;");
 		}
 
@@ -111,7 +111,7 @@ public class CommonTransformer {
 			// Renewed to compile. It works because they don't actually use gl_FrontColor
 			// even though they write to it.
 
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"vec4 iris_FrontColor;");
 			root.rename("gl_FrontColor", "iris_FrontColor");
 		}
@@ -144,7 +144,7 @@ public class CommonTransformer {
 						new ReferenceExpression(new Identifier("iris_FragData" + replaceIndexes.get(i))));
 			}
 			for (long index : replaceIndexesSet) {
-				tree.injectNode(ASTInjectionPoint.BEFORE_FUNCTIONS,
+				tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS,
 						fragDataDeclaration.getInstanceFor(tree,
 								new LiteralExpression(Type.INT32, index),
 								new Identifier("iris_FragData" + index)));

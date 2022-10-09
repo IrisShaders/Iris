@@ -36,4 +36,8 @@ public class ClearPass {
 		RenderSystem.clearColor(color.x, color.y, color.z, color.w);
 		RenderSystem.clear(clearFlags, Minecraft.ON_OSX);
 	}
+
+	public GlFramebuffer getFramebuffer() {
+		return framebuffer;
+	}
 }

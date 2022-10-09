@@ -3,6 +3,7 @@ package net.coderbot.iris.pipeline.transform;
 import java.util.stream.Stream;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
+import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
@@ -23,6 +24,16 @@ class AttributeTransformer {
 			TranslationUnit tree,
 			Root root,
 			AttributeParameters parameters) {
+
+		boolean isCore = (tree.getVersionStatement().profile == Profile.CORE || (tree.getVersionStatement().profile == null && tree.getVersionStatement().version.number > 140));
+
+		if (isCore) {
+			if (parameters.type == PatchShaderType.VERTEX) {
+				throw new IllegalStateException("Vertex shaders must be in the compatibility profile to run properly!");
+			}
+			return;
+		}
+
 		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both ways to refer to the
 		// lightmap texture coordinate.
 		// See https://github.com/IrisShaders/Iris/issues/1149
@@ -73,7 +84,7 @@ class AttributeTransformer {
 			// figure out its type, then replace all occurrences of gl_MultiTexCoord3 with
 			// the correct conversion from mc_midTexCoord's declared type to vec4.
 			root.rename("gl_MultiTexCoord3", "mc_midTexCoord");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"attribute vec4 mc_midTexCoord;");
 		}
 	}
@@ -85,14 +96,14 @@ class AttributeTransformer {
 			boolean hasLightmap) {
 		root.rename("gl_TextureMatrix", "iris_TextureMatrix");
 
-		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"const float iris_ONE_OVER_256 = 0.00390625;",
 				"const float iris_ONE_OVER_32 = iris_ONE_OVER_256 * 8;");
 		if (hasLightmap) {
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"mat4 iris_LightmapTextureMatrix = gl_TextureMatrix[2];");
 		} else {
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "mat4 iris_LightmapTextureMatrix =" +
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "mat4 iris_LightmapTextureMatrix =" +
 					"mat4(iris_ONE_OVER_256, 0.0, 0.0, 0.0," +
 					"     0.0, iris_ONE_OVER_256, 0.0, 0.0," +
 					"     0.0, 0.0, iris_ONE_OVER_256, 0.0," +
@@ -100,7 +111,7 @@ class AttributeTransformer {
 		}
 
 		// column major
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "mat4 iris_TextureMatrix[8] = mat4[8](" +
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "mat4 iris_TextureMatrix[8] = mat4[8](" +
 				"gl_TextureMatrix[0]," +
 				"iris_LightmapTextureMatrix," +
 				"mat4(1.0)," +
@@ -128,7 +139,7 @@ class AttributeTransformer {
 			// add our own declarations
 			// TODO: We're exposing entityColor to this stage even if it isn't declared in
 			// this stage. But this is needed for the pass-through behavior.
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform sampler2D iris_overlay;",
 					"out vec4 entityColor;",
 					"out vec4 iris_vertexColor;",
@@ -151,7 +162,7 @@ class AttributeTransformer {
 			root.replaceReferenceExpressions(t, "entityColor", "entityColor[0]");
 
 			// TODO: this is passthrough behavior
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"out vec4 entityColorGS;",
 					"in vec4 entityColor[];",
 					"out vec4 iris_vertexColorGS;",

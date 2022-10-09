@@ -105,10 +105,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private final ProgramTable<Pass> table;
 
-	private final ImmutableList<ClearPass> clearPassesFull;
-	private final ImmutableList<ClearPass> clearPasses;
-	private final ImmutableList<ClearPass> shadowClearPasses;
-	private final ImmutableList<ClearPass> shadowClearPassesFull;
+	private ImmutableList<ClearPass> clearPassesFull;
+	private ImmutableList<ClearPass> clearPasses;
+	private ImmutableList<ClearPass> shadowClearPasses;
+	private ImmutableList<ClearPass> shadowClearPassesFull;
 
 	private final CompositeRenderer prepareRenderer;
 
@@ -904,6 +904,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			deferredRenderer.recalculateSizes();
 			compositeRenderer.recalculateSizes();
 			finalPassRenderer.recalculateSwapPassSize();
+
+			this.clearPassesFull.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
+			this.clearPasses.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
+
+			this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
+				packDirectives.getRenderTargetDirectives());
+			this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
+				packDirectives.getRenderTargetDirectives());
 		}
 
 		final ImmutableList<ClearPass> passes;

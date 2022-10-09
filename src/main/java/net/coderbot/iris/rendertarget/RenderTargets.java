@@ -153,7 +153,9 @@ public class RenderTargets {
 					continue;
 				}
 
-				framebuffer.addDepthAttachment(newDepthTextureId);
+				if (framebuffer.hasDepthAttachment()) {
+					framebuffer.addDepthAttachment(newDepthTextureId);
+				}
 			}
 		}
 
@@ -325,6 +327,11 @@ public class RenderTargets {
 		}
 
 		return framebuffer;
+	}
+
+	public void destroyFramebuffer(GlFramebuffer framebuffer) {
+		framebuffer.destroy();
+		ownedFramebuffers.remove(framebuffer);
 	}
 
 	public int getCurrentWidth() {

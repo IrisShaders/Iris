@@ -98,10 +98,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private WorldRenderingPhase phase = WorldRenderingPhase.NONE;
 
 	private final Set<ShaderInstance> loadedShaders;
-	private final ImmutableList<ClearPass> clearPassesFull;
-	private final ImmutableList<ClearPass> clearPasses;
-	private final ImmutableList<ClearPass> shadowClearPasses;
-	private final ImmutableList<ClearPass> shadowClearPassesFull;
+	private ImmutableList<ClearPass> clearPassesFull;
+	private ImmutableList<ClearPass> clearPasses;
+	private ImmutableList<ClearPass> shadowClearPasses;
+	private ImmutableList<ClearPass> shadowClearPassesFull;
 	private final GlFramebuffer baseline;
 
 	private final CompositeRenderer prepareRenderer;
@@ -684,6 +684,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			deferredRenderer.recalculateSizes();
 			compositeRenderer.recalculateSizes();
 			finalPassRenderer.recalculateSwapPassSize();
+
+			this.clearPassesFull.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
+			this.clearPasses.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
+
+			this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
+				packDirectives.getRenderTargetDirectives());
+			this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
+				packDirectives.getRenderTargetDirectives());
 		}
 
 		final ImmutableList<ClearPass> passes;
