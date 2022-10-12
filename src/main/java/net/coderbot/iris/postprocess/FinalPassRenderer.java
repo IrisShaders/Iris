@@ -190,6 +190,8 @@ public class FinalPassRenderer {
 
 			for (ComputeProgram computeProgram : finalPass.computes) {
 				if (computeProgram != null) {
+					computeProgram.use();
+					this.customUniforms.push(computeProgram);
 					computeProgram.dispatch(baseWidth, baseHeight);
 				}
 			}
@@ -377,7 +379,9 @@ public class FinalPassRenderer {
 
 				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
-				CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+				CommonUniforms.addDynamicUniforms(builder);
+				customUniforms.assignTo(builder);
+
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
 				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 
@@ -393,6 +397,8 @@ public class FinalPassRenderer {
 				builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
 
 				programs[i] = builder.buildCompute();
+
+				this.customUniforms.mapholderToPass(builder, programs[i]);
 
 				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
 			}

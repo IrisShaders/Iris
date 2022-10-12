@@ -885,6 +885,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			for (ComputeProgram computeProgram : shadowComputes) {
 				if (computeProgram != null) {
+					computeProgram.use();
+					this.customUniforms.push(computeProgram);
 					computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
 				}
 			}
@@ -965,7 +967,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 					throw new RuntimeException("Shader compilation failed!", e);
 				}
 
-				CommonUniforms.addCommonUniforms(builder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier);
+				CommonUniforms.addDynamicUniforms(builder);
+				this.customUniforms.assignTo(builder);
 
 				Supplier<ImmutableSet<Integer>> flipped;
 
@@ -992,6 +995,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				}
 
 				programs[i] = builder.buildCompute();
+
+				// tell the customUniforms that those locations belong to this pass
+				this.customUniforms.mapholderToPass(builder, programs[i]);
 
 				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
 			}
