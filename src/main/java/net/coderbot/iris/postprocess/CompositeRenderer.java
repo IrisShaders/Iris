@@ -359,8 +359,8 @@ public class CompositeRenderer {
 				IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get());
-					IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get());
+					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null);
+					IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
 				}
 
 				// TODO: Don't duplicate this with FinalPassRenderer

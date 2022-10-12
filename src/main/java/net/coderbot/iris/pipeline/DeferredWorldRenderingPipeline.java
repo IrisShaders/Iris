@@ -293,7 +293,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		if (shadowRenderTargets != null) {
 			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
 			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
-			this.shadowCompositeRenderer = new ShadowCompositeRenderer(programs.getPackDirectives(), programs.getShadowComposite(), this.shadowRenderTargets, customTextureManager.getNoiseTexture(), updateNotifier,
+			this.shadowCompositeRenderer = new ShadowCompositeRenderer(programs.getPackDirectives(), programs.getShadowComposite(), programs.getShadowCompCompute(), this.shadowRenderTargets, customTextureManager.getNoiseTexture(), updateNotifier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), programs.getPackDirectives().getExplicitFlips("shadowcomp_pre"));
 			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
 				programs.getPackDirectives(), shadowRenderTargets, shadowCompositeRenderer);
@@ -972,8 +972,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 					if (shadowRenderTargets != null) {
-						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets);
-						IrisImages.addShadowColorImages(builder, shadowRenderTargets);
+						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null);
+						IrisImages.addShadowColorImages(builder, shadowRenderTargets, null);
 					}
 				}
 
