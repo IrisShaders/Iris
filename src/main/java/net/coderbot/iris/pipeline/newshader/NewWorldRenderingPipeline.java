@@ -651,9 +651,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 
-		// Update custom uniforms
-		this.customUniforms.update();
-
 		if (shadowRenderTargets != null) {
 			// Clear depth first, regardless of any color clearing.
 			shadowRenderTargets.getDepthSourceFb().bind();
@@ -682,6 +679,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// NB: execute this before resizing / clearing so that the center depth sample is retrieved properly.
 		updateNotifier.onNewFrame();
+
+		// Update custom uniforms
+		this.customUniforms.update();
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 
