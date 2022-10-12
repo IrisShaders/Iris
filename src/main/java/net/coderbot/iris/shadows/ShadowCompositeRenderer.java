@@ -12,13 +12,11 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
-import net.coderbot.iris.gl.sampler.SamplerLimits;
-import net.coderbot.iris.pipeline.patcher.CompositeDepthTransformer;
-import net.coderbot.iris.postprocess.BufferFlipper;
-import net.coderbot.iris.postprocess.CenterDepthSampler;
+import net.coderbot.iris.pipeline.PatchedShaderPrinter;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
+import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.postprocess.FullScreenQuadRenderer;
 import net.coderbot.iris.rendertarget.RenderTarget;
-import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.PackDirectives;
@@ -27,8 +25,6 @@ import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
@@ -36,7 +32,6 @@ import org.lwjgl.opengl.GL30C;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
 public class ShadowCompositeRenderer {
 	private final ShadowRenderTargets renderTargets;
@@ -46,7 +41,6 @@ public class ShadowCompositeRenderer {
 	private final FrameUpdateNotifier updateNotifier;
 	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
-	private ImmutableList<SwapPass> swapPasses;
 
 	public ShadowCompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, ShadowRenderTargets renderTargets,
 								   IntSupplier noiseTexture, FrameUpdateNotifier updateNotifier,
@@ -82,7 +76,7 @@ public class ShadowCompositeRenderer {
 			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
 
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, renderTargets);
-			int[] drawBuffers = directives.getDrawBuffers();
+			int[] drawBuffers = new int[] { 0, 1 };
 
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
@@ -117,26 +111,6 @@ public class ShadowCompositeRenderer {
 
 		this.passes = passes.build();
 		this.flippedAtLeastOnceFinal = flippedAtLeastOnce.build();
-
-		ImmutableList.Builder<SwapPass> swapPasses = ImmutableList.builder();
-
-		renderTargets.snapshot().forEach((i) -> {
-			int target = i;
-
-			if (renderTargets.getBuffersToBeCleared().contains(target)) {
-				return;
-			}
-
-			SwapPass swap = new SwapPass();
-			swap.from = renderTargets.createFramebufferWritingToAlt(new int[] {target});
-			// NB: This is handled in RenderTargets now.
-			//swap.from.readBuffer(target);
-			swap.targetTexture = renderTargets.get(target).getMainTexture();
-
-			swapPasses.add(swap);
-		});
-
-		this.swapPasses = swapPasses.build();
 
 		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 	}
@@ -194,21 +168,6 @@ public class ShadowCompositeRenderer {
 		ProgramUniforms.clearActiveUniforms();
 		GlStateManager._glUseProgram(0);
 
-		for (SwapPass swapPass : swapPasses) {
-			// NB: We need to use bind(), not bindAsReadBuffer()... Previously we used bindAsReadBuffer() here which
-			//     broke TAA on many packs and on many drivers.
-			//
-			// Note that glCopyTexSubImage2D reads from the current GL_READ_BUFFER (given by glReadBuffer()) for the
-			// current framebuffer bound to GL_FRAMEBUFFER, but that is distinct from the current GL_READ_FRAMEBUFFER,
-			// which is what bindAsReadBuffer() binds.
-			//
-			// Also note that RenderTargets already calls readBuffer(0) for us.
-			swapPass.from.bind();
-
-			RenderSystem.bindTexture(swapPass.targetTexture);
-			GlStateManager._glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, renderTargets.getResolution(), renderTargets.getResolution());
-		}
-
 		for (int i = 0; i < renderTargets.getRenderTargetCount(); i++) {
 			// Reset mipmapping states at the end of the frame.
 			resetRenderTarget(renderTargets.get(i));
@@ -218,7 +177,7 @@ public class ShadowCompositeRenderer {
 	}
 
 	private static void setupMipmapping(net.coderbot.iris.rendertarget.RenderTarget target, boolean readFromAlt) {
-		RenderSystem.bindTexture(readFromAlt ? target.getAltTexture() : target.getMainTexture());
+		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
 		// (since the last mipmap was generated)
@@ -231,34 +190,36 @@ public class ShadowCompositeRenderer {
 		//
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
-		IrisRenderSystem.generateMipmaps(GL20C.GL_TEXTURE_2D);
-		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
+		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
 	}
 
 	private static void resetRenderTarget(RenderTarget target) {
 		// Resets the sampling mode of the given render target and then unbinds it to prevent accidental sampling of it
 		// elsewhere.
-		RenderSystem.bindTexture(target.getMainTexture());
-		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-
-		RenderSystem.bindTexture(target.getAltTexture());
-		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-
-		RenderSystem.bindTexture(0);
+		IrisRenderSystem.texParameteri(target.getMainTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(target.getAltTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
 														   ShadowRenderTargets targets) {
 		// TODO: Properly handle empty shaders
-		Objects.requireNonNull(source.getVertexSource());
-		Objects.requireNonNull(source.getFragmentSource());
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
+			source.getVertexSource().orElseThrow(NullPointerException::new),
+			source.getGeometrySource().orElse(null),
+			source.getFragmentSource().orElseThrow(NullPointerException::new));
+		String vertex = transformed.get(PatchShaderType.VERTEX);
+		String geometry = transformed.get(PatchShaderType.GEOMETRY);
+		String fragment = transformed.get(PatchShaderType.FRAGMENT);
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+
 		Objects.requireNonNull(flipped);
 		ProgramBuilder builder;
 
 		try {
-			builder = ProgramBuilder.begin(source.getName(), CompositeDepthTransformer.patch(source.getVertexSource().orElse(null)), CompositeDepthTransformer.patch(source.getGeometrySource().orElse(null)),
-				CompositeDepthTransformer.patch(source.getFragmentSource().orElse(null)), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+			builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
+				IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
