@@ -28,6 +28,11 @@ public interface WorldRenderingPipeline {
 	void syncProgram();
 	RenderTargetStateListener getRenderTargetStateListener();
 
+	int getCurrentNormalTexture();
+	int getCurrentSpecularTexture();
+
+	void onBindTexture(int id);
+
 	void beginHand();
 
 	void beginTranslucents();
@@ -46,6 +51,7 @@ public interface WorldRenderingPipeline {
 	boolean shouldRenderMoon();
 	boolean shouldWriteRainAndSnowToDepthBuffer();
 	boolean shouldRenderParticlesBeforeDeferred();
+	boolean allowConcurrentCompute();
 
 	float getSunPathRotation();
 }

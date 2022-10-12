@@ -1,6 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 
 public class FloatUniform extends Uniform {
 	private float cachedValue;

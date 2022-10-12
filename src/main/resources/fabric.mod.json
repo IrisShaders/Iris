@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "iris",
-  "version": "1.2.7-development-environment",
+  "version": "1.4.0-development-environment",
 
   "name": "Iris",
   "description": "A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs",
@@ -45,10 +45,7 @@
 
   "depends": {
     "fabricloader": ">=0.12.3",
-    "minecraft": "1.16.5",
-    "fabric-resource-loader-v0": ">=0.3.2",
-    "fabric-key-binding-api-v1": ">=1.0.1",
-    "fabric-api-base": ">=0.4.0"
+    "minecraft": "1.16.5"
   },
 
   "breaks": {

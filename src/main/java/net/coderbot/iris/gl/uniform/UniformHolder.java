@@ -29,6 +29,8 @@ public interface UniformHolder {
 
 	UniformHolder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value);
 
+	UniformHolder uniformVanilla3f(UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Vector3f> value);
+
 	UniformHolder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value);
 
 	UniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3d> value);

@@ -1,31 +1,30 @@
 package net.coderbot.iris.pipeline;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
-import net.coderbot.iris.IrisLogging;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
+import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
-import net.coderbot.iris.shaderpack.transform.BuiltinUniformReplacementTransformer;
-import net.coderbot.iris.shaderpack.transform.StringTransformations;
-import net.coderbot.iris.shaderpack.transform.Transformations;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 
 public class SodiumTerrainPipeline {
-	String terrainVertex;
-	String terrainGeometry;
-	String terrainFragment;
-	String translucentVertex;
-	String translucentGeometry;
-	String translucentFragment;
-	String shadowVertex;
-	String shadowGeometry;
-	String shadowFragment;
+	Optional<String> terrainVertex = Optional.empty();
+	Optional<String> terrainGeometry = Optional.empty();
+	Optional<String> terrainFragment = Optional.empty();
+	Optional<String> translucentVertex = Optional.empty();
+	Optional<String> translucentGeometry = Optional.empty();
+	Optional<String> translucentFragment = Optional.empty();
+	Optional<String> shadowVertex = Optional.empty();
+	Optional<String> shadowGeometry = Optional.empty();
+	Optional<String> shadowFragment = Optional.empty();
 	//GlFramebuffer framebuffer;
 	ProgramSet programSet;
 
@@ -51,46 +50,43 @@ public class SodiumTerrainPipeline {
 		this.programSet = programSet;
 
 		terrainSource.ifPresent(sources -> {
-			terrainVertex = sources.getVertexSource().orElse(null);
-			terrainGeometry = sources.getGeometrySource().orElse(null);
-			terrainFragment = sources.getFragmentSource().orElse(null);
+			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
+				sources.getVertexSource().orElse(null),
+				sources.getGeometrySource().orElse(null),
+				sources.getFragmentSource().orElse(null));
+			terrainVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
+			terrainGeometry = Optional.ofNullable(result.get(PatchShaderType.GEOMETRY));
+			terrainFragment = Optional.ofNullable(result.get(PatchShaderType.FRAGMENT));
+
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium",
+				terrainVertex.orElse(null), terrainGeometry.orElse(null), terrainFragment.orElse(null));
 		});
 
 		translucentSource.ifPresent(sources -> {
-			translucentVertex = sources.getVertexSource().orElse(null);
-			translucentGeometry = sources.getGeometrySource().orElse(null);
-			translucentFragment = sources.getFragmentSource().orElse(null);
+			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
+				sources.getVertexSource().orElse(null),
+				sources.getGeometrySource().orElse(null),
+				sources.getFragmentSource().orElse(null));
+			translucentVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
+			translucentGeometry = Optional.ofNullable(result.get(PatchShaderType.GEOMETRY));
+			translucentFragment = Optional.ofNullable(result.get(PatchShaderType.FRAGMENT));
+
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium",
+				translucentVertex.orElse(null), translucentGeometry.orElse(null), translucentFragment.orElse(null));
 		});
 
 		shadowSource.ifPresent(sources -> {
-			shadowVertex = sources.getVertexSource().orElse(null);
-			shadowGeometry = sources.getGeometrySource().orElse(null);
-			shadowFragment = sources.getFragmentSource().orElse(null);
+			Map<PatchShaderType, String> result = TransformPatcher.patchSodiumTerrain(
+				sources.getVertexSource().orElse(null),
+				sources.getGeometrySource().orElse(null),
+				sources.getFragmentSource().orElse(null));
+			shadowVertex = Optional.ofNullable(result.get(PatchShaderType.VERTEX));
+			shadowGeometry = Optional.ofNullable(result.get(PatchShaderType.GEOMETRY));
+			shadowFragment = Optional.ofNullable(result.get(PatchShaderType.FRAGMENT));
+
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium",
+				shadowVertex.orElse(null), shadowGeometry.orElse(null), shadowFragment.orElse(null));
 		});
-
-		if (terrainVertex != null) {
-			terrainVertex = transformVertexShader(terrainVertex);
-		}
-
-		if (translucentVertex != null) {
-			translucentVertex = transformVertexShader(translucentVertex);
-		}
-
-		if (shadowVertex != null) {
-			shadowVertex = transformVertexShader(shadowVertex);
-		}
-
-		if (terrainFragment != null) {
-			terrainFragment = transformFragmentShader(terrainFragment);
-		}
-
-		if (translucentFragment != null) {
-			translucentFragment = transformFragmentShader(translucentFragment);
-		}
-
-		if (shadowFragment != null) {
-			shadowFragment = transformFragmentShader(shadowFragment);
-		}
 
 		this.createTerrainSamplers = createTerrainSamplers;
 		this.createShadowSamplers = createShadowSamplers;
@@ -98,108 +94,40 @@ public class SodiumTerrainPipeline {
 		this.createShadowImages = createShadowImages;
 	}
 
-	private static String transformVertexShader(String base) {
-		StringTransformations transformations = new StringTransformations(base);
-
-		String injections = "attribute vec3 iris_Pos; // The position of the vertex\n" +
-			"attribute vec4 iris_Color; // The color of the vertex\n" +
-			"attribute vec2 iris_TexCoord; // The block texture coordinate of the vertex\n" +
-			"attribute vec2 iris_LightCoord; // The light map texture coordinate of the vertex\n" +
-			"attribute vec3 iris_Normal; // The vertex normal\n" +
-			"uniform mat4 iris_ModelViewMatrix;\n" +
-			"uniform mat4 u_ModelViewProjectionMatrix;\n" +
-			"uniform mat4 iris_NormalMatrix;\n" +
-			"uniform vec3 u_ModelScale;\n" +
-			"uniform vec2 u_TextureScale;\n" +
-			"\n" +
-			"// The model translation for this draw call.\n" +
-			"attribute vec4 iris_ModelOffset;\n" +
-			"\n" +
-			"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }";
-
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
-
-		transformations.define("gl_Vertex", "vec4((iris_Pos * u_ModelScale) + iris_ModelOffset.xyz, 1.0)");
-		// transformations.replaceExact("gl_MultiTexCoord1.xy/255.0", "iris_LightCoord");
-		transformations.define("gl_MultiTexCoord0", "vec4(iris_TexCoord * u_TextureScale, 0.0, 1.0)");
-		//transformations.replaceExact("gl_MultiTexCoord1", "vec4(iris_LightCoord * 255.0, 0.0, 1.0)");
-		transformations.define("gl_Color", "iris_Color");
-		transformations.define("gl_ModelViewMatrix", "iris_ModelViewMatrix");
-		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
-		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
-		// transformations.replaceExact("gl_TextureMatrix[1]", "mat4(1.0 / 255.0)");
-		transformations.define("gl_NormalMatrix", "mat3(iris_NormalMatrix)");
-		transformations.define("gl_Normal", "iris_Normal");
-		// Just being careful
-		transformations.define("ftransform", "iris_ftransform");
-
-		new BuiltinUniformReplacementTransformer("iris_LightCoord").apply(transformations);
-
-		if (IrisLogging.ENABLE_SPAM) {
-			System.out.println("Final patched vertex source:");
-			System.out.println(transformations);
-		}
-
-		return transformations.toString();
-	}
-
-	private static String transformFragmentShader(String base) {
-		StringTransformations transformations = new StringTransformations(base);
-
-		String injections =
-				"uniform mat4 iris_ModelViewMatrix;\n" +
-				"uniform mat4 u_ModelViewProjectionMatrix;\n" +
-				"uniform mat4 iris_NormalMatrix;\n";
-
-		transformations.define("gl_ModelViewMatrix", "iris_ModelViewMatrix");
-		transformations.define("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
-		transformations.replaceExact("gl_TextureMatrix[0]", "mat4(1.0)");
-		transformations.define("gl_NormalMatrix", "mat3(iris_NormalMatrix)");
-
-		transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, injections);
-
-		if (IrisLogging.ENABLE_SPAM) {
-			System.out.println("Final patched fragment source:");
-			System.out.println(transformations);
-		}
-
-		return transformations.toString();
-	}
-
 	public Optional<String> getTerrainVertexShaderSource() {
-		return Optional.ofNullable(terrainVertex);
+		return terrainVertex;
 	}
 
 	public Optional<String> getTerrainGeometryShaderSource() {
-		return Optional.ofNullable(terrainGeometry);
+		return terrainGeometry;
 	}
 
 	public Optional<String> getTerrainFragmentShaderSource() {
-		return Optional.ofNullable(terrainFragment);
+		return terrainFragment;
 	}
 
 	public Optional<String> getTranslucentVertexShaderSource() {
-		return Optional.ofNullable(translucentVertex);
+		return translucentVertex;
 	}
 
 	public Optional<String> getTranslucentGeometryShaderSource() {
-		return Optional.ofNullable(translucentGeometry);
+		return translucentGeometry;
 	}
 
 	public Optional<String> getTranslucentFragmentShaderSource() {
-		return Optional.ofNullable(translucentFragment);
+		return translucentFragment;
 	}
 
 	public Optional<String> getShadowVertexShaderSource() {
-		return Optional.ofNullable(shadowVertex);
+		return shadowVertex;
 	}
 
 	public Optional<String> getShadowGeometryShaderSource() {
-		return Optional.ofNullable(shadowGeometry);
+		return shadowGeometry;
 	}
 
 	public Optional<String> getShadowFragmentShaderSource() {
-		return Optional.ofNullable(shadowFragment);
+		return shadowFragment;
 	}
 
 	public ProgramUniforms initUniforms(int programId) {

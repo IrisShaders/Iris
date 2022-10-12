@@ -1,5 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
+import net.coderbot.iris.gl.state.ValueUpdateNotifier;
+
 public abstract class Uniform {
 	protected final int location;
 	protected final ValueUpdateNotifier notifier;

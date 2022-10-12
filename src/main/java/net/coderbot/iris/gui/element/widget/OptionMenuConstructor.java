@@ -66,7 +66,7 @@ public final class OptionMenuConstructor {
 
 	static {
 		registerScreen(OptionMenuMainElementScreen.class, screen ->
-				new ElementWidgetScreenData(new TextComponent(Iris.getCurrentPackName()).withStyle(ChatFormatting.BOLD), false));
+				new ElementWidgetScreenData(new TextComponent(Iris.getCurrentPackName()).append(Iris.isFallback() ? " (fallback)" : "").withStyle(ChatFormatting.BOLD), false));
 
 		registerScreen(OptionMenuSubElementScreen.class, screen ->
 				new ElementWidgetScreenData(GuiUtil.translateOrDefault(new TextComponent(screen.screenId), "screen." + screen.screenId), true));

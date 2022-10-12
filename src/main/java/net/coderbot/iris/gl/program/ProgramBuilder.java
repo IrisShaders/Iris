@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.IntSupplier;
@@ -67,8 +68,28 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		return new ProgramBuilder(name, programId, reservedTextureUnits);
 	}
 
+	public static ProgramBuilder beginCompute(String name, @Nullable String source, ImmutableSet<Integer> reservedTextureUnits) {
+		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+
+		if (!IrisRenderSystem.supportsCompute()) {
+			throw new IllegalStateException("This PC does not support compute shaders, but it's attempting to be used???");
+		}
+
+		GlShader compute = buildShader(ShaderType.COMPUTE, name + ".csh", source);
+
+		int programId = ProgramCreator.create(name, compute);
+
+		compute.destroy();
+
+		return new ProgramBuilder(name, programId, reservedTextureUnits);
+	}
+
 	public Program build() {
 		return new Program(program, super.buildUniforms(), this.samplers.build(), this.images.build());
+	}
+
+	public ComputeProgram buildCompute() {
+		return new ComputeProgram(program, super.buildUniforms(), this.samplers.build(), this.images.build());
 	}
 
 	private static GlShader buildShader(ShaderType shaderType, String name, @Nullable String source) {
@@ -97,6 +118,10 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	@Override
 	public boolean addDynamicSampler(IntSupplier sampler, String... names) {
 		return samplers.addDynamicSampler(sampler, names);
+	}
+
+	public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
+		return samplers.addDynamicSampler(sampler, notifier, names);
 	}
 
 	@Override

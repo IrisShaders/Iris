@@ -10,6 +10,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkRenderShaderBac
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ChunkRenderBackendExt;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -91,6 +92,7 @@ public class MixinChunkRenderShaderBackend implements ChunkRenderBackendExt {
 	@Inject(method = "end", at = @At("RETURN"))
 	private void iris$onEnd(PoseStack poseStack, CallbackInfo ci) {
 		ProgramUniforms.clearActiveUniforms();
+		ProgramSamplers.clearActiveSamplers();
 		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::endSodiumTerrainRendering);
 	}
 

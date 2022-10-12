@@ -1,18 +1,19 @@
 package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.program.ComputeProgram;
+import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -32,6 +33,7 @@ import net.coderbot.iris.uniforms.CameraUniforms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CelestialUniforms;
 import net.coderbot.iris.vendored.joml.Vector3d;
+import net.coderbot.iris.vendored.joml.Vector3i;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -50,6 +52,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.lwjgl.opengl.ARBTextureSwizzle;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -87,12 +90,9 @@ public class ShadowRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 	private ProfilerFiller profiler;
-	private final ImmutableSet<Integer> flipped;
 
 	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
 						  ShadowRenderTargets shadowRenderTargets, ShadowCompositeRenderer compositeRenderer) {
-
-		this.flipped = ImmutableSet.of();
 
 		this.profiler = Minecraft.getInstance().getProfiler();
 
@@ -198,33 +198,29 @@ public class ShadowRenderer {
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE4);
 
-		RenderSystem.bindTexture(targets.getDepthTexture().getTextureId());
 		configureDepthSampler(targets.getDepthTexture().getTextureId(), depthSamplingSettings.get(0));
 
-		RenderSystem.bindTexture(targets.getDepthTextureNoTranslucents().getTextureId());
 		configureDepthSampler(targets.getDepthTextureNoTranslucents().getTextureId(), depthSamplingSettings.get(1));
 
 		for (int i = 0; i < colorSamplingSettings.size(); i++) {
 			int glTextureId = targets.get(i).getMainTexture();
 
-			RenderSystem.bindTexture(glTextureId);
 			configureSampler(glTextureId, colorSamplingSettings.get(i));
 		}
 
-		RenderSystem.bindTexture(0);
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 	}
 
 	private void configureDepthSampler(int glTextureId, PackShadowDirectives.DepthSamplingSettings settings) {
 		if (settings.getHardwareFiltering()) {
 			// We have to do this or else shadow hardware filtering breaks entirely!
-			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
 		}
 
 		// Workaround for issues with old shader packs like Chocapic v4.
 		// They expected the driver to put the depth value in z, but it's supposed to only
 		// be available in r. So we set up the swizzle to fix that.
-		IrisRenderSystem.texParameteriv(GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+		IrisRenderSystem.texParameteriv(glTextureId, GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
 			new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_ONE });
 
 		configureSampler(glTextureId, settings);
@@ -238,11 +234,11 @@ public class ShadowRenderer {
 
 		if (!settings.getNearest()) {
 			// Make sure that things are smoothed
-			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
 		} else {
-			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_NEAREST);
-			RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_NEAREST);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_NEAREST);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_NEAREST);
 		}
 	}
 
@@ -250,17 +246,15 @@ public class ShadowRenderer {
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE4);
 
 		for (MipmapPass mipmapPass : mipmapPasses) {
-			RenderSystem.bindTexture(mipmapPass.getTexture());
-			setupMipmappingForBoundTexture(mipmapPass.getTargetFilteringMode());
+			setupMipmappingForTexture(mipmapPass.getTexture(), mipmapPass.getTargetFilteringMode());
 		}
 
-		RenderSystem.bindTexture(0);
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
 	}
 
-	private void setupMipmappingForBoundTexture(int filteringMode) {
-		IrisRenderSystem.generateMipmaps(GL20C.GL_TEXTURE_2D);
-		RenderSystem.texParameter(GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
+	private void setupMipmappingForTexture(int texture, int filteringMode) {
+		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
 	}
 
 	private FrustumHolder createShadowFrustum(float renderMultiplier, FrustumHolder holder) {
@@ -319,13 +313,13 @@ public class ShadowRenderer {
 
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
-			Vector3f shadowLightVectorFromOrigin =
-				new Vector3f(shadowLightPosition.x(), shadowLightPosition.y(), shadowLightPosition.z());
+			net.coderbot.iris.vendored.joml.Vector3f shadowLightVectorFromOrigin =
+				new net.coderbot.iris.vendored.joml.Vector3f(shadowLightPosition.x(), shadowLightPosition.y(), shadowLightPosition.z());
 
 			shadowLightVectorFromOrigin.normalize();
 
-			return holder.setInfo(new AdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
-				CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
+			return holder.setInfo(new AdvancedShadowCullingFrustum(((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferModelView()).convertToJOML(),
+				((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferProjection()).convertToJOML(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
 
 		}
 
@@ -662,10 +656,6 @@ public class ShadowRenderer {
 
 	private String getBlockEntitiesDebugString() {
 		return shouldRenderBlockEntities ? (renderedShadowBlockEntities + "/" + Minecraft.getInstance().level.blockEntityList.size()) : "disabled by pack";
-	}
-
-	public ImmutableSet<Integer> flipped() {
-		return flipped;
 	}
 
 	private static class MipmapPass {

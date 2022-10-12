@@ -1,7 +1,7 @@
 package net.coderbot.iris.shadows.frustum.advanced;
 
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector4f;
+import net.coderbot.iris.vendored.joml.Matrix4f;
+import net.coderbot.iris.vendored.joml.Vector4f;
 
 public class BaseClippingPlanes {
 	private final Vector4f[] planes = new Vector4f[6];
@@ -13,8 +13,8 @@ public class BaseClippingPlanes {
 	private void init(Matrix4f view, Matrix4f projection) {
 		// Transform = Transpose(Projection x View)
 
-		Matrix4f transform = projection.copy();
-		transform.multiply(view);
+		Matrix4f transform = new Matrix4f(projection);
+		transform.mul(view);
 		transform.transpose();
 
 		planes[0] = transform(transform, -1, 0, 0);
@@ -29,7 +29,7 @@ public class BaseClippingPlanes {
 
 	private static Vector4f transform(Matrix4f transform, float x, float y, float z) {
 		Vector4f vector4f = new Vector4f(x, y, z, 1.0F);
-		vector4f.transform(transform);
+		vector4f.mul(transform);
 		vector4f.normalize();
 
 		return vector4f;

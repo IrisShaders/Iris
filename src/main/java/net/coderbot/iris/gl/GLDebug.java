@@ -333,4 +333,61 @@ public final class GLDebug {
 				return APIUtil.apiUnknownToken(severity);
 		}
 	}
+
+	private static DebugState debugState;
+
+	private static interface DebugState {
+		void nameObject(int id, int object, String name);
+		void pushGroup(int id, String name);
+		void popGroup();
+	}
+
+	private static class KHRDebugState implements DebugState {
+		private boolean hasGroup;
+
+		@Override
+		public void nameObject(int id, int object, String name) {
+			KHRDebug.glObjectLabel(id, object, name);
+		}
+
+		@Override
+		public void pushGroup(int id, String name) {
+			KHRDebug.glPushDebugGroup(KHRDebug.GL_DEBUG_SOURCE_APPLICATION, id, name);
+			hasGroup = true;
+		}
+
+		@Override
+		public void popGroup() {
+			if (hasGroup) {
+				KHRDebug.glPopDebugGroup();
+				hasGroup = false;
+			}
+		}
+	}
+
+	private static class UnsupportedDebugState implements DebugState {
+		@Override
+		public void nameObject(int id, int object, String name) {
+		}
+
+		@Override
+		public void pushGroup(int id, String name) {
+		}
+
+		@Override
+		public void popGroup() {
+		}
+	}
+
+	public static void initRenderer() {
+		if (GL.getCapabilities().GL_KHR_debug || GL.getCapabilities().OpenGL43) {
+			debugState = new KHRDebugState();
+		} else {
+			debugState = new UnsupportedDebugState();
+		}
+	}
+
+    public static void nameObject(int id, int object, String name) {
+		debugState.nameObject(id, object, name);
+    }
 }

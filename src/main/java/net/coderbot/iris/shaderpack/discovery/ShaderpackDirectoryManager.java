@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ShaderpackDirectoryManager {
 	private final Path root;
@@ -65,9 +66,11 @@ public class ShaderpackDirectoryManager {
 			return baseComparator.compare(a, b);
 		};
 
-		return Files.list(root).filter(Iris::isValidShaderpack)
-			.map(path -> path.getFileName().toString())
-			.sorted(comparator).collect(Collectors.toList());
+		try (Stream<Path> list = Files.list(root)) {
+			return list.filter(Iris::isValidShaderpack)
+				.map(path -> path.getFileName().toString())
+				.sorted(comparator).collect(Collectors.toList());
+		}
 	}
 
 	/**

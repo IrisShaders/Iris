@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -8,12 +9,15 @@ import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.texture.TextureScaleOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -24,11 +28,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -56,6 +62,7 @@ public class ShaderProperties {
 	private OptionalBoolean backFaceCutoutMipped = OptionalBoolean.DEFAULT;
 	private OptionalBoolean backFaceTranslucent = OptionalBoolean.DEFAULT;
 	private OptionalBoolean rainDepth = OptionalBoolean.DEFAULT;
+	private OptionalBoolean concurrentCompute = OptionalBoolean.DEFAULT;
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
@@ -72,11 +79,15 @@ public class ShaderProperties {
 	// TODO: Parse custom uniforms / variables
 	private final Object2ObjectMap<String, AlphaTestOverride> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
+	private final Object2ObjectMap<String, TextureScaleOverride> textureScaleOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, ArrayList<BufferBlendOverride>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 	private Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
+	private List<String> requiredFeatureFlags = new ArrayList<>();
+	private List<String> optionalFeatureFlags = new ArrayList<>();
 
 	private ShaderProperties() {
 		// empty
@@ -133,6 +144,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "backFace.cutoutMipped", bool -> backFaceCutoutMipped = bool);
 			handleBooleanDirective(key, value, "backFace.translucent", bool -> backFaceTranslucent = bool);
 			handleBooleanDirective(key, value, "rain.depth", bool -> rainDepth = bool);
+			handleBooleanDirective(key, value, "allowConcurrentCompute", bool -> concurrentCompute = bool);
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
@@ -154,6 +166,17 @@ public class ShaderProperties {
 				}
 
 				viewportScaleOverrides.put(pass, scale);
+			});
+
+			handlePassDirective("size.buffer.", key, value, pass -> {
+				String[] parts = value.split(" ");
+
+				if (parts.length != 2) {
+					Iris.logger.error("Unable to parse size.buffer directive for " + pass + ": " + value);
+					return;
+				}
+
+				textureScaleOverrides.put(pass, new TextureScaleOverride(parts[0], parts[1]));
 			});
 
 			handlePassDirective("alphaTest.", key, value, pass -> {
@@ -192,8 +215,44 @@ public class ShaderProperties {
 
 			handlePassDirective("blend.", key, value, pass -> {
 				if (pass.contains(".")) {
-					// TODO: Support per-buffer blending directives (glBlendFuncSeparateI)
-					Iris.logger.warn("Per-buffer pass blending directives are not supported, ignoring blend directive for " + key);
+
+					if (!IrisRenderSystem.supportsBufferBlending()) {
+						throw new RuntimeException("Buffer blending is not supported on this platform, however it was attempted to be used!");
+					}
+
+					String[] parts = pass.split("\\.");
+					int index = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.indexOf(parts[1]);
+
+					if (index == -1 && parts[1].startsWith("colortex")) {
+						String id = parts[1].substring("colortex".length());
+
+						try {
+							index = Integer.parseInt(id);
+						} catch (NumberFormatException e) {
+							throw new RuntimeException("Failed to parse buffer blend!", e);
+						}
+					}
+
+					if (index == -1) {
+						throw new RuntimeException("Failed to parse buffer blend! index = " + index);
+					}
+
+					if ("off".equals(value)) {
+						bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendOverride(index, null));
+						return;
+					}
+
+					String[] modeArray = value.split(" ");
+					int[] modes = new int[modeArray.length];
+
+					int i = 0;
+					for (String modeName : modeArray) {
+						modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
+						i++;
+					}
+
+					bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendOverride(index, new BlendMode(modes[0], modes[1], modes[2], modes[3])));
+
 					return;
 				}
 
@@ -203,7 +262,7 @@ public class ShaderProperties {
 				}
 
 				String[] modeArray = value.split(" ");
-				int[] modes = new int[4];
+				int[] modes = new int[modeArray.length];
 
 				int i = 0;
 				for (String modeName : modeArray) {
@@ -246,6 +305,10 @@ public class ShaderProperties {
 							.put(buffer, shouldFlip);
 				});
 			});
+
+
+			handleWhitespacedListDirective(key, value, "iris.features.required", options -> requiredFeatureFlags = options);
+			handleWhitespacedListDirective(key, value, "iris.features.optional", options -> optionalFeatureFlags = options);
 
 			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
@@ -480,6 +543,10 @@ public class ShaderProperties {
 		return particlesBeforeDeferred;
 	}
 
+	public OptionalBoolean getConcurrentCompute() {
+		return concurrentCompute;
+	}
+
 	public OptionalBoolean getPrepareBeforeShadow() {
 		return prepareBeforeShadow;
 	}
@@ -492,8 +559,16 @@ public class ShaderProperties {
 		return viewportScaleOverrides;
 	}
 
+	public Object2ObjectMap<String, TextureScaleOverride> getTextureScaleOverrides() {
+		return textureScaleOverrides;
+	}
+
 	public Object2ObjectMap<String, BlendModeOverride> getBlendModeOverrides() {
 		return blendModeOverrides;
+	}
+
+	public Object2ObjectMap<String, ArrayList<BufferBlendOverride>> getBufferBlendOverrides() {
+		return bufferBlendOverrides;
 	}
 
 	public EnumMap<TextureStage, Object2ObjectMap<String, String>> getCustomTextures() {
@@ -534,5 +609,13 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<String, Object2BooleanMap<String>> getExplicitFlips() {
 		return explicitFlips;
+	}
+
+	public List<String> getRequiredFeatureFlags() {
+		return requiredFeatureFlags;
+	}
+
+	public List<String> getOptionalFeatureFlags() {
+		return optionalFeatureFlags;
 	}
 }

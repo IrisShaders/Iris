@@ -4,6 +4,8 @@ import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.floats.FloatConsumer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.IrisLogging;
+import net.coderbot.iris.vendored.joml.Vector2f;
+import net.coderbot.iris.vendored.joml.Vector3i;
 import net.coderbot.iris.vendored.joml.Vector4f;
 
 import java.util.HashMap;
@@ -16,6 +18,8 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	private final Map<String, Consumer<String>> stringConstVariables;
 	private final Map<String, IntConsumer> intConstVariables;
 	private final Map<String, FloatConsumer> floatConstVariables;
+	private final Map<String, Consumer<Vector2f>> vec2ConstVariables;
+	private final Map<String, Consumer<Vector3i>> ivec3ConstVariables;
 	private final Map<String, Consumer<Vector4f>> vec4ConstVariables;
 
 	public DispatchingDirectiveHolder() {
@@ -23,6 +27,8 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 		stringConstVariables = new HashMap<>();
 		intConstVariables = new HashMap<>();
 		floatConstVariables = new HashMap<>();
+		vec2ConstVariables = new HashMap<>();
+		ivec3ConstVariables = new HashMap<>();
 		vec4ConstVariables = new HashMap<>();
 	}
 
@@ -107,6 +113,93 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 			typeCheckHelper("int", intConstVariables, directive);
 			typeCheckHelper("int", stringConstVariables, directive);
 			typeCheckHelper("vec4", vec4ConstVariables, directive);
+		} else if (type == ConstDirectiveParser.Type.VEC2) {
+			Consumer<Vector2f> consumer = vec2ConstVariables.get(key);
+
+			if (consumer != null) {
+				if (!value.startsWith("vec2")) {
+					Iris.logger.error("Failed to process " + directive + ": value was not a valid vec2 constructor");
+				}
+
+				String vec2Args = value.substring("vec2".length()).trim();
+
+				if (!vec2Args.startsWith("(") || !vec2Args.endsWith(")")) {
+					Iris.logger.error("Failed to process " + directive + ": value was not a valid vec2 constructor");
+				}
+
+				vec2Args = vec2Args.substring(1, vec2Args.length() - 1);
+
+				String[] parts = vec2Args.split(",");
+
+				for (int i = 0; i < parts.length; i++) {
+					parts[i] = parts[i].trim();
+				}
+
+				if (parts.length != 2) {
+					Iris.logger.error("Failed to process " + directive +
+						": expected 2 arguments to a vec2 constructor, got " + parts.length);
+				}
+
+				try {
+					consumer.accept(new Vector2f(
+						Float.parseFloat(parts[0]),
+						Float.parseFloat(parts[1])
+					));
+				} catch (NumberFormatException e) {
+					Iris.logger.error("Failed to process " + directive, e);
+				}
+
+				return;
+			}
+
+			typeCheckHelper("bool", booleanConstVariables, directive);
+			typeCheckHelper("int", intConstVariables, directive);
+			typeCheckHelper("int", stringConstVariables, directive);
+			typeCheckHelper("float", floatConstVariables, directive);
+		} else if (type == ConstDirectiveParser.Type.IVEC3) {
+			Consumer<Vector3i> consumer = ivec3ConstVariables.get(key);
+
+			if (consumer != null) {
+				if (!value.startsWith("ivec3")) {
+					Iris.logger.error("Failed to process " + directive + ": value was not a valid ivec3 constructor");
+				}
+
+				String ivec3Args = value.substring("ivec3".length()).trim();
+
+				if (!ivec3Args.startsWith("(") || !ivec3Args.endsWith(")")) {
+					Iris.logger.error("Failed to process " + directive + ": value was not a valid ivec3 constructor");
+				}
+
+				ivec3Args = ivec3Args.substring(1, ivec3Args.length() - 1);
+
+				String[] parts = ivec3Args.split(",");
+
+				for (int i = 0; i < parts.length; i++) {
+					parts[i] = parts[i].trim();
+				}
+
+				if (parts.length != 3) {
+					Iris.logger.error("Failed to process " + directive +
+						": expected 3 arguments to a ivec3 constructor, got " + parts.length);
+				}
+
+				try {
+					consumer.accept(new Vector3i(
+						Integer.parseInt(parts[0]),
+						Integer.parseInt(parts[1]),
+						Integer.parseInt(parts[2])
+					));
+				} catch (NumberFormatException e) {
+					Iris.logger.error("Failed to process " + directive, e);
+				}
+
+				return;
+			}
+
+			typeCheckHelper("bool", booleanConstVariables, directive);
+			typeCheckHelper("int", intConstVariables, directive);
+			typeCheckHelper("int", stringConstVariables, directive);
+			typeCheckHelper("float", floatConstVariables, directive);
 		} else if (type == ConstDirectiveParser.Type.VEC4) {
 			Consumer<Vector4f> consumer = vec4ConstVariables.get(key);
 
@@ -211,6 +304,16 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	@Override
 	public void acceptConstFloatDirective(String name, FloatConsumer consumer) {
 		floatConstVariables.put(name, consumer);
+	}
+
+	@Override
+	public void acceptConstVec2Directive(String name, Consumer<Vector2f> consumer) {
+		vec2ConstVariables.put(name, consumer);
+	}
+
+	@Override
+	public void acceptConstIVec3Directive(String name, Consumer<Vector3i> consumer) {
+		ivec3ConstVariables.put(name, consumer);
 	}
 
 	@Override
