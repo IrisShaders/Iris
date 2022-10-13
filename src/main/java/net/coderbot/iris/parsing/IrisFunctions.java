@@ -505,9 +505,10 @@ public class IrisFunctions {
 								public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 									params[0].evaluateTo(context, functionReturn);
 									float target = functionReturn.floatReturn;
-									functionReturn.floatReturn = smoothFloat.evaluate(
+									functionReturn.floatReturn = smoothFloat.updateAndGet(
 											target,
-											1
+											1,
+										1
 									);
 								}
 							});
@@ -529,8 +530,9 @@ public class IrisFunctions {
 							public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 								params[1].evaluateTo(context, functionReturn);
 								float target = functionReturn.floatReturn;
-								functionReturn.floatReturn = smoothFloat.evaluate(
+								functionReturn.floatReturn = smoothFloat.updateAndGet(
 									target,
+									1,
 									1
 								);
 							}
@@ -557,8 +559,9 @@ public class IrisFunctions {
 									params[1].evaluateTo(context, functionReturn);
 									float fadeTime = functionReturn.floatReturn;
 
-									functionReturn.floatReturn = smoothFloat.evaluate(
+									functionReturn.floatReturn = smoothFloat.updateAndGet(
 											target,
+											fadeTime,
 											fadeTime
 									);
 								}
@@ -586,8 +589,9 @@ public class IrisFunctions {
 								params[2].evaluateTo(context, functionReturn);
 								float fadeTime = functionReturn.floatReturn;
 
-								functionReturn.floatReturn = smoothFloat.evaluate(
+								functionReturn.floatReturn = smoothFloat.updateAndGet(
 									target,
+									fadeTime,
 									fadeTime
 								);
 							}
@@ -617,7 +621,7 @@ public class IrisFunctions {
 									params[2].evaluateTo(context, functionReturn);
 									float fadeDownTime = functionReturn.floatReturn;
 
-									functionReturn.floatReturn = smoothFloat.evaluate(
+									functionReturn.floatReturn = smoothFloat.updateAndGet(
 											target,
 											fadeUpTime,
 											fadeDownTime
@@ -650,7 +654,7 @@ public class IrisFunctions {
 								params[3].evaluateTo(context, functionReturn);
 								float fadeDownTime = functionReturn.floatReturn;
 
-								functionReturn.floatReturn = smoothFloat.evaluate(
+								functionReturn.floatReturn = smoothFloat.updateAndGet(
 									target,
 									fadeUpTime,
 									fadeDownTime
