@@ -22,15 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = LevelRenderer.class, priority = 1010)
 public class MixinLevelRenderer_RedirectChunkOffset {
-	@Group(name = "iris_MixinRedirectChunkOffset", min = 1, max = 2)
-	@Inject(method = "renderChunkLayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType;setupRenderState()V", shift = At.Shift.AFTER), require = 0)
-	private void setProjModelView(RenderType arg, PoseStack arg2, double d, double e, double f, Matrix4f arg3, CallbackInfo ci) {
-		if (RenderSystem.getShader() instanceof ExtendedShader extendedShader) {
-			extendedShader.setProjectionModelViewOverride(arg2, arg3);
-		}
-	}
-
-	@Group(name = "iris_MixinRedirectChunkOffset", min = 1, max = 2)
+	@Group(name = "iris_MixinRedirectChunkOffset", min = 1, max = 1)
 	@Redirect(method = "renderChunkLayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk;getOrigin()Lnet/minecraft/core/BlockPos;"), require = 0)
 	private BlockPos iris$setChunkOffset(ChunkRenderDispatcher.RenderChunk instance) {
 		BlockPos origin = instance.getOrigin();
@@ -41,7 +33,7 @@ public class MixinLevelRenderer_RedirectChunkOffset {
 		return origin;
 	}
 
-	@Group(name = "iris_MixinRedirectChunkOffset", min = 1, max = 2)
+	@Group(name = "iris_MixinRedirectChunkOffset", min = 1, max = 1)
 	@Inject(method = "renderChunkLayer",
 		at = @At(value = "INVOKE",
 			target = "me/jellysquid/mods/sodium/client/gl/device/RenderDevice.enterManagedCode ()V",

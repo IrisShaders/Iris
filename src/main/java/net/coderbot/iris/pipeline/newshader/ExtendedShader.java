@@ -67,7 +67,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private Runnable chunkOffsetListener;
 	private final Vector3f chunkOffset = new Vector3f();
 	private Matrix4f projectionOverride;
-	private PoseStack modelViewOverride;
+	private Matrix4f modelViewOverride;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
@@ -98,6 +98,9 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.parent = parent;
 		this.inputs = inputs;
 
+		this.PROJECTION_MATRIX = new RedirectingUniform("ProjMat2", 0, 0, this, this::setProjectionOverride);
+		this.MODEL_VIEW_MATRIX = new RedirectingUniform("ModelViewMat2", 0, 0, this, this::setModelViewOverride);
+
 		this.intensitySwizzle = isIntensity;
 	}
 
@@ -112,7 +115,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		}, listener -> {});
 		uniformBuilder.uniformMatrix("iris_ModelViewMat", () -> {
 			if (modelViewOverride != null) {
-				return modelViewOverride.last().pose();
+				return modelViewOverride;
 			} else {
 				return RenderSystem.getModelViewMatrix();
 			}
@@ -215,8 +218,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		return chunkOffset;
 	}
 
-    public void setProjectionModelViewOverride(PoseStack arg2, Matrix4f arg3) {
+    public void setProjectionOverride(Matrix4f arg3) {
 		this.projectionOverride = arg3;
-		this.modelViewOverride = arg2;
+    }
+
+	public void setModelViewOverride(Matrix4f arg3) {
+		this.modelViewOverride = arg3;
     }
 }
