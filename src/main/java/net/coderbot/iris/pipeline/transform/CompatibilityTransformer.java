@@ -352,7 +352,10 @@ public class CompatibilityTransformer {
 							.getNodeMatch("name*", DeclarationMember.class)
 							.getAncestor(TypeAndInitDeclaration.class)
 							.getMembers()) {
-						outDeclarations.put(member.getName().getName(), extractedType);
+								String name = member.getName().getName();
+								if (!name.startsWith("gl_")) {
+									outDeclarations.put(name, extractedType);
+								}
 					}
 				}
 			}
@@ -377,6 +380,9 @@ public class CompatibilityTransformer {
 							.getAncestor(TypeAndInitDeclaration.class)
 							.getMembers()) {
 						String name = inDeclarationMember.getName().getName();
+						if (name.startsWith("gl_")) {
+							continue;
+						}
 
 						// patch missing declarations with an initialization
 						if (!outDeclarations.containsKey(name)) {
