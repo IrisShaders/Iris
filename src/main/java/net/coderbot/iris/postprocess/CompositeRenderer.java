@@ -367,7 +367,7 @@ public class CompositeRenderer {
 
 				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
-				CommonUniforms.addDynamicUniforms(builder);
+				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
 
 				customUniforms.assignTo(builder);
 

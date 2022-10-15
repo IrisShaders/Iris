@@ -378,7 +378,7 @@ public class FinalPassRenderer {
 
 				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
-				CommonUniforms.addDynamicUniforms(builder);
+				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
 				customUniforms.assignTo(builder);
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);

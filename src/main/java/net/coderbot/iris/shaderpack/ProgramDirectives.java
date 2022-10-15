@@ -33,7 +33,7 @@ public class ProgramDirectives {
 	private final ImmutableSet<Integer> mipmappedBuffers;
 	private final ImmutableMap<Integer, Boolean> explicitFlips;
 
-	private ProgramDirectives(int[] drawBuffers, float viewportScale, @Nullable AlphaTestOverride alphaTestOverride,
+	private ProgramDirectives(int[] drawBuffers, float viewportScale, @Nullable AlphaTest alphaTestOverride,
 							  @Nullable BlendModeOverride blendModeOverride, List<BufferBlendInformation> bufferBlendInformations, ImmutableSet<Integer> mipmappedBuffers,
 							  ImmutableMap<Integer, Boolean> explicitFlips) {
 		this.drawBuffers = drawBuffers;

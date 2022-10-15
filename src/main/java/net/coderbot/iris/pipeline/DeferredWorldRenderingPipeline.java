@@ -983,7 +983,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 					throw new RuntimeException("Shader compilation failed!", e);
 				}
 
-				CommonUniforms.addDynamicUniforms(builder);
+				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
 				this.customUniforms.assignTo(builder);
 
 				Supplier<ImmutableSet<Integer>> flipped;

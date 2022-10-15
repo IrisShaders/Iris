@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Ints;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -14,6 +15,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ComputeProgram;
@@ -27,7 +29,6 @@ import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.pipeline.ClearPass;
 import net.coderbot.iris.pipeline.ClearPassCreator;
 import net.coderbot.iris.pipeline.CustomTextureManager;
-import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.HorizonRenderer;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.ShadowRenderer;
@@ -79,6 +80,7 @@ import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -476,8 +478,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
+		List<BufferBlendOverride> bufferOverrides = new ArrayList<>();
+
+		source.getDirectives().getBufferBlendOverrides().forEach(information -> {
+			int index = Ints.indexOf(source.getDirectives().getDrawBuffers(), information.getIndex());
+			if (index > -1) {
+				bufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+			}
+		});
+
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent,
-				baseline, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, fogMode, isIntensity, isFullbright, customUniforms);
+				baseline, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, fogMode, isIntensity, isFullbright, customUniforms, bufferOverrides);
 
 		loadedShaders.add(extendedShader);
 
@@ -528,8 +539,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlFramebuffer framebuffer = this.shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
+		List<BufferBlendOverride> bufferOverrides = new ArrayList<>();
+
+		source.getDirectives().getBufferBlendOverrides().forEach(information -> {
+			int index = Ints.indexOf(source.getDirectives().getDrawBuffers(), information.getIndex());
+			if (index > -1) {
+				bufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+			}
+		});
+
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
-				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, FogMode.PER_VERTEX, isIntensity, isFullbright, customUniforms);
+				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, FogMode.PER_VERTEX, isIntensity, isFullbright, customUniforms, bufferOverrides);
 
 		loadedShaders.add(extendedShader);
 
@@ -661,7 +681,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			for (ComputeProgram computeProgram : shadowComputes) {
 				if (computeProgram != null) {
-					computeProgram.dispatch(shadowMapResolution, shadowMapResolution, customUniforms);
+					computeProgram.use();
+					customUniforms.push(computeProgram);
+					computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
 				}
 			}
 

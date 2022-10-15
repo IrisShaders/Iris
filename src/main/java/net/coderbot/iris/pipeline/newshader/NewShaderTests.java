@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
@@ -24,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 public class NewShaderTests {
@@ -31,7 +33,7 @@ public class NewShaderTests {
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, ShaderAttributeInputs inputs, FrameUpdateNotifier updateNotifier,
 										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isIntensity,
-										boolean isFullbright, CustomUniforms customUniforms) throws IOException {
+										boolean isFullbright, CustomUniforms customUniforms, @Nullable List<BufferBlendOverride> bufferBlendInformation) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
 
@@ -123,7 +125,7 @@ public class NewShaderTests {
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
-		}, isIntensity, parent, inputs, source.getDirectives().getBufferBlendOverrides(), customUniforms);
+		}, isIntensity, parent, inputs, bufferBlendInformation, customUniforms);
 	}
 
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,

@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Ints;
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -22,6 +23,7 @@ import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -118,7 +120,13 @@ public class SodiumTerrainPipeline {
 
 		terrainSource.ifPresentOrElse(sources -> {
 			terrainBlendOverride = sources.getDirectives().getBlendModeOverride();
-			terrainBufferOverrides = sources.getDirectives().getBufferBlendOverrides();
+			terrainBufferOverrides = new ArrayList<>();
+			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
+				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());
+				if (index > -1) {
+					terrainBufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+				}
+			});
 			terrainCutoutAlpha = sources.getDirectives().getAlphaTestOverride().or(terrainCutoutDefault);
 
 			Map<PatchShaderType, String> transformed = TransformPatcher.patchSodium(
@@ -147,7 +155,13 @@ public class SodiumTerrainPipeline {
 
 		translucentSource.ifPresentOrElse(sources -> {
 			translucentBlendOverride = sources.getDirectives().getBlendModeOverride();
-			translucentBufferOverrides = sources.getDirectives().getBufferBlendOverrides();
+			translucentBufferOverrides = new ArrayList<>();
+			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
+				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());
+				if (index > -1) {
+					translucentBufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+				}
+			});
 			translucentAlpha = sources.getDirectives().getAlphaTestOverride().or(translucentDefault);
 
 			Map<PatchShaderType, String> transformed = TransformPatcher.patchSodium(
@@ -172,7 +186,13 @@ public class SodiumTerrainPipeline {
 
 		programSet.getShadow().ifPresentOrElse(sources -> {
 			shadowBlendOverride = sources.getDirectives().getBlendModeOverride();
-			shadowBufferOverrides = sources.getDirectives().getBufferBlendOverrides();
+			shadowBufferOverrides = new ArrayList<>();
+			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
+				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());
+				if (index > -1) {
+					shadowBufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+				}
+			});
 			shadowAlpha = sources.getDirectives().getAlphaTestOverride().or(shadowDefault);
 
 			Map<PatchShaderType, String> transformed = TransformPatcher.patchSodium(

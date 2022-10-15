@@ -57,15 +57,13 @@ public final class ComputeProgram extends GlResource {
 
 	public void use() {
 		ProgramManager.glUseProgram(getGlId());
-	}
 
-	public void dispatch(float width, float height) {
 		uniforms.update();
 		samplers.update();
 		images.update();
+	}
 
-		customUniforms.push(this);
-
+	public void dispatch(float width, float height) {
 		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::allowConcurrentCompute).orElse(false)) {
 			IrisRenderSystem.memoryBarrier(40);
 		}
