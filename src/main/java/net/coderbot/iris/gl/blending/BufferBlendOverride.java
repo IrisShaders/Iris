@@ -1,15 +1,15 @@
 package net.coderbot.iris.gl.blending;
 
 public class BufferBlendOverride {
-	private final int index;
+	private final int drawBuffer;
 	private final BlendMode blendMode;
 
-	public BufferBlendOverride(int index, BlendMode blendMode) {
-		this.index = index;
+	public BufferBlendOverride(int drawBuffer, BlendMode blendMode) {
+		this.drawBuffer = drawBuffer;
 		this.blendMode = blendMode;
 	}
 
 	public void apply() {
-		BlendModeStorage.overrideBufferBlend(this.index, this.blendMode);
+		BlendModeStorage.overrideBufferBlend(this.drawBuffer, this.blendMode);
 	}
 }
