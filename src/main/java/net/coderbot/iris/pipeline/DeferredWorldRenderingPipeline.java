@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Ints;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -67,7 +68,6 @@ import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
-import net.coderbot.iris.vendored.joml.Vector3i;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -87,6 +87,7 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import org.lwjgl.opengl.GL43C;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -696,8 +697,17 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		AlphaTest alphaTestOverride = programDirectives.getAlphaTestOverride().orElse(null);
 
+		List<BufferBlendOverride> bufferOverrides = new ArrayList<>();
+
+		programDirectives.getBufferBlendOverrides().forEach(information -> {
+			int index = Ints.indexOf(programDirectives.getDrawBuffers(), information.getIndex());
+			if (index > -1) {
+				bufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+			}
+		});
+
 		Pass pass = new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
-				programDirectives.getBlendModeOverride(), programDirectives.getBufferBlendOverrides(), shadow);
+			programDirectives.getBlendModeOverride(), bufferOverrides, shadow);
 
 		// tell the customUniforms that those locations belong to this pass
 		this.customUniforms.mapholderToPass(builder, pass);
@@ -891,7 +901,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 			for (ComputeProgram computeProgram : shadowComputes) {
 				if (computeProgram != null) {
-					computeProgram.dispatch(shadowMapResolution, shadowMapResolution, customUniforms);
+					computeProgram.use();
+					this.customUniforms.push(computeProgram);
+					computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
 				}
 			}
 
@@ -971,7 +983,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 					throw new RuntimeException("Shader compilation failed!", e);
 				}
 
-				CommonUniforms.addDynamicUniforms(builder, FogMode.PER_VERTEX);
+				CommonUniforms.addDynamicUniforms(builder);
 				this.customUniforms.assignTo(builder);
 
 				Supplier<ImmutableSet<Integer>> flipped;
@@ -1000,6 +1012,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 				programs[i] = builder.buildCompute();
 
+				// tell the customUniforms that those locations belong to this pass
 				this.customUniforms.mapholderToPass(builder, programs[i]);
 
 				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
