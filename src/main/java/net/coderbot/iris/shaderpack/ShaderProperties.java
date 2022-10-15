@@ -1,7 +1,6 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -17,7 +16,7 @@ import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.texture.TextureScaleOverride;
-import net.coderbot.iris.gl.blending.BufferBlendOverride;
+import net.coderbot.iris.gl.blending.BufferBlendInformation;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -28,13 +27,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -81,7 +78,7 @@ public class ShaderProperties {
 	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureScaleOverride> textureScaleOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
-	private final Object2ObjectMap<String, ArrayList<BufferBlendOverride>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, ArrayList<BufferBlendInformation>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, String>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
@@ -238,7 +235,7 @@ public class ShaderProperties {
 					}
 
 					if ("off".equals(value)) {
-						bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendOverride(index, null));
+						bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendInformation(index, null));
 						return;
 					}
 
@@ -251,7 +248,7 @@ public class ShaderProperties {
 						i++;
 					}
 
-					bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendOverride(index, new BlendMode(modes[0], modes[1], modes[2], modes[3])));
+					bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendInformation(index, new BlendMode(modes[0], modes[1], modes[2], modes[3])));
 
 					return;
 				}
@@ -567,7 +564,7 @@ public class ShaderProperties {
 		return blendModeOverrides;
 	}
 
-	public Object2ObjectMap<String, ArrayList<BufferBlendOverride>> getBufferBlendOverrides() {
+	public Object2ObjectMap<String, ArrayList<BufferBlendInformation>> getBufferBlendOverrides() {
 		return bufferBlendOverrides;
 	}
 

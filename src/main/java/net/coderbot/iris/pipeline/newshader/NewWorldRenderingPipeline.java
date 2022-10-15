@@ -20,6 +20,7 @@ import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
@@ -252,11 +253,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				shouldBindPBR = IrisSamplers.hasPBRSamplers(customTextureSamplerInterceptor);
 			}
 
-			// This must be done, as there's no Vanilla binding for Sodium shaders.
-			customTextureSamplerInterceptor.addExternalSampler(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, "lightmap");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
-
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
@@ -294,11 +291,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				shouldBindPBR = IrisSamplers.hasPBRSamplers(customTextureSamplerInterceptor);
 			}
 
-			// This must be done, as there's no Vanilla binding for Sodium shaders.
-			customTextureSamplerInterceptor.addExternalSampler(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, "lightmap");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
-			customTextureSamplerInterceptor.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
-
+			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
 			// Only initialize these samplers if the shadow map renderer exists.
@@ -373,11 +366,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			boolean shadowUsesImages = false;
 
 			if (shader instanceof ExtendedShader) {
-				ImageHolder holder = (ExtendedShader) shader;
-
-				// TODO: Use getActiveImages instead like what 1.16.x does?
-				shadowUsesImages = IrisImages.hasShadowImages(holder)
-					|| IrisImages.hasRenderTargetImages(holder, renderTargets);
+				ExtendedShader shader2 = (ExtendedShader) shader;
+				shadowUsesImages = shader2.hasActiveImages();
 			}
 
 			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
@@ -466,15 +456,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
+		Supplier<ImmutableSet<Integer>> flipped =
+			() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
+
 		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent,
-				baseline, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, fogMode, isIntensity, isFullbright);
+				baseline, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, fogMode, isIntensity, isFullbright, false);
 
 		loadedShaders.add(extendedShader);
-
-		Supplier<ImmutableSet<Integer>> flipped =
-				() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
-
-		addGbufferOrShadowSamplers(extendedShader, flipped, false);
 
 		return extendedShader;
 	}
@@ -518,36 +506,32 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlFramebuffer framebuffer = this.shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
-				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, FogMode.PER_VERTEX, isIntensity, isFullbright);
-
-		loadedShaders.add(extendedShader);
-
 		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
 
-		addGbufferOrShadowSamplers(extendedShader, flipped, true);
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
+				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, FogMode.PER_VERTEX, isIntensity, isFullbright, true);
+
+		loadedShaders.add(extendedShader);
 
 		return extendedShader;
 	}
 
-	private void addGbufferOrShadowSamplers(ExtendedShader extendedShader, Supplier<ImmutableSet<Integer>> flipped,
-											boolean isShadowPass) {
+	public void addGbufferOrShadowSamplers(SamplerHolder samplers, ImageHolder images, Supplier<ImmutableSet<Integer>> flipped,
+										   boolean isShadowPass, InputAvailability availability) {
 		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
 
 		ProgramSamplers.CustomTextureSamplerInterceptor samplerHolder =
-				ProgramSamplers.customTextureSamplerInterceptor(extendedShader,
+				ProgramSamplers.customTextureSamplerInterceptor(samplers,
 						customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
 
 		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false);
-		IrisImages.addRenderTargetImages(extendedShader, flipped, renderTargets);
+		IrisImages.addRenderTargetImages(images, flipped, renderTargets);
 
 		if (!shouldBindPBR) {
 			shouldBindPBR = IrisSamplers.hasPBRSamplers(samplerHolder);
 		}
 
-		samplerHolder.addDynamicSampler(this::getCurrentNormalTexture, StateUpdateNotifiers.normalTextureChangeNotifier, "normals");
-		samplerHolder.addDynamicSampler(this::getCurrentSpecularTexture, StateUpdateNotifiers.specularTextureChangeNotifier, "specular");
-
+		IrisSamplers.addLevelSamplers(samplers, this, whitePixel, availability);
 		IrisSamplers.addWorldDepthSamplers(samplerHolder, this.renderTargets);
 		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
 
@@ -559,10 +543,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			IrisSamplers.addShadowSamplers(samplerHolder, Objects.requireNonNull(shadowRenderTargets));
 		}
 
-		if (isShadowPass || IrisImages.hasShadowImages(extendedShader)) {
+		if (isShadowPass || IrisImages.hasShadowImages(images)) {
 			// Note: hasShadowSamplers currently queries for shadow images too, so the shadow render targets will be
 			// created by this point... that's sorta ugly, though.
-			IrisImages.addShadowColorImages(extendedShader, Objects.requireNonNull(shadowRenderTargets));
+			IrisImages.addShadowColorImages(images, Objects.requireNonNull(shadowRenderTargets));
 		}
 	}
 
