@@ -1,5 +1,7 @@
 package net.coderbot.iris.shaderpack.loading;
 
+import net.coderbot.iris.gl.blending.BlendMode;
+import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 
 import java.util.Objects;
@@ -33,7 +35,8 @@ public enum ProgramId {
 	EntitiesTrans(ProgramGroup.Gbuffers, "entities_trans", Entities),
 	EntitiesGlowing(ProgramGroup.Gbuffers, "entities_glowing", Entities),
 	ArmorGlint(ProgramGroup.Gbuffers, "armor_glint", Textured),
-	SpiderEyes(ProgramGroup.Gbuffers, "spidereyes", Textured),
+	SpiderEyes(ProgramGroup.Gbuffers, "spidereyes", Textured,
+			new BlendModeOverride(new BlendMode(BlendModeFunction.SRC_ALPHA.getGlId(), BlendModeFunction.ONE.getGlId(), BlendModeFunction.ZERO.getGlId(), BlendModeFunction.ONE.getGlId()))),
 
 	Hand(ProgramGroup.Gbuffers, "hand", TexturedLit),
 	Weather(ProgramGroup.Gbuffers, "weather", TexturedLit),
