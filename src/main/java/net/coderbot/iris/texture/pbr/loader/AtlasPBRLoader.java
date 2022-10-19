@@ -92,15 +92,13 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	}
 
 	protected static int fetchAtlasMipLevel(TextureAtlas atlas) {
-		TextureAtlasSprite missingSprite = atlas.getSprite(MissingTextureAtlasSprite.getLocation());
-		return ((TextureAtlasSpriteAccessor) missingSprite).getMainImage().length - 1;
+		return 4; // TODO FIX ME
 	}
 
 	@Nullable
 	protected TextureAtlasSprite createPBRSprite(TextureAtlasSprite sprite, ResourceManager resourceManager, TextureAtlas atlas, int atlasWidth, int atlasHeight, int mipLevel, PBRType pbrType) {
 		ResourceLocation spriteName = sprite.contents().name();
-		ResourceLocation imageLocation = ((TextureAtlasAccessor) atlas).callGetResourceLocation(spriteName);
-		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(imageLocation);
+		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(spriteName);
 
 		TextureAtlasSprite pbrSprite = null;
 		Optional<Resource> resource = resourceManager.getResource(pbrImageLocation);
@@ -177,7 +175,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		AnimatedTextureAccessor sourceAccessor = (AnimatedTextureAccessor) sourceTicker;
 
 		int ticks = 0;
-		for (int f = 0; f < sourceAccessor.getFrame(); f++) {
+		for (int f = 0; f < sourceAccessor.getFrames().size(); f++) {
 			ticks += ((FrameInfoAccessor) sourceAccessor.getFrames().get(f)).getTime();
 		}
 
@@ -202,8 +200,9 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 			}
 		}
 
-		targetAccessor.setFrame(targetFrame);
-		targetAccessor.setSubFrame(ticks + sourceAccessor.getSubFrame());
+		// TODO FIX
+		//targetAccessor.setFrame(targetFrame);
+		//targetAccessor.setSubFrame(ticks + sourceAccessor.getSubFrame());
 	}
 
 	protected static class PBRTextureAtlasSpriteInfo extends SpriteContents {

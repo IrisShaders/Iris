@@ -80,7 +80,7 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L696-L699">Optifine Doc</a>
 	 */
 	public static String getMcVersion() {
-		String version = SharedConstants.getCurrentVersion().getReleaseTarget();
+		String version = "1.19.3"; // TODO FIX 120
 			// release target so snapshots are set to the higher version
 			//
 			// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17

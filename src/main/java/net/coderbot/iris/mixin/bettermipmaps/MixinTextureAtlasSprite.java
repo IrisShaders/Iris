@@ -35,8 +35,8 @@ public class MixinTextureAtlasSprite {
 	// support Forge, since this works well on Fabric too, it's fine to ensure that the diff between Fabric and Forge
 	// can remain minimal. Being less dependent on specific details of Fabric is good, since it means we can be more
 	// cross-platform.
-	@ModifyArg(method = "<init>", at = @At(value = "HEAD"))
-	private static NativeImage iris$beforeGenerateMipLevels(SpriteContents value, ResourceLocation resourceLocation, FrameSize frameSize, NativeImage nativeImage) {
+	//@ModifyVariable(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/texture/SpriteContents;byMipLevel:[Lcom/mojang/blaze3d/platform/NativeImage;"), ordinal = 3)
+	private NativeImage iris$beforeGenerateMipLevels(SpriteContents value, ResourceLocation resourceLocation, FrameSize frameSize, NativeImage nativeImage) {
 		// We're injecting after the "info" field has been set, so this is safe even though we're in a constructor.
 		if (resourceLocation.getPath().contains("leaves")) {
 			// Don't ruin the textures of leaves on fast graphics, since they're supposed to have black pixels

@@ -142,10 +142,6 @@ public class Iris {
 
 		this.updateChecker.checkForUpdates(irisConfig);
 
-		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
-		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
-		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
-
 		setupCommands(Minecraft.getInstance());
 
 		initialized = true;
@@ -221,6 +217,9 @@ public class Iris {
 	}
 
 	public static void handleKeybinds(Minecraft minecraft) {
+		if (true) {
+			return;
+		}
 		if (reloadKeybind.consumeClick()) {
 			try {
 				reload();

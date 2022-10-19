@@ -368,6 +368,6 @@ public class SodiumTerrainPipeline {
 		String path = matcher.group("path");
 
 		ResourceLocation identifier = new ResourceLocation(namespace, path);
-		return ShaderLoader.getShaderSource(identifier);
+		return "";
 	}
 }

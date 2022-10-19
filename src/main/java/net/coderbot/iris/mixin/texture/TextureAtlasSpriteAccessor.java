@@ -9,9 +9,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(TextureAtlasSprite.class)
 public interface TextureAtlasSpriteAccessor {
-	@Accessor("mainImage")
-	NativeImage[] getMainImage();
-
 	@Accessor("x")
 	int getX();
 

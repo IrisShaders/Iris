@@ -114,7 +114,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 		if (ticker instanceof AnimatedTextureAccessor) {
 			AnimatedTextureAccessor accessor = (AnimatedTextureAccessor) ticker;
 
-			accessor.invokeUploadFrame(((FrameInfoAccessor) accessor.getFrames().get(accessor.getFrame())).getIndex(), sprite.getX(), sprite.getY());
+			// TODO FIX accessor.invokeUploadFrame(((FrameInfoAccessor) accessor.getFrames().get(sprite.contents().createTicker().frame)).getIndex(), sprite.getX(), sprite.getY());
 			return;
 		}
 

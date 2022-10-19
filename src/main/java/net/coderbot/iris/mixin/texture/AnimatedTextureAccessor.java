@@ -13,17 +13,6 @@ import java.util.List;
 
 @Mixin(targets = "net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture")
 public interface AnimatedTextureAccessor {
-	@Accessor("frame")
-	int getFrame();
-
-	@Accessor("frame")
-	void setFrame(int frame);
-
-	@Accessor("subFrame")
-	int getSubFrame();
-
-	@Accessor("subFrame")
-	void setSubFrame(int subFrame);
 
 	@Accessor("frames")
 	List<SpriteContents.FrameInfo> getFrames();
