@@ -10,6 +10,8 @@ accessible  class   net/minecraft/client/renderer/texture/Stitcher$Holder
 accessible  class   net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo
 accessible  class   net/minecraft/client/Options$FieldAccess
 extendable class net/minecraft/client/renderer/texture/TextureAtlasSprite$Info
+accessible class net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture
+accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
 accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask
 accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask$CompileResults
 extendable method com/mojang/blaze3d/shaders/Uniform set (Lcom/mojang/math/Matrix4f;)V

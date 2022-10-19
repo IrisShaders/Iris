@@ -1,5 +1,6 @@
 package net.coderbot.iris.mixin.optimized_stitching;
 
+import net.coderbot.iris.mixin.texture.StitcherHolderAccessor;
 import net.minecraft.client.renderer.texture.Stitcher;
 import net.minecraft.client.renderer.texture.Stitcher.Holder;
 import net.minecraft.client.renderer.texture.Stitcher.Region;
@@ -35,8 +36,8 @@ public class MixinStitcher {
 	 */
 	@Overwrite
 	private boolean expand(Holder holder) {
-		int newEffectiveWidth = Mth.smallestEncompassingPowerOfTwo(storageX + holder.width);
-		int newEffectiveHeight = Mth.smallestEncompassingPowerOfTwo(storageY + holder.height);
+		int newEffectiveWidth = Mth.smallestEncompassingPowerOfTwo(storageX + ((StitcherHolderAccessor) (Object) holder).getWidth());
+		int newEffectiveHeight = Mth.smallestEncompassingPowerOfTwo(storageY + ((StitcherHolderAccessor) (Object) holder).getHeight());
 		boolean canFitWidth = newEffectiveWidth <= maxWidth;
 		boolean canFitHeight = newEffectiveHeight <= maxHeight;
 
@@ -111,7 +112,7 @@ public class MixinStitcher {
 					 *
 					 * Vanilla does not perform this check.
 					 */
-					growWidth = holder.width > storageX;
+					growWidth = ((StitcherHolderAccessor) (Object) holder).getWidth() > storageX;
 				}
 			} else {
 				if (wouldGrowEffectiveHeight) {
@@ -143,14 +144,14 @@ public class MixinStitcher {
 		Region region;
 		if (growWidth) {
 			if (storageY == 0) {
-				storageY = holder.height;
+				storageY = ((StitcherHolderAccessor) (Object) holder).getHeight();
 			}
 
-			region = new Region(storageX, 0, holder.width, storageY);
-			storageX += holder.width;
+			region = new Region(storageX, 0, ((StitcherHolderAccessor) (Object) holder).getWidth(), storageY);
+			storageX += ((StitcherHolderAccessor) (Object) holder).getWidth();
 		} else {
-			region = new Region(0, storageY, storageX, holder.height);
-			storageY += holder.height;
+			region = new Region(0, storageY, storageX, ((StitcherHolderAccessor) (Object) holder).getHeight());
+			storageY += ((StitcherHolderAccessor) (Object) holder).getHeight();
 		}
 
 		region.add(holder);

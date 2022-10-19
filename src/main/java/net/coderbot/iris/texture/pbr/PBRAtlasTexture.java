@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.TextureUtil;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.mixin.texture.AnimatedTextureAccessor;
 import net.coderbot.iris.mixin.texture.FrameInfoAccessor;
+import net.coderbot.iris.mixin.texture.SpriteContentsAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
 import net.coderbot.iris.texture.util.TextureExporter;
 import net.coderbot.iris.texture.util.TextureManipulationUtil;
@@ -11,6 +12,7 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.Tickable;
@@ -31,7 +33,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 	protected final PBRType type;
 	protected final ResourceLocation id;
 	protected final Map<ResourceLocation, TextureAtlasSprite> sprites = new HashMap<>();
-	protected final List<Tickable> animationTickers = new ArrayList<>();
+	protected final List<TextureAtlasSprite.Ticker> animationTickers = new ArrayList<>();
 
 	public PBRAtlasTexture(TextureAtlas atlasTexture, PBRType type) {
 		this.atlasTexture = atlasTexture;
@@ -48,9 +50,9 @@ public class PBRAtlasTexture extends AbstractTexture {
 	}
 
 	public void addSprite(TextureAtlasSprite sprite) {
-		sprites.put(sprite.getName(), sprite);
-		if (sprite.getAnimationTicker() != null) {
-			animationTickers.add(sprite.getAnimationTicker());
+		sprites.put(sprite.contents().name(), sprite);
+		if (sprite.createTicker() != null) {
+			animationTickers.add(sprite.createTicker());
 		}
 	}
 
@@ -108,11 +110,11 @@ public class PBRAtlasTexture extends AbstractTexture {
 	}
 
 	protected void uploadSprite(TextureAtlasSprite sprite) {
-		Tickable ticker = sprite.getAnimationTicker();
+		SpriteContents.AnimatedTexture ticker = ((SpriteContentsAccessor) sprite.contents()).getAnimatedTexture();
 		if (ticker instanceof AnimatedTextureAccessor) {
 			AnimatedTextureAccessor accessor = (AnimatedTextureAccessor) ticker;
 
-			accessor.invokeUploadFrame(((FrameInfoAccessor) accessor.getFrames().get(accessor.getFrame())).getIndex());
+			accessor.invokeUploadFrame(((FrameInfoAccessor) accessor.getFrames().get(accessor.getFrame())).getIndex(), sprite.getX(), sprite.getY());
 			return;
 		}
 
@@ -121,8 +123,8 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 	public void cycleAnimationFrames() {
 		bind();
-		for (Tickable ticker : animationTickers) {
-			ticker.tick();
+		for (TextureAtlasSprite.Ticker ticker : animationTickers) {
+			ticker.tickAndUpload();
 		}
 	}
 

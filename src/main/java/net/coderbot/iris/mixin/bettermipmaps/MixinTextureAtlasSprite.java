@@ -1,19 +1,22 @@
 package net.coderbot.iris.mixin.bettermipmaps;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.Objects;
 
-@Mixin(TextureAtlasSprite.class)
+@Mixin(SpriteContents.class)
 public class MixinTextureAtlasSprite {
 	// Generate some color tables for gamma correction.
 	private static final float[] SRGB_TO_LINEAR = new float[256];
@@ -32,13 +35,10 @@ public class MixinTextureAtlasSprite {
 	// support Forge, since this works well on Fabric too, it's fine to ensure that the diff between Fabric and Forge
 	// can remain minimal. Being less dependent on specific details of Fabric is good, since it means we can be more
 	// cross-platform.
-	@ModifyVariable(method = "<init>", at = @At(value = "FIELD",
-		target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;animatedTexture:Lnet/minecraft/client/renderer/texture/TextureAtlasSprite$AnimatedTexture;"), argsOnly = true)
-	private NativeImage iris$beforeGenerateMipLevels(NativeImage nativeImage, TextureAtlas arg, TextureAtlasSprite.Info info) {
+	@ModifyArg(method = "<init>", at = @At(value = "HEAD"))
+	private static NativeImage iris$beforeGenerateMipLevels(SpriteContents value, ResourceLocation resourceLocation, FrameSize frameSize, NativeImage nativeImage) {
 		// We're injecting after the "info" field has been set, so this is safe even though we're in a constructor.
-		ResourceLocation name = Objects.requireNonNull(info).name();
-
-		if (name.getPath().contains("leaves")) {
+		if (resourceLocation.getPath().contains("leaves")) {
 			// Don't ruin the textures of leaves on fast graphics, since they're supposed to have black pixels
 			// apparently.
 			return nativeImage;
@@ -59,7 +59,7 @@ public class MixinTextureAtlasSprite {
 	 * black color does not leak over into sampling.
 	 */
 	@Unique
-	private void iris$fillInTransparentPixelColors(NativeImage nativeImage) {
+	private static void iris$fillInTransparentPixelColors(NativeImage nativeImage) {
 		// Calculate an average color from all pixels that are not completely transparent.
 		//
 		// This average is weighted based on the (non-zero) alpha value of the pixel.

@@ -1,48 +1,72 @@
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
+import io.github.coolcrabs.accesswidener.AccessWidener;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
+import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.fabric.FabricContext;
 import io.github.coolcrabs.brachyura.fabric.FabricLoader;
 import io.github.coolcrabs.brachyura.fabric.FabricMaven;
 import io.github.coolcrabs.brachyura.fabric.FabricModule;
+import io.github.coolcrabs.brachyura.fabric.Intermediary;
 import io.github.coolcrabs.brachyura.fabric.SimpleFabricProject;
 import io.github.coolcrabs.brachyura.fabric.FabricContext.ModDependencyCollector;
 import io.github.coolcrabs.brachyura.fabric.FabricContext.ModDependencyFlag;
+import io.github.coolcrabs.brachyura.mappings.MappingHasher;
+import io.github.coolcrabs.brachyura.mappings.MappingHelper;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
+import io.github.coolcrabs.brachyura.mappings.tinyremapper.MappingTreeMappingProvider;
+import io.github.coolcrabs.brachyura.mappings.tinyremapper.TinyRemapperHelper;
+import io.github.coolcrabs.brachyura.mappings.tinyremapper.TrWrapper;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
 import io.github.coolcrabs.brachyura.processing.ProcessingSink;
+import io.github.coolcrabs.brachyura.processing.ProcessingSource;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
+import io.github.coolcrabs.brachyura.processing.sinks.ZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
+import io.github.coolcrabs.brachyura.processing.sources.ZipProcessingSource;
 import io.github.coolcrabs.brachyura.project.java.BuildModule;
+import io.github.coolcrabs.brachyura.util.AtomicDirectory;
+import io.github.coolcrabs.brachyura.util.AtomicFile;
+import io.github.coolcrabs.brachyura.util.CloseableArrayList;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
+import io.github.coolcrabs.brachyura.util.MessageDigestUtil;
+import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
+import io.github.coolmineman.trieharder.FindReplaceSourceRemapper;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
+import net.fabricmc.tinyremapper.TinyRemapper;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Constants;
+import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 
 public class Buildscript extends SimpleFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = false;
-	static final String MC_VERSION = "1.19.2";
+	static final String MC_VERSION = "22w42a";
 	static final String customSodiumName = "sodium-fabric-mc1.19.2-0.4.3+rev.653869b.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
@@ -51,6 +75,112 @@ public class Buildscript extends SimpleFabricProject {
 		SODIUM ? "sodiumCompatibility" : "noSodiumStub",
 		"headers"
 	};
+
+	public class IrisFabricContext extends FabricContext {
+		@Override
+		public VersionMeta createMcVersion() {
+			return Buildscript.this.createMcVersion();
+		}
+
+		@Override
+		public MappingTree createMappings() {
+			return Buildscript.this.createMappings();
+		}
+
+		@Override
+		public FabricLoader getLoader() {
+			return Buildscript.this.getLoader();
+		}
+
+		@Override
+		public void getModDependencies(ModDependencyCollector d) {
+			Buildscript.this.getModDependencies(d);
+		}
+
+		@Override
+		protected @Nullable AccessWidener createAw() {
+			return Buildscript.this.createAw();
+		}
+
+		@Override
+		public @Nullable BrachyuraDecompiler decompiler() {
+			return Buildscript.this.decompiler();
+		}
+
+		@Override
+		protected MappingTree createIntermediary() {
+			return Intermediary.ofMaven(FabricMaven.URL, FabricMaven.intermediary("1.19.2")).tree;
+		}
+
+
+		@Override
+		protected RemappedJar createIntermediaryJar() {
+			Path mergedJar = getMergedJar();
+			String intermediaryHash = MappingHasher.hashSha256(intermediary.get());
+			return new RemappedJar(mergedJar, intermediaryHash);
+		}
+
+		@Override
+		protected List<ModDependency> createRemappedModDependencies() {
+			class RemapInfo {
+				ModDependency source;
+				ModDependency target;
+			}
+			try {
+				List<ModDependency> unmapped = modDependencies.get();
+				if (unmapped == null || unmapped.isEmpty()) return Collections.emptyList();
+				List<RemapInfo> remapinfo = new ArrayList<>(unmapped.size());
+				List<ModDependency> remapped = new ArrayList<>(unmapped.size());
+				MessageDigest dephasher = MessageDigestUtil.messageDigest(MessageDigestUtil.SHA256);
+				dephasher.update(remappedModsLogicVersion()); // Bump this if the logic changes
+				for (ModDependency dep : unmapped) {
+					hashDep(dephasher, dep);
+				}
+				for (JavaJarDependency dep : mcClasspath.get()) {
+					hashDep(dephasher, dep);
+				}
+				dephasher.update(namedJar.get().mappingHash.getBytes(StandardCharsets.UTF_8));
+				MessageDigestUtil.update(dephasher, TinyRemapperHelper.VERSION);
+				String dephash = MessageDigestUtil.toHexHash(dephasher.digest());
+				Path depdir = remappedModsRootPath();
+				Path resultdir = depdir.resolve(dephash);
+				for (ModDependency u : unmapped) {
+					RemapInfo ri = new RemapInfo();
+					remapinfo.add(ri);
+					ri.source = u;
+					remapped.add(ri.source);
+				}
+				return remapped;
+			} catch (Exception e) {
+				throw Util.sneak(e);
+			}
+		}
+		@Override
+		public MappingTree createMojmap() {
+			return createMojmap(versionMeta.get());
+		}
+
+		public MappingTree createMojmap(VersionMeta meta) {
+			try {
+				MemoryMappingTree r = new MemoryMappingTree(true);
+				Minecraft.getMojmap(meta).accept(r);
+				MappingHelper.dropNullInNamespace(r, Namespaces.INTERMEDIARY);
+				return r;
+			} catch (IOException e) {
+				throw Util.sneak(e);
+			}
+		}
+
+		@Override
+		public Path getContextRoot() {
+			return getProjectDir();
+		}
+	}
+
+	@Override
+	protected FabricContext createContext() {
+		return new IrisFabricContext();
+	}
 
 	private static final String[] HEADER_SOURCE_SETS = new String[] {
 		"headers"
@@ -226,7 +356,7 @@ public class Buildscript extends SimpleFabricProject {
 						"-AbrachyuraInMap=" + writeMappings4FabricStuff().toAbsolutePath().toString(),
 						"-AbrachyuraOutMap=" + mixinOut, // Remaps shadows etc
 						"-AbrachyuraInNamespace=" + Namespaces.NAMED,
-						"-AbrachyuraOutNamespace=" + Namespaces.INTERMEDIARY,
+						"-AbrachyuraOutNamespace=" + Namespaces.NAMED,
 						"-AoutRefMapFile=" + getModuleName() + "-refmap.json", // Remaps annotations
 						"-AdefaultObfuscationEnv=brachyura"
 					)
