@@ -47,6 +47,9 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 			LinearBlendFunction.INSTANCE
 	);
 
+	private PBRAtlasTexture normalAtlas = null;
+	private PBRAtlasTexture specularAtlas = null;
+
 	@Override
 	public void load(TextureAtlas atlas, ResourceManager resourceManager, PBRTextureConsumer pbrTextureConsumer) {
 		TextureInfo textureInfo = TextureInfoCache.INSTANCE.getInfo(atlas.getId());
@@ -54,8 +57,6 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		int atlasHeight = textureInfo.getHeight();
 		int mipLevel = fetchAtlasMipLevel(atlas);
 
-		PBRAtlasTexture normalAtlas = null;
-		PBRAtlasTexture specularAtlas = null;
 		for (TextureAtlasSprite sprite : ((TextureAtlasAccessor) atlas).getTexturesByName().values()) {
 			if (true) {
 				TextureAtlasSprite normalSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, mipLevel, PBRType.NORMAL);
@@ -152,7 +153,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 				int x = ((TextureAtlasSpriteAccessor) sprite).getX();
 				int y = ((TextureAtlasSpriteAccessor) sprite).getY();
 				pbrSprite = new PBRTextureAtlasSprite(pbrSpriteName, pbrSpriteInfo, atlasWidth, atlasHeight, x, y);
-				syncAnimation(sprite, pbrSprite);
+				syncAnimation(createAndReturnAtlas(atlas, pbrType), sprite, pbrSprite);
 			} catch (FileNotFoundException e) {
 				//
 			} catch (RuntimeException e) {
@@ -165,7 +166,23 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		return pbrSprite;
 	}
 
-	protected void syncAnimation(TextureAtlasSprite source, TextureAtlasSprite target) {
+	private PBRAtlasTexture createAndReturnAtlas(TextureAtlas atlas, PBRType type) {
+		if (type == PBRType.NORMAL) {
+			if (normalAtlas == null) {
+				normalAtlas = new PBRAtlasTexture(atlas, PBRType.NORMAL);
+			}
+			return normalAtlas;
+		} else if (type == PBRType.SPECULAR) {
+			if (specularAtlas == null) {
+				specularAtlas = new PBRAtlasTexture(atlas, PBRType.SPECULAR);
+			}
+			return specularAtlas;
+		} else {
+			throw new IllegalStateException("Unknown PBR Type: " + type);
+		}
+	}
+
+	protected void syncAnimation(PBRAtlasTexture atlas, TextureAtlasSprite source, TextureAtlasSprite target) {
 		SpriteContents.AnimatedTexture sourceTicker = ((SpriteContentsAccessor) source.contents()).getAnimatedTexture();
 		SpriteContents.AnimatedTexture targetTicker = ((SpriteContentsAccessor) target.contents()).getAnimatedTexture();
 		if (!(sourceTicker instanceof AnimatedTextureAccessor) || !(targetTicker instanceof AnimatedTextureAccessor)) {
@@ -199,10 +216,8 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 				break;
 			}
 		}
-
-		// TODO FIX
-		//targetAccessor.setFrame(targetFrame);
-		//targetAccessor.setSubFrame(ticks + sourceAccessor.getSubFrame());
+		atlas.setFrameOnSprite(target, targetFrame);
+		atlas.setSubFrameOnSprite(target, ticks + atlas.getSubFrameFromSprite(source));
 	}
 
 	protected static class PBRTextureAtlasSpriteInfo extends SpriteContents {

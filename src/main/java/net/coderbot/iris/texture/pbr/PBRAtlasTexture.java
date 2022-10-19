@@ -1,11 +1,10 @@
 package net.coderbot.iris.texture.pbr;
 
 import com.mojang.blaze3d.platform.TextureUtil;
-import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.mixin.texture.AnimatedTextureAccessor;
 import net.coderbot.iris.mixin.texture.FrameInfoAccessor;
 import net.coderbot.iris.mixin.texture.SpriteContentsAccessor;
-import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
+import net.coderbot.iris.mixin.texture.TickerAccessor;
 import net.coderbot.iris.texture.util.TextureExporter;
 import net.coderbot.iris.texture.util.TextureManipulationUtil;
 import net.minecraft.CrashReport;
@@ -15,25 +14,19 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.Tickable;
-import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class PBRAtlasTexture extends AbstractTexture {
 	protected final TextureAtlas atlasTexture;
 	protected final PBRType type;
 	protected final ResourceLocation id;
 	protected final Map<ResourceLocation, TextureAtlasSprite> sprites = new HashMap<>();
-	protected final List<TextureAtlasSprite.Ticker> animationTickers = new ArrayList<>();
+	protected final Map<TextureAtlasSprite, SpriteContents.Ticker> animationTickers = new HashMap<>();
 
 	public PBRAtlasTexture(TextureAtlas atlasTexture, PBRType type) {
 		this.atlasTexture = atlasTexture;
@@ -52,7 +45,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 	public void addSprite(TextureAtlasSprite sprite) {
 		sprites.put(sprite.contents().name(), sprite);
 		if (sprite.createTicker() != null) {
-			animationTickers.add(sprite.createTicker());
+			animationTickers.put(sprite, (SpriteContents.Ticker) sprite.contents().createTicker());
 		}
 	}
 
@@ -111,21 +104,47 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 	protected void uploadSprite(TextureAtlasSprite sprite) {
 		SpriteContents.AnimatedTexture ticker = ((SpriteContentsAccessor) sprite.contents()).getAnimatedTexture();
-		if (ticker instanceof AnimatedTextureAccessor) {
+		if (ticker instanceof AnimatedTextureAccessor && animationTickers.containsKey(sprite)) {
 			AnimatedTextureAccessor accessor = (AnimatedTextureAccessor) ticker;
 
-			// TODO FIX accessor.invokeUploadFrame(((FrameInfoAccessor) accessor.getFrames().get(sprite.contents().createTicker().frame)).getIndex(), sprite.getX(), sprite.getY());
+			accessor.invokeUploadFrame(((FrameInfoAccessor) accessor.getFrames().get(getFrameFromSprite(sprite))).getIndex(), sprite.getX(), sprite.getY());
 			return;
 		}
 
 		sprite.uploadFirstFrame();
 	}
 
+	public int getFrameFromSprite(TextureAtlasSprite sprite) {
+		if (animationTickers.containsKey(sprite)) {
+			return ((TickerAccessor) animationTickers.get(sprite)).getFrame();
+		}
+		return 0;
+	}
+
+	public int getSubFrameFromSprite(TextureAtlasSprite sprite) {
+		if (animationTickers.containsKey(sprite)) {
+			return ((TickerAccessor) animationTickers.get(sprite)).getSubFrame();
+		}
+		return 0;
+	}
+
+	public void setFrameOnSprite(TextureAtlasSprite sprite, int frame) {
+		if (animationTickers.containsKey(sprite)) {
+			((TickerAccessor) animationTickers.get(sprite)).setFrame(frame);
+		}
+	}
+
+	public void setSubFrameOnSprite(TextureAtlasSprite sprite, int frame) {
+		if (animationTickers.containsKey(sprite)) {
+			((TickerAccessor) animationTickers.get(sprite)).setSubFrame(frame);
+		}
+	}
+
 	public void cycleAnimationFrames() {
 		bind();
-		for (TextureAtlasSprite.Ticker ticker : animationTickers) {
-			ticker.tickAndUpload();
-		}
+		animationTickers.forEach((textureAtlasSprite, ticker) -> {
+			ticker.tickAndUpload(textureAtlasSprite.getX(), textureAtlasSprite.getY());
+		});
 	}
 
 	@Override
