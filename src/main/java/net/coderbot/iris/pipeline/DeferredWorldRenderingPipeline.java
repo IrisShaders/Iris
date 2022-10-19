@@ -287,18 +287,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.shadowComputes = createShadowComputes(programs.getShadowCompute(), programs);
 
-		if (shadowRenderTargets != null) {
-			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
-			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
-
-			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
-				programs.getPackDirectives(), shadowRenderTargets);
-		} else {
-			this.shadowClearPasses = ImmutableList.of();
-			this.shadowClearPassesFull = ImmutableList.of();
-			this.shadowRenderer = null;
-		}
-
 		this.table = new ProgramTable<>((condition, availability) -> {
 			int idx;
 
@@ -347,9 +335,20 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			});
 		});
 
-		if (shadowRenderer != null) {
+		if (shadowRenderTargets != null) {
+			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
+			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
+
+			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
+				programs.getPackDirectives(), shadowRenderTargets);
+
 			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
 			shadowRenderer.setUsesImages(shadowProgram != null && shadowProgram.getActiveImages() > 0);
+
+		} else {
+			this.shadowClearPasses = ImmutableList.of();
+			this.shadowClearPassesFull = ImmutableList.of();
+			this.shadowRenderer = null;
 		}
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
