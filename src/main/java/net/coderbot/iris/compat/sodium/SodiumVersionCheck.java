@@ -1,6 +1,7 @@
 package net.coderbot.iris.compat.sodium;
 
 import com.google.common.collect.ImmutableList;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.Optional;
 
@@ -12,7 +13,7 @@ public class SodiumVersionCheck {
 	// of pain. So don't forget!
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
 			// Dev version
-			AllowedSodiumVersion.exact("0.4.4+build.18",
+			AllowedSodiumVersion.exact("0.4.4+rev.f01f931-dirty",
 					"https://modrinth.com/mod/sodium/version/mc1.19.2-0.4.4")
 	);
 
@@ -23,7 +24,7 @@ public class SodiumVersionCheck {
 
 	public static boolean isAllowedVersion(String sodiumVersion) {
 		for (AllowedSodiumVersion allowed : ALLOWED_SODIUM_VERSIONS) {
-			if (allowed.matches(sodiumVersion)) {
+			if (allowed.matches(sodiumVersion) || FabricLoader.getInstance().isDevelopmentEnvironment()) {
 				return true;
 			}
 		}

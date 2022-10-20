@@ -11,14 +11,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(TextureAtlasSprite.class)
+@Mixin(SpriteContents.class)
 public abstract class MixinTextureAtlasSprite {
-	@Shadow
-	public abstract SpriteContents contents();
-
 	@Inject(method = "setActive(Z)V", at = @At("TAIL"), remap = false)
 	private void iris$onTailMarkActive(CallbackInfo ci) {
-		PBRSpriteHolder pbrHolder = ((TextureAtlasSpriteExtension) this.contents()).getPBRHolder();
+		PBRSpriteHolder pbrHolder = ((TextureAtlasSpriteExtension) this).getPBRHolder();
 		if (pbrHolder != null) {
 			TextureAtlasSprite normalSprite = pbrHolder.getNormalSprite();
 			TextureAtlasSprite specularSprite = pbrHolder.getSpecularSprite();
