@@ -15,8 +15,7 @@ public class RedirectingUniform extends Uniform {
 		this.setup = setup;
 	}
 
-	@Override
-	public void set(Matrix4f arg) {
+	public void accept(Matrix4f arg) {
 		setup.accept(arg);
 	}
 }
