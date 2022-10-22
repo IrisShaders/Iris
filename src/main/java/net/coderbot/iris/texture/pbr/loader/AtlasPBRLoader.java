@@ -19,6 +19,7 @@ import net.coderbot.iris.texture.mipmap.LinearBlendFunction;
 import net.coderbot.iris.texture.pbr.PBRAtlasTexture;
 import net.coderbot.iris.texture.pbr.PBRSpriteHolder;
 import net.coderbot.iris.texture.pbr.PBRType;
+import net.coderbot.iris.texture.pbr.TextureAtlasExtension;
 import net.coderbot.iris.texture.pbr.TextureAtlasSpriteExtension;
 import net.coderbot.iris.texture.util.ImageManipulationUtil;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
@@ -52,9 +53,13 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 
 	@Override
 	public void load(TextureAtlas atlas, ResourceManager resourceManager, PBRTextureConsumer pbrTextureConsumer) {
-		TextureInfo textureInfo = TextureInfoCache.INSTANCE.getInfo(atlas.getId());
-		int atlasWidth = textureInfo.getWidth();
-		int atlasHeight = textureInfo.getHeight();
+		if (normalAtlas != null && specularAtlas != null) {
+			pbrTextureConsumer.acceptNormalTexture(normalAtlas);
+			pbrTextureConsumer.acceptSpecularTexture(specularAtlas);
+			return;
+		}
+		int atlasWidth = ((TextureAtlasExtension) atlas).getWidth();
+		int atlasHeight = ((TextureAtlasExtension) atlas).getHeight();
 		int mipLevel = fetchAtlasMipLevel(atlas);
 
 		for (TextureAtlasSprite sprite : ((TextureAtlasAccessor) atlas).getTexturesByName().values()) {
@@ -93,7 +98,8 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	}
 
 	protected static int fetchAtlasMipLevel(TextureAtlas atlas) {
-		return 4; // TODO FIX ME
+		TextureAtlasSprite missingSprite = atlas.getSprite(MissingTextureAtlasSprite.getLocation());
+		return ((SpriteContentsAccessor) missingSprite.contents()).getMainImage().length - 1;
 	}
 
 	@Nullable
@@ -128,7 +134,6 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 					} else {
 						scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
 					}
-					nativeImage.close();
 					nativeImage = scaledImage;
 
 					frameWidth = targetFrameWidth;
@@ -152,10 +157,12 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 
 				int x = ((TextureAtlasSpriteAccessor) sprite).getX();
 				int y = ((TextureAtlasSpriteAccessor) sprite).getY();
+				pbrSpriteInfo.increaseMipLevel(mipLevel);
+
 				pbrSprite = new PBRTextureAtlasSprite(pbrSpriteName, pbrSpriteInfo, atlasWidth, atlasHeight, x, y);
 				syncAnimation(createAndReturnAtlas(atlas, pbrType), sprite, pbrSprite);
 			} catch (FileNotFoundException e) {
-				//
+				Iris.logger.error("Unable to find file from {} : {}", pbrImageLocation, e);
 			} catch (RuntimeException e) {
 				Iris.logger.error("Unable to parse metadata from {} : {}", pbrImageLocation, e);
 			} catch (IOException e) {

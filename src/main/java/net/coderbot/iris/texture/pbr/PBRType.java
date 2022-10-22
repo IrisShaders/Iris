@@ -35,7 +35,7 @@ public enum PBRType {
 		} else {
 			newPath = path + suffix;
 		}
-		return new ResourceLocation(location.getNamespace(), newPath);
+		return new ResourceLocation(location.getNamespace(), "textures/" + newPath + ".png");
 	}
 
 	/**
