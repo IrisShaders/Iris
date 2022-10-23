@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Enumerates the possible program source file names to
@@ -26,9 +27,12 @@ public class ShaderPackSourceNames {
 
 		boolean anyFound = false;
 
-		Set<String> found = Files.list(directoryPath)
-				.map(path -> path.getFileName().toString())
-				.collect(Collectors.toSet());
+		Set<String> found;
+		try (Stream<Path> stream = Files.list(directoryPath)) {
+			found = stream
+					.map(path -> path.getFileName().toString())
+					.collect(Collectors.toSet());
+		}
 
 		for (String candidate : candidates) {
 			if (found.contains(candidate)) {
