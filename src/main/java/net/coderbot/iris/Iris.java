@@ -94,7 +94,10 @@ public class Iris {
 	private static UpdateChecker updateChecker;
 	private static boolean fallback;
 
-    /**
+	// Change this for snapshots!
+	private static String backupVersionNumber = "1.19.3";
+
+	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
 	 * some very basic setup, config loading, and environment checks.
 	 *
@@ -718,7 +721,11 @@ public class Iris {
 	 */
 	public static String getReleaseTarget() {
 		// If this is a snapshot, you must change this manually!
-		return SharedConstants.getCurrentVersion().isStable() ? SharedConstants.getCurrentVersion().getName() : "1.19.3";
+		return SharedConstants.getCurrentVersion().isStable() ? SharedConstants.getCurrentVersion().getName() : backupVersionNumber;
+	}
+
+	public static String getBackupVersionNumber() {
+		return backupVersionNumber;
 	}
 
 	public static boolean isSodiumInvalid() {

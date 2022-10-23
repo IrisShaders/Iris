@@ -90,7 +90,8 @@ public class StandardMacros {
 		String[] splitVersion = version.split("\\.");
 
 		if (splitVersion.length < 2) {
-			throw new IllegalStateException("Could not parse game version \"" + version +  "\"");
+			Iris.logger.error("Could not parse game version \"" + version +  "\"");
+			splitVersion = Iris.getBackupVersionNumber().split("\\.");
 		}
 
 		String major = splitVersion[0];
