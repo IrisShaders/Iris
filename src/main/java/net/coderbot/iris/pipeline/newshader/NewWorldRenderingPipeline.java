@@ -52,6 +52,7 @@ import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramFallbackResolver;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.texture.TextureInfoCache;
@@ -445,11 +446,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			return createFallbackShader(name, key);
 		}
 
-		return createShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
+		return createShader(name, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
 				key.isIntensity(), key.shouldIgnoreLightmap());
 	}
 
-	private ShaderInstance createShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
+	private ShaderInstance createShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FogMode fogMode,
 										boolean isIntensity, boolean isFullbright) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
@@ -459,7 +460,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Supplier<ImmutableSet<Integer>> flipped =
 			() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, beforeTranslucent, afterTranslucent,
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, programId, beforeTranslucent, afterTranslucent,
 				baseline, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, fogMode, isIntensity, isFullbright, false);
 
 		loadedShaders.add(extendedShader);
@@ -485,7 +486,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			return createFallbackShadowShader(name, key);
 		}
 
-		return createShadowShader(name, source.get(), key.getAlphaTest(), key.getVertexFormat(),
+		return createShadowShader(name, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(),
 				key.isIntensity(), key.shouldIgnoreLightmap());
 	}
 
@@ -501,14 +502,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return shader;
 	}
 
-	private ShaderInstance createShadowShader(String name, ProgramSource source, AlphaTest fallbackAlpha,
+	private ShaderInstance createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright) throws IOException {
 		GlFramebuffer framebuffer = this.shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
 
-		ExtendedShader extendedShader = NewShaderTests.create(name, source, framebuffer, framebuffer, baseline,
+		ExtendedShader extendedShader = NewShaderTests.create(name, source, programId, framebuffer, framebuffer, baseline,
 				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, FogMode.PER_VERTEX, isIntensity, isFullbright, true);
 
 		loadedShaders.add(extendedShader);
