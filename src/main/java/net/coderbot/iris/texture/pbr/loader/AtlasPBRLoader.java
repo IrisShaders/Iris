@@ -122,7 +122,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	@Nullable
 	protected TextureAtlasSprite createPBRSprite(TextureAtlasSprite sprite, ResourceManager resourceManager, TextureAtlas atlas, int atlasWidth, int atlasHeight, int mipLevel, PBRType pbrType) {
 		ResourceLocation spriteName = sprite.contents().name();
-		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(spriteName);
+		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(spriteName, true);
 
 		TextureAtlasSprite pbrSprite = null;
 		Optional<Resource> resource = resourceManager.getResource(pbrImageLocation);
