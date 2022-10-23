@@ -720,7 +720,7 @@ public class Iris {
 	 * @return Release target
 	 */
 	public static String getReleaseTarget() {
-		// If this is a snapshot, you must change this manually!
+		// If this is a snapshot, you must change backupVersionNumber!
 		return SharedConstants.getCurrentVersion().isStable() ? SharedConstants.getCurrentVersion().getName() : backupVersionNumber;
 	}
 
