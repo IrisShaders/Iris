@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import net.coderbot.iris.Iris;
 import net.fabricmc.loader.api.FabricLoader;
@@ -28,13 +29,15 @@ public class PatchedShaderPrinter {
 			if (!outputLocationCleared) {
 				try {
 					if (Files.exists(debugOutDir)) {
-						Files.list(debugOutDir).forEach(path -> {
-							try {
-								Files.delete(path);
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							}
-						});
+						try (Stream<Path> stream = Files.list(debugOutDir)) {
+							stream.forEach(path -> {
+								try {
+									Files.delete(path);
+								} catch (IOException e) {
+									throw new RuntimeException(e);
+								}
+							});
+						}
 					}
 
 					Files.createDirectories(debugOutDir);
