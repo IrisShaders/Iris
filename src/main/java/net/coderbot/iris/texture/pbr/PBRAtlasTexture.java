@@ -78,6 +78,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 		}
 
 		PBRAtlasHolder pbrHolder = ((TextureAtlasExtension) atlasTexture).getOrCreatePBRHolder();
+
 		switch (type) {
 			case NORMAL:
 				pbrHolder.setNormalAtlas(this);
@@ -87,14 +88,14 @@ public class PBRAtlasTexture extends AbstractTexture {
 				break;
 		}
 
-		//if (PBRTextureManager.DEBUG) {
+		if (PBRTextureManager.DEBUG) {
 			TextureExporter.exportTextures("pbr_debug/atlas", id.getNamespace() + "_" + id.getPath().replaceAll("/", "_"), glId, mipLevel, atlasWidth, atlasHeight);
-	//	}
+		}
 	}
 
 	public boolean tryUpload(int atlasWidth, int atlasHeight, int mipLevel) {
 		try {
-			Iris.logger.warn("ATLAS " + id.toString() + " with widthheightmip " + atlasWidth + " " + atlasHeight + " " + mipLevel);
+			//Iris.logger.warn("ATLAS " + id.toString() + " with widthheightmip " + atlasWidth + " " + atlasHeight + " " + mipLevel);
 			upload(atlasWidth, atlasHeight, mipLevel);
 			return true;
 		} catch (Throwable t) {
@@ -105,13 +106,13 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 	protected void uploadSprite(TextureAtlasSprite sprite) {
 		SpriteContents.AnimatedTexture ticker = ((SpriteContentsAccessor) sprite.contents()).getAnimatedTexture();
-		if (ticker instanceof AnimatedTextureAccessor && animationTickers.containsKey(sprite)) {
+		if (ticker instanceof AnimatedTextureAccessor && animationTickers.containsKey(sprite) && getFrameFromSprite(sprite) != 0) {
 			AnimatedTextureAccessor accessor = (AnimatedTextureAccessor) ticker;
 
-//			accessor.invokeUploadFrame(((FrameInfoAccessor) accessor.getFrames().get(getFrameFromSprite(sprite))).getIndex(), sprite.getX(), sprite.getY());
+			accessor.invokeUploadFrame(((FrameInfoAccessor) accessor.getFrames().get(getFrameFromSprite(sprite))).getIndex(), sprite.getX(), sprite.getY());
 		}
 
-		Iris.logger.warn("Sprite " + sprite.contents().name().toString() + " with xy " + sprite.getX() + " " + sprite.getY() + " with widthheight" + sprite.contents().width() + " " + sprite.contents().height());
+		//Iris.logger.warn("Sprite " + sprite.contents().name().toString() + " with xy " + sprite.getX() + " " + sprite.getY() + " with widthheight" + sprite.contents().width() + " " + sprite.contents().height());
  		sprite.uploadFirstFrame();
 	}
 

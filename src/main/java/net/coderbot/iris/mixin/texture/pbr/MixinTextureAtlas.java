@@ -35,7 +35,7 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 		}
 	}
 
-	@Inject(method = "clearTextureData", at = @At("HEAD"))
+	@Inject(method = "clearTextureData", at = @At("TAIL"))
 	private void clearTextureSettingPBR(CallbackInfo ci) {
 		((AtlasPBRLoader) PBRTextureLoaderRegistry.INSTANCE.getLoader(TextureAtlas.class)).removeAtlasInformation(((TextureAtlas) (Object) this));
 	}
@@ -43,7 +43,7 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 	@Inject(method = "upload", at = @At("TAIL"))
 	private void export(SpriteLoader.Preparations arg, CallbackInfo ci) {
 		this.prep = arg;
-		if (pbrHolder != null) {
+		/*if (pbrHolder != null) {
 			if (pbrHolder.getNormalAtlas() != null) {
 				pbrHolder.getNormalAtlas().upload(arg.width(), arg.height(), arg.mipLevel());
 			}
@@ -51,8 +51,9 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 			if (pbrHolder.getSpecularAtlas() != null) {
 				pbrHolder.getSpecularAtlas().upload(arg.width(), arg.height(), arg.mipLevel());
 			}
-		}
-		TextureExporter.exportTextures("pbr_debug/atlas", location.getNamespace() + "_" + location.getPath().replaceAll("/", "_"), this.getId(), arg.mipLevel(), arg.width(), arg.height());
+		}*/
+
+		//TextureExporter.exportTextures("pbr_debug/atlas", location.getNamespace() + "_" + location.getPath().replaceAll("/", "_"), this.getId(), arg.mipLevel(), arg.width(), arg.height());
 	}
 
 	@Override
