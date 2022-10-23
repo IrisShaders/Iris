@@ -2,6 +2,8 @@ package net.coderbot.iris.mixin.texture.pbr;
 
 import net.coderbot.iris.texture.pbr.PBRAtlasHolder;
 import net.coderbot.iris.texture.pbr.TextureAtlasExtension;
+import net.coderbot.iris.texture.pbr.loader.AtlasPBRLoader;
+import net.coderbot.iris.texture.pbr.loader.PBRTextureLoaderRegistry;
 import net.coderbot.iris.texture.util.TextureExporter;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.SpriteLoader;
@@ -31,6 +33,11 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 		if (pbrHolder != null) {
 			pbrHolder.cycleAnimationFrames();
 		}
+	}
+
+	@Inject(method = "clearTextureData", at = @At("HEAD"))
+	private void clearTextureSettingPBR(CallbackInfo ci) {
+		((AtlasPBRLoader) PBRTextureLoaderRegistry.INSTANCE.getLoader(TextureAtlas.class)).removeAtlasInformation(((TextureAtlas) (Object) this));
 	}
 
 	@Inject(method = "upload", at = @At("TAIL"))

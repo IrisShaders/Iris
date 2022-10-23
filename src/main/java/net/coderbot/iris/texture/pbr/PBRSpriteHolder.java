@@ -28,6 +28,7 @@ public class PBRSpriteHolder {
 	public void close() {
 		if (normalSprite != null) {
 			normalSprite.contents().close();
+
 		}
 		if (specularSprite != null) {
 			specularSprite.contents().close();

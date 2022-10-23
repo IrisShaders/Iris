@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.texture.mipmap.CustomMipmapGenerator;
 import net.minecraft.client.renderer.texture.MipmapGenerator;
 import net.minecraft.client.renderer.texture.SpriteContents;
@@ -16,9 +17,13 @@ public class MixinTextureAtlasSprite {
 	private NativeImage[] iris$redirectMipmapGeneration(NativeImage[] nativeImages, int mipLevel) {
 		if (this instanceof CustomMipmapGenerator.Provider) {
 			CustomMipmapGenerator.Provider provider = (CustomMipmapGenerator.Provider) this;
-			CustomMipmapGenerator generator = provider.getMipmapGenerator(((SpriteContents) (Object) this));
+			CustomMipmapGenerator generator = provider.getMipmapGenerator();
 			if (generator != null) {
-				return generator.generateMipLevels(nativeImages, mipLevel);
+				try {
+					return generator.generateMipLevels(nativeImages, mipLevel);
+				} catch (Exception e) {
+					Iris.logger.error("ERROR MIPMAPPING", e);
+				}
 			}
 		}
 		return MipmapGenerator.generateMipLevels(nativeImages, mipLevel);

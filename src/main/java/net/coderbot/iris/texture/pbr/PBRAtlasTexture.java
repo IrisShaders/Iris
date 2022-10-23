@@ -112,7 +112,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 		}
 
 		Iris.logger.warn("Sprite " + sprite.contents().name().toString() + " with xy " + sprite.getX() + " " + sprite.getY() + " with widthheight" + sprite.contents().width() + " " + sprite.contents().height());
-		sprite.uploadFirstFrame();
+ 		sprite.uploadFirstFrame();
 	}
 
 	public int getFrameFromSprite(TextureAtlasSprite sprite) {
