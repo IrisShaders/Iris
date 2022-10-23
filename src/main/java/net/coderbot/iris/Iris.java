@@ -3,6 +3,7 @@ package net.coderbot.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.bridge.game.GameVersion;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
@@ -27,6 +28,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
 import net.minecraft.ChatFormatting;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -92,7 +94,7 @@ public class Iris {
 	private static UpdateChecker updateChecker;
 	private static boolean fallback;
 
-	/**
+    /**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
 	 * some very basic setup, config loading, and environment checks.
 	 *
@@ -708,6 +710,15 @@ public class Iris {
 		}
 
 		return color + version;
+	}
+
+	/**
+	 * Gets the current release target. Since 1.19.3, Mojang no longer stores this information, so we must manually provide it for snapshots.
+	 * @return Release target
+	 */
+	public static String getReleaseTarget() {
+		// If this is a snapshot, you must change this manually!
+		return SharedConstants.getCurrentVersion().isStable() ? SharedConstants.getCurrentVersion().getName() : "1.19.3";
 	}
 
 	public static boolean isSodiumInvalid() {

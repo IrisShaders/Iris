@@ -151,6 +151,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 					} else {
 						scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
 					}
+					nativeImage.close();
 					nativeImage = scaledImage;
 
 					frameWidth = targetFrameWidth;
