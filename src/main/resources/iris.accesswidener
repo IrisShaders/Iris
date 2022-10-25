@@ -12,7 +12,6 @@ accessible  class   net/minecraft/client/Options$FieldAccess
 extendable class net/minecraft/client/renderer/texture/TextureAtlasSprite$Info
 accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask
 accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask$CompileResults
-extendable method com/mojang/blaze3d/shaders/Uniform set (Lcom/mojang/math/Matrix4f;)V
 mutable field net/minecraft/client/renderer/ShaderInstance PROJECTION_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/ShaderInstance MODEL_VIEW_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
