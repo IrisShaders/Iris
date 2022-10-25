@@ -354,11 +354,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			});
 		});
 
-		if (shadowRenderer != null) {
-			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
-			shadowRenderer.setUsesImages(shadowProgram != null && shadowProgram.getActiveImages() > 0);
-		}
-
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programs.getPackDirectives().getRenderTargetDirectives());
 		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
