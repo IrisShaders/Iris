@@ -138,7 +138,7 @@ public class IrisExclusiveUniforms {
 			});
 			uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "ambientLight", () -> {
 				if (level != null) {
-					return ((DimensionTypeAccessor) level.dimensionType()).getAmbientLight();
+					return level.dimensionType().ambientLight();
 				} else {
 					return 0f;
 				}
