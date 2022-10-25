@@ -98,8 +98,9 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.parent = parent;
 		this.inputs = inputs;
 
-		this.PROJECTION_MATRIX = new RedirectingUniform("ProjMat2", 0, 0, this, this::setProjectionOverride);
-		this.MODEL_VIEW_MATRIX = new RedirectingUniform("ModelViewMat2", 0, 0, this, this::setModelViewOverride);
+		this.PROJECTION_MATRIX = new RedirectingUniform<>("ProjMat2", 0, 0, this, this::setProjectionOverride);
+		this.MODEL_VIEW_MATRIX = new RedirectingUniform<>("ModelViewMat2", 0, 0, this, this::setModelViewOverride);
+		this.CHUNK_OFFSET = new RedirectingUniform<>("ChunkOffset2", 0, 0, this, this::setChunkOffset);
 
 		this.intensitySwizzle = isIntensity;
 	}

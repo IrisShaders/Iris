@@ -32,7 +32,6 @@
     "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
-    "MixinLevelRenderer_RedirectChunkOffset",
     "MixinMinecraft_Keybinds",
     "MixinMinecraft_Images",
     "MixinMinecraft_NoAuthInDev",

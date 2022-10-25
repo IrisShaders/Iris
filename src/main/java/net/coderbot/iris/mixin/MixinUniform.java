@@ -48,4 +48,12 @@ public class MixinUniform {
 			ci.cancel();
 		}
 	}
+
+	@Inject(method = "set(FFF)V", at = @At("HEAD"), cancellable = true)
+	private void cancelUniformFloat(float f, float g, float h, CallbackInfo ci) {
+		if ((Object) this instanceof RedirectingUniform) {
+			((RedirectingUniform) (Object) this).accept(f, g, h);
+			ci.cancel();
+		}
+	}
 }
