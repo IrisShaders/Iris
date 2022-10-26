@@ -6,7 +6,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
-import net.coderbot.iris.vendored.joml.Vector3f;
+import org.joml.Vector3f;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.lwjgl.system.MemoryUtil;

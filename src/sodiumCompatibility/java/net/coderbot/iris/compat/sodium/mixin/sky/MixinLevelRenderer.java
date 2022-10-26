@@ -1,7 +1,7 @@
 package net.coderbot.iris.compat.sodium.mixin.sky;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -34,7 +34,7 @@ public class MixinLevelRenderer {
 	 * <a href="https://bugs.mojang.com/browse/MC-152504">MC-152504</a> since it
 	 * is also caused by being able to see the sky through invisible chunks.</p>
 	 *
-	 * <p>However, this fix comes with some caveats. When underwater, it becomes 
+	 * <p>However, this fix comes with some caveats. When underwater, it becomes
 	 * impossible to see the sun, stars, and moon since the sky is not rendered.
 	 * While this does not exactly match the vanilla game, it is consistent with
 	 * what Bedrock Edition does, so it can be considered vanilla-style. This is

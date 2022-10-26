@@ -3,7 +3,6 @@ package net.coderbot.iris.pipeline;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
@@ -32,9 +31,6 @@ import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.CameraUniforms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CelestialUniforms;
-import net.coderbot.iris.vendored.joml.Vector3d;
-import net.coderbot.iris.vendored.joml.Vector3i;
-import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -47,6 +43,10 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.joml.Matrix4f;
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.opengl.ARBTextureSwizzle;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
@@ -307,8 +307,8 @@ public class ShadowRenderer {
 
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
-			net.coderbot.iris.vendored.joml.Vector3f shadowLightVectorFromOrigin =
-				new net.coderbot.iris.vendored.joml.Vector3f(shadowLightPosition.x(), shadowLightPosition.y(), shadowLightPosition.z());
+			Vector3f shadowLightVectorFromOrigin =
+				new Vector3f(shadowLightPosition.x(), shadowLightPosition.y(), shadowLightPosition.z());
 
 			shadowLightVectorFromOrigin.normalize();
 
@@ -340,7 +340,7 @@ public class ShadowRenderer {
 
 		// Create our camera
 		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
-		MODELVIEW = modelView.last().pose().copy();
+		MODELVIEW = new Matrix4f(modelView.last().pose());
 
 		levelRenderer.getLevel().getProfiler().push("terrain_setup");
 
@@ -402,8 +402,7 @@ public class ShadowRenderer {
 			projMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
 		}
 
-		Matrix4f shadowProjection = new Matrix4f();
-		((Matrix4fAccess) (Object) shadowProjection).copyFromArray(projMatrix);
+		Matrix4f shadowProjection = new Matrix4f().set(projMatrix);
 
 		IrisRenderSystem.setShadowProjection(shadowProjection);
 

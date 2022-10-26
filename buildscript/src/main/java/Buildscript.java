@@ -42,8 +42,8 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String MC_VERSION = "22w42a";
-	static final String customSodiumName = "sodium-22w42a.jar";
+	static final String MC_VERSION = "22w43a";
+	static final String customSodiumName = "sodium-22w43a.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
 		"main",
@@ -108,8 +108,6 @@ public class Buildscript extends SimpleFabricProject {
 		} else {
 			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.2-0.4.4"), ModDependencyFlag.COMPILE);
 		}
-
-		d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 	}
 
 	@Override

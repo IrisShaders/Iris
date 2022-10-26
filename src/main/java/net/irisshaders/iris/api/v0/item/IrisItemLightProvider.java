@@ -1,9 +1,9 @@
 package net.irisshaders.iris.api.v0.item;
 
-import com.mojang.math.Vector3f;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Vector3f;
 
 public interface IrisItemLightProvider {
 

@@ -8,7 +8,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Vector4f;
 
 import java.util.Collections;
 import java.util.Map;

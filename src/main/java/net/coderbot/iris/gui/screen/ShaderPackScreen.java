@@ -220,20 +220,19 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				this.addRenderableWidget(shaderPackList);
 			}
 
-			this.addRenderableWidget(new Button(bottomCenter + 104, this.height - 27, 100, 20,
-				CommonComponents.GUI_DONE, button -> onClose()));
+			this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose()).bounds(bottomCenter + 104, this.height - 27, 100, 20
+				).build());
 
-			this.addRenderableWidget(new Button(bottomCenter, this.height - 27, 100, 20,
-				Component.translatable("options.iris.apply"), button -> this.applyChanges()));
+			this.addRenderableWidget(Button.builder(Component.translatable("options.iris.apply"), button -> this.applyChanges()).bounds(bottomCenter, this.height - 27, 100, 20
+				).build());
 
-			this.addRenderableWidget(new Button(bottomCenter - 104, this.height - 27, 100, 20,
-				CommonComponents.GUI_CANCEL, button -> this.dropChangesAndClose()));
+			this.addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, button -> this.dropChangesAndClose()).bounds(bottomCenter - 104, this.height - 27, 100, 20
+				).build());
 
-			this.addRenderableWidget(new Button(topCenter - 78, this.height - 51, 152, 20,
-				Component.translatable("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()));
+			this.addRenderableWidget(Button.builder(Component.translatable("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()).bounds(topCenter - 78, this.height - 51, 152, 20
+				).build());
 
-			this.screenSwitchButton = this.addRenderableWidget(new Button(topCenter + 78, this.height - 51, 152, 20,
-				Component.translatable("options.iris.shaderPackList"), button -> {
+			this.screenSwitchButton = this.addRenderableWidget(Button.builder(Component.translatable("options.iris.shaderPackList"), button -> {
 					this.optionMenuOpen = !this.optionMenuOpen;
 
 					// UX: Apply changes before switching screens to avoid unintuitive behavior
@@ -245,7 +244,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 					this.init();
 				}
-			));
+			).bounds(topCenter + 78, this.height - 51, 152, 20
+				).build());
 
 			refreshScreenSwitchButton();
 		}

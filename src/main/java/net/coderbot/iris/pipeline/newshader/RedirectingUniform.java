@@ -2,7 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import com.mojang.blaze3d.shaders.Shader;
 import com.mojang.blaze3d.shaders.Uniform;
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix4f;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;

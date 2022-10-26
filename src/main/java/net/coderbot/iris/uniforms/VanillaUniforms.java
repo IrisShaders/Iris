@@ -6,8 +6,8 @@ import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.pipeline.newshader.ExtendedShader;
-import net.coderbot.iris.vendored.joml.Vector2f;
-import net.coderbot.iris.vendored.joml.Vector2i;
+import org.joml.Vector2f;
+import org.joml.Vector2i;
 
 public class VanillaUniforms {
 	public static void addVanillaUniforms(DynamicUniformHolder uniforms) {

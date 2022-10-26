@@ -6,7 +6,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.vendored.joml.Vector3f;
+import org.joml.Vector3f;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.BufferBuilderPolygonView;
 import net.coderbot.iris.vertices.ExtendedDataHelper;

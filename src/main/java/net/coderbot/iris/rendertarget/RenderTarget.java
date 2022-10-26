@@ -5,7 +5,7 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
-import net.coderbot.iris.vendored.joml.Vector2i;
+import org.joml.Vector2i;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 

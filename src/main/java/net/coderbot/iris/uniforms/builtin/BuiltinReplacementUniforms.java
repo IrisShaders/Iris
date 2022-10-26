@@ -1,6 +1,6 @@
 package net.coderbot.iris.uniforms.builtin;
 
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
@@ -11,9 +11,10 @@ public class BuiltinReplacementUniforms {
 	static {
 		// This mimics the transformations done in LightTexture to the GL_TEXTURE matrix.
 		lightmapTextureMatrix = new Matrix4f();
-		lightmapTextureMatrix.setIdentity();
-		lightmapTextureMatrix.multiply(0.00390625f);
-		lightmapTextureMatrix.multiply(Matrix4f.createTranslateMatrix(8.0f, 8.0f, 8.0f));
+		lightmapTextureMatrix.identity();
+		float mul = 0.00390625f;
+		lightmapTextureMatrix.mul(mul, mul, mul, mul, mul, mul, mul, mul, mul, mul, mul, mul, mul, mul, mul, mul);
+		lightmapTextureMatrix.mul(new Matrix4f().translation(8.0f, 8.0f, 8.0f));
 	}
 
 	public static void addBuiltinReplacementUniforms(UniformHolder uniforms) {

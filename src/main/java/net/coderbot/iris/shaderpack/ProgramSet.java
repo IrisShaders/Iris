@@ -6,7 +6,6 @@ import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.loading.ProgramId;
-import net.coderbot.iris.vendored.joml.Vector3i;
 
 import java.util.ArrayList;
 import java.util.Arrays;

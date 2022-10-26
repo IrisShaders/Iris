@@ -1,10 +1,10 @@
 package net.coderbot.iris.shadows.frustum.advanced;
 
-import net.coderbot.iris.vendored.joml.Math;
+import org.joml.Math;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
-import net.coderbot.iris.vendored.joml.Matrix4f;
-import net.coderbot.iris.vendored.joml.Vector3f;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
@@ -73,7 +73,7 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	public AdvancedShadowCullingFrustum(Matrix4f playerView, Matrix4f playerProjection, Vector3f shadowLightVectorFromOrigin,
 										BoxCuller boxCuller) {
 		// We're overriding all of the methods, don't pass any matrices down.
-		super(new com.mojang.math.Matrix4f(), new com.mojang.math.Matrix4f());
+		super(new org.joml.Matrix4f(), new org.joml.Matrix4f());
 
 		this.shadowLightVectorFromOrigin = shadowLightVectorFromOrigin;
 		BaseClippingPlanes baseClippingPlanes = new BaseClippingPlanes(playerView, playerProjection);

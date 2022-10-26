@@ -2,7 +2,7 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.Uniform;
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix4f;
 import net.coderbot.iris.pipeline.newshader.RedirectingUniform;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,7 +41,7 @@ public class MixinUniform {
 		}
 	}
 
-	@Inject(method = "set(Lcom/mojang/math/Matrix4f;)V", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "set(Lorg/joml/Matrix4f;)V", at = @At("HEAD"), cancellable = true)
 	private void cancelUniform(Matrix4f arg, CallbackInfo ci) {
 		if ((Object) this instanceof RedirectingUniform) {
 			((RedirectingUniform) (Object) this).accept(arg);

@@ -1,6 +1,6 @@
 package net.coderbot.iris.shadows;
 
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix4f;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 
 public class ShadowRenderingState {
