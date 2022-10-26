@@ -166,7 +166,7 @@ public class Buildscript extends SimpleFabricProject {
 		if (build_id != null) {
 			return baseVersion + "-build." + build_id + "-" + commitHash;
 		} else {
-			return baseVersion + "-" + commitHash + (isDirty ? "-dirty" : "") + System.nanoTime();
+			return baseVersion + "-" + commitHash + (isDirty ? "-dirty" : "");
 		}
 	});
 
