@@ -312,8 +312,8 @@ public class ShadowRenderer {
 
 			shadowLightVectorFromOrigin.normalize();
 
-			return holder.setInfo(new AdvancedShadowCullingFrustum(((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferModelView()).convertToJOML(),
-				((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferProjection()).convertToJOML(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
+			return holder.setInfo(new AdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
+				CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
 
 		}
 

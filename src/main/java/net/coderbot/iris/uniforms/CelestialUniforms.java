@@ -30,6 +30,8 @@ public final class CelestialUniforms {
 			.uniform1f(PER_FRAME, "shadowAngle", CelestialUniforms::getShadowAngle)
 			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", this::getShadowLightPosition)
 			.uniformTruncated3f(PER_FRAME, "upPosition", CelestialUniforms::getUpPosition);
+
+
 	}
 
 	public static float getSunAngle() {
@@ -97,7 +99,7 @@ public final class CelestialUniforms {
 		celestial.rotate(Axis.ZP.rotationDegrees(sunPathRotation));
 		celestial.rotate(Axis.XP.rotationDegrees(getSkyAngle() * 360.0F));
 
-		celestial.transform(position);
+		position = celestial.transform(position);
 
 		return position;
 	}
@@ -113,7 +115,7 @@ public final class CelestialUniforms {
 		preCelestial.rotate(Axis.YP.rotationDegrees(-90.0F));
 
 		// Use this matrix to transform the vector.
-		preCelestial.transform(upVector);
+		upVector = preCelestial.transform(upVector);
 
 		return upVector;
 	}
