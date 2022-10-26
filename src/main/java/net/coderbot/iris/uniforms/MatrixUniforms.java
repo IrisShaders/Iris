@@ -22,7 +22,7 @@ public final class MatrixUniforms {
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
 		addShadowMatrix(uniforms, "ModelView", () ->
 				new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose()));
-		addShadowArrayMatrix(uniforms, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance()));
+		addShadowMatrix(uniforms, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance()));
 	}
 
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
@@ -36,12 +36,6 @@ public final class MatrixUniforms {
 		uniforms
 				.uniformMatrix(PER_FRAME, "shadow" + name, supplier)
 				.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
-	}
-
-	private static void addShadowArrayMatrix(UniformHolder uniforms, String name, Supplier<float[]> supplier) {
-		uniforms
-				.uniformMatrixFromArray(PER_FRAME, "shadow" + name, supplier)
-				.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new InvertedArrayMatrix(supplier));
 	}
 
 	private static class Inverted implements Supplier<Matrix4f> {
@@ -59,26 +53,6 @@ public final class MatrixUniforms {
 			copy.invert();
 
 			return copy;
-		}
-	}
-
-	private static class InvertedArrayMatrix implements Supplier<Matrix4f> {
-		private final Supplier<float[]> parent;
-
-		InvertedArrayMatrix(Supplier<float[]> parent) {
-			this.parent = parent;
-		}
-
-		@Override
-		public Matrix4f get() {
-			FloatBuffer buffer = FloatBuffer.allocate(16);
-			buffer.put(parent.get());
-			buffer.rewind();
-
-			Matrix4f matrix4f = new Matrix4f(buffer);
-			matrix4f.invert();
-
-			return matrix4f;
 		}
 	}
 

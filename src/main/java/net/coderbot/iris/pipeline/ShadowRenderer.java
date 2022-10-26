@@ -394,15 +394,13 @@ public class ShadowRenderer {
 		setupShadowViewport();
 
 		// Set up our orthographic projection matrix and load it into RenderSystem
-		float[] projMatrix;
+		Matrix4f shadowProjection;
 		if (this.fov != null) {
 			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
-			projMatrix = ShadowMatrices.createPerspectiveMatrix(this.fov);
+			shadowProjection = ShadowMatrices.createPerspectiveMatrix(this.fov);
 		} else {
-			projMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
+			shadowProjection = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
 		}
-
-		Matrix4f shadowProjection = new Matrix4f().set(projMatrix);
 
 		IrisRenderSystem.setShadowProjection(shadowProjection);
 
