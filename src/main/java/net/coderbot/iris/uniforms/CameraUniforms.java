@@ -2,7 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.vendored.joml.Vector3d;
+import org.joml.Vector3d;
 import net.minecraft.client.Minecraft;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;

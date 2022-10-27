@@ -2,7 +2,7 @@ package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 
 import java.util.Objects;

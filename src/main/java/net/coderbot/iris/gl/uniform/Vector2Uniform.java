@@ -1,7 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
 import net.coderbot.iris.gl.IrisRenderSystem;
-import net.coderbot.iris.vendored.joml.Vector2f;
+import org.joml.Vector2f;
 
 import java.util.function.Supplier;
 

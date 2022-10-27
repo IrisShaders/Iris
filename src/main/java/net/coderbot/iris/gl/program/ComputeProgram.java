@@ -6,8 +6,8 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.coderbot.iris.vendored.joml.Vector2f;
-import net.coderbot.iris.vendored.joml.Vector3i;
+import org.joml.Vector2f;
+import org.joml.Vector3i;
 import org.lwjgl.opengl.GL43C;
 
 public final class ComputeProgram extends GlResource {

@@ -2,7 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
-import net.coderbot.iris.vendored.joml.Vector3d;
+import org.joml.Vector3d;
 import net.minecraft.client.Minecraft;
 
 public class CapturedRenderingState {

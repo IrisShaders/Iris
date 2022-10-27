@@ -1,10 +1,10 @@
 package net.coderbot.iris.shadows.frustum.advanced;
 
-import net.coderbot.iris.vendored.joml.Math;
+import org.joml.Math;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
-import net.coderbot.iris.vendored.joml.Matrix4f;
-import net.coderbot.iris.vendored.joml.Vector3f;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 

@@ -2,7 +2,7 @@ package net.coderbot.iris.gl.uniform;
 
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
-import net.coderbot.iris.vendored.joml.Vector2i;
+import org.joml.Vector2i;
 
 import java.util.function.Supplier;
 
