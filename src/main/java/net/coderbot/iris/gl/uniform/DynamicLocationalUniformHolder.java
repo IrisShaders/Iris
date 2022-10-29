@@ -1,9 +1,9 @@
 package net.coderbot.iris.gl.uniform;
 
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
-import org.joml.Vector2i;
-import org.joml.Vector4f;
-import org.joml.Vector4i;
+import net.coderbot.iris.vendored.joml.Vector2i;
+import net.coderbot.iris.vendored.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.Vector4i;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;

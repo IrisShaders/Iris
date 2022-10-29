@@ -1,7 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
 import net.coderbot.iris.gl.IrisRenderSystem;
-import org.joml.Matrix4f;
+import net.coderbot.iris.vendored.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;

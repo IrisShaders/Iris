@@ -1,7 +1,7 @@
 package net.coderbot.iris.vertices;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import org.joml.Vector3f;
+import net.coderbot.iris.vendored.joml.Vector3f;
 import net.irisshaders.iris.api.v0.IrisTextVertexSink;
 import org.lwjgl.system.MemoryUtil;
 

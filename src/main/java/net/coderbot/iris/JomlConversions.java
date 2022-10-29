@@ -1,7 +1,7 @@
 package net.coderbot.iris;
 
-import org.joml.Vector3d;
-import org.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.Vector3d;
+import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.world.phys.Vec3;
 
 public class JomlConversions {

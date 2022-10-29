@@ -44,7 +44,7 @@ public final class MatrixUniforms {
 				.uniformJomlMatrix(PER_FRAME, "shadow" + name + "Inverse", new InvertedArrayMatrix(supplier));
 	}
 
-	private static class Inverted implements Supplier<org.joml.Matrix4f> {
+	private static class Inverted implements Supplier<net.coderbot.iris.vendored.joml.Matrix4f> {
 		private final Supplier<Matrix4f> parent;
 
 		Inverted(Supplier<Matrix4f> parent) {
@@ -52,7 +52,7 @@ public final class MatrixUniforms {
 		}
 
 		@Override
-		public org.joml.Matrix4f get() {
+		public net.coderbot.iris.vendored.joml.Matrix4f get() {
 			// PERF: Don't copy + allocate this matrix every time?
 			Matrix4f copy = parent.get().copy();
 
@@ -60,14 +60,14 @@ public final class MatrixUniforms {
 			copy.store(buffer);
 			buffer.rewind();
 
-			org.joml.Matrix4f matrix4f = new org.joml.Matrix4f(buffer);
+			net.coderbot.iris.vendored.joml.Matrix4f matrix4f = new net.coderbot.iris.vendored.joml.Matrix4f(buffer);
 			matrix4f.invert();
 
 			return matrix4f;
 		}
 	}
 
-	private static class InvertedArrayMatrix implements Supplier<org.joml.Matrix4f> {
+	private static class InvertedArrayMatrix implements Supplier<net.coderbot.iris.vendored.joml.Matrix4f> {
 		private final Supplier<float[]> parent;
 
 		InvertedArrayMatrix(Supplier<float[]> parent) {
@@ -75,12 +75,12 @@ public final class MatrixUniforms {
 		}
 
 		@Override
-		public org.joml.Matrix4f get() {
+		public net.coderbot.iris.vendored.joml.Matrix4f get() {
 			FloatBuffer buffer = FloatBuffer.allocate(16);
 			buffer.put(parent.get());
 			buffer.rewind();
 
-			org.joml.Matrix4f matrix4f = new org.joml.Matrix4f(buffer);
+			net.coderbot.iris.vendored.joml.Matrix4f matrix4f = new net.coderbot.iris.vendored.joml.Matrix4f(buffer);
 			matrix4f.invert();
 
 			return matrix4f;

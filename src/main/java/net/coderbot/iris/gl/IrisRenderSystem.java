@@ -2,7 +2,7 @@ package net.coderbot.iris.gl;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import org.joml.Vector3i;
+import net.coderbot.iris.vendored.joml.Vector3i;
 import net.coderbot.iris.Iris;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.ARBDirectStateAccess;
@@ -263,7 +263,7 @@ public class IrisRenderSystem {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
 		GL40C.glBlendFuncSeparatei(buffer, srcRGB, dstRGB, srcAlpha, dstAlpha);
   }
-
+  
 	public static void bindTextureToUnit(int unit, int texture) {
 		dsaState.bindTextureToUnit(unit, texture);
 	}

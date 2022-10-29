@@ -7,7 +7,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.TextureScaleOverride;
-import org.joml.Vector2i;
+import net.coderbot.iris.vendored.joml.Vector2i;
 
 import java.util.Set;
 

@@ -19,5 +19,5 @@ public interface Matrix4fAccess {
 	 * Converts the matrix into a JOML matrix. This matrix is inherently column-major, and compatible with OpenGL.
 	 * @return JOML matrix
 	 */
-	org.joml.Matrix4f convertToJOML();
+	net.coderbot.iris.vendored.joml.Matrix4f convertToJOML();
 }

@@ -1,6 +1,6 @@
 package net.coderbot.iris.pipeline;
 
-import org.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.Vector4f;
 
 public class ClearPassInformation {
 	private final Vector4f color;

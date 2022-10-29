@@ -3,7 +3,7 @@ package net.coderbot.iris.shaderpack;
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import org.joml.Vector4f;
+import net.coderbot.iris.vendored.joml.Vector4f;
 
 import java.util.Optional;
 
