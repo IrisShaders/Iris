@@ -65,6 +65,8 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	private static ExtendedShader lastApplied;
 	private Runnable chunkOffsetListener;
+	private Runnable modelViewListener;
+	private Runnable projectionListener;
 	private final Vector3f chunkOffset = new Vector3f();
 	private Matrix4f projectionOverride;
 	private Matrix4f modelViewOverride;
@@ -98,9 +100,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.parent = parent;
 		this.inputs = inputs;
 
-		this.PROJECTION_MATRIX = new RedirectingUniform<>("ProjMat2", 0, 0, this, this::setProjectionOverride);
-		this.MODEL_VIEW_MATRIX = new RedirectingUniform<>("ModelViewMat2", 0, 0, this, this::setModelViewOverride);
-		this.CHUNK_OFFSET = new RedirectingUniform<>("ChunkOffset2", 0, 0, this, this::setChunkOffset);
+		this.PROJECTION_MATRIX = new RedirectingUniform<>("ProjMat2", 0, 0, this, this::setProjectionOverride, projectionListener);
+		this.MODEL_VIEW_MATRIX = new RedirectingUniform<>("ModelViewMat2", 0, 0, this, this::setModelViewOverride, modelViewListener);
+		this.CHUNK_OFFSET = new RedirectingUniform<>("ChunkOffset2", 0, 0, this, this::setChunkOffset, () -> {
+			if (chunkOffsetListener != null) chunkOffsetListener.run();
+		});
 
 		this.intensitySwizzle = isIntensity;
 	}
@@ -113,14 +117,14 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 			} else {
 				return RenderSystem.getProjectionMatrix();
 			}
-		}, listener -> {});
+		}, listener -> this.projectionListener = listener);
 		uniformBuilder.uniformMatrix("iris_ModelViewMat", () -> {
 			if (modelViewOverride != null) {
 				return modelViewOverride;
 			} else {
 				return RenderSystem.getModelViewMatrix();
 			}
-		}, listener -> {});
+		}, listener -> this.modelViewListener = listener);
 	}
 
 	public boolean isIntensitySwizzle() {
