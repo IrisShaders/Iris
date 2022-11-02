@@ -4,6 +4,8 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -128,7 +130,9 @@ public class IrisConfig {
 
 		Properties properties = new Properties();
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
-		properties.load(Files.newInputStream(propertiesPath));
+		try (InputStream is = Files.newInputStream(propertiesPath)) {
+			properties.load(is);
+		}
 		shaderPackName = properties.getProperty("shaderPack");
 		enableShaders = !"false".equals(properties.getProperty("enableShaders"));
 		enableDebugOptions = "true".equals(properties.getProperty("enableDebugOptions"));
@@ -161,6 +165,8 @@ public class IrisConfig {
 		properties.setProperty("disableUpdateMessage", disableUpdateMessage ? "true" : "false");
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
-		properties.store(Files.newOutputStream(propertiesPath), COMMENT);
+		try (OutputStream os = Files.newOutputStream(propertiesPath)) {
+			properties.store(os, COMMENT);
+		}
 	}
 }

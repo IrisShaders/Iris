@@ -64,10 +64,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private final ShaderAttributeInputs inputs;
 
 	private static ExtendedShader lastApplied;
-	private Runnable chunkOffsetListener;
 	private final Vector3f chunkOffset = new Vector3f();
-	private Matrix4f projectionOverride;
-	private Matrix4f modelViewOverride;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
@@ -81,7 +78,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
 		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		uniformCreator.accept(uniformBuilder);
-		addDynamicUniforms(uniformBuilder);
 		ProgramImages.Builder builder = ProgramImages.builder(programId);
 		samplerCreator.accept(samplerBuilder, builder);
 
@@ -98,28 +94,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.parent = parent;
 		this.inputs = inputs;
 
-		this.PROJECTION_MATRIX = new RedirectingUniform("ProjMat2", 0, 0, this, this::setProjectionOverride);
-		this.MODEL_VIEW_MATRIX = new RedirectingUniform("ModelViewMat2", 0, 0, this, this::setModelViewOverride);
-
 		this.intensitySwizzle = isIntensity;
-	}
-
-	private void addDynamicUniforms(DynamicUniformHolder uniformBuilder) {
-		uniformBuilder.uniform3f("iris_ChunkOffset", this::getChunkOffset, getChunkOffsetNotifier());
-		uniformBuilder.uniformMatrix("iris_ProjMat", () -> {
-			if (projectionOverride != null) {
-				return projectionOverride;
-			} else {
-				return RenderSystem.getProjectionMatrix();
-			}
-		}, listener -> {});
-		uniformBuilder.uniformMatrix("iris_ModelViewMat", () -> {
-			if (modelViewOverride != null) {
-				return modelViewOverride;
-			} else {
-				return RenderSystem.getModelViewMatrix();
-			}
-		}, listener -> {});
 	}
 
 	public boolean isIntensitySwizzle() {
@@ -131,8 +106,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
 		lastApplied = null;
-		projectionOverride = null;
-		modelViewOverride = null;
 
 		if (this.blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();
@@ -158,6 +131,12 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		uniforms.update();
 		images.update();
 
+		uploadIfNotNull(PROJECTION_MATRIX);
+		uploadIfNotNull(MODEL_VIEW_MATRIX);
+		uploadIfNotNull(TEXTURE_MATRIX);
+		uploadIfNotNull(COLOR_MODULATOR);
+		uploadIfNotNull(CHUNK_OFFSET);
+
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
 		}
@@ -171,6 +150,24 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		} else {
 			writingToAfterTranslucent.bind();
 		}
+	}
+
+	@Nullable
+	@Override
+	public Uniform getUniform(String name) {
+		// Prefix all uniforms with Iris to help avoid conflicts with existing names within the shader.
+		return super.getUniform("iris_" + name);
+	}
+
+	private void uploadIfNotNull(Uniform uniform) {
+		if (uniform != null) {
+			uniform.upload();
+		}
+	}
+
+	@Override
+	public void close() {
+		super.close();
 	}
 
 	@Override
@@ -205,27 +202,4 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	public boolean hasActiveImages() {
 		return images.getActiveImages() > 0;
 	}
-
-    public void setChunkOffset(float x, float y, float z) {
-		chunkOffset.set(x, y, z);
-		if (this.chunkOffsetListener != null) {
-			chunkOffsetListener.run();
-		}
-    }
-
-	private ValueUpdateNotifier getChunkOffsetNotifier() {
-		return listener -> this.chunkOffsetListener = listener;
-	}
-
-	private Vector3f getChunkOffset() {
-		return chunkOffset;
-	}
-
-    public void setProjectionOverride(Matrix4f arg3) {
-		this.projectionOverride = arg3;
-    }
-
-	public void setModelViewOverride(Matrix4f arg3) {
-		this.modelViewOverride = arg3;
-    }
 }
