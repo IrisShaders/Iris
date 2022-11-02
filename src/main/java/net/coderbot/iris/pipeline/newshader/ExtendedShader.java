@@ -81,7 +81,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
 		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		uniformCreator.accept(uniformBuilder);
-		addDynamicUniforms(uniformBuilder);
 		ProgramImages.Builder builder = ProgramImages.builder(programId);
 		samplerCreator.accept(samplerBuilder, builder);
 
@@ -105,9 +104,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.COLOR_MODULATOR = new RedirectingUniform4F(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_ColorModulator"));
 
 		this.intensitySwizzle = isIntensity;
-	}
-
-	private void addDynamicUniforms(DynamicUniformHolder uniformBuilder) {
 	}
 
 	public boolean isIntensitySwizzle() {
