@@ -42,8 +42,8 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String MC_VERSION = "22w43a";
-	static final String customSodiumName = "sodium-22w43a.jar";
+	static final String MC_VERSION = "22w44a";
+	static final String customSodiumName = "sodium-22w44a.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
 		"main",
@@ -97,7 +97,7 @@ public class Buildscript extends SimpleFabricProject {
 		if (SODIUM) {
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.13+93d8cb822d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.16+aeb40ebe2d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "3.0.9+75e982112d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve("frf.jar").toAbsolutePath(), null, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "3.0.10+11ba9c3b9a")), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.8.0+75e982112d"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
 			if (CUSTOM_SODIUM) {
