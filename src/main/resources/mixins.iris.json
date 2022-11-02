@@ -34,7 +34,6 @@
     "MixinLevelRenderer",
     "MixinMinecraft_Keybinds",
     "MixinMinecraft_Images",
-    "MixinMinecraft_NoAuthInDev",
     "MixinMinecraft_PipelineManagement",
     "MixinModelViewBobbing",
     "MixinOptions_Entrypoint",
