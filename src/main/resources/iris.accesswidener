@@ -12,5 +12,7 @@ accessible  class   net/minecraft/client/Options$FieldAccess
 extendable class net/minecraft/client/renderer/texture/TextureAtlasSprite$Info
 mutable field net/minecraft/client/renderer/ShaderInstance PROJECTION_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/ShaderInstance MODEL_VIEW_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
+mutable field net/minecraft/client/renderer/ShaderInstance TEXTURE_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/ShaderInstance CHUNK_OFFSET Lcom/mojang/blaze3d/shaders/Uniform;
+mutable field net/minecraft/client/renderer/ShaderInstance COLOR_MODULATOR Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;

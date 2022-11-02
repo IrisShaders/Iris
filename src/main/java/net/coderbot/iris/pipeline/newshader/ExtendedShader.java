@@ -25,6 +25,9 @@ import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
+import net.coderbot.iris.pipeline.newshader.uniforms.RedirectingUniform3F;
+import net.coderbot.iris.pipeline.newshader.uniforms.RedirectingUniform4F;
+import net.coderbot.iris.pipeline.newshader.uniforms.RedirectingUniformMatrix;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vendored.joml.FrustumRayBuilder;
@@ -64,10 +67,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private final ShaderAttributeInputs inputs;
 
 	private static ExtendedShader lastApplied;
-	private Runnable chunkOffsetListener;
 	private final Vector3f chunkOffset = new Vector3f();
-	private Matrix4f projectionOverride;
-	private Matrix4f modelViewOverride;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
@@ -98,29 +98,16 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.parent = parent;
 		this.inputs = inputs;
 
-		this.PROJECTION_MATRIX = new RedirectingUniform<>("ProjMat2", 0, 0, this, this::setProjectionOverride);
-		this.MODEL_VIEW_MATRIX = new RedirectingUniform<>("ModelViewMat2", 0, 0, this, this::setModelViewOverride);
-		this.CHUNK_OFFSET = new RedirectingUniform<>("ChunkOffset2", 0, 0, this, this::setChunkOffset);
+		this.PROJECTION_MATRIX = new RedirectingUniformMatrix(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_ProjMat"));
+		this.TEXTURE_MATRIX = new RedirectingUniformMatrix(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_TextureMat"));
+		this.MODEL_VIEW_MATRIX = new RedirectingUniformMatrix(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_ModelViewMat"));
+		this.CHUNK_OFFSET = new RedirectingUniform3F(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_ChunkOffset"));
+		this.COLOR_MODULATOR = new RedirectingUniform4F(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_ColorModulator"));
 
 		this.intensitySwizzle = isIntensity;
 	}
 
 	private void addDynamicUniforms(DynamicUniformHolder uniformBuilder) {
-		uniformBuilder.uniform3f("iris_ChunkOffset", this::getChunkOffset, getChunkOffsetNotifier());
-		uniformBuilder.uniformMatrix("iris_ProjMat", () -> {
-			if (projectionOverride != null) {
-				return projectionOverride;
-			} else {
-				return RenderSystem.getProjectionMatrix();
-			}
-		}, listener -> {});
-		uniformBuilder.uniformMatrix("iris_ModelViewMat", () -> {
-			if (modelViewOverride != null) {
-				return modelViewOverride;
-			} else {
-				return RenderSystem.getModelViewMatrix();
-			}
-		}, listener -> {});
 	}
 
 	public boolean isIntensitySwizzle() {
@@ -132,8 +119,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
 		lastApplied = null;
-		projectionOverride = null;
-		modelViewOverride = null;
 
 		if (this.blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();
@@ -159,6 +144,12 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		uniforms.update();
 		images.update();
 
+		PROJECTION_MATRIX.upload();
+		MODEL_VIEW_MATRIX.upload();
+		TEXTURE_MATRIX.upload();
+		CHUNK_OFFSET.upload();
+		COLOR_MODULATOR.upload();
+
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
 		}
@@ -172,6 +163,14 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		} else {
 			writingToAfterTranslucent.bind();
 		}
+	}
+
+	@Override
+	public void close() {
+		super.close();
+		PROJECTION_MATRIX.close();
+		MODEL_VIEW_MATRIX.close();
+		TEXTURE_MATRIX.close();
 	}
 
 	@Override
@@ -203,27 +202,4 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	public boolean hasActiveImages() {
 		return images.getActiveImages() > 0;
 	}
-
-    public void setChunkOffset(float x, float y, float z) {
-		chunkOffset.set(x, y, z);
-		if (this.chunkOffsetListener != null) {
-			chunkOffsetListener.run();
-		}
-    }
-
-	private ValueUpdateNotifier getChunkOffsetNotifier() {
-		return listener -> this.chunkOffsetListener = listener;
-	}
-
-	private Vector3f getChunkOffset() {
-		return chunkOffset;
-	}
-
-    public void setProjectionOverride(Matrix4f arg3) {
-		this.projectionOverride = arg3;
-    }
-
-	public void setModelViewOverride(Matrix4f arg3) {
-		this.modelViewOverride = arg3;
-    }
 }
