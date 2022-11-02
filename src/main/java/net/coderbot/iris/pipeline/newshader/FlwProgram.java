@@ -10,6 +10,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.pipeline.newshader.flw.FlwProgramType;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -36,8 +37,8 @@ public class FlwProgram {
 					  Consumer<SamplerHolder> initSamplers, Consumer<ImageHolder> initImages,
 					  @Nullable  BlendModeOverride override,
 					  GlFramebuffer framebuffer) {
-		vertex = TriforcePatcher.patchFlywheel(vertex, ShaderType.VERTEX, alphaDiscard);
-		fragment = TriforcePatcher.patchFlywheel(fragment, ShaderType.FRAGMENT, alphaDiscard);
+		vertex = TriforcePatcher.patchFlywheel(vertex, ShaderType.VERTEX, FlwProgramType.TRANSFORMED, alphaDiscard);
+		fragment = TriforcePatcher.patchFlywheel(fragment, ShaderType.FRAGMENT, FlwProgramType.TRANSFORMED, alphaDiscard);
 
 		ProgramBuilder builder = ProgramBuilder.begin("<iris patched shaders for flywheel>", vertex, null, fragment,
 			IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
