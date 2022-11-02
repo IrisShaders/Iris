@@ -25,9 +25,6 @@ import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
-import net.coderbot.iris.pipeline.newshader.uniforms.RedirectingUniform3F;
-import net.coderbot.iris.pipeline.newshader.uniforms.RedirectingUniform4F;
-import net.coderbot.iris.pipeline.newshader.uniforms.RedirectingUniformMatrix;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vendored.joml.FrustumRayBuilder;
@@ -97,12 +94,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.parent = parent;
 		this.inputs = inputs;
 
-		this.PROJECTION_MATRIX = new RedirectingUniformMatrix(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_ProjMat"));
-		this.TEXTURE_MATRIX = new RedirectingUniformMatrix(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_TextureMat"));
-		this.MODEL_VIEW_MATRIX = new RedirectingUniformMatrix(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_ModelViewMat"));
-		this.CHUNK_OFFSET = new RedirectingUniform3F(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_ChunkOffset"));
-		this.COLOR_MODULATOR = new RedirectingUniform4F(this.getId(), Uniform.glGetUniformLocation(this.getId(), "iris_ColorModulator"));
-
 		this.intensitySwizzle = isIntensity;
 	}
 
@@ -140,11 +131,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		uniforms.update();
 		images.update();
 
-		PROJECTION_MATRIX.upload();
-		MODEL_VIEW_MATRIX.upload();
-		TEXTURE_MATRIX.upload();
-		CHUNK_OFFSET.upload();
-		COLOR_MODULATOR.upload();
+		uploadIfNotNull(PROJECTION_MATRIX);
+		uploadIfNotNull(MODEL_VIEW_MATRIX);
+		uploadIfNotNull(TEXTURE_MATRIX);
+		uploadIfNotNull(COLOR_MODULATOR);
+		uploadIfNotNull(CHUNK_OFFSET);
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
@@ -161,12 +152,22 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		}
 	}
 
+	@Nullable
+	@Override
+	public Uniform getUniform(String name) {
+		// Prefix all uniforms with Iris to help avoid conflicts with existing names within the shader.
+		return super.getUniform("iris_" + name);
+	}
+
+	private void uploadIfNotNull(Uniform uniform) {
+		if (uniform != null) {
+			uniform.upload();
+		}
+	}
+
 	@Override
 	public void close() {
 		super.close();
-		PROJECTION_MATRIX.close();
-		MODEL_VIEW_MATRIX.close();
-		TEXTURE_MATRIX.close();
 	}
 
 	@Override
