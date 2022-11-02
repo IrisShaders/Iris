@@ -41,6 +41,7 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystemNotFoundException;
@@ -53,6 +54,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Stream;
 import java.util.zip.ZipError;
 import java.util.zip.ZipException;
 
@@ -417,10 +419,12 @@ public class Iris {
 		// For example Sildurs-Vibrant-Shaders.zip/shaders
 		// While other packs have Trippy-Shaderpack-master.zip/Trippy-Shaderpack-master/shaders
 		// This makes it hard to determine what is the actual shaders dir
-		return Files.walk(root)
-				.filter(Files::isDirectory)
-				.filter(path -> path.endsWith("shaders"))
-				.findFirst();
+		try (Stream<Path> stream = Files.walk(root)) {
+			return stream
+					.filter(Files::isDirectory)
+					.filter(path -> path.endsWith("shaders"))
+					.findFirst();
+		}
 	}
 
 	private static void setShadersDisabled() {
@@ -460,10 +464,10 @@ public class Iris {
 		Properties properties = new Properties();
 
 		if (Files.exists(path)) {
-			try {
+			try (InputStream is = Files.newInputStream(path)) {
 				// NB: config properties are specified to be encoded with ISO-8859-1 by OptiFine,
 				//     so we don't need to do the UTF-8 workaround here.
-				properties.load(Files.newInputStream(path));
+				properties.load(is);
 			} catch (IOException e) {
 				// TODO: Better error handling
 				return Optional.empty();
@@ -501,8 +505,8 @@ public class Iris {
 			if (pack.equals(getShaderpacksDirectory())) {
 				return false;
 			}
-			try {
-				return Files.walk(pack)
+			try (Stream<Path> stream = Files.walk(pack)) {
+				return stream
 						.filter(Files::isDirectory)
 						// Prevent a pack simply named "shaders" from being
 						// identified as a valid pack
@@ -516,9 +520,11 @@ public class Iris {
 		if (pack.toString().endsWith(".zip")) {
 			try (FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader())) {
 				Path root = zipSystem.getRootDirectories().iterator().next();
-				return Files.walk(root)
-						.filter(Files::isDirectory)
-						.anyMatch(path -> path.endsWith("shaders"));
+				try (Stream<Path> stream = Files.walk(root)) {
+					return stream
+							.filter(Files::isDirectory)
+							.anyMatch(path -> path.endsWith("shaders"));
+				}
 			} catch (ZipError zipError) {
 				// Java 8 seems to throw a ZipError instead of a subclass of IOException
 				Iris.logger.warn("The ZIP at " + pack + " is corrupt");
