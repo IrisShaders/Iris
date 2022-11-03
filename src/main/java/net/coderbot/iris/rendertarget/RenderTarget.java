@@ -42,8 +42,8 @@ public class RenderTarget {
 		this.altTexture = textures[1];
 
 		boolean isPixelFormatInteger = builder.internalFormat.getPixelFormat().isInteger();
-		setupTexture(mainTexture, builder.width, builder.height, isPixelFormatInteger);
-		setupTexture(altTexture, builder.width, builder.height, isPixelFormatInteger);
+		setupTexture(mainTexture, builder.width, builder.height, !isPixelFormatInteger);
+		setupTexture(altTexture, builder.width, builder.height, !isPixelFormatInteger);
 
 		// Clean up after ourselves
 		// This is strictly defensive to ensure that other buggy code doesn't tamper with our textures
