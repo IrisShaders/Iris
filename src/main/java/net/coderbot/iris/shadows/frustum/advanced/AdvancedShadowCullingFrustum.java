@@ -369,6 +369,6 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 			inside &= Math.fma(plane.x(), insideBoundX, Math.fma(plane.y(), insideBoundY, plane.z() * insideBoundZ)) >= -plane.w();
 		}
 
-		return inside ? 1 : 2;
+		return 2;
 	}
 }
