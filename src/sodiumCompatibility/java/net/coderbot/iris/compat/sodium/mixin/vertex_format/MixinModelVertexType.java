@@ -1,6 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
-import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexUtil;
+import me.jellysquid.mods.sodium.client.render.chunk.format.sfp.ModelVertexType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -49,9 +49,9 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  *    which might take a while. Then, once those steps are available, use the debugger
  *    to its fullest extent.</p>
  */
-@Mixin(ModelVertexUtil.class)
-public class MixinModelVertexUtil {
-	@ModifyVariable(method = "denormalizeVertexTextureFloatAsShort", at = @At("HEAD"), remap = false)
+@Mixin(ModelVertexType.class)
+public class MixinModelVertexType {
+	@ModifyVariable(method = "encodeBlockTexture", at = @At("HEAD"), remap = false)
 	private static float iris$clampUV(float uv) {
 		return Math.min(0.99999997F, uv);
 	}
