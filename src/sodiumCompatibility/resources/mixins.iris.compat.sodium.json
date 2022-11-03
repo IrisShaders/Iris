@@ -36,6 +36,7 @@
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinChunkOneshotGraphicsState",
     "vertex_format.MixinGlVertexFormatBuilder",
+    "vertex_format.MixinModelVertexUtil",
     "vertex_format.MixinMultidrawChunkRenderBackend",
     "vertex_format.MixinSodiumWorldRenderer"
   ]
