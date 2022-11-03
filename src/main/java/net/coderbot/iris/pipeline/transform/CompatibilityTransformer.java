@@ -50,7 +50,7 @@ public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
 	private static final AutoHintedMatcher<Expression> sildursWaterFract = new AutoHintedMatcher<>(
-		"fract(worldpos.y + 0.001)", Matcher.expressionPattern, "___");
+		"fract(worldpos.y + 0.001)", Matcher.expressionPattern);
 
 	private static StorageQualifier getConstQualifier(TypeQualifier qualifier) {
 		if (qualifier == null) {
