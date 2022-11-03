@@ -51,7 +51,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  */
 @Mixin(ModelVertexUtil.class)
 public class MixinModelVertexUtil {
-	@ModifyVariable(method = "denormalizeVertexTextureFloatAsShort", at = @At("HEAD"))
+	@ModifyVariable(method = "denormalizeVertexTextureFloatAsShort", at = @At("HEAD"), remap = false)
 	private static float iris$clampUV(float uv) {
 		return Math.min(0.99999997F, uv);
 	}
