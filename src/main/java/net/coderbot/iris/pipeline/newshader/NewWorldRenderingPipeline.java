@@ -72,6 +72,7 @@ import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -112,7 +113,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final FinalPassRenderer finalPassRenderer;
 
 	private final CustomTextureManager customTextureManager;
-	private final AbstractTexture whitePixel;
+	private final DynamicTexture whitePixel;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
@@ -896,9 +897,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			RenderSystem.setShaderTexture(i, 0);
 		}
 
+		prepareRenderer.destroy();
 		compositeRenderer.destroy();
+		deferredRenderer.destroy();
+		finalPassRenderer.destroy();
+		centerDepthSampler.destroy();
 		customTextureManager.destroy();
-		whitePixel.releaseId();
+		whitePixel.close();
 
 		horizonRenderer.destroy();
 
