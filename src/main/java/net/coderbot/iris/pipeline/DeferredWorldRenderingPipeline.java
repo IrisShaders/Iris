@@ -218,7 +218,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets, programs.getPackDirectives().getCenterDepthHalfLife());
+		this.centerDepthSampler = new CenterDepthSampler(() -> getRenderTargets().getDepthTexture(), programs.getPackDirectives().getCenterDepthHalfLife());
 
 		this.shadowMapResolution = programs.getPackDirectives().getShadowDirectives().getResolution();
 
@@ -421,6 +421,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
 			shadowRenderer == null ? null : createShadowTerrainSamplers, createTerrainImages,
 			shadowRenderer == null ? null : createShadowTerrainImages);
+	}
+
+	private RenderTargets getRenderTargets() {
+		return renderTargets;
 	}
 
 	private void checkWorld() {
