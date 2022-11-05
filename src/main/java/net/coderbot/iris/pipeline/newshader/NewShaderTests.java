@@ -1,51 +1,54 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Ints;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.pipeline.newshader.fallback.ShaderSynthesizer;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
+import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.VanillaUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import org.jetbrains.annotations.Nullable;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class NewShaderTests {
-	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
+	public static ExtendedShader create(String name, ProgramSource source, ProgramId programId, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
-										VertexFormat vertexFormat, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isIntensity,
-										boolean isFullbright) throws IOException {
+										VertexFormat vertexFormat, ShaderAttributeInputs inputs, FrameUpdateNotifier updateNotifier,
+										NewWorldRenderingPipeline parent, Supplier<ImmutableSet<Integer>> flipped, FogMode fogMode, boolean isIntensity,
+										boolean isFullbright, boolean isShadowPass) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
-		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
+		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(programId.getBlendModeOverride());
 
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
-
-		String geometry = null;
-		boolean hasGeometry = false;
-		if (source.getGeometrySource().isPresent()) {
-			hasGeometry = true;
-			geometry = TriforcePatcher.patchVanilla(source.getGeometrySource().get(), ShaderType.GEOMETRY, alpha, true, inputs, true);
-		}
-
-		String vertex = TriforcePatcher.patchVanilla(source.getVertexSource().orElseThrow(RuntimeException::new), ShaderType.VERTEX, alpha, true, inputs, hasGeometry);
-		String fragment = TriforcePatcher.patchVanilla(source.getFragmentSource().orElseThrow(RuntimeException::new), ShaderType.FRAGMENT, alpha, true, inputs, hasGeometry);
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchVanilla(
+			source.getVertexSource().orElseThrow(RuntimeException::new),
+			source.getGeometrySource().orElse(null),
+			source.getFragmentSource().orElseThrow(RuntimeException::new),
+			alpha, true, inputs);
+		String vertex = transformed.get(PatchShaderType.VERTEX);
+		String geometry = transformed.get(PatchShaderType.GEOMETRY);
+		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 
 		StringBuilder shaderJson = new StringBuilder("{\n" +
 				"    \"blend\": {\n" +
@@ -63,78 +66,38 @@ public class NewShaderTests {
 				"        \"UV2\",\n" +
 				"        \"Normal\"\n" +
 				"    ],\n" +
-				"    \"samplers\": [\n" +
-				// TODO: Don't duplicate these definitions!
-				"        { \"name\": \"gtexture\" },\n" +
-				"        { \"name\": \"texture\" },\n" +
-				"        { \"name\": \"tex\" },\n" +
-				"        { \"name\": \"iris_overlay\" },\n" +
-				"        { \"name\": \"lightmap\" },\n" +
-				"        { \"name\": \"normals\" },\n" +
-				"        { \"name\": \"specular\" },\n" +
-				"        { \"name\": \"shadow\" },\n" +
-				"        { \"name\": \"watershadow\" },\n" +
-				"        { \"name\": \"shadowtex0\" },\n" +
-				"        { \"name\": \"shadowtex0HW\" },\n" +
-				"        { \"name\": \"shadowtex1\" },\n" +
-				"        { \"name\": \"shadowtex1HW\" },\n" +
-				"        { \"name\": \"depthtex0\" },\n" +
-				"        { \"name\": \"depthtex1\" },\n" +
-				"        { \"name\": \"noisetex\" },\n");
-
-		// TODO: SamplerHolder should really be responsible for this...
-		for (int buffer : PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS) {
-			if (buffer >= 4 && buffer < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
-				shaderJson.append("        { \"name\": \"");
-				shaderJson.append(PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(buffer));
-				shaderJson.append("\" },\n");
-			}
-
-			shaderJson.append("        { \"name\": \"colortex");
-			shaderJson.append(buffer);
-			shaderJson.append("\" },\n");
-		}
-
-		shaderJson.append(
-				"        { \"name\": \"shadowcolor\" },\n" +
-				"        { \"name\": \"shadowcolor0\" },\n" +
-				"        { \"name\": \"shadowcolor1\" }\n" +
-				"    ],\n" +
 				"    \"uniforms\": [\n" +
 				"        { \"name\": \"iris_TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
 				"        { \"name\": \"iris_ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
 				"        { \"name\": \"iris_ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
 				"        { \"name\": \"iris_ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
-				"        { \"name\": \"iris_ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
-				"        { \"name\": \"iris_FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-				"        { \"name\": \"iris_LineWidth\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-				"        { \"name\": \"iris_ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
+				"        { \"name\": \"iris_ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] }\n" +
 				"    ]\n" +
 				"}");
 
 		String shaderJsonString = shaderJson.toString();
 
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment, shaderJsonString);
+
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, geometry, fragment);
 
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
-
-			Files.writeString(debugOutDir.resolve(name + ".vsh"), vertex);
-			Files.writeString(debugOutDir.resolve(name + ".fsh"), fragment);
-			if (geometry != null) {
-				Files.writeString(debugOutDir.resolve(name + ".gsh"), geometry);
+		List<BufferBlendOverride> overrides = new ArrayList<>();
+		source.getDirectives().getBufferBlendOverrides().forEach(information -> {
+			int index = Ints.indexOf(source.getDirectives().getDrawBuffers(), information.getIndex());
+			if (index > -1) {
+				overrides.add(new BufferBlendOverride(index, information.getBlendMode()));
 			}
-			Files.writeString(debugOutDir.resolve(name + ".json"), shaderJsonString);
-		}
+		});
 
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, alpha, uniforms -> {
 			CommonUniforms.addCommonUniforms(uniforms, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier, fogMode);
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
-		}, isIntensity, parent, inputs);
+			VanillaUniforms.addVanillaUniforms(uniforms);
+		}, (samplerHolder, imageHolder) -> {
+			parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.toAvailability());
+		}, isIntensity, parent, inputs, overrides);
 	}
 
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
@@ -187,15 +150,9 @@ public class NewShaderTests {
 				"    ]\n" +
 				"}";
 
+		PatchedShaderPrinter.debugPatchedShaders(name, vertex, null, fragment, shaderJsonString);
+
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, fragment);
-
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
-
-			Files.write(debugOutDir.resolve(name + ".vsh"), vertex.getBytes(StandardCharsets.UTF_8));
-			Files.write(debugOutDir.resolve(name + ".fsh"), fragment.getBytes(StandardCharsets.UTF_8));
-			Files.write(debugOutDir.resolve(name + ".json"), shaderJsonString.getBytes(StandardCharsets.UTF_8));
-		}
 
 		return new FallbackShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
 				writingToAfterTranslucent, blendModeOverride, alpha.getReference(), parent);

@@ -3,6 +3,7 @@ package net.coderbot.iris.mixin.texture;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.texture.TextureInfoCache;
 import net.coderbot.iris.texture.TextureTracker;
+import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,11 +16,6 @@ import java.nio.IntBuffer;
 
 @Mixin(GlStateManager.class)
 public class MixinGlStateManager {
-	@Inject(method = "_bindTexture(I)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glBindTexture(II)V", shift = Shift.AFTER), remap = false)
-	private static void iris$onBindTexture(int id, CallbackInfo ci) {
-		TextureTracker.INSTANCE.onBindTexture(id);
-	}
-
 	@Inject(method = "_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V", at = @At("TAIL"), remap = false)
 	private static void iris$onTexImage2D(int target, int level, int internalformat, int width, int height, int border,
 										  int format, int type, @Nullable IntBuffer pixels, CallbackInfo ci) {
@@ -42,5 +38,6 @@ public class MixinGlStateManager {
 	private static void iris$onDeleteTexture(int id) {
 		TextureTracker.INSTANCE.onDeleteTexture(id);
 		TextureInfoCache.INSTANCE.onDeleteTexture(id);
+		PBRTextureManager.INSTANCE.onDeleteTexture(id);
 	}
 }

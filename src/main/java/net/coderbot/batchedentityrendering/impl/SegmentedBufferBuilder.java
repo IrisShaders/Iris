@@ -2,23 +2,19 @@ package net.coderbot.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.datafixers.util.Pair;
 import net.coderbot.batchedentityrendering.mixin.RenderTypeAccessor;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTrackingBuffer {
     private final BufferBuilder buffer;
     private RenderType currentType;
-	private List<BufferSegment> buffers;
+	private final List<BufferSegment> buffers;
 
     public SegmentedBufferBuilder() {
         // 2 MB initial allocation
@@ -35,7 +31,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
                     buffer.setQuadSortOrigin(0, 0, 0);
                 }
 
-                buffers.add(new BufferSegment(buffer.end(), currentType));
+                buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
             }
 
             buffer.begin(renderType.mode(), renderType.format());
@@ -63,7 +59,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
             buffer.setQuadSortOrigin(0, 0, 0);
         }
 
-		buffers.add(new BufferSegment(buffer.end(), currentType));
+		buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
 
 		currentType = null;
 

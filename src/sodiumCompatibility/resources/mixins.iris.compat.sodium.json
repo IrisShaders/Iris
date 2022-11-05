@@ -21,6 +21,7 @@
     "options.MixinUserConfigCategories",
     "options.MixinUserConfigScreen",
     "separate_ao.MixinColorABGR",
+    "pbr_animation.MixinTextureAtlasSprite",
     "shader_overrides.MixinGlProgram",
     "shader_overrides.MixinRenderSectionManager",
     "shadow_map.MixinTerrainRenderManager",
@@ -35,6 +36,8 @@
     "vertex_format.ChunkMeshAttributeAccessor",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinGlVertexFormatBuilder",
-    "vertex_format.MixinRenderRegionArenas"
+    "vertex_format.MixinRegionChunkRenderer",
+    "vertex_format.MixinRenderRegionArenas",
+    "vertex_format.MixinRenderSectionManager"
   ]
 }

@@ -18,6 +18,7 @@ import org.lwjgl.opengl.ARBTextureSwizzle;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,7 +29,10 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Objects;
 
 @Mixin(ShaderInstance.class)
-public class MixinShaderInstance implements ShaderInstanceInterface {
+public abstract class MixinShaderInstance implements ShaderInstanceInterface {
+	@Shadow
+	public abstract int getId();
+
 	@Unique
 	private String lastSamplerName;
 
@@ -72,8 +76,7 @@ public class MixinShaderInstance implements ShaderInstanceInterface {
 			// https://www.khronos.org/opengl/wiki/Image_Format#Legacy_Image_Formats
 			// https://www.khronos.org/opengl/wiki/Texture#Swizzle_mask
 
-			// TODO: Avoid direct GL calls
-			IrisRenderSystem.texParameteriv(GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+			IrisRenderSystem.texParameterivDirect(GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
 					new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED });
 		}
 	}

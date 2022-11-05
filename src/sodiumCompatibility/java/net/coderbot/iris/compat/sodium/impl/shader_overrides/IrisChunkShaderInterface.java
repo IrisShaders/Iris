@@ -28,6 +28,8 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	private IrisTerrainPass pass;
 	private int handle;
 	private float alpha;
+	private List<BufferBlendOverride> bufferBlendOverrides;
+	private boolean hasOverrides;
 
 	public IrisChunkShaderInterface(ShaderBindingContext context) {
 		super(context);
@@ -38,7 +40,10 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 		this.pass = pass;
 		this.handle = handle;
 		this.alpha = alpha;
-		this.irisProgramUniforms = pipeline.initUniforms(handle);
+			this.bufferBlendOverrides = bufferOverrides;
+			this.hasOverrides = bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty();
+
+			this.irisProgramUniforms = pipeline.initUniforms(handle);
 		this.irisProgramSamplers
 			= isShadowPass? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
 		this.irisProgramImages = isShadowPass ? pipeline.initShadowImages(handle) : pipeline.initTerrainImages(handle);
@@ -56,6 +61,10 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 				blendModeOverride.apply();
 			}
 
+			if (hasOverrides) {
+				bufferBlendOverrides.forEach(BufferBlendOverride::apply);
+			}
+
 			CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alpha);
 
 			irisProgramUniforms.update();
@@ -65,7 +74,7 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	}
 
 	public void restore() {
-		if (blendModeOverride != null) {
+		if (blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();
 		}
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);

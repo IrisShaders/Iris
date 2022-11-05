@@ -138,7 +138,7 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// TODO: getPositionColorLightmapShader, getPositionColorTexLightmapShader
+	// TODO: getPositionColorLightmapShader
 
 	@Inject(method = "getPositionTexColorNormalShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexColorNormalShader(CallbackInfoReturnable<ShaderInstance> cir) {
@@ -209,9 +209,6 @@ public class MixinGameRenderer {
 			"getRendertypeEntityCutoutNoCullZOffsetShader",
 			"getRendertypeEntityDecalShader",
 			"getRendertypeEntitySmoothCutoutShader",
-			"getRendertypeEntityTranslucentShader",
-			"getRendertypeEntityTranslucentCullShader",
-			"getRendertypeItemEntityTranslucentCullShader",
 			"getRendertypeArmorCutoutNoCullShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
@@ -228,6 +225,23 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
+		"getRendertypeEntityTranslucentShader",
+		"getRendertypeEntityTranslucentCullShader",
+		"getRendertypeItemEntityTranslucentCullShader",
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntityTranslucentShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (HandRenderer.INSTANCE.isActive()) {
+			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
+		} else if (isBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+		} else if (shouldOverrideShaders()) {
+			override(ShaderKey.ENTITIES_TRANSLUCENT, cir);
+		}
+	}
+
+		@Inject(method = {
 			"getRendertypeEnergySwirlShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEnergySwirlShader(CallbackInfoReturnable<ShaderInstance> cir) {
@@ -370,7 +384,8 @@ public class MixinGameRenderer {
 
 	@Inject(method = {
 			"getRendertypeTextShader",
-			"getRendertypeTextSeeThroughShader"
+			"getRendertypeTextSeeThroughShader",
+			"getPositionColorTexLightmapShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTextShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {

@@ -29,10 +29,12 @@ jobs:
         run: java -Diris.release=true -jar brachyura-bootstrap-0.jar build
 
       - name: Upload artifacts to Modrinth, Curseforge and GitHub
-        uses: Kir-Antipov/mc-publish@v2.0
+        uses: Kir-Antipov/mc-publish@v3.2
         with:
           modrinth-id: YL57xq9U
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-featured: true
+          modrinth-unfeature-mode: subset
 
           curseforge-id: 455508
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
@@ -43,7 +45,7 @@ jobs:
 
           version-type: release
 
-          loaders: fabric
+          loaders: fabric quilt
 
           dependencies: sodium | depends | *
 

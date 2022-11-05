@@ -2,13 +2,24 @@ package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.coderbot.iris.vendored.joml.Math;
 import net.coderbot.iris.vendored.joml.Vector3d;
+import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.Objects;
+import java.util.stream.StreamSupport;
 
 public class IrisExclusiveUniforms {
 	public static void addIrisExclusiveUniforms(UniformHolder uniforms) {
+		WorldInfoUniforms.addWorldInfoUniforms(uniforms);
+
 		//All Iris-exclusive uniforms (uniforms which do not exist in either OptiFine or ShadersMod) should be registered here.
 		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "thunderStrength", IrisExclusiveUniforms::getThunderStrength);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerHealth", IrisExclusiveUniforms::getCurrentHealth);
@@ -20,6 +31,18 @@ public class IrisExclusiveUniforms {
 		uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "firstPersonCamera", IrisExclusiveUniforms::isFirstPersonCamera);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isSpectator", IrisExclusiveUniforms::isSpectator);
 		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "eyePosition", IrisExclusiveUniforms::getEyePosition);
+		Vector4f zero = new Vector4f(0, 0, 0, 0);
+		uniforms.uniform4f(UniformUpdateFrequency.PER_TICK, "lightningBoltPosition", () -> {
+			if (Minecraft.getInstance().level != null) {
+				return StreamSupport.stream(Minecraft.getInstance().level.entitiesForRendering().spliterator(), false).filter(bolt -> bolt instanceof LightningBolt).findAny().map(bolt -> {
+					Vector3d unshiftedCameraPosition = CameraUniforms.getUnshiftedCameraPosition();
+					Vec3 vec3 = bolt.getPosition(Minecraft.getInstance().getDeltaFrameTime());
+					return new Vector4f((float) (vec3.x - unshiftedCameraPosition.x), (float) (vec3.y - unshiftedCameraPosition.y), (float) (vec3.z - unshiftedCameraPosition.z), 1);
+				}).orElse(zero);
+			} else {
+				return zero;
+			}
+		});
 	}
 
 	private static float getThunderStrength() {
@@ -83,6 +106,44 @@ public class IrisExclusiveUniforms {
 	}
 
 	private static Vector3d getEyePosition() {
-		return new Vector3d(Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getEyeY(), Minecraft.getInstance().player.getZ());
+		Objects.requireNonNull(Minecraft.getInstance().getCameraEntity());
+		return new Vector3d(Minecraft.getInstance().getCameraEntity().getX(), Minecraft.getInstance().getCameraEntity().getEyeY(), Minecraft.getInstance().getCameraEntity().getZ());
+	}
+
+	public static class WorldInfoUniforms {
+		public static void addWorldInfoUniforms(UniformHolder uniforms) {
+			ClientLevel level = Minecraft.getInstance().level;
+			// TODO: Use level.dimensionType() coordinates for 1.18!
+			uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "bedrockLevel", () -> 0);
+			uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "heightLimit", () -> {
+				if (level != null) {
+					return level.getMaxBuildHeight();
+				} else {
+					return 256;
+				}
+			});
+			uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "hasCeiling", () -> {
+				if (level != null) {
+					return level.dimensionType().hasCeiling();
+				} else {
+					return false;
+				}
+			});
+			uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "hasSkylight", () -> {
+				if (level != null) {
+					return level.dimensionType().hasSkyLight();
+				} else {
+					return true;
+				}
+			});
+			uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "ambientLight", () -> {
+				if (level != null) {
+					return ((DimensionTypeAccessor) (Object) level.dimensionType()).getAmbientLight();
+				} else {
+					return 0f;
+				}
+			});
+
+		}
 	}
 }

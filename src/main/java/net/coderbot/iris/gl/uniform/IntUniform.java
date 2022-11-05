@@ -1,6 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 
 import java.util.function.IntSupplier;
 

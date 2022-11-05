@@ -6,7 +6,9 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
+import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import org.lwjgl.opengl.GL20C;
 
 import java.util.ArrayList;
@@ -36,12 +38,13 @@ public class RenderTargets {
 	private int cachedDepthBufferVersion;
 	private boolean destroyed;
 
-	public RenderTargets(int width, int height, int depthTexture, int depthBufferVersion, DepthBufferFormat depthFormat, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets) {
+	public RenderTargets(int width, int height, int depthTexture, int depthBufferVersion, DepthBufferFormat depthFormat, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets, PackDirectives packDirectives) {
 		targets = new RenderTarget[renderTargets.size()];
 
 		renderTargets.forEach((index, settings) -> {
 			// TODO: Handle mipmapping?
-			targets[index] = RenderTarget.builder().setDimensions(width, height)
+			Vector2i dimensions = packDirectives.getTextureScaleOverride(index, width, height);
+			targets[index] = RenderTarget.builder().setDimensions(dimensions.x, dimensions.y)
 					.setInternalFormat(settings.getInternalFormat())
 					.setPixelFormat(settings.getInternalFormat().getPixelFormat()).build();
 		});
@@ -118,7 +121,7 @@ public class RenderTargets {
 		return noHand;
 	}
 
-	public void resizeIfNeeded(int newDepthBufferVersion, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat) {
+	public boolean resizeIfNeeded(int newDepthBufferVersion, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat, PackDirectives packDirectives) {
 		boolean recreateDepth = false;
 		if (cachedDepthBufferVersion != newDepthBufferVersion) {
 			recreateDepth = true;
@@ -150,7 +153,9 @@ public class RenderTargets {
 					continue;
 				}
 
-				framebuffer.addDepthAttachment(newDepthTextureId);
+				if (framebuffer.hasDepthAttachment()) {
+					framebuffer.addDepthAttachment(newDepthTextureId);
+				}
 			}
 		}
 
@@ -166,12 +171,14 @@ public class RenderTargets {
 			cachedWidth = newWidth;
 			cachedHeight = newHeight;
 
-			for (RenderTarget target : targets) {
-				target.resize(newWidth, newHeight);
+			for (int i = 0; i < targets.length; i++) {
+				targets[i].resize(packDirectives.getTextureScaleOverride(i, newWidth, newHeight));
 			}
 
 			fullClearRequired = true;
 		}
+
+		return sizeChanged;
 	}
 
 	public void copyPreTranslucentDepth() {
@@ -212,6 +219,16 @@ public class RenderTargets {
 
 	public GlFramebuffer createFramebufferWritingToAlt(int[] drawBuffers) {
 		return createFullFramebuffer(true, drawBuffers);
+	}
+
+	public GlFramebuffer createClearFramebuffer(boolean alt, int[] clearBuffers) {
+		ImmutableSet<Integer> stageWritesToMain = ImmutableSet.of();
+
+		if (!alt) {
+			stageWritesToMain = invert(ImmutableSet.of(), clearBuffers);
+		}
+
+		return createColorFramebuffer(stageWritesToMain, clearBuffers);
 	}
 
 	private ImmutableSet<Integer> invert(ImmutableSet<Integer> base, int[] relevant) {
@@ -310,6 +327,11 @@ public class RenderTargets {
 		}
 
 		return framebuffer;
+	}
+
+	public void destroyFramebuffer(GlFramebuffer framebuffer) {
+		framebuffer.destroy();
+		ownedFramebuffers.remove(framebuffer);
 	}
 
 	public int getCurrentWidth() {

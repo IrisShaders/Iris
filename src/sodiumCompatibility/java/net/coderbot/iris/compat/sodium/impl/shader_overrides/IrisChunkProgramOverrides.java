@@ -16,6 +16,8 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
+import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.AlphaTests;
@@ -27,6 +29,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.EnumMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class IrisChunkProgramOverrides {
@@ -97,6 +101,18 @@ public class IrisChunkProgramOverrides {
 		}
 	}
 
+	private List<BufferBlendOverride> getBufferBlendOverride(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+		if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
+			return pipeline.getShadowBufferOverrides();
+		} else if (pass == IrisTerrainPass.GBUFFER_SOLID || pass == IrisTerrainPass.GBUFFER_CUTOUT) {
+			return pipeline.getTerrainBufferOverrides();
+		} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+			return pipeline.getTranslucentBufferOverrides();
+		} else {
+			throw new IllegalArgumentException("Unknown pass type " + pass);
+		}
+	}
+
 	private static ShaderConstants getShaderConstants(IrisTerrainPass pass, TerrainVertexType vertexType) {
 		ShaderConstants.Builder constants = ShaderConstants.builder();
 		if (pass == IrisTerrainPass.GBUFFER_CUTOUT || pass == IrisTerrainPass.SHADOW_CUTOUT) {
@@ -114,6 +130,8 @@ public class IrisChunkProgramOverrides {
 		String vertShader = createVertexShader(pass, pipeline);
 		String geomShader = createGeometryShader(pass, pipeline);
 		String fragShader = createFragmentShader(pass, pipeline);
+		List<BufferBlendOverride> bufferOverrides = getBufferBlendOverride(pass, pipeline);
+
 		ShaderDescription.Builder builder = ShaderDescription.builder().addShaderSource(ShaderType.VERTEX, vertShader);
 
 		if (fragShader == null || vertShader == null) {
@@ -140,7 +158,7 @@ public class IrisChunkProgramOverrides {
 
 		int handle = GlProgram.getHandle(interfaces);
 
-		interfaces.getInterface().setInfo(pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, pipeline, handle, pass, getBlendOverride(pass, pipeline), getAlphaReference(pass, pipeline));
+		interfaces.getInterface().setInfo(pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, pipeline, handle, pass, getBlendOverride(pass, pipeline), bufferOverrides, getAlphaReference(pass, pipeline));
 
 		return interfaces;
 	}
