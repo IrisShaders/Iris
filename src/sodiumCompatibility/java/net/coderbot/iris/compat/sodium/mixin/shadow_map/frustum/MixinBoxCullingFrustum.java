@@ -14,15 +14,13 @@ public class MixinBoxCullingFrustum implements Frustum, FrustumAdapter {
 	@Final
 	private BoxCuller boxCuller;
 
-	// TODO: Better way to do this... Maybe we shouldn't be using a frustum for the box culling in the first place!
-	@Override
-	public int testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		// TODO: Frustum.INSIDE
-		return this.boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ) ? -3 : -1;
-	}
-
 	@Override
 	public Frustum sodium$createFrustum() {
 		return this;
+	}
+
+	@Override
+	public int intersectBox(float v, float v1, float v2, float v3, float v4, float v5, int i) {
+		return this.boxCuller.isCulled(v, v1, v2, v3, v4, v5) ? -1 : 1;
 	}
 }

@@ -8,12 +8,12 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(NonCullingFrustum.class)
 public class MixinNonCullingFrustum implements Frustum, FrustumAdapter {
 	@Override
-	public int testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return -2;
+	public Frustum sodium$createFrustum() {
+		return this;
 	}
 
 	@Override
-	public Frustum sodium$createFrustum() {
-		return this;
+	public int intersectBox(float v, float v1, float v2, float v3, float v4, float v5, int i) {
+		return 1;
 	}
 }

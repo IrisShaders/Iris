@@ -370,4 +370,131 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 
 		return inside ? 1 : 2;
 	}
+
+	public int checkInfoSodium(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, int prevMask) {
+		float newMinX = (float)(minX - this.x);
+		float newMinY = (float)(minY - this.y);
+		float newMinZ = (float)(minZ - this.z);
+		float newMaxX = (float)(maxX - this.x);
+		float newMaxY = (float)(maxY - this.y);
+		float newMaxZ = (float)(maxZ - this.z);
+		if (boxCuller != null && boxCuller.isCulled(newMinX, newMinY, newMinZ, newMaxX, newMaxY, newMaxZ)) {
+			return -1;
+		}
+
+		float outsideBoundX;
+		float outsideBoundY;
+		float outsideBoundZ;
+		float insideBoundX;
+		float insideBoundY;
+		float insideBoundZ;
+
+		int newMask = 0;
+
+		boolean checkedOne = false;
+		for (int i = 0; i < planeCount; ++i) {
+			int bit = (1 << i);
+			if (((prevMask & bit) != 0)) {
+				//continue;
+			}
+
+			Vector4f plane = this.planes[i];
+
+			// Check if plane is inside or intersecting.
+			// This is ported from JOML's FrustumIntersection.
+
+			if (plane.x() < 0) {
+				outsideBoundX = newMinX;
+				insideBoundX = newMaxX;
+			} else {
+				outsideBoundX = newMaxX;
+				insideBoundX = newMinX;
+			}
+
+			if (plane.y() < 0) {
+				outsideBoundY = newMinY;
+				insideBoundY = newMaxY;
+			} else {
+				outsideBoundY = newMaxY;
+				insideBoundY = newMinY;
+			}
+
+			if (plane.z() < 0) {
+				outsideBoundZ = newMinZ;
+				insideBoundZ = newMaxZ;
+			} else {
+				outsideBoundZ = newMaxZ;
+				insideBoundZ = newMinZ;
+			}
+
+			if (Math.fma(plane.x(), outsideBoundX, Math.fma(plane.y(), outsideBoundY, plane.z() * outsideBoundZ)) < -plane.w()) {
+				return -1;
+			}
+
+			/*if (Math.fma(plane.x(), insideBoundX, Math.fma(plane.y(), insideBoundY, plane.z() * insideBoundZ)) >= -plane.w()) {
+				if (!checkedOne) {
+					newMask = prevMask | 1;
+				} else {
+					newMask |= bit;
+				}
+			}*/
+
+			checkedOne = true;
+		}
+
+		return newMask;
+	}
+
+	public boolean containsSodium(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, int prevMask) {
+		float newMinX = (float)(minX - this.x);
+		float newMinY = (float)(minY - this.y);
+		float newMinZ = (float)(minZ - this.z);
+		float newMaxX = (float)(maxX - this.x);
+		float newMaxY = (float)(maxY - this.y);
+		float newMaxZ = (float)(maxZ - this.z);
+
+		if (boxCuller != null && boxCuller.isCulled(newMinX, newMinY, newMinZ, newMaxX, newMaxY, newMaxZ)) {
+			return false;
+		}
+
+		float outsideBoundX;
+		float outsideBoundY;
+		float outsideBoundZ;
+
+		for (int i = 0; i < planeCount; ++i) {
+			int bit = (1 << i);
+			if (((prevMask & bit) != 0)) {
+				continue;
+			}
+
+			Vector4f plane = this.planes[i];
+
+			// Check if plane is inside or intersecting.
+			// This is ported from JOML's FrustumIntersection.
+
+			if (plane.x() < 0) {
+				outsideBoundX = newMinX;
+			} else {
+				outsideBoundX = newMaxX;
+			}
+
+			if (plane.y() < 0) {
+				outsideBoundY = newMinY;
+			} else {
+				outsideBoundY = newMaxY;
+			}
+
+			if (plane.z() < 0) {
+				outsideBoundZ = newMinZ;
+			} else {
+				outsideBoundZ = newMaxZ;
+			}
+
+			if (Math.fma(plane.x(), outsideBoundX, Math.fma(plane.y(), outsideBoundY, plane.z() * outsideBoundZ)) < -plane.w()) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

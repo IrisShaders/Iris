@@ -35,9 +35,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TerrainRenderManager.class)
 public class MixinRenderSectionManager {
-	@Shadow
-	@Final
-	private RenderDevice device;
 	@Mutable
 	@Shadow
 	@Final
@@ -52,8 +49,13 @@ public class MixinRenderSectionManager {
 	@Unique
 	private int versionCounterForSodiumShaderReload = -1;
 
+	@Unique
+	private RenderDevice device;
+
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void createShadow(RenderDevice device, SodiumWorldRenderer worldRenderer, ChunkRenderPassManager renderPassManager, ClientLevel world, ChunkCameraContext camera, int chunkViewDistance, CallbackInfo ci) {
+		this.device = device;
+
 		this.irisChunkProgramOverrides = new IrisChunkProgramOverrides();
 
 		this.chunkRenderer = irisChunkRendererCreation(device, camera, createVertexType(), renderPassManager);

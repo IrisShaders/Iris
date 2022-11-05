@@ -9,21 +9,23 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(AdvancedShadowCullingFrustum.class)
 public abstract class MixinAdvancedShadowCullingFrustum implements Frustum, FrustumAdapter {
 	@Shadow(remap = false)
-	public abstract int fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
+	public abstract int checkInfoSodium(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, int prevMask);
 
-	@Override
-	public int testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return switch(fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ)) {
-			case 0 -> Frustum.OUTSIDE;
-			case 1 -> Frustum.INSIDE;
-			case 2 -> Frustum.INTERSECT;
-			default ->
-				throw new IllegalStateException("Unexpected value: " + fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ));
-		};
-	}
+	@Shadow(remap = false)
+	public abstract boolean containsSodium(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, int prevMask);
 
 	@Override
 	public Frustum sodium$createFrustum() {
 		return this;
+	}
+
+	@Override
+	public int intersectBox(float v, float v1, float v2, float v3, float v4, float v5, int i) {
+		return this.checkInfoSodium(v, v1, v2, v3, v4, v5, i);
+	}
+
+	@Override
+	public boolean containsBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, int skipMask) {
+		return this.containsSodium(minX, minY, minZ, maxX, maxY, maxZ, skipMask);
 	}
 }

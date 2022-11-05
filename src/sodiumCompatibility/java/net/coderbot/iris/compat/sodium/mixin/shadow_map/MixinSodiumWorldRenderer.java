@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * always moving.
  */
 @Mixin(SodiumWorldRenderer.class)
-public class MixinSodiumWorldRenderer {
+public abstract class MixinSodiumWorldRenderer {
     @Shadow(remap = false)
 	private TerrainRenderManager terrainRenderManager;
 
@@ -33,6 +33,9 @@ public class MixinSodiumWorldRenderer {
 
 	@Shadow(remap = false)
 	private double lastCameraX, lastCameraY, lastCameraZ, lastCameraPitch, lastCameraYaw;
+
+	@Shadow(remap = false)
+	public abstract void incrementFrame();
 
 	@Unique
 	private double iris$swapLastCameraX, iris$swapLastCameraY, iris$swapLastCameraZ,
@@ -97,9 +100,14 @@ public class MixinSodiumWorldRenderer {
                      target = "net/caffeinemc/sodium/render/SodiumWorldRenderer.lastCameraX : D",
                      ordinal = 0,
                      remap = false))
-    private void iris$ensureStateSwappedInUpdateChunks(Camera camera, Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
+    private void iris$ensureStateSwappedInUpdateChunks(Camera camera, Frustum frustum, boolean spectator, CallbackInfo ci) {
         iris$ensureStateSwapped();
     }
+
+	@Inject(method = "updateChunks", remap = false, at = @At("TAIL"))
+	private void iris$incrementFrame(Camera camera, Frustum frustum, boolean spectator, CallbackInfo ci) {
+		this.incrementFrame();
+	}
 
     @Redirect(method = "updateChunks", remap = false,
             at = @At(value = "FIELD",

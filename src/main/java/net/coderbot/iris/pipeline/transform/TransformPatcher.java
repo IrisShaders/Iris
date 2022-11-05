@@ -207,7 +207,7 @@ public class TransformPatcher {
 									break;
 								}
 							}
-							if (version.number >= 330) {
+							if (version.number >= (parameters instanceof SodiumParameters ? 450 : 330)) {
 								if (profile != Profile.COMPATIBILITY) {
 									throw new IllegalStateException(
 											"Expected \"compatibility\" after the GLSL version: #version " + version + " "
@@ -215,7 +215,7 @@ public class TransformPatcher {
 								}
 								versionStatement.profile = Profile.CORE;
 							} else {
-								versionStatement.version = Version.GLSL33;
+								versionStatement.version = parameters instanceof SodiumParameters ? Version.GLSL45 : Version.GLSL33;
 								versionStatement.profile = Profile.CORE;
 							}
 							switch (parameters.patch) {
@@ -328,10 +328,10 @@ public class TransformPatcher {
 
 	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
 			AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale) {
+			int maxBatchSize, float vertexRange, boolean baseInstanced) {
 		return transform(vertex, geometry, fragment,
-				new SodiumParameters(Patch.SODIUM, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset,
-						textureScale));
+				new SodiumParameters(Patch.SODIUM, cutoutAlpha, defaultAlpha, inputs, maxBatchSize, vertexRange,
+					baseInstanced));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {

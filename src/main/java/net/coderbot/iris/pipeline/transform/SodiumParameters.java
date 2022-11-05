@@ -7,21 +7,21 @@ public class SodiumParameters extends Parameters {
 	private final AlphaTest cutoutAlpha;
 	private final AlphaTest defaultAlpha;
 	public final ShaderAttributeInputs inputs;
-	public final float positionScale;
-	public final float positionOffset;
-	public final float textureScale;
+	public final int maxBatchSize;
+	public final float vertexRange;
+	public final boolean baseInstanced;
 
 	public AlphaTest alpha;
 
 	public SodiumParameters(Patch patch, AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale) {
+							int maxBatchSize, float vertexRange, boolean baseInstanced) {
 		super(patch);
 		this.cutoutAlpha = cutoutAlpha;
 		this.defaultAlpha = defaultAlpha;
 		this.inputs = inputs;
-		this.positionScale = positionScale;
-		this.positionOffset = positionOffset;
-		this.textureScale = textureScale;
+		this.maxBatchSize = maxBatchSize;
+		this.vertexRange = vertexRange;
+		this.baseInstanced = baseInstanced;
 
 		this.alpha = defaultAlpha;
 	}
@@ -50,9 +50,9 @@ public class SodiumParameters extends Parameters {
 		result = prime * result + ((defaultAlpha == null) ? 0 : defaultAlpha.hashCode());
 		result = prime * result + ((cutoutAlpha == null) ? 0 : cutoutAlpha.hashCode());
 		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
-		result = prime * result + Float.floatToIntBits(positionOffset);
-		result = prime * result + Float.floatToIntBits(positionScale);
-		result = prime * result + Float.floatToIntBits(textureScale);
+		result = prime * result + Float.floatToIntBits(maxBatchSize);
+		result = prime * result + Float.floatToIntBits(vertexRange);
+		result = prime * result + (baseInstanced ? 1 : 0);
 		return result;
 	}
 
@@ -80,11 +80,11 @@ public class SodiumParameters extends Parameters {
 				return false;
 		} else if (!inputs.equals(other.inputs))
 			return false;
-		if (Float.floatToIntBits(positionOffset) != Float.floatToIntBits(other.positionOffset))
+		if (Float.floatToIntBits(maxBatchSize) != Float.floatToIntBits(other.maxBatchSize))
 			return false;
-		if (Float.floatToIntBits(positionScale) != Float.floatToIntBits(other.positionScale))
+		if (Float.floatToIntBits(vertexRange) != Float.floatToIntBits(other.vertexRange))
 			return false;
-		if (Float.floatToIntBits(textureScale) != Float.floatToIntBits(other.textureScale))
+		if (baseInstanced != other.baseInstanced)
 			return false;
 		return true;
 	}

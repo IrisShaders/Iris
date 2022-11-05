@@ -14,10 +14,11 @@ public class SodiumTransformer {
 			SodiumParameters parameters) {
 		CommonTransformer.transform(t, tree, root, parameters);
 
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_ALL, "#extension GL_ARB_shader_draw_parameters : require\n");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
-		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");
+		root.rename("gl_ProjectionMatrix", "mat_proj");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
@@ -50,7 +51,7 @@ public class SodiumTransformer {
 
 		if (parameters.inputs.hasColor()) {
 			// TODO: Handle the fragment shader here
-			root.rename("gl_Color", "_vert_color");
+			root.rename("gl_Color", "_vert_color_shade");
 		} else {
 			root.replaceReferenceExpressions(t, "gl_Color", "vec4(1.0)");
 		}
@@ -58,72 +59,75 @@ public class SodiumTransformer {
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			if (parameters.inputs.hasNormal()) {
 				root.rename("gl_Normal", "iris_Normal");
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "layout(location = 7) in vec3 iris_Normal;");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
 		}
 
-		// TODO: Should probably add the normal matrix as a proper uniform that's
-		// computed on the CPU-side of things
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix",
-				"mat3(iris_NormalMatrix)");
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"uniform mat4 iris_NormalMatrix;");
+				"mat3(transpose(inverse(mat_modelview)))");
 
 		// TODO: All of the transformed variants of the input matrices, preferably
 		// computed on the CPU side...
-		root.rename("gl_ModelViewMatrix", "iris_ModelViewMatrix");
+		root.rename("gl_ModelViewMatrix", "mat_modelview");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to
 			// chunks.
 			if (root.identifierIndex.has("ftransform")) {
 				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-						"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+						"vec4 ftransform() { return mat_modelviewproj * gl_Vertex; }");
 			}
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					// translated from sodium's chunk_vertex.glsl
-					"vec3 _vert_position;",
-					"vec2 _vert_tex_diffuse_coord;",
-					"ivec2 _vert_tex_light_coord;",
-					"vec4 _vert_color;",
-					"uint _draw_id;",
-					"in vec4 a_PosId;",
-					"in vec4 a_Color;",
-					"in vec2 a_TexCoord;",
-					"in ivec2 a_LightCoord;",
-					"void _vert_init() {" +
-							"_vert_position = (a_PosId.xyz * " + String.valueOf(parameters.positionScale) + " + "
-							+ String.valueOf(parameters.positionOffset) + ");" +
-							"_vert_tex_diffuse_coord = (a_TexCoord * " + String.valueOf(parameters.textureScale) + ");" +
-							"_vert_tex_light_coord = a_LightCoord;" +
-							"_vert_color = a_Color;" +
-							"_draw_id = uint(a_PosId.w); }",
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+																			"vec3 _vert_position;",
+																			"vec2 _vert_tex_diffuse_coord;",
+																			"ivec2 _vert_tex_light_coord;",
+																			"vec4 _vert_color_shade;",
+																			"layout(location = 0) in vec3 in_position;",
+																			"layout(location = 1) in vec4 in_color;",
+																			"layout(location = 2) in vec2 in_tex_diffuse_coord;",
+																			"layout(location = 3) in ivec2 in_tex_light_coord;",
+																			"void _vert_init() {\n" +
+																			"    _vert_position = (in_position * VERT_SCALE) + 8.0f;\n".replaceAll("VERT_SCALE", String.valueOf(parameters.vertexRange)) +
+																			"    _vert_tex_diffuse_coord = in_tex_diffuse_coord;\n" +
+																			"    _vert_tex_light_coord = in_tex_light_coord;\n" +
+																			"    _vert_color_shade = in_color;\n" +
+																			"}");
 
-					// translated from sodium's chunk_parameters.glsl
-					// Comment on the struct:
-					// Older AMD drivers can't handle vec3 in std140 layouts correctly The alignment
-					// requirement is 16 bytes (4 float components) anyways, so we're not wasting
-					// extra memory with this, only fixing broken drivers.
-					"struct DrawParameters { vec4 offset; };",
-					"layout(std140) uniform ubo_DrawParameters {DrawParameters Chunks[256]; };",
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS, """
+				struct ModelTransform {
+				    // Translation of the model in world-space
+				    vec3 translation;
+				};""",
+				"""
+				layout(std140, binding = 1) uniform ModelTransforms {
+				    ModelTransform transforms[MAX_BATCH_SIZE];
+				};""".replaceAll("MAX_BATCH_SIZE", String.valueOf(parameters.maxBatchSize)),
 
-					"uniform mat4 iris_ProjectionMatrix;",
-					"uniform mat4 iris_ModelViewMatrix;",
-					"uniform vec3 u_RegionOffset;",
-					// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-					"vec4 getVertexPosition() { return vec4(u_RegionOffset + Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }");
+				"""
+				vec3 _apply_view_transform(vec3 position) {
+				    ModelTransform transform = transforms[transformIndex];
+				    return transform.translation + position;
+				}""".replaceAll("transformIndex", (parameters.baseInstanced ? "gl_BaseInstanceARB" : "gl_DrawIDARB")));
 			tree.prependMain(t, "_vert_init();");
-			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
-		} else {
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"uniform mat4 iris_ModelViewMatrix;",
-					"uniform mat4 iris_ProjectionMatrix;");
+			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(_apply_view_transform(_vert_position), 1.0)");
 		}
 
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
-				"(iris_ProjectionMatrix * iris_ModelViewMatrix)");
+				"mat_modelviewproj");
+
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
+			layout(std140, binding = 0) uniform CameraMatrices {
+			    // The projection matrix
+			    mat4 mat_proj;
+
+			    // The model-view matrix
+			    mat4 mat_modelview;
+
+			    // The model-view-projection matrix
+			    mat4 mat_modelviewproj;
+			};""");
 
 		CommonTransformer.applyIntelHd4000Workaround(root);
 	}

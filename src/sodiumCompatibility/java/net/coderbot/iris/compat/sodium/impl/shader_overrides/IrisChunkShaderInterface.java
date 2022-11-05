@@ -7,6 +7,7 @@ import net.caffeinemc.gfx.api.shader.ShaderBindingContext;
 import net.caffeinemc.sodium.render.chunk.shader.ChunkShaderInterface;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
@@ -19,6 +20,8 @@ import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32C;
+
+import java.util.List;
 
 public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	private BlendModeOverride blendModeOverride;
@@ -35,12 +38,12 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 		super(context);
 	}
 
-	public void setInfo(boolean isShadowPass, SodiumTerrainPipeline pipeline, int handle, IrisTerrainPass pass, BlendModeOverride blendModeOverride, float alpha) {
+	public void setInfo(boolean isShadowPass, SodiumTerrainPipeline pipeline, int handle, IrisTerrainPass pass, BlendModeOverride blendModeOverride, List<BufferBlendOverride> bufferBlendOverrides, float alpha) {
 		this.blendModeOverride = blendModeOverride;
 		this.pass = pass;
 		this.handle = handle;
 		this.alpha = alpha;
-			this.bufferBlendOverrides = bufferOverrides;
+			this.bufferBlendOverrides = bufferBlendOverrides;
 			this.hasOverrides = bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty();
 
 			this.irisProgramUniforms = pipeline.initUniforms(handle);
