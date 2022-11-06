@@ -40,7 +40,7 @@ public class CommonTransformer {
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", Matcher.expressionPattern);
 	public static final AutoHintedMatcher<ExternalDeclaration> sampler = new AutoHintedMatcher<>(
-			"uniform Type name;", Matcher.externalDeclarationPattern, "__") {
+			"uniform Type name;", Matcher.externalDeclarationPattern) {
 		{
 			markClassedPredicateWildcard("type",
 					pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
