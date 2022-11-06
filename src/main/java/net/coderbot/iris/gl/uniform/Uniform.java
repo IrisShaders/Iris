@@ -15,6 +15,10 @@ public abstract class Uniform {
 		this.notifier = notifier;
 	}
 
+	public abstract int getStandardOffsetBytes();
+
+	public abstract void putInBuffer(long memoryOffset);
+
 	public abstract void update();
 
 	public final int getLocation() {
@@ -24,4 +28,14 @@ public abstract class Uniform {
 	public final ValueUpdateNotifier getNotifier() {
 		return notifier;
 	}
+
+	public int align(int bufferSize) {
+		int alignment = getAlignment();
+		if (alignment == 0) return bufferSize;
+		return (((bufferSize - 1) + alignment) & -alignment);
+	}
+
+	protected abstract int getAlignment();
+
+    public abstract String getTypeName();
 }

@@ -1,10 +1,12 @@
 package net.coderbot.iris.pipeline.transform;
 
+import net.coderbot.iris.pipeline.newshader.UniformBufferObject;
+
 class OverlayParameters extends Parameters {
 	public final boolean hasGeometry;
 
-	public OverlayParameters(Patch patch, boolean hasGeometry) {
-		super(patch);
+	public OverlayParameters(Patch patch, boolean hasGeometry, UniformBufferObject bufferObject) {
+		super(patch, bufferObject);
 		this.hasGeometry = hasGeometry;
 	}
 

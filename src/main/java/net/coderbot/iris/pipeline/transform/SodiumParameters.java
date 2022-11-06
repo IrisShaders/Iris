@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.transform;
 
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.pipeline.newshader.UniformBufferObject;
 
 public class SodiumParameters extends Parameters {
 	private final AlphaTest cutoutAlpha;
@@ -14,8 +15,8 @@ public class SodiumParameters extends Parameters {
 	public AlphaTest alpha;
 
 	public SodiumParameters(Patch patch, AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale) {
-		super(patch);
+			float positionScale, float positionOffset, float textureScale, UniformBufferObject bufferObject) {
+		super(patch, bufferObject);
 		this.cutoutAlpha = cutoutAlpha;
 		this.defaultAlpha = defaultAlpha;
 		this.inputs = inputs;

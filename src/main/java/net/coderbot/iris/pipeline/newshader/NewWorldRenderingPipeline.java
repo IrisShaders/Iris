@@ -151,8 +151,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
 	private PackDirectives packDirectives;
+	private final UniformBufferObject ubo;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
+
+		UBOCreator creator = new UBOCreator();
+
 		PatchedShaderPrinter.resetPrintState();
 
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
@@ -163,6 +167,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.updateNotifier = new FrameUpdateNotifier();
 		this.packDirectives = programSet.getPackDirectives();
 
+		CommonUniforms.addCommonUniforms(creator, programSet.getPack().getIdMap(), packDirectives, updateNotifier, FogMode.OFF);
+
+		this.ubo = creator.build();
+
+		TransformPatcher.setBufferObject(this.ubo);
 		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
@@ -405,8 +414,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 					// TODO: Better error handling
 					throw new RuntimeException("Shader compilation failed!", e);
 				}
-
-				CommonUniforms.addCommonUniforms(builder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier, FogMode.OFF);
 
 				Supplier<ImmutableSet<Integer>> flipped;
 
@@ -656,6 +663,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// NB: execute this before resizing / clearing so that the center depth sample is retrieved properly.
 		updateNotifier.onNewFrame();
 
+		ubo.update();
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 
 		int depthTextureId = main.getDepthTextureId();

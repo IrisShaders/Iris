@@ -3,6 +3,7 @@ package net.coderbot.iris.gl.uniform;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector4i;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.function.Supplier;
 
@@ -28,6 +29,30 @@ public class Vector4IntegerJomlUniform extends Uniform {
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	public int getStandardOffsetBytes() {
+		return 16;
+	}
+
+	@Override
+	public void putInBuffer(long memoryOffset) {
+		Vector4i value = this.value.get();
+		MemoryUtil.memPutInt(memoryOffset, value.x);
+		MemoryUtil.memPutInt(memoryOffset + 4, value.y);
+		MemoryUtil.memPutInt(memoryOffset + 8, value.z);
+		MemoryUtil.memPutInt(memoryOffset + 12, value.w);
+	}
+
+	@Override
+	protected int getAlignment() {
+		return 16;
+	}
+
+	@Override
+	public String getTypeName() {
+		return "ivec4";
 	}
 
 	private void updateValue() {

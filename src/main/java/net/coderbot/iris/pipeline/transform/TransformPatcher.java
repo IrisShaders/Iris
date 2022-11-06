@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.coderbot.iris.pipeline.newshader.UniformBufferObject;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -50,6 +51,11 @@ public class TransformPatcher {
 	private static EnumASTTransformer<Parameters, PatchShaderType> transformer;
 	private static final boolean useCache = true;
 	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = new LRUCache<>(400);
+	private static UniformBufferObject bufferObject;
+
+	public static void setBufferObject(UniformBufferObject bufferObject) {
+		TransformPatcher.bufferObject = bufferObject;
+	}
 
 	private static class CacheKey {
 		final Parameters parameters;
@@ -316,14 +322,14 @@ public class TransformPatcher {
 
 	public static Map<PatchShaderType, String> patchAttributes(String vertex, String geometry, String fragment,
 			InputAvailability inputs) {
-		return transform(vertex, geometry, fragment, new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs));
+		return transform(vertex, geometry, fragment, new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs, bufferObject));
 	}
 
 	public static Map<PatchShaderType, String> patchVanilla(
 			String vertex, String geometry, String fragment, AlphaTest alpha,
 			boolean hasChunkOffset, ShaderAttributeInputs inputs) {
 		return transform(vertex, geometry, fragment,
-				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, geometry != null));
+				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, geometry != null, bufferObject));
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
@@ -331,14 +337,14 @@ public class TransformPatcher {
 			float positionScale, float positionOffset, float textureScale) {
 		return transform(vertex, geometry, fragment,
 				new SodiumParameters(Patch.SODIUM, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset,
-						textureScale));
+						textureScale, bufferObject));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
-		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE));
+		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE, bufferObject));
 	}
 
 	public static String patchCompute(String compute) {
-		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE)).getOrDefault(PatchShaderType.COMPUTE, null);
+		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE, bufferObject)).getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 }

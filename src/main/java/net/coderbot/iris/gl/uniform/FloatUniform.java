@@ -2,6 +2,7 @@ package net.coderbot.iris.gl.uniform;
 
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
+import org.lwjgl.system.MemoryUtil;
 
 public class FloatUniform extends Uniform {
 	private float cachedValue;
@@ -19,12 +20,32 @@ public class FloatUniform extends Uniform {
 	}
 
 	@Override
+	public int getStandardOffsetBytes() {
+		return 4;
+	}
+
+	@Override
+	public void putInBuffer(long memoryOffset) {
+		MemoryUtil.memPutFloat(memoryOffset, value.getAsFloat());
+	}
+
+	@Override
 	public void update() {
 		updateValue();
 
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	protected int getAlignment() {
+		return 0;
+	}
+
+	@Override
+	public String getTypeName() {
+		return "float";
 	}
 
 	private void updateValue() {

@@ -3,6 +3,7 @@ package net.coderbot.iris.gl.uniform;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector2f;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.function.Supplier;
 
@@ -26,6 +27,19 @@ public class Vector2Uniform extends Uniform {
 	}
 
 	@Override
+	public int getStandardOffsetBytes() {
+		return 8;
+	}
+
+	@Override
+	public void putInBuffer(long memoryOffset) {
+		Vector2f value = this.value.get();
+
+		MemoryUtil.memPutFloat(memoryOffset, value.x);
+		MemoryUtil.memPutFloat(memoryOffset + 4, value.y);
+	}
+
+	@Override
 	public void update() {
 		updateValue();
 
@@ -37,9 +51,19 @@ public class Vector2Uniform extends Uniform {
 	private void updateValue() {
 		Vector2f newValue = value.get();
 
-		if (cachedValue == null || !newValue.equals(cachedValue)) {
+		if (!newValue.equals(cachedValue)) {
 			cachedValue = newValue;
 			IrisRenderSystem.uniform2f(this.location, newValue.x, newValue.y);
 		}
+	}
+
+	@Override
+	protected int getAlignment() {
+		return 8;
+	}
+
+	@Override
+	public String getTypeName() {
+		return "vec2";
 	}
 }

@@ -2,13 +2,16 @@ package net.coderbot.iris.pipeline.transform;
 
 import io.github.douira.glsl_transformer.job_parameter.JobParameters;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.pipeline.newshader.UniformBufferObject;
 
 class Parameters extends JobParameters{
 	public final Patch patch;
+	public final UniformBufferObject bufferObject;
 	public PatchShaderType type;
 
-	public Parameters(Patch patch) {
+	public Parameters(Patch patch, UniformBufferObject bufferObject) {
 		this.patch = patch;
+		this.bufferObject = bufferObject;
 	}
 
 	public AlphaTest getAlphaTest() {

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
+import net.coderbot.iris.gl.uniform.LocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
@@ -58,18 +59,15 @@ public final class CommonUniforms {
 	}
 
 	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
-	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier, FogMode fogMode) {
+	public static void addCommonUniforms(LocationalUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier, FogMode fogMode) {
 		CameraUniforms.addCameraUniforms(uniforms, updateNotifier);
 		ViewportUniforms.addViewportUniforms(uniforms);
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
 		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
-		IdMapUniforms.addIdMapUniforms(updateNotifier, uniforms, idMap, directives.isOldHandLight());
 		IrisExclusiveUniforms.addIrisExclusiveUniforms(uniforms);
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		HardcodedCustomUniforms.addHardcodedCustomUniforms(uniforms, updateNotifier);
-		FogUniforms.addFogUniforms(uniforms, fogMode);
-		IrisInternalUniforms.addFogUniforms(uniforms);
 
 		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
 		//       but we do. How will custom uniforms depending on atlasSize work?
@@ -77,37 +75,6 @@ public final class CommonUniforms {
 		// Note: on 1.17+ we don't need to reset this when textures are bound, since
 		// the shader will always be setup (and therefore uniforms will be re-uploaded)
 		// after the texture is changed and before rendering starts.
-		uniforms.uniform2i("atlasSize", () -> {
-			int glId = RenderSystem.getShaderTexture(0);
-
-			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
-			if (texture instanceof TextureAtlas) {
-				TextureInfo info = TextureInfoCache.INSTANCE.getInfo(glId);
-				return new Vector2i(info.getWidth(), info.getHeight());
-			}
-
-			return ZERO_VECTOR_2i;
-		}, listener -> {});
-
-		uniforms.uniform2i("gtextureSize", () -> {
-			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
-
-			TextureInfo info = TextureInfoCache.INSTANCE.getInfo(glId);
-			return new Vector2i(info.getWidth(), info.getHeight());
-
-		}, StateUpdateNotifiers.bindTextureNotifier);
-
-		uniforms.uniform4i("blendFunc", () -> {
-			GlStateManager.BlendState blend = GlStateManagerAccessor.getBLEND();
-
-			if (((BooleanStateAccessor) blend.mode).isEnabled()) {
-				return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
-			} else {
-				return ZERO_VECTOR_4i;
-			}
-		}, StateUpdateNotifiers.blendFuncNotifier);
-
-		uniforms.uniform1i("renderStage", () -> GbufferPrograms.getCurrentPhase().ordinal(), StateUpdateNotifiers.phaseChangeNotifier);
 
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier, directives);
 	}
@@ -128,7 +95,7 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
 			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
 			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
-			.uniform4f(ONCE, "entityColor", Vector4f::new)
+			//.uniform4f(ONCE, "entityColor", Vector4f::new)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
 			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", () -> {

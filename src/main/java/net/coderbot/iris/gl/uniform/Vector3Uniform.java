@@ -5,6 +5,7 @@ import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vendored.joml.Vector4f;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.function.Supplier;
 
@@ -51,6 +52,21 @@ public class Vector3Uniform extends Uniform {
 	}
 
 	@Override
+	public int getStandardOffsetBytes() {
+		return 12;
+	}
+
+	@Override
+	public void putInBuffer(long memoryOffset) {
+		Vector3f vector3f = this.value.get();
+
+		MemoryUtil.memPutFloat(memoryOffset, vector3f.x);
+		MemoryUtil.memPutFloat(memoryOffset + 4, vector3f.y);
+		MemoryUtil.memPutFloat(memoryOffset + 8, vector3f.z);
+		MemoryUtil.memPutFloat(memoryOffset + 12, 0);
+	}
+
+	@Override
 	public void update() {
 		updateValue();
 
@@ -66,5 +82,15 @@ public class Vector3Uniform extends Uniform {
 			cachedValue.set(newValue.x(), newValue.y(), newValue.z());
 			IrisRenderSystem.uniform3f(location, cachedValue.x(), cachedValue.y(), cachedValue.z());
 		}
+	}
+
+	@Override
+	protected int getAlignment() {
+		return 16;
+	}
+
+	@Override
+	public String getTypeName() {
+		return "vec3";
 	}
 }
