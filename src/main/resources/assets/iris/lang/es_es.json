@@ -9,9 +9,9 @@
   "iris.keybind.reload": "Recargar Shaders",
   "iris.keybind.shaderPackSelection": "Pantalla de Selección de Shaders",
   "iris.keybind.toggleShaders": "Alternar Shaders",
-  
+
   "iris.shaders.reloaded.failure": "¡Error al recargar los Shaders! Razón: %s",
-  
+
   "iris.shaders.toggled.failure": "¡Error al activar shaders! Razón: %s",
   "iris.sodium.failure.title": "¡Iris no pudo iniciarse!",
   "iris.sodium.failure.download": "Descarga Sodium",
@@ -61,7 +61,7 @@
 
   "pack.iris.select.title": "Seleccionar",
   "pack.iris.configure.title": "Configurar",
-  "pack.iris.list.label": "+ Arrastra Shader Packs aquí para añadirlos"
+  "pack.iris.list.label": "+ Arrastra Shader Packs aquí para añadirlos",
   "label.iris.true": "On",
   "label.iris.false": "Off"
 }

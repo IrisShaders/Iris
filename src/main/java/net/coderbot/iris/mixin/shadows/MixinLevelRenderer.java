@@ -15,10 +15,10 @@ public class MixinLevelRenderer implements CullingDataCache {
 	@Shadow
 	@Final
 	@Mutable
-	private ObjectList renderChunks;
+	private ObjectList<LevelRenderer.RenderChunkInfo> renderChunks;
 
 	@Unique
-	private ObjectList savedRenderChunks = new ObjectArrayList(69696);
+	private ObjectList<LevelRenderer.RenderChunkInfo> savedRenderChunks = new ObjectArrayList<>(69696);
 
 	@Shadow
 	private boolean needsUpdate;
@@ -68,7 +68,7 @@ public class MixinLevelRenderer implements CullingDataCache {
 
 	@Unique
 	private void swap() {
-		ObjectList tmpList = renderChunks;
+		ObjectList<LevelRenderer.RenderChunkInfo> tmpList = renderChunks;
 		renderChunks = savedRenderChunks;
 		savedRenderChunks = tmpList;
 

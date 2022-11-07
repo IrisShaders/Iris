@@ -4,11 +4,8 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.commons.lang3.text.WordUtils;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BooleanSupplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public enum FeatureFlags {
 	SEPARATE_HARDWARE_SAMPLERS(() -> true, () -> true),

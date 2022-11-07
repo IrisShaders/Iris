@@ -172,7 +172,7 @@ public class CompositeRenderer {
 		}
 	}
 
-	private class Pass {
+	private static class Pass {
 		int[] drawBuffers;
 		int viewWidth;
 		int viewHeight;
