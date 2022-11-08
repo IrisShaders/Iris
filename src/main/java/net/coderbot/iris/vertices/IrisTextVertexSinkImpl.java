@@ -1,7 +1,6 @@
 package net.coderbot.iris.vertices;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.irisshaders.iris.api.v0.IrisTextVertexSink;
 import org.lwjgl.system.MemoryUtil;
@@ -12,7 +11,7 @@ import java.util.function.IntFunction;
 public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	static VertexFormat format = IrisVertexFormats.TERRAIN;
 	private final ByteBuffer buffer;
-	private final QuadViewEntity.QuadViewEntityUnsafe quad = new QuadViewEntity.QuadViewEntityUnsafe();
+	private final TextQuadView quad = new TextQuadView();
 	private final Vector3f saveNormal = new Vector3f();
 	private static final int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
 	private int vertexCount;
@@ -86,5 +85,39 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 
 		buffer.position(buffer.position() + STRIDE);
 		elementOffset += STRIDE;
+	}
+
+	static class TextQuadView implements QuadView {
+		long writePointer;
+		int stride;
+
+		public TextQuadView() {
+
+		}
+
+		public void setup(long writePointer, int stride) {
+			this.writePointer = writePointer;
+			this.stride = stride;
+		}
+
+		public float x(int index) {
+			return MemoryUtil.memGetFloat(writePointer - stride * (3L - index));
+		}
+
+		public float y(int index) {
+			return MemoryUtil.memGetFloat(writePointer + 4 - stride * (3L - index));
+		}
+
+		public float z(int index) {
+			return MemoryUtil.memGetFloat(writePointer + 8 - stride * (3L - index));
+		}
+
+		public float u(int index) {
+			return MemoryUtil.memGetFloat(writePointer + 16 - stride * (3L - index));
+		}
+
+		public float v(int index) {
+			return MemoryUtil.memGetFloat(writePointer + 20 - stride * (3L - index));
+		}
 	}
 }

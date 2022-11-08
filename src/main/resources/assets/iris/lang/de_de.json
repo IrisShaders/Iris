@@ -43,6 +43,7 @@
   "options.iris.reset.tooltip.holdShift": "Zum Zurücksetzen UMSCHALTEN/SHIFT gedrückt halten und klicken",
   "options.iris.importSettings.tooltip": "Einstellungen aus Datei importieren",
   "options.iris.exportSettings.tooltip": "Angewandte Einstellungen in eine Datei exportieren",
+  "options.iris.mustDisableFullscreen": "Bitte deaktiviere zuerst den Vollbildmodus!",
   "options.iris.setToDefault": "Diese Einstellung auf den Standardwert zurücksetzen?",
   "options.iris.profile": "Profil",
   "options.iris.profile.custom": "Benutzerdefiniert",

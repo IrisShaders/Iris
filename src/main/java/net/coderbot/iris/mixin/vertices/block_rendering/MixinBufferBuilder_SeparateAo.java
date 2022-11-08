@@ -46,16 +46,14 @@ public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsu
 	@Override
 	public void vertex(float x, float y, float z, float red, float green, float blue, float alpha, float u, float v,
 					   int overlay, int light, float normalX, float normalY, float normalZ) {
-		float ao = 1.0f;
-
 		if (brightnesses != null && BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			if (brightnessIndex < brightnesses.length) {
-				ao = brightnesses[brightnessIndex++];
+				alpha = brightnesses[brightnessIndex++];
 			} else {
 				brightnesses = null;
 			}
 		}
 
-		super.vertex(x, y, z, red, green, blue, ao, u, v, overlay, light, normalX, normalY, normalZ);
+		super.vertex(x, y, z, red, green, blue, alpha, u, v, overlay, light, normalX, normalY, normalZ);
 	}
 }

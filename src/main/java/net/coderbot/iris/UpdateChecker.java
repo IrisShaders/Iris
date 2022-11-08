@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -161,5 +162,13 @@ public class UpdateChecker {
 		} else {
 			return Optional.empty();
 		}
+	}
+
+	class UpdateInfo {
+		public String semanticVersion;
+		public Map<String, String> updateInfo;
+		public String modHost;
+		public String modDownload;
+		public String installer;
 	}
 }

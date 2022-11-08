@@ -20,11 +20,6 @@ import net.coderbot.iris.vendored.joml.Vector3f;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Static routines of general utility for renderer implementations.
- * Renderers are not required to use these helpers, but they were
- * designed to be usable without the default renderer.
- */
 public abstract class NormalHelper {
 	private NormalHelper() { }
 
@@ -39,7 +34,7 @@ public abstract class NormalHelper {
 		z = Mth.clamp(z, -1, 1);
 		w = Mth.clamp(w, -1, 1);
 
-		return ((int) (x * 127) & 255) | (((int) (y * 127) & 255) << 8) | (((int) (z * 127) & 255) << 16) | (((int) (w * 127) & 255) << 24);
+		return ((int) (x * 127) & 0xFF) | (((int) (y * 127) & 0xFF) << 8) | (((int) (z * 127) & 0xFF) << 16) | (((int) (w * 127) & 0xFF) << 24);
 	}
 
 	/**
@@ -241,7 +236,7 @@ public abstract class NormalHelper {
 			tangentW = 1.0F;
 		}
 
-		return NormalHelper.packNormal(tangentx, tangenty, tangentz, tangentW);
+		return packNormal(tangentx, tangenty, tangentz, tangentW);
 	}
 
 	private static float rsqrt(float value) {

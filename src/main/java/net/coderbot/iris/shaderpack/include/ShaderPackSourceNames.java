@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Enumerates the possible program source file names to
@@ -26,9 +27,12 @@ public class ShaderPackSourceNames {
 
 		boolean anyFound = false;
 
-		Set<String> found = Files.list(directoryPath)
-				.map(path -> path.getFileName().toString())
-				.collect(Collectors.toSet());
+		Set<String> found;
+		try (Stream<Path> stream = Files.list(directoryPath)) {
+			found = stream
+					.map(path -> path.getFileName().toString())
+					.collect(Collectors.toSet());
+		}
 
 		for (String candidate : candidates) {
 			if (found.contains(candidate)) {
@@ -39,7 +43,7 @@ public class ShaderPackSourceNames {
 
 		return anyFound;
 	}
-	
+
 	private static ImmutableList<String> findPotentialStarts() {
 		ImmutableList.Builder<String> potentialFileNames = ImmutableList.builder();
 
@@ -53,18 +57,18 @@ public class ShaderPackSourceNames {
 					suffix = Integer.toString(i);
 				}
 
-				addCompositeStarts(potentialFileNames, name + suffix);
+				addComputeStarts(potentialFileNames, name + suffix);
 			}
 		}
 
 		for (ProgramId programId : ProgramId.values()) {
-			if (programId == ProgramId.Final) {
-				addCompositeStarts(potentialFileNames, programId.getSourceName());
+			if (programId == ProgramId.Final || programId == ProgramId.Shadow) {
+				addComputeStarts(potentialFileNames, programId.getSourceName());
 			} else {
 				addStarts(potentialFileNames, programId.getSourceName());
 			}
 		}
-		
+
 		return potentialFileNames.build();
 	}
 
@@ -74,7 +78,7 @@ public class ShaderPackSourceNames {
 		potentialFileNames.add(baseName + ".fsh");
 	}
 
-	private static void addCompositeStarts(ImmutableList.Builder<String> potentialFileNames, String baseName) {
+	private static void addComputeStarts(ImmutableList.Builder<String> potentialFileNames, String baseName) {
 		addStarts(potentialFileNames, baseName);
 
 		for (int j = 0; j < 27; j++) {

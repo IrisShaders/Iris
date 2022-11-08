@@ -8,4 +8,5 @@ accessible class com/mojang/blaze3d/platform/GlStateManager$FogState
 accessible class com/mojang/blaze3d/platform/GlStateManager$TextureState
 accessible class net/minecraft/client/renderer/texture/Stitcher$Holder
 accessible class net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo
+extendable class net/minecraft/client/renderer/texture/TextureAtlasSprite$Info
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;

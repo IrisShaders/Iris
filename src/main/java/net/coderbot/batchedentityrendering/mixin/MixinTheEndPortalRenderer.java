@@ -33,7 +33,7 @@ public class MixinTheEndPortalRenderer {
     private static int index;
 
     // Inject a little bit after HEAD to avoid cancellations.
-    @ModifyVariable(method = RENDER, at = @At(value = "INVOKE", target = POSESTACK_POSE))
+    @ModifyVariable(method = RENDER, at = @At(value = "INVOKE", target = POSESTACK_POSE), argsOnly = true)
     private MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource) {
         if (bufferSource instanceof Groupable) {
             Groupable groupable = (Groupable) bufferSource;

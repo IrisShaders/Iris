@@ -1,32 +1,39 @@
 package net.coderbot.iris.rendertarget;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
+import net.coderbot.iris.vendored.joml.Vector2i;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 public class RenderTarget {
 	private final InternalTextureFormat internalFormat;
 	private final PixelFormat format;
 	private final PixelType type;
+	private int width;
+	private int height;
 
 	private boolean isValid;
 	private final int mainTexture;
 	private final int altTexture;
 
-	private static final IntBuffer NULL_BUFFER = null;
+	private static final ByteBuffer NULL_BUFFER = null;
 
-	private RenderTarget(Builder builder) {
+	public RenderTarget(Builder builder) {
 		this.isValid = true;
 
 		this.internalFormat = builder.internalFormat;
 		this.format = builder.format;
 		this.type = builder.type;
+
+		this.width = builder.width;
+		this.height = builder.height;
 
 		int[] textures = new int[2];
 		GlStateManager._genTextures(textures);
@@ -34,39 +41,42 @@ public class RenderTarget {
 		this.mainTexture = textures[0];
 		this.altTexture = textures[1];
 
-		GlStateManager._bindTexture(mainTexture);
-		setupCurrentlyBoundTexture(builder.width, builder.height);
-
-		GlStateManager._bindTexture(altTexture);
-		setupCurrentlyBoundTexture(builder.width, builder.height);
+		boolean isPixelFormatInteger = builder.internalFormat.getPixelFormat().isInteger();
+		setupTexture(mainTexture, builder.width, builder.height, !isPixelFormatInteger);
+		setupTexture(altTexture, builder.width, builder.height, !isPixelFormatInteger);
 
 		// Clean up after ourselves
 		// This is strictly defensive to ensure that other buggy code doesn't tamper with our textures
 		GlStateManager._bindTexture(0);
 	}
 
-	private void setupCurrentlyBoundTexture(int width, int height) {
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-		RenderSystem.texParameter(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+	private void setupTexture(int texture, int width, int height, boolean allowsLinear) {
+		resizeTexture(texture, width, height);
 
-		resizeCurrentlyBoundTexture(width, height);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
 	}
 
-	private void resizeCurrentlyBoundTexture(int width, int height) {
-		GlStateManager._texImage2D(GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
+	private void resizeTexture(int texture, int width, int height) {
+		IrisRenderSystem.texImage2D(texture, GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
+	}
+
+	void resize(Vector2i textureScaleOverride) {
+		this.resize(textureScaleOverride.x, textureScaleOverride.y);
 	}
 
 	// Package private, call CompositeRenderTargets#resizeIfNeeded instead.
 	void resize(int width, int height) {
 		requireValid();
 
-		GlStateManager._bindTexture(mainTexture);
-		resizeCurrentlyBoundTexture(width, height);
+		this.width = width;
+		this.height = height;
 
-		GlStateManager._bindTexture(altTexture);
-		resizeCurrentlyBoundTexture(width, height);
+		resizeTexture(mainTexture, width, height);
+
+		resizeTexture(altTexture, width, height);
 	}
 
 	public InternalTextureFormat getInternalFormat() {
@@ -83,6 +93,14 @@ public class RenderTarget {
 		requireValid();
 
 		return altTexture;
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
 	}
 
 	public void destroy() {

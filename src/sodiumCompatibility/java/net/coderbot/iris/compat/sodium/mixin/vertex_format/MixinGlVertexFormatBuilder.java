@@ -24,7 +24,8 @@ public class MixinGlVertexFormatBuilder {
 
 		if (value == null) {
 			if (key == IrisChunkMeshAttributes.NORMAL || key == IrisChunkMeshAttributes.TANGENT
-					|| key == IrisChunkMeshAttributes.MID_TEX_COORD || key == IrisChunkMeshAttributes.BLOCK_ID) {
+					|| key == IrisChunkMeshAttributes.MID_TEX_COORD || key == IrisChunkMeshAttributes.BLOCK_ID
+					|| key == IrisChunkMeshAttributes.MID_BLOCK) {
 				// Missing these attributes is acceptable and will be handled properly.
 				return EMPTY;
 			}

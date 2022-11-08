@@ -1,6 +1,5 @@
 # Iris 1.2.5 Changelog (full)
 
-(boilerplate message about changelog just being a draft here)
 
 Iris 1.2.5 is now available for download, fixing a huge number of bugs, massively improving performance with packs using depth of field, and improving performance in some CPU-limited scenarios.
 

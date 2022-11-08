@@ -1,5 +1,6 @@
 package net.coderbot.iris.shaderpack.option.values;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.option.OptionSet;
 
@@ -10,7 +11,13 @@ public interface OptionValues {
 	Optional<String> getStringValue(String name);
 
 	default boolean getBooleanValueOrDefault(String name) {
-		return getBooleanValue(name).orElseGet(() -> getOptionSet().getBooleanOptions().get(name).getOption().getDefaultValue());
+		return getBooleanValue(name).orElseGet(() -> {
+			if (!getOptionSet().getBooleanOptions().containsKey(name)) {
+				Iris.logger.warn("Tried to get boolean value for unknown option: " + name + ", defaulting to true!");
+				return true;
+			}
+			return getOptionSet().getBooleanOptions().get(name).getOption().getDefaultValue();
+		});
 	}
 
 	default String getStringValueOrDefault(String name) {

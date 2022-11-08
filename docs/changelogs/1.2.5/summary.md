@@ -1,6 +1,5 @@
 # Iris 1.2.5 Changelog (trimmed)
 
-(boilerplate message about changelog just being a draft here)
 
 Iris 1.2.5 is now available for download for Minecraft 1.16.5, 1.17.1, and 1.18.2, fixing a huge number of bugs and mod compatibility issues, massively improving performance with packs using depth of field, and improving performance in some CPU-limited scenarios.
 

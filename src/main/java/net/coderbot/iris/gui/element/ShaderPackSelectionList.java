@@ -20,11 +20,14 @@ import java.util.function.Function;
 public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
 	private static final Component PACK_LIST_LABEL = new TranslatableComponent("pack.iris.list.label").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
 
+	private final ShaderPackScreen screen;
 	private final TopButtonRowEntry topButtonRow;
 	private ShaderPackEntry applied = null;
 
-	public ShaderPackSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right) {
+	public ShaderPackSelectionList(ShaderPackScreen screen, Minecraft client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
+
+		this.screen = screen;
 		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
 
 		refresh();
@@ -169,15 +172,15 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 			MutableComponent text = new TextComponent(name);
 
-			if (shadersEnabled && this.isMouseOver(mouseX, mouseY)) {
+			if (this.isMouseOver(mouseX, mouseY)) {
 				text = text.withStyle(ChatFormatting.BOLD);
 			}
 
-			if (this.isApplied()) {
+			if (shadersEnabled && this.isApplied()) {
 				color = 0xFFF263;
 			}
 
-			if (!shadersEnabled) {
+			if (!shadersEnabled && !this.isMouseOver(mouseX, mouseY)) {
 				color = 0xA2A2A2;
 			}
 
@@ -186,13 +189,29 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (list.getTopButtonRow().shadersEnabled && !this.isSelected() && button == 0) {
-				this.list.select(this.index);
-
-				return true;
+			// Only do anything on left-click
+			if (button != 0) {
+				return false;
 			}
 
-			return false;
+			boolean didAnything = false;
+
+			// UX: If shaders are disabled, then clicking a shader in the list will also
+			//     enable shaders on apply. Previously, it was not possible to select
+			//     a pack when shaders were disabled, but this was a source of confusion
+			//     - people did not realize that they needed to enable shaders before
+			//     selecting a shader pack.
+			if (!list.getTopButtonRow().shadersEnabled) {
+				list.getTopButtonRow().setShadersEnabled(true);
+				didAnything = true;
+			}
+
+			if (!this.isSelected()) {
+				this.list.select(this.index);
+				didAnything = true;
+			}
+
+			return didAnything;
 		}
 	}
 
@@ -231,9 +250,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 					getEnableDisableLabel(),
 					button -> {
 						if (this.allowEnableShadersButton) {
-							this.shadersEnabled = !this.shadersEnabled;
-							button.text = getEnableDisableLabel();
-
+							setShadersEnabled(!this.shadersEnabled);
 							GuiUtil.playButtonClickSound();
 							return true;
 						}
@@ -249,6 +266,12 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 						return true;
 					});
 			this.buttons.add(this.enableDisableButton, 0).add(this.refreshPacksButton, REFRESH_BUTTON_WIDTH);
+		}
+
+		public void setShadersEnabled(boolean shadersEnabled) {
+			this.shadersEnabled = shadersEnabled;
+			this.enableDisableButton.text = getEnableDisableLabel();
+			this.list.screen.refreshScreenSwitchButton();
 		}
 
 		@Override

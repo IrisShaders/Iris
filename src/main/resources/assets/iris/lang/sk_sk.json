@@ -1,6 +1,11 @@
 {
   "iris.shaders.reloaded": "Tieňovače obnovené!",
   "iris.shaders.toggled": "Zapnuté tieňovače %s!",
+  "iris.shaders.toggled": "Toggled shaders to %s!",
+  "iris.shaders.debug.enabled": "Ladenie bolo zapnuté, záznamy budú detailnejšie!",
+  "iris.shaders.debug.disabled": "Ladenie bolo vypnuté.",
+  "iris.shaders.debug.failure": "Nie je možné zapnúť ladenie, tvoj počítač to nepodporuje.",
+  "iris.shaders.debug.restart": "Nemáš kontext ladenia, prosím reštartujte pre zapnutie ladenia.",
   "iris.keybind.reload": "Obnoviť tieňovače",
   "iris.keybind.shaderPackSelection": "Výber tieňovačov",
   "iris.keybind.toggleShaders": "Prepnúť tieňovače",
@@ -49,6 +54,6 @@
   "pack.iris.configure.title": "Nastavovať",
   "pack.iris.list.label": "+ Potiahni a pusti tieňovače pre pridanie",
 
-  "label.iris.true": "VYP",
-  "label.iris.false": "ZAP"
+  "label.iris.true": "ZAP",
+  "label.iris.false": "VYP"
 }

@@ -22,7 +22,7 @@ public abstract class MixinCrashReport {
         if (Iris.getCurrentPackName() == null) return; // this also gets called at startup for some reason
 
         getSystemDetails().setDetail("Loaded Shaderpack", () -> {
-            StringBuilder sb = new StringBuilder(Iris.getCurrentPackName());
+            StringBuilder sb = new StringBuilder(Iris.getCurrentPackName() + (Iris.isFallback() ? " (fallback)" : ""));
             Iris.getCurrentPack().ifPresent(pack -> {
                 sb.append("\n\t\t");
                 sb.append(pack.getProfileInfo());

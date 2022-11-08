@@ -41,6 +41,26 @@ public enum InternalTextureFormat {
 	RG32F(GL30C.GL_RG32F, GlVersion.GL_30, PixelFormat.RG),
 	RGB32F(GL30C.GL_RGB32F, GlVersion.GL_30, PixelFormat.RGB),
 	RGBA32F(GL30C.GL_RGBA32F, GlVersion.GL_30, PixelFormat.RGBA),
+	// 8-bit integer
+	R8I(GL30C.GL_R8I, GlVersion.GL_30, PixelFormat.RED_INTEGER),
+	RG8I(GL30C.GL_RG8I, GlVersion.GL_30, PixelFormat.RG_INTEGER),
+	RGB8I(GL30C.GL_RGB8I, GlVersion.GL_30, PixelFormat.RGB_INTEGER),
+	RGBA8I(GL30C.GL_RGBA8I, GlVersion.GL_30, PixelFormat.RGBA_INTEGER),
+	// 8-bit unsigned integer
+	R8UI(GL30C.GL_R8UI, GlVersion.GL_30, PixelFormat.RED_INTEGER),
+	RG8UI(GL30C.GL_RG8UI, GlVersion.GL_30, PixelFormat.RG_INTEGER),
+	RGB8UI(GL30C.GL_RGB8UI, GlVersion.GL_30, PixelFormat.RGB_INTEGER),
+	RGBA8UI(GL30C.GL_RGBA8UI, GlVersion.GL_30, PixelFormat.RGBA_INTEGER),
+	// 16-bit integer
+	R16I(GL30C.GL_R16I, GlVersion.GL_30, PixelFormat.RED_INTEGER),
+	RG16I(GL30C.GL_RG16I, GlVersion.GL_30, PixelFormat.RG_INTEGER),
+	RGB16I(GL30C.GL_RGB16I, GlVersion.GL_30, PixelFormat.RGB_INTEGER),
+	RGBA16I(GL30C.GL_RGBA16I, GlVersion.GL_30, PixelFormat.RGBA_INTEGER),
+	// 16-bit unsigned integer
+	R16UI(GL30C.GL_R16UI, GlVersion.GL_30, PixelFormat.RED_INTEGER),
+	RG16UI(GL30C.GL_RG16UI, GlVersion.GL_30, PixelFormat.RG_INTEGER),
+	RGB16UI(GL30C.GL_RGB16UI, GlVersion.GL_30, PixelFormat.RGB_INTEGER),
+	RGBA16UI(GL30C.GL_RGBA16UI, GlVersion.GL_30, PixelFormat.RGBA_INTEGER),
 	// 32-bit integer
 	R32I(GL30C.GL_R32I, GlVersion.GL_30, PixelFormat.RED_INTEGER),
 	RG32I(GL30C.GL_RG32I, GlVersion.GL_30, PixelFormat.RG_INTEGER),

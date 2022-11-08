@@ -7,6 +7,7 @@ import net.coderbot.iris.shaderpack.option.ProfileSet;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +26,12 @@ public class OptionMenuContainer {
 	public OptionMenuContainer(ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, ProfileSet profiles) {
 		this.profiles = profiles;
 
+		// note: if the Shader Pack does not provide a list of options for the main screen, then dump all options on to
+		// the main screen by default.
 		this.mainScreen = new OptionMenuMainElementScreen(
-				this, shaderProperties, shaderPackOptions, shaderProperties.getMainScreenOptions(), shaderProperties.getMainScreenColumnCount());
+			this, shaderProperties, shaderPackOptions,
+			shaderProperties.getMainScreenOptions().orElseGet(() -> Collections.singletonList("*")),
+			shaderProperties.getMainScreenColumnCount());
 
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getBooleanOptions().keySet());
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getStringOptions().keySet());

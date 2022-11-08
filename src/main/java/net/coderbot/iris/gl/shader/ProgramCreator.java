@@ -3,10 +3,12 @@
 package net.coderbot.iris.gl.shader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.KHRDebug;
 
 public class ProgramCreator {
 	private static final Logger LOGGER = LogManager.getLogger(ProgramCreator.class);
@@ -19,6 +21,7 @@ public class ProgramCreator {
 		IrisRenderSystem.bindAttributeLocation(program, 11, "mc_Entity");
 		IrisRenderSystem.bindAttributeLocation(program, 12, "mc_midTexCoord");
 		IrisRenderSystem.bindAttributeLocation(program, 13, "at_tangent");
+		IrisRenderSystem.bindAttributeLocation(program, 14, "at_midBlock");
 
 		for (GlShader shader : shaders) {
 			GlStateManager.glAttachShader(program, shader.getHandle());
@@ -26,7 +29,9 @@ public class ProgramCreator {
 
 		GlStateManager.glLinkProgram(program);
 
-        //Always detach shaders according to https://www.khronos.org/opengl/wiki/Shader_Compilation#Cleanup
+		GLDebug.nameObject(KHRDebug.GL_PROGRAM, program, name);
+
+		//Always detach shaders according to https://www.khronos.org/opengl/wiki/Shader_Compilation#Cleanup
         for (GlShader shader : shaders) {
             IrisRenderSystem.detachShader(program, shader.getHandle());
         }

@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinRenderStateShard_Tagging {
 	@Shadow
 	@Final
-	private String name;
+	protected String name;
 
 	@Shadow
 	@Final

@@ -178,7 +178,7 @@ public class IncludeGraph {
 						error.append(new RusticError("error", "#include cycle detected",
 							detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
 					} else {
-						error.append("\n  = " + new RusticError("note", "cycle involves another file",
+						error.append("\n  = ").append(new RusticError("note", "cycle involves another file",
 							detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
 					}
 

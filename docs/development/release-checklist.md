@@ -3,7 +3,7 @@
 Once you have written a changelog for a new release, have all branches merged properly, and have tested the new
 release sufficiently, follow these steps to publish that new release to the public.
 
-1. Change the Iris version in `fabric.mod.json` on the `trunk`, `1.17`, and `1.18` branch.
+1. Change the Iris version in `fabric.mod.json` on the `trunk`, `1.18.2` and `1.19` branch.
 2. Push the version bump commit to GitHub.
 3. Go to the releases tab on the Iris repository, and click the `Draft a new release` button.
     1. Insert a tag and title relevant to the branch and Iris version

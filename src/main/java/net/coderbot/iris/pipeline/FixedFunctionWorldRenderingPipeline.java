@@ -6,6 +6,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -90,6 +91,21 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public int getCurrentNormalTexture() {
+		return 0;
+	}
+
+	@Override
+	public int getCurrentSpecularTexture() {
+		return 0;
+	}
+
+	@Override
+	public void onBindTexture(int id) {
+
+	}
+
+	@Override
 	public void beginHand() {
 	    // stub: nothing to do here
 	}
@@ -132,9 +148,8 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public boolean shouldRenderClouds() {
-		// Keep clouds enabled
-		return true;
+	public CloudSetting getCloudSetting() {
+		return CloudSetting.DEFAULT;
 	}
 
 	@Override
@@ -148,12 +163,27 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public boolean shouldRenderSun() {
+		return true;
+	}
+
+	@Override
+	public boolean shouldRenderMoon() {
+		return true;
+	}
+
+	@Override
 	public boolean shouldWriteRainAndSnowToDepthBuffer() {
 		return false;
 	}
 
 	@Override
 	public boolean shouldRenderParticlesBeforeDeferred() {
+		return false;
+	}
+
+	@Override
+	public boolean allowConcurrentCompute() {
 		return false;
 	}
 

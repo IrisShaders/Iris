@@ -27,6 +27,7 @@ public class FullScreenQuadRenderer {
 		end();
 	}
 
+	@SuppressWarnings("deprecation")
 	public void begin() {
 		RenderSystem.disableDepthTest();
 
@@ -40,7 +41,7 @@ public class FullScreenQuadRenderer {
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 		RenderSystem.pushMatrix();
 		RenderSystem.loadIdentity();
-		
+
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, quadBuffer);
@@ -51,6 +52,7 @@ public class FullScreenQuadRenderer {
 		GlStateManager._drawArrays(GL20C.GL_TRIANGLE_STRIP, 0, 4);
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void end() {
 		DefaultVertexFormat.POSITION_TEX.clearBufferState();
 		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
@@ -82,12 +84,6 @@ public class FullScreenQuadRenderer {
 			0.0F, 0.0F
 		};
 
-		int buffer = GlStateManager._glGenBuffers();
-
-		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, buffer);
-		IrisRenderSystem.bufferData(GL20C.GL_ARRAY_BUFFER, vertices, GL20C.GL_STATIC_DRAW);
-		GlStateManager._glBindBuffer(GL20C.GL_ARRAY_BUFFER, 0);
-
-		return buffer;
+		return IrisRenderSystem.bufferStorage(GL20C.GL_ARRAY_BUFFER, vertices, GL20C.GL_STATIC_DRAW);
 	}
 }
