@@ -54,7 +54,7 @@ public class CenterDepthSampler {
 			String fsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.fsh"))), StandardCharsets.UTF_8);
 			String vsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.vsh"))), StandardCharsets.UTF_8);
 
-			builder = ProgramBuilder.begin("centerDepthSmooth", vsh, null, fsh, new EmptyBufferHolder(), ImmutableSet.of(0, 1, 2));
+			builder = ProgramBuilder.begin("centerDepthSmooth", vsh, null, fsh, new EmptyBufferHolder(), ImmutableSet.of(), ImmutableSet.of(0, 1, 2));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

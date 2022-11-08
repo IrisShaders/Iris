@@ -71,7 +71,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 		return new ProgramBuilder(name, programId, shaderStorageBufferHolder, bufferMappings, reservedTextureUnits);
 	}
 
-	public static ProgramBuilder beginCompute(String name, @Nullable String source, ImmutableSet<Integer> reservedTextureUnits) {
+	public static ProgramBuilder beginCompute(String name, @Nullable String source, ShaderStorageBufferHolder shaderStorageBufferHolder, Set<BufferMapping> bufferMappings, ImmutableSet<Integer> reservedTextureUnits) {
 		RenderSystem.assertThread(RenderSystem::isOnRenderThread);
 
 		if (!IrisRenderSystem.supportsCompute()) {
@@ -84,7 +84,7 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 
 		compute.destroy();
 
-		return new ProgramBuilder(name, programId, reservedTextureUnits);
+		return new ProgramBuilder(name, programId, shaderStorageBufferHolder, bufferMappings, reservedTextureUnits);
 	}
 
 	public Program build() {

@@ -7,6 +7,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.buffer.BufferMapping;
 import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ComputeProgram;
@@ -31,17 +32,16 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.coderbot.iris.vendored.joml.Vector3i;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -84,7 +84,7 @@ public class FinalPassRenderer {
 			ProgramDirectives directives = source.getDirectives();
 
 			pass.program = createProgram(source, flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
-			pass.computes = createComputes(pack.getFinalCompute(), flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
+			pass.computes = createComputes(pack.getFinalCompute(), source.getDirectives().getBufferMappings(), flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
 			pass.stageReadsFromAlt = flippedBuffers;
 			pass.mipmappedBuffers = directives.getMipmappedBuffers();
 
@@ -330,7 +330,7 @@ public class FinalPassRenderer {
 
 		try {
 			builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
-				shaderStorageBufferHolder, IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+				shaderStorageBufferHolder, source.getDirectives().getBufferMappings(), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
 			throw new RuntimeException("Shader compilation failed!", e);
@@ -355,7 +355,7 @@ public class FinalPassRenderer {
 		return builder.build();
 	}
 
-	private ComputeProgram[] createComputes(ComputeSource[] compute, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot, Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
+	private ComputeProgram[] createComputes(ComputeSource[] compute, Set<BufferMapping> bufferMappings, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot, Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
@@ -367,7 +367,7 @@ public class FinalPassRenderer {
 				ProgramBuilder builder;
 
 				try {
-					builder = ProgramBuilder.beginCompute(source.getName(), source.getSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+					builder = ProgramBuilder.beginCompute(source.getName(), source.getSource().orElse(null), shaderStorageBufferHolder, bufferMappings, IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 				} catch (RuntimeException e) {
 					// TODO: Better error handling
 					throw new RuntimeException("Shader compilation failed!", e);

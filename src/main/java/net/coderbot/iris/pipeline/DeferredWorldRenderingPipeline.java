@@ -631,7 +631,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
 
 		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
-			shaderStorageBufferHolder, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+			shaderStorageBufferHolder, source.getDirectives().getBufferMappings(), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives(), availability, shadow, id);
 	}
@@ -980,7 +980,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				ProgramBuilder builder;
 
 				try {
-					builder = ProgramBuilder.beginCompute(source.getName(), source.getSource().orElse(null), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+					builder = ProgramBuilder.beginCompute(source.getName(), source.getSource().orElse(null), shaderStorageBufferHolder, programSet.getShadow().get().getDirectives().getBufferMappings(), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 				} catch (RuntimeException e) {
 					// TODO: Better error handling
 					throw new RuntimeException("Shader compilation failed!", e);
