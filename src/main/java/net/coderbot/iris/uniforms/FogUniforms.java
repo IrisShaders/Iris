@@ -6,7 +6,7 @@ import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.pipeline.newshader.FogMode;
-import net.coderbot.iris.vendored.joml.Vector3f;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;

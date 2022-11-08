@@ -24,7 +24,7 @@ public class FeatureMissingErrorScreen extends Screen {
 	protected void init() {
 		super.init();
 		this.message = MultiLineLabel.create(this.font, messageTemp, this.width - 50);
-		this.addRenderableWidget(new Button(this.width / 2 - 100, 140, 200, 20, CommonComponents.GUI_BACK, arg -> this.minecraft.setScreen(parent)));
+		this.addRenderableWidget(Button.builder(CommonComponents.GUI_BACK, arg -> this.minecraft.setScreen(parent)).bounds(this.width / 2 - 100, 140, 200, 20).build());
 	}
 
 	@Override

@@ -32,21 +32,25 @@ public class ShaderpackDirectoryManager {
 			// which requires additional handling when used in a lambda
 
 			// Copy all sub folders, collected as a list in order to prevent issues with non-ordered sets
-			for (Path p : Files.walk(source).filter(Files::isDirectory).collect(Collectors.toList())) {
-				Path folder = source.relativize(p);
+			try (Stream<Path> stream = Files.walk(source)) {
+				for (Path p : stream.filter(Files::isDirectory).collect(Collectors.toList())) {
+					Path folder = source.relativize(p);
 
-				if (Files.exists(folder)) {
-					continue;
+					if (Files.exists(folder)) {
+						continue;
+					}
+
+					Files.createDirectory(target.resolve(folder));
 				}
-
-				Files.createDirectory(target.resolve(folder));
 			}
 
 			// Copy all non-folder files
-			for (Path p : Files.walk(source).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
-				Path file = source.relativize(p);
+			try (Stream<Path> stream = Files.walk(source)) {
+				for (Path p : stream.filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
+					Path file = source.relativize(p);
 
-				Files.copy(p, target.resolve(file));
+					Files.copy(p, target.resolve(file));
+				}
 			}
 		}
 	}

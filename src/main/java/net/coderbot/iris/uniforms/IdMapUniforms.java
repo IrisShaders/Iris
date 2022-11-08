@@ -11,6 +11,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Vector3f;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
@@ -51,7 +52,7 @@ public final class IdMapUniforms {
 		private final boolean applyOldHandLight;
 		private int intID;
 		private int lightValue;
-		private com.mojang.math.Vector3f lightColor;
+		private Vector3f lightColor;
 
 		HeldItemSupplier(InteractionHand hand, Object2IntFunction<NamespacedId> itemIdMap, boolean shouldApplyOldHandLight) {
 			this.hand = hand;
@@ -97,7 +98,7 @@ public final class IdMapUniforms {
 			return lightValue;
 		}
 
-		public com.mojang.math.Vector3f getLightColor() {
+		public Vector3f getLightColor() {
 			return lightColor;
 		}
 	}

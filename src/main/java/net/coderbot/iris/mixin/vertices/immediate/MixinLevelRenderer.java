@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin.vertices.immediate;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix4f;
 import net.coderbot.iris.vertices.ImmediateState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;

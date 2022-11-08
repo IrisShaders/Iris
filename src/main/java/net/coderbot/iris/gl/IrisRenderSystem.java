@@ -2,11 +2,11 @@ package net.coderbot.iris.gl;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
-import net.coderbot.iris.vendored.joml.Vector3i;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
+import org.joml.Vector3i;
 import org.lwjgl.opengl.ARBDirectStateAccess;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;

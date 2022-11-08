@@ -16,7 +16,7 @@ package net.coderbot.iris.vertices;
  * limitations under the License.
  */
 
-import net.coderbot.iris.vendored.joml.Vector3f;
+import org.joml.Vector3f;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 

@@ -1,6 +1,6 @@
 package net.coderbot.iris.mixin.math;
 
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix4f;
 import net.coderbot.iris.shadows.Matrix4fAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -59,8 +59,8 @@ public class MixinMatrix4f implements Matrix4fAccess {
 	}
 
 	@Override
-	public net.coderbot.iris.vendored.joml.Matrix4f convertToJOML() {
-		return new net.coderbot.iris.vendored.joml.Matrix4f(
+	public org.joml.Matrix4f convertToJOML() {
+		return new org.joml.Matrix4f(
 				m00, m10, m20, m30,
 				m01, m11, m21, m31,
 				m02, m12, m22, m32,

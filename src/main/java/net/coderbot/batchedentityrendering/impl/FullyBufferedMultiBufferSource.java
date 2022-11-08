@@ -99,7 +99,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			List<BufferSegment> segments = builder.getSegments();
 
 			for (BufferSegment segment : segments) {
-				typeToSegment.computeIfAbsent(segment.getRenderType(), (type) -> new ArrayList<>()).add(segment);
+				typeToSegment.computeIfAbsent(segment.type(), (type) -> new ArrayList<>()).add(segment);
 			}
 		}
 
@@ -115,10 +115,8 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			renderTypes += 1;
 
 			for (BufferSegment segment : typeToSegment.getOrDefault(type, Collections.emptyList())) {
-				if (segment.getRenderedBuffer() != null) {
-					segmentRenderer.drawInner(segment);
-					drawCalls += 1;
-				}
+				segmentRenderer.drawInner(segment);
+				drawCalls += 1;
 			}
 
 			type.clearRenderState();

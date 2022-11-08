@@ -5,9 +5,15 @@ import com.mojang.blaze3d.platform.NativeImage;
 public abstract class AbstractMipmapGenerator implements CustomMipmapGenerator {
 	@Override
 	public NativeImage[] generateMipLevels(NativeImage[] image, int mipLevel) {
+		if (mipLevel + 1 <= image.length) {
+			return image;
+		}
+
+		NativeImage[] newImages = new NativeImage[mipLevel + 1];
+
 		if (mipLevel > 0) {
 			for (int level = 1; level <= mipLevel; ++level) {
-				NativeImage prevMipmap = image[level - 1];
+				NativeImage prevMipmap = level == 1 ? image[0] : newImages[level - 1];
 				NativeImage mipmap = new NativeImage(prevMipmap.getWidth() >> 1, prevMipmap.getHeight() >> 1, false);
 				int width = mipmap.getWidth();
 				int height = mipmap.getHeight();
@@ -21,10 +27,13 @@ public abstract class AbstractMipmapGenerator implements CustomMipmapGenerator {
 						));
 					}
 				}
-				image[level] = mipmap;
+				newImages[level] = mipmap;
 			}
 		}
-		return image;
+
+		newImages[0] = image[0];
+
+		return newImages;
 	}
 
 	public abstract int blend(int c0, int c1, int c2, int c3);

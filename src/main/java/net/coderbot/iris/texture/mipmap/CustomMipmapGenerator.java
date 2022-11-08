@@ -10,6 +10,6 @@ public interface CustomMipmapGenerator {
 
 	public interface Provider {
 		@Nullable
-		CustomMipmapGenerator getMipmapGenerator(SpriteContents info);
+		CustomMipmapGenerator getMipmapGenerator();
 	}
 }

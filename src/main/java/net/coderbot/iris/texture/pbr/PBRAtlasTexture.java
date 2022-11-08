@@ -1,6 +1,7 @@
 package net.coderbot.iris.texture.pbr;
 
 import com.mojang.blaze3d.platform.TextureUtil;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.texture.AnimatedTextureAccessor;
 import net.coderbot.iris.mixin.texture.FrameInfoAccessor;
 import net.coderbot.iris.mixin.texture.SpriteContentsAccessor;
@@ -31,7 +32,7 @@ public class PBRAtlasTexture extends AbstractTexture {
 	public PBRAtlasTexture(TextureAtlas atlasTexture, PBRType type) {
 		this.atlasTexture = atlasTexture;
 		this.type = type;
-		id = type.appendToFileLocation(atlasTexture.location());
+		id = new ResourceLocation(atlasTexture.location().getNamespace(), atlasTexture.location().getPath().replace(".png", "") + type.getSuffix() + ".png");
 	}
 
 	public PBRType getType() {
@@ -76,16 +77,15 @@ public class PBRAtlasTexture extends AbstractTexture {
 			}
 		}
 
-		if (!animationTickers.isEmpty()) {
-			PBRAtlasHolder pbrHolder = ((TextureAtlasExtension) atlasTexture).getOrCreatePBRHolder();
-			switch (type) {
+		PBRAtlasHolder pbrHolder = ((TextureAtlasExtension) atlasTexture).getOrCreatePBRHolder();
+
+		switch (type) {
 			case NORMAL:
 				pbrHolder.setNormalAtlas(this);
 				break;
 			case SPECULAR:
 				pbrHolder.setSpecularAtlas(this);
 				break;
-			}
 		}
 
 		if (PBRTextureManager.DEBUG) {
@@ -95,23 +95,25 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 	public boolean tryUpload(int atlasWidth, int atlasHeight, int mipLevel) {
 		try {
+			//Iris.logger.warn("ATLAS " + id.toString() + " with widthheightmip " + atlasWidth + " " + atlasHeight + " " + mipLevel);
 			upload(atlasWidth, atlasHeight, mipLevel);
 			return true;
 		} catch (Throwable t) {
+			Iris.logger.error("Error loading PBR atlas: ", t);
 			return false;
 		}
 	}
 
 	protected void uploadSprite(TextureAtlasSprite sprite) {
 		SpriteContents.AnimatedTexture ticker = ((SpriteContentsAccessor) sprite.contents()).getAnimatedTexture();
-		if (ticker instanceof AnimatedTextureAccessor && animationTickers.containsKey(sprite)) {
+		if (ticker instanceof AnimatedTextureAccessor && animationTickers.containsKey(sprite) && getFrameFromSprite(sprite) != 0) {
 			AnimatedTextureAccessor accessor = (AnimatedTextureAccessor) ticker;
 
 			accessor.invokeUploadFrame(((FrameInfoAccessor) accessor.getFrames().get(getFrameFromSprite(sprite))).getIndex(), sprite.getX(), sprite.getY());
-			return;
 		}
 
-		sprite.uploadFirstFrame();
+		//Iris.logger.warn("Sprite " + sprite.contents().name().toString() + " with xy " + sprite.getX() + " " + sprite.getY() + " with widthheight" + sprite.contents().width() + " " + sprite.contents().height());
+ 		sprite.uploadFirstFrame();
 	}
 
 	public int getFrameFromSprite(TextureAtlasSprite sprite) {

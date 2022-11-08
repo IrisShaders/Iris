@@ -1,11 +1,17 @@
 package net.coderbot.iris.gl.uniform;
 
-import com.mojang.math.Matrix4f;
-import net.coderbot.iris.vendored.joml.Vector2f;
-import net.coderbot.iris.vendored.joml.Vector2i;
-import net.coderbot.iris.vendored.joml.Vector3d;
-import net.coderbot.iris.vendored.joml.Vector3f;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector2i;
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector2i;
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import java.util.OptionalInt;
 import java.util.function.BooleanSupplier;
@@ -75,13 +81,6 @@ public interface LocationalUniformHolder extends UniformHolder {
 	}
 
 	@Override
-	default LocationalUniformHolder uniformVanilla3f(UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Vector3f> value) {
-		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, new VanillaVector3Uniform(id, value)));
-
-		return this;
-	}
-
-	@Override
 	default LocationalUniformHolder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
 		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, Vector3Uniform.truncated(id, value)));
 
@@ -112,13 +111,6 @@ public interface LocationalUniformHolder extends UniformHolder {
 	@Override
 	default LocationalUniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value) {
 		location(name, UniformType.MAT4).ifPresent(id -> addUniform(updateFrequency, new MatrixUniform(id, value)));
-
-		return this;
-	}
-
-	@Override
-	default LocationalUniformHolder uniformJomlMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<net.coderbot.iris.vendored.joml.Matrix4f> value) {
-		location(name, UniformType.MAT4).ifPresent(id -> addUniform(updateFrequency, new JomlMatrixUniform(id, value)));
 
 		return this;
 	}

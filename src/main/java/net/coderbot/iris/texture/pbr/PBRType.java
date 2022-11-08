@@ -26,7 +26,7 @@ public enum PBRType {
 		return defaultValue;
 	}
 
-	public ResourceLocation appendToFileLocation(ResourceLocation location) {
+	public ResourceLocation appendToFileLocation(ResourceLocation location, boolean isAtlas) {
 		String path = location.getPath();
 		String newPath;
 		int extensionIndex = FilenameUtils.indexOfExtension(path);
@@ -35,7 +35,7 @@ public enum PBRType {
 		} else {
 			newPath = path + suffix;
 		}
-		return new ResourceLocation(location.getNamespace(), newPath);
+		return new ResourceLocation(location.getNamespace(), isAtlas ? "textures/" + newPath + ".png" : newPath);
 	}
 
 	/**

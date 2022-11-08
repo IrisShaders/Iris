@@ -66,8 +66,8 @@ import net.coderbot.iris.texture.pbr.PBRType;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
-import net.coderbot.iris.vendored.joml.Vector3d;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Vector3d;
+import org.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
@@ -323,6 +323,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				id = ids[idx];
 			}
 
+			ProgramId finalId = id;
+
 			return cachedPasses.computeIfAbsent(new Pair<>(id, availability), p -> {
 				ProgramSource source = resolver.resolveNullable(p.getFirst());
 
@@ -344,18 +346,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				}
 
 				try {
-					return createPass(source, availability, condition == RenderCondition.SHADOW);
+					return createPass(source, availability, condition == RenderCondition.SHADOW, finalId);
 				} catch (Exception e) {
 					throw new RuntimeException("Failed to create pass for " + source.getName() + " for rendering condition "
 						+ condition + " specialized to input availability " + availability, e);
 				}
 			});
 		});
-
-		if (shadowRenderer != null) {
-			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
-			shadowRenderer.setUsesImages(shadowProgram != null && shadowProgram.getActiveImages() > 0);
-		}
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programs.getPackDirectives().getRenderTargetDirectives());
@@ -598,7 +595,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			null, Collections.emptyList(), false);
 	}
 
-	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow) {
+	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow, ProgramId id) {
 		// TODO: Properly handle empty shaders?
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchAttributes(
 			source.getVertexSource().orElseThrow(NullPointerException::new),
@@ -614,11 +611,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
 			IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
-		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives(), availability, shadow);
+		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives(), availability, shadow, id);
 	}
 
 	private Pass createPassInner(ProgramBuilder builder, IdMap map, ProgramDirectives programDirectives,
-								 PackDirectives packDirectives, InputAvailability availability, boolean shadow) {
+								 PackDirectives packDirectives, InputAvailability availability, boolean shadow, ProgramId id) {
 
 		CommonUniforms.addCommonUniforms(builder, map, packDirectives, updateNotifier, null);
 
@@ -694,7 +691,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		});
 
 		return new Pass(builder.build(), framebufferBeforeTranslucents, framebufferAfterTranslucents, alphaTestOverride,
-				programDirectives.getBlendModeOverride(), bufferOverrides, shadow);
+				programDirectives.getBlendModeOverride().orElse(id.getBlendModeOverride()), bufferOverrides, shadow);
 	}
 
 	private boolean isPostChain;
