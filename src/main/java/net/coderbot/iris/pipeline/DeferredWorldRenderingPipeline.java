@@ -136,7 +136,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private InputAvailability inputs = new InputAvailability(false, false, false);
 	private SpecialCondition special = null;
 	private final ShaderStorageBufferHolder shaderStorageBufferHolder;
-	private boolean showSSBOError = false;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -154,7 +153,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				this.shaderStorageBufferHolder = new ActiveBufferHolder(programs.getPackDirectives().getBufferObjects());
 			} else {
 				Iris.logger.fatal("Shader storage buffers/immutable buffer storage is not supported on this graphics card, however the shaderpack requested them? Let's hope it's not a problem.");
-				showSSBOError = true;
 				this.shaderStorageBufferHolder = new EmptyBufferHolder();
 			}
 		} else {
@@ -949,13 +947,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		if (current != null) {
 			throw new IllegalStateException("Called beginLevelRendering but level rendering appears to still be in progress?");
-		}
-
-		if (showSSBOError) {
-			showSSBOError = false;
-			if (Minecraft.getInstance().player != null) {
-				Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent("iris.shaders.ssbofailure"), false);
-			}
 		}
 
 		updateNotifier.onNewFrame();

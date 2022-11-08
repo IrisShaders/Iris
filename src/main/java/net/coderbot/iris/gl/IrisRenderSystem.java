@@ -9,9 +9,11 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL45C;
+import org.lwjgl.opengl.NVXGPUMemoryInfo;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -226,5 +228,13 @@ public class IrisRenderSystem {
 		RenderSystem.matrixMode(GL11.GL_PROJECTION);
 		RenderSystem.popMatrix();
 		RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+	}
+
+	public static long getVRAM() {
+		if (GL.getCapabilities().GL_NVX_gpu_memory_info) {
+			return GL32C.glGetInteger(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX) * 1024L;
+		} else {
+			return 4294967296L;
+		}
 	}
 }

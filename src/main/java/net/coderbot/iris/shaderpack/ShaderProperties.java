@@ -215,7 +215,16 @@ public class ShaderProperties {
 			handleTwoArgDirective("mapping.", key, value, (pass, index) -> {
 				String[] modeArray = value.split(" ");
 
-				bufferMappings.computeIfAbsent(pass, empty -> new HashSet<>()).add(new BufferMapping(Integer.parseInt(index), Integer.parseInt(modeArray[0]), BufferType.parse(modeArray[1])));
+				int trueIndex = Integer.parseInt(index);
+				if (trueIndex >= 8 && trueIndex <= 16) {
+					throw new IllegalStateException("You cannot use buffer indexes 8-16, as they are reserved for Iris!");
+				}
+
+				if (trueIndex > 16) {
+					throw new IllegalStateException("You cannot use buffer indexes higher than 16!");
+				}
+
+				bufferMappings.computeIfAbsent(pass, empty -> new HashSet<>()).add(new BufferMapping(trueIndex, Integer.parseInt(modeArray[0]), BufferType.parse(modeArray[1])));
 				Iris.logger.warn("mapped! " + new BufferMapping(Integer.parseInt(index), Integer.parseInt(modeArray[0]), BufferType.parse(modeArray[1])));
 			});
 
