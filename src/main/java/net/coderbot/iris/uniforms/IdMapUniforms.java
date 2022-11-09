@@ -8,6 +8,7 @@ import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -85,7 +86,7 @@ public final class IdMapUniforms {
 
 				lightColor = ((IrisItemLightProvider) heldStack.getItem()).getLightColor(Minecraft.getInstance().player, heldStack);
 
-				ResourceLocation heldItemId = Registry.ITEM.getKey(heldStack.getItem());
+				ResourceLocation heldItemId = BuiltInRegistries.ITEM.getKey(heldStack.getItem());
 				intID = itemIdMap.applyAsInt(new NamespacedId(heldItemId.getNamespace(), heldItemId.getPath()));
 			}
 		}

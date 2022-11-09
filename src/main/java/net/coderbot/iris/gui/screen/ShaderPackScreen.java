@@ -272,14 +272,11 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				this.guiHidden ? 20 : 0, 146, 20,
 				GuiUtil.IRIS_WIDGETS_TEX,
 				256, 256,
-				button -> {
-					this.guiHidden = !this.guiHidden;
-					this.init();
-				},
-				(button, poseStack, i, j) -> {
+				(button) -> {
 					this.guiButtonHoverTimer += this.minecraft.getDeltaFrameTime();
 					if (this.guiButtonHoverTimer >= 10.0f) {
-						TOP_LAYER_RENDER_QUEUE.add(() -> this.renderTooltip(poseStack, showOrHide, i, j));
+						// TODO 1.19.3: fix
+						// TOP_LAYER_RENDER_QUEUE.add(() -> this.renderTooltip(poseStack, showOrHide, i, j));
 					}
 				},
 				showOrHide
