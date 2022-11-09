@@ -14,6 +14,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
@@ -266,21 +267,23 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				x = (int) (endOfLastButton + (freeSpace / 2.0f)) - 10;
 			}
 
-			this.addRenderableWidget(new ImageButton(
+			ImageButton showHideButton = new ImageButton(
 				x, this.height - 39,
 				20, 20,
 				this.guiHidden ? 20 : 0, 146, 20,
 				GuiUtil.IRIS_WIDGETS_TEX,
 				256, 256,
 				(button) -> {
-					this.guiButtonHoverTimer += this.minecraft.getDeltaFrameTime();
-					if (this.guiButtonHoverTimer >= 10.0f) {
-						// TODO 1.19.3: fix
-						// TOP_LAYER_RENDER_QUEUE.add(() -> this.renderTooltip(poseStack, showOrHide, i, j));
-					}
+					this.guiHidden = !this.guiHidden;
+					this.init();
 				},
 				showOrHide
-			));
+			);
+
+			showHideButton.setTooltip(Tooltip.create(showOrHide));
+			showHideButton.setTooltipDelay(10);
+
+			this.addRenderableWidget(showHideButton);
 		}
 
 		// NB: Don't let comment remain when exiting options screen

@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,7 +39,7 @@ public class MixinEntityRenderDispatcher {
 			return;
 		}
 
-		ResourceLocation entityId = Registry.ENTITY_TYPE.getKey(entity.getType());
+		ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
 
 		Object2IntFunction<NamespacedId> entityIds = BlockRenderingSettings.INSTANCE.getEntityIds();
 
