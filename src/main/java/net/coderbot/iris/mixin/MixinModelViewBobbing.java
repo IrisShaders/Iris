@@ -26,16 +26,12 @@ public class MixinModelViewBobbing {
 	@Unique
 	private Matrix4f bobbingEffectsModel;
 
-	@Unique
-	private Matrix3f bobbingEffectsNormal;
-
 	@ModifyArg(method = "renderLevel", index = 0,
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"))
 	private PoseStack iris$separateViewBobbing(PoseStack stack) {
 		stack.pushPose();
 		stack.last().pose().setIdentity();
-		stack.last().normal().setIdentity();
 
 		return stack;
 	}
@@ -47,7 +43,6 @@ public class MixinModelViewBobbing {
 					       target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lcom/mojang/math/Matrix4f;)V")))
 	private PoseStack.Pose iris$saveBobbing(PoseStack stack) {
 		bobbingEffectsModel = stack.last().pose().copy();
-		bobbingEffectsNormal = stack.last().normal().copy();
 
 		stack.popPose();
 
@@ -59,9 +54,7 @@ public class MixinModelViewBobbing {
 					target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lcom/mojang/math/Matrix4f;)V"))
 	private void iris$applyBobbingToModelView(float tickDelta, long limitTime, PoseStack matrix, CallbackInfo ci) {
 		matrix.last().pose().multiply(bobbingEffectsModel);
-		matrix.last().normal().mul(bobbingEffectsNormal);
 
 		bobbingEffectsModel = null;
-		bobbingEffectsNormal = null;
 	}
 }

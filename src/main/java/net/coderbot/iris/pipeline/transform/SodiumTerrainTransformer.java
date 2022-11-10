@@ -26,6 +26,8 @@ class SodiumTerrainTransformer {
 			"gl_TextureMatrix[1] * ___coord", Matcher.expressionPattern, "___");
 	private static final Matcher<Expression> xyDivision = new Matcher<>(
 			"___coord.xy / 255.0", Matcher.expressionPattern, "___");
+	private static final Matcher<Expression> xyDivision240 = new Matcher<>(
+		"___coord.xy / 240.0", Matcher.expressionPattern, "___");
 
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
 	private static final List<Expression> replaceSExpressions = new ArrayList<>();
@@ -58,6 +60,18 @@ class SodiumTerrainTransformer {
 			if (division != null
 					&& xyDivision.matchesExtract(division)
 					&& xyDivision.getStringDataMatch("coord").equals(coord)) {
+				replaceExpressions.add(division);
+				return;
+			}
+
+			// Similar case, but for Continuum 2.0.5. This code is similarly incorrect and
+			// fails to properly mimic the lightmap coordinate transformation. In addition,
+			// it will generate out-of-range values if we pass the shaderpack a lightmap
+			// coordinate larger than 240 (which is correct in the case of a light value of
+			// 15, where a coordinate of 248 should be passed)
+			if (division != null
+				&& xyDivision240.matchesExtract(division)
+				&& xyDivision240.getStringDataMatch("coord").equals(coord)) {
 				replaceExpressions.add(division);
 				return;
 			}
@@ -103,9 +117,9 @@ class SodiumTerrainTransformer {
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
 		root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4("
-				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
+				+ lightmapCoordsExpression + " * 256.0 - 8.0, 0.0, 1.0)");
 		root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4("
-				+ lightmapCoordsExpression + " * 255.0, 0.0, 1.0)");
+				+ lightmapCoordsExpression + " * 256.0 - 8.0, 0.0, 1.0)");
 
 		// If there are references to the fallback lightmap texture matrix, then make it
 		// available to the shader program.
