@@ -20,7 +20,7 @@
   "iris.unsupported.iris": "Iris",
   "iris.unsupported.pc": "你的电脑",
   "iris.unsupported.pack": "光影包不兼容！",
-  "iris.unsupported.pack.description": "你尝试加载的光影包含%s不支持的功能。请尝试其他光影。列表：%s",
+  "iris.unsupported.pack.description": "你尝试加载的光影包含%s不支持的功能。请尝试其他光影。名单：%s",
   "options.iris.apply": "应用",
   "options.iris.refresh": "刷新",
   "options.iris.openShaderPackFolder": "打开光影包文件夹...",
