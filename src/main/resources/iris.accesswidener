@@ -17,4 +17,5 @@ mutable field net/minecraft/client/renderer/ShaderInstance MODEL_VIEW_MATRIX Lco
 mutable field net/minecraft/client/renderer/ShaderInstance TEXTURE_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/ShaderInstance CHUNK_OFFSET Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/ShaderInstance COLOR_MODULATOR Lcom/mojang/blaze3d/shaders/Uniform;
+accessible field net/minecraft/client/renderer/ShaderInstance uniforms Ljava/util/List;
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;

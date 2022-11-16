@@ -9,7 +9,6 @@ import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.math.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -36,6 +35,8 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32C;
 
@@ -51,6 +52,9 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private final boolean intensitySwizzle;
 	private final List<BufferBlendOverride> bufferBlendOverrides;
 	private final boolean hasOverrides;
+	private final Uniform modelViewInverse;
+	private final Uniform projectionInverse;
+	private final Uniform normalMatrix;
 	NewWorldRenderingPipeline parent;
 	ProgramUniforms uniforms;
 	ProgramSamplers samplers;
@@ -94,6 +98,10 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.parent = parent;
 		this.inputs = inputs;
 
+		this.modelViewInverse = this.getUniform("ModelViewMatInverse");
+		this.projectionInverse = this.getUniform("ProjMatInverse");
+		this.normalMatrix = this.getUniform("NormalMat");
+
 		this.intensitySwizzle = isIntensity;
 	}
 
@@ -114,6 +122,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}
 
+	Matrix4f tempMatrix4f = new Matrix4f();
+	Matrix3f tempMatrix3f = new Matrix3f();
+	float[] tempFloats = new float[16];
+	float[] tempFloats2 = new float[9];
+
 	@Override
 	public void apply() {
 		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest);
@@ -127,15 +140,30 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
 
+		if (projectionInverse != null) {
+			projectionInverse.set(tempMatrix4f.set(PROJECTION_MATRIX.getFloatBuffer()).invert().get(tempFloats));
+		}
+
+		if (modelViewInverse != null) {
+			modelViewInverse.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer()).invert().get(tempFloats));
+		}
+
+		if (normalMatrix != null) {
+			normalMatrix.set(tempMatrix3f.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer())).invert().transpose().get(tempFloats2));
+		}
+
+		uploadIfNotNull(projectionInverse);
+		uploadIfNotNull(modelViewInverse);
+		uploadIfNotNull(normalMatrix);
+
+		List<Uniform> uniformList = super.uniforms;
+		for (Uniform uniform : uniformList) {
+			uploadIfNotNull(uniform);
+		}
+
 		samplers.update();
 		uniforms.update();
 		images.update();
-
-		uploadIfNotNull(PROJECTION_MATRIX);
-		uploadIfNotNull(MODEL_VIEW_MATRIX);
-		uploadIfNotNull(TEXTURE_MATRIX);
-		uploadIfNotNull(COLOR_MODULATOR);
-		uploadIfNotNull(CHUNK_OFFSET);
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();

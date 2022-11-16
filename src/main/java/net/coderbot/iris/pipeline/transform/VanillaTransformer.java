@@ -106,7 +106,16 @@ public class VanillaTransformer {
 		// TODO: Should probably add the normal matrix as a proper uniform that's
 		// computed on the CPU-side of things
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix",
-				"mat3(transpose(inverse(gl_ModelViewMatrix)))");
+				"iris_NormalMat");
+
+		root.replaceReferenceExpressions(t, "gl_ModelViewMatrixInverse",
+				"iris_ModelViewMatInverse");
+
+		root.replaceReferenceExpressions(t, "gl_ProjectionMatrixInverse",
+				"iris_ProjMatInverse");
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform mat3 iris_NormalMat;");
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ProjMatInverse;");
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_ModelViewMatInverse;");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
