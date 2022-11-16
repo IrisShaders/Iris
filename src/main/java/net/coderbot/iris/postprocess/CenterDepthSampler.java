@@ -23,6 +23,7 @@ import org.lwjgl.opengl.GL21C;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.function.IntSupplier;
 
 public class CenterDepthSampler {
 	private static final double LN2 = Math.log(2);
@@ -32,8 +33,9 @@ public class CenterDepthSampler {
 	private final int altTexture;
 	private boolean hasFirstSample;
 	private boolean everRetrieved;
+	private boolean destroyed;
 
-	public CenterDepthSampler(RenderTargets targets, float halfLife) {
+	public CenterDepthSampler(IntSupplier depthSupplier, float halfLife) {
 		this.texture = GlStateManager._genTexture();
 		this.altTexture = GlStateManager._genTexture();
 		this.framebuffer = new GlFramebuffer();
@@ -50,12 +52,12 @@ public class CenterDepthSampler {
 			String fsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.fsh"))), StandardCharsets.UTF_8);
 			String vsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.vsh"))), StandardCharsets.UTF_8);
 
-			builder = ProgramBuilder.begin("centerDepthSmooth", vsh, null, fsh, ImmutableSet.of());
+			builder = ProgramBuilder.begin("centerDepthSmooth", vsh, null, fsh, ImmutableSet.of(0, 1, 2));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 
-		builder.addDynamicSampler(targets::getDepthTexture, "depth");
+		builder.addDynamicSampler(depthSupplier, "depth");
 		builder.addDynamicSampler(() -> altTexture, "altDepth");
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
 		builder.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> (1.0f / ((halfLife * 0.1) / LN2)));
@@ -65,7 +67,7 @@ public class CenterDepthSampler {
 	}
 
 	public void sampleCenterDepth() {
-		if (hasFirstSample && (!everRetrieved)) {
+		if ((hasFirstSample && (!everRetrieved)) || destroyed) {
 			// If the shaderpack isn't reading center depth values, don't bother sampling it
 			// This improves performance with most shaderpacks
 			return;
@@ -100,9 +102,11 @@ public class CenterDepthSampler {
 	}
 
 	public int getCenterDepthTexture() {
-		everRetrieved = true;
-
 		return altTexture;
+	}
+
+	public void setUsage(boolean usage) {
+		everRetrieved |= usage;
 	}
 
 	public void destroy() {
@@ -110,5 +114,6 @@ public class CenterDepthSampler {
 		GlStateManager._deleteTexture(altTexture);
 		framebuffer.destroy();
 		program.destroy();
+		destroyed = true;
 	}
 }
