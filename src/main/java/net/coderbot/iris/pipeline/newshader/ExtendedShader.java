@@ -140,10 +140,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
 
-		samplers.update();
-		uniforms.update();
-		images.update();
-
 		if (projectionInverse != null) {
 			projectionInverse.set(tempMatrix4f.set(PROJECTION_MATRIX.getFloatBuffer()).invert().get(tempFloats));
 		}
@@ -156,14 +152,18 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 			normalMatrix.set(tempMatrix3f.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer())).invert().transpose().get(tempFloats2));
 		}
 
-		uploadIfNotNull(PROJECTION_MATRIX);
 		uploadIfNotNull(projectionInverse);
-		uploadIfNotNull(MODEL_VIEW_MATRIX);
 		uploadIfNotNull(modelViewInverse);
 		uploadIfNotNull(normalMatrix);
-		uploadIfNotNull(TEXTURE_MATRIX);
-		uploadIfNotNull(COLOR_MODULATOR);
-		uploadIfNotNull(CHUNK_OFFSET);
+
+		List<Uniform> uniformList = super.uniforms;
+		for (Uniform uniform : uniformList) {
+			uploadIfNotNull(uniform);
+		}
+
+		samplers.update();
+		uniforms.update();
+		images.update();
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
