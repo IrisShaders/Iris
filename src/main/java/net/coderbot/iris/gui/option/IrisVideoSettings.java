@@ -35,7 +35,7 @@ public class IrisVideoSettings {
 	}
 	// TODO 22w12a fix this
 
-	public static final OptionInstance<Integer> RENDER_DISTANCE = new ShadowDistanceOption<>("options.renderDistance",
+	public static final OptionInstance<Integer> RENDER_DISTANCE = new ShadowDistanceOption<>("options.iris.shadowDistance",
 		mc -> {
 			WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
@@ -78,48 +78,4 @@ public class IrisVideoSettings {
 				e.printStackTrace();
 			}
 		});
-
-	/* new ShadowDistanceOption("options.iris.shadowDistance", 0.0D, 32.0D, 1.0F, (gameOptions) -> {
-		return (double) getOverriddenShadowDistance(shadowDistance);
-	}, (gameOptions, viewDistance) -> {
-		double outputShadowDistance = viewDistance;
-		shadowDistance = (int) outputShadowDistance;
-		try {
-			Iris.getIrisConfig().save();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}, (gameOptions, option) -> {
-		int d = (int) option.get(gameOptions);
-
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
-
-		if (pipeline != null) {
-			d = pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(d);
-		}
-
-		if (d <= 0.0) {
-			return Component.translatable("options.generic_value", Component.translatable("options.iris.shadowDistance"), "0 (disabled)");
-		} else {
-			return Component.translatable("options.generic_value",
-					Component.translatable("options.iris.shadowDistance"),
-					Component.translatable("options.chunks", d));
-		}
-	}, client -> {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
-
-		Component tooltip;
-
-		if (pipeline != null) {
-			if (pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent()) {
-				tooltip = DISABLED_TOOLTIP;
-			} else {
-				tooltip = ENABLED_TOOLTIP;
-			}
-		} else {
-			tooltip = ENABLED_TOOLTIP;
-		}
-
-		return (Option.TooltipSupplier<Double>) aDouble -> Minecraft.getInstance().font.split(tooltip, 200);
-	});*/
 }
