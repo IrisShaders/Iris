@@ -41,7 +41,7 @@ public class CenterDepthSampler {
 		this.framebuffer = new GlFramebuffer();
 
 		// Fall back to a less precise format if the system doesn't support OpenGL 3
-		InternalTextureFormat format = GL.getCapabilities().OpenGL30 ? InternalTextureFormat.R32F : InternalTextureFormat.RGB16;
+		InternalTextureFormat format = GL.getCapabilities().OpenGL32 ? InternalTextureFormat.R32F : InternalTextureFormat.RGB16;
 		setupColorTexture(texture, format);
 		setupColorTexture(altTexture, format);
 		RenderSystem.bindTexture(0);
@@ -51,6 +51,13 @@ public class CenterDepthSampler {
 
 		try {
 			String fsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.fsh"))), StandardCharsets.UTF_8);
+
+			if (GL.getCapabilities().OpenGL32) {
+				fsh = fsh.replace("VERSIONPLACEHOLDER", "150 compatibility");
+			} else {
+				fsh = fsh.replace("#define IS_GL3", "");
+				fsh = fsh.replace("VERSIONPLACEHOLDER", "120");
+			}
 			String vsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.vsh"))), StandardCharsets.UTF_8);
 
 			builder = ProgramBuilder.begin("centerDepthSmooth", vsh, null, fsh, ImmutableSet.of(0, 1, 2));
