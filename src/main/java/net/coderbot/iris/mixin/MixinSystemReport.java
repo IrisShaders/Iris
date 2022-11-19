@@ -33,7 +33,7 @@ public abstract class MixinSystemReport {
             return sb.toString();
         });
 
-		getSystemDetails().setDetail("NEC status", () -> {
+		this.setDetail("NEC status", () -> {
 			if (Iris.hasNotEnoughCrashes()) {
 				return "Has NEC: INVALID";
 			} else {
