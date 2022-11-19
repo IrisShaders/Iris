@@ -46,7 +46,7 @@ public class MixinTitleScreen extends Screen {
 			reason = "iris.sodium.failure.reason.notFound";
 		} else if (Iris.isSodiumInvalid()) {
 			reason = "iris.sodium.failure.reason.incompatible";
-		} else if (true) {
+		} else if (Iris.hasNotEnoughCrashes()) {
 			Minecraft.getInstance().setScreen(new ConfirmScreen(
 				bool -> {
 					if (bool) {
