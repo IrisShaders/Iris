@@ -71,6 +71,7 @@ public class Iris {
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static boolean sodiumInvalid;
+	private static boolean hasNEC;
 	private static boolean sodiumInstalled;
 	private static boolean initialized;
 
@@ -91,7 +92,7 @@ public class Iris {
 	private static UpdateChecker updateChecker;
 	private static boolean fallback;
 
-	/**
+    /**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
 	 * some very basic setup, config loading, and environment checks.
 	 *
@@ -113,6 +114,8 @@ public class Iris {
 					}
 				}
 		);
+
+		hasNEC = FabricLoader.getInstance().isModLoaded("notenoughcrashes");
 
 		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
 				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
@@ -719,6 +722,10 @@ public class Iris {
 
 	public static boolean isSodiumInstalled() {
 		return sodiumInstalled;
+	}
+
+	public static boolean hasNotEnoughCrashes() {
+		return hasNEC;
 	}
 
 	public static Path getShaderpacksDirectory() {
