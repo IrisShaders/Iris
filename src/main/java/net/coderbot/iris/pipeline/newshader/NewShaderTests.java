@@ -2,6 +2,7 @@ package net.coderbot.iris.pipeline.newshader;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -115,8 +116,10 @@ public class NewShaderTests {
 												boolean intensityTex, boolean isFullbright) throws IOException {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
-		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting);
-		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex);
+		// TODO: Is this check sound in newer versions?
+		boolean isLeash = vertexFormat == DefaultVertexFormat.POSITION_COLOR_LIGHTMAP;
+		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting, isLeash);
+		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex, isLeash);
 
 
 		String shaderJsonString = "{\n" +
