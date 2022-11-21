@@ -42,6 +42,7 @@ import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
@@ -310,7 +311,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				ProgramSource source = resolver.resolveNullable(p.getFirst());
 
 				if (condition == RenderCondition.SHADOW) {
-					if (shadowRenderTargets == null) {
+					if (shadowRenderTargets == null || packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
 						// shadow is not used
 						return null;
 					} else if (source == null) {
@@ -339,12 +340,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
 			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
 
-			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
-				programs.getPackDirectives(), shadowRenderTargets);
-
-			Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
-			shadowRenderer.setUsesImages(shadowProgram != null && shadowProgram.getActiveImages() > 0);
-
+			if (programs.getPackDirectives().getShadowDirectives().isShadowEnabled().orElse(true)) {
+				this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
+					programs.getPackDirectives(), shadowRenderTargets);
+				Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
+				shadowRenderer.setUsesImages(shadowProgram != null && shadowProgram.getActiveImages() > 0);
+			} else {
+				shadowRenderer = null;
+			}
 		} else {
 			this.shadowClearPasses = ImmutableList.of();
 			this.shadowClearPassesFull = ImmutableList.of();
@@ -869,30 +872,39 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private void prepareRenderTargets() {
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+		Vector4f emptyClearColor = new Vector4f(1.0F);
 
 		if (shadowRenderTargets != null) {
-			// Clear depth first, regardless of any color clearing.
-			shadowRenderTargets.getDepthSourceFb().bind();
-			RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
-
-			Vector4f emptyClearColor = new Vector4f(1.0F);
-			ImmutableList<ClearPass> passes;
-
-			for (ComputeProgram computeProgram : shadowComputes) {
-				if (computeProgram != null) {
-					computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
+			if (packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
+				if (shadowRenderTargets.isFullClearRequired()) {
+					shadowRenderTargets.onFullClear();
+					for (ClearPass clearPass : shadowClearPassesFull) {
+						clearPass.execute(emptyClearColor);
+					}
 				}
-			}
-
-			if (shadowRenderTargets.isFullClearRequired()) {
-				passes = shadowClearPassesFull;
-				shadowRenderTargets.onFullClear();
 			} else {
-				passes = shadowClearPasses;
-			}
+				// Clear depth first, regardless of any color clearing.
+				shadowRenderTargets.getDepthSourceFb().bind();
+				RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
 
-			for (ClearPass clearPass : passes) {
-				clearPass.execute(emptyClearColor);
+				ImmutableList<ClearPass> passes;
+
+				for (ComputeProgram computeProgram : shadowComputes) {
+					if (computeProgram != null) {
+						computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
+					}
+				}
+
+				if (shadowRenderTargets.isFullClearRequired()) {
+					passes = shadowClearPassesFull;
+					shadowRenderTargets.onFullClear();
+				} else {
+					passes = shadowClearPasses;
+				}
+
+				for (ClearPass clearPass : passes) {
+					clearPass.execute(emptyClearColor);
+				}
 			}
 		}
 

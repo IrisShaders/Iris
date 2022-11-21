@@ -64,6 +64,7 @@ public class ShaderProperties {
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowCulling = OptionalBoolean.DEFAULT;
+	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
 	private OptionalBoolean particlesBeforeDeferred = OptionalBoolean.DEFAULT;
 	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
@@ -146,6 +147,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
+			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
 			handleBooleanDirective(key, value, "particles.before.deferred", bool -> particlesBeforeDeferred = bool);
 			handleBooleanDirective(key, value, "prepareBeforeShadow", bool -> prepareBeforeShadow = bool);
 
@@ -534,6 +536,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getShadowCulling() {
 		return shadowCulling;
+	}
+
+	public OptionalBoolean getShadowEnabled() {
+		return shadowEnabled;
 	}
 
 	public OptionalBoolean getParticlesBeforeDeferred() {
