@@ -1,10 +1,15 @@
 package net.coderbot.iris.pipeline.newshader.fallback;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.shaders.Uniform;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
+import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -12,6 +17,7 @@ import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.List;
 
 public class FallbackShader extends ShaderInstance {
 	private final NewWorldRenderingPipeline parent;
@@ -24,6 +30,9 @@ public class FallbackShader extends ShaderInstance {
 
 	@Nullable
 	private final Uniform FOG_IS_EXP2;
+	private final int gtexture;
+	private final int overlay;
+	private final int lightmap;
 
 	public FallbackShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
@@ -37,6 +46,11 @@ public class FallbackShader extends ShaderInstance {
 
 		this.FOG_DENSITY = this.getUniform("FogDensity");
 		this.FOG_IS_EXP2 = this.getUniform("FogIsExp2");
+
+		this.gtexture = GlStateManager._glGetUniformLocation(getId(), "gtexture");
+		this.overlay = GlStateManager._glGetUniformLocation(getId(), "overlay");
+		this.lightmap = GlStateManager._glGetUniformLocation(getId(), "lightmap");
+
 
 		Uniform ALPHA_TEST_VALUE = this.getUniform("AlphaTestValue");
 
@@ -70,7 +84,20 @@ public class FallbackShader extends ShaderInstance {
 			}
 		}
 
-		super.apply();
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
+
+		ProgramManager.glUseProgram(this.getId());
+
+		List<Uniform> uniformList = super.uniforms;
+		for (Uniform uniform : uniformList) {
+			uploadIfNotNull(uniform);
+		}
+
+		GlStateManager._glUniform1i(gtexture, 0);
+		GlStateManager._glUniform1i(overlay, 1);
+		GlStateManager._glUniform1i(lightmap, 2);
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
@@ -80,6 +107,12 @@ public class FallbackShader extends ShaderInstance {
 			writingToBeforeTranslucent.bind();
 		} else {
 			writingToAfterTranslucent.bind();
+		}
+	}
+
+	private void uploadIfNotNull(Uniform uniform) {
+		if (uniform != null) {
+			uniform.upload();
 		}
 	}
 }

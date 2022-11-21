@@ -7,7 +7,7 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 
 public class ShaderSynthesizer {
 	public static String vsh(boolean hasChunkOffset, ShaderAttributeInputs inputs, FogMode fogMode,
-							 boolean entityLighting) {
+							 boolean entityLighting, boolean isLeash) {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
@@ -64,6 +64,9 @@ public class ShaderSynthesizer {
 		}
 
 		// Vertex Color
+		if (isLeash) {
+			shader.append("flat ");
+		}
 		shader.append("out vec4 iris_vertexColor;\n");
 		shader.append("uniform vec4 ColorModulator;\n");
 
@@ -107,11 +110,11 @@ public class ShaderSynthesizer {
 
 		// Overlay Color
 		if (inputs.hasOverlay()) {
-			shader.append("uniform sampler2D Sampler1;\n");
+			shader.append("uniform sampler2D overlay;\n");
 			shader.append("in ivec2 UV1;\n");
 			shader.append("out vec4 overlayColor;\n");
 
-			main.append("    overlayColor = texelFetch(Sampler1, UV1, 0);\n");
+			main.append("    overlayColor = texelFetch(overlay, UV1, 0);\n");
 		}
 
 		// Vertex Texture
@@ -149,7 +152,7 @@ public class ShaderSynthesizer {
 		return shader.toString();
 	}
 
-	public static String fsh(ShaderAttributeInputs inputs, FogMode fogMode, AlphaTest alphaTest, boolean intensityTex) {
+	public static String fsh(ShaderAttributeInputs inputs, FogMode fogMode, AlphaTest alphaTest, boolean intensityTex, boolean isLeash) {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
@@ -157,13 +160,16 @@ public class ShaderSynthesizer {
 
 		shader.append("out vec4 fragColor;\n");
 		shader.append("uniform float AlphaTestValue;\n");
+		if (isLeash) {
+			shader.append("flat ");
+		}
 		shader.append("in vec4 iris_vertexColor;\n");
 
 		if (inputs.hasTex()) {
-			shader.append("uniform sampler2D Sampler0;\n");
+			shader.append("uniform sampler2D gtexture;\n");
 			shader.append("in vec2 texCoord;\n");
 
-			main.append("    vec4 color = texture(Sampler0, texCoord)");
+			main.append("    vec4 color = texture(gtexture, texCoord)");
 
 			if (intensityTex) {
 				main.append(".rrrr");
@@ -189,10 +195,10 @@ public class ShaderSynthesizer {
 		}
 
 		if (inputs.hasLight()) {
-			shader.append("uniform sampler2D Sampler2;\n");
+			shader.append("uniform sampler2D lightmap;\n");
 			shader.append("in vec2 lightCoord;\n");
 
-			main.append("    color *= texture(Sampler2, lightCoord);\n");
+			main.append("    color *= texture(lightmap, lightCoord);\n");
 		}
 
 		if (fogMode == FogMode.PER_VERTEX || fogMode == FogMode.PER_FRAGMENT) {

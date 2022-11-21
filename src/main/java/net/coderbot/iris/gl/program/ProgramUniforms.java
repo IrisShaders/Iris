@@ -346,7 +346,7 @@ public class ProgramUniforms {
 		} else if (type == GL20C.GL_INT_VEC4) {
 			return UniformType.VEC4I;
 		} else if (type == GL20C.GL_FLOAT_MAT3) {
-			return null;
+			return UniformType.MAT3;
 		} else if (type == GL20C.GL_FLOAT_VEC3) {
 			return UniformType.VEC3;
 		} else if (type == GL20C.GL_INT_VEC3) {
