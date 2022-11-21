@@ -22,7 +22,7 @@ public class DebugLoadFailedGridScreen extends Screen {
 		GridWidget widget = new GridWidget();
 		LayoutSettings layoutSettings = widget.newCellSettings().alignVerticallyTop().alignHorizontallyCenter();
 		int numWidgets = 0;
-		widget.addChild(new DebugTextWidget(0, 0, 1, 2, font, exception), ++numWidgets, 0, 1, 2, layoutSettings);
+		widget.addChild(new DebugTextWidget(0, 0, this.width - 40, font.lineHeight * 8, font, exception), ++numWidgets, 0, 1, 2, layoutSettings);
 		widget.addChild(Button.builder(Component.translatable("menu.returnToGame"), arg2 -> {
 			this.minecraft.setScreen(null);
 			this.minecraft.mouseHandler.grabMouse();
