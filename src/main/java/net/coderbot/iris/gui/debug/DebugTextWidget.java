@@ -4,6 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.function.DoubleConsumer;
+
+import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
@@ -41,6 +43,9 @@ public class DebugTextWidget
 	}
 
 	private Content buildContent(Exception exception) {
+		if (exception instanceof ShaderCompileException sce) {
+			return buildContentShader(sce);
+		}
 		ContentBuilder lv = new ContentBuilder(this.containerWidth());
 		StackTraceElement[] elements = exception.getStackTrace();
 		lv.addHeader(font, Component.literal("Error: "));
@@ -57,10 +62,18 @@ public class DebugTextWidget
 			StackTraceElement element = elements[i];
 			if (element == null) continue;;
 			lv.addLine(font, Component.literal(element.toString()));
-			lv.addSpacer(this.font.lineHeight);
 			if (i >= elements.length - 1) continue;
 			lv.addSpacer(this.font.lineHeight);
 		}
+		return lv.build();
+	}
+
+	private Content buildContentShader(ShaderCompileException sce) {
+		ContentBuilder lv = new ContentBuilder(this.containerWidth());
+		lv.addHeader(font, Component.literal("Shader compile error in " + sce.getFilename() + ": "));
+		lv.addSpacer(this.font.lineHeight);
+
+		lv.addLine(font, Component.literal(sce.getError()));
 		return lv.build();
 	}
 

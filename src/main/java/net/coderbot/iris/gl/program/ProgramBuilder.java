@@ -7,6 +7,7 @@ import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.shader.GlShader;
 import net.coderbot.iris.gl.shader.ProgramCreator;
+import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
@@ -95,6 +96,8 @@ public class ProgramBuilder extends ProgramUniforms.Builder implements SamplerHo
 	private static GlShader buildShader(ShaderType shaderType, String name, @Nullable String source) {
 		try {
 			return new GlShader(shaderType, name, source);
+		} catch (ShaderCompileException e) {
+			throw e;
 		} catch (RuntimeException e) {
 			throw new RuntimeException("Failed to compile " + shaderType + " shader for program " + name, e);
 		}

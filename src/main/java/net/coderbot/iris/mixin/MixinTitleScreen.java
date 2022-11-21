@@ -34,7 +34,6 @@ public class MixinTitleScreen {
 
 		String reason;
 
-		Minecraft.getInstance().setScreen(new DebugLoadFailedGridScreen(Component.literal("CRINGE"), new Exception("Kinda cringe")));
 		if (!Iris.isSodiumInstalled() && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			reason = "iris.sodium.failure.reason.notFound";
 		} else if (Iris.isSodiumInvalid()) {
