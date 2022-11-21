@@ -2,6 +2,7 @@ package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
+import net.coderbot.iris.gui.debug.DebugLoadFailedGridScreen;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -33,6 +34,7 @@ public class MixinTitleScreen {
 
 		String reason;
 
+		Minecraft.getInstance().setScreen(new DebugLoadFailedGridScreen(Component.literal("CRINGE"), new Exception("Kinda cringe")));
 		if (!Iris.isSodiumInstalled() && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			reason = "iris.sodium.failure.reason.notFound";
 		} else if (Iris.isSodiumInvalid()) {
