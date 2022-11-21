@@ -311,7 +311,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				ProgramSource source = resolver.resolveNullable(p.getFirst());
 
 				if (condition == RenderCondition.SHADOW) {
-					if (shadowRenderTargets == null || packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
+					if (shadowRenderTargets == null || shadowDirectives.isShadowEnabled() == OptionalBoolean.FALSE) {
 						// shadow is not used
 						return null;
 					} else if (source == null) {
@@ -335,6 +335,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				}
 			});
 		});
+
+		if (shadowRenderTargets == null && shadowDirectives.isShadowEnabled() == OptionalBoolean.TRUE) {
+			shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, shadowDirectives);
+		}
 
 		if (shadowRenderTargets != null) {
 			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
