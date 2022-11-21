@@ -10,6 +10,7 @@ import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import net.coderbot.iris.gui.debug.DebugLoadFailedGridScreen;
+import net.coderbot.iris.gui.debug.LoadFailedGridScreen;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.PipelineManager;
@@ -35,6 +36,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
