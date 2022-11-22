@@ -7,9 +7,9 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import java.util.function.Consumer;
 
 public class ShadowDistanceOption<T> extends OptionInstance<T> {
-	private final TooltipSupplierFactory<T> tooltipSupplier;
+	private final TooltipSupplier<T> tooltipSupplier;
 
-	public ShadowDistanceOption(String string, TooltipSupplierFactory<T> arg, CaptionBasedToString<T> arg2, OptionInstance.ValueSet<T> arg3, T object, Consumer<T> consumer) {
+	public ShadowDistanceOption(String string, TooltipSupplier<T> arg, CaptionBasedToString<T> arg2, OptionInstance.ValueSet<T> arg3, T object, Consumer<T> consumer) {
 		super(string, arg, arg2, arg3, object, consumer);
 
 		this.tooltipSupplier = arg;
@@ -17,8 +17,7 @@ public class ShadowDistanceOption<T> extends OptionInstance<T> {
 
 	@Override
 	public AbstractWidget createButton(Options options, int x, int y, int width) {
-		TooltipSupplier<T> lv = this.tooltipSupplier.apply(Minecraft.getInstance());
-		AbstractWidget widget = this.values().createButton(lv, options, x, y, width).apply(this);
+		AbstractWidget widget = super.createButton(options, x, y, width);
 
 		widget.active = IrisVideoSettings.isShadowDistanceSliderEnabled();
 
