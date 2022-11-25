@@ -12,6 +12,8 @@ accessible  class   net/minecraft/client/Options$FieldAccess
 accessible class net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture
 accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
 accessible class net/minecraft/client/renderer/texture/SpriteContents$Ticker
+accessible  class   net/minecraft/client/OptionInstance$ValueSet
+extendable  class   net/minecraft/client/OptionInstance
 accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask
 accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask$CompileResults
 mutable field net/minecraft/client/renderer/ShaderInstance PROJECTION_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
