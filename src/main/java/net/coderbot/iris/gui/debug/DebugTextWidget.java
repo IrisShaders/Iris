@@ -1,15 +1,8 @@
 package net.coderbot.iris.gui.debug;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.function.DoubleConsumer;
 
 import net.coderbot.iris.gl.shader.ShaderCompileException;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractScrollWidget;
 import net.minecraft.client.gui.components.GridWidget;
@@ -18,23 +11,13 @@ import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.components.SpacerWidget;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.telemetry.TelemetryEventType;
-import net.minecraft.client.telemetry.TelemetryProperty;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import org.jetbrains.annotations.Nullable;
 
-@Environment(value=EnvType.CLIENT)
 public class DebugTextWidget
 	extends AbstractScrollWidget {
-	private static final int HEADER_HORIZONTAL_PADDING = 32;
-	private static final String TELEMETRY_REQUIRED_TRANSLATION_KEY = "telemetry.event.required";
-	private static final String TELEMETRY_OPTIONAL_TRANSLATION_KEY = "telemetry.event.optional";
-	private static final Component PROPERTY_TITLE = Component.translatable("telemetry_info.property_title").withStyle(ChatFormatting.UNDERLINE);
 	private final Font font;
 	private Content content;
-	@Nullable
-	private DoubleConsumer onScrolledListener;
 
 	public DebugTextWidget(int i, int j, int k, int l, Font arg, Exception exception) {
 		super(i, j, k, l, Component.empty());
@@ -78,14 +61,6 @@ public class DebugTextWidget
 	}
 
 	@Override
-	protected void setScrollAmount(double d) {
-		super.setScrollAmount(d);
-		if (this.onScrolledListener != null) {
-			this.onScrolledListener.accept(this.scrollAmount());
-		}
-	}
-
-	@Override
 	protected int getInnerHeight() {
 		return this.content.container().getHeight();
 	}
@@ -115,30 +90,13 @@ public class DebugTextWidget
 		arg.add(NarratedElementType.TITLE, this.content.narration());
 	}
 
-	private void addEventType(ContentBuilder arg, TelemetryEventType arg2) {
-		String string = arg2.isOptIn() ? TELEMETRY_OPTIONAL_TRANSLATION_KEY : TELEMETRY_REQUIRED_TRANSLATION_KEY;
-		arg.addHeader(this.font, Component.translatable(string, arg2.title()));
-		arg.addHeader(this.font, arg2.description().withStyle(ChatFormatting.GRAY));
-		arg.addSpacer(this.font.lineHeight / 2);
-		arg.addLine(this.font, PROPERTY_TITLE, 2);
-		this.addEventTypeProperties(arg2, arg);
-	}
-
-	private void addEventTypeProperties(TelemetryEventType arg, ContentBuilder arg2) {
-		for (TelemetryProperty<?> lv : arg.properties()) {
-			arg2.addLine(this.font, lv.title());
-		}
-	}
-
 	private int containerWidth() {
 		return this.width - this.totalInnerPadding();
 	}
 
-	@Environment(value=EnvType.CLIENT)
 	record Content(GridWidget container, Component narration) {
 	}
 
-	@Environment(value=EnvType.CLIENT)
 	static class ContentBuilder {
 		private final int width;
 		private final GridWidget grid;
