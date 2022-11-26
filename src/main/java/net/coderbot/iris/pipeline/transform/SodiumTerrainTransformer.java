@@ -100,7 +100,8 @@ class SodiumTerrainTransformer {
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform mat4 iris_ModelViewMatrix;",
 				"uniform mat4 u_ModelViewProjectionMatrix;",
-				"uniform mat4 iris_NormalMatrix;");
+				"uniform mat4 iris_NormalMatrix;",
+				"uniform mat4 iris_LightmapTextureMatrix;");
 		root.rename("gl_ModelViewMatrix", "iris_ModelViewMatrix");
 		root.rename("gl_ModelViewProjectionMatrix", "u_ModelViewProjectionMatrix");
 		root.replaceReferenceExpressions(t,
@@ -110,7 +111,7 @@ class SodiumTerrainTransformer {
 				t,
 				glTextureMatrix0,
 				"mat4(1.0)");
-		root.replaceExpressionMatches(t, glTextureMatrix1, "mat4(1.0)");
+		root.replaceExpressionMatches(t, glTextureMatrix1, "iris_LightmapTextureMatrix");
 	}
 	private static final String lightmapCoordsExpression = "iris_LightCoord";
 	private static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(

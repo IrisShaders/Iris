@@ -40,7 +40,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 				color,
 				ModelVertexUtil.denormalizeVertexTextureFloatAsShort(u),
 				ModelVertexUtil.denormalizeVertexTextureFloatAsShort(v),
-				ModelVertexUtil.encodeLightMapTexCoord(light),
+			light,
 				contextHolder.blockId,
 				contextHolder.renderType,
 				ExtendedDataHelper.computeMidBlock(x, y, z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ)
@@ -60,7 +60,8 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		MemoryUtil.memPutInt(i + 8, color);
 		MemoryUtil.memPutShort(i + 12, u);
 		MemoryUtil.memPutShort(i + 14, v);
-		MemoryUtil.memPutInt(i + 16, light);
+		MemoryUtil.memPutShort(i + 16, (short) (light & 0xFFFF));
+		MemoryUtil.memPutShort(i + 18, (short) (light >> 16 & 0xFFFF));
 		// NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
 		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
 		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_format
