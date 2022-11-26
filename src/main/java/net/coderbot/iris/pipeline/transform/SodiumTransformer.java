@@ -27,7 +27,11 @@ public class SodiumTransformer {
 			}
 
 			if (parameters.inputs.hasLight()) {
-				SodiumTerrainTransformer.replaceLightmapForSodium("_vert_tex_light_coord", t, tree, root);
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_LightmapTextureMatrix;");
+				root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
+
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4(_vert_tex_light_coord, 0, 1)");
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4(_vert_tex_light_coord, 0, 1)");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
 						"vec4(0.0, 0.0, 0.0, 1.0)");
