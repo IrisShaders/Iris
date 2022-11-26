@@ -23,6 +23,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
+import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
@@ -342,6 +343,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				} else {
 					return createShader(key.getName(), resolver.resolve(key.getProgram()), key);
 				}
+			} catch (FakeChainedJsonException e) {
+				destroyShaders();
+				throw e.getTrueException();
 			} catch (IOException e) {
 				destroyShaders();
 				throw new RuntimeException(e);
@@ -413,6 +417,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 				try {
 					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null)), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
+				} catch (ShaderCompileException e) {
+					throw e;
 				} catch (RuntimeException e) {
 					// TODO: Better error handling
 					throw new RuntimeException("Shader compilation failed!", e);

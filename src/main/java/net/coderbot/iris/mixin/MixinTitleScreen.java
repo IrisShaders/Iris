@@ -3,6 +3,7 @@ package net.coderbot.iris.mixin;
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
+import net.coderbot.iris.gui.debug.DebugLoadFailedGridScreen;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;

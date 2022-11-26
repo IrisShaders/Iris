@@ -1,7 +1,9 @@
 package net.coderbot.iris.gui.screen;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
@@ -12,10 +14,12 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
+import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -105,6 +109,16 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.renderBackground(poseStack);
 		} else if (!this.guiHidden) {
 			this.fillGradient(poseStack, 0, 0, width, height, 0x4F232323, 0x4F232323);
+		}
+
+		if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_D)) {
+			Minecraft.getInstance().setScreen(new ConfirmScreen((option) -> {
+				Iris.setDebug(option);
+				Minecraft.getInstance().setScreen(this);
+			}, Component.literal("Shader debug mode toggle"),
+				Component.literal("Debug mode helps investigate problems and shows shader errors. Would you like to enable it?"),
+				Component.literal("Yes"),
+				Component.literal("No")));
 		}
 
 		if (!this.guiHidden) {
