@@ -58,6 +58,7 @@ class SodiumTerrainTransformer {
 				"uniform vec3 u_ModelScale;",
 				"uniform vec2 u_TextureScale;",
 				"attribute vec4 iris_ModelOffset;",
+				"vec4 iris_LightTexCoord = vec4(iris_LightCoord, 0, 1);",
 				"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 
 		transformShared(t, tree, root, parameters);
@@ -66,11 +67,13 @@ class SodiumTerrainTransformer {
 				"vec4((iris_Pos * u_ModelScale) + iris_ModelOffset.xyz, 1.0)");
 		root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 				"vec4(iris_TexCoord * u_TextureScale, 0.0, 1.0)");
+		root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
+				"iris_LightTexCoord");
+		root.replaceReferenceExpressions(t, "gl_MultiTexCoord2",
+				"iris_LightTexCoord");
 		root.rename("gl_Color", "iris_Color");
 		root.rename("gl_Normal", "iris_Normal");
 		root.rename("ftransform", "iris_ftransform");
-
-		replaceLightmapForSodium(t, tree, root, parameters);
 	}
 
 	/**
@@ -107,120 +110,9 @@ class SodiumTerrainTransformer {
 				t,
 				glTextureMatrix0,
 				"mat4(1.0)");
+		root.replaceExpressionMatches(t, glTextureMatrix1, "mat4(1.0)");
 	}
-
-	private static final Matcher<Expression> glTextureMatrixMultMember = new Matcher<>(
-			"(gl_TextureMatrix[1] * ___coord).___suffix", Matcher.expressionPattern, "___");
-	private static final Matcher<Expression> glTextureMatrixMultS = new Matcher<>(
-			"(gl_TextureMatrix[1] * ___coord).s", Matcher.expressionPattern, "___");
-	private static final Matcher<Expression> glTextureMatrixMult = new Matcher<>(
-			"gl_TextureMatrix[1] * ___coord", Matcher.expressionPattern, "___");
-	private static final Matcher<Expression> xyDivision = new Matcher<>(
-			"___coord.xy / 255.0", Matcher.expressionPattern, "___");
-	private static final Matcher<Expression> xyDivision240 = new Matcher<>(
-		"___coord.xy / 240.0", Matcher.expressionPattern, "___");
-
 	private static final String lightmapCoordsExpression = "iris_LightCoord";
-	private static final String lightmapCoordsExpressionS = lightmapCoordsExpression + ".s";
-	private static final String lightmapCoordsExpressionWrapped = "vec4(" + lightmapCoordsExpression + ", 0.0, 1.0)";
-
-	private static final List<Expression> replaceExpressions = new ArrayList<>();
-	private static final List<Expression> replaceSExpressions = new ArrayList<>();
-	private static final List<Expression> replaceWrapExpressions = new ArrayList<>();
-
-	private static void processCoord(Root root, String coord) {
-		for (Identifier identifier : root.identifierIndex.get(coord)) {
-			MemberAccessExpression memberAccess = identifier.getAncestor(MemberAccessExpression.class);
-			if (memberAccess != null && glTextureMatrixMultMember.matchesExtract(memberAccess)) {
-				String suffix = glTextureMatrixMultMember.getStringDataMatch("suffix");
-				if (glTextureMatrixMultMember.getStringDataMatch("coord").equals(coord)
-						&& suffix != null && ("st".equals(suffix) || "xy".equals(suffix))) {
-					replaceExpressions.add(memberAccess);
-					return;
-				}
-			}
-
-			if (memberAccess != null
-					&& glTextureMatrixMultS.matchesExtract(memberAccess)
-					&& glTextureMatrixMultS.getStringDataMatch("coord").equals(coord)) {
-				replaceSExpressions.add(memberAccess);
-				return;
-			}
-			// NB: Technically this isn't a correct transformation (it changes the values
-			// slightly), however the shader code being replaced isn't correct to begin with
-			// since it doesn't properly apply the centering / scaling transformation like
-			// gl_TextureMatrix[1] would. Therefore, I think this is acceptable. This code
-			// shows up in Sildur's shaderpacks.
-			DivisionExpression division = identifier.getAncestor(DivisionExpression.class);
-			if (division != null
-					&& xyDivision.matchesExtract(division)
-					&& xyDivision.getStringDataMatch("coord").equals(coord)) {
-				replaceExpressions.add(division);
-				return;
-			}
-
-			// Similar case, but for Continuum 2.0.5. This code is similarly incorrect and
-			// fails to properly mimic the lightmap coordinate transformation. In addition,
-			// it will generate out-of-range values if we pass the shaderpack a lightmap
-			// coordinate larger than 240 (which is correct in the case of a light value of
-			// 15, where a coordinate of 248 should be passed)
-			if (division != null
-				&& xyDivision240.matchesExtract(division)
-				&& xyDivision240.getStringDataMatch("coord").equals(coord)) {
-				replaceExpressions.add(division);
-				return;
-			}
-
-			MultiplicationExpression mult = identifier.getAncestor(MultiplicationExpression.class);
-			if (mult != null
-					&& glTextureMatrixMult.matchesExtract(mult)
-					&& glTextureMatrixMult.getStringDataMatch("coord").equals(coord)) {
-				replaceWrapExpressions.add(mult);
-				return;
-			}
-		}
-	}
-
 	private static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", Matcher.expressionPattern);
-
-	/**
-	 * Replaces BuiltinUniformReplacementTransformer and does what it does but a
-	 * little more general.
-	 */
-	private static void replaceLightmapForSodium(
-			ASTParser t,
-			TranslationUnit tree,
-			Root root,
-			Parameters parameters) {
-		replaceExpressions.clear();
-		replaceSExpressions.clear();
-		replaceWrapExpressions.clear();
-
-		// gl_MultiTexCoord1 and gl_MultiTexCoord2 are both aliases of the lightmap
-		// coords
-		processCoord(root, "gl_MultiTexCoord1");
-		processCoord(root, "gl_MultiTexCoord2");
-
-		Root.replaceExpressionsConcurrent(t, replaceExpressions, lightmapCoordsExpression);
-		Root.replaceExpressionsConcurrent(t, replaceSExpressions, lightmapCoordsExpressionS);
-		Root.replaceExpressionsConcurrent(t, replaceWrapExpressions, lightmapCoordsExpressionWrapped);
-
-		replaceExpressions.clear();
-		replaceSExpressions.clear();
-		replaceWrapExpressions.clear();
-
-		root.replaceExpressionMatches(t, glTextureMatrix1, "iris_LightmapTextureMatrix");
-		root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4("
-				+ lightmapCoordsExpression + " * 256.0 - 8.0, 0.0, 1.0)");
-		root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4("
-				+ lightmapCoordsExpression + " * 256.0 - 8.0, 0.0, 1.0)");
-
-		// If there are references to the fallback lightmap texture matrix, then make it
-		// available to the shader program.
-		if (root.identifierIndex.has("iris_LightmapTextureMatrix")) {
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"uniform mat4 iris_LightmapTextureMatrix;");
-		}
-	}
 }
