@@ -224,6 +224,11 @@ public class IrisChunkProgramOverrides {
                 this.programs.put(pass, createShader(pass, pipeline));
             }
         } else {
+			for (GlProgram<?> program : this.programs.values()) {
+				if (program != null) {
+					program.delete();
+				}
+			}
             this.programs.clear();
         }
 

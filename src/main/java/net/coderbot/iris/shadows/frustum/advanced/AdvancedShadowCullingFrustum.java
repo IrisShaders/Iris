@@ -324,13 +324,9 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	 * @return 0 if nothing is visible, 1 if everything is visible, 2 if only some corners are visible.
 	 */
 	private int checkCornerVisibility(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		boolean inside = true;
 		float outsideBoundX;
 		float outsideBoundY;
 		float outsideBoundZ;
-		float insideBoundX;
-		float insideBoundY;
-		float insideBoundZ;
 
 		for (int i = 0; i < planeCount; ++i) {
 			Vector4f plane = this.planes[i];
@@ -340,34 +336,27 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 
 			if (plane.x() < 0) {
 				outsideBoundX = minX;
-				insideBoundX = maxX;
 			} else {
 				outsideBoundX = maxX;
-				insideBoundX = minX;
 			}
 
 			if (plane.y() < 0) {
 				outsideBoundY = minY;
-				insideBoundY = maxY;
 			} else {
 				outsideBoundY = maxY;
-				insideBoundY = minY;
 			}
 
 			if (plane.z() < 0) {
 				outsideBoundZ = minZ;
-				insideBoundZ = maxZ;
 			} else {
 				outsideBoundZ = maxZ;
-				insideBoundZ = minZ;
 			}
 
 			if (Math.fma(plane.x(), outsideBoundX, Math.fma(plane.y(), outsideBoundY, plane.z() * outsideBoundZ)) < -plane.w()) {
 				return 0;
 			}
-			inside &= Math.fma(plane.x(), insideBoundX, Math.fma(plane.y(), insideBoundY, plane.z() * insideBoundZ)) >= -plane.w();
 		}
 
-		return inside ? 1 : 2;
+		return 2;
 	}
 }

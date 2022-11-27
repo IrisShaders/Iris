@@ -1,5 +1,9 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Ints;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
@@ -11,8 +15,10 @@ import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.VanillaUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.resources.ResourceLocation;
@@ -25,17 +31,19 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class NewShaderTests {
-	public static ExtendedShader create(String name, ProgramSource source, GlFramebuffer writingToBeforeTranslucent,
+	public static ExtendedShader create(String name, ProgramSource source, ProgramId programId, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, ShaderAttributeInputs inputs, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, FogMode fogMode, boolean isIntensity,
-										boolean isFullbright, CustomUniforms customUniforms, @Nullable List<BufferBlendOverride> bufferBlendInformation) throws IOException {
+										NewWorldRenderingPipeline parent, Supplier<ImmutableSet<Integer>> flipped, FogMode fogMode, boolean isIntensity,
+										boolean isFullbright, boolean isShadowPass, CustomUniforms customUniforms) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
-		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride();
+		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(programId.getBlendModeOverride());
 
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchVanilla(
 			source.getVertexSource().orElseThrow(RuntimeException::new),
@@ -47,71 +55,35 @@ public class NewShaderTests {
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 
 		StringBuilder shaderJson = new StringBuilder("{\n" +
-				"    \"blend\": {\n" +
-				"        \"func\": \"add\",\n" +
-				"        \"srcrgb\": \"srcalpha\",\n" +
-				"        \"dstrgb\": \"1-srcalpha\"\n" +
-				"    },\n" +
-				"    \"vertex\": \"" + name + "\",\n" +
-				"    \"fragment\": \"" + name + "\",\n" +
-				"    \"attributes\": [\n" +
-				"        \"Position\",\n" +
-				"        \"Color\",\n" +
-				"        \"UV0\",\n" +
-				"        \"UV1\",\n" +
-				"        \"UV2\",\n" +
-				"        \"Normal\"\n" +
-				"    ],\n" +
-				"    \"samplers\": [\n" +
-				// TODO: Don't duplicate these definitions!
-				"        { \"name\": \"gtexture\" },\n" +
-				"        { \"name\": \"texture\" },\n" +
-				"        { \"name\": \"tex\" },\n" +
-				"        { \"name\": \"iris_overlay\" },\n" +
-				"        { \"name\": \"lightmap\" },\n" +
-				"        { \"name\": \"normals\" },\n" +
-				"        { \"name\": \"specular\" },\n" +
-				"        { \"name\": \"shadow\" },\n" +
-				"        { \"name\": \"watershadow\" },\n" +
-				"        { \"name\": \"shadowtex0\" },\n" +
-				"        { \"name\": \"shadowtex0HW\" },\n" +
-				"        { \"name\": \"shadowtex1\" },\n" +
-				"        { \"name\": \"shadowtex1HW\" },\n" +
-				"        { \"name\": \"depthtex0\" },\n" +
-				"        { \"name\": \"depthtex1\" },\n" +
-				"        { \"name\": \"noisetex\" },\n");
-
-		// TODO: SamplerHolder should really be responsible for this...
-		for (int buffer : PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS) {
-			if (buffer >= 4 && buffer < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
-				shaderJson.append("        { \"name\": \"");
-				shaderJson.append(PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(buffer));
-				shaderJson.append("\" },\n");
-			}
-
-			shaderJson.append("        { \"name\": \"colortex");
-			shaderJson.append(buffer);
-			shaderJson.append("\" },\n");
-		}
-
-		shaderJson.append(
-				"        { \"name\": \"shadowcolor\" },\n" +
-				"        { \"name\": \"shadowcolor0\" },\n" +
-				"        { \"name\": \"shadowcolor1\" }\n" +
-				"    ],\n" +
-				"    \"uniforms\": [\n" +
-				"        { \"name\": \"iris_TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
-				"        { \"name\": \"iris_ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
-				"        { \"name\": \"iris_FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-				"        { \"name\": \"iris_LineWidth\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-				"        { \"name\": \"iris_ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
-				"        { \"name\": \"iris_FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
-				"    ]\n" +
-				"}");
+			"    \"blend\": {\n" +
+			"        \"func\": \"add\",\n" +
+			"        \"srcrgb\": \"srcalpha\",\n" +
+			"        \"dstrgb\": \"1-srcalpha\"\n" +
+			"    },\n" +
+			"    \"vertex\": \"" + name + "\",\n" +
+			"    \"fragment\": \"" + name + "\",\n" +
+			"    \"attributes\": [\n" +
+			"        \"Position\",\n" +
+			"        \"Color\",\n" +
+			"        \"UV0\",\n" +
+			"        \"UV1\",\n" +
+			"        \"UV2\",\n" +
+			"        \"Normal\"\n" +
+			"    ],\n" +
+			"    \"uniforms\": [\n" +
+			"        { \"name\": \"iris_TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_ModelViewMatInverse\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_ProjMatInverse\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_NormalMat\", \"type\": \"matrix3x3\", \"count\": 9, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 ] },\n" +
+			"        { \"name\": \"iris_ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
+			"        { \"name\": \"iris_ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
+			"        { \"name\": \"iris_FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
+			"        { \"name\": \"iris_FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
+			"    ]\n" +
+			"}");
 
 		String shaderJsonString = shaderJson.toString();
 
@@ -119,71 +91,79 @@ public class NewShaderTests {
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, geometry, fragment);
 
+		List<BufferBlendOverride> overrides = new ArrayList<>();
+		source.getDirectives().getBufferBlendOverrides().forEach(information -> {
+			int index = Ints.indexOf(source.getDirectives().getDrawBuffers(), information.getIndex());
+			if (index > -1) {
+				overrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+			}
+		});
+
 		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent, writingToAfterTranslucent, baseline, blendModeOverride, alpha, uniforms -> {
 			CommonUniforms.addDynamicUniforms(uniforms, FogMode.PER_VERTEX);
 			customUniforms.assignTo(uniforms);
 			//SamplerUniforms.addWorldSamplerUniforms(uniforms);
 			//SamplerUniforms.addDepthSamplerUniforms(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
-		}, isIntensity, parent, inputs, bufferBlendInformation, customUniforms);
+		}, (samplerHolder, imageHolder) -> {
+			parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.toAvailability());
+		}, isIntensity, parent, inputs, overrides, customUniforms);
 	}
 
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
-										GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
-										VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
-										NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
-										boolean intensityTex, boolean isFullbright) throws IOException {
+												GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
+												VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
+												NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
+												boolean intensityTex, boolean isFullbright) throws IOException {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
-		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting);
-		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex);
+		// TODO: Is this check sound in newer versions?
+		boolean isLeash = vertexFormat == DefaultVertexFormat.POSITION_COLOR_LIGHTMAP;
+		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting, isLeash);
+		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex, isLeash);
+
 
 		String shaderJsonString = "{\n" +
-				"    \"blend\": {\n" +
-				"        \"func\": \"add\",\n" +
-				"        \"srcrgb\": \"srcalpha\",\n" +
-				"        \"dstrgb\": \"1-srcalpha\"\n" +
-				"    },\n" +
-				"    \"vertex\": \"" + name + "\",\n" +
-				"    \"fragment\": \"" + name + "\",\n" +
-				"    \"attributes\": [\n" +
-				"        \"Position\",\n" +
-				"        \"Color\",\n" +
-				"        \"UV0\",\n" +
-				"        \"UV1\",\n" +
-				"        \"UV2\",\n" +
-				"        \"Normal\"\n" +
-				"    ],\n" +
-				"    \"samplers\": [\n" +
-				"        { \"name\": \"Sampler0\" },\n" +
-				"        { \"name\": \"Sampler1\" },\n" +
-				"        { \"name\": \"Sampler2\" }\n" +
-				"    ],\n" +
-				"    \"uniforms\": [\n" +
-				"        { \"name\": \"TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-				"        { \"name\": \"ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-				"        { \"name\": \"ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-				"        { \"name\": \"ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
-				"        { \"name\": \"ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
-				"        { \"name\": \"Light0_Direction\", \"type\": \"float\", \"count\": 3, \"values\": [0.0, 0.0, 0.0] },\n" +
-				"        { \"name\": \"Light1_Direction\", \"type\": \"float\", \"count\": 3, \"values\": [0.0, 0.0, 0.0] },\n" +
-				"        { \"name\": \"FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
-				"        { \"name\": \"FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-				"        { \"name\": \"FogDensity\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-				"        { \"name\": \"FogIsExp2\", \"type\": \"int\", \"count\": 1, \"values\": [ 0 ] },\n" +
-				"        { \"name\": \"AlphaTestValue\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
-				"        { \"name\": \"LineWidth\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-				"        { \"name\": \"ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
-				"        { \"name\": \"FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
-				"    ]\n" +
-				"}";
+			"    \"blend\": {\n" +
+			"        \"func\": \"add\",\n" +
+			"        \"srcrgb\": \"srcalpha\",\n" +
+			"        \"dstrgb\": \"1-srcalpha\"\n" +
+			"    },\n" +
+			"    \"vertex\": \"" + name + "\",\n" +
+			"    \"fragment\": \"" + name + "\",\n" +
+			"    \"attributes\": [\n" +
+			"        \"Position\",\n" +
+			"        \"Color\",\n" +
+			(inputs.hasTex() ? "        \"UV0\",\n" : "") +
+			(inputs.hasOverlay() ? "        \"UV1\",\n" : "") +
+			(inputs.hasLight() ? "        \"UV2\",\n" : "") +
+			"        \"Normal\"\n" +
+			"    ],\n" +
+			"    \"uniforms\": [\n" +
+			"        { \"name\": \"TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
+			"        { \"name\": \"ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
+			"        { \"name\": \"Light0_Direction\", \"type\": \"float\", \"count\": 3, \"values\": [0.0, 0.0, 0.0] },\n" +
+			"        { \"name\": \"Light1_Direction\", \"type\": \"float\", \"count\": 3, \"values\": [0.0, 0.0, 0.0] },\n" +
+			"        { \"name\": \"FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
+			"        { \"name\": \"FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
+			"        { \"name\": \"FogDensity\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
+			"        { \"name\": \"FogIsExp2\", \"type\": \"int\", \"count\": 1, \"values\": [ 0 ] },\n" +
+			"        { \"name\": \"AlphaTestValue\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
+			"        { \"name\": \"LineWidth\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
+			"        { \"name\": \"ScreenSize\", \"type\": \"float\", \"count\": 2, \"values\": [ 1.0, 1.0 ] },\n" +
+			"        { \"name\": \"FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
+			"    ]\n" +
+			"}";
 
 		PatchedShaderPrinter.debugPatchedShaders(name, vertex, null, fragment, shaderJsonString);
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, fragment);
 
 		return new FallbackShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
-				writingToAfterTranslucent, blendModeOverride, alpha.getReference(), parent);
+			writingToAfterTranslucent, blendModeOverride, alpha.getReference(), parent);
 	}
 
 	private static class IrisProgramResourceFactory implements ResourceProvider {

@@ -26,7 +26,11 @@ public class IrisChunkShaderInterface {
 	@Nullable
 	private final GlUniformMatrix4f uniformModelViewMatrix;
 	@Nullable
+	private final GlUniformMatrix4f uniformModelViewMatrixInverse;
+	@Nullable
 	private final GlUniformMatrix4f uniformProjectionMatrix;
+	@Nullable
+	private final GlUniformMatrix4f uniformProjectionMatrixInverse;
 	@Nullable
 	private final GlUniformFloat3v uniformRegionOffset;
 	@Nullable
@@ -47,7 +51,9 @@ public class IrisChunkShaderInterface {
 	public IrisChunkShaderInterface(int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
 									boolean isShadowPass, BlendModeOverride blendModeOverride, List<BufferBlendOverride> bufferOverrides, float alpha, CustomUniforms customUniforms) {
 		this.uniformModelViewMatrix = contextExt.bindUniformIfPresent("iris_ModelViewMatrix", GlUniformMatrix4f::new);
+		this.uniformModelViewMatrixInverse = contextExt.bindUniformIfPresent("iris_ModelViewMatrixInverse", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("iris_ProjectionMatrix", GlUniformMatrix4f::new);
+		this.uniformProjectionMatrixInverse = contextExt.bindUniformIfPresent("iris_ProjectionMatrixInverse", GlUniformMatrix4f::new);
 		this.uniformRegionOffset = contextExt.bindUniformIfPresent("u_RegionOffset", GlUniformFloat3v::new);
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("iris_NormalMatrix", GlUniformMatrix4f::new);
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
@@ -103,6 +109,12 @@ public class IrisChunkShaderInterface {
 		if (this.uniformProjectionMatrix != null) {
 			this.uniformProjectionMatrix.set(matrix);
 		}
+
+		if (this.uniformProjectionMatrixInverse != null) {
+			Matrix4f inverted = new Matrix4f(matrix);
+			inverted.invert();
+			this.uniformProjectionMatrixInverse.set(inverted);
+		}
 	}
 
 	public void setModelViewMatrix(Matrix4f modelView) {
@@ -110,7 +122,15 @@ public class IrisChunkShaderInterface {
 			this.uniformModelViewMatrix.set(modelView);
 		}
 
-		if (this.uniformNormalMatrix != null) {
+		if (this.uniformModelViewMatrixInverse != null) {
+			Matrix4f invertedMatrix = new Matrix4f(modelView);
+			invertedMatrix.invert();
+			this.uniformModelViewMatrixInverse.set(invertedMatrix);
+			if (this.uniformNormalMatrix != null) {
+				invertedMatrix.transpose();
+				this.uniformNormalMatrix.set(invertedMatrix);
+			}
+		} else if (this.uniformNormalMatrix != null) {
 			Matrix4f normalMatrix = new Matrix4f(modelView);
 			normalMatrix.invert();
 			normalMatrix.transpose();

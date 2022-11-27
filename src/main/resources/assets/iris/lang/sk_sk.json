@@ -1,7 +1,6 @@
 {
   "iris.shaders.reloaded": "Tieňovače obnovené!",
   "iris.shaders.toggled": "Zapnuté tieňovače %s!",
-  "iris.shaders.toggled": "Toggled shaders to %s!",
   "iris.shaders.debug.enabled": "Ladenie bolo zapnuté, záznamy budú detailnejšie!",
   "iris.shaders.debug.disabled": "Ladenie bolo vypnuté.",
   "iris.shaders.debug.failure": "Nie je možné zapnúť ladenie, tvoj počítač to nepodporuje.",

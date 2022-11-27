@@ -293,15 +293,25 @@ public class FinalPassRenderer {
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
 		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
-		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
+
+		int filter = GL20C.GL_LINEAR_MIPMAP_LINEAR;
+		if (target.getInternalFormat().getPixelFormat().isInteger()) {
+			filter = GL20C.GL_NEAREST_MIPMAP_NEAREST;
+		}
+
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
 	}
 
 	private static void resetRenderTarget(RenderTarget target) {
 		// Resets the sampling mode of the given render target and then unbinds it to prevent accidental sampling of it
 		// elsewhere.
-		IrisRenderSystem.texParameteri(target.getMainTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+		int filter = GL20C.GL_LINEAR;
+		if (target.getInternalFormat().getPixelFormat().isInteger()) {
+			filter = GL20C.GL_NEAREST;
+		}
 
-		IrisRenderSystem.texParameteri(target.getAltTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(target.getMainTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
+		IrisRenderSystem.texParameteri(target.getAltTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
 
 		RenderSystem.bindTexture(0);
 	}
@@ -347,7 +357,7 @@ public class FinalPassRenderer {
 		}
 
 		// TODO: Don't duplicate this with CompositeRenderer
-		builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
+		centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth"));
 
 		Program build = builder.build();
 
@@ -393,7 +403,7 @@ public class FinalPassRenderer {
 				}
 
 				// TODO: Don't duplicate this with FinalPassRenderer
-				builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
+				centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth"));
 
 				programs[i] = builder.buildCompute();
 
@@ -411,5 +421,6 @@ public class FinalPassRenderer {
 		if (finalPass != null) {
 			finalPass.destroy();
 		}
+		colorHolder.destroy();
 	}
 }

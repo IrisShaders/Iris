@@ -19,6 +19,7 @@ import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.minecraft.resources.ResourceLocation;
@@ -119,7 +120,7 @@ public class SodiumTerrainPipeline {
 
 
 		terrainSource.ifPresentOrElse(sources -> {
-			terrainBlendOverride = sources.getDirectives().getBlendModeOverride();
+			terrainBlendOverride = sources.getDirectives().getBlendModeOverride().orElse(ProgramId.Terrain.getBlendModeOverride());
 			terrainBufferOverrides = new ArrayList<>();
 			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
 				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());
@@ -154,7 +155,7 @@ public class SodiumTerrainPipeline {
 
 
 		translucentSource.ifPresentOrElse(sources -> {
-			translucentBlendOverride = sources.getDirectives().getBlendModeOverride();
+			translucentBlendOverride = sources.getDirectives().getBlendModeOverride().orElse(ProgramId.Water.getBlendModeOverride());
 			translucentBufferOverrides = new ArrayList<>();
 			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
 				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());
@@ -185,7 +186,7 @@ public class SodiumTerrainPipeline {
 		});
 
 		programSet.getShadow().ifPresentOrElse(sources -> {
-			shadowBlendOverride = sources.getDirectives().getBlendModeOverride();
+			shadowBlendOverride = sources.getDirectives().getBlendModeOverride().orElse(ProgramId.Shadow.getBlendModeOverride());
 			shadowBufferOverrides = new ArrayList<>();
 			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
 				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());

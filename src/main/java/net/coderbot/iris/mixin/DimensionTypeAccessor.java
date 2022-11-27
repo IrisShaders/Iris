@@ -10,4 +10,8 @@ import java.util.OptionalLong;
 public interface DimensionTypeAccessor {
 	@Accessor
 	OptionalLong getFixedTime();
+
+	@Accessor
+	float getAmbientLight();
+
 }

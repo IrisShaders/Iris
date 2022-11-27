@@ -333,11 +333,10 @@ public class ShaderPack {
 	}
 
 	private JsonObject loadMcMeta(Path mcMetaPath) throws IOException, JsonParseException {
-		BufferedReader reader =
-				new BufferedReader(new InputStreamReader(Files.newInputStream(mcMetaPath), StandardCharsets.UTF_8));
-
-		JsonReader jsonReader = new JsonReader(reader);
-		return GSON.getAdapter(JsonObject.class).read(jsonReader);
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(mcMetaPath), StandardCharsets.UTF_8))) {
+			JsonReader jsonReader = new JsonReader(reader);
+			return GSON.getAdapter(JsonObject.class).read(jsonReader);
+		}
 	}
 
 	private static String readProperties(Path shaderPath, String name) {

@@ -175,7 +175,7 @@ public class CompositeRenderer {
 		}
 	}
 
-	private class Pass {
+	private static class Pass {
 		int[] drawBuffers;
 		int viewWidth;
 		int viewHeight;
@@ -291,7 +291,13 @@ public class CompositeRenderer {
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
 		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
-		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR_MIPMAP_LINEAR);
+
+		int filter = GL20C.GL_LINEAR_MIPMAP_LINEAR;
+		if (target.getInternalFormat().getPixelFormat().isInteger()) {
+			filter = GL20C.GL_NEAREST_MIPMAP_NEAREST;
+		}
+
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
@@ -336,7 +342,7 @@ public class CompositeRenderer {
 		}
 
 		// TODO: Don't duplicate this with FinalPassRenderer
-		builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
+		centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth"));
 
 		Program build = builder.build();
 
@@ -383,7 +389,7 @@ public class CompositeRenderer {
 				}
 
 				// TODO: Don't duplicate this with FinalPassRenderer
-				builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth");
+				centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth"));
 
 				programs[i] = builder.buildCompute();
 

@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import io.github.douira.glsl_transformer.ast.node.expression.Expression;
+import net.coderbot.iris.Iris;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,6 +49,9 @@ import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
+	private static final AutoHintedMatcher<Expression> sildursWaterFract = new AutoHintedMatcher<>(
+		"fract(worldpos.y + 0.001)", Matcher.expressionPattern);
+
 	private static StorageQualifier getConstQualifier(TypeQualifier qualifier) {
 		if (qualifier == null) {
 			return null;
@@ -63,6 +68,13 @@ public class CompatibilityTransformer {
 	}
 
 	public static void transformEach(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
+		if (parameters.type == PatchShaderType.VERTEX) {
+			if (root.replaceExpressionMatches(t, sildursWaterFract, "fract(worldpos.y + 0.01)")) {
+				Iris.logger.warn("Patched fract(worldpos.y + 0.001) to fract(worldpos.y + 0.01) to fix " +
+					"waving water disconnecting from other water blocks; See https://github.com/IrisShaders/Iris/issues/509");
+			}
+		}
+
 		/**
 		 * Removes const storage qualifier from declarations in functions if they are
 		 * initialized with const parameters. Const parameters are immutable parameters
@@ -348,7 +360,10 @@ public class CompatibilityTransformer {
 							.getNodeMatch("name*", DeclarationMember.class)
 							.getAncestor(TypeAndInitDeclaration.class)
 							.getMembers()) {
-						outDeclarations.put(member.getName().getName(), extractedType);
+								String name = member.getName().getName();
+								if (!name.startsWith("gl_")) {
+									outDeclarations.put(name, extractedType);
+								}
 					}
 				}
 			}
@@ -373,6 +388,9 @@ public class CompatibilityTransformer {
 							.getAncestor(TypeAndInitDeclaration.class)
 							.getMembers()) {
 						String name = inDeclarationMember.getName().getName();
+						if (name.startsWith("gl_")) {
+							continue;
+						}
 
 						// patch missing declarations with an initialization
 						if (!outDeclarations.containsKey(name)) {

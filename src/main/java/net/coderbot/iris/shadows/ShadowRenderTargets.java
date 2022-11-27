@@ -100,6 +100,7 @@ public class ShadowRenderTargets {
 			target.destroy();
 		}
 
+		mainDepth.destroy();
 		noTranslucents.destroy();
 	}
 

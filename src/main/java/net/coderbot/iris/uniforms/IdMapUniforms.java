@@ -9,10 +9,13 @@ import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.function.IntSupplier;
@@ -26,7 +29,7 @@ public final class IdMapUniforms {
 
 	public static void addIdMapUniforms(FrameUpdateNotifier notifier, UniformHolder uniforms, IdMap idMap, boolean isOldHandLight) {
 		HeldItemSupplier mainHandSupplier = new HeldItemSupplier(InteractionHand.MAIN_HAND, idMap.getItemIdMap(), isOldHandLight);
-		HeldItemSupplier offHandSupplier = new HeldItemSupplier(InteractionHand.OFF_HAND, idMap.getItemIdMap(), isOldHandLight);
+		HeldItemSupplier offHandSupplier = new HeldItemSupplier(InteractionHand.OFF_HAND, idMap.getItemIdMap(), false);
 		notifier.addListener(mainHandSupplier::update);
 		notifier.addListener(offHandSupplier::update);
 
@@ -59,34 +62,70 @@ public final class IdMapUniforms {
 			this.applyOldHandLight = shouldApplyOldHandLight && hand == InteractionHand.MAIN_HAND;
 		}
 
+		private void invalidate() {
+			intID = -1;
+			lightValue = 0;
+			lightColor = IrisItemLightProvider.DEFAULT_LIGHT_COLOR;
+		}
+
 		public void update() {
-			if (Minecraft.getInstance().player == null) {
+			LocalPlayer player = Minecraft.getInstance().player;
+
+			if (player == null) {
 				// Not valid when the player doesn't exist
-				intID = -1;
-				lightValue = 0;
-				lightColor = IrisItemLightProvider.DEFAULT_LIGHT_COLOR;
+				invalidate();
 				return;
 			}
 
-			ItemStack heldStack = Minecraft.getInstance().player.getItemInHand(hand);
+			ItemStack heldStack = player.getItemInHand(hand);
 
-			if (heldStack != null) {
-				if (applyOldHandLight) {
-					lightValue = ((IrisItemLightProvider) heldStack.getItem()).getLightEmission(Minecraft.getInstance().player, heldStack);
-					ItemStack offHandStack = Minecraft.getInstance().player.getItemInHand(InteractionHand.OFF_HAND);
-					if (lightValue < (((IrisItemLightProvider) offHandStack.getItem()).getLightEmission(Minecraft.getInstance().player, Minecraft.getInstance().player.getItemInHand(InteractionHand.OFF_HAND)))) {
-						heldStack = offHandStack;
-						lightValue = (((IrisItemLightProvider) offHandStack.getItem()).getLightEmission(Minecraft.getInstance().player, Minecraft.getInstance().player.getItemInHand(InteractionHand.OFF_HAND)));
-					}
-				} else {
-					lightValue = ((IrisItemLightProvider) heldStack.getItem()).getLightEmission(Minecraft.getInstance().player, heldStack);
-				}
-
-				lightColor = ((IrisItemLightProvider) heldStack.getItem()).getLightColor(Minecraft.getInstance().player, heldStack);
-
-				ResourceLocation heldItemId = Registry.ITEM.getKey(heldStack.getItem());
-				intID = itemIdMap.applyAsInt(new NamespacedId(heldItemId.getNamespace(), heldItemId.getPath()));
+			if (heldStack == null) {
+				invalidate();
+				return;
 			}
+
+			Item heldItem = heldStack.getItem();
+
+			if (heldItem == null) {
+				invalidate();
+				return;
+			}
+
+			ResourceLocation heldItemId = Registry.ITEM.getKey(heldItem);
+			intID = itemIdMap.applyAsInt(new NamespacedId(heldItemId.getNamespace(), heldItemId.getPath()));
+
+			IrisItemLightProvider lightProvider = (IrisItemLightProvider) heldItem;
+			lightValue = lightProvider.getLightEmission(Minecraft.getInstance().player, heldStack);
+
+			if (applyOldHandLight) {
+				lightProvider = applyOldHandLighting(player, lightProvider);
+			}
+
+			lightColor = lightProvider.getLightColor(Minecraft.getInstance().player, heldStack);
+		}
+
+		private IrisItemLightProvider applyOldHandLighting(@NotNull LocalPlayer player, IrisItemLightProvider existing) {
+			ItemStack offHandStack = player.getItemInHand(InteractionHand.OFF_HAND);
+
+			if (offHandStack == null) {
+				return existing;
+			}
+
+			Item offHandItem = offHandStack.getItem();
+
+			if (offHandItem == null) {
+				return existing;
+			}
+
+			IrisItemLightProvider lightProvider = (IrisItemLightProvider) offHandItem;
+			int newEmission = lightProvider.getLightEmission(Minecraft.getInstance().player,  offHandStack);
+
+			if (lightValue < newEmission) {
+				lightValue = newEmission;
+				return lightProvider;
+			}
+
+			return existing;
 		}
 
 		public int getIntID() {
