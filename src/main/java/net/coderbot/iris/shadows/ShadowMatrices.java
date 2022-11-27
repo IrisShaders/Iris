@@ -1,4 +1,4 @@
-package net.coderbot.iris.shadow;
+package net.coderbot.iris.shadows;
 
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;

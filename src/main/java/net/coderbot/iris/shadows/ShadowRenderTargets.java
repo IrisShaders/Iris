@@ -52,6 +52,9 @@ public class ShadowRenderTargets {
 				.setInternalFormat(settings.getFormat())
 				.setPixelFormat(settings.getFormat().getPixelFormat()).build();
 			formats[i] = settings.getFormat();
+			if (settings.getClear()) {
+				buffersToBeCleared.add(i);
+			}
 
 			if (settings.getClear()) {
 				buffersToBeCleared.add(i);
