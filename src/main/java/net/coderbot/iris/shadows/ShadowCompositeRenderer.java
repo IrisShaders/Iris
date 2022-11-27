@@ -14,6 +14,7 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
+import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.postprocess.CompositeRenderer;
@@ -28,6 +29,7 @@ import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -45,14 +47,16 @@ public class ShadowCompositeRenderer {
 	private final FrameUpdateNotifier updateNotifier;
 	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
+	private final CustomUniforms customUniforms;
 
 	public ShadowCompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, ShadowRenderTargets renderTargets,
 								   IntSupplier noiseTexture, FrameUpdateNotifier updateNotifier,
-								   Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips) {
+								   Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips, CustomUniforms customUniforms) {
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.renderTargets = renderTargets;
 		this.customTextureIds = customTextureIds;
+		this.customUniforms = customUniforms;
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -163,7 +167,6 @@ public class ShadowCompositeRenderer {
 
 	public void renderAll() {
 		RenderSystem.disableBlend();
-		RenderSystem.disableAlphaTest();
 
 		FullScreenQuadRenderer.INSTANCE.begin();
 
@@ -172,6 +175,8 @@ public class ShadowCompositeRenderer {
 			for (ComputeProgram computeProgram : renderPass.computes) {
 				if (computeProgram != null) {
 					ranCompute = true;
+					computeProgram.use();
+					this.customUniforms.push(computeProgram);
 					com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 					computeProgram.dispatch(main.width, main.height);
 				}
@@ -202,10 +207,12 @@ public class ShadowCompositeRenderer {
 			renderPass.framebuffer.bind();
 			renderPass.program.use();
 
+			this.customUniforms.push(renderPass.program);
+
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 		}
 
-		FullScreenQuadRenderer.end();
+		FullScreenQuadRenderer.INSTANCE.end();
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		ProgramUniforms.clearActiveUniforms();
@@ -270,14 +277,18 @@ public class ShadowCompositeRenderer {
 
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
-		CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
+		CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
+		this.customUniforms.assignTo(builder);
 
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 
 		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped);
 		IrisImages.addShadowColorImages(builder, targets, flipped);
 
-		return builder.build();
+		Program build = builder.build();
+		this.customUniforms.mapholderToPass(builder, build);
+
+		return build;
 	}
 
 	private ComputeProgram[] createComputes(ComputeSource[] sources, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
@@ -301,14 +312,17 @@ public class ShadowCompositeRenderer {
 
 				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
-				CommonUniforms.addCommonUniforms(builder, source.getParent().getPack().getIdMap(), source.getParent().getPackDirectives(), updateNotifier);
-
+				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
+				this.customUniforms.assignTo(builder);
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 
 				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped);
 				IrisImages.addShadowColorImages(builder, targets, flipped);
 
 				programs[i] = builder.buildCompute();
+
+				this.customUniforms.mapholderToPass(builder, programs[i]);
+
 
 				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
 			}

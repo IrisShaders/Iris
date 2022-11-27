@@ -314,7 +314,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
 			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
 			this.shadowCompositeRenderer = new ShadowCompositeRenderer(programs.getPackDirectives(), programs.getShadowComposite(), programs.getShadowCompCompute(), this.shadowRenderTargets, customTextureManager.getNoiseTexture(), updateNotifier,
-				customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), programs.getPackDirectives().getExplicitFlips("shadowcomp_pre"));
+				customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), programs.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customUniforms);
 			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
 				programs.getPackDirectives(), shadowRenderTargets, shadowCompositeRenderer, customUniforms);
 		} else {
