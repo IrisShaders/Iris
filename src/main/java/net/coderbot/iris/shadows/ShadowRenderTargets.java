@@ -25,6 +25,7 @@ public class ShadowRenderTargets {
 	private final DepthTexture noTranslucents;
 	private final GlFramebuffer depthSourceFb;
 	private final GlFramebuffer noTranslucentsDestFb;
+	private final GlFramebuffer mainRenderBuffer;
 	private final boolean[] flipped;
 
 	private final List<GlFramebuffer> ownedFramebuffers;
@@ -72,6 +73,8 @@ public class ShadowRenderTargets {
 		fullClearRequired = true;
 
 		this.depthSourceFb = createFramebufferWritingToMain(new int[] {0});
+		this.mainRenderBuffer = createFramebufferWritingToMain(new int[] { 0, 1 });
+		this.mainRenderBuffer.addDepthAttachment(this.mainDepth.getTextureId());
 
 		this.noTranslucentsDestFb = createFramebufferWritingToMain(new int[] {0});
 		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents.getTextureId());
@@ -177,6 +180,10 @@ public class ShadowRenderTargets {
 		framebuffer.noDrawBuffers();
 
 		return framebuffer;
+	}
+
+	public GlFramebuffer getMainRenderBuffer() {
+		return mainRenderBuffer;
 	}
 
 	public GlFramebuffer createShadowFramebuffer(ImmutableSet<Integer> stageWritesToAlt, int[] drawBuffers) {
