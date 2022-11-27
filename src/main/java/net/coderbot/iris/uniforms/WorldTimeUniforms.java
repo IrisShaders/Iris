@@ -36,7 +36,7 @@ public final class WorldTimeUniforms {
 			return (int) (timeOfDay % 24000L);
 		}
 
-		long dayTime = ((DimensionTypeAccessor) getWorld().dimensionType()).getFixedTime()
+		long dayTime = getWorld().dimensionType().fixedTime()
 																		  .orElse(timeOfDay % 24000L);
 
 		return (int) dayTime;

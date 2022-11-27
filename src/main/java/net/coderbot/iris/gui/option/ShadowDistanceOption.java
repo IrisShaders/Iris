@@ -1,32 +1,24 @@
 package net.coderbot.iris.gui.option;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
-import net.minecraft.client.ProgressOption;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.FormattedCharSequence;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
-public class ShadowDistanceOption extends ProgressOption {
-	private final Function<Minecraft, List<FormattedCharSequence>> shadowTooltipsGetter;
+public class ShadowDistanceOption<T> extends OptionInstance<T> {
+	private final TooltipSupplierFactory<T> tooltipSupplier;
 
-	public ShadowDistanceOption(String key, double min, double max, float step, Function<Options, Double> getter,
-								BiConsumer<Options, Double> setter,
-								BiFunction<Options, ProgressOption, Component> displayStringGetter,
-								Function<Minecraft, List<FormattedCharSequence>> tooltipsGetter) {
-		super(key, min, max, step, getter, setter, displayStringGetter, tooltipsGetter);
+	public ShadowDistanceOption(String string, TooltipSupplierFactory<T> arg, CaptionBasedToString<T> arg2, OptionInstance.ValueSet<T> arg3, T object, Consumer<T> consumer) {
+		super(string, arg, arg2, arg3, object, consumer);
 
-		shadowTooltipsGetter = tooltipsGetter;
+		this.tooltipSupplier = arg;
 	}
 
 	@Override
 	public AbstractWidget createButton(Options options, int x, int y, int width) {
-		List<FormattedCharSequence> list = shadowTooltipsGetter.apply(Minecraft.getInstance());
-		AbstractWidget widget = new ShadowDistanceSliderButton(options, x, y, width, 20, this, list);
+		TooltipSupplier<T> lv = this.tooltipSupplier.apply(Minecraft.getInstance());
+		AbstractWidget widget = this.values().createButton(lv, options, x, y, width).apply(this);
 
 		widget.active = IrisVideoSettings.isShadowDistanceSliderEnabled();
 

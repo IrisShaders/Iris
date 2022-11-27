@@ -10,14 +10,14 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+
+
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
 
 public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElement> {
-	private static final Component ARROW = new TextComponent(">");
+	private static final Component ARROW = Component.literal(">");
 
 	private final String targetScreenId;
 	private final MutableComponent label;
@@ -30,7 +30,7 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 		super(element);
 
 		this.targetScreenId = element.targetScreenId;
-		this.label = GuiUtil.translateOrDefault(new TextComponent(element.targetScreenId), "screen." + element.targetScreenId);
+		this.label = GuiUtil.translateOrDefault(Component.literal(element.targetScreenId), "screen." + element.targetScreenId);
 	}
 
 	@Override
@@ -85,6 +85,6 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 	@Override
 	public Optional<Component> getCommentBody() {
 		String translation = "screen." + this.targetScreenId + ".comment";
-		return Optional.ofNullable(I18n.exists(translation) ? new TranslatableComponent(translation) : null);
+		return Optional.ofNullable(I18n.exists(translation) ? Component.translatable(translation) : null);
 	}
 }

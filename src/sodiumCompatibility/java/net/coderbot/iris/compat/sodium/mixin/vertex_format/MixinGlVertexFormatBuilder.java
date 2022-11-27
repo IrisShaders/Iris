@@ -13,7 +13,7 @@ import java.util.EnumMap;
 @Mixin(GlVertexFormat.Builder.class)
 public class MixinGlVertexFormatBuilder {
 	private static final GlVertexAttribute EMPTY
-			= new GlVertexAttribute(GlVertexAttributeFormat.FLOAT, 0, false, 0, 0);
+			= new GlVertexAttribute(GlVertexAttributeFormat.FLOAT, 0, false, 0, 0, false);
 
 	@Redirect(method = "build",
 			at = @At(value = "INVOKE",

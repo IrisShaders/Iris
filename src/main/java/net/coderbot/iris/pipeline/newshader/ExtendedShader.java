@@ -218,16 +218,19 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	@Override
 	public void iris$createGeometryShader(ResourceProvider factory, String name) throws IOException {
-		Resource geometry = factory.getResource(new ResourceLocation("minecraft", name + "_geometry.gsh"));
-		if (geometry != null) {
-			this.geometry = Program.compileShader(IrisProgramTypes.GEOMETRY, name, geometry.getInputStream(), geometry.getSourceName(), new GlslPreprocessor() {
-				@Nullable
-				@Override
-				public String applyImport(boolean bl, String string) {
-					return null;
-				}
-			});
-		}
+		 factory.getResource(new ResourceLocation("minecraft", name + "_geometry.gsh")).ifPresent(geometry -> {
+			 try {
+				 this.geometry = Program.compileShader(IrisProgramTypes.GEOMETRY, name, geometry.open(), geometry.sourcePackId(), new GlslPreprocessor() {
+					 @Nullable
+					 @Override
+					 public String applyImport(boolean bl, String string) {
+						 return null;
+					 }
+				 });
+			 } catch (IOException e) {
+				 e.printStackTrace();
+			 }
+		 });
 	}
 
 	public Program getGeometry() {

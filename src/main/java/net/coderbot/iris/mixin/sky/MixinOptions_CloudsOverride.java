@@ -3,7 +3,9 @@ package net.coderbot.iris.mixin.sky;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.CloudSetting;
 import net.minecraft.client.CloudStatus;
+import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,13 +21,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value = Options.class, priority = 1010)
 public class MixinOptions_CloudsOverride {
 	@Shadow
-	public int renderDistance;
+	@Final
+	private OptionInstance<Integer> renderDistance;
 
 	@Inject(method = "getCloudsType", at = @At("HEAD"), cancellable = true)
 	private void iris$overrideCloudsType(CallbackInfoReturnable<CloudStatus> cir) {
 		// Vanilla does not render clouds on low render distances, we have to mirror that check
 		// when injecting at the head.
-		if (renderDistance < 4) {
+		if (renderDistance.get() < 4) {
 			return;
 		}
 
