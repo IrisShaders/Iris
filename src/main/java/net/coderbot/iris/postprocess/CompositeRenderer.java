@@ -1,5 +1,6 @@
 package net.coderbot.iris.postprocess;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.IntSupplier;
@@ -115,7 +116,6 @@ public class CompositeRenderer {
 			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
 			int[] drawBuffers = directives.getDrawBuffers();
 
-			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
 			int passWidth = 0, passHeight = 0;
 			// Flip the buffers that this shader wrote to, and set pass width and height
@@ -124,7 +124,7 @@ public class CompositeRenderer {
 			for (int buffer : drawBuffers) {
 				RenderTarget target = renderTargets.get(buffer);
 				if ((passWidth > 0 && passWidth != target.getWidth()) || (passHeight > 0 && passHeight != target.getHeight())) {
-					throw new IllegalStateException("Pass widths must match");
+					throw new IllegalStateException("Pass sizes must match for drawbuffers " + Arrays.toString(drawBuffers) + "\nOriginal width: " + passWidth + " New width: " + target.getWidth()+ " Original height: " + passHeight + " New height: " + target.getHeight()) ;
 				}
 				passWidth = target.getWidth();
 				passHeight = target.getHeight();
@@ -137,6 +137,8 @@ public class CompositeRenderer {
 				bufferFlipper.flip(buffer);
 				flippedAtLeastOnce.add(buffer);
 			}
+
+			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
 			explicitFlips.forEach((buffer, shouldFlip) -> {
 				if (shouldFlip) {

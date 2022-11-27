@@ -97,11 +97,11 @@ public class GlFramebuffer extends GlResource {
 		GlStateManager._glDeleteFramebuffers(getGlId());
 	}
 
-	public boolean isComplete() {
+	public int getStatus() {
 		bind();
 		int status = GlStateManager.glCheckFramebufferStatus(GL30C.GL_FRAMEBUFFER);
 
-		return status == GL30C.GL_FRAMEBUFFER_COMPLETE;
+		return status;
 	}
 
 	public int getId() {

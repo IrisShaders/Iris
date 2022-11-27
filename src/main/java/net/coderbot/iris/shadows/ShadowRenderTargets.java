@@ -1,8 +1,6 @@
 package net.coderbot.iris.shadows;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.gl.IrisRenderSystem;
@@ -13,7 +11,6 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
-import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
@@ -252,7 +249,8 @@ public class ShadowRenderTargets {
 		framebuffer.drawBuffers(actualDrawBuffers);
 		framebuffer.readBuffer(0);
 
-		if (!framebuffer.isComplete()) {
+		int status = framebuffer.getStatus();
+		if (status != GL30C.GL_FRAMEBUFFER_COMPLETE) {
 			throw new IllegalStateException("Unexpected error while creating framebuffer");
 		}
 
