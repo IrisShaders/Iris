@@ -143,6 +143,16 @@ public class CustomUniformFixedInputUniformsHolder {
 		}
 
 		@Override
+		public UniformHolder uniform4fArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
+			Vector4f held = new Vector4f();
+			return this.put(name, new Float4VectorCachedUniform(name, updateFrequency, () -> {
+				float[] vec = value.get();
+				held.set(vec);
+				return held;
+			}));
+		}
+
+		@Override
 		public UniformHolder uniformMatrix(
 				UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Matrix4f> value) {
 			Matrix4f held = new Matrix4f();

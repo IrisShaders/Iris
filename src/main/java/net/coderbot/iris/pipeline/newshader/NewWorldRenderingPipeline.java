@@ -577,7 +577,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		if (isShadowPass || IrisImages.hasShadowImages(images)) {
 			// Note: hasShadowSamplers currently queries for shadow images too, so the shadow render targets will be
 			// created by this point... that's sorta ugly, though.
-			IrisImages.addShadowColorImages(images, Objects.requireNonNull(shadowRenderTargets));
+			IrisImages.addShadowColorImages(images, Objects.requireNonNull(shadowRenderTargets), null);
 		}
 	}
 
