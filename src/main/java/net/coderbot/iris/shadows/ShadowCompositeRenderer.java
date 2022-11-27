@@ -13,11 +13,12 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.gl.texture.TextureAccess;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
-import net.coderbot.iris.postprocess.CompositeRenderer;
 import net.coderbot.iris.postprocess.FullScreenQuadRenderer;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.samplers.IrisImages;
@@ -27,6 +28,7 @@ import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
@@ -37,25 +39,28 @@ import org.lwjgl.opengl.GL30C;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.IntSupplier;
 
 public class ShadowCompositeRenderer {
 	private final ShadowRenderTargets renderTargets;
 
 	private final ImmutableList<Pass> passes;
-	private final IntSupplier noiseTexture;
+	private final TextureAccess noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
-	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
+	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
 	private final CustomUniforms customUniforms;
+	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
+	private final WorldRenderingPipeline pipeline;
 
-	public ShadowCompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, ShadowRenderTargets renderTargets,
-								   IntSupplier noiseTexture, FrameUpdateNotifier updateNotifier,
-								   Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips, CustomUniforms customUniforms) {
+	public ShadowCompositeRenderer(WorldRenderingPipeline pipeline, PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, ShadowRenderTargets renderTargets,
+								   TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
+								   Object2ObjectMap<String, TextureAccess> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips, Object2ObjectMap<String, TextureAccess> irisCustomTextures, CustomUniforms customUniforms) {
+		this.pipeline = pipeline;
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.renderTargets = renderTargets;
 		this.customTextureIds = customTextureIds;
+		this.irisCustomTextures = irisCustomTextures;
 		this.customUniforms = customUniforms;
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
@@ -258,7 +263,7 @@ public class ShadowCompositeRenderer {
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
 			source.getVertexSource().orElseThrow(NullPointerException::new),
 			source.getGeometrySource().orElse(null),
-			source.getFragmentSource().orElseThrow(NullPointerException::new));
+			source.getFragmentSource().orElseThrow(NullPointerException::new), TextureStage.SHADOWCOMP, pipeline.getTextureMap());
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);

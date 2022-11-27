@@ -226,6 +226,7 @@ public class TransformPatcher {
 							switch (parameters.patch) {
 								case COMPOSITE:
 									CompositeTransformer.transform(transformer, tree, root, parameters);
+									TextureTransformer.transform(transformer, tree, root, ((CompositeParameters) parameters).stage, ((CompositeParameters) parameters).getTextureMap());
 									break;
 								case SODIUM:
 									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
@@ -241,7 +242,6 @@ public class TransformPatcher {
 								default:
 									throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
 							}
-							TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, ((SodiumParameters) parameters).getTextureMap());
 
 					}
 					CompatibilityTransformer.transformEach(transformer, tree, root, parameters);
@@ -325,8 +325,8 @@ public class TransformPatcher {
 	}
 
 	public static Map<PatchShaderType, String> patchAttributes(String vertex, String geometry, String fragment,
-			InputAvailability inputs) {
-		return transform(vertex, geometry, fragment, new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs));
+			InputAvailability inputs, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(vertex, geometry, fragment, new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs, textureMap));
 	}
 
 	public static Map<PatchShaderType, String> patchVanilla(
@@ -344,11 +344,11 @@ public class TransformPatcher {
 						textureScale, textureMap));
 	}
 
-	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
-		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE));
+	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment, TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE, stage, textureMap));
 	}
 
-	public static String patchCompute(String compute, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE, textureMap)).getOrDefault(PatchShaderType.COMPUTE, null);
+	public static String patchCompute(String compute) {
+		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE)).getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 }

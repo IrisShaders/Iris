@@ -2,6 +2,8 @@ package net.coderbot.iris.pipeline.transform;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 

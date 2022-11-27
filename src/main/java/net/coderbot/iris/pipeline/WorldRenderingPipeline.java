@@ -1,9 +1,13 @@
 package net.coderbot.iris.pipeline;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.shaderpack.CloudSetting;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 
@@ -16,7 +20,9 @@ public interface WorldRenderingPipeline {
 	void addDebugText(List<String> messages);
 	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
 
-	WorldRenderingPhase getPhase();
+    Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap();
+
+    WorldRenderingPhase getPhase();
 
 	void beginSodiumTerrainRendering();
 	void endSodiumTerrainRendering();

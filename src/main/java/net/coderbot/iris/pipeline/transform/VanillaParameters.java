@@ -1,19 +1,29 @@
 package net.coderbot.iris.pipeline.transform;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 public class VanillaParameters extends OverlayParameters {
 	public final AlphaTest alpha;
 	public final ShaderAttributeInputs inputs;
 	public final boolean hasChunkOffset;
+	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 
 	public VanillaParameters(Patch patch, AlphaTest alpha, boolean hasChunkOffset,
-			ShaderAttributeInputs inputs, boolean hasGeometry) {
+			ShaderAttributeInputs inputs, boolean hasGeometry, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		super(patch, hasGeometry);
 		this.alpha = alpha;
 		this.hasChunkOffset = hasChunkOffset;
+		this.textureMap = textureMap;
 		this.inputs = inputs;
+	}
+
+	public Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap() {
+		return textureMap;
 	}
 
 	@Override

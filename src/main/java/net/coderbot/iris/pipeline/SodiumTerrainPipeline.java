@@ -135,7 +135,7 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				terrainCutoutAlpha.get(), AlphaTest.ALWAYS, inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
 			terrainVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			terrainGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			terrainCutoutFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT_CUTOUT));
@@ -170,7 +170,7 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				null, translucentAlpha.get(), inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
 			translucentVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			translucentGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			translucentFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
@@ -201,7 +201,7 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				shadowAlpha.get(), AlphaTest.ALWAYS, inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
 			shadowVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			shadowGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			shadowCutoutFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT_CUTOUT));

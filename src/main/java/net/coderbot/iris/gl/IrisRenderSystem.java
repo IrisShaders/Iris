@@ -16,6 +16,7 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL40C;
+import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL45C;
 import org.lwjgl.system.MemoryUtil;
 
@@ -71,7 +72,7 @@ public class IrisRenderSystem {
 	}
 
 	public static void texImage1D(int texture, int target, int level, int internalformat, int width, int border, int format, int type, @Nullable ByteBuffer pixels) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL30C.glTexImage1D(target, level, internalformat, width, border, format, type, pixels);
 	}
@@ -83,7 +84,7 @@ public class IrisRenderSystem {
 	}
 
 	public static void texImage3D(int texture, int target, int level, int internalformat, int width, int height, int depth, int border, int format, int type, @Nullable ByteBuffer pixels) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL30C.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
 	}
