@@ -16,6 +16,8 @@
   "iris.sodium.failure.download": "下載 Sodium",
   "iris.sodium.failure.reason.notFound": "為了讓 Iris 有良好的效能表現，您需要安裝 Sodium。請先下載它、將它存放於模組資料夾後重新啟動遊戲。",
   "iris.sodium.failure.reason.incompatible": "為了讓 Iris 有良好的效能表現，您需要安裝版本相容的 Sodium。請先下載正確的版本、將它存放於模組資料夾、移除不正確的版本後重新啟動遊戲。",
+  "iris.nec.failure.title": "%s：已偵測到｢Not Enough Crashes」！",
+  "iris.nec.failure.description": "「Not Enough Crashes」可能會在處理崩潰問題時，對遊戲造成嚴重破壞，並且無法提供精確結果。\n建議使用「MixinTrace」和「Crafty Crashes」替代，他們在辨識崩潰原因上更可靠，並且不會讓遊戲處於無效狀態。",
   "iris.unsupported.irisorpc": "Iris 或您的電腦",
   "iris.unsupported.iris": "Iris",
   "iris.unsupported.pc": "您的電腦",
