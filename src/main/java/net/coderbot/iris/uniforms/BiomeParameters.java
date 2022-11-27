@@ -2,10 +2,14 @@ package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.uniform.FloatSupplier;
 import net.coderbot.iris.gl.uniform.UniformHolder;
+import net.coderbot.iris.parsing.BiomeCategories;
+import net.coderbot.iris.parsing.ExtendedBiome;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.Holder;
 import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.level.biome.Biome;
 
 import java.util.Locale;
@@ -23,7 +27,16 @@ public class BiomeParameters {
 		uniforms
 				.uniform1i(PER_TICK, "biome", playerI(player ->
 						BuiltinRegistries.BIOME.getId(player.level.getBiome(player.blockPosition()).value())))
-				.uniform1i(PER_TICK, "biome_category", () -> 0)
+				.uniform1i(PER_TICK, "biome_category", playerI(player -> {
+					Holder<Biome> holder = player.level.getBiome(player.blockPosition());
+					ExtendedBiome extendedBiome = ((ExtendedBiome) (Object) holder.value());
+					if (extendedBiome.getBiomeCategory() == -1) {
+						extendedBiome.setBiomeCategory(getBiomeCategory(holder).ordinal());
+						return extendedBiome.getBiomeCategory();
+					} else {
+						return extendedBiome.getBiomeCategory();
+					}
+				}))
 				.uniform1i(PER_TICK, "biome_precipitation", playerI(player -> {
 					Biome.Precipitation precipitation = player.level.getBiome(player.blockPosition()).value().getPrecipitation();
 					switch (precipitation){
@@ -51,6 +64,47 @@ public class BiomeParameters {
 
 	}
 
+	private static BiomeCategories getBiomeCategory(Holder<Biome> holder) {
+		if (holder.is(BiomeTags.WITHOUT_WANDERING_TRADER_SPAWNS)) {
+			// Literally only the void has this...
+			return BiomeCategories.NONE;
+		} else if (holder.is(BiomeTags.IS_HILL)) {
+			return BiomeCategories.EXTREME_HILLS;
+		} else if (holder.is(BiomeTags.IS_TAIGA)) {
+			return BiomeCategories.TAIGA;
+		} else if (holder.is(BiomeTags.IS_OCEAN)) {
+			return BiomeCategories.OCEAN;
+		} else if (holder.is(BiomeTags.IS_JUNGLE)) {
+			return BiomeCategories.JUNGLE;
+		} else if (holder.is(BiomeTags.IS_FOREST)) {
+			return BiomeCategories.FOREST;
+		} else if (holder.is(BiomeTags.IS_BADLANDS)) {
+			return BiomeCategories.MESA;
+		} else if (holder.is(BiomeTags.IS_NETHER)) {
+			return BiomeCategories.NETHER;
+		} else if (holder.is(BiomeTags.IS_END)) {
+			return BiomeCategories.THE_END;
+		} else if (holder.is(BiomeTags.IS_BEACH)) {
+			return BiomeCategories.BEACH;
+		} else if (holder.is(BiomeTags.HAS_DESERT_PYRAMID)) {
+			return BiomeCategories.DESERT;
+		} else if (holder.is(BiomeTags.IS_RIVER)) {
+			return BiomeCategories.RIVER;
+		} else if (holder.is(BiomeTags.HAS_CLOSER_WATER_FOG)) {
+			return BiomeCategories.SWAMP;
+		} else if (holder.is(BiomeTags.PLAYS_UNDERWATER_MUSIC)) {
+			return BiomeCategories.UNDERGROUND;
+		} else if (holder.is(BiomeTags.WITHOUT_ZOMBIE_SIEGES)) {
+			return BiomeCategories.MUSHROOM;
+		} else if (holder.is(BiomeTags.HAS_VILLAGE_SNOWY)) {
+			return BiomeCategories.ICY;
+		} else if (holder.is(BiomeTags.IS_MOUNTAIN)) {
+			return BiomeCategories.MOUNTAIN;
+		} else {
+			return BiomeCategories.PLAINS;
+		}
+	}
+
 	public static void addBiomes(UniformHolder uniforms) {
 		for (Biome biome : BuiltinRegistries.BIOME) {
 			ResourceLocation id = BuiltinRegistries.BIOME.getKey(biome);
@@ -63,11 +117,11 @@ public class BiomeParameters {
 	}
 
 	public static void addCategories(UniformHolder uniforms) {
-		//Biome.BiomeCategory[] categories = Biome.BiomeCategory.values();
-		//for (int i = 0; i < categories.length; i++) {
-		//	int finalI = i;
-		//	uniforms.uniform1i(ONCE, "CAT_" + categories[i].getName().toUpperCase(Locale.ROOT), () -> finalI);
-		//}
+		BiomeCategories[] categories = BiomeCategories.values();
+		for (int i = 0; i < categories.length; i++) {
+			int finalI = i;
+			uniforms.uniform1i(ONCE, "CAT_" + categories[i].name().toUpperCase(Locale.ROOT), () -> finalI);
+		}
 	}
 
 	static IntSupplier playerI(ToIntFunction<LocalPlayer> function) {
