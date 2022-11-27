@@ -23,8 +23,7 @@ public class BiomeParameters {
 		uniforms
 				.uniform1i(PER_TICK, "biome", playerI(player ->
 						BuiltinRegistries.BIOME.getId(player.level.getBiome(player.blockPosition()).value())))
-				.uniform1i(PER_TICK, "biome_category", playerI(player ->
-						Biome.getBiomeCategory(player.level.getBiome(player.blockPosition())).ordinal()))
+				.uniform1i(PER_TICK, "biome_category", () -> 0)
 				.uniform1i(PER_TICK, "biome_precipitation", playerI(player -> {
 					Biome.Precipitation precipitation = player.level.getBiome(player.blockPosition()).value().getPrecipitation();
 					switch (precipitation){
@@ -64,11 +63,11 @@ public class BiomeParameters {
 	}
 
 	public static void addCategories(UniformHolder uniforms) {
-		Biome.BiomeCategory[] categories = Biome.BiomeCategory.values();
-		for (int i = 0; i < categories.length; i++) {
-			int finalI = i;
-			uniforms.uniform1i(ONCE, "CAT_" + categories[i].getName().toUpperCase(Locale.ROOT), () -> finalI);
-		}
+		//Biome.BiomeCategory[] categories = Biome.BiomeCategory.values();
+		//for (int i = 0; i < categories.length; i++) {
+		//	int finalI = i;
+		//	uniforms.uniform1i(ONCE, "CAT_" + categories[i].getName().toUpperCase(Locale.ROOT), () -> finalI);
+		//}
 	}
 
 	static IntSupplier playerI(ToIntFunction<LocalPlayer> function) {
