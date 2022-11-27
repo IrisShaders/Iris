@@ -99,7 +99,7 @@ public abstract class CustomTextureData {
 	public static final class RawData1D extends RawData {
 		private final int sizeX;
 
-		private RawData1D(byte[] content, InternalTextureFormat internalFormat,
+		public RawData1D(byte[] content, InternalTextureFormat internalFormat,
 						  PixelFormat pixelFormat, PixelType pixelType, int sizeX) {
 			super(content, internalFormat, pixelFormat, pixelType);
 
@@ -115,7 +115,7 @@ public abstract class CustomTextureData {
 		int sizeX;
 		int sizeY;
 
-		private RawData2D(byte[] content, InternalTextureFormat internalFormat,
+		public RawData2D(byte[] content, InternalTextureFormat internalFormat,
 						  PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY) {
 			super(content, internalFormat, pixelFormat, pixelType);
 
@@ -137,7 +137,7 @@ public abstract class CustomTextureData {
 		int sizeY;
 		int sizeZ;
 
-		private RawData3D(byte[] content, InternalTextureFormat internalFormat,
+		public RawData3D(byte[] content, InternalTextureFormat internalFormat,
 						  PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY, int sizeZ) {
 			super(content, internalFormat, pixelFormat, pixelType);
 

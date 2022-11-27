@@ -19,6 +19,9 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.gl.texture.TextureAccess;
+import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
@@ -32,6 +35,7 @@ import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -41,29 +45,39 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
+
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
 
 	private final ImmutableList<Pass> passes;
-	private final IntSupplier noiseTexture;
+	private final TextureAccess noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
-	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
+	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
 	private final CustomUniforms customUniforms;
+	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
+	private TextureStage textureStage;
+	private WorldRenderingPipeline pipeline;
 
-	public CompositeRenderer(PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets,
-							 IntSupplier noiseTexture, FrameUpdateNotifier updateNotifier,
+	public CompositeRenderer(WorldRenderingPipeline pipeline, PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets,
+							 TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
-							 Supplier<ShadowRenderTargets> shadowTargetsSupplier,
-							 Object2ObjectMap<String, IntSupplier> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips,
+							 Supplier<ShadowRenderTargets> shadowTargetsSupplier, TextureStage textureStage,
+							 Object2ObjectMap<String, TextureAccess> customTextureIds, Object2ObjectMap<String, TextureAccess> irisCustomTextures, ImmutableMap<Integer, Boolean> explicitPreFlips,
 							 CustomUniforms customUniforms) {
+		this.pipeline = pipeline;
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.renderTargets = renderTargets;
 		this.customTextureIds = customTextureIds;
 		this.customUniforms = customUniforms;
+		this.irisCustomTextures = irisCustomTextures;
+		this.textureStage = textureStage;
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -307,7 +321,7 @@ public class CompositeRenderer {
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
 			source.getVertexSource().orElseThrow(NullPointerException::new),
 			source.getGeometrySource().orElse(null),
-			source.getFragmentSource().orElseThrow(NullPointerException::new));
+			source.getFragmentSource().orElseThrow(NullPointerException::new), textureStage, ((DeferredWorldRenderingPipeline) pipeline).getTextureMap());
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
@@ -331,6 +345,8 @@ public class CompositeRenderer {
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+		IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+
 		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
@@ -378,6 +394,8 @@ public class CompositeRenderer {
 				customUniforms.assignTo(builder);
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+
 				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);

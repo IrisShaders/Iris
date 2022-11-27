@@ -14,7 +14,10 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
+import net.coderbot.iris.gl.texture.TextureAccess;
+import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.pipeline.newshader.FogMode;
@@ -28,6 +31,7 @@ import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -41,7 +45,6 @@ import org.lwjgl.opengl.GL30C;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class FinalPassRenderer {
@@ -52,24 +55,29 @@ public class FinalPassRenderer {
 	private final ImmutableList<SwapPass> swapPasses;
 	private final GlFramebuffer baseline;
 	private final GlFramebuffer colorHolder;
+	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
 	private int lastColorTextureId;
 	private int lastColorTextureVersion;
-	private final IntSupplier noiseTexture;
+	private final TextureAccess noiseTexture;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
-	private final Object2ObjectMap<String, IntSupplier> customTextureIds;
+	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
+	private WorldRenderingPipeline pipeline;
 	private final CustomUniforms customUniforms;
 
 	// TODO: The length of this argument list is getting a bit ridiculous
-	public FinalPassRenderer(ProgramSet pack, RenderTargets renderTargets, IntSupplier noiseTexture,
+	public FinalPassRenderer(WorldRenderingPipeline pipeline, ProgramSet pack, RenderTargets renderTargets, TextureAccess noiseTexture,
 							 FrameUpdateNotifier updateNotifier, ImmutableSet<Integer> flippedBuffers,
 							 CenterDepthSampler centerDepthSampler,
 							 Supplier<ShadowRenderTargets> shadowTargetsSupplier,
-							 Object2ObjectMap<String, IntSupplier> customTextureIds,
-							 ImmutableSet<Integer> flippedAtLeastOnce, CustomUniforms customUniforms) {
+							 Object2ObjectMap<String, TextureAccess> customTextureIds,
+							 Object2ObjectMap<String, TextureAccess> irisCustomTextures, ImmutableSet<Integer> flippedAtLeastOnce
+							, CustomUniforms customUniforms) {
+		this.pipeline = pipeline;
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.customTextureIds = customTextureIds;
+		this.irisCustomTextures = irisCustomTextures;
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -323,7 +331,7 @@ public class FinalPassRenderer {
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
 			source.getVertexSource().orElseThrow(NullPointerException::new),
 			source.getGeometrySource().orElse(null),
-			source.getFragmentSource().orElseThrow(NullPointerException::new));
+			source.getFragmentSource().orElseThrow(NullPointerException::new), TextureStage.COMPOSITE_AND_FINAL, ((DeferredWorldRenderingPipeline) pipeline).getTextureMap());
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
@@ -348,6 +356,7 @@ public class FinalPassRenderer {
 
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
 		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+		IrisSamplers.addCustomTextures(builder, irisCustomTextures);
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
@@ -392,6 +401,8 @@ public class FinalPassRenderer {
 				customUniforms.assignTo(builder);
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+
 				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);

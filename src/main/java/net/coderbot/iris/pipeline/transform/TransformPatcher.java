@@ -6,6 +6,10 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.helpers.Tri;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -191,6 +195,7 @@ public class TransformPatcher {
 					switch (parameters.patch) {
 						case ATTRIBUTES:
 							AttributeTransformer.transform(transformer, tree, root, (AttributeParameters) parameters);
+							TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, ((AttributeParameters) parameters).getTextureMap());
 							break;
 						case COMPUTE:
 							// we can assume the version is at least 400 because it's a compute shader
@@ -226,13 +231,18 @@ public class TransformPatcher {
 									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
 									sodiumParameters.setAlphaFor(type);
 									SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
+									TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, ((SodiumParameters) parameters).getTextureMap());
 									break;
 								case VANILLA:
 									VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+									TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, ((VanillaParameters) parameters).getTextureMap());
+
 									break;
 								default:
 									throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
 							}
+							TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, ((SodiumParameters) parameters).getTextureMap());
+
 					}
 					CompatibilityTransformer.transformEach(transformer, tree, root, parameters);
 				});
@@ -321,24 +331,24 @@ public class TransformPatcher {
 
 	public static Map<PatchShaderType, String> patchVanilla(
 			String vertex, String geometry, String fragment, AlphaTest alpha,
-			boolean hasChunkOffset, ShaderAttributeInputs inputs) {
+			boolean hasChunkOffset, ShaderAttributeInputs inputs, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
-				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, geometry != null));
+				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, geometry != null, textureMap));
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
 			AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale) {
+			float positionScale, float positionOffset, float textureScale, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
 				new SodiumParameters(Patch.SODIUM, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset,
-						textureScale));
+						textureScale, textureMap));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
 		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE));
 	}
 
-	public static String patchCompute(String compute) {
-		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE)).getOrDefault(PatchShaderType.COMPUTE, null);
+	public static String patchCompute(String compute, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE, textureMap)).getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 }

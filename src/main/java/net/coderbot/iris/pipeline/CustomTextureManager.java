@@ -7,6 +7,10 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
+import net.coderbot.iris.gl.texture.GlTexture;
+import net.coderbot.iris.gl.texture.TextureAccess;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.gl.texture.TextureWrapper;
 import net.coderbot.iris.mixin.LightTextureAccessor;
 import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
 import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
@@ -31,11 +35,11 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.IntSupplier;
 
 public class CustomTextureManager {
-	private final EnumMap<TextureStage, Object2ObjectMap<String, IntSupplier>> customTextureIdMap = new EnumMap<>(TextureStage.class);
-	private final IntSupplier noise;
+	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureAccess>> customTextureIdMap = new EnumMap<>(TextureStage.class);
+	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures = new Object2ObjectOpenHashMap<>();
+	private final TextureAccess noise;
 
 	/**
 	 * List of all OpenGL texture objects owned by this CustomTextureManager that need to be deleted in order to avoid
@@ -43,12 +47,13 @@ public class CustomTextureManager {
 	 * Make sure any textures added to this list call releaseId from the close method.
 	 */
 	private final List<AbstractTexture> ownedTextures = new ArrayList<>();
+	private final List<GlTexture> ownedRawTextures = new ArrayList<>();
 
 	public CustomTextureManager(PackDirectives packDirectives,
 								EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap,
-								Optional<CustomTextureData> customNoiseTextureData) {
+								Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap, Optional<CustomTextureData> customNoiseTextureData) {
 		customTextureDataMap.forEach((textureStage, customTextureStageDataMap) -> {
-			Object2ObjectMap<String, IntSupplier> customTextureIds = new Object2ObjectOpenHashMap<>();
+			Object2ObjectMap<String, TextureAccess> customTextureIds = new Object2ObjectOpenHashMap<>();
 
 			customTextureStageDataMap.forEach((samplerName, textureData) -> {
 				try {
@@ -62,6 +67,14 @@ public class CustomTextureManager {
 			customTextureIdMap.put(textureStage, customTextureIds);
 		});
 
+		irisCustomTextureDataMap.forEach((name, texture) -> {
+			try {
+				irisCustomTextures.put(name, createCustomTexture(texture));
+			} catch (IOException e) {
+				Iris.logger.error("Unable to parse the image data for the custom texture on sampler " + name, e);
+			}
+		});
+
 		noise = customNoiseTextureData.flatMap(textureData -> {
 			try {
 				return Optional.of(createCustomTexture(textureData));
@@ -73,25 +86,42 @@ public class CustomTextureManager {
 		}).orElseGet(() -> {
 			final int noiseTextureResolution = packDirectives.getNoiseTextureResolution();
 
-			AbstractTexture texture = new NativeImageBackedNoiseTexture(noiseTextureResolution);
+			NativeImageBackedNoiseTexture texture = new NativeImageBackedNoiseTexture(noiseTextureResolution);
 			ownedTextures.add(texture);
 
-			return texture::getId;
+			return texture;
 		});
 	}
 
-	private IntSupplier createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
+	private TextureAccess createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
 		if (textureData instanceof CustomTextureData.PngData) {
-			AbstractTexture texture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
+			NativeImageBackedCustomTexture texture = new NativeImageBackedCustomTexture((CustomTextureData.PngData) textureData);
 			ownedTextures.add(texture);
 
-			return texture::getId;
+			return texture;
 		} else if (textureData instanceof CustomTextureData.LightmapMarker) {
 			// Special code path for the light texture. While shader packs hardcode the primary light texture, it's
 			// possible that a mod will create a different light texture, so this code path is robust to that.
-			return () ->
-				((LightTextureAccessor) Minecraft.getInstance().gameRenderer.lightTexture())
-					.getLightTexture().getId();
+			return new TextureWrapper(((LightTextureAccessor) Minecraft.getInstance().gameRenderer.lightTexture())
+				.getLightTexture()::getId, TextureType.TEXTURE_2D);
+		} else if (textureData instanceof CustomTextureData.RawData1D) {
+			CustomTextureData.RawData1D rawData1D = (CustomTextureData.RawData1D) textureData;
+			GlTexture texture = new GlTexture(TextureType.TEXTURE_1D, rawData1D.getSizeX(), 0, 0, rawData1D.getInternalFormat().getGlFormat(), rawData1D.getPixelFormat().getGlFormat(), rawData1D.getPixelType().getGlFormat(), rawData1D.getContent());
+			ownedRawTextures.add(texture);
+
+			return texture;
+		} else if (textureData instanceof CustomTextureData.RawData2D) {
+			CustomTextureData.RawData2D rawData2D = (CustomTextureData.RawData2D) textureData;
+			GlTexture texture = new GlTexture(TextureType.TEXTURE_2D, rawData2D.getSizeX(), rawData2D.getSizeY(), 0, rawData2D.getInternalFormat().getGlFormat(), rawData2D.getPixelFormat().getGlFormat(), rawData2D.getPixelType().getGlFormat(), rawData2D.getContent());
+			ownedRawTextures.add(texture);
+
+			return texture;
+		} else if (textureData instanceof CustomTextureData.RawData3D) {
+			CustomTextureData.RawData3D rawData3D = (CustomTextureData.RawData3D) textureData;
+			GlTexture texture = new GlTexture(TextureType.TEXTURE_3D, rawData3D.getSizeX(), rawData3D.getSizeY(), rawData3D.getSizeZ(), rawData3D.getInternalFormat().getGlFormat(), rawData3D.getPixelFormat().getGlFormat(), rawData3D.getPixelType().getGlFormat(), rawData3D.getContent());
+			ownedRawTextures.add(texture);
+
+			return texture;
 		} else if (textureData instanceof CustomTextureData.ResourceData) {
 			CustomTextureData.ResourceData resourceData = (CustomTextureData.ResourceData) textureData;
 			String namespace = resourceData.getNamespace();
@@ -116,17 +146,16 @@ public class CustomTextureManager {
 				//     and we could end up holding on to a deleted texture unless we added special code to handle resource
 				//     reloads. Re-fetching the texture from the TextureManager every time is the most robust approach for
 				//     now.
-				return () -> {
+				// TODO: Should we give something else if the texture isn't there? This will need some thought
+				return new TextureWrapper(() -> {
 					AbstractTexture texture = textureManager.getTexture(textureLocation);
-
-					// TODO: Should we give something else if the texture isn't there? This will need some thought
 					return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();
-				};
+				}, TextureType.TEXTURE_2D);
 			} else {
 				location = location.substring(0, extensionIndex - pbrType.getSuffix().length()) + location.substring(extensionIndex);
 				ResourceLocation textureLocation = new ResourceLocation(namespace, location);
 
-				return () -> {
+				return new TextureWrapper(() -> {
 					AbstractTexture texture = textureManager.getTexture(textureLocation);
 
 					if (texture != null) {
@@ -134,14 +163,14 @@ public class CustomTextureManager {
 						PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
 						AbstractTexture pbrTexture;
 						switch (pbrType) {
-						case NORMAL:
-							pbrTexture = pbrHolder.getNormalTexture();
-							break;
-						case SPECULAR:
-							pbrTexture = pbrHolder.getSpecularTexture();
-							break;
-						default:
-							throw new Error("Unknown PBRType '" + pbrType + "'");
+							case NORMAL:
+								pbrTexture = pbrHolder.getNormalTexture();
+								break;
+							case SPECULAR:
+								pbrTexture = pbrHolder.getSpecularTexture();
+								break;
+							default:
+								throw new Error("Unknown PBRType '" + pbrType + "'");
 						}
 
 						TextureFormat textureFormat = TextureFormatLoader.getFormat();
@@ -156,26 +185,30 @@ public class CustomTextureManager {
 					}
 
 					return MissingTextureAtlasSprite.getTexture().getId();
-				};
+				}, TextureType.TEXTURE_2D);
 			}
-		} else {
-			throw new IllegalArgumentException("Unable to handle custom texture data " + textureData);
 		}
+		throw new IllegalArgumentException("Don't know texture type!");
 	}
 
-	public EnumMap<TextureStage, Object2ObjectMap<String, IntSupplier>> getCustomTextureIdMap() {
+	public EnumMap<TextureStage, Object2ObjectMap<String, TextureAccess>> getCustomTextureIdMap() {
 		return customTextureIdMap;
 	}
 
-	public Object2ObjectMap<String, IntSupplier> getCustomTextureIdMap(TextureStage stage) {
+	public Object2ObjectMap<String, TextureAccess> getCustomTextureIdMap(TextureStage stage) {
 		return customTextureIdMap.getOrDefault(stage, Object2ObjectMaps.emptyMap());
 	}
 
-	public IntSupplier getNoiseTexture() {
+	public Object2ObjectMap<String, TextureAccess> getIrisCustomTextures() {
+		return irisCustomTextures;
+	}
+
+	public TextureAccess getNoiseTexture() {
 		return noise;
 	}
 
 	public void destroy() {
 		ownedTextures.forEach(AbstractTexture::close);
+		ownedRawTextures.forEach(GlTexture::destroy);
 	}
 }
