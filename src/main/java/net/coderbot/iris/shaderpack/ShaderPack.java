@@ -314,8 +314,8 @@ public class ShaderPack {
 				path = path.substring(1);
 			}
 
-			boolean blur = false;
-			boolean clamp = false;
+			boolean blur = definition instanceof TextureDefinition.RawDefinition;
+			boolean clamp = definition instanceof TextureDefinition.RawDefinition;
 
 			String mcMetaPath = path + ".mcmeta";
 			Path mcMetaResolvedPath = root.resolve(mcMetaPath);
@@ -344,13 +344,13 @@ public class ShaderPack {
 				TextureDefinition.RawDefinition rawDefinition = (TextureDefinition.RawDefinition) definition;
 				switch (rawDefinition.getTarget()) {
 					case TEXTURE_1D:
-						customTextureData = new CustomTextureData.RawData1D(content, rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
+						customTextureData = new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
 						break;
 					case TEXTURE_2D:
-						customTextureData = new CustomTextureData.RawData2D(content, rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+						customTextureData = new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
 						break;
 					case TEXTURE_3D:
-						customTextureData = new CustomTextureData.RawData3D(content, rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
+						customTextureData = new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
 						break;
 					default:
 						throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
