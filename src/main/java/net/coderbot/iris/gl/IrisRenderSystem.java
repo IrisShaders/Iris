@@ -8,6 +8,7 @@ import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.vendored.joml.Vector3i;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.ARBDirectStateAccess;
+import org.lwjgl.opengl.ARBDrawBuffersBlend;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL32C;
@@ -270,7 +271,7 @@ public class IrisRenderSystem {
 
 	public static void blendFuncSeparatei(int buffer, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		GL40C.glBlendFuncSeparatei(buffer, srcRGB, dstRGB, srcAlpha, dstAlpha);
+		ARBDrawBuffersBlend.glBlendFuncSeparateiARB(buffer, srcRGB, dstRGB, srcAlpha, dstAlpha);
   }
 
 	public static void bindTextureToUnit(int target, int unit, int texture) {
