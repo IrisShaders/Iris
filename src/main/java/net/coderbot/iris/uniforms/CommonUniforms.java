@@ -136,6 +136,8 @@ public final class CommonUniforms {
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
+			.uniform1b(PER_FRAME, "is_sneaking", CommonUniforms::isSneaking)
+			.uniform1b(PER_FRAME, "is_hurt", CommonUniforms::isHurt)
 			// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect
 			//       that the player is trying to turn on fullbright?
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma)
@@ -152,6 +154,22 @@ public final class CommonUniforms {
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(directives.getWetnessHalfLife(), directives.getDrynessHalfLife(), CommonUniforms::getRainStrength, updateNotifier))
 			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor);
+	}
+
+	private static boolean isHurt() {
+		if (client.player != null) {
+			return client.player.isHurt();
+		} else {
+			return false;
+		}
+	}
+
+	private static boolean isSneaking() {
+		if (client.player != null) {
+			return client.player.isCrouching();
+		} else {
+			return false;
+		}
 	}
 
 	private static Vector3d getSkyColor() {

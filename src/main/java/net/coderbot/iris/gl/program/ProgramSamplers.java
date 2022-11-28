@@ -195,7 +195,7 @@ public class ProgramSamplers {
 					throw new IllegalStateException("No more available texture units while activating sampler " + name);
 				}
 
-				System.out.println("Binding dynamic sampler " + name + " with type " + type.name() + " to texture unit " + nextUnit);
+				//System.out.println("Binding dynamic sampler " + name + " with type " + type.name() + " to texture unit " + nextUnit);
 
 				// Set up this sampler uniform to use this particular texture unit.
 				calls.add(new GlUniform1iCall(location, nextUnit));
