@@ -2,27 +2,41 @@
   "iris.shaders.reloaded": "Shader neu geladen!",
   "iris.shaders.disabled": "Shader deaktiviert!",
   "iris.shaders.toggled": "Shader umgeschaltet auf: %s!",
+  
   "iris.shaders.debug.enabled": "Debugging wurde aktiviert, die Debug-Protokollierung wird ausführlicher sein!",
   "iris.shaders.debug.disabled": "Debugging wurde deaktiviert.",
   "iris.shaders.debug.failure": "Debugging kann nicht aktiviert werden, da dieser Computer keine Debug-Funktionen unterstützt.",
   "iris.shaders.debug.restart": "Es liegt kein Debug-Kontext vor, starte bitte neu, um Debugging zu aktivieren.",
+  
   "iris.keybind.reload": "Shader neu laden",
   "iris.keybind.shaderPackSelection": "Shader-Auswahlbildschirm",
   "iris.keybind.toggleShaders": "Shader umschalten",
   "iris.keybinds": "Iris",
+  
   "iris.shaders.reloaded.failure": "Shader konnte nicht neu geladen werden! Grund: %s",
   "iris.shaders.toggled.failure": "Shader konnte nicht umgeschaltet werden! Grund: %s",
+  
   "iris.sodium.failure.title": "Iris konnte nicht geladen werden!",
   "iris.sodium.failure.download": "Sodium herunterladen",
   "iris.sodium.failure.reason.notFound": "Iris erfordert Sodium für optimale Leistung, aber Sodium ist nicht installiert. Bitte lade Sodium herunter, füge es deinem Mods-Ordner hinzu und starte das Spiel neu.",
   "iris.sodium.failure.reason.incompatible": "Iris erfordert Sodium für optimale Leistung, aber es wurde eine inkompatible Version gefunden. Bitte lade die passende Version von Sodium herunter, füge sie deinem Mods-Ordner hinzu, entferne die falsche Version und starte das Spiel neu.",
-
+  
+  "iris.nec.failure.title": "[%s] Not Enough Crashes erkannt!",
+  "iris.nec.failure.description": "Not Enough Crashes kann das Spiel bei der Behandlung von Abstürzen stark beeinträchtigen und liefert keine genauen Ergebnisse.\nGute Alternativen sind MixinTrace und Crafty Crashes, die die Ursache eines Absturzes zuverlässiger identifizieren können und das Spiel nicht in einen fehlerhaften Zustand versetzen.",
+  
+  "iris.unsupported.irisorpc": "Iris oder diesem Computer",
+  "iris.unsupported.iris": "Iris",
+  "iris.unsupported.pc": "diesem Computer",
+  "iris.unsupported.pack": "Shaderpaket inkompatibel!",
+  "iris.unsupported.pack.description": "Dieses Shaderpaket enthält Funktionen, die von %s nicht unterstützt werden%s Bitte versuche ein anderes Paket.",
+  
   "options.iris.apply": "Anwenden",
   "options.iris.refresh": "Aktualisieren",
   "options.iris.openShaderPackFolder": "Shader-Ordner öffnen ...",
   "options.iris.shaderPackSettings": "Shader-Einstellungen ...",
   "options.iris.shaderPackList": "Shader-Liste ...",
   "options.iris.refreshShaderPacks": "Shader/Liste aktualisieren",
+  
   "options.iris.shaderPackSelection": "Shaderpakete ...",
   "options.iris.shaderPackSelection.title": "Shaderpakete",
   "options.iris.shaderPackSelection.addedPack": "Shaderpaket \"%s\" hinzugefügt",
@@ -31,27 +45,36 @@
   "options.iris.shaderPackSelection.failedAddSingle": "\"%s\" ist kein zulässiges Shaderpaket",
   "options.iris.shaderPackSelection.copyError": "Konnte Shaderpaket \"%s\" nicht hinzufügen",
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" befindet sich bereits im Shader-Ordner!",
+  
   "options.iris.shaderPackOptions.tooManyFiles": "Es können nicht mehrere Shader-Einstellungsdateien importiert werden!",
   "options.iris.shaderPackOptions.failedImport": "Shader-Einstellungsdatei \"%s\" konnte nicht importiert werden",
   "options.iris.shaderPackOptions.importedSettings": "Shader-Einstellungen aus \"%s\" importiert",
+  
   "options.iris.shaders.disabled": "Shader: Deaktiviert",
   "options.iris.shaders.enabled": "Shader: Aktiviert",
   "options.iris.shaders.nonePresent": "Shader: Keine vorhanden",
+  
   "options.iris.back": "Zurück",
   "options.iris.reset": "Zurücksetzen",
   "options.iris.reset.tooltip": "ALLE Einstellungen zurücksetzen und anwenden?",
   "options.iris.reset.tooltip.holdShift": "Zum Zurücksetzen UMSCHALTEN/SHIFT gedrückt halten und klicken",
+  
   "options.iris.importSettings.tooltip": "Einstellungen aus Datei importieren",
   "options.iris.exportSettings.tooltip": "Angewandte Einstellungen in eine Datei exportieren",
   "options.iris.mustDisableFullscreen": "Bitte deaktiviere zuerst den Vollbildmodus!",
   "options.iris.setToDefault": "Diese Einstellung auf den Standardwert zurücksetzen?",
+  
   "options.iris.profile": "Profil",
   "options.iris.profile.custom": "Benutzerdefiniert",
+  
   "options.iris.shadowDistance": "Max. Schattendistanz",
   "options.iris.shadowDistance.enabled": "Erlaubt es dir, die maximale Distanz für Schatten zu ändern. Gelände und Objekte, die weiter entfernt sind als die eingestellte Distanz, werden keine Schatten werfen. Das Senken der Distanz kann die Leistung erheblich verbessern.",
   "options.iris.shadowDistance.disabled": "Dein aktuelles Shaderpaket hat bereits eine Distanz für Schatten gesetzt; du kannst sie nicht ändern.",
   "options.iris.shadowDistance.sodium_tooltip": "Die Distanz für Schatten bestimmt, wie weit das Gelände entfernt sein darf, um keinen Schatten mehr zu werfen. Bei geringeren Distanzen werden weniger Schatten berechnet, was die Bildrate verbessert. Diese Option kann nicht geändert werden bei Paketen, die explizit eine Distanz für Schatten vorgeben. Die tatsächliche Distanz für Schatten wird von der Einstellung \"Sichtweite\" begrenzt.",
-
+  
+  "options.iris.gui.hide": "GUI ausblenden",
+  "options.iris.gui.show": "GUI anzeigen",
+  
   "pack.iris.select.title": "Auswählen",
   "pack.iris.configure.title": "Konfigurieren",
   "pack.iris.list.label": "+ Um Shader hinzuzufügen, ziehe sie in dieses Fenster hinein",
