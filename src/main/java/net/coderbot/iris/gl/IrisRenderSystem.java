@@ -479,8 +479,10 @@ public class IrisRenderSystem {
 
 		@Override
 		public void bindTextureToUnit(int target, int unit, int texture) {
+			int activeTexture = GlStateManager._getActiveTexture();
 			GlStateManager._activeTexture(GL30C.GL_TEXTURE0 + unit);
 			GL11C.glBindTexture(target, texture);
+			GlStateManager._activeTexture(activeTexture);
 		}
 
 		@Override
