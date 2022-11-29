@@ -17,10 +17,6 @@ import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-/**
- * Implements AttributeShaderTransformer using glsl-transformer AST
- * transformation methods.
- */
 class TextureTransformer {
 	public static final AutoHintedMatcher<ExternalDeclaration> sampler = new AutoHintedMatcher<ExternalDeclaration>(
 			"uniform Type name;", Matcher.externalDeclarationPattern, "__") {
@@ -42,7 +38,8 @@ class TextureTransformer {
 			if (stringTextureTypeTextureStageTri.getThird() == stage) {
 				String name = stringTextureTypeTextureStageTri.getFirst();
 
-				// get rename targets and check for declaration that have the right type
+				// check if the declaration has the right type and rename if one is found
+				// iterates all hits of the identifier and checks the ancestors
 				for (Identifier id : root.identifierIndex.get(name)) {
 					TypeAndInitDeclaration initDeclaration = (TypeAndInitDeclaration) id.getAncestor(
 							2, 0, TypeAndInitDeclaration.class::isInstance);
