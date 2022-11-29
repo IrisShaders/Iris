@@ -17,36 +17,48 @@ import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
 /**
  * Implements AttributeShaderTransformer using glsl-transformer AST
  * transformation methods.
  */
 class TextureTransformer {
 	public static final AutoHintedMatcher<ExternalDeclaration> sampler = new AutoHintedMatcher<ExternalDeclaration>(
-		"uniform Type name;", Matcher.externalDeclarationPattern, "__") {
+			"uniform Type name;", Matcher.externalDeclarationPattern, "__") {
 		{
 			markClassedPredicateWildcard("type",
-				pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
-				BuiltinFixedTypeSpecifier.class,
-				specifier -> specifier.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER);
+					pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
+					BuiltinFixedTypeSpecifier.class,
+					specifier -> specifier.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER);
 			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
 		}
 	};
 
 	public static void transform(
-		ASTParser t,
-		TranslationUnit tree,
-		Root root,
-		TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+			ASTParser t,
+			TranslationUnit tree,
+			Root root,
+			TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		textureMap.forEach((stringTextureTypeTextureStageTri, s) -> {
 			if (stringTextureTypeTextureStageTri.getThird() == stage) {
-				RenameTargetResult targetResult = getTextureRenameTargets(stringTextureTypeTextureStageTri.getFirst(), root);
-				if (targetResult != null && targetResult.extractedType.type == convertType(stringTextureTypeTextureStageTri.getSecond())) {
-					root.rename(stringTextureTypeTextureStageTri.getFirst(), s);
+				String name = stringTextureTypeTextureStageTri.getFirst();
+
+				// get rename targets and check for declaration that have the right type
+				for (Identifier id : root.identifierIndex.get(name)) {
+					TypeAndInitDeclaration initDeclaration = (TypeAndInitDeclaration) id.getAncestor(
+							2, 0, TypeAndInitDeclaration.class::isInstance);
+					if (initDeclaration == null) {
+						continue;
+					}
+					DeclarationExternalDeclaration declaration = (DeclarationExternalDeclaration) initDeclaration.getAncestor(
+							1, 0, DeclarationExternalDeclaration.class::isInstance);
+					if (declaration == null) {
+						continue;
+					}
+					if (initDeclaration.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier fixed
+							&& fixed.type == convertType(stringTextureTypeTextureStageTri.getSecond())) {
+						root.rename(stringTextureTypeTextureStageTri.getFirst(), s);
+						break;
+					}
 				}
 			}
 		});
@@ -54,77 +66,14 @@ class TextureTransformer {
 
 	private static BuiltinFixedTypeSpecifier.BuiltinType convertType(TextureType extractedType) {
 		switch (extractedType) {
-			case TEXTURE_1D: return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D;
-			case TEXTURE_2D: return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D;
-			case TEXTURE_3D: return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D;
-			default: throw new IllegalStateException("What is this enum? " + extractedType.name());
+			case TEXTURE_1D:
+				return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D;
+			case TEXTURE_2D:
+				return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D;
+			case TEXTURE_3D:
+				return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D;
+			default:
+				throw new IllegalStateException("What is this enum? " + extractedType.name());
 		}
-	}
-
-	private static class RenameTargetResult {
-		public final DeclarationExternalDeclaration samplerDeclaration;
-		public final DeclarationMember samplerDeclarationMember;
-		public final Stream<Identifier> targets;
-		public final BuiltinFixedTypeSpecifier extractedType;
-
-		public RenameTargetResult(DeclarationExternalDeclaration samplerDeclaration,
-								  DeclarationMember samplerDeclarationMember, Stream<Identifier> targets, BuiltinFixedTypeSpecifier extractedType) {
-			this.samplerDeclaration = samplerDeclaration;
-			this.samplerDeclarationMember = samplerDeclarationMember;
-			this.targets = targets;
-			this.extractedType = extractedType;
-		}
-	}
-
-	private static RenameTargetResult getTextureRenameTargets(String name, Root root) {
-		List<Identifier> gtextureTargets = new ArrayList<>();
-		DeclarationExternalDeclaration samplerDeclaration = null;
-		DeclarationMember samplerDeclarationMember = null;
-		BuiltinFixedTypeSpecifier extractedType = null;
-
-		// collect targets until we find out if the name is a sampler or not
-		for (Identifier id : root.identifierIndex.get(name)) {
-			gtextureTargets.add(id);
-			if (samplerDeclaration != null) {
-				continue;
-			}
-			DeclarationExternalDeclaration externalDeclaration = (DeclarationExternalDeclaration) id.getAncestor(
-				3, 0, DeclarationExternalDeclaration.class::isInstance);
-			if (externalDeclaration == null) {
-				continue;
-			}
-			if (sampler.matchesExtract(externalDeclaration)) {
-				// check that any of the members match the name
-				boolean foundNameMatch = false;
-				for (DeclarationMember member : sampler
-					.getNodeMatch("name*", DeclarationMember.class)
-					.getAncestor(TypeAndInitDeclaration.class).getMembers()) {
-					if (member.getName().getName().equals(name)) {
-						foundNameMatch = true;
-					}
-				}
-				extractedType = sampler.getNodeMatch("type",
-					BuiltinFixedTypeSpecifier.class);
-				if (!foundNameMatch) {
-					return null;
-				}
-
-				// no need to check any more declarations
-				samplerDeclaration = externalDeclaration;
-				samplerDeclarationMember = id.getAncestor(DeclarationMember.class);
-
-				// remove since we are treating the declaration specially
-				gtextureTargets.remove(gtextureTargets.size() - 1);
-				continue;
-			}
-			// we found a declaration using this name, but it's not a sampler,
-			// renaming this name is disabled
-			return null;
-		}
-		if (samplerDeclaration == null) {
-			// no sampler declaration found, renaming this name is disabled
-			return null;
-		}
-		return new RenameTargetResult(samplerDeclaration, samplerDeclarationMember, gtextureTargets.stream(), extractedType);
 	}
 }
