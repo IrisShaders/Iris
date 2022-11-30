@@ -57,7 +57,7 @@ public class CustomUniforms implements FunctionContext {
 				if (variable.uniform) {
 					this.uniforms.add(cachedUniform);
 				}
-				Iris.logger.info("Was able to resolve uniform " + variable.name + " = " + variable.expression);
+				//Iris.logger.info("Was able to resolve uniform " + variable.name + " = " + variable.expression);
 			} catch (Exception e) {
 				Iris.logger
 						.warn("Failed to resolve uniform " + variable.name + ", reason: " + e
