@@ -13,6 +13,7 @@ import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -43,6 +44,7 @@ class TextureTransformer {
 		Root root,
 		TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		textureMap.forEach((stringTextureTypeTextureStageTri, s) -> {
+			Iris.logger.warn("A " + stringTextureTypeTextureStageTri.toString() + " " + s);
 			if (stringTextureTypeTextureStageTri.getThird() == stage) {
 				RenameTargetResult targetResult = getTextureRenameTargets(stringTextureTypeTextureStageTri.getFirst(), root);
 				if (targetResult != null && targetResult.extractedType.type == convertType(stringTextureTypeTextureStageTri.getSecond())) {
