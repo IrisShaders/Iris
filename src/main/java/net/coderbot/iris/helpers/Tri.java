@@ -40,4 +40,9 @@ public class Tri<X, Y, Z> {
 		result = prime * result + ((third == null) ? 0 : third.hashCode());
 		return result;
 	}
+
+	@Override
+	public String toString() {
+		return "First: " + first.toString() + " Second: " + second.toString() + " Third: " + third.toString();
+	}
 }
