@@ -32,6 +32,19 @@ import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.pipeline.transform.parameter.AttributeParameters;
+import net.coderbot.iris.pipeline.transform.parameter.CompositeParameters;
+import net.coderbot.iris.pipeline.transform.parameter.ComputeParameters;
+import net.coderbot.iris.pipeline.transform.parameter.Parameters;
+import net.coderbot.iris.pipeline.transform.parameter.SodiumParameters;
+import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
+import net.coderbot.iris.pipeline.transform.transformer.AttributeTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.CommonTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.CompatibilityTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.CompositeTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.SodiumTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.TextureTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.VanillaTransformer;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to

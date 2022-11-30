@@ -1,12 +1,13 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.parameter;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
+import net.coderbot.iris.pipeline.transform.Patch;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-class AttributeParameters extends OverlayParameters {
+public class AttributeParameters extends OverlayParameters {
 	public final InputAvailability inputs;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 

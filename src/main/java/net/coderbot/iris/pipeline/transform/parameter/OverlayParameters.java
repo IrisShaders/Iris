@@ -1,6 +1,8 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.parameter;
 
-class OverlayParameters extends Parameters {
+import net.coderbot.iris.pipeline.transform.Patch;
+
+public class OverlayParameters extends Parameters {
 	public final boolean hasGeometry;
 
 	public OverlayParameters(Patch patch, boolean hasGeometry) {
