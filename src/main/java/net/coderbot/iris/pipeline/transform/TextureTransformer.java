@@ -2,15 +2,10 @@ package net.coderbot.iris.pipeline.transform;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
-import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
-import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.texture.TextureType;
@@ -18,17 +13,6 @@ import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 class TextureTransformer {
-	public static final AutoHintedMatcher<ExternalDeclaration> sampler = new AutoHintedMatcher<ExternalDeclaration>(
-			"uniform Type name;", Matcher.externalDeclarationPattern, "__") {
-		{
-			markClassedPredicateWildcard("type",
-					pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
-					BuiltinFixedTypeSpecifier.class,
-					specifier -> specifier.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER);
-			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
-		}
-	};
-
 	public static void transform(
 			ASTParser t,
 			TranslationUnit tree,
