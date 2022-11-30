@@ -68,6 +68,8 @@ public class BiomeParameters {
 		if (holder.is(BiomeTags.WITHOUT_WANDERING_TRADER_SPAWNS)) {
 			// Literally only the void has this...
 			return BiomeCategories.NONE;
+		} else if (holder.is(BiomeTags.HAS_VILLAGE_SNOWY)) {
+			return BiomeCategories.ICY;
 		} else if (holder.is(BiomeTags.IS_HILL)) {
 			return BiomeCategories.EXTREME_HILLS;
 		} else if (holder.is(BiomeTags.IS_TAIGA)) {
@@ -96,8 +98,6 @@ public class BiomeParameters {
 			return BiomeCategories.UNDERGROUND;
 		} else if (holder.is(BiomeTags.WITHOUT_ZOMBIE_SIEGES)) {
 			return BiomeCategories.MUSHROOM;
-		} else if (holder.is(BiomeTags.HAS_VILLAGE_SNOWY)) {
-			return BiomeCategories.ICY;
 		} else if (holder.is(BiomeTags.IS_MOUNTAIN)) {
 			return BiomeCategories.MOUNTAIN;
 		} else {
