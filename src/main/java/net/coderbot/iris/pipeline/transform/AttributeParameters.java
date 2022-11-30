@@ -43,6 +43,11 @@ class AttributeParameters extends OverlayParameters {
 				return false;
 		} else if (!inputs.equals(other.inputs))
 			return false;
+		if (textureMap == null) {
+			if (other.textureMap != null)
+				return false;
+		} else if (!textureMap.equals(other.textureMap))
+			return false;
 		return true;
 	}
 }
