@@ -36,7 +36,7 @@ public class TextureTransformer {
 						continue;
 					}
 					if (initDeclaration.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier fixed
-							&& fixed.type == convertType(stringTextureTypeTextureStageTri.getSecond())) {
+							&& isTypeValid(stringTextureTypeTextureStageTri.getSecond(), fixed.type)) {
 						root.rename(stringTextureTypeTextureStageTri.getFirst(), s);
 						break;
 					}
@@ -45,16 +45,21 @@ public class TextureTransformer {
 		});
 	}
 
-	private static BuiltinFixedTypeSpecifier.BuiltinType convertType(TextureType extractedType) {
-		switch (extractedType) {
-			case TEXTURE_1D:
-				return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D;
-			case TEXTURE_2D:
-				return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D;
-			case TEXTURE_3D:
-				return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D;
-			default:
-				throw new IllegalStateException("What is this enum? " + extractedType.name());
+	private static boolean isTypeValid(TextureType expectedType, BuiltinFixedTypeSpecifier.BuiltinType extractedType) {
+		if (expectedType == TextureType.TEXTURE_1D) {
+			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D ||
+			extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER1D ||
+			extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER1D;
+		} else if (expectedType == TextureType.TEXTURE_2D) {
+			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2D ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2D;
+		} else if (expectedType == TextureType.TEXTURE_3D) {
+			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER3D ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER3D;
+		} else {
+			throw new IllegalStateException("Unexpected enum! " + expectedType);
 		}
 	}
 }
