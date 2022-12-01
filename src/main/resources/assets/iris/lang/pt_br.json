@@ -8,7 +8,7 @@
   "iris.shaders.debug.restart": "Você não tem o contexto de depuração, reinicie o jogo para ativá-lo.",
   "iris.keybind.reload": "Recarregar sombreadores",
   "iris.keybind.shaderPackSelection": "Abrir/Fechar tela de pacotes de sombreadores",
-  "iris.keybind.toggleSombreadores": "Alternar sombreadores",
+  "iris.keybind.toggleShaders": "Alternar sombreadores",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Falha ao recarregar sombreadores! Motivo: %s",
   "iris.shaders.toggled.failure": "Falha ao alternar sombreadores! Motivo: %s",
