@@ -1,10 +1,10 @@
 {
   "iris.shaders.reloaded": "Sombreadores recarregados!",
   "iris.shaders.disabled": "Sombreadores desativados!",
-  "iris.shaders.toggled": "Sombreadores alternado para %s!",
+  "iris.shaders.toggled": "Sombreadores alternados para %s!",
   "iris.shaders.debug.enabled": "A depuração foi ativada, seus registros serão mais detalhados!",
   "iris.shaders.debug.disabled": "A depuração foi desativada.",
-  "iris.shaders.debug.failure": "Não foi possível ativar a depuração pois seu computador não suporta os recursos de depuração.",
+  "iris.shaders.debug.failure": "Não foi possível ativar a depuração pois seu computador não suporta os recursos necessários.",
   "iris.shaders.debug.restart": "Você não tem o contexto de depuração, reinicie o jogo para ativá-lo.",
   "iris.keybind.reload": "Recarregar sombreadores",
   "iris.keybind.shaderPackSelection": "Abrir/Fechar tela de pacotes de sombreadores",
