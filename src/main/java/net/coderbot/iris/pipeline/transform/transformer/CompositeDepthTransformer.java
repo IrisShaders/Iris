@@ -1,4 +1,4 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
@@ -9,7 +9,7 @@ import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 
-class CompositeDepthTransformer {
+public class CompositeDepthTransformer {
 	private static final AutoHintedMatcher<ExternalDeclaration> uniformFloatCenterDepthSmooth = new AutoHintedMatcher<>(
 			"uniform float centerDepthSmooth;", Matcher.externalDeclarationPattern);
 

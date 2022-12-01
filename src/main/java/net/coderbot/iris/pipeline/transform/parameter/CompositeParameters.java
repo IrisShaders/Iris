@@ -1,18 +1,19 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.parameter;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
+import net.coderbot.iris.pipeline.transform.Patch;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-class AttributeParameters extends OverlayParameters {
-	public final InputAvailability inputs;
+public class CompositeParameters extends Parameters {
+	public final TextureStage stage;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 
-	public AttributeParameters(Patch patch, boolean hasGeometry, InputAvailability inputs, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		super(patch, hasGeometry);
-		this.inputs = inputs;
+	public CompositeParameters(Patch patch, TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		super(patch);
+		this.stage = stage;
 		this.textureMap = textureMap;
 	}
 
@@ -24,7 +25,7 @@ class AttributeParameters extends OverlayParameters {
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
+		result = prime * result + ((stage == null) ? 0 : stage.hashCode());
 		result = prime * result + ((textureMap == null) ? 0 : textureMap.hashCode());
 		return result;
 	}
@@ -37,12 +38,12 @@ class AttributeParameters extends OverlayParameters {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		AttributeParameters other = (AttributeParameters) obj;
-		if (inputs == null) {
-			if (other.inputs != null)
-				return false;
-		} else if (!inputs.equals(other.inputs))
-			return false;
-		return true;
+		CompositeParameters other = (CompositeParameters) obj;
+		return stage == other.stage && textureMap.equals(other.textureMap);
+	}
+
+	@Override
+	public AlphaTest getAlphaTest() {
+		return AlphaTest.ALWAYS;
 	}
 }
