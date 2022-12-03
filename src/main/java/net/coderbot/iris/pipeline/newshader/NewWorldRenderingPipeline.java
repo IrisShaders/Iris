@@ -71,6 +71,7 @@ import net.coderbot.iris.texture.pbr.PBRType;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;

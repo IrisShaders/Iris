@@ -7,7 +7,7 @@ import net.coderbot.iris.parsing.ExtendedBiome;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
-import net.minecraft.data.BuiltinRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.level.biome.Biome;
@@ -26,7 +26,7 @@ public class BiomeParameters {
 
 		uniforms
 				.uniform1i(PER_TICK, "biome", playerI(player ->
-						BuiltinRegistries.BIOME.getId(player.level.getBiome(player.blockPosition()).value())))
+						player.level.registryAccess().registryOrThrow(Registries.BIOME).getId(player.level.getBiome(player.blockPosition()).value())))
 				.uniform1i(PER_TICK, "biome_category", playerI(player -> {
 					Holder<Biome> holder = player.level.getBiome(player.blockPosition());
 					ExtendedBiome extendedBiome = ((ExtendedBiome) (Object) holder.value());
@@ -106,14 +106,14 @@ public class BiomeParameters {
 	}
 
 	public static void addBiomes(UniformHolder uniforms) {
-		for (Biome biome : BuiltinRegistries.BIOME) {
+		/*for (Biome biome :player.level.registryAccess().registryOrThrow(Registries.BIOME)) {
 			ResourceLocation id = BuiltinRegistries.BIOME.getKey(biome);
 			if (id == null || !id.getNamespace().equals("minecraft")) {
 				continue; // TODO: What should we do with non-standard biomes?
 			}
 			int rawId = BuiltinRegistries.BIOME.getId(biome);
 			uniforms.uniform1i(ONCE, "BIOME_" + id.getPath().toUpperCase(Locale.ROOT), () -> rawId);
-		}
+		}*/
 	}
 
 	public static void addCategories(UniformHolder uniforms) {

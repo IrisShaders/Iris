@@ -7,24 +7,24 @@ import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.parsing.VectorType;
-import net.coderbot.iris.vendored.joml.Vector2f;
-import net.coderbot.iris.vendored.joml.Vector3f;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 public abstract class CachedUniform implements VariableExpression {
 	private final String name;
 	private final UniformUpdateFrequency updateFrequency;
 	private boolean changed = true;
-	
+
 	public CachedUniform(String name, UniformUpdateFrequency updateFrequency) {
 		this.name = name;
 		this.updateFrequency = updateFrequency;
 	}
-	
+
 	public void markUnchanged() {
 		this.changed = false;
 	}
-	
+
 	public void update() {
 		doUpdate();
 		// TODO: Works around a logic error / architectural flaw - there's no way to
@@ -32,25 +32,25 @@ public abstract class CachedUniform implements VariableExpression {
 		//       safely change this to false with the current design.
 		this.changed = true;
 	}
-	
+
 	protected abstract boolean doUpdate();
-	
+
 	public abstract void push(int location);
-	
+
 	public void pushIfChanged(int location) {
 		if (this.changed)
 			push(location);
 	}
-	
+
 	@Override
 	public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
 		this.writeTo(functionReturn);
 	}
-	
+
 	public abstract void writeTo(FunctionReturn functionReturn);
-	
+
 	public abstract Type getType();
-	
+
 	static public CachedUniform forExpression(String name, Type type, Expression expression, FunctionContext context) {
 		final FunctionReturn held = new FunctionReturn();
 		final UniformUpdateFrequency frequency = UniformUpdateFrequency.CUSTOM;
@@ -88,11 +88,11 @@ public abstract class CachedUniform implements VariableExpression {
 			throw new IllegalArgumentException("Custom uniforms of type: " + type + " are currently not supported");
 		}
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public UniformUpdateFrequency getUpdateFrequency() {
 		return updateFrequency;
 	}

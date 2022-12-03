@@ -3,7 +3,7 @@ package net.coderbot.iris.parsing;
 import kroppeb.stareval.expression.Expression;
 import kroppeb.stareval.function.*;
 import kroppeb.stareval.function.TypedFunction.Parameter;
-import net.coderbot.iris.vendored.joml.*;
+import org.joml.*;
 
 import java.lang.Math;
 import java.util.Arrays;
