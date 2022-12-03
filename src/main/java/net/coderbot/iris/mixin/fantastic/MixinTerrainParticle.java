@@ -32,7 +32,7 @@ public class MixinTerrainParticle {
 	@Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
 	private void iris$overrideParticleSheet(CallbackInfoReturnable<ParticleRenderType> cir) {
 		if (isOpaque) {
-			cir.setReturnValue(IrisParticleRenderTypes.OPAQUE_TERRAIN);
+			cir.setReturnValue(ParticleRenderType.TERRAIN_SHEET);
 		}
 	}
 }

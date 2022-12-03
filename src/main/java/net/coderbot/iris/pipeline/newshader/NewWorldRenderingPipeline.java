@@ -52,6 +52,7 @@ import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shaderpack.ParticleRenderingSettings;
 import net.coderbot.iris.shaderpack.ProgramFallbackResolver;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
@@ -85,6 +86,7 @@ import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -139,7 +141,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final boolean shouldRenderUnderwaterOverlay;
 	private final boolean shouldRenderVignette;
 	private final boolean shouldWriteRainAndSnowToDepthBuffer;
-	private final boolean shouldRenderParticlesBeforeDeferred;
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 	private boolean destroyed = false;
@@ -157,6 +158,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private boolean shouldBindPBR;
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
+	private ParticleRenderingSettings particleRenderingSettings;
 	private PackDirectives packDirectives;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
@@ -165,7 +167,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
 		this.shouldRenderVignette = programSet.getPackDirectives().vignette();
 		this.shouldWriteRainAndSnowToDepthBuffer = programSet.getPackDirectives().rainDepth();
-		this.shouldRenderParticlesBeforeDeferred = programSet.getPackDirectives().areParticlesBeforeDeferred();
 		this.oldLighting = programSet.getPackDirectives().isOldLighting();
 		this.updateNotifier = new FrameUpdateNotifier();
 		this.packDirectives = programSet.getPackDirectives();
@@ -176,6 +177,16 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.prepareBeforeShadow = programSet.getPackDirectives().isPrepareBeforeShadow();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
+
+		ProgramFallbackResolver resolver = new ProgramFallbackResolver(programSet);
+
+		this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings().orElseGet(() -> {
+			if (programSet.getDeferred().length > 0) {
+				return ParticleRenderingSettings.AFTER;
+			} else {
+				return ParticleRenderingSettings.MIXED;
+			}
+		});
 
 		this.shadowComputes = createShadowComputes(programSet.getShadowCompute(), programSet);
 
@@ -340,7 +351,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.baseline = renderTargets.createFramebufferWritingToMain(new int[] {0});
 		this.loadedShaders = new HashSet<>();
 
-		ProgramFallbackResolver resolver = new ProgramFallbackResolver(programSet);
 
 		this.shaderMap = new ShaderMap(key -> {
 			try {
@@ -888,8 +898,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	@Override
-	public boolean shouldRenderParticlesBeforeDeferred() {
-		return shouldRenderParticlesBeforeDeferred;
+	public ParticleRenderingSettings getParticleRenderingSettings() {
+		return particleRenderingSettings;
 	}
 
 	@Override

@@ -11,7 +11,6 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.AlphaTestFunction;
-import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -21,7 +20,6 @@ import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.gl.texture.TextureDefinition;
 import net.coderbot.iris.gl.texture.TextureScaleOverride;
 import net.coderbot.iris.gl.blending.BufferBlendInformation;
-import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
@@ -75,7 +73,7 @@ public class ShaderProperties {
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
-	private OptionalBoolean particlesBeforeDeferred = OptionalBoolean.DEFAULT;
+	private Optional<ParticleRenderingSettings> particleRenderingSettings = Optional.empty();
 	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
 	private final Map<String, List<String>> profiles = new LinkedHashMap<>();
@@ -161,8 +159,21 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
 			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
-			handleBooleanDirective(key, value, "particles.before.deferred", bool -> particlesBeforeDeferred = bool);
+			handleBooleanDirective(key, value, "particles.before.deferred", bool -> {
+				if (bool.orElse(false) && particleRenderingSettings.isEmpty()) {
+					particleRenderingSettings = Optional.of(ParticleRenderingSettings.BEFORE);
+				}
+			});
 			handleBooleanDirective(key, value, "prepareBeforeShadow", bool -> prepareBeforeShadow = bool);
+
+			if (key.startsWith("particles.ordering")) {
+				Optional<ParticleRenderingSettings> settings = ParticleRenderingSettings.fromString(value.trim().toUpperCase(Locale.US));
+				if (settings.isPresent()) {
+					particleRenderingSettings = settings;
+				} else {
+					throw new RuntimeException("Failed to parse particle rendering order! " + value);
+				}
+			}
 
 			// TODO: Min optifine versions, shader options layout / appearance / profiles
 			// TODO: Custom uniforms
@@ -624,8 +635,8 @@ public class ShaderProperties {
 		return shadowEnabled;
 	}
 
-	public OptionalBoolean getParticlesBeforeDeferred() {
-		return particlesBeforeDeferred;
+	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
+		return particleRenderingSettings;
 	}
 
 	public OptionalBoolean getConcurrentCompute() {

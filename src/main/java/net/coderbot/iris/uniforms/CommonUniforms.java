@@ -59,6 +59,7 @@ public final class CommonUniforms {
 
 	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
 	public static void addDynamicUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
+		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
 		FogUniforms.addFogUniforms(uniforms, fogMode);
 		IrisInternalUniforms.addFogUniforms(uniforms);
 
