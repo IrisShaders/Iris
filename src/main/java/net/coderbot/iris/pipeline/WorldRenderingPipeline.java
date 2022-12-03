@@ -7,6 +7,7 @@ import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.shaderpack.CloudSetting;
+import net.coderbot.iris.shaderpack.ParticleRenderingSettings;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
@@ -53,7 +54,7 @@ public interface WorldRenderingPipeline {
 	boolean shouldRenderSun();
 	boolean shouldRenderMoon();
 	boolean shouldWriteRainAndSnowToDepthBuffer();
-	boolean shouldRenderParticlesBeforeDeferred();
+	ParticleRenderingSettings getParticleRenderingSettings();
 	boolean allowConcurrentCompute();
 
 	float getSunPathRotation();
