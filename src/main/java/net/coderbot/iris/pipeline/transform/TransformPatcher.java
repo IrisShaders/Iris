@@ -226,6 +226,13 @@ public class TransformPatcher {
 									throw new IllegalStateException(
 											"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless) See debugging.md for more information.");
 								} else {
+									if (parameters instanceof CompositeParameters compositeParameters) {
+										TextureTransformer.transform(transformer, tree, root,
+											compositeParameters.stage,
+											compositeParameters.getTextureMap());
+									} else {
+										TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, parameters instanceof SodiumParameters parameters1 ? parameters1.getTextureMap() : ((VanillaParameters) parameters).getTextureMap());
+									}
 									break;
 								}
 							}

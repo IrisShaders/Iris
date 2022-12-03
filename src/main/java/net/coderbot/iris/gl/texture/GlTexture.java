@@ -25,7 +25,6 @@ public class GlTexture extends GlResource implements TextureAccess {
 		ByteBuffer buffer = MemoryUtil.memAlloc(pixels.length);
 		buffer.put(pixels);
 		buffer.flip();
-		Iris.logger.warn(" This is " + this.getGlId() + sizeX + sizeY + sizeZ + internalFormat + format + pixelType + buffer);
 		target.apply(this.getGlId(), sizeX, sizeY, sizeZ, internalFormat, format, pixelType, buffer);
 		MemoryUtil.memFree(buffer);
 

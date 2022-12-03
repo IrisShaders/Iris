@@ -286,6 +286,7 @@ public class ShadowCompositeRenderer {
 		this.customUniforms.assignTo(builder);
 
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
+		IrisSamplers.addCustomTextures(customTextureSamplerInterceptor, irisCustomTextures);
 
 		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped);
 		IrisImages.addShadowColorImages(builder, targets, flipped);
@@ -320,6 +321,7 @@ public class ShadowCompositeRenderer {
 				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
 				this.customUniforms.assignTo(builder);
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
+				IrisSamplers.addCustomTextures(customTextureSamplerInterceptor, irisCustomTextures);
 
 				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped);
 				IrisImages.addShadowColorImages(builder, targets, flipped);
