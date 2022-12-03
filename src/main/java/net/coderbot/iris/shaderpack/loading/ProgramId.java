@@ -32,7 +32,7 @@ public enum ProgramId {
 	Item(ProgramGroup.Gbuffers, "item", TexturedLit),
 
 	Entities(ProgramGroup.Gbuffers, "entities", TexturedLit),
-	EntitiesTrans(ProgramGroup.Gbuffers, "entities_trans", Entities),
+	EntitiesTrans(ProgramGroup.Gbuffers, "entities_translucent", Entities),
 	EntitiesGlowing(ProgramGroup.Gbuffers, "entities_glowing", Entities),
 	ArmorGlint(ProgramGroup.Gbuffers, "armor_glint", Textured),
 	SpiderEyes(ProgramGroup.Gbuffers, "spidereyes", Textured,
