@@ -52,14 +52,19 @@ public class IrisImages {
 		return false;
 	}
 
-	public static void addShadowColorImages(ImageHolder images, ShadowRenderTargets shadowRenderTargets) {
+	public static void addShadowColorImages(ImageHolder images, ShadowRenderTargets shadowRenderTargets, ImmutableSet<Integer> flipped) {
 		if (images == null) {
 			return;
 		}
 		for (int i = 0; i < shadowRenderTargets.getNumColorTextures(); i++) {
 			final int index = i;
 
-			IntSupplier textureID = () -> shadowRenderTargets.getColorTextureId(index);
+			IntSupplier textureID;
+			if (flipped == null) {
+				textureID = () -> shadowRenderTargets.getColorTextureId(index);
+			} else {
+				textureID = () -> flipped.contains(index) ? shadowRenderTargets.get(index).getAltTexture() : shadowRenderTargets.get(index).getMainTexture();
+			}
 			InternalTextureFormat format = shadowRenderTargets.getColorTextureFormat(index);
 
 			images.addTextureImage(textureID, format, "shadowcolorimg" + i);

@@ -10,8 +10,10 @@ import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import org.joml.Vector2i;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -308,6 +310,8 @@ public class RenderTargets {
 
 			if (drawBuffers[i] >= getRenderTargetCount()) {
 				// TODO: This causes resource leaks, also we should really verify this in the shaderpack parser...
+				framebuffer.destroy();
+				ownedFramebuffers.remove(framebuffer);
 				throw new IllegalStateException("Render target with index " + drawBuffers[i] + " is not supported, only "
 						+ getRenderTargetCount() + " render targets are supported.");
 			}
@@ -322,8 +326,10 @@ public class RenderTargets {
 		framebuffer.drawBuffers(actualDrawBuffers);
 		framebuffer.readBuffer(0);
 
-		if (!framebuffer.isComplete()) {
-			throw new IllegalStateException("Unexpected error while creating framebuffer");
+
+		int status = framebuffer.getStatus();
+		if (status != GL30C.GL_FRAMEBUFFER_COMPLETE) {
+			throw new IllegalStateException("Unexpected error while creating framebuffer: Draw buffers " + Arrays.toString(actualDrawBuffers) + " Status: " + status);
 		}
 
 		return framebuffer;

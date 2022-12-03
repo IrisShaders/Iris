@@ -32,5 +32,8 @@ public class IrisInternalUniforms {
 		}, notifier -> {});
 
 		uniforms.uniform1f("iris_currentAlphaTest", CapturedRenderingState.INSTANCE::getCurrentAlphaTest, notifier -> {});
+
+		// Optifine compatibility
+		uniforms.uniform1f("alphaTestRef", CapturedRenderingState.INSTANCE::getCurrentAlphaTest, notifier -> {});
 	}
 }

@@ -32,6 +32,8 @@ public class ExternallyManagedUniforms {
 		addFloat(uniformHolder, "iris_FogEnd");
 		addVec4(uniformHolder, "iris_FogColor");
 		addMat4(uniformHolder, "iris_ProjectionMatrix");
+		addMat4(uniformHolder, "iris_ModelViewMatrix");
+		addMat4(uniformHolder, "iris_NormalMatrix");
 		addFloat(uniformHolder, "iris_TextureScale");
 		addFloat(uniformHolder, "iris_ModelScale");
 		addFloat(uniformHolder, "iris_ModelOffset");

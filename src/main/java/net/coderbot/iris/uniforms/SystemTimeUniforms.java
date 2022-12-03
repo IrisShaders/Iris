@@ -27,7 +27,7 @@ public final class SystemTimeUniforms {
 		uniforms
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "frameCounter", COUNTER)
 			// TODO: Don't hardcode framemod8 here for Sildur's Vibrant Shaders
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "framemod8", () -> COUNTER.getAsInt() % 8)
+			// .uniform1i(UniformUpdateFrequency.PER_FRAME, "framemod8", () -> COUNTER.getAsInt() % 8)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTime", TIMER::getLastFrameTime)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTimeCounter", TIMER::getFrameTimeCounter);
 	}
