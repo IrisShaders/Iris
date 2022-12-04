@@ -9,7 +9,7 @@ uniform float lastFrameTime;
 uniform float decay;
 
 #ifdef IS_GL3
-out float output;
+out float outputColor;
 #endif
 
 void main() {
@@ -22,7 +22,7 @@ void main() {
         oldDepth = currentDepth;
     }
 
-    output = mix(oldDepth, currentDepth, decay2);
+    outputColor = mix(oldDepth, currentDepth, decay2);
     #else
     if (oldDepth != oldDepth) { // cheap isNaN
        oldDepth = currentDepth;
