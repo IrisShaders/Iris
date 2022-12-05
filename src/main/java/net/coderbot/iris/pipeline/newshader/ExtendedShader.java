@@ -37,7 +37,10 @@ import org.apache.logging.log4j.util.TriConsumer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.ARBTextureSwizzle;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32C;
 
 import java.io.IOException;
@@ -134,6 +137,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		if (lastApplied != this) {
 			lastApplied = this;
 			ProgramManager.glUseProgram(this.getId());
+		}
+
+		if (intensitySwizzle) {
+			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+				new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED });
 		}
 
 		IrisRenderSystem.bindTextureToUnit(IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));

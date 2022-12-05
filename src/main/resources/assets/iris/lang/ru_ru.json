@@ -20,7 +20,7 @@
   "iris.nec.failure.description": "Not Enough Crashes может серьёзно сломать игру при обработке сбоев, при этом не давая точных результатов.\nВ качестве альтернатив есть MixinTrace и Crafty Crashes, которые более надёжно определяют причину сбоя и не доводят игру до нестабильного состояния.",
   "iris.unsupported.irisorpc": "не поддерживает Iris или ваше устройство",
   "iris.unsupported.iris": "Iris не поддерживает",
-  "iris.unsupported.pc": "ваше устройсво не поддерживает",
+  "iris.unsupported.pc": "ваше устройство не поддерживает",
   "iris.unsupported.pack": "Несовместимый набор шейдеров!",
   "iris.unsupported.pack.description": "Этот набор шейдеров содержит функции, которые %s. Попробуйте другой набор. Несовместимо: %s",
   "options.iris.apply": "Применить",
