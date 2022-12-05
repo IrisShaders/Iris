@@ -30,9 +30,9 @@ public class MixinBlockEntityRenderDispatcher {
 	// NOTE: This is the last location that we can inject at, because the MultiBufferSource variable gets
 	// captured by the lambda shortly afterwards, and therefore our ModifyVariable call becomes ineffective!
 	@ModifyVariable(method = "render", at = @At(value = "INVOKE",
-		target = "net/minecraft/world/level/block/entity/BlockEntityType.isValid (Lnet/minecraft/world/level/block/Block;)Z"),
+		target = "Lnet/minecraft/world/level/block/entity/BlockEntityType;isValid(Lnet/minecraft/world/level/block/state/BlockState;)Z"),
 		allow = 1, require = 1)
-	private MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource, BlockEntity blockEntity) {
+	private <E extends BlockEntity> MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource, BlockEntity blockEntity) {
 		Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
 
 		if (blockStateIds == null ) {
@@ -45,7 +45,7 @@ public class MixinBlockEntityRenderDispatcher {
 		// - The block entity is not sure that it's supported by a valid block
 
 		BlockState state = blockEntity.getBlockState();
-		if (!blockEntity.getType().isValid(state.getBlock())) {
+		if (!blockEntity.getType().isValid(state)) {
 			return bufferSource;
 		}
 
