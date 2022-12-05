@@ -53,6 +53,6 @@ public class MixinBlockEntityRenderDispatcher {
 		RenderStateShard stateShard = BlockEntityRenderStateShard.forId(intId);
 
 		return type ->
-			bufferSource.getBuffer(new OuterWrappedRenderType("iris:is_block_entity", type, stateShard));
+			bufferSource.getBuffer(OuterWrappedRenderType.wrapExactlyOnce("iris:is_block_entity", type, stateShard));
 	}
 }

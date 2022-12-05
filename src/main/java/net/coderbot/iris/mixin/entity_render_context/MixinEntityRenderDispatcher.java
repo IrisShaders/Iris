@@ -38,6 +38,6 @@ public class MixinEntityRenderDispatcher {
 		RenderStateShard phase = EntityRenderStateShard.forId(intId);
 
 		return type ->
-				bufferSource.getBuffer(new OuterWrappedRenderType("iris:is_entity", type, phase));
+				bufferSource.getBuffer(OuterWrappedRenderType.wrapExactlyOnce("iris:is_entity", type, phase));
 	}
 }
