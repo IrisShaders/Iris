@@ -375,6 +375,9 @@ public class IrisRenderSystem {
 		@Override
 		public void bindTextureToUnit(int unit, int texture) {
 			ARBDirectStateAccess.glBindTextureUnit(unit, texture);
+
+			// Manually fix GLStateManager bindings...
+			GlStateManagerAccessor.getTEXTURES()[unit].binding = texture;
 		}
 
 		@Override
