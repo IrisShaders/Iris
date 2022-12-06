@@ -21,7 +21,7 @@
   "iris.unsupported.irisorpc": "Iris ou seu computador",
   "iris.unsupported.iris": "Iris",
   "iris.unsupported.pc": "seu computador",
-  "iris.unsupported.pack": "Sombreadores incompatível!",
+  "iris.unsupported.pack": "Sombreadores incompatíveis!",
   "iris.unsupported.pack.description": "Este pacote de sombreadores possui recursos não suportados pelo %s, tente outro pacote. Lista: %s",
   "options.iris.apply": "Aplicar",
   "options.iris.refresh": "Recarregar",
