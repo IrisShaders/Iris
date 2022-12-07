@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin.entity_render_context;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import net.coderbot.batchedentityrendering.impl.Groupable;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.layer.BlockEntityRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
@@ -33,6 +34,11 @@ public class MixinBlockEntityRenderDispatcher {
 		target = "Lnet/minecraft/world/level/block/entity/BlockEntityType;isValid(Lnet/minecraft/world/level/block/state/BlockState;)Z"),
 		allow = 1, require = 1)
 	private <E extends BlockEntity> MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource, BlockEntity blockEntity) {
+		if (!(bufferSource instanceof Groupable)) {
+			// Fully batched entity rendering is not being used, do not use this wrapper!!!
+			return bufferSource;
+		}
+
 		Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
 
 		if (blockStateIds == null ) {

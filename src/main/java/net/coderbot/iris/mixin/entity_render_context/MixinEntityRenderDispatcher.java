@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin.entity_render_context;
 
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
+import net.coderbot.batchedentityrendering.impl.Groupable;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.layer.EntityRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
@@ -26,6 +27,11 @@ public class MixinEntityRenderDispatcher {
 	@ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER),
 		allow = 1, require = 1)
 	private MultiBufferSource iris$beginEntityRender(MultiBufferSource bufferSource, Entity entity) {
+		if (!(bufferSource instanceof Groupable)) {
+			// Fully batched entity rendering is not being used, do not use this wrapper!!!
+			return bufferSource;
+		}
+
 		ResourceLocation entityId = Registry.ENTITY_TYPE.getKey(entity.getType());
 
 		Object2IntFunction<NamespacedId> entityIds = BlockRenderingSettings.INSTANCE.getEntityIds();
