@@ -41,8 +41,8 @@ import org.eclipse.jgit.lib.Constants;
 
 public class Buildscript extends SimpleFabricProject {
 	static final boolean SODIUM = true;
-	static final boolean CUSTOM_SODIUM = true;
-	static final String MC_VERSION = "1.19.3-rc3";
+	static final boolean CUSTOM_SODIUM = false;
+	static final String MC_VERSION = "1.19.3";
 	static final String customSodiumName = "sodium-rc1.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
@@ -103,10 +103,10 @@ public class Buildscript extends SimpleFabricProject {
 			if (CUSTOM_SODIUM) {
 				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			} else {
-				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.2-0.4.4"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.3-0.4.5"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			}
 		} else {
-			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.2-0.4.4"), ModDependencyFlag.COMPILE);
+			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.3-0.4.5"), ModDependencyFlag.COMPILE);
 		}
 	}
 
