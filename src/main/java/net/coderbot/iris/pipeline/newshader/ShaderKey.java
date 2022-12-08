@@ -46,7 +46,7 @@ public enum ShaderKey {
 	LEASH                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	PARTICLES              (ProgramId.TexturedLit, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	WEATHER                (ProgramId.Weather,     AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
-	CRUMBLING              (ProgramId.DamagedBlock,AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.BLOCK,                       FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	CRUMBLING              (ProgramId.DamagedBlock,AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.OFF,          LightingModel.LIGHTMAP  ),
 	TEXT                   (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	TEXT_INTENSITY         (ProgramId.Entities,    AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	TEXT_BE                (ProgramId.Block,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),

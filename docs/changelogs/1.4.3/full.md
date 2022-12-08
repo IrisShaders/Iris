@@ -41,5 +41,6 @@ This release was developed by coderbot and IMS.
 - [Updated Japanese translation](https://github.com/IrisShaders/Iris/pull/1704) (KabanFriends)
 - [Updated Portuguese translation](https://github.com/IrisShaders/Iris/pull/1720) (FITFC)
 - [Updated Chinese translation](https://github.com/IrisShaders/Iris/pull/1734) (GodGun968)
+- [Updated Taiwanese translation](https://github.com/IrisShaders/Iris/pull/1754) (HJ-zhtw)
 - [Updated Russian translation](https://github.com/IrisShaders/Iris/pull/1741) (Felix14-v2)
 - [Updated Ukrainian translation](https://github.com/IrisShaders/Iris/pull/1742) (Altegar)
