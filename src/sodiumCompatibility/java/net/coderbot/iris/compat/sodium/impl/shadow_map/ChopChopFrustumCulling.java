@@ -111,6 +111,21 @@ public class ChopChopFrustumCulling {
 		Vector4f abs = new Vector4f();
 
 		for (Vector4f plane : planes) {
+			// Defensive check to avoid worrying about divide by zero.
+			if (plane.x == 0.0 && plane.y == 0.0 && plane.z == 0.0) {
+				// Degenerate plane detected.
+				//
+				// Remember, given this plane equation, that a point is on the inside side of
+				// a plane if dot(plane, point) > 0.
+				//
+				// Therefore, this is equivalent to if plane.w > 0.
+				if (plane.w < 0) {
+					// All points are outside the plane.
+					result.clear();
+					return result;
+				}
+			}
+
 			current.clear();
 			plane.absolute(abs);
 
