@@ -45,4 +45,32 @@ public class BoxCuller {
 
 		return false;
 	}
+
+	public double getMaxDistance() {
+		return maxDistance;
+	}
+
+	public double getMinAllowedX() {
+		return minAllowedX;
+	}
+
+	public double getMinAllowedY() {
+		return minAllowedY;
+	}
+
+	public double getMinAllowedZ() {
+		return minAllowedZ;
+	}
+
+	public double getMaxAllowedX() {
+		return maxAllowedX;
+	}
+
+	public double getMaxAllowedY() {
+		return maxAllowedY;
+	}
+
+	public double getMaxAllowedZ() {
+		return maxAllowedZ;
+	}
 }

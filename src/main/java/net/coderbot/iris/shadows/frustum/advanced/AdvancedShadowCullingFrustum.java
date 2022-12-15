@@ -7,6 +7,7 @@ import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 
@@ -379,5 +380,10 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 
 	public double getZ() {
 		return z;
+	}
+
+	@Nullable
+	public BoxCuller getBoxCuller() {
+		return boxCuller;
 	}
 }

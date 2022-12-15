@@ -1,16 +1,21 @@
 package net.coderbot.iris.compat.sodium.impl.shadow_map;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
+import it.unimi.dsi.fastutil.objects.ObjectList;
 import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderList;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegionManager;
 import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
+import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 
 /**
  * chop² (ChopChop): A high-performance frustum culling algorithm / implementation for voxel grids
@@ -34,15 +39,36 @@ import java.util.BitSet;
  */
 public class ChopChopFrustumCulling {
 	public static void addVisibleChunksToRenderList(ChunkRenderList renderList,
+													ObjectList<BlockEntity> visibleBlockEntities,
 													AdvancedShadowCullingFrustum frustum,
 													RenderRegionManager regions,
-													Long2ReferenceMap<RenderSection> sections) {
+													Long2ReferenceMap<RenderSection> sections,
+													int frame) {
 		// Note: this makes a copy, so we can safely mutate the array.
 		Vector4f[] planes = frustum.getPlanes();
 
 		for (Vector4f plane : planes) {
 			// Adjust distances from blocks to chunks.
 			plane.w *= (1.0 / 16.0);
+		}
+
+		BoxCuller box = frustum.getBoxCuller();
+		if (box != null) {
+			// Add the boundaries as planes to use our existing code.
+			// A potential optimization is adding special handing for these
+			// axis-aligned planes, but this is the simplest approach that allows us to
+			// just reuse our known-correct plane culling code.
+			int baseIdx = planes.length;
+			planes = Arrays.copyOf(planes, planes.length + 6);
+
+			float distChunks = (float) (box.getMaxDistance() / 16.0);
+
+			planes[baseIdx    ] = new Vector4f(-1f,  0f,  0f, distChunks); // maxX
+			planes[baseIdx + 1] = new Vector4f( 1f,  0f,  0f, distChunks); // minX
+			planes[baseIdx + 2] = new Vector4f( 0f,  1f,  0f, distChunks); // maxY
+			planes[baseIdx + 3] = new Vector4f( 0f, -1f,  0f, distChunks); // minY
+			planes[baseIdx + 4] = new Vector4f( 0f,  0f,  1f, distChunks); // maxZ
+			planes[baseIdx + 5] = new Vector4f( 0f,  0f, -1f, distChunks); // minZ
 		}
 
 		double frustumCenterX = frustum.getX() / 16.0;
@@ -77,7 +103,12 @@ public class ChopChopFrustumCulling {
 					// was loaded before treating it as visible, so we have to check to see if the chunk is
 					// actually there.
 					if (section != null && !section.isEmpty()) {
+						section.getGraphInfo().setLastVisibleFrame(frame);
 						renderList.add(section);
+						Collection<BlockEntity> blockEntities = section.getData().getBlockEntities();
+						if (!blockEntities.isEmpty()) {
+							visibleBlockEntities.addAll(blockEntities);
+						}
 					}
 				}
 			}

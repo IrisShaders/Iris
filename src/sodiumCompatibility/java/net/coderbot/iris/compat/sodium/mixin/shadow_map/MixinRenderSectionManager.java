@@ -23,6 +23,7 @@ import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Final;
@@ -88,6 +89,17 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
     @Unique
     private static final ObjectArrayFIFOQueue<?> EMPTY_QUEUE = new ObjectArrayFIFOQueue<>();
 
+	@Shadow
+	private int centerChunkX;
+	@Shadow
+	private int centerChunkZ;
+	@Shadow
+	private boolean useOcclusionCulling;
+	@Shadow
+	private Frustum frustum;
+	@Shadow
+	private int currentFrame;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void iris$onInit(SodiumWorldRenderer worldRenderer, BlockRenderPassManager renderPassManager,
 							 ClientLevel world, int renderDistance, CommandList commandList, CallbackInfo ci) {
@@ -116,19 +128,48 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
         needsUpdateSwap = needsUpdateTmp;
     }
 
+	@Inject(method = "iterateChunks", at = @At("HEAD"), cancellable = true)
+	private void iris$chop2culling(Camera camera, Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
+		if (!(frustum instanceof AdvancedShadowCullingFrustum)) {
+			return;
+		}
+
+		if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			return;
+		}
+
+		if (!Minecraft.getInstance().player.isShiftKeyDown()) {
+			return;
+		}
+
+		ci.cancel();
+
+		this.currentFrame = frame;
+		this.frustum = frustum;
+		this.useOcclusionCulling = false;
+		BlockPos origin = camera.getBlockPosition();
+		int chunkX = origin.getX() >> 4;
+		int chunkZ = origin.getZ() >> 4;
+		this.centerChunkX = chunkX;
+		this.centerChunkZ = chunkZ;
+
+		ChopChopFrustumCulling.addVisibleChunksToRenderList(chunkRenderList, visibleBlockEntities,
+			(AdvancedShadowCullingFrustum) frustum, regions, sections, frame);
+	}
+
     @Inject(method = "update", at = @At("RETURN"))
 	private void iris$captureVisibleBlockEntities(Camera camera, Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
 		// TODO: Rename injector
-		if (frustum instanceof AdvancedShadowCullingFrustum) {
+		/*if (frustum instanceof AdvancedShadowCullingFrustum) {
 			ChunkRenderList chop2 = new ChunkRenderList();
 
-			ChopChopFrustumCulling.addVisibleChunksToRenderList(chop2, (AdvancedShadowCullingFrustum) frustum,
-				regions, sections);
+			ChopChopFrustumCulling.addVisibleChunksToRenderList(chop2, visibleBlockEntities,
+				(AdvancedShadowCullingFrustum) frustum, regions, sections);
 
 			if (Minecraft.getInstance().player.isShiftKeyDown()) {
 				this.chunkRenderList = chop2;
 			}
-		}
+		}*/
 
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
