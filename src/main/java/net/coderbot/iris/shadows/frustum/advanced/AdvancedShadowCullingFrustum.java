@@ -8,6 +8,8 @@ import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 
+import java.util.Arrays;
+
 /**
  * A Frustum implementation that derives a tightly-fitted shadow pass frustum based on the player's camera frustum and
  * an assumption that the shadow map will only be sampled for the purposes of direct shadow casting, volumetric lighting,
@@ -358,5 +360,24 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		}
 
 		return 2;
+	}
+
+	/**
+	 * @return A copy of the planes contained in this frustum.
+	 */
+	public Vector4f[] getPlanes() {
+		return Arrays.copyOf(planes, planeCount);
+	}
+
+	public double getX() {
+		return x;
+	}
+
+	public double getY() {
+		return y;
+	}
+
+	public double getZ() {
+		return z;
 	}
 }

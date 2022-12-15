@@ -1,5 +1,7 @@
 package net.coderbot.iris.compat.sodium.mixin.shadow_map;
 
+import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
@@ -9,12 +11,19 @@ import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderList;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
+import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
+import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegionManager;
 import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
+import net.coderbot.iris.compat.sodium.impl.shadow_map.ChopChopFrustumCulling;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
+import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
+import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,6 +35,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -50,6 +61,14 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
     @Final
     @Mutable
     private ObjectList<BlockEntity> visibleBlockEntities;
+
+	@Shadow
+	@Final
+	private RenderRegionManager regions;
+
+	@Shadow
+	@Final
+	private Long2ReferenceMap<RenderSection> sections;
 
 	@Shadow(remap = false)
 	private boolean needsUpdate;
@@ -99,6 +118,18 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 
     @Inject(method = "update", at = @At("RETURN"))
 	private void iris$captureVisibleBlockEntities(Camera camera, Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
+		// TODO: Rename injector
+		if (frustum instanceof AdvancedShadowCullingFrustum) {
+			ChunkRenderList chop2 = new ChunkRenderList();
+
+			ChopChopFrustumCulling.addVisibleChunksToRenderList(chop2, (AdvancedShadowCullingFrustum) frustum,
+				regions, sections);
+
+			if (Minecraft.getInstance().player.isShiftKeyDown()) {
+				this.chunkRenderList = chop2;
+			}
+		}
+
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
 		}
