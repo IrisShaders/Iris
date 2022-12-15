@@ -123,6 +123,8 @@ public class ChopChopFrustumCulling {
 					// All points are outside the plane.
 					result.clear();
 					return result;
+				} else {
+					continue;
 				}
 			}
 
