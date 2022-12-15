@@ -76,7 +76,7 @@ public class ChopChopFrustumCulling {
 					// note: the original culling result from chop2 didn't take into account whether the chunk
 					// was loaded before treating it as visible, so we have to check to see if the chunk is
 					// actually there.
-					if (section != null) {
+					if (section != null && !section.isEmpty()) {
 						renderList.add(section);
 					}
 				}
