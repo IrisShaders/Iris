@@ -147,25 +147,25 @@ public class ChopChopFrustumCulling {
 
 						// We've found the boundary, but which side of that boundary is inside the plane?
 						// Remember, given this plane equation, that a point is on the inside side of
-						// a plane if dot(plane, point) < 0.
+						// a plane if dot(plane, point) > 0.
 						//
 						// Let x' be an arbitrary x value such that (x', y, z) is inside the plane.
 						// Clearly, ax' must be less than ax for the plane equation to be less than zero:
-						// ax' < ax
+						// ax' > ax
 						//
-						// Let's assume that x' < x. It must be the case that a > 0 because if a < 0,
-						// then ax' < ax would only hold if x' > x. Therefore, for a given value of a,
+						// Let's assume that x' > x. It must be the case that a < 0 because if a > 0,
+						// then ax' > ax would only hold if x' < x. Therefore, for a given value of a,
 						// two possibilities exist:
 						//
-						// * a > 0: All values less than the boundary x are in the plane
-						// * a < 0: All values greater than the boundary x are in the plane
+						// * a < 0: All values less than the boundary x are in the plane
+						// * a > 0: All values greater than the boundary x are in the plane
 
 						int ixmin = 0;
 						int ixmax = RenderRegion.REGION_WIDTH;
 
 						// Note: This rounding is sensitive, it's been tuned to make sure that our
 						// integral value lies on either one side or the other
-						if (plane.x > 0) {
+						if (plane.x < 0) {
 							float xmax = Math.max(Math.max(xmid00, xmid10), Math.max(xmid01, xmid11));
 							ixmax = (int) Math.ceil(xmax - originX);
 							ixmax = Math.min(ixmax, RenderRegion.REGION_WIDTH);
@@ -203,7 +203,7 @@ public class ChopChopFrustumCulling {
 						int iymin = 0;
 						int iymax = RenderRegion.REGION_HEIGHT;
 
-						if (plane.y > 0) {
+						if (plane.y < 0) {
 							float ymax = Math.max(Math.max(ymid00, ymid10), Math.max(ymid01, ymid11));
 							iymax = (int) Math.ceil(ymax - originY);
 							iymax = Math.min(iymax, RenderRegion.REGION_HEIGHT);
@@ -240,7 +240,7 @@ public class ChopChopFrustumCulling {
 						int izmin = 0;
 						int izmax = RenderRegion.REGION_LENGTH;
 
-						if (plane.z > 0) {
+						if (plane.z < 0) {
 							float zmax = Math.max(Math.max(zmid00, zmid10), Math.max(zmid01, zmid11));
 							izmax = (int) Math.ceil(zmax - originZ);
 							izmax = Math.min(izmax, RenderRegion.REGION_LENGTH);
