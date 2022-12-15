@@ -10,7 +10,6 @@ import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import net.coderbot.iris.vendored.joml.Vector4f;
 import net.minecraft.core.SectionPos;
 
-import java.util.Arrays;
 import java.util.BitSet;
 
 /**
