@@ -75,12 +75,16 @@ public class MixinTitleScreen extends Screen {
 							throw new IllegalStateException(e);
 						}
 					} else {
-						Minecraft.getInstance().stop();
+						if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+							Minecraft.getInstance().setScreen(this);
+						} else {
+							Minecraft.getInstance().stop();
+						}
 					}
 				},
 				Component.translatable("iris.sodium.failure.title").withStyle(ChatFormatting.RED),
 				Component.translatable(reason),
 				Component.translatable("iris.sodium.failure.download"),
-				Component.translatable("menu.quit")));
+				FabricLoader.getInstance().isDevelopmentEnvironment() ? Component.literal("Continue (Development)") : Component.translatable("menu.quit")));
 	}
 }
