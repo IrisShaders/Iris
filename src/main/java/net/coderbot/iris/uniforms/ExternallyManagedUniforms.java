@@ -11,7 +11,7 @@ public class ExternallyManagedUniforms {
 	public static void addExternallyManagedUniforms(UniformHolder uniformHolder) {
 		addMat4(uniformHolder, "iris_ModelViewMatrix");
 		addMat4(uniformHolder, "u_ModelViewProjectionMatrix");
-		addMat4(uniformHolder, "iris_NormalMatrix");
+		addMat3(uniformHolder, "iris_NormalMatrix");
 		// Exclusive to pre-1.19
 		addFloat(uniformHolder, "darknessFactor");
 		addFloat(uniformHolder, "darknessLightFactor");
@@ -55,6 +55,10 @@ public class ExternallyManagedUniforms {
 
 	private static void addMat4(UniformHolder uniformHolder, String name) {
 		uniformHolder.externallyManagedUniform(name, UniformType.MAT4);
+	}
+
+	private static void addMat3(UniformHolder uniformHolder, String name) {
+		uniformHolder.externallyManagedUniform(name, UniformType.MAT3);
 	}
 
 	private static void addVec3(UniformHolder uniformHolder, String name) {

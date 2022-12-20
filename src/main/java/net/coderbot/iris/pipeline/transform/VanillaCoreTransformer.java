@@ -10,6 +10,7 @@ public class VanillaCoreTransformer {
 			TranslationUnit tree,
 			Root root,
 			VanillaParameters parameters) {
+		root.rename("alphaTestRef", "iris_currentAlphaTest");
 		root.rename("modelViewMatrix", "iris_ModelViewMat");
 		root.rename("modelViewMatrixInverse", "iris_ModelViewMatInverse");
 		root.rename("projectionMatrix", "iris_ProjMat");
