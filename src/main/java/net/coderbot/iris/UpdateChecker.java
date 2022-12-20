@@ -13,7 +13,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -141,13 +140,13 @@ public class UpdateChecker {
 			String originalText = info.updateInfo.containsKey(languageCode) ? info.updateInfo.get(languageCode) : info.updateInfo.get("en_us");
 			String[] textParts = originalText.split("\\{link}");
 			if (textParts.length > 1) {
-				MutableComponent component1 = new TextComponent(textParts[0]);
-				MutableComponent component2 = new TextComponent(textParts[1]);
-				MutableComponent link = new TextComponent(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
+				MutableComponent component1 = Component.literal(textParts[0]);
+				MutableComponent component2 = Component.literal(textParts[1]);
+				MutableComponent link = Component.literal(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
 				return Optional.of(component1.append(link).append(component2));
 			} else {
-				MutableComponent link = new TextComponent(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
-				return Optional.of(new TextComponent(textParts[0]).append(link));
+				MutableComponent link = Component.literal(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
+				return Optional.of(Component.literal(textParts[0]).append(link));
 			}
 		} else {
 			return Optional.empty();

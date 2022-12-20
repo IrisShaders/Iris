@@ -1,6 +1,7 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
 import io.github.coolcrabs.brachyura.processing.ProcessingSink;
 import io.github.coolcrabs.brachyura.processing.Processor;
@@ -30,6 +31,7 @@ public class FmjVersionFixer implements Processor {
 				}
 
 				fabricModJson.addProperty("version", parent.getVersion());
+				fabricModJson.get("mixins").getAsJsonArray().remove(new JsonPrimitive("mixins.iris.devenvironment.json"));
 
 				sink.sink(() -> GsonUtil.toIs(fabricModJson, gson), e.id);
 			} else {

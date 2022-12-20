@@ -11,14 +11,14 @@ import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+
+
 
 import java.util.Collection;
 import java.util.function.Function;
 
 public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
-	private static final Component PACK_LIST_LABEL = new TranslatableComponent("pack.iris.list.label").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
+	private static final Component PACK_LIST_LABEL = Component.translatable("pack.iris.list.label").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
 
 	private final ShaderPackScreen screen;
 	private final TopButtonRowEntry topButtonRow;
@@ -57,15 +57,15 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			// We're just trying to get more information on a seemingly untraceable bug:
 			// - https://github.com/IrisShaders/Iris/issues/785
 			this.addLabelEntries(
-					TextComponent.EMPTY,
-					new TextComponent("There was an error reading your shaderpacks directory")
+					Component.empty(),
+					Component.literal("There was an error reading your shaderpacks directory")
 							.withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
-					TextComponent.EMPTY,
-					new TextComponent("Check your logs for more information."),
-					new TextComponent("Please file an issue report including a log file."),
-					new TextComponent("If you are able to identify the file causing this, " +
+					Component.empty(),
+					Component.literal("Check your logs for more information."),
+					Component.literal("Please file an issue report including a log file."),
+					Component.literal("If you are able to identify the file causing this, " +
 											 "please include it in your report as well."),
-					new TextComponent("Note that this might be an issue with folder " +
+					Component.literal("Note that this might be an issue with folder " +
 											 "permissions; ensure those are correct first.")
 			);
 
@@ -161,7 +161,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		// Appears to be some accessibility thing
 		@Override
 		public Component getNarration() {
-			return new TranslatableComponent("narrator.select", packName);
+			return Component.translatable("narrator.select", packName);
 		}
 
 		@Override
@@ -172,11 +172,11 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 			boolean shadersEnabled = list.getTopButtonRow().shadersEnabled;
 
-			if (font.width(new TextComponent(name).withStyle(ChatFormatting.BOLD)) > this.list.getRowWidth() - 3) {
+			if (font.width(Component.literal(name).withStyle(ChatFormatting.BOLD)) > this.list.getRowWidth() - 3) {
 				name = font.plainSubstrByWidth(name, this.list.getRowWidth() - 8) + "...";
 			}
 
-			MutableComponent text = new TextComponent(name);
+			MutableComponent text = Component.literal(name);
 
 			if (this.isMouseOver(mouseX, mouseY)) {
 				text = text.withStyle(ChatFormatting.BOLD);
@@ -241,10 +241,10 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	}
 
 	public static class TopButtonRowEntry extends BaseEntry {
-		private static final Component REFRESH_SHADER_PACKS_LABEL = new TranslatableComponent("options.iris.refreshShaderPacks").withStyle(style -> style.withColor(TextColor.fromRgb(0x99ceff)));
-		private static final Component NONE_PRESENT_LABEL = new TranslatableComponent("options.iris.shaders.nonePresent").withStyle(ChatFormatting.GRAY);
-		private static final Component SHADERS_DISABLED_LABEL = new TranslatableComponent("options.iris.shaders.disabled");
-		private static final Component SHADERS_ENABLED_LABEL = new TranslatableComponent("options.iris.shaders.enabled");
+		private static final Component REFRESH_SHADER_PACKS_LABEL = Component.translatable("options.iris.refreshShaderPacks").withStyle(style -> style.withColor(TextColor.fromRgb(0x99ceff)));
+		private static final Component NONE_PRESENT_LABEL = Component.translatable("options.iris.shaders.nonePresent").withStyle(ChatFormatting.GRAY);
+		private static final Component SHADERS_DISABLED_LABEL = Component.translatable("options.iris.shaders.disabled");
+		private static final Component SHADERS_ENABLED_LABEL = Component.translatable("options.iris.shaders.enabled");
 		private static final int REFRESH_BUTTON_WIDTH = 18;
 
 		private final ShaderPackSelectionList list;
@@ -307,7 +307,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		// Appears to be some accessibility thing
 		@Override
 		public Component getNarration() {
-			return new TranslatableComponent("narration.button", this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
+			return Component.translatable("narration.button", this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
 		}
 
 		@Override

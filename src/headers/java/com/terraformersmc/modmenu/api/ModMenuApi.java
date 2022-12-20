@@ -26,7 +26,7 @@ package com.terraformersmc.modmenu.api;
 
 import com.terraformersmc.modmenu.util.ModMenuApiMarker;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 
 import java.util.Map;
 
@@ -43,12 +43,12 @@ public interface ModMenuApi extends ModMenuApiMarker {
 	}
 
 	/**
-	 * Used for creating a {@link TextComponent} just like what would appear
+	 * Used for creating a {@link Component} just like what would appear
 	 * on a Mod Menu Mods button
 	 *
 	 * @return The text that would be displayed on a Mods button
 	 */
-	static TextComponent createModsButtonText() {
+	static Component createModsButtonText() {
 		throw new AssertionError("Attempt to call API header stub method");
 	}
 

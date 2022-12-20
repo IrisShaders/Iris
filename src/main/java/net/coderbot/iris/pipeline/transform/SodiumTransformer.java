@@ -15,9 +15,15 @@ public class SodiumTransformer {
 		CommonTransformer.transform(t, tree, root, parameters);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
+			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
+			// See https://github.com/IrisShaders/Iris/issues/1149
+			root.rename("gl_MultiTexCoord2", "gl_MultiTexCoord1");
+
 			if (parameters.inputs.hasTex()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
 						"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
@@ -27,19 +33,19 @@ public class SodiumTransformer {
 			}
 
 			if (parameters.inputs.hasLight()) {
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_LightmapTextureMatrix;");
-				root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
-
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4(_vert_tex_light_coord, 0, 1)");
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4(_vert_tex_light_coord, 0, 1)");
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
+						"vec4(_vert_tex_light_coord, 0.0, 1.0)");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
-						"vec4(0.0, 0.0, 0.0, 1.0)");
+						"vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
-			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs, other
-			// texture coordinates are not valid inputs.
-			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 2, 7);
+			AttributeTransformer.patchMultiTexCoord3(t, tree, root, parameters);
+
+			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs (with
+			// gl_MultiTexCoord2 and gl_MultiTexCoord3 as aliases), other texture
+			// coordinates are not valid inputs.
+			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
 		}
 
 		if (parameters.inputs.hasColor()) {
@@ -88,13 +94,13 @@ public class SodiumTransformer {
 					// translated from sodium's chunk_vertex.glsl
 					"vec3 _vert_position;",
 					"vec2 _vert_tex_diffuse_coord;",
-					"vec2 _vert_tex_light_coord;",
+					"ivec2 _vert_tex_light_coord;",
 					"vec4 _vert_color;",
 					"uint _draw_id;",
 					"in vec4 a_PosId;",
 					"in vec4 a_Color;",
 					"in vec2 a_TexCoord;",
-					"in vec2 a_LightCoord;",
+					"in ivec2 a_LightCoord;",
 					"void _vert_init() {" +
 							"_vert_position = (a_PosId.xyz * " + String.valueOf(parameters.positionScale) + " + "
 							+ String.valueOf(parameters.positionOffset) + ");" +

@@ -9,7 +9,11 @@ accessible  class   net/minecraft/client/renderer/RenderType$CompositeState
 accessible  class   net/minecraft/client/renderer/texture/Stitcher$Holder
 accessible  class   net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo
 accessible  class   net/minecraft/client/Options$FieldAccess
+accessible  class   net/minecraft/client/OptionInstance$ValueSet
+extendable  class   net/minecraft/client/OptionInstance
 extendable class net/minecraft/client/renderer/texture/TextureAtlasSprite$Info
+accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask
+accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask$CompileResults
 mutable field net/minecraft/client/renderer/ShaderInstance PROJECTION_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/ShaderInstance MODEL_VIEW_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/ShaderInstance TEXTURE_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;

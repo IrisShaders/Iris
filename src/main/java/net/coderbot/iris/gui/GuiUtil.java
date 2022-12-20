@@ -9,8 +9,8 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+
+
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 
@@ -25,7 +25,7 @@ import net.minecraft.sounds.SoundEvents;
  */
 public final class GuiUtil {
 	public static final ResourceLocation IRIS_WIDGETS_TEX = new ResourceLocation("iris", "textures/gui/widgets.png");
-	private static final Component ELLIPSIS = new TextComponent("...");
+	private static final Component ELLIPSIS = Component.literal("...");
 
 	private GuiUtil() {}
 
@@ -129,7 +129,7 @@ public final class GuiUtil {
 	 */
 	public static MutableComponent shortenText(Font font, MutableComponent text, int width) {
 		if (font.width(text) > width) {
-			return new TextComponent(font.plainSubstrByWidth(text.getString(), width - font.width(ELLIPSIS))).append(ELLIPSIS).setStyle(text.getStyle());
+			return Component.literal(font.plainSubstrByWidth(text.getString(), width - font.width(ELLIPSIS))).append(ELLIPSIS).setStyle(text.getStyle());
 		}
 		return text;
 	}
@@ -146,7 +146,7 @@ public final class GuiUtil {
 	 */
 	public static MutableComponent translateOrDefault(MutableComponent defaultText, String translationDesc, Object ... format) {
 		if (I18n.exists(translationDesc)) {
-			return new TranslatableComponent(translationDesc, format);
+			return Component.translatable(translationDesc, format);
 		}
 		return defaultText;
 	}

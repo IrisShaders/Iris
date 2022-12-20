@@ -10,14 +10,12 @@ import net.coderbot.iris.shaderpack.option.menu.OptionMenuBooleanOptionElement;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 
 public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBooleanOptionElement> {
-	private static final Component TEXT_TRUE = new TranslatableComponent("label.iris.true").withStyle(ChatFormatting.GREEN);
-	private static final Component TEXT_FALSE = new TranslatableComponent("label.iris.false").withStyle(ChatFormatting.RED);
-	private static final Component TEXT_TRUE_DEFAULT = new TranslatableComponent("label.iris.true");
-	private static final Component TEXT_FALSE_DEFAULT = new TranslatableComponent("label.iris.false");
+	private static final Component TEXT_TRUE = Component.translatable("label.iris.true").withStyle(ChatFormatting.GREEN);
+	private static final Component TEXT_FALSE = Component.translatable("label.iris.false").withStyle(ChatFormatting.RED);
+	private static final Component TEXT_TRUE_DEFAULT = Component.translatable("label.iris.true");
+	private static final Component TEXT_FALSE_DEFAULT = Component.translatable("label.iris.false");
 
 	private final BooleanOption option;
 
@@ -45,7 +43,7 @@ public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBool
 		this.defaultValue = this.element.getAppliedOptionValues().getOptionSet().getBooleanOptions()
 			.get(this.option.getName()).getOption().getDefaultValue();
 
-		this.setLabel(GuiUtil.translateOrDefault(new TextComponent(this.option.getName()), "option." + this.option.getName()));
+		this.setLabel(GuiUtil.translateOrDefault(Component.literal(this.option.getName()), "option." + this.option.getName()));
 	}
 
 	@Override

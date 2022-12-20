@@ -6,7 +6,7 @@ import me.jellysquid.mods.sodium.client.gui.options.OptionPage;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,7 +36,7 @@ public class MixinSodiumOptionsGUI extends Screen {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void iris$onInit(Screen prevScreen, CallbackInfo ci) {
-        TranslatableComponent shaderPacksTranslated = new TranslatableComponent("options.iris.shaderPackSelection");
+        Component shaderPacksTranslated = Component.translatable("options.iris.shaderPackSelection");
         shaderPacks = new OptionPage(shaderPacksTranslated, ImmutableList.of());
         pages.add(shaderPacks);
     }

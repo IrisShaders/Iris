@@ -9,7 +9,7 @@ import net.coderbot.iris.shaderpack.option.StringOption;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuStringOptionElement;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.network.chat.TextComponent;
+
 
 import java.util.List;
 
@@ -37,7 +37,7 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 		// The value currently in use by the shader pack
 		this.appliedValue = this.element.getAppliedOptionValues().getStringValueOrDefault(this.option.getName());
 
-		this.setLabel(GuiUtil.translateOrDefault(new TextComponent(this.option.getName()), "option." + this.option.getName()));
+		this.setLabel(GuiUtil.translateOrDefault(Component.literal(this.option.getName()), "option." + this.option.getName()));
 
 		List<String> values = this.option.getAllowedValues();
 
@@ -62,7 +62,7 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 	@Override
 	protected Component createValueLabel() {
 		return GuiUtil.translateOrDefault(
-				new TextComponent(getValue()).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff))),
+				Component.literal(getValue()).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff))),
 				"value." + this.option.getName() + "." + getValue());
 	}
 

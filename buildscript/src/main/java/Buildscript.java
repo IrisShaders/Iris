@@ -42,8 +42,8 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = false;
-	static final String MC_VERSION = "1.18.2";
-	static final String customSodiumName = "sodium-fabric-mc1.18.2-0.4.1+rev.d50338a.jar";
+	static final String MC_VERSION = "1.19.2";
+	static final String customSodiumName = "sodium-fabric-mc1.19.2-0.4.3+rev.653869b.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
 		"main",
@@ -89,24 +89,24 @@ public class Buildscript extends SimpleFabricProject {
 	@Override
 	public void getModDependencies(ModDependencyCollector d) {
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.anarres:jcpp:1.4.14"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
-		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.12+54e5b2ec60"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.20+aeb40ebe90"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:1.0.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.antlr:antlr4-runtime:4.10.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 
 		if (SODIUM) {
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.3+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.6+d7c144a8d2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "2.0.1+54e5b2ecd2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.5.2+446e059560"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.8+d7c144a8a7"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "3.0.0+56447d9ba7"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.7.0+93d8cb8290"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
 			if (CUSTOM_SODIUM) {
 				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			} else {
-				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.2-0.4.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.2-0.4.4"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			}
 		} else {
-			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.18.2-0.4.1"), ModDependencyFlag.COMPILE);
+			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.2-0.4.4"), ModDependencyFlag.COMPILE);
 		}
 
 		d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.joml:joml:1.10.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
@@ -179,7 +179,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public Path getBuildJarPath() {
-		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + createMcVersion().version + "-" + getVersion() + ".jar");
+		return getBuildLibsDir().resolve(getModId() + "-" + "mc" + MC_VERSION + "-" + getVersion() + ".jar");
 	}
 
 	@Override
