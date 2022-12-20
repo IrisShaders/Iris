@@ -10,6 +10,14 @@ public class VanillaCoreTransformer {
 			TranslationUnit tree,
 			Root root,
 			VanillaParameters parameters) {
+		root.rename("modelViewMatrix", "iris_ModelViewMat");
+		root.rename("modelViewMatrixInverse", "iris_ModelViewMatInverse");
+		root.rename("projectionMatrix", "iris_ProjMat");
+		root.rename("projectionMatrixInverse", "iris_ProjMatInverse");
+		root.rename("textureMatrix", "iris_TextureMat");
+		root.rename("normalMatrix", "iris_NormalMat");
+		root.rename("chunkOffset", "iris_ChunkOffset");
+
 		if (parameters.type == PatchShaderType.VERTEX) {
 			root.rename("vaPosition", "iris_Position");
 			root.rename("vaColor", "iris_Color");
@@ -17,13 +25,6 @@ public class VanillaCoreTransformer {
 			root.rename("vaUV0", "iris_UV0");
 			root.rename("vaUV1", "iris_UV1");
 			root.rename("vaUV2", "iris_UV2");
-			root.rename("modelViewMatrix", "iris_ModelViewMat");
-			root.rename("modelViewMatrixInverse", "iris_ModelViewMatInverse");
-			root.rename("projectionMatrix", "iris_ProjMat");
-			root.rename("projectionMatrixInverse", "iris_ProjMatInverse");
-			root.rename("textureMatrix", "iris_TextureMat");
-			root.rename("normalMatrix", "iris_NormalMat");
-			root.rename("chunkOffset", "iris_ChunkOffset");
 		}
 
 		if (parameters.inputs.hasOverlay()) {

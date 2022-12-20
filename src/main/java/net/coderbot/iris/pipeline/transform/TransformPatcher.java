@@ -200,16 +200,18 @@ public class TransformPatcher {
 						default:
 							// TODO: Implement Optifine's special core profile mode
 							if (profile == Profile.CORE || version.number >= 150 && profile == null) {
-								if (parameters.type == PatchShaderType.VERTEX) {
-									if (parameters.patch == Patch.VANILLA) {
-										VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
-										break;
-									} else {
-										throw new IllegalStateException(
-											"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless) See debugging.md for more information.");
-									}
-								} else {
+								if (parameters.patch == Patch.VANILLA) {
+									VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
 									break;
+								} else if (parameters.patch == Patch.SODIUM) {
+									SodiumCoreTransformer.transform(transformer, tree, root, (SodiumParameters) parameters);
+									break;
+								} else if (parameters.patch == Patch.COMPOSITE) {
+									CompositeCoreTransformer.transform(transformer, tree, root, (CompositeParameters) parameters);
+									break;
+								} else {
+									throw new IllegalStateException(
+										"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless) See debugging.md for more information.");
 								}
 							}
 							if (version.number >= 330) {

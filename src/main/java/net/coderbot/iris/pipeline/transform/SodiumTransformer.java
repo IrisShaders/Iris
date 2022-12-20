@@ -67,9 +67,9 @@ public class SodiumTransformer {
 		// TODO: Should probably add the normal matrix as a proper uniform that's
 		// computed on the CPU-side of things
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix",
-				"mat3(iris_NormalMatrix)");
+				"iris_NormalMatrix");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"uniform mat4 iris_NormalMatrix;");
+				"uniform mat3 iris_NormalMatrix;");
 
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform mat4 iris_ModelViewMatrixInverse;");
