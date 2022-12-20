@@ -11,11 +11,14 @@ public class ShaderAttributeInputs {
 	private boolean light;
 	private boolean normal;
 	private boolean newLines;
+	private boolean gbuffersLine;
 
-	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright) {
-		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL) {
+	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isGbuffersLine) {
+		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL && !isGbuffersLine) {
 			newLines = true;
 		}
+
+		gbuffersLine = isGbuffersLine;
 
 		format.getElementAttributeNames().forEach(name -> {
 			if ("Color".equals(name)) {
@@ -70,6 +73,10 @@ public class ShaderAttributeInputs {
 
 	public boolean isNewLines() {
 		return newLines;
+	}
+
+	public boolean isGbuffersLine() {
+		return gbuffersLine;
 	}
 
 	public InputAvailability toAvailability() {

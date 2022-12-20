@@ -335,12 +335,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			try {
 				if (key.isShadow()) {
 					if (shadowRenderTargets != null) {
-						return createShadowShader(key.getName(), resolver.resolve(key.getProgram()), key);
+						return createShadowShader(key.getName(), resolver.resolve(key.getProgram()), key,(key.getProgram() == ProgramId.Line && resolver.hasSourceFor(ProgramId.Line)));
 					} else {
 						return null;
 					}
 				} else {
-					return createShader(key.getName(), resolver.resolve(key.getProgram()), key);
+					return createShader(key.getName(), resolver.resolve(key.getProgram()), key, (key.getProgram() == ProgramId.Line && resolver.hasSourceFor(ProgramId.Line)));
 				}
 			} catch (IOException e) {
 				destroyShaders();
@@ -454,21 +454,21 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return programs;
 	}
 
-	private ShaderInstance createShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
+	private ShaderInstance createShader(String name, Optional<ProgramSource> source, ShaderKey key, boolean isLine) throws IOException {
 		if (!source.isPresent()) {
 			return createFallbackShader(name, key);
 		}
 
 		return createShader(name, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
-				key.isIntensity(), key.shouldIgnoreLightmap());
+				key.isIntensity(), key.shouldIgnoreLightmap(), isLine);
 	}
 
 	private ShaderInstance createShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FogMode fogMode,
-										boolean isIntensity, boolean isFullbright) throws IOException {
+										boolean isIntensity, boolean isFullbright, boolean isLine) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isLine);
 
 		Supplier<ImmutableSet<Integer>> flipped =
 			() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
@@ -494,13 +494,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return shader;
 	}
 
-	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
+	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, ShaderKey key, boolean isLine) throws IOException {
 		if (!source.isPresent()) {
 			return createFallbackShadowShader(name, key);
 		}
 
 		return createShadowShader(name, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(),
-				key.isIntensity(), key.shouldIgnoreLightmap());
+				key.isIntensity(), key.shouldIgnoreLightmap(), isLine);
 	}
 
 	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
@@ -516,9 +516,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	private ShaderInstance createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
-											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright) throws IOException {
+											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright, boolean isLine) throws IOException {
 		GlFramebuffer framebuffer = this.shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isLine);
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
 

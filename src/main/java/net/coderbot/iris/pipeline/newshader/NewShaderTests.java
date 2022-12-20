@@ -113,7 +113,7 @@ public class NewShaderTests {
 												VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
 												NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
 												boolean intensityTex, boolean isFullbright) throws IOException {
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, false);
 
 		// TODO: Is this check sound in newer versions?
 		boolean isLeash = vertexFormat == DefaultVertexFormat.POSITION_COLOR_LIGHTMAP;

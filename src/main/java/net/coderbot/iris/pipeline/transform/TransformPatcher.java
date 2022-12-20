@@ -199,16 +199,17 @@ public class TransformPatcher {
 							break;
 						default:
 							// TODO: Implement Optifine's special core profile mode
-							if (profile == Profile.CORE || version.number >= 150 && profile == null) {
+							boolean isCore = profile == Profile.CORE || (version.number >= 150 && profile == null);
+							if (isCore || (parameters instanceof VanillaParameters && ((VanillaParameters) parameters).inputs.isGbuffersLine())) {
 								if (parameters.patch == Patch.VANILLA) {
 									VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
-									break;
+									if (isCore) break;
 								} else if (parameters.patch == Patch.SODIUM) {
 									SodiumCoreTransformer.transform(transformer, tree, root, (SodiumParameters) parameters);
-									break;
+									if (isCore) break;
 								} else if (parameters.patch == Patch.COMPOSITE) {
 									CompositeCoreTransformer.transform(transformer, tree, root, (CompositeParameters) parameters);
-									break;
+									if (isCore) break;
 								} else {
 									throw new IllegalStateException(
 										"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless) See debugging.md for more information.");
