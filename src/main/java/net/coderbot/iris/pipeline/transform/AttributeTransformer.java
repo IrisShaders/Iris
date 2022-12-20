@@ -138,8 +138,11 @@ class AttributeTransformer {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform sampler2D iris_overlay;",
 					"out vec4 entityColor;",
-					"out vec4 iris_vertexColor;",
-					"in ivec2 iris_UV1;");
+					"out vec4 iris_vertexColor;");
+
+			if (!root.identifierIndex.has("iris_UV1")) {
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in ivec2 iris_UV1;");
+			}
 
 			// Create our own main function to wrap the existing main function, so that we
 			// can pass through the overlay color at the end to the geometry or fragment

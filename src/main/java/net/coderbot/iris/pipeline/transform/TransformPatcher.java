@@ -201,8 +201,13 @@ public class TransformPatcher {
 							// TODO: Implement Optifine's special core profile mode
 							if (profile == Profile.CORE || version.number >= 150 && profile == null) {
 								if (parameters.type == PatchShaderType.VERTEX) {
-									throw new IllegalStateException(
+									if (parameters.patch == Patch.VANILLA) {
+										VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+										break;
+									} else {
+										throw new IllegalStateException(
 											"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless) See debugging.md for more information.");
+									}
 								} else {
 									break;
 								}
