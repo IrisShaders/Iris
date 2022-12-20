@@ -92,7 +92,8 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		buffer.putShort(i + 12, XHFPModelVertexType.encodeBlockTexture(u));
 		buffer.putShort(i + 14, XHFPModelVertexType.encodeBlockTexture(v));
 
-		buffer.putInt(i + 16, XHFPModelVertexType.encodeLightMapTexCoord(light));
+		buffer.putShort(i + 16, (short) (light & 0xFFFF));
+		buffer.putShort(i + 18, (short) (light >> 16 & 0xFFFF));
 
 		// NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
 		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec

@@ -48,6 +48,7 @@ import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.shaderpack.IdMap;
+import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
@@ -225,7 +226,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(renderTargets, programs.getPackDirectives().getCenterDepthHalfLife());
+		this.centerDepthSampler = new CenterDepthSampler(() -> getRenderTargets().getDepthTexture(), programs.getPackDirectives().getCenterDepthHalfLife());
 
 		this.shadowMapResolution = programs.getPackDirectives().getShadowDirectives().getResolution();
 
@@ -294,18 +295,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.shadowComputes = createShadowComputes(programs.getShadowCompute(), programs);
 
-		if (shadowRenderTargets != null) {
-			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
-			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
-
-			this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
-				programs.getPackDirectives(), shadowRenderTargets, false);
-		} else {
-			this.shadowClearPasses = ImmutableList.of();
-			this.shadowClearPassesFull = ImmutableList.of();
-			this.shadowRenderer = null;
-		}
-
 		this.table = new ProgramTable<>((condition, availability) -> {
 			int idx;
 
@@ -329,13 +318,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				ProgramSource source = resolver.resolveNullable(p.getFirst());
 
 				if (condition == RenderCondition.SHADOW) {
-					if (shadowRenderTargets == null) {
+					if (!shadowDirectives.isShadowEnabled().orElse(shadowRenderTargets != null)) {
 						// shadow is not used
 						return null;
 					} else if (source == null) {
 						// still need the custom framebuffer, viewport, and blend mode behavior
 						GlFramebuffer shadowFb =
-							shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] {0});
+							shadowTargetsSupplier.get().createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] {0});
 						return new Pass(null, shadowFb, shadowFb, null,
 							BlendModeOverride.OFF, Collections.emptyList(), true);
 					}
@@ -353,6 +342,28 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				}
 			});
 		});
+
+		if (shadowRenderTargets == null && shadowDirectives.isShadowEnabled() == OptionalBoolean.TRUE) {
+			shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, shadowDirectives);
+		}
+
+		if (shadowRenderTargets != null) {
+			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
+			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
+
+			if (programs.getPackDirectives().getShadowDirectives().isShadowEnabled().orElse(true)) {
+				Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
+
+				this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
+					programs.getPackDirectives(), shadowRenderTargets, shadowProgram != null && shadowProgram.getActiveImages() > 0);
+			} else {
+				shadowRenderer = null;
+			}
+		} else {
+			this.shadowClearPasses = ImmutableList.of();
+			this.shadowClearPassesFull = ImmutableList.of();
+			this.shadowRenderer = null;
+		}
 
 		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
 				programs.getPackDirectives().getRenderTargetDirectives());
@@ -424,6 +435,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programs, createTerrainSamplers,
 			shadowRenderTargets == null ? null : createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedAfterPrepare, flippedAfterTranslucent,
 			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 }) : null);
+	}
+
+	private RenderTargets getRenderTargets() {
+		return renderTargets;
 	}
 
 	private void checkWorld() {
@@ -665,7 +680,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		if (shadow) {
 			// Always add both draw buffers on the shadow pass.
 			framebufferBeforeTranslucents =
-				Objects.requireNonNull(shadowRenderTargets).createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
+				shadowTargetsSupplier.get().createShadowFramebuffer(shadowRenderTargets.snapshot(), new int[] { 0, 1 });
 			framebufferAfterTranslucents = framebufferBeforeTranslucents;
 		} else {
 			framebufferBeforeTranslucents =
@@ -868,30 +883,39 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private void prepareRenderTargets() {
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+		Vector4f emptyClearColor = new Vector4f(1.0F);
 
 		if (shadowRenderTargets != null) {
-			// Clear depth first, regardless of any color clearing.
-			shadowRenderTargets.getDepthSourceFb().bind();
-			RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
-
-			Vector4f emptyClearColor = new Vector4f(1.0F);
-			ImmutableList<ClearPass> passes;
-
-			for (ComputeProgram computeProgram : shadowComputes) {
-				if (computeProgram != null) {
-					computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
+			if (packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
+				if (shadowRenderTargets.isFullClearRequired()) {
+					shadowRenderTargets.onFullClear();
+					for (ClearPass clearPass : shadowClearPassesFull) {
+						clearPass.execute(emptyClearColor);
+					}
 				}
-			}
-
-			if (shadowRenderTargets.isFullClearRequired()) {
-				passes = shadowClearPassesFull;
-				shadowRenderTargets.onFullClear();
 			} else {
-				passes = shadowClearPasses;
-			}
+				// Clear depth first, regardless of any color clearing.
+				shadowRenderTargets.getDepthSourceFb().bind();
+				RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
 
-			for (ClearPass clearPass : passes) {
-				clearPass.execute(emptyClearColor);
+				ImmutableList<ClearPass> passes;
+
+				for (ComputeProgram computeProgram : shadowComputes) {
+					if (computeProgram != null) {
+						computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
+					}
+				}
+
+				if (shadowRenderTargets.isFullClearRequired()) {
+					passes = shadowClearPassesFull;
+					shadowRenderTargets.onFullClear();
+				} else {
+					passes = shadowClearPasses;
+				}
+
+				for (ClearPass clearPass : passes) {
+					clearPass.execute(emptyClearColor);
+				}
 			}
 		}
 

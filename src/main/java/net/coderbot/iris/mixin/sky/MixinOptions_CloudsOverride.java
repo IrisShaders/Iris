@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value = Options.class, priority = 1010)
 public class MixinOptions_CloudsOverride {
 	@Shadow
-	private int renderDistance;
+	public int renderDistance;
 
 	@Inject(method = "getCloudsType", at = @At("HEAD"), cancellable = true)
 	private void iris$overrideCloudsType(CallbackInfoReturnable<CloudStatus> cir) {

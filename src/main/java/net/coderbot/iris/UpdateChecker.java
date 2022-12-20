@@ -164,7 +164,7 @@ public class UpdateChecker {
 		}
 	}
 
-	class UpdateInfo {
+	static class UpdateInfo {
 		public String semanticVersion;
 		public Map<String, String> updateInfo;
 		public String modHost;

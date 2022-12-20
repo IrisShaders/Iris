@@ -27,7 +27,11 @@ public class SodiumTransformer {
 			}
 
 			if (parameters.inputs.hasLight()) {
-				SodiumTerrainTransformer.replaceLightmapForSodium("_vert_tex_light_coord", t, tree, root);
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform mat4 iris_LightmapTextureMatrix;");
+				root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
+
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4(_vert_tex_light_coord, 0, 1)");
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4(_vert_tex_light_coord, 0, 1)");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
 						"vec4(0.0, 0.0, 0.0, 1.0)");
@@ -61,9 +65,17 @@ public class SodiumTransformer {
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform mat4 iris_NormalMatrix;");
 
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+				"uniform mat4 iris_ModelViewMatrixInverse;");
+
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+				"uniform mat4 iris_ProjectionMatrixInverse;");
+
 		// TODO: All of the transformed variants of the input matrices, preferably
 		// computed on the CPU side...
 		root.rename("gl_ModelViewMatrix", "iris_ModelViewMatrix");
+		root.rename("gl_ModelViewMatrixInverse", "iris_ModelViewMatrixInverse");
+		root.rename("gl_ProjectionMatrixInverse", "iris_ProjectionMatrixInverse");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to
