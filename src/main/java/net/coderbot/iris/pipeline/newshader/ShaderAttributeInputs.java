@@ -88,11 +88,12 @@ public class ShaderAttributeInputs {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (color ? 1231 : 1237);
-		result = prime * result + (light ? 1231 : 1237);
-		result = prime * result + (newLines ? 1231 : 1237);
-		result = prime * result + (normal ? 1231 : 1237);
-		result = prime * result + (overlay ? 1231 : 1237);
 		result = prime * result + (tex ? 1231 : 1237);
+		result = prime * result + (overlay ? 1231 : 1237);
+		result = prime * result + (light ? 1231 : 1237);
+		result = prime * result + (normal ? 1231 : 1237);
+		result = prime * result + (newLines ? 1231 : 1237);
+		result = prime * result + (gbuffersLine ? 1231 : 1237);
 		return result;
 	}
 
@@ -107,15 +108,17 @@ public class ShaderAttributeInputs {
 		ShaderAttributeInputs other = (ShaderAttributeInputs) obj;
 		if (color != other.color)
 			return false;
-		if (light != other.light)
-			return false;
-		if (newLines != other.newLines)
-			return false;
-		if (normal != other.normal)
+		if (tex != other.tex)
 			return false;
 		if (overlay != other.overlay)
 			return false;
-		if (tex != other.tex)
+		if (light != other.light)
+			return false;
+		if (normal != other.normal)
+			return false;
+		if (newLines != other.newLines)
+			return false;
+		if (gbuffersLine != other.gbuffersLine)
 			return false;
 		return true;
 	}
