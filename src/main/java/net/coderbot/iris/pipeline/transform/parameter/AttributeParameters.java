@@ -1,8 +1,9 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.parameter;
 
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
+import net.coderbot.iris.pipeline.transform.Patch;
 
-class AttributeParameters extends OverlayParameters {
+public class AttributeParameters extends OverlayParameters {
 	public final InputAvailability inputs;
 
 	public AttributeParameters(Patch patch, boolean hasGeometry, InputAvailability inputs) {

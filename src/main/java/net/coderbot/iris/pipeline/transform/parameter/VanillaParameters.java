@@ -1,7 +1,8 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.parameter;
 
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.pipeline.transform.Patch;
 
 public class VanillaParameters extends OverlayParameters {
 	public final AlphaTest alpha;

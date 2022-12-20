@@ -1,4 +1,4 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.transformer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,6 +32,7 @@ import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
 // Order fixed
 public class CommonTransformer {
