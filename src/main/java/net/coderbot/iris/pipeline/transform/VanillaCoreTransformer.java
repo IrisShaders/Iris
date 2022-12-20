@@ -2,12 +2,8 @@ package net.coderbot.iris.pipeline.transform;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
-import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.newshader.AlphaTests;
 
-// Order fixed
 public class VanillaCoreTransformer {
 	public static void transform(
 			ASTParser t,
@@ -24,7 +20,7 @@ public class VanillaCoreTransformer {
 		}
 
 		if (parameters.inputs.hasOverlay()) {
-			AttributeTransformer.	patchOverlayColor(t, tree, root, parameters);
+			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
 		}
 	}
 }
