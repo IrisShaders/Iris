@@ -72,6 +72,7 @@ The paid versions are not supported, but Continuum 2.0.4 works decently.
 * [XorDev's shaders](https://github.com/XorDev/Minecraft-Shaderpacks)
 * [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus)
 * [maple's retro extravaganza](https://github.com/Lana-chan/maples-retro-extravaganza)
+* [Voyager Shaders](https://www.curseforge.com/minecraft/customization/voyager-shader-2-0)
 
 # Shaders that do not work on Iris
 
@@ -91,7 +92,6 @@ This is not a complete list, but is just for people trying to control-F their fa
   - SoftVoxels
   - UShader
   - VanillaPlus
-- Voyager Shaders
 - All shaders made by DrDesten
   - DrDestens MinecraftShaders
   - Stracciatella
