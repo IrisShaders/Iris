@@ -146,7 +146,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		}
 
 		if (intensitySwizzle) {
-			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), TextureType.TEXTURE_2D.getGlType(), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
 				new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED });
 		}
 

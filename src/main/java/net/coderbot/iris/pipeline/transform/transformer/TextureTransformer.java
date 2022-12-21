@@ -1,16 +1,11 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
-import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
-import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
@@ -18,18 +13,7 @@ import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-class TextureTransformer {
-	public static final AutoHintedMatcher<ExternalDeclaration> sampler = new AutoHintedMatcher<ExternalDeclaration>(
-			"uniform Type name;", Matcher.externalDeclarationPattern, "__") {
-		{
-			markClassedPredicateWildcard("type",
-					pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
-					BuiltinFixedTypeSpecifier.class,
-					specifier -> specifier.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER);
-			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
-		}
-	};
-
+public class TextureTransformer {
 	public static void transform(
 			ASTParser t,
 			TranslationUnit tree,
@@ -54,7 +38,7 @@ class TextureTransformer {
 						continue;
 					}
 					if (initDeclaration.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier fixed
-							&& fixed.type == convertType(stringTextureTypeTextureStageTri.getSecond())) {
+							&& isTypeValid(stringTextureTypeTextureStageTri.getSecond(), fixed.type)) {
 						root.rename(stringTextureTypeTextureStageTri.getFirst(), s);
 						break;
 					}
@@ -63,16 +47,21 @@ class TextureTransformer {
 		});
 	}
 
-	private static BuiltinFixedTypeSpecifier.BuiltinType convertType(TextureType extractedType) {
-		switch (extractedType) {
-			case TEXTURE_1D:
-				return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D;
-			case TEXTURE_2D:
-				return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D;
-			case TEXTURE_3D:
-				return BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D;
-			default:
-				throw new IllegalStateException("What is this enum? " + extractedType.name());
+	private static boolean isTypeValid(TextureType expectedType, BuiltinFixedTypeSpecifier.BuiltinType extractedType) {
+		if (expectedType == TextureType.TEXTURE_1D) {
+			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D ||
+			extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER1D ||
+			extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER1D;
+		} else if (expectedType == TextureType.TEXTURE_2D) {
+			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2D ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2D;
+		} else if (expectedType == TextureType.TEXTURE_3D) {
+			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER3D ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER3D;
+		} else {
+			throw new IllegalStateException("Unexpected enum! " + expectedType);
 		}
 	}
 }

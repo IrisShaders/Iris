@@ -1,6 +1,7 @@
 package net.coderbot.iris.gl.texture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;

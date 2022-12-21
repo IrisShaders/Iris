@@ -25,7 +25,7 @@ public class FogUniforms {
 			uniforms.uniform1i("fogMode", () -> {
 				float fogDensity = CapturedRenderingState.INSTANCE.getFogDensity();
 
-				if (fogDensity < 0.0F) {
+				if (fogDensity > 0.0F) {
 					return GL11.GL_LINEAR;
 				} else {
 					return GL11.GL_EXP2;

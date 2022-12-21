@@ -1,4 +1,4 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
@@ -10,6 +10,7 @@ import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
 public class CompositeTransformer {
 	private static final AutoHintedMatcher<Expression> glTextureMatrix0To7 = new AutoHintedMatcher<Expression>(

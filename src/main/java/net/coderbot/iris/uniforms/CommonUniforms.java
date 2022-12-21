@@ -59,6 +59,7 @@ public final class CommonUniforms {
 
 	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
 	public static void addDynamicUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
+		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
 		FogUniforms.addFogUniforms(uniforms, fogMode);
 		IrisInternalUniforms.addFogUniforms(uniforms);
 
@@ -132,7 +133,6 @@ public final class CommonUniforms {
 
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
-			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
 			.uniform1f(PER_FRAME, "darknessFactor", CommonUniforms::getDarknessFactor)

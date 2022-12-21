@@ -1,9 +1,11 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.parameter;
 
 import io.github.douira.glsl_transformer.job_parameter.JobParameters;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.pipeline.transform.Patch;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
 
-class Parameters extends JobParameters{
+public class Parameters extends JobParameters {
 	public final Patch patch;
 	public PatchShaderType type;
 

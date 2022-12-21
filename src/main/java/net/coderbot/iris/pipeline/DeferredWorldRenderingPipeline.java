@@ -16,9 +16,7 @@ import net.coderbot.iris.gbuffer_overrides.matching.ProgramTable;
 import net.coderbot.iris.gbuffer_overrides.matching.RenderCondition;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
-import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
-import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.AlphaTestStorage;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -37,7 +35,6 @@ import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
-import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.postprocess.BufferFlipper;
 import net.coderbot.iris.postprocess.CenterDepthSampler;
@@ -54,6 +51,7 @@ import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.coderbot.iris.shaderpack.ParticleRenderingSettings;
 import net.coderbot.iris.shaderpack.ProgramDirectives;
 import net.coderbot.iris.shaderpack.ProgramFallbackResolver;
 import net.coderbot.iris.shaderpack.ProgramSet;
@@ -84,13 +82,9 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.*;
 
-import java.io.IOException;
-import java.util.*;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
-import org.lwjgl.opengl.GL43C;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -101,8 +95,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.Set;
-import java.util.function.IntFunction;
-import java.util.function.Supplier;
 
 /**
  * Encapsulates the compiled shader program objects for the currently loaded shaderpack.
@@ -175,6 +167,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private final CustomUniforms customUniforms;
 	private Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTextureMap;
+	private ParticleRenderingSettings particleRenderingSettings;
 
 	public DeferredWorldRenderingPipeline(ProgramSet programs) {
 		Objects.requireNonNull(programs);
@@ -185,7 +178,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.shouldRenderSun = programs.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programs.getPackDirectives().shouldRenderMoon();
 		this.shouldWriteRainAndSnowToDepthBuffer = programs.getPackDirectives().rainDepth();
-		this.shouldRenderParticlesBeforeDeferred = programs.getPackDirectives().areParticlesBeforeDeferred();
+		this.shouldRenderParticlesBeforeDeferred = false;
 		this.allowConcurrentCompute = programs.getPackDirectives().getConcurrentCompute();
 		this.shouldRenderPrepareBeforeShadow = programs.getPackDirectives().isPrepareBeforeShadow();
 		this.oldLighting = programs.getPackDirectives().isOldLighting();
@@ -193,6 +186,14 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		this.customTextureMap = programs.getPackDirectives().getTextureMap();
 
 		this.packDirectives = programs.getPackDirectives();
+
+		this.particleRenderingSettings = programs.getPackDirectives().getParticleRenderingSettings().orElseGet(() -> {
+			if (programs.getDeferred().length > 0) {
+				return ParticleRenderingSettings.AFTER;
+			} else {
+				return ParticleRenderingSettings.MIXED;
+			}
+		});
 
 		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
@@ -521,8 +522,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	@Override
-	public boolean shouldRenderParticlesBeforeDeferred() {
-		return shouldRenderParticlesBeforeDeferred;
+	public ParticleRenderingSettings getParticleRenderingSettings() {
+		return particleRenderingSettings;
 	}
 
 	@Override

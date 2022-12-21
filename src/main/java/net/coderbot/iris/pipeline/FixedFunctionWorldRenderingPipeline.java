@@ -11,6 +11,7 @@ import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
 import net.coderbot.iris.shaderpack.CloudSetting;
+import net.coderbot.iris.shaderpack.ParticleRenderingSettings;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
@@ -188,8 +189,8 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public boolean shouldRenderParticlesBeforeDeferred() {
-		return false;
+	public ParticleRenderingSettings getParticleRenderingSettings() {
+		return ParticleRenderingSettings.MIXED;
 	}
 
 	@Override
