@@ -119,7 +119,6 @@ public final class CommonUniforms {
 
 		uniforms
 			.uniform1b(PER_FRAME, "hideGUI", () -> client.options.hideGui)
-			.uniform1f(PER_FRAME, "eyeAltitude", () -> Objects.requireNonNull(client.getCameraEntity()).getEyeY())
 			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
