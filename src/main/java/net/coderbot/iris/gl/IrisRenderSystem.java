@@ -438,19 +438,19 @@ public class IrisRenderSystem {
 
 		@Override
 		public void texParameteri(int texture, int target, int pname, int param) {
-			GlStateManager._bindTexture(texture);
+			bindTextureForSetup(target, texture);
 			GL32C.glTexParameteri(target, pname, param);
 		}
 
 		@Override
 		public void texParameterf(int texture, int target, int pname, float param) {
-			GlStateManager._bindTexture(texture);
+			bindTextureForSetup(target, texture);
 			GL32C.glTexParameterf(target, pname, param);
 		}
 
 		@Override
 		public void texParameteriv(int texture, int target, int pname, int[] params) {
-			GlStateManager._bindTexture(texture);
+			bindTextureForSetup(target, texture);
 			GL32C.glTexParameteriv(target, pname, params);
 		}
 
@@ -468,7 +468,7 @@ public class IrisRenderSystem {
 
 		@Override
 		public int getTexParameteri(int texture, int target, int pname) {
-			GlStateManager._bindTexture(texture);
+			bindTextureForSetup(target, texture);
 			return GL32C.glGetTexParameteri(target, pname);
 		}
 
@@ -484,7 +484,7 @@ public class IrisRenderSystem {
 		public void bindTextureToUnit(int target, int unit, int texture) {
 			int activeTexture = GlStateManager._getActiveTexture();
 			GlStateManager._activeTexture(GL30C.GL_TEXTURE0 + unit);
-			GL11C.glBindTexture(target, texture);
+			bindTextureForSetup(target, texture);
 			GlStateManager._activeTexture(activeTexture);
 		}
 
