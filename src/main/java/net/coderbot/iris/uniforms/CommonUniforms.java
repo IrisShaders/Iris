@@ -139,7 +139,9 @@ public final class CommonUniforms {
 			.uniform1f(PER_FRAME, "darknessLightFactor", CapturedRenderingState.INSTANCE::getDarknessLightFactor)
 			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
 			.uniform1b(PER_FRAME, "is_sneaking", CommonUniforms::isSneaking)
+			.uniform1b(PER_FRAME, "is_sprinting", CommonUniforms::isSprinting)
 			.uniform1b(PER_FRAME, "is_hurt", CommonUniforms::isHurt)
+			.uniform1b(PER_FRAME, "is_burning", CommonUniforms::isBurning)
 			// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect
 			//       that the player is trying to turn on fullbright?
 			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma().get())
@@ -160,7 +162,15 @@ public final class CommonUniforms {
 
 	private static boolean isHurt() {
 		if (client.player != null) {
-			return client.player.isHurt();
+			return client.player.hurtTime > 0; // Do not use isHurt, that's not what we want!
+		} else {
+			return false;
+		}
+	}
+
+	private static boolean isBurning() {
+		if (client.player != null) {
+			return client.player.isOnFire();
 		} else {
 			return false;
 		}
@@ -169,6 +179,14 @@ public final class CommonUniforms {
 	private static boolean isSneaking() {
 		if (client.player != null) {
 			return client.player.isCrouching();
+		} else {
+			return false;
+		}
+	}
+
+	private static boolean isSprinting() {
+		if (client.player != null) {
+			return client.player.isSprinting();
 		} else {
 			return false;
 		}
