@@ -36,12 +36,20 @@ public class SmoothFloat {
 	public float updateAndGet(float value, float halfLifeUp, float halfLifeDown) {
 		if (halfLifeUp != cachedHalfLifeUp) {
 			cachedHalfLifeUp = halfLifeUp;
-			cachedDecayUp = computeDecay(halfLifeUp * 0.1F);
+			if (halfLifeUp == 0.0f) {
+				cachedDecayUp = 0;
+			} else {
+				cachedDecayUp = computeDecay(halfLifeUp * 0.1F);
+			}
 		}
 
 		if (halfLifeDown != cachedHalfLifeDown) {
 			cachedHalfLifeDown = halfLifeDown;
-			cachedDecayDown = computeDecay(halfLifeDown * 0.1F);
+			if (halfLifeDown == 0.0f) {
+				cachedDecayDown = 0;
+			} else {
+				cachedDecayDown = computeDecay(halfLifeDown * 0.1F);
+			}
 		}
 
 		if (!hasInitialValue) {
@@ -62,9 +70,16 @@ public class SmoothFloat {
 		// 𝚫t
 		float lastFrameTime = SystemTimeUniforms.TIMER.getLastFrameTime();
 
+		float decay = value > this.accumulator ? cachedDecayUp : cachedDecayDown;
+
+		if (decay == 0.0f) {
+			accumulator = value;
+			return accumulator;
+		}
+
 		// Compute the smoothing factor based on our
 		// α = 1 - e^(-𝚫t/τ) = 1 - e^(-k𝚫t)
-		float smoothingFactor = 1.0f - exponentialDecayFactor(value > this.accumulator ? cachedDecayUp : cachedDecayDown, lastFrameTime);
+		float smoothingFactor = 1.0f - exponentialDecayFactor(decay, lastFrameTime);
 
 		// sₜ = αxₜ + (1 - α)sₜ₋₁
 		accumulator = lerp(accumulator, value, smoothingFactor);
