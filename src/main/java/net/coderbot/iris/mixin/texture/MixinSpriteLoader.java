@@ -14,7 +14,7 @@ public class MixinSpriteLoader {
 	@Inject(method = "loadSprite", at = @At(value = "HEAD"), cancellable = true)
 	private static void editMap(ResourceLocation location, Resource arg2, CallbackInfoReturnable<SpriteContents> ci) {
 		// TODO: sga_x is the enchanting table particles, we REALLY need a better way to do this.
-		if (!arg2.source().packId().equals("vanilla") && !location.getPath().startsWith("sga") && (location.getPath().endsWith("_n") || location.getPath().endsWith("_s") || location.getPath().endsWith("_n.png") || location.getPath().endsWith("_s.png"))) {
+		if (!(arg2.source().packId().equals("vanilla") && arg2.source().isBuiltin()) && !location.getPath().startsWith("sga") && (location.getPath().endsWith("_n") || location.getPath().endsWith("_s") || location.getPath().endsWith("_n.png") || location.getPath().endsWith("_s.png"))) {
 			ci.setReturnValue(null);
 		}
 	}
