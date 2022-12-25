@@ -85,7 +85,7 @@
     "texture.SimpleTextureAccessor",
     "texture.TextureAtlasAccessor",
     "texture.TextureAtlasSpriteAccessor",
-    "texture.MixinSpriteSourceOutput",
+    "texture.MixinSpriteLoader",
     "texture.pbr.MixinTextureAtlas",
     "texture.pbr.MixinSpriteContents",
     "state_tracking.MixinPostChain",
