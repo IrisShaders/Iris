@@ -218,6 +218,7 @@ public class TransformPatcher {
 							// we can assume the version is at least 400 because it's a compute shader
 							versionStatement.profile = Profile.CORE;
 							CommonTransformer.transform(transformer, tree, root, parameters);
+							TextureTransformer.transform(transformer, tree, root, ((ComputeParameters) parameters).getStage(), ((ComputeParameters) parameters).getTextureMap());
 							break;
 						default:
 							// TODO: Implement Optifine's special core profile mode
@@ -383,7 +384,7 @@ public class TransformPatcher {
 		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE, stage, textureMap));
 	}
 
-	public static String patchCompute(String compute) {
-		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE)).getOrDefault(PatchShaderType.COMPUTE, null);
+	public static String patchCompute(String compute, TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap)).getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 }
