@@ -41,14 +41,15 @@ public class CommonTransformer {
 			"gl_TextureMatrix[0]", Matcher.expressionPattern);
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", Matcher.expressionPattern);
-	public static final AutoHintedMatcher<ExternalDeclaration> sampler = new AutoHintedMatcher<>(
+	public static final Matcher<ExternalDeclaration> sampler = new Matcher<>(
 			"uniform Type name;", Matcher.externalDeclarationPattern) {
 		{
 			markClassedPredicateWildcard("type",
 					pattern.getRoot().identifierIndex.getUnique("Type").getAncestor(TypeSpecifier.class),
 					BuiltinFixedTypeSpecifier.class,
 					specifier -> specifier.type.kind == TypeKind.SAMPLER);
-			markClassWildcard("name*", pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+			markClassWildcard("name*",
+					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
 		}
 	};
 

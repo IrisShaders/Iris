@@ -211,15 +211,19 @@ public class CompatibilityTransformer {
 		}
 	}
 
-	private static class DeclarationMatcher extends AutoHintedMatcher<ExternalDeclaration> {
+	private static class DeclarationMatcher extends Matcher<ExternalDeclaration> {
 		private final StorageType storageType;
 
 		public DeclarationMatcher(StorageType storageType) {
 			super("out float name;", Matcher.externalDeclarationPattern);
 			this.storageType = storageType;
+		}
+
+		{
 			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
 			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*", pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+			markClassWildcard("name*",
+					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
 		}
 
 		@Override
@@ -242,9 +246,9 @@ public class CompatibilityTransformer {
 	}
 
 	private static final ShaderType[] pipeline = { ShaderType.VERTEX, ShaderType.GEOMETRY, ShaderType.FRAGMENT };
-	private static final AutoHintedMatcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(
+	private static final Matcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(
 			StorageType.OUT);
-	private static final AutoHintedMatcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(
+	private static final Matcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(
 			StorageType.IN);
 
 	private static final String tagPrefix = "iris_template_";
@@ -259,7 +263,8 @@ public class CompatibilityTransformer {
 			.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
 
 	static {
-		declarationTemplate.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getUnique(TypeQualifier.class));
+		declarationTemplate
+				.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getUnique(TypeQualifier.class));
 		declarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
 		declarationTemplate.markIdentifierReplacement("__name");
 		initTemplate.markIdentifierReplacement("__decl");
