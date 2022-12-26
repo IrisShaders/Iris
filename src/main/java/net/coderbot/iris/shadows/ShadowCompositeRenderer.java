@@ -309,7 +309,7 @@ public class ShadowCompositeRenderer {
 				ProgramBuilder builder;
 
 				try {
-					builder = ProgramBuilder.beginCompute(source.getName(), source.getSource().orElse(null),
+					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null), TextureStage.SHADOWCOMP, pipeline.getTextureMap()),
 						IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 				} catch (RuntimeException e) {
 					// TODO: Better error handling

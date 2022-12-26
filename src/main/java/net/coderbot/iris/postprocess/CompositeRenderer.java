@@ -383,7 +383,7 @@ public class CompositeRenderer {
 				ProgramBuilder builder;
 
 				try {
-					builder = ProgramBuilder.beginCompute(source.getName(), source.getSource().orElse(null), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null), textureStage, pipeline.getTextureMap()), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 				} catch (RuntimeException e) {
 					// TODO: Better error handling
 					throw new RuntimeException("Shader compilation failed!", e);
