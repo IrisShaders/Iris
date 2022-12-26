@@ -112,7 +112,7 @@ public class PropertiesPreprocessor {
 
 		source = builder.toString();
 
-		return listener.collectLines() + source.replace("IRIS_PASSTHROUGHBACKSLASH", "\\");
+		return (listener.collectLines() + source).replace("IRIS_PASSTHROUGHBACKSLASH", "\\");
 	}
 
 	private static List<String> getBooleanValues(ShaderPackOptions shaderPackOptions) {
