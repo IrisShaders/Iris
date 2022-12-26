@@ -18,11 +18,11 @@ import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
-import io.github.douira.glsl_transformer.cst.core.SemanticException;
-import io.github.douira.glsl_transformer.cst.token_filter.ChannelFilter;
-import io.github.douira.glsl_transformer.cst.token_filter.TokenChannel;
-import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
+import io.github.douira.glsl_transformer.token_filter.ChannelFilter;
+import io.github.douira.glsl_transformer.token_filter.TokenChannel;
+import io.github.douira.glsl_transformer.token_filter.TokenFilter;
 import io.github.douira.glsl_transformer.util.LRUCache;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -142,7 +142,7 @@ public class TransformPatcher {
 		@Override
 		public boolean isTokenAllowed(Token token) {
 			if (!super.isTokenAllowed(token)) {
-				throw new SemanticException("Unparsed preprocessor directives such as '" + token.getText()
+				throw new IllegalArgumentException("Unparsed preprocessor directives such as '" + token.getText()
 						+ "' may not be present at this stage of shader processing!");
 			}
 			return true;
@@ -150,6 +150,7 @@ public class TransformPatcher {
 	};
 
 	static {
+		Root.identifierIndexFactory = PrefixIdentifierIndex::withPrefix;
 		transformer = new EnumASTTransformer<Parameters, PatchShaderType>(PatchShaderType.class) {
 			@Override
 			public TranslationUnit parseTranslationUnit(String input) throws RecognitionException {
@@ -181,15 +182,18 @@ public class TransformPatcher {
 				Root root = tree.getRoot();
 
 				// check for illegal references to internal Iris shader interfaces
-				Optional<Identifier> violation = root.identifierIndex.prefixQueryFlat("iris_").findAny();
+				Optional<Identifier> violation = ((PrefixIdentifierIndex<?, ?>) root.identifierIndex)
+						.prefixQueryFlat("iris_").findAny();
 				if (!violation.isPresent()) {
-					violation = root.identifierIndex.prefixQueryFlat("irisMain").findAny();
+					violation = ((PrefixIdentifierIndex<?, ?>) root.identifierIndex)
+							.prefixQueryFlat("irisMain").findAny();
 				}
 				if (!violation.isPresent()) {
-					violation = root.identifierIndex.prefixQueryFlat("moj_import").findAny();
+					violation = ((PrefixIdentifierIndex<?, ?>) root.identifierIndex)
+							.prefixQueryFlat("moj_import").findAny();
 				}
 				violation.ifPresent(id -> {
-					throw new SemanticException(
+					throw new IllegalArgumentException(
 							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
 									+ id.getName() + ". See debugging.md for more information.");
 				});
@@ -254,7 +258,7 @@ public class TransformPatcher {
 			// the compatibility transformer does a grouped transformation
 			CompatibilityTransformer.transformGrouped(transformer, trees, parameters);
 		});
-		transformer.setParseTokenFilter(parseTokenFilter);
+		transformer.setTokenFilter(parseTokenFilter);
 	}
 
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);

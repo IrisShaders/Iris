@@ -36,6 +36,7 @@ import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericT
 import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
@@ -347,7 +348,7 @@ public class CompatibilityTransformer {
 			Root prevRoot = prevTree.getRoot();
 
 			// test if the prefix tag is used for some reason
-			if (prevRoot.identifierIndex.prefixQueryFlat(tagPrefix).findAny().isPresent()) {
+			if (((PrefixIdentifierIndex<?, ?>) prevRoot.identifierIndex).prefixQueryFlat(tagPrefix).findAny().isPresent()) {
 				LOGGER.warn("The prefix tag " + tagPrefix + " is used in the shader, bailing compatibility transformation.");
 				return;
 			}
