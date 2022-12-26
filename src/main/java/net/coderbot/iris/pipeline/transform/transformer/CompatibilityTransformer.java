@@ -217,9 +217,9 @@ public class CompatibilityTransformer {
 		public DeclarationMatcher(StorageType storageType) {
 			super("out float name;", Matcher.externalDeclarationPattern);
 			this.storageType = storageType;
-			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getOne(TypeQualifier.class));
-			markClassWildcard("type", pattern.getRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
+			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
+			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
+			markClassWildcard("name*", pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
 		}
 
 		@Override
@@ -259,7 +259,7 @@ public class CompatibilityTransformer {
 			.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
 
 	static {
-		declarationTemplate.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getOne(TypeQualifier.class));
+		declarationTemplate.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getUnique(TypeQualifier.class));
 		declarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
 		declarationTemplate.markIdentifierReplacement("__name");
 		initTemplate.markIdentifierReplacement("__decl");

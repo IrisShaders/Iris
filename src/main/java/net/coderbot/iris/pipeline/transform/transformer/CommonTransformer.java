@@ -45,10 +45,10 @@ public class CommonTransformer {
 			"uniform Type name;", Matcher.externalDeclarationPattern) {
 		{
 			markClassedPredicateWildcard("type",
-					pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
+					pattern.getRoot().identifierIndex.getUnique("Type").getAncestor(TypeSpecifier.class),
 					BuiltinFixedTypeSpecifier.class,
 					specifier -> specifier.type.kind == TypeKind.SAMPLER);
-			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
+			markClassWildcard("name*", pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
 		}
 	};
 
@@ -56,7 +56,7 @@ public class CommonTransformer {
 			"gl_FragData[index]", Matcher.expressionPattern) {
 		{
 			markClassedPredicateWildcard("index",
-					pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
+					pattern.getRoot().identifierIndex.getUnique("index").getAncestor(ReferenceExpression.class),
 					LiteralExpression.class,
 					literalExpression -> literalExpression.isInteger() && literalExpression.getInteger() >= 0);
 		}
