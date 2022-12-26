@@ -1,7 +1,9 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.parameter;
 
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.pipeline.transform.Patch;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
 
 public class SodiumParameters extends Parameters {
 	private final AlphaTest cutoutAlpha;

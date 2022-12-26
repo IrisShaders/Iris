@@ -1,4 +1,4 @@
-package net.coderbot.iris.pipeline.transform;
+package net.coderbot.iris.pipeline.transform.transformer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,6 +23,7 @@ import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTyp
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier.BuiltinType.TypeKind;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
@@ -32,6 +33,7 @@ import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
 // Order fixed
 public class CommonTransformer {
@@ -39,14 +41,15 @@ public class CommonTransformer {
 			"gl_TextureMatrix[0]", Matcher.expressionPattern);
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", Matcher.expressionPattern);
-	public static final AutoHintedMatcher<ExternalDeclaration> sampler = new AutoHintedMatcher<>(
-			"uniform Type name;", Matcher.externalDeclarationPattern, "__") {
+	public static final Matcher<ExternalDeclaration> sampler = new Matcher<>(
+			"uniform Type name;", Matcher.externalDeclarationPattern) {
 		{
 			markClassedPredicateWildcard("type",
-					pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
+					pattern.getRoot().identifierIndex.getUnique("Type").getAncestor(TypeSpecifier.class),
 					BuiltinFixedTypeSpecifier.class,
 					specifier -> specifier.type.kind == TypeKind.SAMPLER);
-			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
+			markClassWildcard("name*",
+					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
 		}
 	};
 
@@ -54,7 +57,7 @@ public class CommonTransformer {
 			"gl_FragData[index]", Matcher.expressionPattern) {
 		{
 			markClassedPredicateWildcard("index",
-					pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
+					pattern.getRoot().identifierIndex.getUnique("index").getAncestor(ReferenceExpression.class),
 					LiteralExpression.class,
 					literalExpression -> literalExpression.isInteger() && literalExpression.getInteger() >= 0);
 		}
@@ -328,7 +331,7 @@ public class CommonTransformer {
 			int minimum,
 			int maximum) {
 		root.replaceReferenceExpressions(t,
-				root.identifierIndex.prefixQueryFlat("gl_MultiTexCoord")
+				((PrefixIdentifierIndex<?, ?>) root.identifierIndex).prefixQueryFlat("gl_MultiTexCoord")
 						.filter(id -> {
 							int index = Integer.parseInt(id.getName().substring("gl_MultiTexCoord".length()));
 							return index >= minimum && index <= maximum;
