@@ -97,7 +97,6 @@ public class IrisFunctions {
 
 			{
 				// divide
-				IrisFunctions.<II2IFunction>addVectorizable("divide", (a, b) -> a / b);
 				IrisFunctions.<FF2FFunction>add("divide", (a, b) -> a / b);
 
 				IrisFunctions.addBinaryOpJOML("divide", VectorType.VEC2, Vector2f::div);

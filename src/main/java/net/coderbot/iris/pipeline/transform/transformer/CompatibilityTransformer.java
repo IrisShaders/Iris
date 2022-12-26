@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import io.github.douira.glsl_transformer.ast.node.expression.Expression;
-import net.coderbot.iris.Iris;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,6 +19,7 @@ import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.declaration.FunctionParameter;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
+import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
@@ -37,12 +36,14 @@ import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericT
 import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
 import io.github.douira.glsl_transformer.util.Type;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
@@ -52,7 +53,7 @@ public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
 	private static final AutoHintedMatcher<Expression> sildursWaterFract = new AutoHintedMatcher<>(
-		"fract(worldpos.y + 0.001)", Matcher.expressionPattern);
+			"fract(worldpos.y + 0.001)", Matcher.expressionPattern);
 
 	private static StorageQualifier getConstQualifier(TypeQualifier qualifier) {
 		if (qualifier == null) {
@@ -73,7 +74,7 @@ public class CompatibilityTransformer {
 		if (parameters.type == PatchShaderType.VERTEX) {
 			if (root.replaceExpressionMatches(t, sildursWaterFract, "fract(worldpos.y + 0.01)")) {
 				Iris.logger.warn("Patched fract(worldpos.y + 0.001) to fract(worldpos.y + 0.01) to fix " +
-					"waving water disconnecting from other water blocks; See https://github.com/IrisShaders/Iris/issues/509");
+						"waving water disconnecting from other water blocks; See https://github.com/IrisShaders/Iris/issues/509");
 			}
 		}
 
@@ -210,15 +211,19 @@ public class CompatibilityTransformer {
 		}
 	}
 
-	private static class DeclarationMatcher extends AutoHintedMatcher<ExternalDeclaration> {
+	private static class DeclarationMatcher extends Matcher<ExternalDeclaration> {
 		private final StorageType storageType;
 
 		public DeclarationMatcher(StorageType storageType) {
 			super("out float name;", Matcher.externalDeclarationPattern);
 			this.storageType = storageType;
-			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getOne(TypeQualifier.class));
-			markClassWildcard("type", pattern.getRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
+		}
+
+		{
+			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
+			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
+			markClassWildcard("name*",
+					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
 		}
 
 		@Override
@@ -241,9 +246,9 @@ public class CompatibilityTransformer {
 	}
 
 	private static final ShaderType[] pipeline = { ShaderType.VERTEX, ShaderType.GEOMETRY, ShaderType.FRAGMENT };
-	private static final AutoHintedMatcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(
+	private static final Matcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(
 			StorageType.OUT);
-	private static final AutoHintedMatcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(
+	private static final Matcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(
 			StorageType.IN);
 
 	private static final String tagPrefix = "iris_template_";
@@ -258,7 +263,8 @@ public class CompatibilityTransformer {
 			.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
 
 	static {
-		declarationTemplate.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getOne(TypeQualifier.class));
+		declarationTemplate
+				.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getUnique(TypeQualifier.class));
 		declarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
 		declarationTemplate.markIdentifierReplacement("__name");
 		initTemplate.markIdentifierReplacement("__decl");
@@ -347,7 +353,7 @@ public class CompatibilityTransformer {
 			Root prevRoot = prevTree.getRoot();
 
 			// test if the prefix tag is used for some reason
-			if (prevRoot.identifierIndex.prefixQueryFlat(tagPrefix).findAny().isPresent()) {
+			if (((PrefixIdentifierIndex<?, ?>) prevRoot.identifierIndex).prefixQueryFlat(tagPrefix).findAny().isPresent()) {
 				LOGGER.warn("The prefix tag " + tagPrefix + " is used in the shader, bailing compatibility transformation.");
 				return;
 			}
@@ -362,10 +368,10 @@ public class CompatibilityTransformer {
 							.getNodeMatch("name*", DeclarationMember.class)
 							.getAncestor(TypeAndInitDeclaration.class)
 							.getMembers()) {
-								String name = member.getName().getName();
-								if (!name.startsWith("gl_")) {
-									outDeclarations.put(name, extractedType);
-								}
+						String name = member.getName().getName();
+						if (!name.startsWith("gl_")) {
+							outDeclarations.put(name, extractedType);
+						}
 					}
 				}
 			}
@@ -405,7 +411,8 @@ public class CompatibilityTransformer {
 								LOGGER.warn(
 										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 												+ " shader that has a missing corresponding out declaration in the previous stage "
-												+ prevType.name() + " has a non-numeric type and could not be compatibility-patched. See debugging.md for more information.");
+												+ prevType.name()
+												+ " has a non-numeric type and could not be compatibility-patched. See debugging.md for more information.");
 								continue;
 							}
 							Type inType = inTypeSpecifier.type;
@@ -429,7 +436,8 @@ public class CompatibilityTransformer {
 							LOGGER.warn(
 									"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 											+ " shader is missing a corresponding out declaration in the previous stage "
-											+ prevType.name() + " and has been compatibility-patched. See debugging.md for more information.");
+											+ prevType.name()
+											+ " and has been compatibility-patched. See debugging.md for more information.");
 						}
 
 						// patch mismatching declaration with a local variable and a cast
@@ -464,7 +472,8 @@ public class CompatibilityTransformer {
 								LOGGER.warn(
 										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
 												+ " shader has a mismatching dimensionality (scalar/vector/matrix) with the out declaration in the previous stage "
-												+ prevType.name() + " and could not be compatibility-patched. See debugging.md for more information.");
+												+ prevType.name()
+												+ " and could not be compatibility-patched. See debugging.md for more information.");
 								continue;
 							}
 

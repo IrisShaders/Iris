@@ -302,6 +302,8 @@ public class ShaderProperties {
 
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
 				String[] parts = value.split(" ");
+				// TODO: Is there a better way to achieve this?
+				samplerName = samplerName.split("\\.")[0];
 
 				Optional<TextureStage> optionalTextureStage = TextureStage.parse(stageName);
 
