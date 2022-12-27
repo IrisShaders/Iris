@@ -217,8 +217,7 @@ public class CompatibilityTransformer {
 			String newName = "iris_renamed_" + reservedWord;
 			if (root.process(root.identifierIndex.getStream(reservedWord).filter(
 					id -> !(id.getParent() instanceof FunctionCallExpression)
-							&& id.getBranchAncestor(
-									FunctionDefinition.class, FunctionDefinition::getFunctionPrototype) == null),
+							&& !(id.getParent() instanceof FunctionPrototype)),
 					id -> id.setName(newName))) {
 				LOGGER.warn("Renamed reserved word \"" + reservedWord + "\" to \"" + newName + "\".");
 			}
