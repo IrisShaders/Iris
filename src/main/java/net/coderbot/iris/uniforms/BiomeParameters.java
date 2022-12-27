@@ -119,7 +119,7 @@ public class BiomeParameters {
 		// TODO: (PLEASE) Fix this. There has to be a better way to do this.
 		final int[] currentId = {0};
 		biomeMap = new Object2IntOpenHashMap<>();
-		Arrays.stream(Biomes.class.getFields()).filter(field -> {
+		Arrays.stream(Biomes.class.getDeclaredFields()).filter(field -> {
 			try {
 				return field.get(null) instanceof ResourceKey;
 			} catch (IllegalAccessException | NullPointerException ignored) {
