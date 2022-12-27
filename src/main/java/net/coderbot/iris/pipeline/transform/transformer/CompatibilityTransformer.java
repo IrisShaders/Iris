@@ -70,6 +70,8 @@ public class CompatibilityTransformer {
 		return null;
 	}
 
+	private static List<String> reservedWords = List.of("texture");
+
 	public static void transformEach(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
 		if (parameters.type == PatchShaderType.VERTEX) {
 			if (root.replaceExpressionMatches(t, sildursWaterFract, "fract(worldpos.y + 0.01)")) {
@@ -208,6 +210,18 @@ public class CompatibilityTransformer {
 		if (emptyDeclarationHit) {
 			LOGGER.warn(
 					"Removed empty external declarations (\";\").");
+		}
+
+		// rename reserved words within files
+		for (String reservedWord : reservedWords) {
+			String newName = "iris_renamed_" + reservedWord;
+			if (root.process(root.identifierIndex.getStream(reservedWord).filter(
+					id -> !(id.getParent() instanceof FunctionCallExpression)
+							&& id.getBranchAncestor(
+									FunctionDefinition.class, FunctionDefinition::getFunctionPrototype) == null),
+					id -> id.setName(newName))) {
+				LOGGER.warn("Renamed reserved word \"" + reservedWord + "\" to \"" + newName + "\".");
+			}
 		}
 	}
 
