@@ -20,7 +20,6 @@ public class TextureTransformer {
 			Root root,
 			TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		textureMap.forEach((stringTextureTypeTextureStageTri, s) -> {
-			Iris.logger.warn("A " + stringTextureTypeTextureStageTri.toString() + " " + s);
 			if (stringTextureTypeTextureStageTri.getThird() == stage) {
 				String name = stringTextureTypeTextureStageTri.getFirst();
 
