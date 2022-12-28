@@ -61,7 +61,7 @@ public final class CommonUniforms {
 	public static void addDynamicUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
 		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
 		FogUniforms.addFogUniforms(uniforms, fogMode);
-		IrisInternalUniforms.addFogUniforms(uniforms);
+		IrisInternalUniforms.addFogUniforms(uniforms, fogMode);
 
 		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
 		//       but we do. How will custom uniforms depending on atlasSize work?
