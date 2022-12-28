@@ -10,12 +10,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
 
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.IntSupplier;
 import java.util.function.ToIntFunction;
@@ -24,9 +21,11 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public class BiomeParameters {
-	private static final Minecraft client = Minecraft.getInstance();
+	private static final Object2IntMap<ResourceKey<Biome>> biomeMap = new Object2IntOpenHashMap<>();
 
-	private static final Object2IntMap<ResourceKey<Biome>> biomeMap;
+	public static Object2IntMap<ResourceKey<Biome>> getBiomeMap() {
+		return biomeMap;
+	}
 
 	public static void addBiomeUniforms(UniformHolder uniforms) {
 
@@ -115,30 +114,6 @@ public class BiomeParameters {
 		}
 	}
 
-	static {
-		// TODO: (PLEASE) Fix this. There has to be a better way to do this.
-		final int[] currentId = {0};
-		biomeMap = new Object2IntOpenHashMap<>();
-		Arrays.stream(Biomes.class.getDeclaredFields()).filter(field -> {
-			try {
-				return field.get(null) instanceof ResourceKey;
-			} catch (IllegalAccessException | NullPointerException ignored) {
-				return false;
-			}
-		}).forEach(field -> {
-			try {
-				ResourceKey<Biome> biome = (ResourceKey<Biome>) field.get(null);
-				ResourceLocation id = biome.location();
-				if (!id.getNamespace().equals("minecraft")) {
-					return;
-				}
-				biomeMap.put(biome, currentId[0]++);
-			} catch (IllegalAccessException e) {
-				throw new RuntimeException(e);
-			}
-		});
-	}
-
 	public static void addCategories(UniformHolder uniforms) {
 		BiomeCategories[] categories = BiomeCategories.values();
 		for (int i = 0; i < categories.length; i++) {
@@ -149,7 +124,7 @@ public class BiomeParameters {
 
 	static IntSupplier playerI(ToIntFunction<LocalPlayer> function) {
 		return () -> {
-			LocalPlayer player = client.player;
+			LocalPlayer player = Minecraft.getInstance().player;
 			if (player == null) {
 				return 0; // TODO: I'm not sure what I'm supposed to do here?
 			} else {
@@ -160,7 +135,7 @@ public class BiomeParameters {
 
 	static FloatSupplier playerF(ToFloatFunction<LocalPlayer> function) {
 		return () -> {
-			LocalPlayer player = client.player;
+			LocalPlayer player = Minecraft.getInstance().player;
 			if (player == null) {
 				return 0.0f; // TODO: I'm not sure what I'm supposed to do here?
 			} else {
