@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
+import io.github.douira.glsl_transformer.ast.node.abstract_node.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.declaration.FunctionParameter;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
@@ -70,6 +70,8 @@ public class CompatibilityTransformer {
 		return null;
 	}
 
+	private static List<String> reservedWords = List.of("texture");
+
 	public static void transformEach(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
 		if (parameters.type == PatchShaderType.VERTEX) {
 			if (root.replaceExpressionMatches(t, sildursWaterFract, "fract(worldpos.y + 0.01)")) {
@@ -104,11 +106,11 @@ public class CompatibilityTransformer {
 				unusedFunctions.add(definition);
 				if (PatchedShaderPrinter.prettyPrintShaders) {
 					LOGGER.warn("Removing unused function " + functionName);
-				} else if (unusedFunctions.size() == 1) {
+				}/* else if (unusedFunctions.size() == 1) {
 					LOGGER.warn(
 							"Removing unused function " + functionName
 									+ " and omitting further such messages outside of debug mode. See debugging.md for more information.");
-				}
+				}*/
 				continue;
 			}
 
@@ -208,6 +210,17 @@ public class CompatibilityTransformer {
 		if (emptyDeclarationHit) {
 			LOGGER.warn(
 					"Removed empty external declarations (\";\").");
+		}
+
+		// rename reserved words within files
+		for (String reservedWord : reservedWords) {
+			String newName = "iris_renamed_" + reservedWord;
+			if (root.process(root.identifierIndex.getStream(reservedWord).filter(
+					id -> !(id.getParent() instanceof FunctionCallExpression)
+							&& !(id.getParent() instanceof FunctionPrototype)),
+					id -> id.setName(newName))) {
+				LOGGER.warn("Renamed reserved word \"" + reservedWord + "\" to \"" + newName + "\".");
+			}
 		}
 	}
 
@@ -428,7 +441,7 @@ public class CompatibilityTransformer {
 									new Identifier(name)));
 
 							// add the initializer to the main function
-							prevTree.prependMain(getInitializer(prevRoot, name, inType));
+							prevTree.prependMainFunctionBody(getInitializer(prevRoot, name, inType));
 
 							// update out declarations to prevent duplicates
 							outDeclarations.put(name, null);
@@ -462,7 +475,7 @@ public class CompatibilityTransformer {
 								}
 
 								// add an initialization statement for this declaration
-								prevTree.prependMain(getInitializer(prevRoot, name, inType));
+								prevTree.prependMainFunctionBody(getInitializer(prevRoot, name, inType));
 								outDeclarations.put(name, null);
 								continue;
 							}
@@ -522,7 +535,7 @@ public class CompatibilityTransformer {
 
 							// insert a statement at the end of the main function that sets the value of the
 							// out declaration to the value of the global variable and does a type cast
-							prevTree.appendMain(
+							prevTree.appendMainFunctionBody(
 									(isVector && outType.getDimensions()[0] < inType.getDimensions()[0] ? statementTemplateVector
 											: statementTemplate).getInstanceFor(prevRoot,
 													new Identifier(name),

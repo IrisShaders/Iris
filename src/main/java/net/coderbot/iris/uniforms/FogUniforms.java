@@ -19,37 +19,39 @@ public class FogUniforms {
 	public static void addFogUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
 		if (fogMode == FogMode.OFF) {
 			uniforms.uniform1f(UniformUpdateFrequency.ONCE, "fogDensity", () -> 0.0F);
+			uniforms.uniform1f(UniformUpdateFrequency.ONCE, "fogStart", () -> Float.MIN_VALUE);
+			uniforms.uniform1f(UniformUpdateFrequency.ONCE, "fogEnd", () -> Float.MAX_VALUE);
 			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogMode", () -> 0);
 			uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogShape", () -> -1);
 		} else if (fogMode == FogMode.PER_VERTEX || fogMode == FogMode.PER_FRAGMENT) {
 			uniforms.uniform1i("fogMode", () -> {
 				float fogDensity = CapturedRenderingState.INSTANCE.getFogDensity();
 
-				if (fogDensity > 0.0F) {
+				if (fogDensity < 0.0F) {
 					return GL11.GL_LINEAR;
 				} else {
 					return GL11.GL_EXP2;
 				}
 			}, listener -> {
 			});
+
+			uniforms.uniform1f("fogDensity", () -> {
+				// ensure that the minimum value is 0.0
+				return Math.max(0.0F, CapturedRenderingState.INSTANCE.getFogDensity());
+			}, notifier -> {
+			});
+
+			// To keep a stable interface, 0 is defined as spherical while 1 is defined as cylindrical, even if Mojang's index changes.
+			uniforms.uniform1i(PER_FRAME, "fogShape", () -> RenderSystem.getShaderFogShape() == FogShape.CYLINDER ? 1 : 0);
+
+			uniforms.uniform1f("fogStart", RenderSystem::getShaderFogStart, listener -> {
+				StateUpdateNotifiers.fogStartNotifier.setListener(listener);
+			});
+
+			uniforms.uniform1f("fogEnd", RenderSystem::getShaderFogEnd, listener -> {
+				StateUpdateNotifiers.fogEndNotifier.setListener(listener);
+			});
 		}
-
-		uniforms.uniform1f("fogDensity", () -> {
-			// ensure that the minimum value is 0.0
-			return Math.max(0.0F, CapturedRenderingState.INSTANCE.getFogDensity());
-		}, notifier -> {
-		});
-
-		// To keep a stable interface, 0 is defined as spherical while 1 is defined as cylindrical, even if Mojang's index changes.
-		uniforms.uniform1i(PER_FRAME, "fogShape", () -> RenderSystem.getShaderFogShape() == FogShape.CYLINDER ? 1 : 0);
-
-		uniforms.uniform1f("fogStart", RenderSystem::getShaderFogStart, listener -> {
-			StateUpdateNotifiers.fogStartNotifier.setListener(listener);
-		});
-
-		uniforms.uniform1f("fogEnd", RenderSystem::getShaderFogEnd, listener -> {
-			StateUpdateNotifiers.fogEndNotifier.setListener(listener);
-		});
 
 		uniforms
 			// TODO: Update frequency of continuous?
