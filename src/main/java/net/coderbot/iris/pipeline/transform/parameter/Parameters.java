@@ -1,6 +1,6 @@
 package net.coderbot.iris.pipeline.transform.parameter;
 
-import io.github.douira.glsl_transformer.basic.JobParameters;
+import io.github.douira.glsl_transformer.ast.transform.JobParameters;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.pipeline.transform.Patch;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;

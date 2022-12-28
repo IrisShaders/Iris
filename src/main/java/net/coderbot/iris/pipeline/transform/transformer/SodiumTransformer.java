@@ -117,7 +117,7 @@ public class SodiumTransformer {
 					"uniform vec3 u_RegionOffset;",
 					// _draw_translation replaced with Chunks[_draw_id].offset.xyz
 					"vec4 getVertexPosition() { return vec4(u_RegionOffset + Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }");
-			tree.prependMain(t, "_vert_init();");
+			tree.prependMainFunctionBody(t, "_vert_init();");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 		} else {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,

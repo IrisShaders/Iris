@@ -4,7 +4,7 @@ import java.util.stream.Stream;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
+import io.github.douira.glsl_transformer.ast.node.abstract_node.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
@@ -148,7 +148,7 @@ public class AttributeTransformer {
 			// Create our own main function to wrap the existing main function, so that we
 			// can pass through the overlay color at the end to the geometry or fragment
 			// stage.
-			tree.prependMain(t,
+			tree.prependMainFunctionBody(t,
 					"vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);",
 					"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);",
 					"iris_vertexColor = iris_Color;",
@@ -167,7 +167,7 @@ public class AttributeTransformer {
 					"in vec4 entityColor[];",
 					"out vec4 iris_vertexColorGS;",
 					"in vec4 iris_vertexColor[];");
-			tree.prependMain(t,
+			tree.prependMainFunctionBody(t,
 					"entityColorGS = entityColor[0];",
 					"iris_vertexColorGS = iris_vertexColor[0];");
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {

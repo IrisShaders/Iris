@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.basic.ASTNode;
+import io.github.douira.glsl_transformer.ast.node.abstract_node.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.declaration.FunctionParameter;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
@@ -441,7 +441,7 @@ public class CompatibilityTransformer {
 									new Identifier(name)));
 
 							// add the initializer to the main function
-							prevTree.prependMain(getInitializer(prevRoot, name, inType));
+							prevTree.prependMainFunctionBody(getInitializer(prevRoot, name, inType));
 
 							// update out declarations to prevent duplicates
 							outDeclarations.put(name, null);
@@ -475,7 +475,7 @@ public class CompatibilityTransformer {
 								}
 
 								// add an initialization statement for this declaration
-								prevTree.prependMain(getInitializer(prevRoot, name, inType));
+								prevTree.prependMainFunctionBody(getInitializer(prevRoot, name, inType));
 								outDeclarations.put(name, null);
 								continue;
 							}
@@ -535,7 +535,7 @@ public class CompatibilityTransformer {
 
 							// insert a statement at the end of the main function that sets the value of the
 							// out declaration to the value of the global variable and does a type cast
-							prevTree.appendMain(
+							prevTree.appendMainFunctionBody(
 									(isVector && outType.getDimensions()[0] < inType.getDimensions()[0] ? statementTemplateVector
 											: statementTemplate).getInstanceFor(prevRoot,
 													new Identifier(name),
