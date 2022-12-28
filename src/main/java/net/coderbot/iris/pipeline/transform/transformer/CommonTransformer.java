@@ -158,7 +158,7 @@ public class CommonTransformer {
 			// insert alpha test for iris_FragData0 in the fragment shader
 			if (parameters.getAlphaTest() != AlphaTest.ALWAYS && replaceIndexesSet.contains(0L)) {
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_currentAlphaTest;");
-				tree.appendMain(t, parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
+				tree.appendMainFunctionBody(t, parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
 			}
 		}
 
