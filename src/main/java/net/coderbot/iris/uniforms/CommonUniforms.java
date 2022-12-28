@@ -61,7 +61,7 @@ public final class CommonUniforms {
 	public static void addDynamicUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
 		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
 		FogUniforms.addFogUniforms(uniforms, fogMode);
-		IrisInternalUniforms.addFogUniforms(uniforms);
+		IrisInternalUniforms.addFogUniforms(uniforms, fogMode);
 
 		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
 		//       but we do. How will custom uniforms depending on atlasSize work?
@@ -141,6 +141,7 @@ public final class CommonUniforms {
 			.uniform1b(PER_FRAME, "is_sneaking", CommonUniforms::isSneaking)
 			.uniform1b(PER_FRAME, "is_sprinting", CommonUniforms::isSprinting)
 			.uniform1b(PER_FRAME, "is_hurt", CommonUniforms::isHurt)
+			.uniform1b(PER_FRAME, "is_invisible", CommonUniforms::isInvisible)
 			.uniform1b(PER_FRAME, "is_burning", CommonUniforms::isBurning)
 			// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect
 			//       that the player is trying to turn on fullbright?
@@ -163,6 +164,14 @@ public final class CommonUniforms {
 	private static boolean isHurt() {
 		if (client.player != null) {
 			return client.player.hurtTime > 0; // Do not use isHurt, that's not what we want!
+		} else {
+			return false;
+		}
+	}
+
+	private static boolean isInvisible() {
+		if (client.player != null) {
+			return client.player.isInvisible();
 		} else {
 			return false;
 		}
