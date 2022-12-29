@@ -59,7 +59,9 @@ public class BiomeParameters {
 
 				.uniform1i(ONCE, "PPT_NONE", () -> 0)
 				.uniform1i(ONCE, "PPT_RAIN", () -> 1)
-				.uniform1i(ONCE, "PPT_SNOW", () -> 2);
+				.uniform1i(ONCE, "PPT_SNOW", () -> 2)
+			// Temporary fix for Sildur's Vibrant
+				.uniform1i(ONCE, "BIOME_SWAMP_HILLS", () -> -1);
 
 
 

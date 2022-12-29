@@ -43,7 +43,7 @@ public class Buildscript extends SimpleFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
 	static final String MC_VERSION = "1.19.3";
-	static final String customSodiumName = "sodium-fabric-mc1.19.3-0.4.6+rev.aa12f01-dirty.jar";
+	static final String customSodiumName = "sodium-fabric-mc1.19.3-0.4.7.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
 		"main",
