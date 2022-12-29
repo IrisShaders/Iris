@@ -16,5 +16,9 @@ This release was developed by Kroppeb, coderbot and IMS.
 - Run shadow pass before sky render begins (IMS)
 - Make binding points for Sodium match Optifine (IMS)
 - Make block.properties blackslashes get temporarily removed during preprocessing to fix a bug (IMS)
+- Force 1.19.2 and 1.19.3 versions to not run on each other (Lolothepro)
 
 ## Translations
+
+- [Updated Ukrainian translation](https://github.com/IrisShaders/Iris/pull/1782) (Altegar)
+- [Updated Italian translation](https://github.com/IrisShaders/Iris/pull/1792) (glaav)
