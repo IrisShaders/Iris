@@ -203,7 +203,7 @@ public class ShaderProperties {
 			});
 
 			handlePassDirective("alphaTest.", key, value, pass -> {
-				if ("off".equals(value)) {
+				if ("off".equals(value) || "false".equals(value)) {
 					alphaTestOverrides.put(pass, AlphaTest.ALWAYS);
 					return;
 				}
