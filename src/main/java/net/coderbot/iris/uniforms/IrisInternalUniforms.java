@@ -27,19 +27,13 @@ public class IrisInternalUniforms {
 					return new Vector4f(fogColor[0], fogColor[1], fogColor[2], fogColor[3]);
 				});
 
-		if (fogMode != FogMode.OFF) {
-			uniforms.uniform1f(PER_FRAME, "iris_FogStart", RenderSystem::getShaderFogStart)
-				.uniform1f(PER_FRAME, "iris_FogEnd", RenderSystem::getShaderFogEnd);
+		uniforms.uniform1f(PER_FRAME, "iris_FogStart", RenderSystem::getShaderFogStart)
+			.uniform1f(PER_FRAME, "iris_FogEnd", RenderSystem::getShaderFogEnd);
 
-			uniforms.uniform1f("iris_FogDensity", () -> {
-				// ensure that the minimum value is 0.0
-				return Math.max(0.0F, CapturedRenderingState.INSTANCE.getFogDensity());
-			}, notifier -> {});
-		} else {
-			uniforms.uniform1f(ONCE, "iris_FogStart", () -> 0.0f)
-				.uniform1f(ONCE, "iris_FogEnd", () -> 0.0f)
-				.uniform1f(ONCE, "iris_FogDensity", () -> 0.0f);
-		}
+		uniforms.uniform1f("iris_FogDensity", () -> {
+			// ensure that the minimum value is 0.0
+			return Math.max(0.0F, CapturedRenderingState.INSTANCE.getFogDensity());
+		}, notifier -> {});
 
 		uniforms.uniform1f("iris_currentAlphaTest", CapturedRenderingState.INSTANCE::getCurrentAlphaTest, notifier -> {});
 
