@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin.fantastic;
 
 import com.google.common.collect.ImmutableList;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.IrisParticleRenderTypes;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleEngine;
@@ -54,7 +55,6 @@ public class MixinParticleEngine implements PhasedParticleEngine {
 
 	static {
 		OPAQUE_PARTICLE_RENDER_TYPES = ImmutableList.of(
-				IrisParticleRenderTypes.OPAQUE_TERRAIN,
 				ParticleRenderType.PARTICLE_SHEET_OPAQUE,
 				ParticleRenderType.PARTICLE_SHEET_LIT,
 				ParticleRenderType.CUSTOM,

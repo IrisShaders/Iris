@@ -18,16 +18,33 @@ import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
-import io.github.douira.glsl_transformer.cst.core.SemanticException;
-import io.github.douira.glsl_transformer.cst.token_filter.ChannelFilter;
-import io.github.douira.glsl_transformer.cst.token_filter.TokenChannel;
-import io.github.douira.glsl_transformer.cst.token_filter.TokenFilter;
+import io.github.douira.glsl_transformer.token_filter.ChannelFilter;
+import io.github.douira.glsl_transformer.token_filter.TokenChannel;
+import io.github.douira.glsl_transformer.token_filter.TokenFilter;
 import io.github.douira.glsl_transformer.util.LRUCache;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.coderbot.iris.pipeline.transform.parameter.AttributeParameters;
+import net.coderbot.iris.pipeline.transform.parameter.CompositeParameters;
+import net.coderbot.iris.pipeline.transform.parameter.ComputeParameters;
+import net.coderbot.iris.pipeline.transform.parameter.Parameters;
+import net.coderbot.iris.pipeline.transform.parameter.SodiumParameters;
+import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
+import net.coderbot.iris.pipeline.transform.transformer.AttributeTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.CommonTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.CompatibilityTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.CompositeTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.SodiumTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.TextureTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.VanillaTransformer;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 /**
  * The transform patcher (triforce 2) uses glsl-transformer's ASTTransformer to
@@ -130,7 +147,7 @@ public class TransformPatcher {
 		@Override
 		public boolean isTokenAllowed(Token token) {
 			if (!super.isTokenAllowed(token)) {
-				throw new SemanticException("Unparsed preprocessor directives such as '" + token.getText()
+				throw new IllegalArgumentException("Unparsed preprocessor directives such as '" + token.getText()
 						+ "' may not be present at this stage of shader processing!");
 			}
 			return true;
@@ -138,6 +155,7 @@ public class TransformPatcher {
 	};
 
 	static {
+		Root.identifierIndexFactory = PrefixIdentifierIndex::withPrefix;
 		transformer = new EnumASTTransformer<Parameters, PatchShaderType>(PatchShaderType.class) {
 			@Override
 			public TranslationUnit parseTranslationUnit(String input) throws RecognitionException {
@@ -145,7 +163,8 @@ public class TransformPatcher {
 				// parser can be set to the correct version
 				Matcher matcher = versionPattern.matcher(input);
 				if (!matcher.find()) {
-					throw new IllegalArgumentException("No #version directive found in source code! See debugging.md for more information.");
+					throw new IllegalArgumentException(
+							"No #version directive found in source code! See debugging.md for more information.");
 				}
 				Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 				if (version.number >= 200) {
@@ -168,15 +187,18 @@ public class TransformPatcher {
 				Root root = tree.getRoot();
 
 				// check for illegal references to internal Iris shader interfaces
-				Optional<Identifier> violation = root.identifierIndex.prefixQueryFlat("iris_").findAny();
+				Optional<Identifier> violation = ((PrefixIdentifierIndex<?, ?>) root.identifierIndex)
+						.prefixQueryFlat("iris_").findAny();
 				if (!violation.isPresent()) {
-					violation = root.identifierIndex.prefixQueryFlat("irisMain").findAny();
+					violation = ((PrefixIdentifierIndex<?, ?>) root.identifierIndex)
+							.prefixQueryFlat("irisMain").findAny();
 				}
 				if (!violation.isPresent()) {
-					violation = root.identifierIndex.prefixQueryFlat("moj_import").findAny();
+					violation = ((PrefixIdentifierIndex<?, ?>) root.identifierIndex)
+							.prefixQueryFlat("moj_import").findAny();
 				}
 				violation.ifPresent(id -> {
-					throw new SemanticException(
+					throw new IllegalArgumentException(
 							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
 									+ id.getName() + ". See debugging.md for more information.");
 				});
@@ -190,12 +212,17 @@ public class TransformPatcher {
 					Version version = versionStatement.version;
 					switch (parameters.patch) {
 						case ATTRIBUTES:
-							AttributeTransformer.transform(transformer, tree, root, (AttributeParameters) parameters);
+							AttributeParameters attributeParameters = (AttributeParameters) parameters;
+							AttributeTransformer.transform(transformer, tree, root, attributeParameters);
+							TextureTransformer.transform(transformer, tree, root,
+									TextureStage.GBUFFERS_AND_SHADOW,
+									attributeParameters.getTextureMap());
 							break;
 						case COMPUTE:
 							// we can assume the version is at least 400 because it's a compute shader
 							versionStatement.profile = Profile.CORE;
 							CommonTransformer.transform(transformer, tree, root, parameters);
+							TextureTransformer.transform(transformer, tree, root, ((ComputeParameters) parameters).getStage(), ((ComputeParameters) parameters).getTextureMap());
 							break;
 						default:
 							// TODO: Implement Optifine's special core profile mode
@@ -204,6 +231,13 @@ public class TransformPatcher {
 									throw new IllegalStateException(
 											"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless) See debugging.md for more information.");
 								} else {
+									if (parameters instanceof CompositeParameters compositeParameters) {
+										TextureTransformer.transform(transformer, tree, root,
+											compositeParameters.stage,
+											compositeParameters.getTextureMap());
+									} else {
+										TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, parameters instanceof SodiumParameters parameters1 ? parameters1.getTextureMap() : ((VanillaParameters) parameters).getTextureMap());
+									}
 									break;
 								}
 							}
@@ -220,19 +254,31 @@ public class TransformPatcher {
 							}
 							switch (parameters.patch) {
 								case COMPOSITE:
+									CompositeParameters compositeParameters = (CompositeParameters) parameters;
 									CompositeTransformer.transform(transformer, tree, root, parameters);
+									TextureTransformer.transform(transformer, tree, root,
+											compositeParameters.stage,
+											compositeParameters.getTextureMap());
 									break;
 								case SODIUM:
 									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
 									sodiumParameters.setAlphaFor(type);
 									SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
+									TextureTransformer.transform(transformer, tree, root,
+											TextureStage.GBUFFERS_AND_SHADOW,
+											sodiumParameters.getTextureMap());
 									break;
 								case VANILLA:
-									VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+									VanillaParameters vanillaParameters = (VanillaParameters) parameters;
+									VanillaTransformer.transform(transformer, tree, root, vanillaParameters);
+									TextureTransformer.transform(transformer, tree, root,
+											TextureStage.GBUFFERS_AND_SHADOW,
+											vanillaParameters.getTextureMap());
 									break;
 								default:
 									throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
 							}
+
 					}
 					CompatibilityTransformer.transformEach(transformer, tree, root, parameters);
 				});
@@ -241,7 +287,7 @@ public class TransformPatcher {
 			// the compatibility transformer does a grouped transformation
 			CompatibilityTransformer.transformGrouped(transformer, trees, parameters);
 		});
-		transformer.setParseTokenFilter(parseTokenFilter);
+		transformer.setTokenFilter(parseTokenFilter);
 	}
 
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
@@ -315,30 +361,34 @@ public class TransformPatcher {
 	}
 
 	public static Map<PatchShaderType, String> patchAttributes(String vertex, String geometry, String fragment,
-			InputAvailability inputs) {
-		return transform(vertex, geometry, fragment, new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs));
+			InputAvailability inputs, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(vertex, geometry, fragment,
+				new AttributeParameters(Patch.ATTRIBUTES, geometry != null, inputs, textureMap));
 	}
 
 	public static Map<PatchShaderType, String> patchVanilla(
 			String vertex, String geometry, String fragment, AlphaTest alpha,
-			boolean hasChunkOffset, ShaderAttributeInputs inputs) {
+			boolean hasChunkOffset, ShaderAttributeInputs inputs,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
-				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, geometry != null));
+				new VanillaParameters(Patch.VANILLA, alpha, hasChunkOffset, inputs, geometry != null, textureMap));
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
 			AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale) {
+			float positionScale, float positionOffset, float textureScale,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
 				new SodiumParameters(Patch.SODIUM, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset,
-						textureScale));
+						textureScale, textureMap));
 	}
 
-	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment) {
-		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE));
+	public static Map<PatchShaderType, String> patchComposite(String vertex, String geometry, String fragment,
+			TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE, stage, textureMap));
 	}
 
-	public static String patchCompute(String compute) {
-		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE)).getOrDefault(PatchShaderType.COMPUTE, null);
+	public static String patchCompute(String compute, TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap)).getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 }

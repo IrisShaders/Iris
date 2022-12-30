@@ -1,7 +1,7 @@
 # Iris installation and usage guide
 
 This guide is created to serve as an all-in-one reference for all the things you might want to know about the Iris Shaders mod. It will be periodically updated as the mod itself evolves.  
-Last updated on August 28, 2022.
+Last updated on December 8th, 2022.
 
 ### Introduction
 
@@ -37,7 +37,7 @@ This method is recommended for users who want to play with **Iris shaders only, 
 7. If you get the following prompt:  
    ![launcherprompt](guide-resources/launcherprompt.png)  
    Select **Microsoft Store / Xbox** if you have updated to the new launcher. Otherwise, select **Standalone (Win32)**.
-8. You should see the button say "Installation succeeded!" next to the full progress bar:  
+8. You should see the button say "Completed!" below the full progress bar:  
    ![success](guide-resources/success.png)
 9. Close the installer.
 10. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):  
@@ -51,7 +51,7 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
 
 1. Follow steps 1 to 5 under the [For standalone use](#for-standalone-use) section.
 
-2. **Check "Install as Fabric mod"**:  
+2. Under "Installation type", select **"Fabric install"**:  
    ![check](guide-resources/check.png)
 3. Follow steps 6 to 9 under the [For standalone use](#for-standalone-use) section.
 4. Place your other Fabric mods in the mods folder. The location of the mods folder depends on your operating system:
@@ -89,9 +89,9 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    | Minecraft    | Sodium       |
    |:------------:|:------------:|
    | 1.16.5       | 1.16.5-0.2.0 |
-   | 1.17.1       | 1.17.1-0.3.4 |
    | 1.18.2       | 1.18.2-0.4.1 |
    | 1.19.2       | 1.19.2-0.4.4 |
+   | 1.19.3       | 1.19.3-0.4.6 |
 9. Place the downloaded files (and optionally your other Fabric mods) into the mods folder. The location of the mods folder depends on  your operating system:
     - Windows: `%APPDATA%\.minecraft\mods`  
     - Linux: `~/.minecraft/mods`  
@@ -184,9 +184,9 @@ Make sure to download the version that supports your current version of Sodium:
 | Sodium       | Indium       |
 |:------------:|:------------:|
 | 1.16.5-0.2.0 | 1.0.0 for 1.16.5 |
-| 1.17.1-0.3.4 | 1.0.1 for 1.17.1 |
 | 1.18.2-0.4.1 | 1.0.7 for 1.18.2 |  
 | 1.19.2-0.4.4 | 1.0.9 for 1.19.2 |
+| 1.19.3-0.4.6 | 1.0.10 for 1.19.3|
 
 **Keep in mind that this list does not cover all the mods which won't work properly without Indium**. If blocks or items from a certain mod are invisible or are not displaying correctly, or the mod crashes your game, chances are high that the mod requires Indium to work properly with Iris and Sodium.
 
