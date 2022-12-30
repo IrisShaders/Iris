@@ -8,7 +8,6 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.newshader.AlphaTests;
 import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
 
-// Order fixed
 public class VanillaTransformer {
 	public static void transform(
 			ASTParser t,

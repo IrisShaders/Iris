@@ -1,4 +1,4 @@
-package net.coderbot.iris.shadow;
+package net.coderbot.iris.shadows;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;

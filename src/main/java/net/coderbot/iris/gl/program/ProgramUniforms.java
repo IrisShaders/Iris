@@ -339,6 +339,8 @@ public class ProgramUniforms {
 			return UniformType.FLOAT;
 		} else if (type == GL20C.GL_INT) {
 			return UniformType.INT;
+		} else if (type == GL20C.GL_BOOL) {
+			return UniformType.INT;
 		} else if (type == GL20C.GL_FLOAT_MAT4) {
 			return UniformType.MAT4;
 		} else if (type == GL20C.GL_FLOAT_VEC4) {
