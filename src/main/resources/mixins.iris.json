@@ -11,6 +11,8 @@
     "LightTextureAccessor",
     "ProgramTypeAccessor",
     "MixinBlockStateBehavior",
+    "MixinBiome",
+    "MixinBiomes",
     "MixinChainedJsonException",
     "MixinClientLanguage",
     "MixinClientPacketListener",

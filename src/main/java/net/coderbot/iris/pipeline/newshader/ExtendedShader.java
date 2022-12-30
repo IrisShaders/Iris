@@ -23,10 +23,12 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.gl.uniform.DynamicLocationalUniformHolder;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
-import org.joml.FrustumRayBuilder;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.joml.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -58,6 +60,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private final Uniform modelViewInverse;
 	private final Uniform projectionInverse;
 	private final Uniform normalMatrix;
+	private final CustomUniforms customUniforms;
 	NewWorldRenderingPipeline parent;
 	ProgramUniforms uniforms;
 	ProgramSamplers samplers;
@@ -76,8 +79,8 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  GlFramebuffer baseline, BlendModeOverride blendModeOverride, AlphaTest alphaTest,
-						  Consumer<DynamicUniformHolder> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
-						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs, @Nullable List<BufferBlendOverride> bufferBlendOverrides) throws IOException {
+						  Consumer<DynamicLocationalUniformHolder> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
+						  NewWorldRenderingPipeline parent, ShaderAttributeInputs inputs, @Nullable List<BufferBlendOverride> bufferBlendOverrides, CustomUniforms customUniforms) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();
@@ -87,8 +90,10 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		uniformCreator.accept(uniformBuilder);
 		ProgramImages.Builder builder = ProgramImages.builder(programId);
 		samplerCreator.accept(samplerBuilder, builder);
+		customUniforms.mapholderToPass(uniformBuilder, this);
 
 		uniforms = uniformBuilder.buildUniforms();
+		this.customUniforms = customUniforms;
 		samplers = samplerBuilder.build();
 		images = builder.build();
 		this.writingToBeforeTranslucent = writingToBeforeTranslucent;
@@ -140,13 +145,13 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		}
 
 		if (intensitySwizzle) {
-			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), TextureType.TEXTURE_2D.getGlType(), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
 				new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED });
 		}
 
-		IrisRenderSystem.bindTextureToUnit(IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
-		IrisRenderSystem.bindTextureToUnit(IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
-		IrisRenderSystem.bindTextureToUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
+		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
+		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
+		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
 
 		if (projectionInverse != null) {
 			projectionInverse.set(tempMatrix4f.set(PROJECTION_MATRIX.getFloatBuffer()).invert().get(tempFloats));
@@ -171,7 +176,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 		samplers.update();
 		uniforms.update();
+
+		customUniforms.push(this);
+
 		images.update();
+
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();

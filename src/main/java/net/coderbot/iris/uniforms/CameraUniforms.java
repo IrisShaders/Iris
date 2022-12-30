@@ -24,6 +24,7 @@ public class CameraUniforms {
 			.uniform1f(ONCE, "near", () -> 0.05)
 			.uniform1f(PER_FRAME, "far", CameraUniforms::getRenderDistanceInBlocks)
 			.uniform3d(PER_FRAME, "cameraPosition", tracker::getCurrentCameraPosition)
+			.uniform1f(PER_FRAME, "eyeAltitude", tracker::getCurrentCameraPositionY)
 			.uniform3d(PER_FRAME, "previousCameraPosition", tracker::getPreviousCameraPosition);
 	}
 
@@ -105,6 +106,10 @@ public class CameraUniforms {
 
 		public Vector3d getPreviousCameraPosition() {
 			return previousCameraPosition;
+		}
+
+		public double getCurrentCameraPositionY() {
+			return currentCameraPosition.y;
 		}
 	}
 }

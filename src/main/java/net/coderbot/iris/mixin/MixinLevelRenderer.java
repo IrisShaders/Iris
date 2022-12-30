@@ -3,6 +3,7 @@ package net.coderbot.iris.mixin;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.fabricmc.loader.api.FabricLoader;
 import org.joml.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
@@ -66,7 +67,7 @@ public class MixinLevelRenderer {
 	private void iris$beginLevelRender(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
 									   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
 									   Matrix4f projection, CallbackInfo callback) {
-		if (Iris.isSodiumInvalid()) {
+		if (Iris.isSodiumInvalid() && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
 				" didn't work. This is a bug! Please report it to the Iris developers.");
 		}
@@ -94,7 +95,9 @@ public class MixinLevelRenderer {
 
 	// Setup shadow terrain & render shadows before the main terrain setup. We need to do things in this order to
 	// avoid breaking other mods such as Light Overlay: https://github.com/IrisShaders/Iris/issues/1356
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;setupRender(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZZ)V"))
+
+	// Do this before sky rendering so it's ready before the sky render starts.
+	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V"))
 	private void iris$renderTerrainShadows(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo callback) {
 		pipeline.renderShadows((LevelRendererAccessor) this, camera);
 	}

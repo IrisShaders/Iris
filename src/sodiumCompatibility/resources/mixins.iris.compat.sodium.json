@@ -14,6 +14,7 @@
     "block_id.MixinChunkRenderRebuildTask",
     "directional_shading.MixinFlatLightPipeline",
     "directional_shading.MixinSmoothLightPipeline",
+    "clouds.MixinCloudRenderer",
     "options.MixinOptionImpl",
     "options.MixinRenderSectionManager",
     "options.MixinSodiumGameOptionPages",

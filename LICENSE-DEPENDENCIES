@@ -1,0 +1,6 @@
+Incompatible licenses:
+
+glsl-transformer is licensed under the GNU GPL Version 3 License, with Minecraft Linking Exception. Details on this exception can be found in https://github.com/IrisShaders/glsl-transformer/blob/main/LICENSE.EXCEPTION.
+This exception does not allow linking (using its API in some way) with glsl-transformer unless the only incompatible linker is Minecraft, and the source linking it is under the GPL or LGPL.
+
+This license is not applicable if linking with a program (Iris) containing glsl-transformer, unless the linker interacts with the library's API directly.

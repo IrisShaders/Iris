@@ -5,6 +5,7 @@ import org.joml.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleEngine;
+import net.coderbot.iris.shaderpack.ParticleRenderingSettings;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -47,23 +48,29 @@ public class MixinLevelRenderer {
 
 		MultiBufferSource.BufferSource bufferSource = renderBuffers.bufferSource();
 
-		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
+		ParticleRenderingSettings settings = getRenderingSettings();
 
-		minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
-
-		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
-
-		if (Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::shouldRenderParticlesBeforeDeferred).orElse(false)) {
-			// Render translucent particles here as well if the pack requests so
+		if (settings == ParticleRenderingSettings.BEFORE) {
+			minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
+		} else if (settings == ParticleRenderingSettings.MIXED) {
+			((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
 			minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
 		}
 	}
 
 	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V"))
 	private void iris$renderTranslucentAfterDeferred(ParticleEngine instance, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LightTexture lightTexture, Camera camera, float f) {
-		// We don't want to render translucent particles again if we already rendered them earlier!
-		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::shouldRenderParticlesBeforeDeferred).orElse(false)) {
-			instance.render(poseStack, bufferSource, lightTexture, camera, f);
+		ParticleRenderingSettings settings = getRenderingSettings();
+
+		if (settings == ParticleRenderingSettings.AFTER) {
+			minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
+		} else if (settings == ParticleRenderingSettings.MIXED) {
+				((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.TRANSLUCENT);
+			minecraft.particleEngine.render(poseStack, bufferSource, lightTexture, camera, f);
 		}
+	}
+
+	private ParticleRenderingSettings getRenderingSettings() {
+		return Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::getParticleRenderingSettings).orElse(ParticleRenderingSettings.MIXED);
 	}
 }

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.type.VertexType;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.clouds_xhfp.ExtendedBasicScreenQuadVertexType;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.ExtendedGlyphVertexType;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.ExtendedQuadVertexType;
 import net.coderbot.iris.vertices.IrisVertexFormats;
@@ -33,6 +34,10 @@ public class MixinBufferBuilder_ExtendedVertexFormatCompat {
 		} else if (format == IrisVertexFormats.TERRAIN) {
 			if (type == VanillaVertexTypes.GLYPHS) {
 				return ExtendedGlyphVertexType.INSTANCE;
+			}
+		} else if (format == IrisVertexFormats.CLOUDS) {
+			if (type == VanillaVertexTypes.BASIC_SCREEN_QUADS) {
+				return ExtendedBasicScreenQuadVertexType.INSTANCE;
 			}
 		}
 

@@ -1,7 +1,9 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.gl.uniform.UniformHolder;
+import java.util.function.IntSupplier;
+
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
-import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
@@ -17,6 +19,9 @@ import net.minecraft.world.item.ItemStack;
 import org.joml.Vector3f;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
+import java.util.function.IntSupplier;
+
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 public final class IdMapUniforms {
@@ -24,7 +29,7 @@ public final class IdMapUniforms {
 	private IdMapUniforms() {
 	}
 
-	public static void addIdMapUniforms(FrameUpdateNotifier notifier, DynamicUniformHolder uniforms, IdMap idMap, boolean isOldHandLight) {
+	public static void addIdMapUniforms(FrameUpdateNotifier notifier, UniformHolder uniforms, IdMap idMap, boolean isOldHandLight) {
 		HeldItemSupplier mainHandSupplier = new HeldItemSupplier(InteractionHand.MAIN_HAND, idMap.getItemIdMap(), isOldHandLight);
 		HeldItemSupplier offHandSupplier = new HeldItemSupplier(InteractionHand.OFF_HAND, idMap.getItemIdMap(), false);
 		notifier.addListener(mainHandSupplier::update);
@@ -39,11 +44,6 @@ public final class IdMapUniforms {
 			//.uniformVanilla3f(PER_FRAME, "heldBlockLightColor", mainHandSupplier::getLightColor)
 			//.uniformVanilla3f(PER_FRAME, "heldBlockLightColor2", offHandSupplier::getLightColor);
 
-		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity,
-				CapturedRenderingState.INSTANCE.getEntityIdNotifier());
-
-		uniforms.uniform1i("blockEntityId", CapturedRenderingState.INSTANCE::getCurrentRenderedBlockEntity,
-				CapturedRenderingState.INSTANCE.getBlockEntityIdNotifier());
 	}
 
 	/**
