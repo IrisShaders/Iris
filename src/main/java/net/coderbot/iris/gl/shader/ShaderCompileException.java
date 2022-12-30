@@ -5,7 +5,7 @@ public class ShaderCompileException extends RuntimeException {
 	private final String error;
 
 	public ShaderCompileException(String filename, String error) {
-		super(error);
+		super(filename + ": " + error);
 
 		this.filename = filename;
 		this.error = error;
