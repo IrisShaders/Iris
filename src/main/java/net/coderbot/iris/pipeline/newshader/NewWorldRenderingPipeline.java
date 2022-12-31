@@ -958,6 +958,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			RenderSystem.setShaderTexture(i, 0);
 		}
 
+		if (shadowCompositeRenderer != null) {
+			shadowCompositeRenderer.destroy();
+		}
+
 		prepareRenderer.destroy();
 		compositeRenderer.destroy();
 		deferredRenderer.destroy();
