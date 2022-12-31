@@ -100,7 +100,7 @@ The paid versions are not supported, but Continuum 2.0.5 works decently.
 
 # Shaders that do not work on Iris
 
-These shaders are broken on Iris, but are very popular, so we've listed them here. In addition, all paid shader packs do not work on Iris.
+These shaders are broken on Iris, but are very popular, so we've listed them here.
 
 This is not a complete list, but is just for people trying to control-F their favorite shader.
 
