@@ -8,8 +8,10 @@
 * [Prismarine Shaders](https://www.curseforge.com/minecraft/customization/prismarine-shader)
 * [AstraLex Shaders](https://www.curseforge.com/minecraft/customization/astralex-shader-bsl-edit)
 * [Lux Shaders](https://techdevongithub.github.io/Lux/)
+
 ### Complementary Shaders
 * [Complementary Reimagined](https://www.complementary.dev/reimagined/)
+  * [rethinking-voxels](https://github.com/gri573/rethinking-voxels)
 * [Complementary Shaders](https://www.complementary.dev/shaders-v4/) (BSL derivative)
 
 ### MakeUp - Ultra Fast
@@ -30,6 +32,24 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 * [Beyond Belief Shaders](https://www.curseforge.com/minecraft/customization/beyond-belief-shaders)
   * This is a popular edit of SEUS v11, apparently. The author doesn't actually have permission to edit SEUS and is kinda rude so take that with what you will. If all you want is "SEUS v11 but better", you probably should just install SEUS Renewed.
 
+### RRe36's Shaders
+
+* [Kappa](https://www.curseforge.com/minecraft/customization/kappa-shader-by-rre36)
+* [KappaPT](https://rre36.com/kappapt)
+* [Nostalgia](https://www.curseforge.com/minecraft/customization/nostalgia-shader)
+* [NostalgiaVX](https://rre36.com/nostalgiavx)
+* [Potato](https://www.curseforge.com/minecraft/customization/potato-shaders)
+* [Simplicissimus](https://www.curseforge.com/minecraft/customization/simplicissimus-shader)
+* [Soft Voxels](https://rre36.com/soft-voxels)
+* [Soft Voxels Lite](https://www.curseforge.com/minecraft/customization/soft-voxels-lite)
+* [UShader](https://www.curseforge.com/minecraft/customization/ushader)
+* [Vanilla Plus](https://www.curseforge.com/minecraft/customization/vanilla-plus-shader)
+* [RRe36's Shader](https://www.curseforge.com/minecraft/customization/rre36s-shader)
+
+### DrDesten's Shaders
+
+* [DrDestens MinecraftShaders](https://www.curseforge.com/minecraft/customization/drdestens-minecraftshaders)
+* [Stracciatella](https://www.curseforge.com/minecraft/customization/stracciatella-shaders)
 
 ### Sildur's Shaders
 
@@ -42,6 +62,11 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 * [projectLUMA](https://www.curseforge.com/minecraft/customization/projectluma)
 * [Sora Shaders v1.12](https://www.curseforge.com/minecraft/customization/sora-shaders) (Number edit of LUMA. Works well though)
 
+### Chocapic and derivatives
+
+* [Chocapic v7-v9](https://www.curseforge.com/minecraft/customization/chocapic13-shaders)
+* [Chocapic High Performance Shaders](https://www.curseforge.com/minecraft/customization/chocapic13-high-performance-shaders)
+* [Bliss](https://www.curseforge.com/minecraft/customization/bliss-shader)
 
 ### Legacy Chocapic and derivatives
 
@@ -56,7 +81,7 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 
 ### Continuum
 
-The paid versions are not supported, but Continuum 2.0.4 works decently.
+The paid versions are not supported, but Continuum 2.0.5 works decently.
 
 * [Continuum 2.0.5](https://continuum.graphics/downloads)
 
@@ -64,7 +89,6 @@ The paid versions are not supported, but Continuum 2.0.4 works decently.
 ### Other
 
 * [Super Duper Vanilla Shaders](https://www.curseforge.com/minecraft/customization/super-duper-vanilla-shaders)
-  * Supported in Iris 1.2.5
 * [Oceano Shaders 3.0](https://www.curseforge.com/minecraft/customization/oceano-shaders)
 * Skylec v4.0
 * [RRe36's Shader](https://www.curseforge.com/minecraft/customization/rre36s-shader)
@@ -72,27 +96,14 @@ The paid versions are not supported, but Continuum 2.0.4 works decently.
 * [XorDev's shaders](https://github.com/XorDev/Minecraft-Shaderpacks)
 * [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus)
 * [maple's retro extravaganza](https://github.com/Lana-chan/maples-retro-extravaganza)
-* [Voyager Shaders](https://www.curseforge.com/minecraft/customization/voyager-shader-2-0)
+* [Voyager Shaders 2.0](https://www.curseforge.com/minecraft/customization/voyager-shader-2-0)
 
 # Shaders that do not work on Iris
 
-These shaders are broken on Iris, but are very popular, so we've listed them here. In addition, all paid shader packs do not work on Iris.
+These shaders are broken on Iris, but are very popular, so we've listed them here.
 
 This is not a complete list, but is just for people trying to control-F their favorite shader.
 
-- Chocapic v7-v9
-- Chocapic High Performance ("Toaster") Shaders
-- All shaders made by RRe36 (except for "RRe36's Shader")
-  - Kappa
-  - KappaPT
-  - Nostalgia
-  - NostalgiaVX
-  - Potato
-  - Simplicissimus
-  - SoftVoxels
-  - UShader
-  - VanillaPlus
-- All shaders made by DrDesten
-  - DrDestens MinecraftShaders
-  - Stracciatella
-- Voxlementary
+* [Wisdom Shaders](https://github.com/bobcao3/Wisdom-Shaders)
+* [NV Shaders](https://www.curseforge.com/minecraft/customization/nv-shaders)
+* [Musk Rose](http://rin.shisyou.com/Zatta/shaders/muskrose.html)
