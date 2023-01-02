@@ -70,8 +70,6 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 
 ### Legacy Chocapic and derivatives
 
-"Modern Chocapic" (Chocapic v7-v9) is not supported on Iris yet, but Chocapic v4-v6 work.
-
 * [Chocapic v4 - v6](https://www.mediafire.com/folder/qs3lb60h0zw6t/Older_versions)
 * [Triliton's Shaders](https://www.curseforge.com/minecraft/customization/trilitons-shaders)
 * [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
