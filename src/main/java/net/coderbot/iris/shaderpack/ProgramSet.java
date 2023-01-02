@@ -25,6 +25,7 @@ public class ProgramSet {
 	private final ComputeSource[][] shadowCompCompute;
 	private final ProgramSource[] prepare;
 	private final ComputeSource[][] prepareCompute;
+	private final ComputeSource[] setup;
 
 	private final ProgramSource gbuffersBasic;
 	private final ProgramSource gbuffersLine;
@@ -86,6 +87,7 @@ public class ProgramSet {
 		}
 
 		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
+		this.setup = readProgramArray(directory, sourceProvider, "setup");
 		this.prepareCompute = new ComputeSource[prepare.length][];
 		for (int i = 0; i < prepare.length; i++) {
 			this.prepareCompute[i] = readComputeArray(directory, sourceProvider, "prepare" + ((i == 0) ? "" : i));
@@ -160,6 +162,19 @@ public class ProgramSet {
 			String suffix = i == 0 ? "" : Integer.toString(i);
 
 			programs[i] = readProgramSource(directory, sourceProvider, name + suffix, this, shaderProperties);
+		}
+
+		return programs;
+	}
+
+	private ComputeSource[] readProgramArray(AbsolutePackPath directory,
+											 Function<AbsolutePackPath, String> sourceProvider, String name) {
+		ComputeSource[] programs = new ComputeSource[99];
+
+		for (int i = 0; i < programs.length; i++) {
+			String suffix = i == 0 ? "" : Integer.toString(i);
+
+			programs[i] = readComputeSource(directory, sourceProvider, name + suffix, this);
 		}
 
 		return programs;
@@ -268,6 +283,10 @@ public class ProgramSet {
 
 	public ProgramSource[] getPrepare() {
 		return prepare;
+	}
+
+	public ComputeSource[] getSetup() {
+		return setup;
 	}
 
 	public Optional<ProgramSource> getGbuffersBasic() {

@@ -102,6 +102,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final CustomUniforms customUniforms;
 	private final ShadowCompositeRenderer shadowCompositeRenderer;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTextureMap;
+	private final ComputeProgram[] setup;
 
 	private ShadowRenderTargets shadowRenderTargets;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
@@ -426,8 +427,19 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			shadowRenderTargets != null ? shadowRenderTargets.getMainRenderBuffer() : null, customUniforms);
 
 
+		this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
+
 		// first optimization pass
 		this.customUniforms.optimise();
+
+		for (ComputeProgram program : setup) {
+			if (program != null) {
+				program.use();
+				program.dispatch(1, 1);
+			}
+		}
+
+		ComputeProgram.unbind();
 	}
 
 	private ComputeProgram[] createShadowComputes(ComputeSource[] compute, ProgramSet programSet) {
@@ -446,7 +458,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 					throw new RuntimeException("Shader compilation failed!", e);
 				}
 
-				CommonUniforms.addCommonUniforms(builder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), updateNotifier, FogMode.OFF);
+				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
+				customUniforms.assignTo(builder);
 
 				Supplier<ImmutableSet<Integer>> flipped;
 
@@ -474,6 +487,64 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				}
 
 				programs[i] = builder.buildCompute();
+
+				this.customUniforms.mapholderToPass(builder, programs[i]);
+
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
+			}
+		}
+
+
+		return programs;
+	}
+
+	private ComputeProgram[] createSetupComputes(ComputeSource[] compute, ProgramSet programSet, TextureStage stage) {
+		ComputeProgram[] programs = new ComputeProgram[compute.length];
+		for (int i = 0; i < programs.length; i++) {
+			ComputeSource source = compute[i];
+			if (source == null || !source.getSource().isPresent()) {
+				continue;
+			} else {
+				ProgramBuilder builder;
+
+				try {
+					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null), stage, customTextureMap), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+				} catch (RuntimeException e) {
+					// TODO: Better error handling
+					throw new RuntimeException("Shader compilation failed!", e);
+				}
+
+				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
+				customUniforms.assignTo(builder);
+
+				Supplier<ImmutableSet<Integer>> flipped;
+
+				flipped = () -> flippedBeforeShadow;
+
+				TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+
+				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
+					ProgramSamplers.customTextureSamplerInterceptor(builder,
+						customTextureManager.getCustomTextureIdMap(textureStage));
+
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, true);
+				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
+				IrisSamplers.addCompositeSamplers(builder, renderTargets);
+				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+
+				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
+
+				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
+					if (shadowRenderTargets != null) {
+						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null);
+						IrisImages.addShadowColorImages(builder, shadowRenderTargets, null);
+					}
+				}
+
+
+				programs[i] = builder.buildCompute();
+
+				this.customUniforms.mapholderToPass(builder, programs[i]);
 
 				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
 			}

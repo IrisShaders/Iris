@@ -4,6 +4,18 @@ import java.util.Optional;
 
 public enum TextureStage {
 	/**
+	 * The setup passes.
+	 *
+	 * Exclusive to Iris 1.6.
+	 */
+	SETUP,
+	/**
+	 * The begin pass.
+	 *
+	 * Exclusive to Iris 1.6.
+	 */
+	BEGIN,
+	/**
 	 * The shadowcomp passes.
 	 *
 	 * While this is not documented in shaders.txt, it is a valid stage for defining custom textures.
