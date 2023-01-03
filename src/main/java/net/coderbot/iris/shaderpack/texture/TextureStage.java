@@ -42,6 +42,10 @@ public enum TextureStage {
 
 	public static Optional<TextureStage> parse(String name) {
 		switch (name) {
+			case "setup":
+				return Optional.of(SETUP);
+			case "begin":
+				return Optional.of(BEGIN);
 			case "shadowcomp":
 				return Optional.of(SHADOWCOMP);
 			case "prepare":
