@@ -102,17 +102,28 @@ public class ShaderPack {
 		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"),
 				potentialFileNames);
 
+		// This cannot be done in IDMap, as we do not have the include graph, and subsequently the shader settings.
 		loadProperties(root, "dimension.properties", environmentDefines).ifPresent(dimensionProperties -> {
 			dimensionIds = parseDimensionIds(dimensionProperties, "dimension.");
 			dimensionMap = parseDimensionMap(dimensionProperties, "dimension.", "dimension.properties");
 		});
 
 		if (dimensionMap == null) {
+			dimensionIds = new ArrayList<>();
 			dimensionMap = new Object2ObjectArrayMap<>();
 
-			if (Files.exists(root.resolve("world0"))) dimensionMap.putIfAbsent(DimensionId.OVERWORLD, "world0");
-			if (Files.exists(root.resolve("world-1"))) dimensionMap.putIfAbsent(DimensionId.NETHER, "world-1");
-			if (Files.exists(root.resolve("world1"))) dimensionMap.putIfAbsent(DimensionId.END, "world1");
+			if (Files.exists(root.resolve("world0"))) {
+				dimensionIds.add("world0");
+				dimensionMap.putIfAbsent(DimensionId.OVERWORLD, "world0");
+			}
+			if (Files.exists(root.resolve("world-1"))) {
+				dimensionIds.add("world-1");
+				dimensionMap.putIfAbsent(DimensionId.NETHER, "world-1");
+			}
+			if (Files.exists(root.resolve("world1"))) {
+				dimensionIds.add("world1");
+				dimensionMap.putIfAbsent(DimensionId.END, "world1");
+			}
 		}
 
 		for (String id : dimensionIds) {
