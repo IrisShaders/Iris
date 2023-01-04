@@ -54,8 +54,6 @@ public class IdMap {
 	 */
 	private Map<NamespacedId, BlockRenderType> blockRenderTypeMap;
 
-	private Map<NamespacedId, String> dimensionMap;
-
 	IdMap(Path shaderPath, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
 		itemIdMap = loadProperties(shaderPath, "item.properties", shaderPackOptions, environmentDefines)
 			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
@@ -67,18 +65,6 @@ public class IdMap {
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
 			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});
-
-		loadProperties(shaderPath, "dimension.properties", shaderPackOptions, environmentDefines).ifPresent(dimensionProperties -> {
-			dimensionMap = parseDimensionMap(dimensionProperties, "dimension.", "dimension.properties");
-		});
-
-		if (dimensionMap == null) {
-			dimensionMap = new Object2ObjectArrayMap<>();
-
-			if (Files.exists(shaderPath.resolve("world0"))) dimensionMap.putIfAbsent(DimensionId.OVERWORLD, "world0");
-			if (Files.exists(shaderPath.resolve("world-1"))) dimensionMap.putIfAbsent(DimensionId.NETHER, "world-1");
-			if (Files.exists(shaderPath.resolve("world1"))) dimensionMap.putIfAbsent(DimensionId.END, "world1");
-		}
 
 		// TODO: Properly override block render layers
 
@@ -305,10 +291,6 @@ public class IdMap {
 
 	public Map<NamespacedId, BlockRenderType> getBlockRenderTypeMap() {
 		return blockRenderTypeMap;
-	}
-
-	public Map<NamespacedId, String> getDimensionMap() {
-		return dimensionMap;
 	}
 
 	@Override

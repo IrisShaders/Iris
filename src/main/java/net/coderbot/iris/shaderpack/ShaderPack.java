@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
@@ -23,6 +24,7 @@ import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
+import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -36,6 +38,7 @@ import java.io.BufferedReader;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -48,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -70,6 +74,8 @@ public class ShaderPack {
 	private final String profileInfo;
 	private final Function<AbsolutePackPath, String> sourceProvider;
 	private final ShaderProperties shaderProperties;
+	private List<String> dimensionIds;
+	private Map<NamespacedId, String> dimensionMap;
 
 	public ShaderPack(Path root, Iterable<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		this(root, Collections.emptyMap(), environmentDefines);
@@ -96,14 +102,23 @@ public class ShaderPack {
 		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"),
 				potentialFileNames);
 
-		boolean hasWorld0 = ShaderPackSourceNames.findPresentSources(starts, root,
-				AbsolutePackPath.fromAbsolutePath("/world0"), potentialFileNames);
+		loadProperties(root, "dimension.properties", environmentDefines).ifPresent(dimensionProperties -> {
+			dimensionIds = parseDimensionIds(dimensionProperties, "dimension.");
+			dimensionMap = parseDimensionMap(dimensionProperties, "dimension.", "dimension.properties");
+		});
 
-		boolean hasNether = ShaderPackSourceNames.findPresentSources(starts, root,
-				AbsolutePackPath.fromAbsolutePath("/world-1"), potentialFileNames);
+		if (dimensionMap == null) {
+			dimensionMap = new Object2ObjectArrayMap<>();
 
-		boolean hasEnd = ShaderPackSourceNames.findPresentSources(starts, root,
-				AbsolutePackPath.fromAbsolutePath("/world1"), potentialFileNames);
+			if (Files.exists(root.resolve("world0"))) dimensionMap.putIfAbsent(DimensionId.OVERWORLD, "world0");
+			if (Files.exists(root.resolve("world-1"))) dimensionMap.putIfAbsent(DimensionId.NETHER, "world-1");
+			if (Files.exists(root.resolve("world1"))) dimensionMap.putIfAbsent(DimensionId.END, "world1");
+		}
+
+		for (String id : dimensionIds) {
+			ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/" + id),
+				potentialFileNames);
+		}
 
 		// Read all files and included files recursively
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
@@ -257,6 +272,76 @@ public class ShaderPack {
 		});
 	}
 
+	// TODO: Copy-paste from IdMap, find a way to deduplicate this
+	/**
+	 * Loads properties from a properties file in a shaderpack path
+	 */
+	private static Optional<Properties> loadProperties(Path shaderPath, String name,
+													   Iterable<StringPair> environmentDefines) {
+		String fileContents = readProperties(shaderPath, name);
+		if (fileContents == null) {
+			return Optional.empty();
+		}
+
+		String processed = PropertiesPreprocessor.preprocessSource(fileContents, environmentDefines);
+
+		StringReader propertiesReader = new StringReader(processed);
+
+		// Note: ordering of properties is significant
+		// See https://github.com/IrisShaders/Iris/issues/1327 and the relevant putIfAbsent calls in
+		// BlockMaterialMapping
+		Properties properties = new OrderBackedProperties();
+		try {
+			properties.load(propertiesReader);
+		} catch (IOException e) {
+			Iris.logger.error("Error loading " + name + " at " + shaderPath, e);
+
+			return Optional.empty();
+		}
+
+		return Optional.of(properties);
+	}
+
+	private List<String> parseDimensionIds(Properties dimensionProperties, String keyPrefix) {
+		List<String> names = new ArrayList<>();
+
+		dimensionProperties.forEach((keyObject, value) -> {
+			String key = (String) keyObject;
+			if (!key.startsWith(keyPrefix)) {
+				// Not a valid line, ignore it
+				return;
+			}
+
+			key = key.substring(keyPrefix.length());
+
+			names.add(key);
+		});
+
+		return names;
+	}
+
+	private static Map<NamespacedId, String> parseDimensionMap(Properties properties, String keyPrefix, String fileName) {
+		Map<NamespacedId, String> overrides = new Object2ObjectArrayMap<>();
+
+		properties.forEach((keyObject, valueObject) -> {
+			String key = (String) keyObject;
+			String value = (String) valueObject;
+
+			if (!key.startsWith(keyPrefix)) {
+				// Not a valid line, ignore it
+				return;
+			}
+
+			key = key.substring(keyPrefix.length());
+
+			for (String part : value.split("\\s+")) {
+				overrides.put(new NamespacedId(part), key);
+			}
+		});
+
+		return overrides;
+	}
+
 	private String getCurrentProfileName() {
 		return profile.current.map(p -> p.name).orElse("Custom");
 	}
@@ -383,8 +468,8 @@ public class ShaderPack {
 		ProgramSet overrides;
 
 		overrides = this.overrides.computeIfAbsent(dimension, dim -> {
-			if (idMap.getDimensionMap().containsKey(dimension)) {
-				String map = idMap.getDimensionMap().get(dimension);
+			if (dimensionMap.containsKey(dimension)) {
+				String map = dimensionMap.get(dimension);
 				return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + map), sourceProvider, shaderProperties, this);
 			} else {
 				return null;
