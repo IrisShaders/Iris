@@ -60,7 +60,7 @@ public class ShaderPack {
 	private static final Gson GSON = new Gson();
 
 	private final ProgramSet base;
-	private final Map<NamespacedId, ProgramSet> overrides;
+	private final Map<NamespacedId, ProgramSetInterface> overrides;
 
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
@@ -102,33 +102,36 @@ public class ShaderPack {
 		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"),
 				potentialFileNames);
 
+		dimensionIds = new ArrayList<>();
+
 		// This cannot be done in IDMap, as we do not have the include graph, and subsequently the shader settings.
-		loadProperties(root, "dimension.properties", environmentDefines).ifPresent(dimensionProperties -> {
-			dimensionIds = parseDimensionIds(dimensionProperties, "dimension.");
+		List<String> dimensionIdCreator = loadProperties(root, "dimension.properties", environmentDefines).map(dimensionProperties -> {
 			dimensionMap = parseDimensionMap(dimensionProperties, "dimension.", "dimension.properties");
-		});
+			return parseDimensionIds(dimensionProperties, "dimension.");
+		}).orElse(new ArrayList<>());
 
 		if (dimensionMap == null) {
-			dimensionIds = new ArrayList<>();
 			dimensionMap = new Object2ObjectArrayMap<>();
 
 			if (Files.exists(root.resolve("world0"))) {
-				dimensionIds.add("world0");
+				dimensionIdCreator.add("world0");
 				dimensionMap.putIfAbsent(DimensionId.OVERWORLD, "world0");
 			}
 			if (Files.exists(root.resolve("world-1"))) {
-				dimensionIds.add("world-1");
+				dimensionIdCreator.add("world-1");
 				dimensionMap.putIfAbsent(DimensionId.NETHER, "world-1");
 			}
 			if (Files.exists(root.resolve("world1"))) {
-				dimensionIds.add("world1");
+				dimensionIdCreator.add("world1");
 				dimensionMap.putIfAbsent(DimensionId.END, "world1");
 			}
 		}
 
-		for (String id : dimensionIds) {
-			ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/" + id),
-				potentialFileNames);
+		for (String id : dimensionIdCreator) {
+			if (ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/" + id),
+				potentialFileNames)) {
+				dimensionIds.add(id);
+			}
 		}
 
 		// Read all files and included files recursively
@@ -476,14 +479,19 @@ public class ShaderPack {
 	}
 
 	public ProgramSet getProgramSet(NamespacedId dimension) {
-		ProgramSet overrides;
+		ProgramSetInterface overrides;
 
 		overrides = this.overrides.computeIfAbsent(dimension, dim -> {
 			if (dimensionMap.containsKey(dimension)) {
-				String map = dimensionMap.get(dimension);
-				return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + map), sourceProvider, shaderProperties, this);
+				String name = dimensionMap.get(dimension);
+				if (dimensionIds.contains(name)) {
+					return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + name), sourceProvider, shaderProperties, this);
+				} else {
+					Iris.logger.error("Attempted to load dimension folder " + name + " for dimension " + dimension + ", but it does not exist!");
+					return ProgramSetInterface.Empty.INSTANCE;
+				}
 			} else {
-				return null;
+				return ProgramSetInterface.Empty.INSTANCE;
 			}
 		});
 
@@ -495,8 +503,8 @@ public class ShaderPack {
 		//     impossible to "un-define" the composite pass. It also removes a lot of complexity related to "merging"
 		//     program sets. At the same time, this might be desired behavior by shader pack authors. It could make
 		//     sense to bring it back as a configurable option, and have a more maintainable set of code backing it.
-		if (overrides != null) {
-			return overrides;
+		if (overrides instanceof ProgramSet) {
+			return (ProgramSet) overrides;
 		} else {
 			return base;
 		}
