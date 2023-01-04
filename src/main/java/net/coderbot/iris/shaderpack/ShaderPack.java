@@ -16,6 +16,7 @@ import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.coderbot.iris.shaderpack.option.ProfileSet;
 import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
@@ -55,10 +56,7 @@ public class ShaderPack {
 	private static final Gson GSON = new Gson();
 
 	private final ProgramSet base;
-	@Nullable
-	private final ProgramSet overworld;
-	private final ProgramSet nether;
-	private final ProgramSet end;
+	private final Map<NamespacedId, ProgramSet> overrides;
 
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
@@ -70,6 +68,8 @@ public class ShaderPack {
 
 	private final ProfileSet.ProfileResult profile;
 	private final String profileInfo;
+	private final Function<AbsolutePackPath, String> sourceProvider;
+	private final ShaderProperties shaderProperties;
 
 	public ShaderPack(Path root, Iterable<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		this(root, Collections.emptyMap(), environmentDefines);
@@ -123,7 +123,7 @@ public class ShaderPack {
 		graph = this.shaderPackOptions.getIncludes();
 
 		Iterable<StringPair> finalEnvironmentDefines = environmentDefines;
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+		this.shaderProperties = loadProperties(root, "shaders.properties")
 				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
 				.orElseGet(ShaderProperties::empty);
 
@@ -181,7 +181,7 @@ public class ShaderPack {
 
 		// Set up our source provider for creating ProgramSets
 		Iterable<StringPair> finalEnvironmentDefines1 = environmentDefines;
-		Function<AbsolutePackPath, String> sourceProvider = (path) -> {
+		this.sourceProvider = (path) -> {
 			String pathString = path.getPathString();
 			// Removes the first "/" in the path if present, and the file
 			// extension in order to represent the path as its program name
@@ -219,12 +219,7 @@ public class ShaderPack {
 
 		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/"), sourceProvider, shaderProperties, this);
 
-		this.overworld = loadOverrides(hasWorld0, AbsolutePackPath.fromAbsolutePath("/world0"), sourceProvider,
-				shaderProperties, this);
-		this.nether = loadOverrides(hasNether, AbsolutePackPath.fromAbsolutePath("/world-1"), sourceProvider,
-				shaderProperties, this);
-		this.end = loadOverrides(hasEnd, AbsolutePackPath.fromAbsolutePath("/world1"), sourceProvider,
-				shaderProperties, this);
+		this.overrides = new HashMap<>();
 
 		this.idMap = new IdMap(root, shaderPackOptions, environmentDefines);
 
@@ -384,22 +379,17 @@ public class ShaderPack {
 		}
 	}
 
-	public ProgramSet getProgramSet(DimensionId dimension) {
+	public ProgramSet getProgramSet(NamespacedId dimension) {
 		ProgramSet overrides;
 
-		switch (dimension) {
-			case OVERWORLD:
-				overrides = overworld;
-				break;
-			case NETHER:
-				overrides = nether;
-				break;
-			case END:
-				overrides = end;
-				break;
-			default:
-				throw new IllegalArgumentException("Unknown dimension " + dimension);
-		}
+		overrides = this.overrides.computeIfAbsent(dimension, dim -> {
+			if (idMap.getDimensionMap().containsKey(dimension)) {
+				String map = idMap.getDimensionMap().get(dimension);
+				return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + map), sourceProvider, shaderProperties, this);
+			} else {
+				return null;
+			}
+		});
 
 		// NB: If a dimension overrides directory is present, none of the files from the parent directory are "merged"
 		//     into the override. Rather, we act as if the overrides directory contains a completely different set of
