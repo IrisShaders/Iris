@@ -246,7 +246,7 @@ public class ShaderPack {
 			return source;
 		};
 
-		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/"), sourceProvider, shaderProperties, this);
+		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + dimensionMap.getOrDefault(new NamespacedId("iris", "base"), "")), sourceProvider, shaderProperties, this);
 
 		this.overrides = new HashMap<>();
 
