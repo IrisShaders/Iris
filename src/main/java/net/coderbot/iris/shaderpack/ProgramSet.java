@@ -214,6 +214,12 @@ public class ProgramSet {
 				gbuffersHand
 		));
 
+		for (ComputeSource computeSource : setup) {
+			if (computeSource != null) {
+				computes.add(computeSource);
+			}
+		}
+
 		for (ComputeSource[] computeSources : compositeCompute) {
 			computes.addAll(Arrays.asList(computeSources));
 		}

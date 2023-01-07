@@ -431,15 +431,29 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// first optimization pass
 		this.customUniforms.optimise();
+		boolean hasRun = false;
 
 		for (ComputeProgram program : setup) {
 			if (program != null) {
+				if (!hasRun) {
+					hasRun = true;
+					renderTargets.onFullClear();
+					Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
+
+					// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
+					//     will give you pink reflections and other weirdness if this is zero.
+					Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
+
+					clearPassesFull.forEach(clearPass -> clearPass.execute(fogColor));
+				}
 				program.use();
 				program.dispatch(1, 1);
 			}
 		}
 
-		ComputeProgram.unbind();
+		if (hasRun) {
+			ComputeProgram.unbind();
+		}
 	}
 
 	private ComputeProgram[] createShadowComputes(ComputeSource[] compute, ProgramSet programSet) {
@@ -521,7 +535,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 				flipped = () -> flippedBeforeShadow;
 
-				TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
+				TextureStage textureStage = TextureStage.SETUP;
 
 				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
 					ProgramSamplers.customTextureSamplerInterceptor(builder,
