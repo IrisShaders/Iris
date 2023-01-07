@@ -117,6 +117,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private ImmutableList<ClearPass> shadowClearPassesFull;
 	private final GlFramebuffer baseline;
 
+	private final CompositeRenderer beginRenderer;
 	private final CompositeRenderer prepareRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
@@ -150,7 +151,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final CloudSetting cloudSetting;
 	private final boolean shouldRenderSun;
 	private final boolean shouldRenderMoon;
-	private final boolean prepareBeforeShadow;
 	private final boolean allowConcurrentCompute;
 
 	@Nullable
@@ -176,7 +176,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
-		this.prepareBeforeShadow = programSet.getPackDirectives().isPrepareBeforeShadow();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 
 		ProgramFallbackResolver resolver = new ProgramFallbackResolver(programSet);
@@ -225,9 +224,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
 
-		this.flippedBeforeShadow = ImmutableSet.of();
-
 		BufferFlipper flipper = new BufferFlipper();
+
 
 		this.centerDepthSampler = new CenterDepthSampler(() -> renderTargets.getDepthTexture(), programSet.getPackDirectives().getCenterDepthHalfLife());
 
@@ -241,6 +239,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			return shadowRenderTargets;
 		};
+
+		this.beginRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getBegin(), programSet.getBeginCompute(), renderTargets,
+			customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.BEGIN,
+			customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.BEGIN, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(),
+			programSet.getPackDirectives().getExplicitFlips("begin_pre"), customUniforms);
+
+		flippedBeforeShadow = flipper.snapshot();
 
 		this.prepareRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getPrepare(), programSet.getPrepareCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.PREPARE,
@@ -312,7 +317,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow, renderTargets, false);
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeShadow, renderTargets, false);
 			IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 
 			if (!shouldBindPBR) {
@@ -337,7 +342,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
 			ProgramImages.Builder builder = ProgramImages.builder(programId);
 
-			IrisImages.addRenderTargetImages(builder, () -> prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow, renderTargets);
+			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeShadow, renderTargets);
 
 			if (IrisImages.hasShadowImages(builder)) {
 				// We don't compile Sodium shadow programs unless there's a shadow pass... And a shadow pass
@@ -531,9 +536,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
 				customUniforms.assignTo(builder);
 
+				ImmutableSet<Integer> empty = ImmutableSet.of();
 				Supplier<ImmutableSet<Integer>> flipped;
 
-				flipped = () -> flippedBeforeShadow;
+				flipped = () -> empty;
 
 				TextureStage textureStage = TextureStage.SETUP;
 
@@ -639,7 +645,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GlFramebuffer framebuffer = this.shadowRenderTargets.getMainRenderBuffer();
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
-		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
+		Supplier<ImmutableSet<Integer>> flipped = () -> flippedBeforeShadow;
 
 		ExtendedShader extendedShader = NewShaderTests.create(this, name, source, programId, framebuffer, framebuffer, baseline,
 				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, FogMode.PER_VERTEX, isIntensity, isFullbright, true, customUniforms);
@@ -812,6 +818,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			main.height, depthBufferFormat, packDirectives);
 
 		if (changed) {
+			beginRenderer.recalculateSizes();
 			prepareRenderer.recalculateSizes();
 			deferredRenderer.recalculateSizes();
 			compositeRenderer.recalculateSizes();
@@ -853,7 +860,25 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		main.bindWrite(true);
 		isMainBound = true;
 
+		if (changed) {
+			boolean hasRun = false;
+
+			for (ComputeProgram program : setup) {
+				if (program != null) {
+					hasRun = true;
+					program.use();
+					program.dispatch(1, 1);
+				}
+			}
+
+			if (hasRun) {
+				ComputeProgram.unbind();
+			}
+		}
+
 		isBeforeTranslucent = true;
+
+		beginRenderer.renderAll();
 
 		setPhase(WorldRenderingPhase.SKY);
 
@@ -878,17 +903,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
-		if (prepareBeforeShadow) {
-			prepareRenderer.renderAll();
-		}
-
 		if (shadowRenderer != null) {
 			this.shadowRenderer.renderShadows(worldRenderer, playerCamera);
 		}
 
-		if (!prepareBeforeShadow) {
-			prepareRenderer.renderAll();
-		}
+		prepareRenderer.renderAll();
 	}
 
 	@Override

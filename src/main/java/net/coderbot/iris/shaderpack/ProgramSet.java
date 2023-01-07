@@ -23,6 +23,8 @@ public class ProgramSet {
 
 	private final ProgramSource[] shadowcomp;
 	private final ComputeSource[][] shadowCompCompute;
+	private final ProgramSource[] begin;
+	private final ComputeSource[][] beginCompute;
 	private final ProgramSource[] prepare;
 	private final ComputeSource[][] prepareCompute;
 	private final ComputeSource[] setup;
@@ -86,8 +88,15 @@ public class ProgramSet {
 			this.shadowCompCompute[i] = readComputeArray(directory, sourceProvider, "shadowcomp" + ((i == 0) ? "" : i));
 		}
 
-		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
 		this.setup = readProgramArray(directory, sourceProvider, "setup");
+
+		this.begin = readProgramArray(directory, sourceProvider, "begin", shaderProperties);
+		this.beginCompute = new ComputeSource[begin.length][];
+		for (int i = 0; i < begin.length; i++) {
+			this.beginCompute[i] = readComputeArray(directory, sourceProvider, "begin" + ((i == 0) ? "" : i));
+		}
+
+		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
 		this.prepareCompute = new ComputeSource[prepare.length][];
 		for (int i = 0; i < prepare.length; i++) {
 			this.prepareCompute[i] = readComputeArray(directory, sourceProvider, "prepare" + ((i == 0) ? "" : i));
@@ -205,6 +214,7 @@ public class ProgramSet {
 
 		programs.add(shadow);
 		programs.addAll(Arrays.asList(shadowcomp));
+		programs.addAll(Arrays.asList(begin));
 		programs.addAll(Arrays.asList(prepare));
 
 		programs.addAll (Arrays.asList(
@@ -218,6 +228,10 @@ public class ProgramSet {
 			if (computeSource != null) {
 				computes.add(computeSource);
 			}
+		}
+
+		for (ComputeSource[] computeSources : beginCompute) {
+			computes.addAll(Arrays.asList(computeSources));
 		}
 
 		for (ComputeSource[] computeSources : compositeCompute) {
@@ -285,6 +299,10 @@ public class ProgramSet {
 
 	public ProgramSource[] getShadowComposite() {
 		return shadowcomp;
+	}
+
+	public ProgramSource[] getBegin() {
+		return begin;
 	}
 
 	public ProgramSource[] getPrepare() {
@@ -417,6 +435,10 @@ public class ProgramSet {
 
 	public ComputeSource[][] getShadowCompCompute() {
 		return shadowCompCompute;
+	}
+
+	public ComputeSource[][] getBeginCompute() {
+		return beginCompute;
 	}
 
 	public ComputeSource[][] getPrepareCompute() {
