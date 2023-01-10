@@ -11,7 +11,7 @@ public class PackShadowDirectives {
 	// Bump this up if you want more shadow color buffers!
 	// This is currently set at 2 for ShadersMod / OptiFine parity but can theoretically be bumped up to 8.
 	// TODO: Make this configurable?
-	public static final int MAX_SHADOW_COLOR_BUFFERS = 2;
+	public static final int MAX_SHADOW_COLOR_BUFFERS = 8;
 
 	private final OptionalBoolean shadowEnabled;
 

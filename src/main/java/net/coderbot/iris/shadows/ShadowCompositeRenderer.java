@@ -97,7 +97,7 @@ public class ShadowCompositeRenderer {
 
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, renderTargets);
 			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, renderTargets);
-			int[] drawBuffers = new int[]{0, 1};
+			int[] drawBuffers = new int[]{0, 1, 2, 3, 4, 5, 6, 7};
 
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
