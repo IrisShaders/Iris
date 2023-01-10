@@ -60,7 +60,9 @@ public class ShadowRenderTargets {
 			if (settings.getClear()) {
 				buffersToBeCleared.add(i);
 			}
+		}
 
+		for (int i = 0; i < shadowDirectives.getDepthSamplingSettings().size(); i++) {
 			this.hardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
 		}
 
