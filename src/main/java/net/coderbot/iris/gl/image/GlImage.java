@@ -83,6 +83,15 @@ public class GlImage extends GlResource {
 		GlStateManager._deleteTexture(getGlId());
 	}
 
+	public InternalTextureFormat getInternalFormat() {
+		return internalTextureFormat;
+	}
+
+	@Override
+	public String toString() {
+		return "GlImage name " + name + " format " + format + "internalformat " + internalTextureFormat + " pixeltype " + pixelType;
+	}
+
 	public static class Relative extends GlImage {
 
 		private final float relativeHeight;

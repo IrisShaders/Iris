@@ -16,6 +16,7 @@ import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -49,6 +50,7 @@ import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.shaderpack.ComputeSource;
+import net.coderbot.iris.shaderpack.ImageInformation;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
@@ -160,6 +162,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private int currentSpecularTexture;
 	private ParticleRenderingSettings particleRenderingSettings;
 	private PackDirectives packDirectives;
+	private Set<GlImage> customImages;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		PatchedShaderPrinter.resetPrintState();
@@ -178,6 +181,22 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.prepareBeforeShadow = programSet.getPackDirectives().isPrepareBeforeShadow();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 
+		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+		int depthTextureId = main.getDepthTextureId();
+		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
+		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
+
+		this.customImages = new HashSet<>();
+		for (ImageInformation information : programSet.getPack().getIrisCustomImages()) {
+			if (information.isRelative()) {
+				customImages.add(new GlImage.Relative(information.name(), information.format(), information.internalTextureFormat(), information.type(), information.relativeWidth(), information.relativeHeight(), main.width, main.height));
+			} else {
+				customImages.add(new GlImage(information.name(), information.target(), information.format(), information.internalTextureFormat(), information.type(), information.width(), information.height(), information.depth()));
+			}
+		}
+
+		customImages.forEach(Object::toString);
+
 		ProgramFallbackResolver resolver = new ProgramFallbackResolver(programSet);
 
 		this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings().orElseGet(() -> {
@@ -189,11 +208,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		});
 
 		this.shadowComputes = createShadowComputes(programSet.getShadowCompute(), programSet);
-
-		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-		int depthTextureId = main.getDepthTextureId();
-		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
-		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
 		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, ((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings(), programSet.getPackDirectives());
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
@@ -243,25 +257,25 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		this.prepareRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getPrepare(), programSet.getPrepareCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.PREPARE,
-				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(),
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 				programSet.getPackDirectives().getExplicitFlips("prepare_pre"), customUniforms);
 
 		flippedAfterPrepare = flipper.snapshot();
 
 		this.deferredRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getDeferred(), programSet.getDeferredCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.DEFERRED,
-				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(),
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 				programSet.getPackDirectives().getExplicitFlips("deferred_pre"), customUniforms);
 
 		flippedAfterTranslucent = flipper.snapshot();
 
 		this.compositeRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getComposite(), programSet.getCompositeCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.COMPOSITE_AND_FINAL,
-				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(),
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 				programSet.getPackDirectives().getExplicitFlips("composite_pre"), customUniforms);
 		this.finalPassRenderer = new FinalPassRenderer(this, programSet, renderTargets, customTextureManager.getNoiseTexture(), updateNotifier, flipper.snapshot(),
 				centerDepthSampler, shadowTargetsSupplier,
-				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(),
+				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 				this.compositeRenderer.getFlippedAtLeastOnceFinal(), customUniforms);
 
 		Supplier<ImmutableSet<Integer>> flipped =
@@ -296,6 +310,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			ProgramImages.Builder builder = ProgramImages.builder(programId);
 
 			IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+			IrisImages.addCustomImages(builder, customImages);
 
 			if (IrisImages.hasShadowImages(builder)) {
 				// we compiled the non-Sodium version of this program first... so if this is somehow null, something
@@ -337,6 +352,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			ProgramImages.Builder builder = ProgramImages.builder(programId);
 
 			IrisImages.addRenderTargetImages(builder, () -> prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow, renderTargets);
+			IrisImages.addCustomImages(builder, customImages);
 
 			if (IrisImages.hasShadowImages(builder)) {
 				// We don't compile Sodium shadow programs unless there's a shadow pass... And a shadow pass
@@ -461,6 +477,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
+				IrisImages.addCustomImages(builder, customImages);
 
 				IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 
@@ -731,6 +748,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			deferredRenderer.recalculateSizes();
 			compositeRenderer.recalculateSizes();
 			finalPassRenderer.recalculateSwapPassSize();
+
+			customImages.forEach(image -> image.updateNewSize(main.width, main.height));
 
 			this.clearPassesFull.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
 			this.clearPasses.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));

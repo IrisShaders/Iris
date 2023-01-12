@@ -372,6 +372,7 @@ public class ShaderProperties {
 
 			handlePassDirective("image.", key, value, (samplerName) -> {
 				String[] parts = value.split(" ");
+				String key2 = key.substring(6);
 
 				if (irisCustomImages.size() > 7) {
 					Iris.logger.error("Only up to 8 images are allowed, but tried to add another image! " + key);
@@ -385,7 +386,7 @@ public class ShaderProperties {
 				PixelType pixelType = PixelType.fromString(parts[2]).orElse(null);
 
 				if (format == null || internalFormat == null || pixelType == null) {
-					Iris.logger.error("Image " + key + " is invalid! Format: " + format + " Internal format: " + internalFormat + " Pixel type: " + pixelType);
+					Iris.logger.error("Image " + key2 + " is invalid! Format: " + format + " Internal format: " + internalFormat + " Pixel type: " + pixelType);
 				}
 
 				boolean relative = Boolean.parseBoolean(parts[3]);
@@ -393,7 +394,7 @@ public class ShaderProperties {
 				if (relative) { // Is relative?
 					float relativeWidth = Float.parseFloat(parts[4]);
 					float relativeHeight = Float.parseFloat(parts[5]);
-					image = new ImageInformation(key, TextureType.TEXTURE_2D, format, internalFormat, pixelType, 0, 0, 0, true, relativeWidth, relativeHeight);
+					image = new ImageInformation(key2, TextureType.TEXTURE_2D, format, internalFormat, pixelType, 0, 0, 0, true, relativeWidth, relativeHeight);
 				} else {
 					TextureType type;
 					int width, height, depth;
@@ -413,10 +414,10 @@ public class ShaderProperties {
 						height = Integer.parseInt(parts[5]);
 						depth = Integer.parseInt(parts[6]);
 					} else {
-						Iris.logger.error("Unknown image type! " + key + " = " + value);
+						Iris.logger.error("Unknown image type! " + key2 + " = " + value);
 						return;
 					}
-					image = new ImageInformation(key, type, format, internalFormat, pixelType, width, height, depth, false, 0, 0);
+					image = new ImageInformation(key2, type, format, internalFormat, pixelType, width, height, depth, false, 0, 0);
 				}
 
 				irisCustomImages.add(image);
