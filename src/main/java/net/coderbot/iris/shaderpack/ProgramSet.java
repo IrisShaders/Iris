@@ -32,6 +32,8 @@ public class ProgramSet {
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersTexturedLit;
 	private final ProgramSource gbuffersTerrain;
+	private final ProgramSource gbuffersTerrainSolid;
+	private final ProgramSource gbuffersTerrainCutout;
 	private ProgramSource gbuffersDamagedBlock;
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
@@ -97,6 +99,8 @@ public class ProgramSet {
 		this.gbuffersTextured = readProgramSource(directory, sourceProvider, "gbuffers_textured", this, shaderProperties);
 		this.gbuffersTexturedLit = readProgramSource(directory, sourceProvider, "gbuffers_textured_lit", this, shaderProperties);
 		this.gbuffersTerrain = readProgramSource(directory, sourceProvider, "gbuffers_terrain", this, shaderProperties);
+		this.gbuffersTerrainSolid = readProgramSource(directory, sourceProvider, "gbuffers_terrain_solid", this, shaderProperties);
+		this.gbuffersTerrainCutout = readProgramSource(directory, sourceProvider, "gbuffers_terrain_cutout", this, shaderProperties);
 		this.gbuffersDamagedBlock = readProgramSource(directory, sourceProvider, "gbuffers_damagedblock", this, shaderProperties);
 		this.gbuffersSkyBasic = readProgramSource(directory, sourceProvider, "gbuffers_skybasic", this, shaderProperties);
 		this.gbuffersSkyTextured = readProgramSource(directory, sourceProvider, "gbuffers_skytextured", this, shaderProperties);
@@ -193,7 +197,7 @@ public class ProgramSet {
 		programs.addAll(Arrays.asList(prepare));
 
 		programs.addAll (Arrays.asList(
-				gbuffersBasic, gbuffersBeaconBeam, gbuffersTextured, gbuffersTexturedLit, gbuffersTerrain,
+				gbuffersBasic, gbuffersBeaconBeam, gbuffersTextured, gbuffersTexturedLit, gbuffersTerrain, gbuffersTerrainSolid, gbuffersTerrainCutout,
 				gbuffersDamagedBlock, gbuffersSkyBasic, gbuffersSkyTextured, gbuffersClouds, gbuffersWeather,
 				gbuffersEntities, gbuffersEntitiesTrans, gbuffersEntitiesGlowing, gbuffersGlint, gbuffersEntityEyes, gbuffersBlock,
 				gbuffersHand
@@ -290,6 +294,14 @@ public class ProgramSet {
 		return gbuffersTerrain.requireValid();
 	}
 
+	public Optional<ProgramSource> getGbuffersTerrainSolid() {
+		return gbuffersTerrainSolid.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersTerrainCutout() {
+		return gbuffersTerrainCutout.requireValid();
+	}
+
 	public Optional<ProgramSource> getGbuffersDamagedBlock() {
 		return gbuffersDamagedBlock.requireValid();
 	}
@@ -349,6 +361,9 @@ public class ProgramSet {
 			case SkyTextured: return getGbuffersSkyTextured();
 			case Clouds: return getGbuffersClouds();
 			case Terrain: return getGbuffersTerrain();
+			case TerrainSolid: return getGbuffersTerrainSolid();
+			case TerrainCutout: return getGbuffersTerrainCutout();
+			case TerrainCutoutMip: return getGbuffersTerrainCutout();
 			case DamagedBlock: return getGbuffersDamagedBlock();
 			case Block: return getGbuffersBlock();
 			case BeaconBeam: return getGbuffersBeaconBeam();

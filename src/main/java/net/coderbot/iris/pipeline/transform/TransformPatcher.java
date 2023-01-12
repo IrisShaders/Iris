@@ -262,7 +262,6 @@ public class TransformPatcher {
 									break;
 								case SODIUM:
 									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
-									sodiumParameters.setAlphaFor(type);
 									SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
 									TextureTransformer.transform(transformer, tree, root,
 											TextureStage.GBUFFERS_AND_SHADOW,
@@ -317,11 +316,6 @@ public class TransformPatcher {
 			inputs.put(PatchShaderType.GEOMETRY, geometry);
 			inputs.put(PatchShaderType.FRAGMENT, fragment);
 
-			// the sodium terrain transformer transforms the fragment shader twice
-			if (parameters instanceof SodiumParameters && ((SodiumParameters) parameters).hasCutoutAlpha()) {
-				inputs.put(PatchShaderType.FRAGMENT_CUTOUT, fragment);
-			}
-
 			result = transformer.transform(inputs, parameters);
 			if (useCache) {
 				cache.put(key, result);
@@ -375,11 +369,11 @@ public class TransformPatcher {
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
-			AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
+			AlphaTest alpha, ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
-				new SodiumParameters(Patch.SODIUM, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset,
+				new SodiumParameters(Patch.SODIUM, alpha, inputs, positionScale, positionOffset,
 						textureScale, textureMap));
 	}
 
