@@ -70,6 +70,7 @@ public class ShaderPack {
 
 	private final ProfileSet.ProfileResult profile;
 	private final String profileInfo;
+	private final List<ImageInformation> irisCustomImages;
 
 	public ShaderPack(Path root, Iterable<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		this(root, Collections.emptyMap(), environmentDefines);
@@ -251,6 +252,8 @@ public class ShaderPack {
 			customTextureDataMap.put(textureStage, innerCustomTextureDataMap);
 		});
 
+		this.irisCustomImages = shaderProperties.getIrisCustomImages();
+
 		this.customUniforms = shaderProperties.customUniforms;
 
 		shaderProperties.getIrisCustomTextures().forEach((name, texture) -> {
@@ -422,6 +425,10 @@ public class ShaderPack {
 
 	public EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> getCustomTextureDataMap() {
 		return customTextureDataMap;
+	}
+
+	public List<ImageInformation> getIrisCustomImages() {
+		return irisCustomImages;
 	}
 
 	public Object2ObjectMap<String, CustomTextureData> getIrisCustomTextureDataMap() {

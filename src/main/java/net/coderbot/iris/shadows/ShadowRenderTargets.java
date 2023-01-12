@@ -43,6 +43,7 @@ public class ShadowRenderTargets {
 
 		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 		this.noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
+		int[] drawBuffers = new int[shadowDirectives.getColorSamplingSettings().size()];
 
 		for (int i = 0; i < shadowDirectives.getColorSamplingSettings().size(); i++) {
 			PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().get(i);
@@ -54,10 +55,14 @@ public class ShadowRenderTargets {
 				buffersToBeCleared.add(i);
 			}
 
+			drawBuffers[i] = i;
+
 			if (settings.getClear()) {
 				buffersToBeCleared.add(i);
 			}
+		}
 
+		for (int i = 0; i < shadowDirectives.getDepthSamplingSettings().size(); i++) {
 			this.hardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
 		}
 
@@ -70,7 +75,7 @@ public class ShadowRenderTargets {
 		fullClearRequired = true;
 
 		this.depthSourceFb = createFramebufferWritingToMain(new int[] {0});
-		this.mainRenderBuffer = createFramebufferWritingToMain(new int[] { 0, 1 });
+		this.mainRenderBuffer = createFramebufferWritingToMain(drawBuffers);
 		this.mainRenderBuffer.addDepthAttachment(this.mainDepth.getTextureId());
 
 		this.noTranslucentsDestFb = createFramebufferWritingToMain(new int[] {0});

@@ -1,12 +1,15 @@
 package net.coderbot.iris.samplers;
 
 import com.google.common.collect.ImmutableSet;
+import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.image.ImageHolder;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 
+import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -69,5 +72,11 @@ public class IrisImages {
 
 			images.addTextureImage(textureID, format, "shadowcolorimg" + i);
 		}
+	}
+
+	public static void addCustomImages(ImageHolder images, Set<GlImage> customImages) {
+		customImages.forEach(image -> {
+			images.addTextureImage(image::getId, image.getInternalFormat(), image.getName());
+		});
 	}
 }
