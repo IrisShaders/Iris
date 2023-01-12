@@ -91,6 +91,7 @@ public class ShaderProperties {
 	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureDefinition> irisCustomTextures = new Object2ObjectOpenHashMap<>();
+	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
@@ -367,6 +368,58 @@ public class ShaderProperties {
 				}
 
 				irisCustomTextures.put(samplerName, new TextureDefinition.PNGDefinition(value));
+			});
+
+			handlePassDirective("image.", key, value, (samplerName) -> {
+				String[] parts = value.split(" ");
+
+				if (irisCustomImages.size() > 7) {
+					Iris.logger.error("Only up to 8 images are allowed, but tried to add another image! " + key);
+					return;
+				}
+
+				ImageInformation image;
+
+				PixelFormat format = PixelFormat.fromString(parts[0]).orElse(null);
+				InternalTextureFormat internalFormat = InternalTextureFormat.fromString(parts[1]).orElse(null);
+				PixelType pixelType = PixelType.fromString(parts[2]).orElse(null);
+
+				if (format == null || internalFormat == null || pixelType == null) {
+					Iris.logger.error("Image " + key + " is invalid! Format: " + format + " Internal format: " + internalFormat + " Pixel type: " + pixelType);
+				}
+
+				boolean relative = Boolean.parseBoolean(parts[3]);
+
+				if (relative) { // Is relative?
+					float relativeWidth = Float.parseFloat(parts[4]);
+					float relativeHeight = Float.parseFloat(parts[5]);
+					image = new ImageInformation(key, TextureType.TEXTURE_2D, format, internalFormat, pixelType, 0, 0, 0, true, relativeWidth, relativeHeight);
+				} else {
+					TextureType type;
+					int width, height, depth;
+					if (parts.length == 5) {
+						type = TextureType.TEXTURE_1D;
+						width = Integer.parseInt(parts[4]);
+						height = 0;
+						depth = 0;
+					} else if (parts.length == 6) {
+						type = TextureType.TEXTURE_2D;
+						width = Integer.parseInt(parts[4]);
+						height = Integer.parseInt(parts[5]);
+						depth = 0;
+					} else if (parts.length == 7) {
+						type = TextureType.TEXTURE_3D;
+						width = Integer.parseInt(parts[4]);
+						height = Integer.parseInt(parts[5]);
+						depth = Integer.parseInt(parts[6]);
+					} else {
+						Iris.logger.error("Unknown image type! " + key + " = " + value);
+						return;
+					}
+					image = new ImageInformation(key, type, format, internalFormat, pixelType, width, height, depth, false, 0, 0);
+				}
+
+				irisCustomImages.add(image);
 			});
 
 			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
@@ -676,6 +729,10 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<String, TextureDefinition> getIrisCustomTextures() {
 		return irisCustomTextures;
+	}
+
+	public List<ImageInformation> getIrisCustomImages() {
+		return irisCustomImages;
 	}
 
 	public Optional<String> getNoiseTexturePath() {

@@ -42,6 +42,7 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.Map;
 import java.util.Objects;
@@ -202,7 +203,7 @@ public class FinalPassRenderer {
 				}
 			}
 
-			IrisRenderSystem.memoryBarrier(40);
+			IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_TEXTURE_UPDATE_BARRIER_BIT);
 
 			if (!finalPass.mipmappedBuffers.isEmpty()) {
 				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);

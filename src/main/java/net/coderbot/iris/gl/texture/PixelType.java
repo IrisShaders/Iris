@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL12C;
 import org.lwjgl.opengl.GL30C;
 
+import java.util.Locale;
 import java.util.Optional;
 
 public enum PixelType {
@@ -39,7 +40,7 @@ public enum PixelType {
 
 	public static Optional<PixelType> fromString(String name) {
 		try {
-			return Optional.of(PixelType.valueOf(name));
+			return Optional.of(PixelType.valueOf(name.toUpperCase(Locale.US)));
 		} catch (IllegalArgumentException e) {
 			return Optional.empty();
 		}
