@@ -309,7 +309,7 @@ public class ShaderProperties {
 					trueIndex = Integer.parseInt(index);
 					trueSize = Integer.parseInt(value);
 				} catch (NumberFormatException e) {
-					Iris.logger.fatal("Number format exception parsing SSBO index/size!", e);
+					Iris.logger.error("Number format exception parsing SSBO index/size!", e);
 					return;
 				}
 

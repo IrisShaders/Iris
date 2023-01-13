@@ -202,12 +202,13 @@ public class IrisRenderSystem {
 	}
 
 	public static void bufferStorage(int target, long size, int flags) {
-		RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+		RenderSystem.assertOnRenderThreadOrInit();
 		// The ARB version is identical to GL44 and redirects, so this should work on ARB as well.
 		GL45C.glBufferStorage(target, size, flags);
 	}
 
 	public static void bindBufferBase(int target, Integer index, int buffer) {
+		RenderSystem.assertOnRenderThreadOrInit();
 		GL43C.glBindBufferBase(target, index, buffer);
 	}
 
