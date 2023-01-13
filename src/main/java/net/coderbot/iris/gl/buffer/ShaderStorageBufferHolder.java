@@ -15,6 +15,9 @@ public class ShaderStorageBufferHolder {
 		destroyed = false;
 		buffers = new ShaderStorageBuffer[Collections.max(overrides.keySet()) + 1];
 		overrides.forEach((index, size) -> {
+			if (size > IrisRenderSystem.getVRAM()) {
+				throw new OutOfVideoMemoryError("We only have " + toMib(IrisRenderSystem.getVRAM()) + "MiB of RAM to work with, but the pack is requesting " + size + "! Can't continue.");
+			}
 			int buffer = GlStateManager._glGenBuffers();
 			GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, buffer);
 			IrisRenderSystem.bufferStorage(GL43C.GL_SHADER_STORAGE_BUFFER, size, 0);
@@ -23,6 +26,11 @@ public class ShaderStorageBufferHolder {
 			buffers[index] = new ShaderStorageBuffer(buffer, index, size);
 		});
 		GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+
+	private static long toMib(long x) {
+		return x / 1024L / 1024L;
 	}
 
 	public void setupBuffers() {
@@ -41,5 +49,11 @@ public class ShaderStorageBufferHolder {
 		}
 		buffers = null;
 		destroyed = true;
+	}
+
+	private static class OutOfVideoMemoryError extends RuntimeException {
+		public OutOfVideoMemoryError(String s) {
+			super(s);
+		}
 	}
 }

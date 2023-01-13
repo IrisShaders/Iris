@@ -213,7 +213,12 @@ public class ShaderProperties {
 					trueIndex = Integer.parseInt(index);
 					trueSize = Integer.parseInt(value);
 				} catch (NumberFormatException e) {
-					Iris.logger.warn("Number format exception parsing SSBO index/size!", e);
+					Iris.logger.fatal("Number format exception parsing SSBO index/size!", e);
+					return;
+				}
+
+				if (trueIndex > 8) {
+					Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
 					return;
 				}
 
