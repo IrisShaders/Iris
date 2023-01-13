@@ -352,6 +352,9 @@ public class ShaderPack {
 					case TEXTURE_3D:
 						customTextureData = new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
 						break;
+					case TEXTURE_RECTANGLE:
+						customTextureData = new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+						break;
 					default:
 						throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
 				}
