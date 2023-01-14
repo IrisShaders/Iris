@@ -207,7 +207,7 @@ public class FinalPassRenderer {
 				}
 			}
 
-			IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_TEXTURE_UPDATE_BARRIER_BIT);
+			IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 
 			if (!finalPass.mipmappedBuffers.isEmpty()) {
 				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
