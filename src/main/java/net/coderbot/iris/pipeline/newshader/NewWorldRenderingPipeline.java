@@ -8,13 +8,16 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.image.ImageHolder;
@@ -86,6 +89,7 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -105,6 +109,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShadowCompositeRenderer shadowCompositeRenderer;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTextureMap;
 	private final ComputeProgram[] setup;
+	private ShaderStorageBufferHolder shaderStorageBufferHolder;
 
 	private ShadowRenderTargets shadowRenderTargets;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
@@ -253,6 +258,23 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			return shadowRenderTargets;
 		};
+
+		if (!programSet.getPackDirectives().getBufferObjects().isEmpty()) {
+			if (IrisRenderSystem.supportsSSBO()) {
+				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programSet.getPackDirectives().getBufferObjects());
+
+				this.shaderStorageBufferHolder.setupBuffers();
+			} else {
+				Iris.logger.fatal("Shader storage buffers/immutable buffer storage is not supported on this graphics card, however the shaderpack requested them? Let's hope it's not a problem.");
+				for (int i = 0; i < 16; i++) {
+					IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, i);
+				}
+			}
+		} else {
+			for (int i = 0; i < 16; i++) {
+				IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, i);
+			}
+		}
 
 		this.beginRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getBegin(), programSet.getBeginCompute(), renderTargets,
 			customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.BEGIN,
@@ -1110,6 +1132,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		if (shadowRenderer != null) {
 			shadowRenderer.destroy();
+		}
+
+		if (shaderStorageBufferHolder != null) {
+			shaderStorageBufferHolder.destroyBuffers();
 		}
 	}
 

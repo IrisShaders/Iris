@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -92,6 +93,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureDefinition> irisCustomTextures = new Object2ObjectOpenHashMap<>();
 	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
+	private final Int2IntArrayMap bufferObjects = new Int2IntArrayMap();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
@@ -299,6 +301,25 @@ public class ShaderProperties {
 
 			handleProgramEnabledDirective("program.", key, value, program -> {
 				conditionallyEnabledPrograms.put(program, value);
+			});
+
+			handlePassDirective("bufferObject.", key, value, index -> {
+				int trueIndex;
+				int trueSize;
+				try {
+					trueIndex = Integer.parseInt(index);
+					trueSize = Integer.parseInt(value);
+				} catch (NumberFormatException e) {
+					Iris.logger.error("Number format exception parsing SSBO index/size!", e);
+					return;
+				}
+
+				if (trueIndex > 8) {
+					Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
+					return;
+				}
+
+				bufferObjects.put(trueIndex, trueSize);
 			});
 
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
@@ -721,6 +742,10 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<String, ArrayList<BufferBlendInformation>> getBufferBlendOverrides() {
 		return bufferBlendOverrides;
+	}
+
+	public Int2IntArrayMap getBufferObjects() {
+		return bufferObjects;
 	}
 
 	public EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> getCustomTextures() {

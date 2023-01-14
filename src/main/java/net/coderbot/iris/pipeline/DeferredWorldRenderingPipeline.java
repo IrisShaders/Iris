@@ -17,10 +17,12 @@ import net.coderbot.iris.gbuffer_overrides.matching.RenderCondition;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.blending.AlphaTest;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTestOverride;
 import net.coderbot.iris.gl.blending.AlphaTestStorage;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
+import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
@@ -77,11 +79,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
@@ -159,6 +165,8 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	private boolean isRenderingShadow = false;
 	private InputAvailability inputs = new InputAvailability(false, false, false);
 	private SpecialCondition special = null;
+	private ShaderStorageBufferHolder shaderStorageBufferHolder;
+	private boolean showSSBOError = false;
 
 	private boolean shouldBindPBR;
 	private int currentNormalTexture;
@@ -194,6 +202,24 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				return ParticleRenderingSettings.MIXED;
 			}
 		});
+
+		if (!programs.getPackDirectives().getBufferObjects().isEmpty()) {
+			if (IrisRenderSystem.supportsSSBO()) {
+				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programs.getPackDirectives().getBufferObjects());
+
+				this.shaderStorageBufferHolder.setupBuffers();
+			} else {
+				Iris.logger.fatal("Shader storage buffers/immutable buffer storage is not supported on this graphics card, however the shaderpack requested them? Let's hope it's not a problem.");
+				showSSBOError = true;
+				for (int i = 0; i < 16; i++) {
+					IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, i);
+				}
+			}
+		} else {
+			for (int i = 0; i < 16; i++) {
+				IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, i);
+			}
+		}
 
 		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
@@ -905,6 +931,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		// Destroy custom textures and the static samplers (normals, specular, and noise)
 		customTextureManager.destroy();
 		whitePixel.releaseId();
+
+		if (shaderStorageBufferHolder != null) {
+			// Destroy shader storage buffer objects
+			shaderStorageBufferHolder.destroyBuffers();
+		}
 	}
 
 	private static void destroyPasses(ProgramTable<Pass> table) {
@@ -1176,6 +1207,13 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		if (current != null) {
 			throw new IllegalStateException("Called beginLevelRendering but level rendering appears to still be in progress?");
+		}
+
+		if (showSSBOError) {
+			showSSBOError = false;
+			if (Minecraft.getInstance().player != null) {
+				Minecraft.getInstance().player.displayClientMessage(new TranslatableComponent("iris.shaders.ssbofailure"), false);
+			}
 		}
 
 		updateNotifier.onNewFrame();
