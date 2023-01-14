@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
+import net.coderbot.iris.gl.image.GlImage;
+import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
@@ -16,6 +18,7 @@ import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 
+import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -187,6 +190,14 @@ public class IrisSamplers {
 	public static void addCustomTextures(SamplerHolder samplers, Object2ObjectMap<String, TextureAccess> irisCustomTextures) {
 		irisCustomTextures.forEach((name, texture) -> {
 			samplers.addDynamicSampler(texture.getType(), texture.getTextureId(), name);
+		});
+	}
+
+	public static void addCustomImages(SamplerHolder images, Set<GlImage> customImages) {
+		customImages.forEach(image -> {
+			if (image.getSamplerName() != null) {
+				images.addDynamicSampler(image::getId, image.getSamplerName());
+			}
 		});
 	}
 }

@@ -189,9 +189,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.customImages = new HashSet<>();
 		for (ImageInformation information : programSet.getPack().getIrisCustomImages()) {
 			if (information.isRelative()) {
-				customImages.add(new GlImage.Relative(information.name(), information.format(), information.internalTextureFormat(), information.type(), information.relativeWidth(), information.relativeHeight(), main.width, main.height));
+				customImages.add(new GlImage.Relative(information.name(), information.samplerName(), information.format(), information.internalTextureFormat(), information.type(), information.relativeWidth(), information.relativeHeight(), main.width, main.height));
 			} else {
-				customImages.add(new GlImage(information.name(), information.target(), information.format(), information.internalTextureFormat(), information.type(), information.width(), information.height(), information.depth()));
+				customImages.add(new GlImage(information.name(), information.samplerName(), information.target(), information.format(), information.internalTextureFormat(), information.type(), information.width(), information.height(), information.depth()));
 			}
 		}
 
@@ -302,6 +302,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addWorldDepthSamplers(customTextureSamplerInterceptor, renderTargets);
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
+			IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 
 			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 				// we compiled the non-Sodium version of this program first... so if this is somehow null, something
@@ -341,6 +342,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, new InputAvailability(true, true, false));
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
+			IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 
 			// Only initialize these samplers if the shadow map renderer exists.
 			// Otherwise, this program shouldn't be used at all?
@@ -508,6 +510,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
+				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
 				IrisImages.addCustomImages(builder, customImages);
 
@@ -567,6 +570,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, true);
 				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 				IrisSamplers.addCompositeSamplers(builder, renderTargets);
+				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
 				IrisImages.addCustomImages(builder, customImages);
 

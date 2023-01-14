@@ -14,15 +14,17 @@ import org.lwjgl.opengl.GL30C;
 
 public class GlImage extends GlResource {
 	protected final String name;
+	protected final String samplerName;
 	protected final TextureType target;
 	protected final PixelFormat format;
 	protected final InternalTextureFormat internalTextureFormat;
 	protected final PixelType pixelType;
 
-	public GlImage(String name, TextureType target, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType, int width, int height, int depth) {
+	public GlImage(String name, String samplerName, TextureType target, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType, int width, int height, int depth) {
 		super(IrisRenderSystem.createTexture(target.getGlType()));
 
 		this.name = name;
+		this.samplerName = samplerName;
 		this.target = target;
 		this.format = format;
 		this.internalTextureFormat = internalFormat;
@@ -61,6 +63,10 @@ public class GlImage extends GlResource {
 		return name;
 	}
 
+	public String getSamplerName() {
+		return samplerName;
+	}
+
 	public TextureType getTarget() {
 		return target;
 	}
@@ -97,8 +103,8 @@ public class GlImage extends GlResource {
 		private final float relativeHeight;
 		private final float relativeWidth;
 
-		public Relative(String name, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType, float relativeWidth, float relativeHeight, int currentWidth, int currentHeight) {
-			super(name, TextureType.TEXTURE_2D, format, internalFormat, pixelType, (int) (currentWidth * relativeWidth), (int) (currentHeight * relativeHeight), 0);
+		public Relative(String name, String samplerName, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType, float relativeWidth, float relativeHeight, int currentWidth, int currentHeight) {
+			super(name, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, (int) (currentWidth * relativeWidth), (int) (currentHeight * relativeHeight), 0);
 
 			this.relativeWidth = relativeWidth;
 			this.relativeHeight = relativeHeight;

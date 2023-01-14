@@ -356,6 +356,7 @@ public class CompositeRenderer {
 
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
 		IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+		IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 
 		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 		IrisImages.addCustomImages(builder, customImages);
@@ -406,6 +407,7 @@ public class CompositeRenderer {
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
 				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 
 				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 				IrisImages.addCustomImages(builder, customImages);
