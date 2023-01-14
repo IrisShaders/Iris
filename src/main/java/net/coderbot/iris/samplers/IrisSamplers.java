@@ -196,7 +196,7 @@ public class IrisSamplers {
 	public static void addCustomImages(SamplerHolder images, Set<GlImage> customImages) {
 		customImages.forEach(image -> {
 			if (image.getSamplerName() != null) {
-				images.addDynamicSampler(image::getId, image.getSamplerName());
+				images.addDynamicSampler(image.getTarget(), image::getId, image.getSamplerName());
 			}
 		});
 	}
