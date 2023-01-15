@@ -126,16 +126,25 @@ public class IrisSamplers {
 		}
 
 		if (flipped == null) {
-			samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(0), "shadowcolor");
+			if (samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(0), "shadowcolor")) {
+				shadowRenderTargets.createIfEmpty(0);
+			}
 			for (int i = 0; i < shadowRenderTargets.getRenderTargetCount(); i++) {
 				int finalI = i;
-				samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(finalI), "shadowcolor" + i);
+				if (samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(finalI), "shadowcolor" + i)) {
+					shadowRenderTargets.createIfEmpty(finalI);
+				}
 			}
 		} else {
-			samplers.addDynamicSampler(() -> flipped.contains(0) ? shadowRenderTargets.getOrCreate(0).getAltTexture() : shadowRenderTargets.getOrCreate(0).getMainTexture(), "shadowcolor");
+			if (samplers.addDynamicSampler(() -> flipped.contains(0) ? shadowRenderTargets.get(0).getAltTexture() : shadowRenderTargets.get(0).getMainTexture(), "shadowcolor")) {
+				shadowRenderTargets.createIfEmpty(0);
+			}
+
 			for (int i = 0; i < shadowRenderTargets.getRenderTargetCount(); i++) {
 				int finalI = i;
-				samplers.addDynamicSampler(() -> flipped.contains(finalI) ? shadowRenderTargets.getOrCreate(finalI).getAltTexture() : shadowRenderTargets.getOrCreate(finalI).getMainTexture(), "shadowcolor" + i);
+				if (samplers.addDynamicSampler(() -> flipped.contains(finalI) ? shadowRenderTargets.get(finalI).getAltTexture() : shadowRenderTargets.get(finalI).getMainTexture(), "shadowcolor" + i)) {
+					shadowRenderTargets.createIfEmpty(finalI);
+				}
 			}
 		}
 

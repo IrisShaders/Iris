@@ -113,13 +113,19 @@ public class ShadowRenderTargets {
 	 * @return The existing or a new render target, if no existing one exists
 	 */
 	public RenderTarget getOrCreate(int index) {
+		if (targets[index] != null) {
+			return targets[index];
+		}
+
+		create(index);
+		return targets[index];
+	}
+
+	private void create(int index) {
 		if (index > size) {
 			throw new IllegalStateException("Tried to access buffer higher than allowed limit of " + size + "! If you're trying to use shadowcolor2-7, you need to activate it's feature flag!");
 		}
 
-		if (targets[index] != null) {
-			return targets[index];
-		}
 
 		PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().computeIfAbsent(index, i -> new PackShadowDirectives.SamplingSettings());
 		targets[index] = RenderTarget.builder().setDimensions(resolution, resolution)
@@ -136,7 +142,12 @@ public class ShadowRenderTargets {
 
 		fullClearRequired = true;
 		pipeline.onShadowBufferChange();
-		return targets[index];
+	}
+
+	public void createIfEmpty(int index) {
+		if (targets[index] == null) {
+			create(index);
+		}
 	}
 
 	public int getResolution() {
@@ -284,7 +295,7 @@ public class ShadowRenderTargets {
 	}
 
 	public int getColorTextureId(int i) {
-		return isFlipped(i) ? getOrCreate(i).getAltTexture() : getOrCreate(i).getMainTexture();
+		return isFlipped(i) ? get(i).getAltTexture() : get(i).getMainTexture();
 	}
 
 	public boolean isHardwareFiltered(int i) {
