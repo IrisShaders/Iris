@@ -31,6 +31,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public void onShadowBufferChange() {
+
+	}
+
+	@Override
 	public void beginLevelRendering() {
 		// Use the default Minecraft framebuffer and ensure that no programs are in use
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);

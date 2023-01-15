@@ -66,7 +66,7 @@ public class IrisImages {
 			if (flipped == null) {
 				textureID = () -> shadowRenderTargets.getColorTextureId(index);
 			} else {
-				textureID = () -> flipped.contains(index) ? shadowRenderTargets.get(index).getAltTexture() : shadowRenderTargets.get(index).getMainTexture();
+				textureID = () -> flipped.contains(index) ? shadowRenderTargets.getOrCreate(index).getAltTexture() : shadowRenderTargets.getOrCreate(index).getMainTexture();
 			}
 			InternalTextureFormat format = shadowRenderTargets.getColorTextureFormat(index);
 

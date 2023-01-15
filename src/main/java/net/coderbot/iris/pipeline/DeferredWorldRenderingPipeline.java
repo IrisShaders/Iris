@@ -281,7 +281,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		this.shadowTargetsSupplier = () -> {
 			if (shadowRenderTargets == null) {
-				this.shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, shadowDirectives);
+				this.shadowRenderTargets = new ShadowRenderTargets(this, shadowMapResolution, shadowDirectives);
 			}
 
 			return shadowRenderTargets;
@@ -393,7 +393,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		});
 
 		if (shadowRenderTargets == null && shadowDirectives.isShadowEnabled() == OptionalBoolean.TRUE) {
-			shadowRenderTargets = new ShadowRenderTargets(shadowMapResolution, shadowDirectives);
+			shadowRenderTargets = new ShadowRenderTargets(this, shadowMapResolution, shadowDirectives);
 		}
 
 		if (shadowRenderTargets != null) {
@@ -1192,6 +1192,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	// TODO: better way to avoid this global state?
 	private boolean isRenderingWorld = false;
 	private boolean isRenderingFullScreenPass = false;
+
+	@Override
+	public void onShadowBufferChange() {
+
+	}
 
 	@Override
 	public void beginLevelRendering() {

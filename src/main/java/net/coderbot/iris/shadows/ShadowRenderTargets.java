@@ -3,30 +3,35 @@ package net.coderbot.iris.shadows;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class ShadowRenderTargets {
 	private final RenderTarget[] targets;
+	private final PackShadowDirectives shadowDirectives;
 	private final DepthTexture mainDepth;
 	private final DepthTexture noTranslucents;
 	private final GlFramebuffer depthSourceFb;
 	private final GlFramebuffer noTranslucentsDestFb;
-	private final GlFramebuffer mainRenderBuffer;
 	private final boolean[] flipped;
 
 	private final List<GlFramebuffer> ownedFramebuffers;
 	private final int resolution;
+	private final WorldRenderingPipeline pipeline;
 
 	private boolean fullClearRequired;
 	private boolean translucentDepthDirty;
@@ -34,7 +39,9 @@ public class ShadowRenderTargets {
 	private InternalTextureFormat[] formats;
 	private IntList buffersToBeCleared;
 
-	public ShadowRenderTargets(int resolution, PackShadowDirectives shadowDirectives) {
+	public ShadowRenderTargets(WorldRenderingPipeline pipeline, int resolution, PackShadowDirectives shadowDirectives) {
+		this.pipeline = pipeline;
+		this.shadowDirectives = shadowDirectives;
 		targets = new RenderTarget[shadowDirectives.getColorSamplingSettings().size()];
 		formats = new InternalTextureFormat[shadowDirectives.getColorSamplingSettings().size()];
 		flipped = new boolean[shadowDirectives.getColorSamplingSettings().size()];
@@ -43,24 +50,6 @@ public class ShadowRenderTargets {
 
 		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 		this.noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
-		int[] drawBuffers = new int[shadowDirectives.getColorSamplingSettings().size()];
-
-		for (int i = 0; i < shadowDirectives.getColorSamplingSettings().size(); i++) {
-			PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().get(i);
-			targets[i] = RenderTarget.builder().setDimensions(resolution, resolution)
-				.setInternalFormat(settings.getFormat())
-				.setPixelFormat(settings.getFormat().getPixelFormat()).build();
-			formats[i] = settings.getFormat();
-			if (settings.getClear()) {
-				buffersToBeCleared.add(i);
-			}
-
-			drawBuffers[i] = i;
-
-			if (settings.getClear()) {
-				buffersToBeCleared.add(i);
-			}
-		}
 
 		for (int i = 0; i < shadowDirectives.getDepthSamplingSettings().size(); i++) {
 			this.hardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
@@ -75,8 +64,6 @@ public class ShadowRenderTargets {
 		fullClearRequired = true;
 
 		this.depthSourceFb = createFramebufferWritingToMain(new int[] {0});
-		this.mainRenderBuffer = createFramebufferWritingToMain(drawBuffers);
-		this.mainRenderBuffer.addDepthAttachment(this.mainDepth.getTextureId());
 
 		this.noTranslucentsDestFb = createFramebufferWritingToMain(new int[] {0});
 		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents.getTextureId());
@@ -99,7 +86,9 @@ public class ShadowRenderTargets {
 		}
 
 		for (RenderTarget target : targets) {
-			target.destroy();
+			if (target != null) {
+				target.destroy();
+			}
 		}
 
 		mainDepth.destroy();
@@ -111,6 +100,35 @@ public class ShadowRenderTargets {
 	}
 
 	public RenderTarget get(int index) {
+		return targets[index];
+	}
+
+	/**
+	 * Gets the render target assigned to an index, and creates it if it does not exist.
+	 * This is a <b>expensive</b> opetation nad may block other tasks! Use it sparingly, and use {@code get()} if possible.
+	 * @param index The index of the render target to get
+	 * @return The existing or a new render target, if no existing one exists
+	 */
+	public RenderTarget getOrCreate(int index) {
+		if (targets[index] != null) {
+			return targets[index];
+		}
+
+		PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().get(index);
+		targets[index] = RenderTarget.builder().setDimensions(resolution, resolution)
+			.setInternalFormat(settings.getFormat())
+			.setPixelFormat(settings.getFormat().getPixelFormat()).build();
+		formats[index] = settings.getFormat();
+		if (settings.getClear()) {
+			buffersToBeCleared.add(index);
+		}
+
+		if (settings.getClear()) {
+			buffersToBeCleared.add(index);
+		}
+
+		fullClearRequired = true;
+		pipeline.onShadowBufferChange();
 		return targets[index];
 	}
 
@@ -185,10 +203,6 @@ public class ShadowRenderTargets {
 		return framebuffer;
 	}
 
-	public GlFramebuffer getMainRenderBuffer() {
-		return mainRenderBuffer;
-	}
-
 	public GlFramebuffer createShadowFramebuffer(ImmutableSet<Integer> stageWritesToAlt, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
 			return createEmptyFramebuffer();
@@ -244,7 +258,7 @@ public class ShadowRenderTargets {
 					+ getRenderTargetCount() + " render targets are supported.");
 			}
 
-			RenderTarget target = this.get(drawBuffers[i]);
+			RenderTarget target = this.getOrCreate(drawBuffers[i]);
 
 			int textureId = stageWritesToMain.contains(drawBuffers[i]) ? target.getMainTexture() : target.getAltTexture();
 
@@ -263,7 +277,7 @@ public class ShadowRenderTargets {
 	}
 
 	public int getColorTextureId(int i) {
-		return isFlipped(i) ? get(i).getAltTexture() : get(i).getMainTexture();
+		return isFlipped(i) ? getOrCreate(i).getAltTexture() : getOrCreate(i).getMainTexture();
 	}
 
 	public boolean isHardwareFiltered(int i) {

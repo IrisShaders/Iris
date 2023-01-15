@@ -207,10 +207,12 @@ public class ShadowRenderer {
 
 		configureDepthSampler(targets.getDepthTextureNoTranslucents().getTextureId(), depthSamplingSettings.get(1));
 
-		for (int i = 0; i < colorSamplingSettings.size(); i++) {
-			int glTextureId = targets.get(i).getMainTexture();
+		for (int i = 0; i < targets.getNumColorTextures(); i++) {
+			if (targets.get(i) != null) {
+				int glTextureId = targets.get(i).getMainTexture();
 
-			configureSampler(glTextureId, colorSamplingSettings.get(i));
+				configureSampler(glTextureId, colorSamplingSettings.get(i));
+			}
 		}
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);

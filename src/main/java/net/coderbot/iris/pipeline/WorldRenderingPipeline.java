@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.OptionalInt;
 
 public interface WorldRenderingPipeline {
-	void beginLevelRendering();
+    void onShadowBufferChange();
+
+    void beginLevelRendering();
 	void renderShadows(LevelRendererAccessor worldRenderer, Camera camera);
 	void addDebugText(List<String> messages);
 	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();

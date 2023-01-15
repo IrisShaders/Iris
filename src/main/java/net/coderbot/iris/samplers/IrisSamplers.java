@@ -132,10 +132,10 @@ public class IrisSamplers {
 				samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(finalI), "shadowcolor" + i);
 			}
 		} else {
-			samplers.addDynamicSampler(() -> flipped.contains(0) ? shadowRenderTargets.get(0).getAltTexture() : shadowRenderTargets.get(0).getMainTexture(), "shadowcolor");
+			samplers.addDynamicSampler(() -> flipped.contains(0) ? shadowRenderTargets.getOrCreate(0).getAltTexture() : shadowRenderTargets.getOrCreate(0).getMainTexture(), "shadowcolor");
 			for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS; i++) {
 				int finalI = i;
-				samplers.addDynamicSampler(() -> flipped.contains(finalI) ? shadowRenderTargets.get(finalI).getAltTexture() : shadowRenderTargets.get(finalI).getMainTexture(), "shadowcolor" + i);
+				samplers.addDynamicSampler(() -> flipped.contains(finalI) ? shadowRenderTargets.getOrCreate(finalI).getAltTexture() : shadowRenderTargets.getOrCreate(finalI).getMainTexture(), "shadowcolor" + i);
 			}
 		}
 
