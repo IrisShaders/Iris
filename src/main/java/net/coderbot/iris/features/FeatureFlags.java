@@ -9,9 +9,12 @@ import java.util.function.BooleanSupplier;
 
 public enum FeatureFlags {
 	SEPARATE_HARDWARE_SAMPLERS(() -> true, () -> true),
+	HIGHER_SHADOWCOLOR(() -> true, () -> true),
+	CUSTOM_IMAGES(() -> true, IrisRenderSystem::supportsImageLoadStore),
 	PER_BUFFER_BLENDING(() -> true, IrisRenderSystem::supportsBufferBlending),
 	COMPUTE_SHADERS(() -> true, IrisRenderSystem::supportsCompute),
 	ENTITY_TRANSLUCENT(() -> true, () -> true),
+	SSBO(() -> true, IrisRenderSystem::supportsSSBO),
 	UNKNOWN(() -> false, () -> false);
 
 	private final BooleanSupplier irisRequirement;

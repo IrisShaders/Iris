@@ -254,6 +254,10 @@ public class IrisRenderSystem {
 		return GL.getCapabilities().OpenGL44 || (GL.getCapabilities().GL_ARB_shader_storage_buffer_object && GL.getCapabilities().GL_ARB_buffer_storage);
 	}
 
+	public static boolean supportsImageLoadStore() {
+		return GL.getCapabilities().OpenGL42 || ((GL.getCapabilities().GL_ARB_shader_image_load_store || GL.getCapabilities().GL_EXT_shader_image_load_store) && GL.getCapabilities().GL_ARB_buffer_storage);
+	}
+
 	public static void genBuffers(int[] buffers) {
 		GL43C.glGenBuffers(buffers);
 	}
@@ -354,6 +358,7 @@ public class IrisRenderSystem {
 			return 4294967296L;
 		}
 	}
+
 
 	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
