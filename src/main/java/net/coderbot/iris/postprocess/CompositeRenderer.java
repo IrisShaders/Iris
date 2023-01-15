@@ -326,8 +326,6 @@ public class CompositeRenderer {
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
 	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
 														   Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
-		Iris.logger.warn("Patching " + source.getName());
-
 		// TODO: Properly handle empty shaders
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
 			source.getVertexSource().orElseThrow(NullPointerException::new),

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
@@ -38,14 +39,16 @@ public class ShadowRenderTargets {
 	private boolean[] hardwareFiltered;
 	private InternalTextureFormat[] formats;
 	private IntList buffersToBeCleared;
+	private int size;
 
 	public ShadowRenderTargets(WorldRenderingPipeline pipeline, int resolution, PackShadowDirectives shadowDirectives) {
 		this.pipeline = pipeline;
 		this.shadowDirectives = shadowDirectives;
-		targets = new RenderTarget[shadowDirectives.getColorSamplingSettings().size()];
-		formats = new InternalTextureFormat[shadowDirectives.getColorSamplingSettings().size()];
-		flipped = new boolean[shadowDirectives.getColorSamplingSettings().size()];
-		hardwareFiltered = new boolean[shadowDirectives.getColorSamplingSettings().size()];
+		this.size = pipeline.hasFeature(FeatureFlags.HIGHER_SHADOWCOLOR) ? PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS : PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_OF;
+		targets = new RenderTarget[size];
+		formats = new InternalTextureFormat[size];
+		flipped = new boolean[size];
+		hardwareFiltered = new boolean[size];
 		buffersToBeCleared = new IntArrayList();
 
 		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
@@ -110,11 +113,15 @@ public class ShadowRenderTargets {
 	 * @return The existing or a new render target, if no existing one exists
 	 */
 	public RenderTarget getOrCreate(int index) {
+		if (index > size) {
+			throw new IllegalStateException("Tried to access buffer higher than allowed limit of " + size + "! If you're trying to use shadowcolor2-7, you need to activate it's feature flag!");
+		}
+
 		if (targets[index] != null) {
 			return targets[index];
 		}
 
-		PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().get(index);
+		PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().computeIfAbsent(index, i -> new PackShadowDirectives.SamplingSettings());
 		targets[index] = RenderTarget.builder().setDimensions(resolution, resolution)
 			.setInternalFormat(settings.getFormat())
 			.setPixelFormat(settings.getFormat().getPixelFormat()).build();
@@ -255,7 +262,7 @@ public class ShadowRenderTargets {
 			if (drawBuffers[i] >= getRenderTargetCount()) {
 				// TODO: This causes resource leaks, also we should really verify this in the shaderpack parser...
 				throw new IllegalStateException("Render target with index " + drawBuffers[i] + " is not supported, only "
-					+ getRenderTargetCount() + " render targets are supported.");
+					+ getRenderTargetCount() + " render targets are supported with this current feature configuration.");
 			}
 
 			RenderTarget target = this.getOrCreate(drawBuffers[i]);

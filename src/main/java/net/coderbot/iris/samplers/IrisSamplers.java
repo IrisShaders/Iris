@@ -94,7 +94,7 @@ public class IrisSamplers {
 		ImmutableList.Builder<String> shadowSamplers = ImmutableList.<String>builder().add("shadowtex0", "shadowtex0HW", "shadowtex1", "shadowtex1HW", "shadow", "watershadow",
 				"shadowcolor");
 
-		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS; i++) {
+		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS; i++) {
 			shadowSamplers.add("shadowcolor" + i);
 			shadowSamplers.add("shadowcolorimg" + i);
 		}
@@ -127,13 +127,13 @@ public class IrisSamplers {
 
 		if (flipped == null) {
 			samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(0), "shadowcolor");
-			for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS; i++) {
+			for (int i = 0; i < shadowRenderTargets.getRenderTargetCount(); i++) {
 				int finalI = i;
 				samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(finalI), "shadowcolor" + i);
 			}
 		} else {
 			samplers.addDynamicSampler(() -> flipped.contains(0) ? shadowRenderTargets.getOrCreate(0).getAltTexture() : shadowRenderTargets.getOrCreate(0).getMainTexture(), "shadowcolor");
-			for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS; i++) {
+			for (int i = 0; i < shadowRenderTargets.getRenderTargetCount(); i++) {
 				int finalI = i;
 				samplers.addDynamicSampler(() -> flipped.contains(finalI) ? shadowRenderTargets.getOrCreate(finalI).getAltTexture() : shadowRenderTargets.getOrCreate(finalI).getMainTexture(), "shadowcolor" + i);
 			}

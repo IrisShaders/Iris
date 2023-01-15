@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
@@ -198,7 +199,7 @@ public class ShadowRenderer {
 		final ImmutableList<PackShadowDirectives.DepthSamplingSettings> depthSamplingSettings =
 			shadowDirectives.getDepthSamplingSettings();
 
-		final ImmutableList<PackShadowDirectives.SamplingSettings> colorSamplingSettings =
+		final Int2ObjectMap<PackShadowDirectives.SamplingSettings> colorSamplingSettings =
 			shadowDirectives.getColorSamplingSettings();
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE4);
@@ -211,7 +212,7 @@ public class ShadowRenderer {
 			if (targets.get(i) != null) {
 				int glTextureId = targets.get(i).getMainTexture();
 
-				configureSampler(glTextureId, colorSamplingSettings.get(i));
+				configureSampler(glTextureId, colorSamplingSettings.computeIfAbsent(i, a -> new PackShadowDirectives.SamplingSettings()));
 			}
 		}
 

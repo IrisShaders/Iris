@@ -103,8 +103,6 @@ public class ShadowCompositeRenderer {
 			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, renderTargets);
 			int[] drawBuffers = source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers();
 
-			Iris.logger.warn(Arrays.toString(drawBuffers));
-
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
 			pass.stageReadsFromAlt = flipped;

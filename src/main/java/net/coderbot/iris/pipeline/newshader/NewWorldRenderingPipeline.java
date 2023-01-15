@@ -476,7 +476,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
 			shadowRenderTargets == null ? null : createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedAfterPrepare, flippedAfterTranslucent,
-			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), programSet.getShadow().map(source -> source.getDirectives().getDrawBuffers()).orElse(new int[] { 0, 1 })) : null, customUniforms);
+			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), programSet.getShadow().filter(source -> !source.getDirectives().hasUnknownDrawBuffers()).map(source -> source.getDirectives().getDrawBuffers()).orElse(new int[]{0, 1})) : null, customUniforms);
 
 
 		this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
@@ -693,7 +693,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	private ShaderInstance createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright) throws IOException {
-		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), source.getDirectives().getDrawBuffers());
+		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers());
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> flippedBeforeShadow;
