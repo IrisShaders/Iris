@@ -376,15 +376,15 @@ public class IrisRenderSystem {
 	}
 
 
-	public void samplerParameteri(int sampler, int pname, int param) {
+	public static void samplerParameteri(int sampler, int pname, int param) {
 		GL33C.glSamplerParameteri(sampler, pname, param);
 	}
 
-	public void samplerParameterf(int sampler, int pname, float param) {
+	public static void samplerParameterf(int sampler, int pname, float param) {
 		GL33C.glSamplerParameterf(sampler, pname, param);
 	}
 
-	public void samplerParameteriv(int sampler, int pname, int[] params) {
+	public static void samplerParameteriv(int sampler, int pname, int[] params) {
 		GL33C.glSamplerParameteriv(sampler, pname, params);
 	}
 

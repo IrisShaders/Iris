@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
@@ -61,6 +62,7 @@ import net.coderbot.iris.shaderpack.ParticleRenderingSettings;
 import net.coderbot.iris.shaderpack.ProgramFallbackResolver;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.ShadowCompositeRenderer;
@@ -109,6 +111,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShadowCompositeRenderer shadowCompositeRenderer;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTextureMap;
 	private final ComputeProgram[] setup;
+	private final boolean separateHardwareSamplers;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
 
 	private ShadowRenderTargets shadowRenderTargets;
@@ -169,6 +172,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private ParticleRenderingSettings particleRenderingSettings;
 	private PackDirectives packDirectives;
 	private Set<GlImage> customImages;
+	private final ShaderPack pack;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		PatchedShaderPrinter.resetPrintState();
@@ -180,11 +184,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.updateNotifier = new FrameUpdateNotifier();
 		this.packDirectives = programSet.getPackDirectives();
 		this.customTextureMap = programSet.getPackDirectives().getTextureMap();
+		this.separateHardwareSamplers = programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS);
 
 		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
+
+		this.pack = programSet.getPack();
 
 		RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		int depthTextureId = main.getDepthTextureId();
@@ -329,7 +336,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 				// we compiled the non-Sodium version of this program first... so if this is somehow null, something
 				// very odd is going on.
-				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets), null);
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets), null, separateHardwareSamplers);
 			}
 
 			return builder.build();
@@ -372,7 +379,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				// We don't compile Sodium shadow programs unless there's a shadow pass... And a shadow pass
 				// can only exist if the shadow render targets have been created by detecting their
 				// usage in a different program. So this null-check makes sense here.
-				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets), null);
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets), null, separateHardwareSamplers);
 			}
 
 			return builder.build();
@@ -453,7 +460,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			if (programSet.getPackDirectives().getShadowDirectives().isShadowEnabled().orElse(true)) {
 				this.shadowRenderer = new ShadowRenderer(programSet.getShadow().orElse(null),
-					programSet.getPackDirectives(), shadowRenderTargets, shadowCompositeRenderer, customUniforms);
+					programSet.getPackDirectives(), shadowRenderTargets, shadowCompositeRenderer, customUniforms, programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 			} else {
 				shadowRenderer = null;
 			}
@@ -542,7 +549,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 					if (shadowRenderTargets != null) {
-						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null);
+						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null, separateHardwareSamplers);
 						IrisImages.addShadowColorImages(builder, shadowRenderTargets, null);
 					}
 				}
@@ -600,7 +607,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 					if (shadowRenderTargets != null) {
-						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null);
+						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null, separateHardwareSamplers);
 						IrisImages.addShadowColorImages(builder, shadowRenderTargets, null);
 					}
 				}
@@ -724,7 +731,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				shadowTargetsSupplier.get();
 			}
 
-			IrisSamplers.addShadowSamplers(samplerHolder, Objects.requireNonNull(shadowRenderTargets), null);
+			IrisSamplers.addShadowSamplers(samplerHolder, Objects.requireNonNull(shadowRenderTargets), null, separateHardwareSamplers);
 		}
 
 		if (isShadowPass || IrisImages.hasShadowImages(images)) {
@@ -1055,6 +1062,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean allowConcurrentCompute() {
 		return allowConcurrentCompute;
+	}
+
+	@Override
+	public boolean hasFeature(FeatureFlags flag) {
+		return pack.hasFeature(flag);
 	}
 
 	@Override

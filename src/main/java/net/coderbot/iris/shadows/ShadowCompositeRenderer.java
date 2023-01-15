@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ComputeProgram;
@@ -289,7 +290,7 @@ public class ShadowCompositeRenderer {
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 		IrisSamplers.addCustomTextures(customTextureSamplerInterceptor, irisCustomTextures);
 
-		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped);
+		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 		IrisImages.addShadowColorImages(builder, targets, flipped);
 
 		Program build = builder.build();
@@ -324,7 +325,7 @@ public class ShadowCompositeRenderer {
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 				IrisSamplers.addCustomTextures(customTextureSamplerInterceptor, irisCustomTextures);
 
-				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped);
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 				IrisImages.addShadowColorImages(builder, targets, flipped);
 
 				programs[i] = builder.buildCompute();

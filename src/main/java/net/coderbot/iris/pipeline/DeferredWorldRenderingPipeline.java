@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.ProgramTable;
 import net.coderbot.iris.gbuffer_overrides.matching.RenderCondition;
@@ -405,7 +406,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				this.shadowCompositeRenderer = new ShadowCompositeRenderer(this, programs.getPackDirectives(), programs.getShadowComposite(), programs.getShadowCompCompute(), this.shadowRenderTargets, customTextureManager.getNoiseTexture(), updateNotifier,
 					customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), programs.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customTextureManager.getIrisCustomTextures(), customUniforms);
 				this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
-					programs.getPackDirectives(), shadowRenderTargets, shadowCompositeRenderer, customUniforms);
+					programs.getPackDirectives(), shadowRenderTargets, shadowCompositeRenderer, customUniforms, false);
 			} else {
 				shadowCompositeRenderer = null;
 				shadowRenderer = null;
@@ -438,7 +439,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
 
 			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets), null);
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets), null, false);
 			}
 
 			return builder.build();
@@ -468,7 +469,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			// Only initialize these samplers if the shadow map renderer exists.
 			// Otherwise, this program shouldn't be used at all?
 			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets), null);
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets), null, false);
 			}
 
 			return builder.build();
@@ -555,6 +556,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	@Override
 	public boolean allowConcurrentCompute() {
 		return allowConcurrentCompute;
+	}
+
+	@Override
+	public boolean hasFeature(FeatureFlags flags) {
+		return false;
 	}
 
 	@Override
@@ -728,7 +734,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			}
 
 			if (shadowRenderTargets != null) {
-				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null);
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null, false);
 				IrisImages.addShadowColorImages(builder, shadowRenderTargets, null);
 			}
 		}
@@ -1083,7 +1089,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
 					if (shadowRenderTargets != null) {
-						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null);
+						IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowRenderTargets, null, false);
 						IrisImages.addShadowColorImages(builder, shadowRenderTargets, null);
 					}
 				}

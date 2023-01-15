@@ -92,11 +92,14 @@ public class ShadowRenderer {
 	private int renderedShadowBlockEntities = 0;
 
 	private final CustomUniforms customUniforms;
+	private final boolean separateHardwareSamplers;
 
 	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
-						  ShadowRenderTargets shadowRenderTargets, ShadowCompositeRenderer compositeRenderer, CustomUniforms customUniforms) {
+						  ShadowRenderTargets shadowRenderTargets, ShadowCompositeRenderer compositeRenderer, CustomUniforms customUniforms, boolean separateHardwareSamplers) {
 
 		this.customUniforms = customUniforms;
+
+		this.separateHardwareSamplers = separateHardwareSamplers;
 
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
 
@@ -214,7 +217,7 @@ public class ShadowRenderer {
 	}
 
 	private void configureDepthSampler(int glTextureId, PackShadowDirectives.DepthSamplingSettings settings) {
-		if (settings.getHardwareFiltering()) {
+		if (settings.getHardwareFiltering() && !separateHardwareSamplers) {
 			// We have to do this or else shadow hardware filtering breaks entirely!
 			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
 		}

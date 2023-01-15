@@ -7,9 +7,11 @@ import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.image.ImageHolder;
 import net.coderbot.iris.gl.program.ProgramBuilder;
+import net.coderbot.iris.gl.sampler.GlSampler;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.texture.TextureAccess;
+import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
@@ -32,9 +34,14 @@ public class IrisSamplers {
 	// TODO: In composite programs, there shouldn't be any reserved textures.
 	// We need a way to restore these texture bindings.
 	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(1, 2);
+	private static GlSampler SHADOW_SAMPLER;
 
 	private IrisSamplers() {
 		// no construction allowed
+	}
+
+	public static void initRenderer() {
+		SHADOW_SAMPLER = new GlSampler(false, false, true, true);
 	}
 
 	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped,
@@ -101,7 +108,7 @@ public class IrisSamplers {
 		return false;
 	}
 
-	public static boolean addShadowSamplers(SamplerHolder samplers, ShadowRenderTargets shadowRenderTargets, ImmutableSet<Integer> flipped) {
+	public static boolean addShadowSamplers(SamplerHolder samplers, ShadowRenderTargets shadowRenderTargets, ImmutableSet<Integer> flipped, boolean separateHardwareSamplers) {
 		boolean usesShadows;
 
 		// TODO: figure this out from parsing the shader source code to be 100% compatible with the legacy
@@ -110,12 +117,12 @@ public class IrisSamplers {
 
 		if (waterShadowEnabled) {
 			usesShadows = true;
-			samplers.addDynamicSampler(shadowRenderTargets.getDepthTexture()::getTextureId, "shadowtex0", "watershadow");
-			samplers.addDynamicSampler(shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId,
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? SHADOW_SAMPLER : null), "shadowtex0", "watershadow");
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? SHADOW_SAMPLER : null),
 					"shadowtex1", "shadow");
 		} else {
-			usesShadows = samplers.addDynamicSampler(shadowRenderTargets.getDepthTexture()::getTextureId, "shadowtex0", "shadow");
-			usesShadows |= samplers.addDynamicSampler(shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, "shadowtex1");
+			usesShadows = samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? SHADOW_SAMPLER : null), "shadowtex0", "shadow");
+			usesShadows |= samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? SHADOW_SAMPLER : null), "shadowtex1");
 		}
 
 		if (flipped == null) {
@@ -132,12 +139,12 @@ public class IrisSamplers {
 			}
 		}
 
-		if (shadowRenderTargets.isHardwareFiltered(0)) {
-			samplers.addDynamicSampler(shadowRenderTargets.getDepthTexture()::getTextureId, "shadowtex0HW");
+		if (shadowRenderTargets.isHardwareFiltered(0) && separateHardwareSamplers) {
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, SHADOW_SAMPLER, "shadowtex0HW");
 		}
 
-		if (shadowRenderTargets.isHardwareFiltered(1)) {
-			samplers.addDynamicSampler(shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, "shadowtex1HW");
+		if (shadowRenderTargets.isHardwareFiltered(1) && separateHardwareSamplers) {
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, SHADOW_SAMPLER, "shadowtex1HW");
 		}
 
 		return usesShadows;
@@ -189,14 +196,14 @@ public class IrisSamplers {
 
 	public static void addCustomTextures(SamplerHolder samplers, Object2ObjectMap<String, TextureAccess> irisCustomTextures) {
 		irisCustomTextures.forEach((name, texture) -> {
-			samplers.addDynamicSampler(texture.getType(), texture.getTextureId(), name);
+			samplers.addDynamicSampler(texture.getType(), texture.getTextureId(), null, name);
 		});
 	}
 
 	public static void addCustomImages(SamplerHolder images, Set<GlImage> customImages) {
 		customImages.forEach(image -> {
 			if (image.getSamplerName() != null) {
-				images.addDynamicSampler(image.getTarget(), image::getId, image.getSamplerName());
+				images.addDynamicSampler(image.getTarget(), image::getId, null, image.getSamplerName());
 			}
 		});
 	}

@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.texture.TextureType;
@@ -56,6 +57,7 @@ public interface WorldRenderingPipeline {
 	boolean shouldWriteRainAndSnowToDepthBuffer();
 	ParticleRenderingSettings getParticleRenderingSettings();
 	boolean allowConcurrentCompute();
+	boolean hasFeature(FeatureFlags flags);
 
 	float getSunPathRotation();
 }

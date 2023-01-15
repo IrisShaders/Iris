@@ -472,4 +472,8 @@ public class ShaderPack {
 	public OptionMenuContainer getMenuContainer() {
 		return menuContainer;
 	}
+
+    public boolean hasFeature(FeatureFlags feature) {
+		return activeFeatures.contains(feature);
+    }
 }
