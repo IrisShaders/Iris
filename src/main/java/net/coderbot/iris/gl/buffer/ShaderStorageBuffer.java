@@ -26,7 +26,8 @@ public class ShaderStorageBuffer extends GlResource {
 	@Override
 	protected void destroyInternal() {
 		IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, index, 0);
-		GlStateManager._glDeleteBuffers(getGlId());
+		// DO NOT use the GlStateManager version here! On Linux, it will attempt to clear the data using BufferData and cause GL errors.
+		IrisRenderSystem.deleteBuffers(getGlId());
 	}
 
 	public void bind() {
