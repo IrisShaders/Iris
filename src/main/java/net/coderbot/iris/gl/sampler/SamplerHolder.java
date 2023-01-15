@@ -18,15 +18,15 @@ public interface SamplerHolder {
 	 */
 	boolean addDefaultSampler(IntSupplier sampler, String... names);
 
-	default boolean addDynamicSampler(IntSupplier sampler, String... names) {
-		return addDynamicSampler(TextureType.TEXTURE_2D, sampler, names);
+	default boolean addDynamicSampler(IntSupplier texture, String... names) {
+		return addDynamicSampler(TextureType.TEXTURE_2D, texture, null, names);
 	}
 
-	boolean addDynamicSampler(TextureType type, IntSupplier sampler, String... names);
+	boolean addDynamicSampler(TextureType type, IntSupplier texture, GlSampler sampler, String... names);
 
-	default boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
-		return addDynamicSampler(TextureType.TEXTURE_2D, sampler, notifier, names);
+	default boolean addDynamicSampler(IntSupplier texture, ValueUpdateNotifier notifier, String... names) {
+		return addDynamicSampler(TextureType.TEXTURE_2D, texture, notifier, null, names);
 	}
 
-	boolean addDynamicSampler(TextureType type, IntSupplier sampler, ValueUpdateNotifier notifier, String... names);
+	boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names);
 }
