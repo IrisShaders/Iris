@@ -30,7 +30,7 @@ public class TextureInfoCache {
 	public void onTexImage2D(int target, int level, int internalformat, int width, int height, int border,
 							 int format, int type, @Nullable IntBuffer pixels) {
 		if (level == 0) {
-			int id = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
+			int id = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 			TextureInfo info = getInfo(id);
 			info.internalFormat = internalformat;
 			info.width = width;

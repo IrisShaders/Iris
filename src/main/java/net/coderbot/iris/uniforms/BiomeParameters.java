@@ -43,7 +43,7 @@ public class BiomeParameters {
 					}
 				}))
 				.uniform1i(PER_TICK, "biome_precipitation", playerI(player -> {
-					Biome.Precipitation precipitation = player.level.getBiome(player.blockPosition()).value().getPrecipitation();
+					Biome.Precipitation precipitation = player.level.getBiome(player.blockPosition()).value().getPrecipitationAt(player.blockPosition());
 					switch (precipitation){
 						case NONE: return 0;
 						case RAIN: return 1;
@@ -52,7 +52,7 @@ public class BiomeParameters {
 					throw new IllegalStateException("Unknown precipitation type:" + precipitation);
 				}))
 				.uniform1f(PER_TICK, "rainfall", playerF(player ->
-						player.level.getBiome(player.blockPosition()).value().getDownfall()))
+					((ExtendedBiome) (Object) player.level.getBiome(player.blockPosition()).value()).getDownfall()))
 				.uniform1f(PER_TICK, "temperature", playerF(player ->
 						player.level.getBiome(player.blockPosition()).value().getBaseTemperature()))
 

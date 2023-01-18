@@ -3,7 +3,6 @@ package net.coderbot.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.bridge.game.GameVersion;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
@@ -101,7 +100,7 @@ public class Iris {
 	private static boolean fallback;
 
 	// Change this for snapshots!
-	private static String backupVersionNumber = "1.19.3";
+	private static String backupVersionNumber = "1.19.4";
 
 	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
@@ -134,10 +133,6 @@ public class Iris {
 		IRIS_VERSION = iris.getMetadata().getVersion();
 
 		this.updateChecker = new UpdateChecker(IRIS_VERSION);
-
-		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
-		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
-		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
 
 		try {
 			if (!Files.exists(getShaderpacksDirectory())) {

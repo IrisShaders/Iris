@@ -44,8 +44,7 @@
   "accessWidener" : "iris.accesswidener",
 
   "depends": {
-    "fabricloader": ">=0.12.3",
-    "minecraft": "1.19.3"
+    "fabricloader": ">=0.12.3"
   },
 
   "breaks": {

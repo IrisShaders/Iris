@@ -664,7 +664,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			TextureFormat textureFormat = TextureFormatLoader.getFormat();
 			if (textureFormat != null) {
-				int previousBinding = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
+				int previousBinding = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 				textureFormat.setupTextureParameters(PBRType.NORMAL, pbrHolder.getNormalTexture());
 				textureFormat.setupTextureParameters(PBRType.SPECULAR, pbrHolder.getSpecularTexture());
 				GlStateManager._bindTexture(previousBinding);
@@ -786,7 +786,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
 		if (skyType == DimensionSpecialEffects.SkyType.NORMAL) {
-			RenderSystem.disableTexture();
 			RenderSystem.depthMask(false);
 
 			RenderSystem.setShaderColor(fogColor.x, fogColor.y, fogColor.z, fogColor.w);
@@ -794,7 +793,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), GameRenderer.getPositionShader());
 
 			RenderSystem.depthMask(true);
-			RenderSystem.enableTexture();
 		}
 	}
 

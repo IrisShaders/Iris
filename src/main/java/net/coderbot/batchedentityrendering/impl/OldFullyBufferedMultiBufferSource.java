@@ -132,7 +132,7 @@ public class OldFullyBufferedMultiBufferSource extends MultiBufferSource.BufferS
 
 		if (activeBuffers.remove(buffer)) {
 			type.end(buffer, 0, 0, 0);
-			buffer.clear();
+			buffer.discard();
 		} else {
 			// Schedule the buffer for removal next frame if it isn't used this frame.
 			int unusedCount = unused.getOrDefault(type, 0);

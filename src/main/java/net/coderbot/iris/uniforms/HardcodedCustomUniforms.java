@@ -181,18 +181,7 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getRawPrecipitation() {
-		if (storedBiome == null) {
-			return 0;
-		}
-		Biome.Precipitation precipitation = storedBiome.value().getPrecipitation();
-		switch (precipitation) {
-			case RAIN:
-				return 1;
-			case SNOW:
-				return 2;
-			default:
-				return 0;
-		}
+		return 0;
 	}
 
 	private static float getBlindFactor() {

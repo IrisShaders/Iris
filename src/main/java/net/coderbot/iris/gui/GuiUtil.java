@@ -65,10 +65,6 @@ public final class GuiUtil {
 		// Sets RenderSystem to use solid white as the tint color for blend mode, and enables blend mode
 		RenderSystem.enableBlend();
 
-		// Sets RenderSystem to be able to use textures when drawing
-		// This doesn't do anything on 1.17
-		RenderSystem.enableTexture();
-
 		// Top left section
 		GuiComponent.blit(poseStack, x, y, 0, vOffset, halfWidth, halfHeight, 256, 256);
 		// Top right section
@@ -196,9 +192,6 @@ public final class GuiUtil {
 		public void draw(PoseStack poseStack, int x, int y) {
 			// Sets RenderSystem to use solid white as the tint color for blend mode (1.16), and enables blend mode
 			RenderSystem.enableBlend();
-
-			// Sets RenderSystem to be able to use textures when drawing
-			RenderSystem.enableTexture();
 
 			// Draw the texture to the screen
 			GuiComponent.blit(poseStack, x, y, u, v, width, height, 256, 256);
