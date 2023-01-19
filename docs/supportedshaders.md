@@ -41,7 +41,7 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 * [Potato](https://www.curseforge.com/minecraft/customization/potato-shaders)
 * [Simplicissimus](https://www.curseforge.com/minecraft/customization/simplicissimus-shader)
 * [Soft Voxels](https://rre36.com/soft-voxels)
-* [Soft Voxels Lite](https://www.curseforge.com/minecraft/customization/soft-voxels-lite)
+  * [Soft Voxels Lite](https://www.curseforge.com/minecraft/customization/soft-voxels-lite)
 * [UShader](https://www.curseforge.com/minecraft/customization/ushader)
 * [Vanilla Plus](https://www.curseforge.com/minecraft/customization/vanilla-plus-shader)
 * [RRe36's Shader](https://www.curseforge.com/minecraft/customization/rre36s-shader)
