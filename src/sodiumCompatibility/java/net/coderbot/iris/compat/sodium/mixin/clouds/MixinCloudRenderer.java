@@ -8,9 +8,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
-import me.jellysquid.mods.sodium.client.model.vertex.VertexDrain;
-import me.jellysquid.mods.sodium.client.model.vertex.formats.screen_quad.BasicScreenQuadVertexSink;
 import me.jellysquid.mods.sodium.client.render.CloudRenderer;
 import me.jellysquid.mods.sodium.client.util.color.ColorMixer;
 import net.coderbot.iris.Iris;
@@ -65,7 +62,6 @@ public abstract class MixinCloudRenderer {
 	private void buildIrisVertexBuffer(ClientLevel world, LocalPlayer player, PoseStack matrices, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			ci.cancel();
-			this.renderIris(world, player, matrices, projectionMatrix, ticks, tickDelta, cameraX, cameraY, cameraZ);
 		}
 	}
 

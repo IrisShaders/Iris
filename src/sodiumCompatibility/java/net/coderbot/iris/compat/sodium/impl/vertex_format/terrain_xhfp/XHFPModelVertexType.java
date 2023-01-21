@@ -3,11 +3,9 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeFormat;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import me.jellysquid.mods.sodium.client.model.vertex.type.BlittableVertexType;
-import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
-import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
+import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
+import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexType;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisGlVertexAttributeFormat;
 
@@ -40,28 +38,18 @@ public class XHFPModelVertexType implements ChunkVertexType {
 	private static final float TEXTURE_SCALE = (1.0f / TEXTURE_MAX_VALUE);
 
 	@Override
-	public ModelVertexSink createFallbackWriter(VertexConsumer consumer) {
-		throw new UnsupportedOperationException();
+	public float getTextureScale() {
+		return TEXTURE_SCALE;
 	}
 
 	@Override
-	public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
-		return direct ? new XHFPModelVertexBufferWriterUnsafe(buffer) : new XHFPModelVertexBufferWriterNio(buffer);
-	}
-
-	@Override
-	public BlittableVertexType<ModelVertexSink> asBlittable() {
-		return this;
-	}
-
-	@Override
-	public GlVertexFormat<ChunkMeshAttribute> getCustomVertexFormat() {
+	public GlVertexFormat<ChunkMeshAttribute> getVertexFormat() {
 		return VERTEX_FORMAT;
 	}
 
 	@Override
-	public float getTextureScale() {
-		return TEXTURE_SCALE;
+	public ChunkVertexEncoder getEncoder() {
+		return new XHFPModelVertexBufferWriterUnsafe();
 	}
 
 	@Override

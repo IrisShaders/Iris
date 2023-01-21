@@ -14,12 +14,12 @@ import net.coderbot.iris.vertices.ExtendingBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.ByteBuffer;
@@ -124,6 +124,19 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			this.currentElement = this.format.getElements().get(0);
 		}
 	}
+
+	@ModifyArg(method = "begin", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;switchFormat(Lcom/mojang/blaze3d/vertex/VertexFormat;)V"))
+	private VertexFormat iris$afterBeginSwitchFormat(VertexFormat arg) {
+		if (extending) {
+			if (format == DefaultVertexFormat.NEW_ENTITY) {
+				return IrisVertexFormats.ENTITY;
+			} else {
+				return IrisVertexFormats.TERRAIN;
+			}
+		}
+		return arg;
+	}
+
 
 	@Inject(method = "discard()V", at = @At("HEAD"))
 	private void iris$onDiscard(CallbackInfo ci) {
