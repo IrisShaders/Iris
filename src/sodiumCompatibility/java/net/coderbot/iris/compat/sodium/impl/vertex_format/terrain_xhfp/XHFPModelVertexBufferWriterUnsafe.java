@@ -59,26 +59,26 @@ public class XHFPModelVertexBufferWriterUnsafe implements ChunkVertexEncoder, Co
 
 	@Override
 	public long write(long ptr,
-					  float posX, float posY, float posZ, int color, float u, float v, int light, int chunkId) {
-		uSum += u;
-		vSum += v;
+					  Vertex vertex, int chunkId) {
+		uSum += vertex.u;
+		vSum += vertex.v;
 		vertexCount++;
 
-		MemoryUtil.memPutShort(ptr + 0, XHFPModelVertexType.encodePosition(posX));
-		MemoryUtil.memPutShort(ptr + 2, XHFPModelVertexType.encodePosition(posY));
-		MemoryUtil.memPutShort(ptr + 4, XHFPModelVertexType.encodePosition(posZ));
+		MemoryUtil.memPutShort(ptr + 0, XHFPModelVertexType.encodePosition(vertex.x));
+		MemoryUtil.memPutShort(ptr + 2, XHFPModelVertexType.encodePosition(vertex.y));
+		MemoryUtil.memPutShort(ptr + 4, XHFPModelVertexType.encodePosition(vertex.z));
 		MemoryUtil.memPutShort(ptr + 6, (short) chunkId);
 
-		MemoryUtil.memPutInt(ptr + 8, color);
+		MemoryUtil.memPutInt(ptr + 8, vertex.color);
 
-		MemoryUtil.memPutShort(ptr + 12, XHFPModelVertexType.encodeBlockTexture(u));
-		MemoryUtil.memPutShort(ptr + 14, XHFPModelVertexType.encodeBlockTexture(v));
+		MemoryUtil.memPutShort(ptr + 12, XHFPModelVertexType.encodeBlockTexture(vertex.u));
+		MemoryUtil.memPutShort(ptr + 14, XHFPModelVertexType.encodeBlockTexture(vertex.v));
 
-		MemoryUtil.memPutInt(ptr + 16, light);
+		MemoryUtil.memPutInt(ptr + 16, vertex.light);
 
 		MemoryUtil.memPutShort(ptr + 36, contextHolder.blockId);
 		MemoryUtil.memPutShort(ptr + 38, contextHolder.renderType);
-		MemoryUtil.memPutInt(ptr + 40, ExtendedDataHelper.computeMidBlock(posX, posY, posZ, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
+		MemoryUtil.memPutInt(ptr + 40, ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 
 		if (vertexCount == 4) {
 			vertexCount = 0;

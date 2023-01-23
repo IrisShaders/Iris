@@ -8,17 +8,15 @@ import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
-import net.coderbot.iris.vertices.QuadView;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-public final class EntityVertex {
-	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.ENTITY);
-	public static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
+public final class GlyphVertexExt {
+	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.TERRAIN);
+	public static final int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
 
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;
@@ -28,38 +26,65 @@ public final class EntityVertex {
 	private static final int OFFSET_LIGHT = 28;
 	private static final int OFFSET_NORMAL = 32;
 
-	private static Vector3f lastNormal = new Vector3f();
+
+	private static final QuadViewEntity.QuadViewEntityUnsafe quad = new QuadViewEntity.QuadViewEntityUnsafe();
+	private static final Vector3f saveNormal = new Vector3f();
 
 	private static int vertexCount;
+	private static float uSum;
+	private static float vSum;
 
-	public static void write(long ptr,
-							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal) {
+	private static Vector3f lastNormal = new Vector3f();
+
+	public static void write(long ptr, float x, float y, float z, int color, float u, float v, int light) {
+		long i = ptr;
+
 		vertexCount++;
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
+		uSum += u;
+		vSum += v;
 
-		MemoryUtil.memPutInt(ptr + OFFSET_COLOR, color);
-
-		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 0, u);
-		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 4, v);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_LIGHT, light);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_OVERLAY, overlay);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_NORMAL, normal);
-
-		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE, midU);
-		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE + 4, midV);
+		MemoryUtil.memPutFloat(i, x);
+		MemoryUtil.memPutFloat(i + 4, y);
+		MemoryUtil.memPutFloat(i + 8, z);
+		MemoryUtil.memPutInt(i + 12, color);
+		MemoryUtil.memPutFloat(i + 16, u);
+		MemoryUtil.memPutFloat(i + 20, v);
+		MemoryUtil.memPutInt(i + 24, light);
 
 		if (vertexCount == 4) {
-			vertexCount = 0;
-			endQuad(ptr, Norm3b.unpackX(normal), Norm3b.unpackY(normal), Norm3b.unpackZ(normal));
+			endQuad(ptr);
 		}
 	}
 
-	public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, int light, int overlay, int color) {
+	private static void endQuad(long ptr) {
+		vertexCount = 0;
+
+		uSum *= 0.25;
+		vSum *= 0.25;
+
+		quad.setup(ptr, STRIDE);
+
+		float normalX, normalY, normalZ;
+
+		NormalHelper.computeFaceNormal(saveNormal, quad);
+		normalX = saveNormal.x;
+		normalY = saveNormal.y;
+		normalZ = saveNormal.z;
+		int normal = NormalHelper.packNormal(saveNormal, 0.0F);
+
+		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
+
+		for (long vertex = 0; vertex < 4; vertex++) {
+			MemoryUtil.memPutFloat(ptr + 36 - STRIDE * vertex, uSum);
+			MemoryUtil.memPutFloat(ptr + 40 - STRIDE * vertex, vSum);
+			MemoryUtil.memPutInt(ptr + 28 - STRIDE * vertex, normal);
+			MemoryUtil.memPutInt(ptr + 44 - STRIDE * vertex, tangent);
+		}
+
+		uSum = 0;
+		vSum = 0;
+	}
+	public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, int light, int color) {
 		Matrix3f matNormal = matrices.normal();
 		Matrix4f matPosition = matrices.pose();
 
@@ -74,9 +99,6 @@ public final class EntityVertex {
 			float nx = Norm3b.unpackX(n);
 			float ny = Norm3b.unpackY(n);
 			float nz = Norm3b.unpackZ(n);
-
-			float midU = ((quad.getTexU(0) + quad.getTexU(1) + quad.getTexU(2) + quad.getTexU(3)) * 0.25f);
-			float midV = ((quad.getTexV(0) + quad.getTexV(1) + quad.getTexV(2) + quad.getTexV(3)) * 0.25f);
 
 			// The transformed normal vector
 			float nxt = (matNormal.m00() * nx) + (matNormal.m10() * ny) + (matNormal.m20() * nz);
@@ -97,7 +119,7 @@ public final class EntityVertex {
 				float yt = (matPosition.m01() * x) + (matPosition.m11() * y) + (matPosition.m21() * z) + matPosition.m31();
 				float zt = (matPosition.m02() * x) + (matPosition.m12() * y) + (matPosition.m22() * z) + matPosition.m32();
 
-				write(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), midU, midV, light, overlay, nt);
+				write(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), light);
 				ptr += STRIDE;
 			}
 

@@ -18,24 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ModelVertex.class)
 public class MixinModelVertex {
-	@Shadow
-	@Final
-	public static VertexFormatDescription FORMAT;
-
-	@Inject(method = "write", at = @At("HEAD"), cancellable = true)
-	private static void redirect1(long ptr, float x, float y, float z, int color, float u, float v, int light, int overlay, int normal, CallbackInfo ci) {
-		if (shouldBeExtended()) {
-			ci.cancel();
-			EntityVertex.write(ptr, x, y, z, color, u, v, 0, 0, light, overlay, normal);
-		}
-	}
-
-	@Overwrite
-	public static VertexFormatDescription getFormat() {
-		return shouldBeExtended() ? EntityVertex.FORMAT : FORMAT;
-	}
-
-
 	@Inject(method = "writeQuadVertices", at = @At("HEAD"), cancellable = true)
 	private static void redirect2(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, int light, int overlay, int color, CallbackInfo ci) {
 		if (shouldBeExtended()) {

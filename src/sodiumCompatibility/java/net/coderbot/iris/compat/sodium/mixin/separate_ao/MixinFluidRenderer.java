@@ -1,7 +1,7 @@
 package net.coderbot.iris.compat.sodium.mixin.separate_ao;
 
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
-import me.jellysquid.mods.sodium.client.render.pipeline.FluidRenderer;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.FluidRenderer;
 import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.minecraft.core.BlockPos;
