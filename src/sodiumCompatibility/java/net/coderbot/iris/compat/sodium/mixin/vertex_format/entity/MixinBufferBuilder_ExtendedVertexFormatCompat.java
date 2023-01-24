@@ -1,16 +1,29 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format.entity;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.formats.ModelVertex;
+import me.jellysquid.mods.sodium.client.util.Norm3b;
+import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.coderbot.iris.vertices.ImmediateState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.api.v0.IrisApi;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
+import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -22,63 +35,47 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * compatibility code getting in the way.
  */
 @Mixin(value = EntityRenderDispatcher.class, priority = 1010)
+@Pseudo
 public class MixinBufferBuilder_ExtendedVertexFormatCompat {
-	@SuppressWarnings("target")
-	@Redirect(method = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;drawOptimizedShadowVertex(Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/VertexConsumer;FFFFFF)V",
-		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/formats/ModelVertex;write(JFFFIFFIII)V"), remap = false)
-	private static void redirectWrite(long ptr,
-							   float x, float y, float z, int color, float u, float v, int light, int overlay, int normal) {
-		if (shouldBeExtended()) {
-			EntityVertex.write(ptr, x, y, z, color, u, v, 0.5f, 0.5f, light, overlay, normal);
-		} else {
-			ModelVertex.write(ptr, x, y, z, color, u, v, light, overlay, normal);
+	@Unique
+	private static final int SHADOW_COLOR = ColorABGR.pack(1.0f, 1.0f, 1.0f);
+
+	@Unique
+	private static final Vector3fc SHADOW_NORMAL = new Vector3f(0.0f, 1.0f, 0.0f);
+
+	@Overwrite(remap = false)
+	private static void drawOptimizedShadowVertex(PoseStack.Pose entry, VertexConsumer vertices, float alpha, float x, float y, float z, float u, float v) {
+		var writer = VertexBufferWriter.of(vertices);
+
+		var matNormal = entry.normal();
+		var matPosition = entry.pose();
+
+		boolean extend = shouldBeExtended();
+
+		float nx = SHADOW_NORMAL.x();
+		float ny = SHADOW_NORMAL.y();
+		float nz = SHADOW_NORMAL.z();
+
+		// The transformed normal vector
+		float nxt = (matNormal.m00() * nx) + (matNormal.m10() * ny) + (matNormal.m20() * nz);
+		float nyt = (matNormal.m01() * nx) + (matNormal.m11() * ny) + (matNormal.m21() * nz);
+		float nzt = (matNormal.m02() * nx) + (matNormal.m12() * ny) + (matNormal.m22() * nz);
+
+		int norm = Norm3b.pack(nxt, nyt, nzt);
+
+		try (MemoryStack stack = VertexBufferWriter.STACK.push()) {
+			long buffer = writer.buffer(stack, 1, extend ? EntityVertex.STRIDE : ModelVertex.STRIDE, extend ? EntityVertex.FORMAT : ModelVertex.FORMAT);
+
+			// The transformed position vector
+			float xt = (matPosition.m00() * x) + (matPosition.m10() * y) + (matPosition.m20() * z) + matPosition.m30();
+			float yt = (matPosition.m01() * x) + (matPosition.m11() * y) + (matPosition.m21() * z) + matPosition.m31();
+			float zt = (matPosition.m02() * x) + (matPosition.m12() * y) + (matPosition.m22() * z) + matPosition.m32();
+
+			ModelVertex.write(buffer, xt, yt, zt, ColorABGR.withAlpha(SHADOW_COLOR, alpha), u, v, OverlayTexture.NO_OVERLAY, LightTexture.FULL_BRIGHT, norm);
+
+			writer.push(buffer, 1, extend ? EntityVertex.STRIDE : ModelVertex.STRIDE, extend ? EntityVertex.FORMAT : ModelVertex.FORMAT);
 		}
 	}
-
-	@SuppressWarnings("target")
-	@ModifyArg(method = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;drawOptimizedShadowVertex(Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/VertexConsumer;FFFFFF)V",
-		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;buffer(Lorg/lwjgl/system/MemoryStack;IILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)J"), index = 2, remap = false)
-	private static int redirectWrite2(int before) {
-		if (shouldBeExtended()) {
-			return EntityVertex.STRIDE;
-		} else {
-			return ModelVertex.STRIDE;
-		}
-	}
-
-	@SuppressWarnings("target")
-	@ModifyArg(method = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;drawOptimizedShadowVertex(Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/VertexConsumer;FFFFFF)V",
-		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;buffer(Lorg/lwjgl/system/MemoryStack;IILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)J"), index = 3, remap = false)
-	private static VertexFormatDescription redirectWrite3(VertexFormatDescription before) {
-		if (shouldBeExtended()) {
-			return EntityVertex.FORMAT;
-		} else {
-			return ModelVertex.FORMAT;
-		}
-	}
-
-	@SuppressWarnings("target")
-	@ModifyArg(method = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;drawOptimizedShadowVertex(Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/VertexConsumer;FFFFFF)V",
-		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;push(JIILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 2, remap = false)
-	private static int redirectWrite4(int before) {
-		if (shouldBeExtended()) {
-			return EntityVertex.STRIDE;
-		} else {
-			return ModelVertex.STRIDE;
-		}
-	}
-
-	@SuppressWarnings("target")
-	@ModifyArg(method = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;drawOptimizedShadowVertex(Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/VertexConsumer;FFFFFF)V",
-		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;push(JIILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3, remap = false)
-	private static VertexFormatDescription redirectWrite5(VertexFormatDescription before) {
-		if (shouldBeExtended()) {
-			return EntityVertex.FORMAT;
-		} else {
-			return ModelVertex.FORMAT;
-		}
-	}
-
 	private static boolean shouldBeExtended() {
 		return IrisApi.getInstance().isShaderPackInUse() && ImmediateState.renderWithExtendedVertexFormat;
 	}

@@ -173,7 +173,7 @@ public abstract class MixinCloudRenderer {
 		RenderSystem.setShaderFogStart(previousStart);
 	}
 
-	@Inject(method = "writeVertex", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "writeVertex", at = @At("HEAD"), cancellable = true, remap = false)
 	private static void writeIrisVertex(VertexBufferWriter writer, float x, float y, float z, int color, CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			ci.cancel();

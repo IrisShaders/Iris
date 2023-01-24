@@ -27,7 +27,7 @@ public class MixinBlockRenderer {
     private boolean useSeparateAo;
 
     @Inject(method = "renderModel", remap = false, at = @At("HEAD"))
-    private void renderModel(BlockRenderContext ctx, ChunkModelBuilder buffers, CallbackInfo ci) {
+    private void renderModel(BlockRenderContext ctx, ChunkModelBuilder buffers, CallbackInfoReturnable<Boolean> cir) {
         this.useSeparateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo();
     }
 
