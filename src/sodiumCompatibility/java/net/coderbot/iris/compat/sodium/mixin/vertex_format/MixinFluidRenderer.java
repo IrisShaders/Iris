@@ -3,8 +3,7 @@ package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 import me.jellysquid.mods.sodium.client.model.IndexBufferBuilder;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadWinding;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
-import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
-import me.jellysquid.mods.sodium.client.render.pipeline.FluidRenderer;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.FluidRenderer;
 import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -55,12 +54,11 @@ public class MixinFluidRenderer {
 	private void iris$addIndicesFixNormals(IndexBufferBuilder indices, int vertexStart, ModelQuadWinding winding,
 										   ChunkModelBuilder buffers) {
 		if (winding == ModelQuadWinding.COUNTERCLOCKWISE) {
-			ModelVertexSink sink = buffers.getVertexSink();
+			if (buffers instanceof ContextAwareVertexWriter) {
+				// TODO FIX
+				//buffers.getVertexBuffer().push()
 
-			if (sink instanceof ContextAwareVertexWriter) {
-				((ContextAwareVertexWriter) sink).copyQuadAndFlipNormal();
-
-				indices.add(vertexStart + 4, winding);
+				//indices.add(vertexStart + 4, winding);
 
 				return;
 			}

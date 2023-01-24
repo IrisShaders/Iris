@@ -8,12 +8,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
-import me.jellysquid.mods.sodium.client.model.vertex.VertexDrain;
-import me.jellysquid.mods.sodium.client.model.vertex.formats.screen_quad.BasicScreenQuadVertexSink;
 import me.jellysquid.mods.sodium.client.render.CloudRenderer;
+import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
+import me.jellysquid.mods.sodium.client.render.vertex.formats.ColorVertex;
 import me.jellysquid.mods.sodium.client.util.color.ColorMixer;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.CloudVertex;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.ShaderKey;
@@ -29,6 +29,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -65,7 +66,7 @@ public abstract class MixinCloudRenderer {
 	private void buildIrisVertexBuffer(ClientLevel world, LocalPlayer player, PoseStack matrices, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			ci.cancel();
-			this.renderIris(world, player, matrices, projectionMatrix, ticks, tickDelta, cameraX, cameraY, cameraZ);
+			renderIris(world, player, matrices, projectionMatrix, ticks, tickDelta, cameraX, cameraY, cameraZ);
 		}
 	}
 
@@ -172,6 +173,17 @@ public abstract class MixinCloudRenderer {
 		RenderSystem.setShaderFogStart(previousStart);
 	}
 
+	@Inject(method = "writeVertex", at = @At("HEAD"), cancellable = true)
+	private static void writeIrisVertex(VertexBufferWriter writer, float x, float y, float z, int color, CallbackInfo ci) {
+		if (IrisApi.getInstance().isShaderPackInUse()) {
+			ci.cancel();
+			try (MemoryStack stack = VertexBufferWriter.STACK.push()) {
+				long buffer = writer.buffer(stack, 1, CloudVertex.STRIDE, ColorVertex.FORMAT);
+				CloudVertex.write(buffer, x, y, z, color);
+				writer.push(buffer, 1, CloudVertex.STRIDE, CloudVertex.FORMAT);
+			}
+		}
+	}
 
 	private ShaderInstance getClouds() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();

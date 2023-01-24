@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.clouds_xhfp;
+package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
 import net.coderbot.iris.vertices.QuadView;
 import org.lwjgl.system.MemoryUtil;

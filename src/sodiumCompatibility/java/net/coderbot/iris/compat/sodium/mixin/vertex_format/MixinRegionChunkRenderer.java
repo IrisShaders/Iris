@@ -3,9 +3,9 @@ package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeBinding;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
-import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.RegionChunkRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
+import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexType;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
@@ -32,7 +32,7 @@ public class MixinRegionChunkRenderer {
 			return;
 		}
 
-		GlVertexFormat<ChunkMeshAttribute> vertexFormat = vertexType.getCustomVertexFormat();
+		GlVertexFormat<ChunkMeshAttribute> vertexFormat = vertexType.getVertexFormat();
 
 		vertexAttributeBindings = ArrayUtils.addAll(vertexAttributeBindings,
 				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_BLOCK,

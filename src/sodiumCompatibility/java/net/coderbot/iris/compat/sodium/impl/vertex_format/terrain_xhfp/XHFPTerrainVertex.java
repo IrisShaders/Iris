@@ -1,11 +1,8 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterUnsafe;
-import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
+import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import org.joml.Vector3f;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
 import net.coderbot.iris.vertices.NormalHelper;
@@ -13,7 +10,7 @@ import org.lwjgl.system.MemoryUtil;
 
 import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
 
-public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink, ContextAwareVertexWriter {
+public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertexWriter {
 	private final QuadViewTerrain.QuadViewTerrainUnsafe quad = new QuadViewTerrain.QuadViewTerrainUnsafe();
 	private final Vector3f normal = new Vector3f();
 
@@ -23,11 +20,9 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 	private float uSum;
 	private float vSum;
 
-	public XHFPModelVertexBufferWriterUnsafe(VertexBufferView backingBuffer) {
-		super(backingBuffer, IrisModelVertexFormats.MODEL_VERTEX_XHFP);
-	}
+	// TODO: FIX
 
-	@Override
+	/*@Override
 	public void copyQuadAndFlipNormal() {
 		ensureCapacity(4);
 
@@ -49,42 +44,40 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 
 		// Ensure vertices are flushed
 		this.flush();
+	}*/
+
+	@Override
+	public void iris$setContextHolder(BlockContextHolder holder) {
+		this.contextHolder = holder;
 	}
 
 	@Override
-	public void writeVertex(float posX, float posY, float posZ, int color, float u, float v, int light, int chunkId) {
-		uSum += u;
-		vSum += v;
-
-		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, contextHolder.blockId, contextHolder.renderType, chunkId, ExtendedDataHelper.computeMidBlock(posX, posY, posZ, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
+	public void copyQuadAndFlipNormal() {
+		// TODO FIX
 	}
 
-	private void writeQuadInternal(float posX, float posY, float posZ, int color,
-								   float u, float v, int light, short materialId, short renderType, int chunkId, int packedMidBlock) {
-		long i = this.writePointer;
-
+	@Override
+	public long write(long ptr,
+					  Vertex vertex, int chunkId) {
+		uSum += vertex.u;
+		vSum += vertex.v;
 		vertexCount++;
-		// NB: uSum and vSum must already be incremented outside of this function.
 
-		MemoryUtil.memPutShort(i + 0, XHFPModelVertexType.encodePosition(posX));
-		MemoryUtil.memPutShort(i + 2, XHFPModelVertexType.encodePosition(posY));
-		MemoryUtil.memPutShort(i + 4, XHFPModelVertexType.encodePosition(posZ));
-		MemoryUtil.memPutShort(i + 6, (short) chunkId);
+		MemoryUtil.memPutShort(ptr + 0, XHFPModelVertexType.encodePosition(vertex.x));
+		MemoryUtil.memPutShort(ptr + 2, XHFPModelVertexType.encodePosition(vertex.y));
+		MemoryUtil.memPutShort(ptr + 4, XHFPModelVertexType.encodePosition(vertex.z));
+		MemoryUtil.memPutShort(ptr + 6, (short) chunkId);
 
-		MemoryUtil.memPutInt(i + 8, color);
+		MemoryUtil.memPutInt(ptr + 8, vertex.color);
 
-		MemoryUtil.memPutShort(i + 12, XHFPModelVertexType.encodeBlockTexture(u));
-		MemoryUtil.memPutShort(i + 14, XHFPModelVertexType.encodeBlockTexture(v));
+		MemoryUtil.memPutShort(ptr + 12, XHFPModelVertexType.encodeBlockTexture(vertex.u));
+		MemoryUtil.memPutShort(ptr + 14, XHFPModelVertexType.encodeBlockTexture(vertex.v));
 
-		MemoryUtil.memPutInt(i + 16, light);
+		MemoryUtil.memPutInt(ptr + 16, vertex.light);
 
-		// NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
-		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
-		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_format
-		// TODO: can we pack this into one short?
-		MemoryUtil.memPutShort(i + 36, materialId);
-		MemoryUtil.memPutShort(i + 38, renderType);
-		MemoryUtil.memPutInt(i + 40, packedMidBlock);
+		MemoryUtil.memPutShort(ptr + 36, contextHolder.blockId);
+		MemoryUtil.memPutShort(ptr + 38, contextHolder.renderType);
+		MemoryUtil.memPutInt(ptr + 40, ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 
 		if (vertexCount == 4) {
 			vertexCount = 0;
@@ -119,15 +112,15 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 			uSum *= 0.25f;
 			vSum *= 0.25f;
 
-			MemoryUtil.memPutFloat(i + 20, uSum);
-			MemoryUtil.memPutFloat(i + 20 - STRIDE, uSum);
-			MemoryUtil.memPutFloat(i + 20 - STRIDE * 2, uSum);
-			MemoryUtil.memPutFloat(i + 20 - STRIDE * 3, uSum);
+			MemoryUtil.memPutFloat(ptr + 20, uSum);
+			MemoryUtil.memPutFloat(ptr + 20 - STRIDE, uSum);
+			MemoryUtil.memPutFloat(ptr + 20 - STRIDE * 2, uSum);
+			MemoryUtil.memPutFloat(ptr + 20 - STRIDE * 3, uSum);
 
-			MemoryUtil.memPutFloat(i + 24, vSum);
-			MemoryUtil.memPutFloat(i + 24 - STRIDE, vSum);
-			MemoryUtil.memPutFloat(i + 24 - STRIDE * 2, vSum);
-			MemoryUtil.memPutFloat(i + 24 - STRIDE * 3, vSum);
+			MemoryUtil.memPutFloat(ptr + 24, vSum);
+			MemoryUtil.memPutFloat(ptr + 24 - STRIDE, vSum);
+			MemoryUtil.memPutFloat(ptr + 24 - STRIDE * 2, vSum);
+			MemoryUtil.memPutFloat(ptr + 24 - STRIDE * 3, vSum);
 
 			uSum = 0;
 			vSum = 0;
@@ -136,28 +129,23 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 			// Implementation based on the algorithm found here:
 			// https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
-			quad.setup(i, STRIDE);
+			quad.setup(ptr, STRIDE);
 			NormalHelper.computeFaceNormal(normal, quad);
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
-			MemoryUtil.memPutInt(i + 32, packedNormal);
-			MemoryUtil.memPutInt(i + 32 - STRIDE, packedNormal);
-			MemoryUtil.memPutInt(i + 32 - STRIDE * 2, packedNormal);
-			MemoryUtil.memPutInt(i + 32 - STRIDE * 3, packedNormal);
+			MemoryUtil.memPutInt(ptr + 32, packedNormal);
+			MemoryUtil.memPutInt(ptr + 32 - STRIDE, packedNormal);
+			MemoryUtil.memPutInt(ptr + 32 - STRIDE * 2, packedNormal);
+			MemoryUtil.memPutInt(ptr + 32 - STRIDE * 3, packedNormal);
 
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, quad);
 
-			MemoryUtil.memPutInt(i + 28, tangent);
-			MemoryUtil.memPutInt(i + 28 - STRIDE, tangent);
-			MemoryUtil.memPutInt(i + 28 - STRIDE * 2, tangent);
-			MemoryUtil.memPutInt(i + 28 - STRIDE * 3, tangent);
+			MemoryUtil.memPutInt(ptr + 28, tangent);
+			MemoryUtil.memPutInt(ptr + 28 - STRIDE, tangent);
+			MemoryUtil.memPutInt(ptr + 28 - STRIDE * 2, tangent);
+			MemoryUtil.memPutInt(ptr + 28 - STRIDE * 3, tangent);
 		}
 
-		this.advance();
-	}
-
-	@Override
-	public void iris$setContextHolder(BlockContextHolder holder) {
-		this.contextHolder = holder;
+		return ptr + STRIDE;
 	}
 }
