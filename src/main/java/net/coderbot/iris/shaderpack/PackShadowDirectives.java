@@ -295,14 +295,14 @@ public class PackShadowDirectives {
 	}
 
 	private void acceptBufferDirectives(DirectiveHolder directives, Int2ObjectMap<SamplingSettings> settings) {
-		for (int i = 0; i < settings.size(); i++) {
+		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS; i++) {
 			String bufferName = "shadowcolor" + i;
 			int finalI = i;
 			directives.acceptConstStringDirective(bufferName + "Format", format -> {
 				Optional<InternalTextureFormat> internalFormat = InternalTextureFormat.fromString(format);
 
 				if (internalFormat.isPresent()) {
-					settings.get(finalI).setFormat(internalFormat.get());
+					settings.computeIfAbsent(finalI, sa -> new SamplingSettings()).setFormat(internalFormat.get());
 				} else {
 					Iris.logger.warn("Unrecognized internal texture format " + format + " specified for " + bufferName + "Format, ignoring.");
 				}
