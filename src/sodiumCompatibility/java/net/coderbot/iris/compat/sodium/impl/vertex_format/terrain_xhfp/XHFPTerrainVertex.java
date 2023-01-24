@@ -3,7 +3,6 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import org.joml.Vector3f;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
 import net.coderbot.iris.vertices.NormalHelper;
@@ -11,7 +10,7 @@ import org.lwjgl.system.MemoryUtil;
 
 import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
 
-public class XHFPModelVertexBufferWriterUnsafe implements ChunkVertexEncoder, ContextAwareVertexWriter {
+public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertexWriter {
 	private final QuadViewTerrain.QuadViewTerrainUnsafe quad = new QuadViewTerrain.QuadViewTerrainUnsafe();
 	private final Vector3f normal = new Vector3f();
 
