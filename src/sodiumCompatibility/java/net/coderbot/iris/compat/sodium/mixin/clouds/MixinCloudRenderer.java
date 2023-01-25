@@ -169,6 +169,7 @@ public abstract class MixinCloudRenderer {
 
 		RenderSystem.enableCull();
 
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.setShaderFogEnd(previousEnd);
 		RenderSystem.setShaderFogStart(previousStart);
 	}
