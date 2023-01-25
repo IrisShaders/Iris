@@ -90,6 +90,7 @@ public class MixinLevelRenderer {
 		HandRenderer.INSTANCE.renderTranslucent(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
 		pipeline.finalizeLevelRendering();
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		pipeline = null;
 	}
 
