@@ -44,6 +44,7 @@
     "MixinRenderSystem",
     "MixinRenderTarget",
     "MixinShaderInstance",
+    "MixinSheets",
     "MixinTheEndPortalRenderer",
     "MixinTitleScreen",
     "MixinTweakFarPlane",
