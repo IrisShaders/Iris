@@ -53,4 +53,13 @@ public enum PBRType {
 		}
 		return null;
 	}
+
+	public static boolean isPBRTexturePath(String path) {
+		for (PBRType type : VALUES) {
+			if (path.endsWith(type.getSuffix() + ".png")) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
