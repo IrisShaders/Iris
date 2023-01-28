@@ -1,8 +1,6 @@
 package net.coderbot.iris.texture.pbr.loader;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.datafixers.util.Pair;
-import it.unimi.dsi.fastutil.chars.Char2LongOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
@@ -11,9 +9,6 @@ import net.coderbot.iris.mixin.texture.AnimationMetadataSectionAccessor;
 import net.coderbot.iris.mixin.texture.FrameInfoAccessor;
 import net.coderbot.iris.mixin.texture.SpriteContentsAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasAccessor;
-import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
-import net.coderbot.iris.texture.TextureInfoCache;
-import net.coderbot.iris.texture.TextureInfoCache.TextureInfo;
 import net.coderbot.iris.texture.format.TextureFormat;
 import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.coderbot.iris.texture.mipmap.ChannelMipmapGenerator;
@@ -22,14 +17,13 @@ import net.coderbot.iris.texture.mipmap.LinearBlendFunction;
 import net.coderbot.iris.texture.pbr.PBRAtlasTexture;
 import net.coderbot.iris.texture.pbr.PBRSpriteHolder;
 import net.coderbot.iris.texture.pbr.PBRType;
+import net.coderbot.iris.texture.pbr.SpriteContentsExtension;
 import net.coderbot.iris.texture.pbr.TextureAtlasExtension;
-import net.coderbot.iris.texture.pbr.TextureAtlasSpriteExtension;
 import net.coderbot.iris.texture.util.ImageManipulationUtil;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.Tickable;
 import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
@@ -41,7 +35,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
@@ -83,7 +76,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 					TextureAtlasSprite normalSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, mipLevel, PBRType.NORMAL);
 					if (normalSprite != null) {
 						normalAtlases.computeIfAbsent(atlas, (atlas2) -> new PBRAtlasTexture(atlas, PBRType.NORMAL)).addSprite(normalSprite);
-						PBRSpriteHolder pbrSpriteHolder = ((TextureAtlasSpriteExtension) sprite.contents()).getOrCreatePBRHolder();
+						PBRSpriteHolder pbrSpriteHolder = ((SpriteContentsExtension) sprite.contents()).getOrCreatePBRHolder();
 						pbrSpriteHolder.setNormalSprite(normalSprite);
 					}
 				}
@@ -92,7 +85,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 					TextureAtlasSprite specularSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, mipLevel, PBRType.SPECULAR);
 					if (specularSprite != null) {
 						specularAtlases.computeIfAbsent(atlas, (atlas2) -> new PBRAtlasTexture(atlas, PBRType.SPECULAR)).addSprite(specularSprite);
-						PBRSpriteHolder pbrSpriteHolder = ((TextureAtlasSpriteExtension) sprite.contents()).getOrCreatePBRHolder();
+						PBRSpriteHolder pbrSpriteHolder = ((SpriteContentsExtension) sprite.contents()).getOrCreatePBRHolder();
 						pbrSpriteHolder.setSpecularSprite(specularSprite);
 					}
 				}
@@ -173,8 +166,8 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 				ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
 				SpriteContents pbrSpriteInfo = new PBRTextureAtlasSpriteInfo(pbrSpriteName, frameWidth, frameHeight, animationMetadata, pbrType, nativeImage);
 
-				int x = ((TextureAtlasSpriteAccessor) sprite).getX();
-				int y = ((TextureAtlasSpriteAccessor) sprite).getY();
+				int x = sprite.getX();
+				int y = sprite.getY();
 				pbrSpriteInfo.increaseMipLevel(mipLevel);
 
 				pbrSprite = new PBRTextureAtlasSprite(pbrSpriteName, pbrSpriteInfo, atlasWidth, atlasHeight, x, y);

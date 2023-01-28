@@ -38,6 +38,21 @@ public enum PBRType {
 		return new ResourceLocation(location.getNamespace(), isAtlas ? "textures/" + newPath + ".png" : newPath);
 	}
 
+	@Nullable
+	public static ResourceLocation removeSuffix(ResourceLocation location) {
+		String path = location.getPath();
+		int extensionIndex = FilenameUtils.indexOfExtension(path);
+		String pathNoExtension = path.substring(0, extensionIndex);
+		String extension = path.substring(extensionIndex);
+		PBRType type = fromFileLocation(pathNoExtension);
+		if (type != null) {
+			String suffix = type.getSuffix();
+			String basePathNoExtension = pathNoExtension.substring(0, pathNoExtension.length() - suffix.length());
+			return new ResourceLocation(location.getNamespace(), basePathNoExtension + extension);
+		}
+		return null;
+	}
+
 	/**
 	 * Returns the PBR type corresponding to the suffix of the given file location.
 	 *
