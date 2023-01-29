@@ -97,6 +97,7 @@ The paid versions are not supported, but Continuum 2.0.5 works decently.
 * [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus)
 * [maple's retro extravaganza](https://github.com/Lana-chan/maples-retro-extravaganza)
 * [Voyager Shaders 2.0](https://www.curseforge.com/minecraft/customization/voyager-shader-2-0)
+* [Musk Rose](http://rin.shisyou.com/Zatta/shaders/muskrose.html)
 
 # Shaders that do not work on Iris
 
@@ -106,4 +107,3 @@ This is not a complete list, but is just for people trying to control-F their fa
 
 * [Wisdom Shaders](https://github.com/bobcao3/Wisdom-Shaders)
 * [NV Shaders](https://www.curseforge.com/minecraft/customization/nv-shaders)
-* [Musk Rose](http://rin.shisyou.com/Zatta/shaders/muskrose.html)
