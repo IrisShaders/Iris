@@ -6,18 +6,19 @@
 
 * [BSL Shaders](https://bitslablab.com/bslshaders/)
 * [Prismarine Shaders](https://www.curseforge.com/minecraft/customization/prismarine-shader)
-* [AstraLex Shaders](https://www.curseforge.com/minecraft/customization/astralex-shader-bsl-edit)
+* [AstraLex Shaders](https://lextermina7.wixsite.com/astralex/download)
 * [Lux Shaders](https://techdevongithub.github.io/Lux/)
+* [Solas](https://modrinth.com/shader/solas-shader)
 
 ### Complementary Shaders
 * [Complementary Reimagined](https://www.complementary.dev/reimagined/)
-  * [rethinking-voxels](https://github.com/gri573/rethinking-voxels)
+  * [rethinking-voxels](https://modrinth.com/shader/rethinking-voxels)
 * [Complementary Shaders](https://www.complementary.dev/shaders-v4/) (BSL derivative)
 
 ### MakeUp - Ultra Fast
 
 Only 8.5 and above works on Iris.
-* [MakeUp - Ultra Fast](https://www.curseforge.com/minecraft/customization/makeup-ultra-fast-shader)
+* [MakeUp - Ultra Fast](https://modrinth.com/shader/makeup-ultra-fast-shaders)
 
 ### SEUS and derivatives
 
@@ -74,7 +75,7 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 
 * [Chocapic v4 - v6](https://www.mediafire.com/folder/qs3lb60h0zw6t/Older_versions)
 * [Triliton's Shaders](https://www.curseforge.com/minecraft/customization/trilitons-shaders)
-* [RedHat shaders](https://www.curseforge.com/minecraft/customization/redhat-shader-v1-chocapic13-edit)
+* [RedHat shaders](https://modrinth.com/shader/redhat-shaders)
 * [Edi's Shaders](https://download2038.mediafire.com/z9lt7h9j6axg/142fc1vtr1cqcuf/Edi%C2%B4s+Shader+OFFICIAL+V3+ULTRA.zip)
 * [TME Shaders](https://github.com/CrankerMan/TME-Shaders)
 
@@ -88,16 +89,18 @@ The paid versions are not supported, but Continuum 2.0.5 works decently.
 
 ### Other
 
-* [Super Duper Vanilla Shaders](https://www.curseforge.com/minecraft/customization/super-duper-vanilla-shaders)
+* [Super Duper Vanilla Shaders](https://modrinth.com/shader/super-duper-vanilla)
 * [Oceano Shaders 3.0](https://www.curseforge.com/minecraft/customization/oceano-shaders)
 * Skylec v4.0
 * [RRe36's Shader](https://www.curseforge.com/minecraft/customization/rre36s-shader)
 * [Tea V1.5.3](https://www.curseforge.com/minecraft/customization/beyondbelief-vanilla-reborn)
 * [XorDev's shaders](https://github.com/XorDev/Minecraft-Shaderpacks)
-* [Stereo's Default+](https://www.curseforge.com/minecraft/customization/stereos-default-plus)
+* [Stereo's Default+](https://modrinth.com/shader/stereos-default%2B)
 * [maple's retro extravaganza](https://github.com/Lana-chan/maples-retro-extravaganza)
-* [Voyager Shaders 2.0](https://www.curseforge.com/minecraft/customization/voyager-shader-2-0)
+* [Voyager Shaders 2.0](https://modrinth.com/shader/voyager-shader-2.0)
 * [Musk Rose](http://rin.shisyou.com/Zatta/shaders/muskrose.html)
+* [NobleRT](https://modrinth.com/shader/noblert)
+* [Builder's QOL Shaders](https://modrinth.com/shader/builders-qol-shaders)
 
 # Shaders that do not work on Iris
 
