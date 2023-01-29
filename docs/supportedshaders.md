@@ -8,7 +8,6 @@
 * [Prismarine Shaders](https://www.curseforge.com/minecraft/customization/prismarine-shader)
 * [AstraLex Shaders](https://lextermina7.wixsite.com/astralex/download)
 * [Lux Shaders](https://techdevongithub.github.io/Lux/)
-* [Solas](https://modrinth.com/shader/solas-shader)
 
 ### Complementary Shaders
 * [Complementary Reimagined](https://www.complementary.dev/reimagined/)
@@ -101,6 +100,7 @@ The paid versions are not supported, but Continuum 2.0.5 works decently.
 * [Musk Rose](http://rin.shisyou.com/Zatta/shaders/muskrose.html)
 * [NobleRT](https://modrinth.com/shader/noblert)
 * [Builder's QOL Shaders](https://modrinth.com/shader/builders-qol-shaders)
+* [Solas](https://modrinth.com/shader/solas-shader)
 
 # Shaders that do not work on Iris
 
