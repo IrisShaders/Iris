@@ -1,8 +1,6 @@
 package net.coderbot.iris.shadows;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.gl.IrisRenderSystem;
@@ -13,7 +11,6 @@ import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
-import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
@@ -25,6 +22,7 @@ public class ShadowRenderTargets {
 	private final DepthTexture noTranslucents;
 	private final GlFramebuffer depthSourceFb;
 	private final GlFramebuffer noTranslucentsDestFb;
+	private final GlFramebuffer mainRenderBuffer;
 	private final boolean[] flipped;
 
 	private final List<GlFramebuffer> ownedFramebuffers;
@@ -45,6 +43,7 @@ public class ShadowRenderTargets {
 
 		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 		this.noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
+		int[] drawBuffers = new int[shadowDirectives.getColorSamplingSettings().size()];
 
 		for (int i = 0; i < shadowDirectives.getColorSamplingSettings().size(); i++) {
 			PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().get(i);
@@ -52,11 +51,18 @@ public class ShadowRenderTargets {
 				.setInternalFormat(settings.getFormat())
 				.setPixelFormat(settings.getFormat().getPixelFormat()).build();
 			formats[i] = settings.getFormat();
-
 			if (settings.getClear()) {
 				buffersToBeCleared.add(i);
 			}
 
+			drawBuffers[i] = i;
+
+			if (settings.getClear()) {
+				buffersToBeCleared.add(i);
+			}
+		}
+
+		for (int i = 0; i < shadowDirectives.getDepthSamplingSettings().size(); i++) {
 			this.hardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
 		}
 
@@ -69,6 +75,8 @@ public class ShadowRenderTargets {
 		fullClearRequired = true;
 
 		this.depthSourceFb = createFramebufferWritingToMain(new int[] {0});
+		this.mainRenderBuffer = createFramebufferWritingToMain(drawBuffers);
+		this.mainRenderBuffer.addDepthAttachment(this.mainDepth.getTextureId());
 
 		this.noTranslucentsDestFb = createFramebufferWritingToMain(new int[] {0});
 		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents.getTextureId());
@@ -177,6 +185,10 @@ public class ShadowRenderTargets {
 		return framebuffer;
 	}
 
+	public GlFramebuffer getMainRenderBuffer() {
+		return mainRenderBuffer;
+	}
+
 	public GlFramebuffer createShadowFramebuffer(ImmutableSet<Integer> stageWritesToAlt, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
 			return createEmptyFramebuffer();
@@ -242,7 +254,8 @@ public class ShadowRenderTargets {
 		framebuffer.drawBuffers(actualDrawBuffers);
 		framebuffer.readBuffer(0);
 
-		if (!framebuffer.isComplete()) {
+		int status = framebuffer.getStatus();
+		if (status != GL30C.GL_FRAMEBUFFER_COMPLETE) {
 			throw new IllegalStateException("Unexpected error while creating framebuffer");
 		}
 

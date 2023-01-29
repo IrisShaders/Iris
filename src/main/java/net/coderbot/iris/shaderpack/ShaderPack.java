@@ -11,6 +11,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gui.FeatureMissingErrorScreen;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.coderbot.iris.gl.texture.TextureDefinition;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.include.IncludeGraph;
 import net.coderbot.iris.shaderpack.include.IncludeProcessor;
@@ -31,6 +32,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -61,6 +63,7 @@ public class ShaderPack {
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
 	private final EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new EnumMap<>(TextureStage.class);
+	private final Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
 	private final OptionMenuContainer menuContainer;
@@ -71,6 +74,8 @@ public class ShaderPack {
 	public ShaderPack(Path root, Iterable<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		this(root, Collections.emptyMap(), environmentDefines);
 	}
+
+	public final CustomUniforms.Builder customUniforms;
 
 	/**
 	 * Reads a shader pack from the disk.
@@ -225,7 +230,7 @@ public class ShaderPack {
 
 		customNoiseTexture = shaderProperties.getNoiseTexturePath().map(path -> {
 			try {
-				return readTexture(root, path);
+				return readTexture(root, new TextureDefinition.PNGDefinition(path));
 			} catch (IOException e) {
 				Iris.logger.error("Unable to read the custom noise texture at " + path, e);
 
@@ -244,6 +249,16 @@ public class ShaderPack {
 			});
 
 			customTextureDataMap.put(textureStage, innerCustomTextureDataMap);
+		});
+
+		this.customUniforms = shaderProperties.customUniforms;
+
+		shaderProperties.getIrisCustomTextures().forEach((name, texture) -> {
+			try {
+				irisCustomTextureDataMap.put(name, readTexture(root, texture));
+			} catch (IOException e) {
+				Iris.logger.error("Unable to read the custom texture at " + texture.getName(), e);
+			}
 		});
 	}
 
@@ -276,8 +291,9 @@ public class ShaderPack {
 	}
 
 	// TODO: Implement raw texture data types
-	public CustomTextureData readTexture(Path root, String path) throws IOException {
+	public CustomTextureData readTexture(Path root, TextureDefinition definition) throws IOException {
 		CustomTextureData customTextureData;
+		String path = definition.getName();
 		if (path.contains(":")) {
 			String[] parts = path.split(":");
 
@@ -298,8 +314,8 @@ public class ShaderPack {
 				path = path.substring(1);
 			}
 
-			boolean blur = false;
-			boolean clamp = false;
+			boolean blur = definition instanceof TextureDefinition.RawDefinition;
+			boolean clamp = definition instanceof TextureDefinition.RawDefinition;
 
 			String mcMetaPath = path + ".mcmeta";
 			Path mcMetaResolvedPath = root.resolve(mcMetaPath);
@@ -322,7 +338,29 @@ public class ShaderPack {
 
 			byte[] content = Files.readAllBytes(root.resolve(path));
 
-			customTextureData = new CustomTextureData.PngData(new TextureFilteringData(blur, clamp), content);
+			if (definition instanceof TextureDefinition.PNGDefinition) {
+				customTextureData = new CustomTextureData.PngData(new TextureFilteringData(blur, clamp), content);
+			} else if (definition instanceof TextureDefinition.RawDefinition) {
+				TextureDefinition.RawDefinition rawDefinition = (TextureDefinition.RawDefinition) definition;
+				switch (rawDefinition.getTarget()) {
+					case TEXTURE_1D:
+						customTextureData = new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
+						break;
+					case TEXTURE_2D:
+						customTextureData = new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+						break;
+					case TEXTURE_3D:
+						customTextureData = new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
+						break;
+					case TEXTURE_RECTANGLE:
+						customTextureData = new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+						break;
+					default:
+						throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
+				}
+			} else {
+				customTextureData = null;
+			}
 		}
 		return customTextureData;
 	}
@@ -387,6 +425,10 @@ public class ShaderPack {
 
 	public EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> getCustomTextureDataMap() {
 		return customTextureDataMap;
+	}
+
+	public Object2ObjectMap<String, CustomTextureData> getIrisCustomTextureDataMap() {
+		return irisCustomTextureDataMap;
 	}
 
 	public Optional<CustomTextureData> getCustomNoiseTexture() {

@@ -18,8 +18,7 @@ import net.coderbot.iris.pipeline.transform.parameter.OverlayParameters;
 import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
 /**
- * Implements AttributeShaderTransformer using glsl-transformer AST
- * transformation methods.
+ * Implements AttributeShaderTransformer
  */
 public class AttributeTransformer {
 	public static void transform(

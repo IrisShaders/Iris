@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class PropertiesPreprocessor {
 	// Derived from ShaderProcessor.glslPreprocessSource, which is derived from GlShader from Canvas, licenced under LGPL
 	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
-		if (source.contains(PropertyCollectingListener.PROPERTY_MARKER)) {
+		if (source.contains(PropertyCollectingListener.PROPERTY_MARKER) || source.contains("IRIS_PASSTHROUGHBACKSLASH")) {
 			throw new RuntimeException("Some shader author is trying to exploit internal Iris implementation details, stop!");
 		}
 
@@ -91,6 +91,8 @@ public class PropertiesPreprocessor {
 					return "#warning IRIS_PASSTHROUGH " + line;
 				}
 			}).collect(Collectors.joining("\n")) + "\n";
+		// TODO: This is a horrible fix to trick the preprocessor into not seeing the backslashes during processing. We need a better way to do this.
+		source = source.replace("\\", "IRIS_PASSTHROUGHBACKSLASH");
 
 		preprocessor.addInput(new StringLexerSource(source, true));
 		preprocessor.addFeature(Feature.KEEPCOMMENTS);
@@ -110,7 +112,7 @@ public class PropertiesPreprocessor {
 
 		source = builder.toString();
 
-		return listener.collectLines() + source;
+		return (listener.collectLines() + source).replace("IRIS_PASSTHROUGHBACKSLASH", "\\");
 	}
 
 	private static List<String> getBooleanValues(ShaderPackOptions shaderPackOptions) {

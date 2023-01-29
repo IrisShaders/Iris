@@ -8,9 +8,14 @@ import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.vendored.joml.Vector3i;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.ARBDirectStateAccess;
+import org.lwjgl.opengl.ARBDrawBuffersBlend;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL32C;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL40C;
 import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL45C;
@@ -67,10 +72,22 @@ public class IrisRenderSystem {
 		GL32C.glBindAttribLocation(program, index, name);
 	}
 
+	public static void texImage1D(int texture, int target, int level, int internalformat, int width, int border, int format, int type, @Nullable ByteBuffer pixels) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		IrisRenderSystem.bindTextureForSetup(target, texture);
+		GL30C.glTexImage1D(target, level, internalformat, width, border, format, type, pixels);
+	}
+
 	public static void texImage2D(int texture, int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		GlStateManager._bindTexture(texture);
+		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL32C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+	}
+
+	public static void texImage3D(int texture, int target, int level, int internalformat, int width, int height, int depth, int border, int format, int type, @Nullable ByteBuffer pixels) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		IrisRenderSystem.bindTextureForSetup(target, texture);
+		GL30C.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
 	}
 
 	public static void uniformMatrix4fv(int location, boolean transpose, FloatBuffer matrix) {
@@ -254,11 +271,11 @@ public class IrisRenderSystem {
 
 	public static void blendFuncSeparatei(int buffer, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		GL40C.glBlendFuncSeparatei(buffer, srcRGB, dstRGB, srcAlpha, dstAlpha);
+		ARBDrawBuffersBlend.glBlendFuncSeparateiARB(buffer, srcRGB, dstRGB, srcAlpha, dstAlpha);
   }
 
-	public static void bindTextureToUnit(int unit, int texture) {
-		dsaState.bindTextureToUnit(unit, texture);
+	public static void bindTextureToUnit(int target, int unit, int texture) {
+		dsaState.bindTextureToUnit(target, unit, texture);
 	}
 
 	// These functions are deprecated and unavailable in the core profile.
@@ -295,6 +312,10 @@ public class IrisRenderSystem {
 		return dsaState.createTexture(target);
 	}
 
+	public static void bindTextureForSetup(int glType, int glId) {
+		GL30C.glBindTexture(glType, glId);
+	}
+
 	public static boolean supportsCompute() {
 		return supportsCompute;
 	}
@@ -314,7 +335,7 @@ public class IrisRenderSystem {
 
 		void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height);
 
-		void bindTextureToUnit(int unit, int texture);
+		void bindTextureToUnit(int target, int unit, int texture);
 
 		int bufferStorage(int target, float[] data, int usage);
 
@@ -373,7 +394,7 @@ public class IrisRenderSystem {
 		}
 
 		@Override
-		public void bindTextureToUnit(int unit, int texture) {
+		public void bindTextureToUnit(int target, int unit, int texture) {
 			ARBDirectStateAccess.glBindTextureUnit(unit, texture);
 
 			// Manually fix GLStateManager bindings...
@@ -417,19 +438,19 @@ public class IrisRenderSystem {
 
 		@Override
 		public void texParameteri(int texture, int target, int pname, int param) {
-			GlStateManager._bindTexture(texture);
+			bindTextureForSetup(target, texture);
 			GL32C.glTexParameteri(target, pname, param);
 		}
 
 		@Override
 		public void texParameterf(int texture, int target, int pname, float param) {
-			GlStateManager._bindTexture(texture);
+			bindTextureForSetup(target, texture);
 			GL32C.glTexParameterf(target, pname, param);
 		}
 
 		@Override
 		public void texParameteriv(int texture, int target, int pname, int[] params) {
-			GlStateManager._bindTexture(texture);
+			bindTextureForSetup(target, texture);
 			GL32C.glTexParameteriv(target, pname, params);
 		}
 
@@ -447,7 +468,7 @@ public class IrisRenderSystem {
 
 		@Override
 		public int getTexParameteri(int texture, int target, int pname) {
-			GlStateManager._bindTexture(texture);
+			bindTextureForSetup(target, texture);
 			return GL32C.glGetTexParameteri(target, pname);
 		}
 
@@ -460,9 +481,11 @@ public class IrisRenderSystem {
 		}
 
 		@Override
-		public void bindTextureToUnit(int unit, int texture) {
-			GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + unit);
-			GlStateManager._bindTexture(texture);
+		public void bindTextureToUnit(int target, int unit, int texture) {
+			int activeTexture = GlStateManager._getActiveTexture();
+			GlStateManager._activeTexture(GL30C.GL_TEXTURE0 + unit);
+			bindTextureForSetup(target, texture);
+			GlStateManager._activeTexture(activeTexture);
 		}
 
 		@Override

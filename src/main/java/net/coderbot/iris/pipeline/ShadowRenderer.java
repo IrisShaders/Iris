@@ -19,9 +19,10 @@ import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
-import net.coderbot.iris.shadow.ShadowMatrices;
+import net.coderbot.iris.shadows.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
+import net.coderbot.iris.shadows.ShadowCompositeRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
@@ -29,6 +30,7 @@ import net.coderbot.iris.shadows.frustum.FrustumHolder;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.coderbot.iris.uniforms.CameraUniforms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CelestialUniforms;
@@ -71,6 +73,7 @@ public class ShadowRenderer {
 
 	private final ShadowRenderTargets targets;
 	private final OptionalBoolean packCullingState;
+	private final ShadowCompositeRenderer compositeRenderer;
 	private boolean packHasVoxelization;
 	private final boolean shouldRenderTerrain;
 	private final boolean shouldRenderTranslucent;
@@ -88,8 +91,13 @@ public class ShadowRenderer {
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
 
+	private final CustomUniforms customUniforms;
+
 	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
-						  ShadowRenderTargets shadowRenderTargets, boolean shadowUsesImages) {
+						  ShadowRenderTargets shadowRenderTargets, ShadowCompositeRenderer compositeRenderer, CustomUniforms customUniforms) {
+
+		this.customUniforms = customUniforms;
+
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
 
 		this.halfPlaneLength = shadowDirectives.getDistance();
@@ -102,6 +110,8 @@ public class ShadowRenderer {
 		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities();
 		this.shouldRenderPlayer = shadowDirectives.shouldRenderPlayer();
 		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities();
+
+		this.compositeRenderer = compositeRenderer;
 
 		debugStringOverall = "half plane = " + halfPlaneLength + " meters @ " + resolution + "x" + resolution;
 
@@ -519,6 +529,8 @@ public class ShadowRenderer {
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();
 		}
+
+		compositeRenderer.renderAll();
 
 		levelRenderer.setRenderBuffers(playerBuffers);
 

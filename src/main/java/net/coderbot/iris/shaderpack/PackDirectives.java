@@ -7,8 +7,12 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.TextureScaleOverride;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.helpers.Tri;
+import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.vendored.joml.Vector2i;
 
+import java.util.Optional;
 import java.util.Set;
 
 public class PackDirectives {
@@ -29,13 +33,14 @@ public class PackDirectives {
 	private boolean oldLighting;
 	private boolean concurrentCompute;
 	private boolean oldHandLight;
-	private boolean particlesBeforeDeferred;
 	private boolean prepareBeforeShadow;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, TextureScaleOverride> scaleOverrides = new Object2ObjectOpenHashMap<>();
+	private Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
+	private Optional<ParticleRenderingSettings> particleRenderingSettings;
 
 	private PackDirectives(Set<Integer> supportedRenderTargets, PackShadowDirectives packShadowDirectives) {
 		noiseTextureResolution = 256;
@@ -63,8 +68,9 @@ public class PackDirectives {
 		oldHandLight = properties.getOldHandLight().orElse(true);
 		explicitFlips = properties.getExplicitFlips();
 		scaleOverrides = properties.getTextureScaleOverrides();
-		particlesBeforeDeferred = properties.getParticlesBeforeDeferred().orElse(false);
 		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
+		particleRenderingSettings = properties.getParticleRenderingSettings();
+		textureMap = properties.getCustomTexturePatching();
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -75,8 +81,9 @@ public class PackDirectives {
 		concurrentCompute = directives.concurrentCompute;
 		explicitFlips = directives.explicitFlips;
 		scaleOverrides = directives.scaleOverrides;
-		particlesBeforeDeferred = directives.particlesBeforeDeferred;
 		prepareBeforeShadow = directives.prepareBeforeShadow;
+		particleRenderingSettings = directives.particleRenderingSettings;
+		textureMap = directives.textureMap;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -127,6 +134,10 @@ public class PackDirectives {
 		return moon;
 	}
 
+	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
+		return particleRenderingSettings;
+	}
+
 	public boolean rainDepth() {
 		return rainDepth;
 	}
@@ -142,17 +153,16 @@ public class PackDirectives {
 	public boolean isOldHandLight() {
 		return oldHandLight;
 	}
-
-	public boolean areParticlesBeforeDeferred() {
-		return particlesBeforeDeferred;
-	}
-
 	public boolean getConcurrentCompute() {
 		return concurrentCompute;
 	}
 
 	public boolean isPrepareBeforeShadow() {
 		return prepareBeforeShadow;
+	}
+
+	public Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap() {
+		return textureMap;
 	}
 
 	public PackRenderTargetDirectives getRenderTargetDirectives() {
