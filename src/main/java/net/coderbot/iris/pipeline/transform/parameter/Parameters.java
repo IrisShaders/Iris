@@ -8,6 +8,7 @@ import net.coderbot.iris.pipeline.transform.PatchShaderType;
 public class Parameters implements JobParameters {
 	public final Patch patch;
 	public PatchShaderType type;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public Parameters(Patch patch) {
 		this.patch = patch;

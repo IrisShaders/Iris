@@ -4,6 +4,7 @@ import net.coderbot.iris.pipeline.transform.Patch;
 
 public class OverlayParameters extends Parameters {
 	public final boolean hasGeometry;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public OverlayParameters(Patch patch, boolean hasGeometry) {
 		super(patch);

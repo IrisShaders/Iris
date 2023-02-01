@@ -19,9 +19,11 @@ public class SodiumParameters extends Parameters {
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 
 	public AlphaTest alpha;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public SodiumParameters(Patch patch, AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+			float positionScale, float positionOffset, float textureScale,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		super(patch);
 		this.cutoutAlpha = cutoutAlpha;
 		this.defaultAlpha = defaultAlpha;

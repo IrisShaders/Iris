@@ -10,8 +10,10 @@ import net.coderbot.iris.shaderpack.texture.TextureStage;
 public class CompositeParameters extends Parameters {
 	public final TextureStage stage;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public CompositeParameters(Patch patch, TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+	public CompositeParameters(Patch patch, TextureStage stage,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		super(patch);
 		this.stage = stage;
 		this.textureMap = textureMap;

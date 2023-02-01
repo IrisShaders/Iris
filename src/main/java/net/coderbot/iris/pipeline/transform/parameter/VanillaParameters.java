@@ -13,9 +13,11 @@ public class VanillaParameters extends OverlayParameters {
 	public final ShaderAttributeInputs inputs;
 	public final boolean hasChunkOffset;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public VanillaParameters(Patch patch, AlphaTest alpha, boolean hasChunkOffset,
-			ShaderAttributeInputs inputs, boolean hasGeometry, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+			ShaderAttributeInputs inputs, boolean hasGeometry,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		super(patch, hasGeometry);
 		this.alpha = alpha;
 		this.hasChunkOffset = hasChunkOffset;
