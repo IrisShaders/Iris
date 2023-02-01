@@ -42,7 +42,7 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String MC_VERSION = "23w04a";
+	static final String MC_VERSION = "23w05a";
 	static final String customSodiumName = "sodium-fabric-mc23w04a-0.4.9+rev.7b56a41.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
@@ -98,7 +98,7 @@ public class Buildscript extends SimpleFabricProject {
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.17+93d8cb8253"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.21+12bfe4ea53"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "3.0.13+fbde993d53"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
-			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.10.5+b69ba7fa23"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.10.8+12a6ba2c17"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
 			if (CUSTOM_SODIUM) {
 				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);

@@ -125,6 +125,10 @@ public enum ShaderKey {
 		return lightingModel == LightingModel.FULLBRIGHT || lightingModel == LightingModel.DIFFUSE;
 	}
 
+	public boolean isGlint() {
+		return this == GLINT;
+	}
+
 	enum LightingModel {
 		FULLBRIGHT,
 		LIGHTMAP,

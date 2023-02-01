@@ -496,7 +496,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		return createShader(name, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
-				key.isIntensity(), key.shouldIgnoreLightmap());
+				key.isIntensity(), key.shouldIgnoreLightmap(), key.isGlint());
 	}
 
 	@Override
@@ -506,10 +506,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	private ShaderInstance createShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FogMode fogMode,
-										boolean isIntensity, boolean isFullbright) throws IOException {
+										boolean isIntensity, boolean isFullbright, boolean isGlint) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isGlint);
 
 		Supplier<ImmutableSet<Integer>> flipped =
 			() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
@@ -541,7 +541,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		return createShadowShader(name, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(),
-				key.isIntensity(), key.shouldIgnoreLightmap());
+				key.isIntensity(), key.shouldIgnoreLightmap(), key.isGlint());
 	}
 
 	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
@@ -557,9 +557,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	private ShaderInstance createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
-											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright) throws IOException {
+											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright, boolean isGlint) throws IOException {
 		GlFramebuffer framebuffer = this.shadowRenderTargets.getMainRenderBuffer();
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isGlint);
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
 
