@@ -10,8 +10,10 @@ import net.coderbot.iris.shaderpack.texture.TextureStage;
 public class AttributeParameters extends OverlayParameters {
 	public final InputAvailability inputs;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public AttributeParameters(Patch patch, boolean hasGeometry, InputAvailability inputs, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+	public AttributeParameters(Patch patch, boolean hasGeometry, InputAvailability inputs,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		super(patch, hasGeometry);
 		this.inputs = inputs;
 		this.textureMap = textureMap;
