@@ -3,7 +3,8 @@ package net.coderbot.iris.compat.sodium.mixin.fast_render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.jellysquid.mods.sodium.client.model.ModelCuboidAccessor;
-import me.jellysquid.mods.sodium.client.render.ModelCuboid;
+import me.jellysquid.mods.sodium.client.render.RenderGlobal;
+import me.jellysquid.mods.sodium.client.render.immediate.model.ModelCuboid;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.render.vertex.formats.ModelVertex;
 import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
@@ -51,8 +52,8 @@ public class MixinModelPart {
 			cuboid.updateVertices(matrices.pose());
 
 
-			try (MemoryStack stack = VertexBufferWriter.STACK.push()) {
-				long buffer = writer.buffer(stack, 4 * 6, extend ? EntityVertex.STRIDE : ModelVertex.STRIDE, extend ? EntityVertex.FORMAT : ModelVertex.FORMAT);
+			try (MemoryStack stack = RenderGlobal.VERTEX_DATA.push()) {
+				long buffer = stack.nmalloc(4 * 6 * (extend ? EntityVertex.STRIDE : ModelVertex.STRIDE));
 				long ptr = buffer;
 
 				for (ModelCuboid.Quad quad : cuboid.quads) {
@@ -84,7 +85,7 @@ public class MixinModelPart {
 					}
 				}
 
-				writer.push(buffer, 4 * 6, extend ? EntityVertex.STRIDE : ModelVertex.STRIDE, extend ? EntityVertex.FORMAT : ModelVertex.FORMAT);
+				writer.push(stack, buffer, 4 * 6, extend ? EntityVertex.FORMAT : ModelVertex.FORMAT);
 			}
 		}
 	}

@@ -3,15 +3,13 @@ package net.coderbot.iris.compat.sodium.mixin.clouds;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import me.jellysquid.mods.sodium.client.render.CloudRenderer;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
+import me.jellysquid.mods.sodium.client.render.immediate.CloudRenderer;
+import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.formats.ColorVertex;
-import me.jellysquid.mods.sodium.client.util.color.ColorMixer;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.CloudVertex;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -24,23 +22,19 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.server.packs.resources.ResourceProvider;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.io.IOException;
 
 @Mixin(CloudRenderer.class)
 public abstract class MixinCloudRenderer {
@@ -174,15 +168,25 @@ public abstract class MixinCloudRenderer {
 		RenderSystem.setShaderFogStart(previousStart);
 	}
 
+	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lorg/lwjgl/system/MemoryStack;nmalloc(I)J"))
+	private int allocateNewSize(int size) {
+		return IrisApi.getInstance().isShaderPackInUse() ? 480 : size;
+	}
+
 	@Inject(method = "writeVertex", at = @At("HEAD"), cancellable = true)
-	private static void writeIrisVertex(VertexBufferWriter writer, float x, float y, float z, int color, CallbackInfo ci) {
+	private static void writeIrisVertex(long buffer, float x, float y, float z, int color, CallbackInfoReturnable<Long> cir) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
-			ci.cancel();
-			try (MemoryStack stack = VertexBufferWriter.STACK.push()) {
-				long buffer = writer.buffer(stack, 1, CloudVertex.STRIDE, ColorVertex.FORMAT);
-				CloudVertex.write(buffer, x, y, z, color);
-				writer.push(buffer, 1, CloudVertex.STRIDE, CloudVertex.FORMAT);
-			}
+			CloudVertex.write(buffer, x, y, z, color);
+			cir.setReturnValue(buffer + 20L);
+		}
+	}
+
+	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3)
+	private VertexFormatDescription modifyArgIris(VertexFormatDescription vertexFormatDescription) {
+		if (IrisApi.getInstance().isShaderPackInUse()) {
+			return CloudVertex.FORMAT;
+		} else {
+			return ColorVertex.FORMAT;
 		}
 	}
 

@@ -11,7 +11,7 @@ import org.lwjgl.system.MemoryUtil;
 public final class CloudVertex {
 	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.CLOUDS);
 
-	public static final int STRIDE = 16;
+	public static final int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
 
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;

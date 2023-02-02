@@ -37,7 +37,7 @@ public class MixinBufferBuilder_ExtendedVertexFormatCompat {
 
 	@SuppressWarnings("target")
 	@ModifyArg(method = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;drawOptimizedShadowVertex(Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/VertexConsumer;FFFFFF)V",
-		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;buffer(Lorg/lwjgl/system/MemoryStack;IILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)J"), index = 2, remap = false)
+		at = @At(value = "INVOKE", target = "Lorg/lwjgl/system/MemoryStack;nmalloc(I)J"), remap = false)
 	private static int redirectWrite2(int before) {
 		if (shouldBeExtended()) {
 			return EntityVertex.STRIDE;
@@ -48,29 +48,7 @@ public class MixinBufferBuilder_ExtendedVertexFormatCompat {
 
 	@SuppressWarnings("target")
 	@ModifyArg(method = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;drawOptimizedShadowVertex(Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/VertexConsumer;FFFFFF)V",
-		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;buffer(Lorg/lwjgl/system/MemoryStack;IILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)J"), index = 3, remap = false)
-	private static VertexFormatDescription redirectWrite3(VertexFormatDescription before) {
-		if (shouldBeExtended()) {
-			return EntityVertex.FORMAT;
-		} else {
-			return ModelVertex.FORMAT;
-		}
-	}
-
-	@SuppressWarnings("target")
-	@ModifyArg(method = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;drawOptimizedShadowVertex(Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/VertexConsumer;FFFFFF)V",
-		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;push(JIILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 2, remap = false)
-	private static int redirectWrite4(int before) {
-		if (shouldBeExtended()) {
-			return EntityVertex.STRIDE;
-		} else {
-			return ModelVertex.STRIDE;
-		}
-	}
-
-	@SuppressWarnings("target")
-	@ModifyArg(method = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;drawOptimizedShadowVertex(Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/VertexConsumer;FFFFFF)V",
-		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;push(JIILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3, remap = false)
+		at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3, remap = false)
 	private static VertexFormatDescription redirectWrite5(VertexFormatDescription before) {
 		if (shouldBeExtended()) {
 			return EntityVertex.FORMAT;

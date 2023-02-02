@@ -2,6 +2,7 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
+import me.jellysquid.mods.sodium.client.render.RenderGlobal;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
@@ -63,8 +64,8 @@ public final class EntityVertex {
 		Matrix3f matNormal = matrices.normal();
 		Matrix4f matPosition = matrices.pose();
 
-		try (MemoryStack stack = VertexBufferWriter.STACK.push()) {
-			long buffer = writer.buffer(stack, 4, STRIDE, FORMAT);
+		try (MemoryStack stack = RenderGlobal.VERTEX_DATA.push()) {
+			long buffer = stack.nmalloc(4 * STRIDE);
 			long ptr = buffer;
 
 			// The packed normal vector
@@ -103,7 +104,7 @@ public final class EntityVertex {
 
 			endQuad(ptr - STRIDE, nxt, nyt, nzt);
 
-			writer.push(buffer, 4, STRIDE, FORMAT);
+			writer.push(stack, buffer, 4, FORMAT);
 		}
 	}
 	private static QuadViewEntity.QuadViewEntityUnsafe quadView = new QuadViewEntity.QuadViewEntityUnsafe();
