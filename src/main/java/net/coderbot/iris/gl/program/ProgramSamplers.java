@@ -151,13 +151,13 @@ public class ProgramSamplers {
 		}
 
 		@Override
-		public boolean addDefaultSampler(IntSupplier sampler, String... names) {
+		public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
 			if (nextUnit != 0) {
 				// TODO: Relax this restriction!
 				throw new IllegalStateException("Texture unit 0 is already used.");
 			}
 
-			return addDynamicSampler(TextureType.TEXTURE_2D, sampler, null, true, null, names);
+			return addDynamicSampler(TextureType.TEXTURE_2D, texture, sampler, true, notifier, names);
 		}
 
 		/**
@@ -285,6 +285,13 @@ public class ProgramSamplers {
 			sampler = getOverride(sampler, names);
 
 			return samplerHolder.addDefaultSampler(sampler, names);
+		}
+
+		@Override
+		public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
+			texture = getOverride(texture, names);
+
+			return samplerHolder.addDefaultSampler(type, texture, notifier, sampler, names);
 		}
 
 		@Override

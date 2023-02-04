@@ -35,6 +35,8 @@ public class IrisSamplers {
 	// We need a way to restore these texture bindings.
 	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(1, 2);
 	private static GlSampler SHADOW_SAMPLER;
+	private static GlSampler LINEAR_MIPMAP;
+	private static GlSampler NEAREST_MIPMAP;
 
 	private IrisSamplers() {
 		// no construction allowed
@@ -42,10 +44,12 @@ public class IrisSamplers {
 
 	public static void initRenderer() {
 		SHADOW_SAMPLER = new GlSampler(false, false, true, true);
+		LINEAR_MIPMAP = new GlSampler(true, true, false, false);
+		NEAREST_MIPMAP = new GlSampler(false, true, false, false);
 	}
 
 	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped,
-											   RenderTargets renderTargets, boolean isFullscreenPass) {
+											   RenderTargets renderTargets, ImmutableSet<Integer> mipmapped, boolean isFullscreenPass) {
 		// colortex0,1,2,3 are only able to be sampled from fullscreen passes.
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.
 		int startIndex = isFullscreenPass ? 0 : 4;
@@ -53,7 +57,7 @@ public class IrisSamplers {
 		for (int i = startIndex; i < renderTargets.getRenderTargetCount(); i++) {
 			final int index = i;
 
-			IntSupplier sampler = () -> {
+			IntSupplier texture = () -> {
 				ImmutableSet<Integer> flippedBuffers = flipped.get();
 				RenderTarget target = renderTargets.get(index);
 
@@ -64,6 +68,15 @@ public class IrisSamplers {
 				}
 			};
 
+			RenderTarget target = renderTargets.get(index);
+
+			GlSampler sampler;
+			if (mipmapped.contains(index)) {
+				sampler = target.getInternalFormat().getPixelFormat().isInteger() ? NEAREST_MIPMAP : LINEAR_MIPMAP;
+			} else {
+				sampler = null;
+			}
+
 			final String name = "colortex" + i;
 
 			// TODO: How do custom textures interact with aliases?
@@ -73,12 +86,12 @@ public class IrisSamplers {
 
 				// colortex0 is the default sampler in fullscreen passes
 				if (i == 0 && isFullscreenPass) {
-					samplers.addDefaultSampler(sampler, name, legacyName);
+					samplers.addDefaultSampler(TextureType.TEXTURE_2D, texture, null, sampler, name, legacyName);
 				} else {
-					samplers.addDynamicSampler(sampler, name, legacyName);
+					samplers.addDynamicSampler(TextureType.TEXTURE_2D, texture, sampler, name, legacyName);
 				}
 			} else {
-				samplers.addDynamicSampler(sampler, name);
+				samplers.addDynamicSampler(texture, name);
 			}
 		}
 	}
