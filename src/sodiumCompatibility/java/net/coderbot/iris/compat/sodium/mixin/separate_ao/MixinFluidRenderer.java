@@ -29,7 +29,7 @@ public class MixinFluidRenderer {
         this.useSeparateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo();
     }
 
-    @Redirect(method = "calculateQuadColors", remap = false,
+    @Redirect(method = "updateQuad", remap = false,
             at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/util/color/ColorABGR.mul (IF)I", remap = false))
     private int iris$applySeparateAo(int color, float ao) {
         if (useSeparateAo) {
