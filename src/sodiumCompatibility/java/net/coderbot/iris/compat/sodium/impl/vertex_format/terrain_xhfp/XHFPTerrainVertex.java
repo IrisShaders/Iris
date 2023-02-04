@@ -19,6 +19,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 	private int vertexCount;
 	private float uSum;
 	private float vSum;
+	private boolean flipUpcomingNormal;
 
 	// TODO: FIX
 
@@ -52,8 +53,8 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 	}
 
 	@Override
-	public void copyQuadAndFlipNormal() {
-		// TODO FIX
+	public void flipUpcomingQuadNormal() {
+		flipUpcomingNormal = true;
 	}
 
 	@Override
@@ -132,6 +133,11 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 			quad.setup(ptr, STRIDE);
 			NormalHelper.computeFaceNormal(normal, quad);
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
+
+			if (flipUpcomingNormal) {
+				packedNormal = NormalHelper.invertPackedNormal(packedNormal);
+				flipUpcomingNormal = false;
+			}
 
 			MemoryUtil.memPutInt(ptr + 32, packedNormal);
 			MemoryUtil.memPutInt(ptr + 32 - STRIDE, packedNormal);
