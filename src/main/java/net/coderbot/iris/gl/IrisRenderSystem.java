@@ -32,8 +32,6 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import static org.lwjgl.opengl.GL11C.glFinish;
-
 /**
  * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread.
  */
@@ -67,115 +65,84 @@ public class IrisRenderSystem {
 	public static void getIntegerv(int pname, int[] params) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glGetIntegerv(pname, params);
-		glFinish();
 	}
 
 	public static void getFloatv(int pname, float[] params) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glGetFloatv(pname, params);
-		glFinish();
-
 	}
 
 	public static void generateMipmaps(int texture, int mipmapTarget) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.generateMipmaps(texture, mipmapTarget);
-		glFinish();
-
 	}
 
 	public static void bindAttributeLocation(int program, int index, CharSequence name) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glBindAttribLocation(program, index, name);
-		glFinish();
-
 	}
 
 	public static void texImage1D(int texture, int target, int level, int internalformat, int width, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL30C.glTexImage1D(target, level, internalformat, width, border, format, type, pixels);
-		glFinish();
-
 	}
 
 	public static void texImage2D(int texture, int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL32C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
-		glFinish();
-
 	}
 
 	public static void texImage3D(int texture, int target, int level, int internalformat, int width, int height, int depth, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL30C.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
-		glFinish();
-
 	}
 
 	public static void uniformMatrix4fv(int location, boolean transpose, FloatBuffer matrix) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniformMatrix4fv(location, transpose, matrix);
-		glFinish();
-
 	}
 
 	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
-		glFinish();
-
 	}
 
 	public static void uniform1f(int location, float v0) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniform1f(location, v0);
-		glFinish();
-
 	}
 
 	public static void uniform2f(int location, float v0, float v1) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniform2f(location, v0, v1);
-		glFinish();
-
 	}
 
 	public static void uniform2i(int location, int v0, int v1) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniform2i(location, v0, v1);
-		glFinish();
-
 	}
 
 	public static void uniform3f(int location, float v0, float v1, float v2) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniform3f(location, v0, v1, v2);
-		glFinish();
-
 	}
 
 	public static void uniform4f(int location, float v0, float v1, float v2, float v3) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniform4f(location, v0, v1, v2, v3);
-		glFinish();
-
 	}
 
 	public static void uniform4i(int location, int v0, int v1, int v2, int v3) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniform4i(location, v0, v1, v2, v3);
-		glFinish();
-
 	}
 
 	public static void texParameteriv(int texture, int target, int pname, int[] params) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.texParameteriv(texture, target, pname, params);
-		glFinish();
-
 	}
 
 	/**
@@ -184,77 +151,55 @@ public class IrisRenderSystem {
 	public static void texParameterivDirect(int target, int pname, int[] params) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glTexParameteriv(target, pname, params);
-		glFinish();
-
 	}
 
 	public static void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
 		dsaState.copyTexSubImage2D(destTexture, target, i, i1, i2, i3, i4, width, height);
-		glFinish();
-
 	}
 
 	public static void texParameteri(int texture, int target, int pname, int param) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.texParameteri(texture, target, pname, param);
-		glFinish();
-
 	}
 
 	public static void texParameterf(int texture, int target, int pname, float param) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.texParameterf(texture, target, pname, param);
-		glFinish();
-
 	}
 
 	public static String getProgramInfoLog(int program) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		glFinish();
-
 		return GL32C.glGetProgramInfoLog(program);
 	}
 
 	public static String getShaderInfoLog(int shader) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		glFinish();
-
 		return GL32C.glGetShaderInfoLog(shader);
 	}
 
 	public static void drawBuffers(int framebuffer, int[] buffers) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.drawBuffers(framebuffer, buffers);
-		glFinish();
-
 	}
 
 	public static void readBuffer(int framebuffer, int buffer) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		dsaState.readBuffer(framebuffer, buffer);
-		glFinish();
-
 	}
 
 	public static String getActiveUniform(int program, int index, int size, IntBuffer type, IntBuffer name) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		glFinish();
-
 		return GL32C.glGetActiveUniform(program, index, size, type, name);
 	}
 
 	public static void readPixels(int x, int y, int width, int height, int format, int type, float[] pixels) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glReadPixels(x, y, width, height, format, type, pixels);
-		glFinish();
-
 	}
 
 	public static void bufferData(int target, float[] data, int usage) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glBufferData(target, data, usage);
-		glFinish();
-
 	}
 
 	public static int bufferStorage(int target, float[] data, int usage) {
@@ -266,15 +211,11 @@ public class IrisRenderSystem {
 		RenderSystem.assertOnRenderThreadOrInit();
 		// The ARB version is identical to GL44 and redirects, so this should work on ARB as well.
 		GL45C.glBufferStorage(target, size, flags);
-		glFinish();
-
 	}
 
 	public static void bindBufferBase(int target, Integer index, int buffer) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL43C.glBindBufferBase(target, index, buffer);
-		glFinish();
-
 	}
 
 	public static void vertexAttrib4f(int index, float v0, float v1, float v2, float v3) {
@@ -289,8 +230,6 @@ public class IrisRenderSystem {
 
 	public static void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
 		dsaState.framebufferTexture2D(fb, fbtarget, attachment, target, texture, levels);
-		glFinish();
-
 	}
 
 	public static int getTexParameteri(int texture, int target, int pname) {
@@ -305,8 +244,6 @@ public class IrisRenderSystem {
 		} else {
 			EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
 		}
-		glFinish();
-
 	}
 
 	public static int getMaxImageUnits() {
@@ -345,8 +282,6 @@ public class IrisRenderSystem {
 
 	public static void dispatchCompute(Vector3i workGroups) {
 		GL45C.glDispatchCompute(workGroups.x, workGroups.y, workGroups.z);
-		glFinish();
-
 	}
 
 	public static void memoryBarrier(int barriers) {
@@ -355,9 +290,6 @@ public class IrisRenderSystem {
 		if (supportsCompute) {
 			GL45C.glMemoryBarrier(barriers);
 		}
-
-		glFinish();
-
 	}
 
 	public static boolean supportsBufferBlending() {
@@ -509,21 +441,12 @@ public class IrisRenderSystem {
 
 		@Override
 		public void texParameteri(int texture, int target, int pname, int param) {
-
-			GL32C.glFinish();
-
 			ARBDirectStateAccess.glTextureParameteri(texture, pname, param);
-			GL32C.glFinish();
-
 		}
 
 		@Override
 		public void texParameterf(int texture, int target, int pname, float param) {
-			GL32C.glFinish();
-
 			ARBDirectStateAccess.glTextureParameterf(texture, pname, param);
-			GL32C.glFinish();
-
 		}
 
 		@Override
@@ -601,7 +524,6 @@ public class IrisRenderSystem {
 		@Override
 		public void texParameteri(int texture, int target, int pname, int param) {
 			bindTextureForSetup(target, texture);
-
 			GL32C.glTexParameteri(target, pname, param);
 		}
 

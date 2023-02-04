@@ -43,7 +43,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -171,7 +170,6 @@ public class ShaderPack {
 		if (!optionalFeatureFlags.isEmpty()) {
 			List<StringPair> newEnvDefines = new ArrayList<>();
 			environmentDefines.forEach(newEnvDefines::add);
-			Iris.logger.warn("Got feature flags" + Arrays.toString(optionalFeatureFlags.toArray()));
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
 			environmentDefines = ImmutableList.copyOf(newEnvDefines);
 		}

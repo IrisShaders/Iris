@@ -49,7 +49,6 @@ import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL43C;
 
 import java.util.Map;
@@ -314,7 +313,6 @@ public class CompositeRenderer {
 		//
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
-		GL32C.glFinish();
 		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
 
 		int filter = GL20C.GL_LINEAR_MIPMAP_LINEAR;

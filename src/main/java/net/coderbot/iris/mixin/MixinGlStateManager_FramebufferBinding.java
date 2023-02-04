@@ -2,7 +2,6 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.platform.GlStateManager;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -42,19 +41,6 @@ public class MixinGlStateManager_FramebufferBinding {
 		} else {
 			throw new IllegalStateException("Invalid framebuffer target: " + target);
 		}
-	}
-
-	@Inject(method = "_glBindFramebuffer(II)V", at = @At("TAIL"), cancellable = true, remap = false)
-	private static void finish(int pInt0, int pInt1, CallbackInfo ci) {
-		GL11C.glFinish();
-	}
-	@Inject(method = "_glUseProgram(I)V", at = @At("TAIL"), cancellable = true, remap = false)
-	private static void finish2(int pInt0, CallbackInfo ci) {
-		GL11C.glFinish();
-	}
-	@Inject(method = "_drawElements", at = @At("TAIL"), cancellable = true, remap = false)
-	private static void finish3(int pInt0, int pInt1, int pInt2, long pLong3, CallbackInfo ci) {
-		GL11C.glFinish();
 	}
 
 	@Inject(method = "_glDeleteFramebuffers(I)V", at = @At("HEAD"), remap = false)

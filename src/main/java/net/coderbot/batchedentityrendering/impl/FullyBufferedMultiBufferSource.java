@@ -111,7 +111,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 		for (RenderType type : renderOrder) {
 			type.setupRenderState();
-			BufferSegmentRenderer.setupShader(type.mode());
+
 			renderTypes += 1;
 
 			for (BufferSegment segment : typeToSegment.getOrDefault(type, Collections.emptyList())) {
@@ -119,7 +119,6 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 				drawCalls += 1;
 			}
 
-			BufferSegmentRenderer.clearShader();
 			type.clearRenderState();
 		}
 
