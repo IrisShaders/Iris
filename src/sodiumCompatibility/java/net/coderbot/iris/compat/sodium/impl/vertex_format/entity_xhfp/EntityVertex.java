@@ -7,6 +7,7 @@ import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
+import me.jellysquid.mods.sodium.common.util.MatrixHelper;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.coderbot.iris.vertices.QuadView;
@@ -80,9 +81,9 @@ public final class EntityVertex {
 			float midV = ((quad.getTexV(0) + quad.getTexV(1) + quad.getTexV(2) + quad.getTexV(3)) * 0.25f);
 
 			// The transformed normal vector
-			float nxt = (matNormal.m00() * nx) + (matNormal.m10() * ny) + (matNormal.m20() * nz);
-			float nyt = (matNormal.m01() * nx) + (matNormal.m11() * ny) + (matNormal.m21() * nz);
-			float nzt = (matNormal.m02() * nx) + (matNormal.m12() * ny) + (matNormal.m22() * nz);
+			float nxt = MatrixHelper.transformNormalX(matNormal, nx, ny, nz);
+			float nyt = MatrixHelper.transformNormalY(matNormal, nx, ny, nz);
+			float nzt = MatrixHelper.transformNormalZ(matNormal, nx, ny, nz);
 
 			// The packed transformed normal vector
 			var nt = Norm3b.pack(nxt, nyt, nzt);
@@ -94,9 +95,9 @@ public final class EntityVertex {
 				float z = quad.getZ(i);
 
 				// The transformed position vector
-				float xt = (matPosition.m00() * x) + (matPosition.m10() * y) + (matPosition.m20() * z) + matPosition.m30();
-				float yt = (matPosition.m01() * x) + (matPosition.m11() * y) + (matPosition.m21() * z) + matPosition.m31();
-				float zt = (matPosition.m02() * x) + (matPosition.m12() * y) + (matPosition.m22() * z) + matPosition.m32();
+				float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
+				float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);
+				float zt = MatrixHelper.transformPositionZ(matPosition, x, y, z);
 
 				write(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), midU, midV, light, overlay, nt);
 				ptr += STRIDE;
