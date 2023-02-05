@@ -44,6 +44,7 @@
     "vertex_format.entity.MixinEntityRenderDispatcher",
     "vertex_format.entity.MixinModelVertex",
     "vertex_format.ChunkMeshAttributeAccessor",
+    "vertex_format.CommonVertexElementAccessor",
     "vertex_format.GlVertexAttributeFormatAccessor",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinGlVertexFormatBuilder",
@@ -51,6 +52,8 @@
     "vertex_format.MixinRegionChunkRenderer",
     "vertex_format.MixinRenderRegionArenas",
     "vertex_format.MixinRenderSectionManager",
-    "vertex_format.MixinVertexSerializerCache"
+    "vertex_format.MixinCommonVertexElements",
+    "vertex_format.MixinVertexSerializerCache",
+    "vertex_format.MixinVertexTransform"
   ]
 }

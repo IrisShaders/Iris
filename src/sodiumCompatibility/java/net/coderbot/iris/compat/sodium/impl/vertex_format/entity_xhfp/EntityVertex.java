@@ -61,6 +61,28 @@ public final class EntityVertex {
 		}
 	}
 
+	public static void write2(long ptr,
+							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal) {
+		vertexCount++;
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_COLOR, color);
+
+		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 0, u);
+		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 4, v);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_LIGHT, light);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_OVERLAY, overlay);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_NORMAL, normal);
+
+		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE, midU);
+		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE + 4, midV);
+	}
+
 	public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, int light, int overlay, int color) {
 		Matrix3f matNormal = matrices.normal();
 		Matrix4f matPosition = matrices.pose();
@@ -99,7 +121,7 @@ public final class EntityVertex {
 				float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);
 				float zt = MatrixHelper.transformPositionZ(matPosition, x, y, z);
 
-				write(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), midU, midV, light, overlay, nt);
+				write2(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), midU, midV, light, overlay, nt);
 				ptr += STRIDE;
 			}
 
