@@ -215,11 +215,15 @@ public class TransformPatcher {
 						case COMPUTE:
 							// we can assume the version is at least 400 because it's a compute shader
 							versionStatement.profile = Profile.CORE;
+							ComputeParameters computeParameters = (ComputeParameters) parameters;
 							CommonTransformer.transform(transformer, tree, root, parameters);
-							TextureTransformer.transform(transformer, tree, root, ((ComputeParameters) parameters).getStage(), ((ComputeParameters) parameters).getTextureMap());
+							TextureTransformer.transform(transformer, tree, root,
+									computeParameters.getStage(),
+									computeParameters.getTextureMap());
 							break;
 						default:
 							// TODO: Implement Optifine's special core profile mode
+							// handling of Optifine's special core profile mode
 							if (profile == Profile.CORE || version.number >= 150 && profile == null) {
 								if (parameters.type == PatchShaderType.VERTEX) {
 									throw new IllegalStateException(
@@ -227,14 +231,19 @@ public class TransformPatcher {
 								} else {
 									if (parameters instanceof CompositeParameters compositeParameters) {
 										TextureTransformer.transform(transformer, tree, root,
-											compositeParameters.stage,
-											compositeParameters.getTextureMap());
+												compositeParameters.stage,
+												compositeParameters.getTextureMap());
 									} else {
-										TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW, parameters instanceof SodiumParameters parameters1 ? parameters1.getTextureMap() : ((VanillaParameters) parameters).getTextureMap());
+										TextureTransformer.transform(transformer, tree, root, TextureStage.GBUFFERS_AND_SHADOW,
+												parameters instanceof SodiumParameters parameters1 ? parameters1.getTextureMap()
+														: ((VanillaParameters) parameters).getTextureMap());
 									}
+									CompatibilityTransformer.transformFragmentCore(transformer, tree, root, parameters);
 									break;
 								}
 							}
+
+							// patch the version number to at least 330
 							if (version.number >= 330) {
 								if (profile != Profile.COMPATIBILITY) {
 									throw new IllegalStateException(
@@ -246,6 +255,7 @@ public class TransformPatcher {
 								versionStatement.version = Version.GLSL33;
 								versionStatement.profile = Profile.CORE;
 							}
+
 							switch (parameters.patch) {
 								case COMPOSITE:
 									CompositeParameters compositeParameters = (CompositeParameters) parameters;
@@ -382,7 +392,9 @@ public class TransformPatcher {
 		return transform(vertex, geometry, fragment, new CompositeParameters(Patch.COMPOSITE, stage, textureMap));
 	}
 
-	public static String patchCompute(String compute, TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap)).getOrDefault(PatchShaderType.COMPUTE, null);
+	public static String patchCompute(String compute, TextureStage stage,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap))
+				.getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 }
