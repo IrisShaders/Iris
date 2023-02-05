@@ -132,11 +132,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	Matrix4f tempMatrix4f = new Matrix4f();
 	Matrix3f tempMatrix3f = new Matrix3f();
-	private static final com.mojang.math.Matrix4f identity;
+	private static final Matrix4f identity;
 
 	static {
-		identity = new com.mojang.math.Matrix4f();
-		identity.setIdentity();
+		identity = new Matrix4f();
+		identity.identity();
 	}
 
 	float[] tempFloats = new float[16];
