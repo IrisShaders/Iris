@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
+import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.shaderpack.parsing.ParsedString;
@@ -88,7 +89,10 @@ public final class OptionAnnotatedSource {
 	// TODO: Use an immutable list type
 	private final ImmutableMap<String, IntList> booleanDefineReferences;
 
-	private static final ImmutableSet<String> VALID_CONST_OPTION_NAMES = ImmutableSet.of(
+	private static final ImmutableSet<String> VALID_CONST_OPTION_NAMES;
+
+	static {
+		ImmutableSet.Builder<String> values = ImmutableSet.<String>builder().add(
 			"shadowMapResolution",
 			"shadowDistance",
 			"shadowDistanceRenderMul",
@@ -97,26 +101,14 @@ public final class OptionAnnotatedSource {
 			"generateShadowMipmap",
 			"generateShadowColorMipmap",
 			"shadowHardwareFiltering",
-			"shadowHardwareFiltering0",
-			"shadowHardwareFiltering1",
 			"shadowtex0Mipmap",
 			"shadowtexMipmap",
 			"shadowtex1Mipmap",
-			"shadowcolor0Mipmap",
-			"shadowColor0Mipmap",
-			"shadowcolor1Mipmap",
-			"shadowColor1Mipmap",
 			"shadowtex0Nearest",
 			"shadowtexNearest",
 			"shadow0MinMagNearest",
 			"shadowtex1Nearest",
 			"shadow1MinMagNearest",
-			"shadowcolor0Nearest",
-			"shadowColor0Nearest",
-			"shadowColor0MinMagNearest",
-			"shadowcolor1Nearest",
-			"shadowColor1Nearest",
-			"shadowColor1MinMagNearest",
 			"wetnessHalflife",
 			"drynessHalflife",
 			"eyeBrightnessHalflife",
@@ -125,7 +117,20 @@ public final class OptionAnnotatedSource {
 			"ambientOcclusionLevel",
 			"superSamplingLevel",
 			"noiseTextureResolution"
-	);
+		);
+
+		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS; i++) {
+			values.add("shadowcolor" + i + "Mipmap");
+			values.add("shadowColor" + i + "Mipmap");
+			values.add("shadowcolor" + i + "Nearest");
+			values.add("shadowColor" + i + "Nearest");
+			values.add("shadowcolor" + i + "MinMagNearest");
+			values.add("shadowColor" + i + "MinMagNearest");
+			values.add("shadowHardwareFiltering" + i);
+		}
+
+		VALID_CONST_OPTION_NAMES = values.build();
+	}
 
 	public OptionAnnotatedSource(final String source) {
 		// Match any valid newline sequence
