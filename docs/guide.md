@@ -91,7 +91,7 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    | 1.16.5       | 1.16.5-0.2.0 |
    | 1.18.2       | 1.18.2-0.4.1 |
    | 1.19.2       | 1.19.2-0.4.4 |
-   | 1.19.3       | 1.19.3-0.4.6 |
+   | 1.19.3       | 1.19.3-0.4.8 |
 9. Place the downloaded files (and optionally your other Fabric mods) into the mods folder. The location of the mods folder depends on  your operating system:
     - Windows: `%APPDATA%\.minecraft\mods`  
     - Linux: `~/.minecraft/mods`  

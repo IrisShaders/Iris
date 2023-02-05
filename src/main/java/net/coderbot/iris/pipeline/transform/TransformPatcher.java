@@ -1,8 +1,8 @@
 package net.coderbot.iris.pipeline.transform;
 
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,7 +11,6 @@ import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
@@ -154,6 +153,8 @@ public class TransformPatcher {
 		}
 	};
 
+	private static final List<String> internalPrefixes = List.of("iris_", "irisMain", "moj_import");
+
 	static {
 		Root.identifierIndexFactory = PrefixIdentifierIndex::withPrefix;
 		transformer = new EnumASTTransformer<Parameters, PatchShaderType>(PatchShaderType.class) {
@@ -187,21 +188,14 @@ public class TransformPatcher {
 				Root root = tree.getRoot();
 
 				// check for illegal references to internal Iris shader interfaces
-				Optional<Identifier> violation = ((PrefixIdentifierIndex<?, ?>) root.identifierIndex)
-						.prefixQueryFlat("iris_").findAny();
-				if (!violation.isPresent()) {
-					violation = ((PrefixIdentifierIndex<?, ?>) root.identifierIndex)
-							.prefixQueryFlat("irisMain").findAny();
-				}
-				if (!violation.isPresent()) {
-					violation = ((PrefixIdentifierIndex<?, ?>) root.identifierIndex)
-							.prefixQueryFlat("moj_import").findAny();
-				}
-				violation.ifPresent(id -> {
-					throw new IllegalArgumentException(
-							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
-									+ id.getName() + ". See debugging.md for more information.");
-				});
+				internalPrefixes.stream()
+						.flatMap(root.getPrefixIdentifierIndex()::prefixQueryFlat)
+						.findAny()
+						.ifPresent(id -> {
+							throw new IllegalArgumentException(
+									"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
+											+ id.getName() + ". See debugging.md for more information.");
+						});
 
 				Root.indexBuildSession(tree, () -> {
 					VersionStatement versionStatement = tree.getVersionStatement();
