@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.Unique;
 public class MixinEntityRenderDispatcher {
 	@Unique
 	private static final int SHADOW_COLOR = ColorABGR.pack(1.0f, 1.0f, 1.0f);
-	
+
 	/**
 	 * @author IMS
 	 * @reason Overwrite shadow rendering with our own
@@ -91,7 +91,7 @@ public class MixinEntityRenderDispatcher {
 		float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);
 		float zt = MatrixHelper.transformPositionZ(matPosition, x, y, z);
 
-		EntityVertex.write(ptr, xt, yt, zt, color, u, v, 0.5f, 0.5f, OverlayTexture.NO_OVERLAY, LightTexture.FULL_BRIGHT, normal);
+		EntityVertex.write(ptr, xt, yt, zt, color, u, v, 0.5f, 0.5f, OverlayTexture.NO_OVERLAY, LightTexture.FULL_BRIGHT, normal, 0);
 	}
 
 	private static void writeShadowVertex(long ptr, Matrix4f matPosition, float x, float y, float z, float u, float v, int color, int normal) {

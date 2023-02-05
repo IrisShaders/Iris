@@ -29,14 +29,12 @@ public final class EntityVertex {
 	private static final int OFFSET_OVERLAY = 24;
 	private static final int OFFSET_LIGHT = 28;
 	private static final int OFFSET_NORMAL = 32;
+	private static final int OFFSET_TANGENT = 44;
 
 	private static Vector3f lastNormal = new Vector3f();
 
-	private static int vertexCount;
-
 	public static void write(long ptr,
-							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal) {
-		vertexCount++;
+							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal, int tangent) {
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
@@ -51,19 +49,14 @@ public final class EntityVertex {
 		MemoryUtil.memPutInt(ptr + OFFSET_OVERLAY, overlay);
 
 		MemoryUtil.memPutInt(ptr + OFFSET_NORMAL, normal);
+		MemoryUtil.memPutInt(ptr + OFFSET_TANGENT, tangent);
 
 		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE, midU);
 		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE + 4, midV);
-
-		if (vertexCount == 4) {
-			vertexCount = 0;
-			endQuad(ptr, Norm3b.unpackX(normal), Norm3b.unpackY(normal), Norm3b.unpackZ(normal));
-		}
 	}
 
 	public static void write2(long ptr,
 							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal) {
-		vertexCount++;
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
@@ -140,49 +133,5 @@ public final class EntityVertex {
 		for (long vertex = 0; vertex < 4; vertex++) {
 			MemoryUtil.memPutInt(ptr + 44 - STRIDE * vertex, tangent);
 		}
-	}
-
-	public static void computeFaceNormal(Vector3f saveTo, ModelQuadView q) {
-//		final Direction nominalFace = q.nominalFace();
-//
-//		if (GeometryHelper.isQuadParallelToFace(nominalFace, q)) {
-//			Vec3i vec = nominalFace.getVector();
-//			saveTo.set(vec.getX(), vec.getY(), vec.getZ());
-//			return;
-//		}
-
-		final float x0 = q.getX(0);
-		final float y0 = q.getY(0);
-		final float z0 = q.getZ(0);
-		final float x1 = q.getX(1);
-		final float y1 = q.getY(1);
-		final float z1 = q.getZ(1);
-		final float x2 = q.getX(2);
-		final float y2 = q.getY(2);
-		final float z2 = q.getZ(2);
-		final float x3 = q.getX(3);
-		final float y3 = q.getY(3);
-		final float z3 = q.getZ(3);
-
-		final float dx0 = x2 - x0;
-		final float dy0 = y2 - y0;
-		final float dz0 = z2 - z0;
-		final float dx1 = x3 - x1;
-		final float dy1 = y3 - y1;
-		final float dz1 = z3 - z1;
-
-		float normX = dy0 * dz1 - dz0 * dy1;
-		float normY = dz0 * dx1 - dx0 * dz1;
-		float normZ = dx0 * dy1 - dy0 * dx1;
-
-		float l = (float) Math.sqrt(normX * normX + normY * normY + normZ * normZ);
-
-		if (l != 0) {
-			normX /= l;
-			normY /= l;
-			normZ /= l;
-		}
-
-		saveTo.set(normX, normY, normZ);
 	}
 }
