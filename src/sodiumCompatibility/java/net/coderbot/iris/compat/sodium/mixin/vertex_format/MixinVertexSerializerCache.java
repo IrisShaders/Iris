@@ -1,11 +1,20 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
+import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
+import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.client.render.vertex.serializers.MemoryTransfer;
+import me.jellysquid.mods.sodium.client.render.vertex.serializers.VertexSerializer;
 import me.jellysquid.mods.sodium.client.render.vertex.serializers.VertexSerializerCache;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.EntityToTerrainVertexSerializer;
+import net.coderbot.iris.vertices.IrisVertexFormats;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,35 +26,17 @@ public abstract class MixinVertexSerializerCache {
 		return null;
 	}
 
-	/**
-	 * @author IMS
-	 * @reason We need to allow "invalid" combinations.
-	 */
-	// TODO: This is not good. We need this because the "block" vertex format contains elements not in the "entity" format, and that trips up rendering the crumbling texture on beds.
-	@Overwrite
-	private static List<MemoryTransfer> createMemoryTransferList(VertexFormatDescription srcVertexFormat, VertexFormatDescription dstVertexFormat) {
-		var ops = new ArrayList<MemoryTransfer>();
+	@Shadow
+	@Final
+	private static Long2ReferenceMap<VertexSerializer> CACHE;
 
-		var srcElements = srcVertexFormat.getElements();
-		var srcOffsets = srcVertexFormat.getOffsets();
+	@Shadow
+	protected static long getSerializerKey(VertexFormatDescription a, VertexFormatDescription b) {
+		return 0;
+	}
 
-		var dstElements = dstVertexFormat.getElements();
-		var dstOffsets = dstVertexFormat.getOffsets();
-
-		for (int dstIndex = 0; dstIndex < dstElements.size(); dstIndex++) {
-			var dstElement = dstElements.get(dstIndex);
-			var srcIndex = srcElements.indexOf(dstElement);
-
-			if (srcIndex == -1) {
-				continue;
-			}
-
-			var srcOffset = srcOffsets.getInt(srcIndex);
-			var dstOffset = dstOffsets.getInt(dstIndex);
-
-			ops.add(new MemoryTransfer(srcOffset, dstOffset, dstElement.getByteSize()));
-		}
-
-		return mergeAdjacentMemoryTransfers(ops);
+	@Inject(method = "<clinit>", at = @At("TAIL"))
+	private static void putSerializerIris(CallbackInfo ci) {
+		CACHE.put(getSerializerKey(VertexFormatRegistry.get(IrisVertexFormats.ENTITY), VertexFormatRegistry.get(IrisVertexFormats.TERRAIN)), new EntityToTerrainVertexSerializer());
 	}
 }
