@@ -12,7 +12,7 @@ import org.lwjgl.system.MemoryUtil;
 public final class CloudVertex {
 	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.CLOUDS);
 
-	public static final int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
+	public static final int STRIDE = IrisVertexFormats.CLOUDS.getVertexSize();
 
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;
@@ -44,11 +44,24 @@ public final class CloudVertex {
 	}
 
 	public static void write(long ptr, float x, float y, float z, int color) {
+		vertexCount++;
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
 
 		MemoryUtil.memPutInt(ptr + OFFSET_COLOR + 0, color);
+
+		if (vertexCount == 4) {
+			vertexCount = 0;
+			quad.setup(ptr, STRIDE);
+
+			NormalHelper.computeFaceNormal(saveNormal, quad);
+			int normal = NormalHelper.packNormal(saveNormal, 0.0F);
+
+			for (long vertex = 0; vertex < 4; vertex++) {
+				MemoryUtil.memPutInt(ptr + 16L - STRIDE * vertex, normal);
+			}
+		}
 	}
 
 }
