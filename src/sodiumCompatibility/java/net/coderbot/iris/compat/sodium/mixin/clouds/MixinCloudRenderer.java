@@ -173,7 +173,7 @@ public abstract class MixinCloudRenderer {
 		return IrisApi.getInstance().isShaderPackInUse() ? 480 : size;
 	}
 
-	@Inject(method = "writeVertex", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "writeVertex", at = @At("HEAD"), cancellable = true, remap = false)
 	private static void writeIrisVertex(long buffer, float x, float y, float z, int color, CallbackInfoReturnable<Long> cir) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			CloudVertex.write(buffer, x, y, z, color);

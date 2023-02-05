@@ -50,6 +50,7 @@
     "vertex_format.MixinModelVertexType",
     "vertex_format.MixinRegionChunkRenderer",
     "vertex_format.MixinRenderRegionArenas",
-    "vertex_format.MixinRenderSectionManager"
+    "vertex_format.MixinRenderSectionManager",
+    "vertex_format.MixinVertexSerializerCache"
   ]
 }
