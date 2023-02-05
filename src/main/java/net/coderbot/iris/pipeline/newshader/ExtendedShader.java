@@ -132,6 +132,13 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	Matrix4f tempMatrix4f = new Matrix4f();
 	Matrix3f tempMatrix3f = new Matrix3f();
+	private static final com.mojang.math.Matrix4f identity;
+
+	static {
+		identity = new com.mojang.math.Matrix4f();
+		identity.setIdentity();
+	}
+
 	float[] tempFloats = new float[16];
 	float[] tempFloats2 = new float[9];
 
@@ -153,16 +160,32 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
 
-		if (projectionInverse != null) {
-			projectionInverse.set(tempMatrix4f.set(PROJECTION_MATRIX.getFloatBuffer()).invert().get(tempFloats));
+		if (PROJECTION_MATRIX != null) {
+			if (projectionInverse != null) {
+				projectionInverse.set(tempMatrix4f.set(PROJECTION_MATRIX.getFloatBuffer()).invert().get(tempFloats));
+			}
+		} else {
+			if (projectionInverse != null) {
+				projectionInverse.set(identity);
+			}
 		}
 
-		if (modelViewInverse != null) {
-			modelViewInverse.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer()).invert().get(tempFloats));
-		}
+		if (MODEL_VIEW_MATRIX != null) {
+			if (modelViewInverse != null) {
+				modelViewInverse.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer()).invert().get(tempFloats));
+			}
 
-		if (normalMatrix != null) {
-			normalMatrix.set(tempMatrix3f.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer())).invert().transpose().get(tempFloats2));
+			if (normalMatrix != null) {
+				normalMatrix.set(tempMatrix3f.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer())).invert().transpose().get(tempFloats2));
+			}
+		} else {
+			if (modelViewInverse != null) {
+				modelViewInverse.set(identity);
+			}
+
+			if (normalMatrix != null) {
+				normalMatrix.set(identity);
+			}
 		}
 
 		uploadIfNotNull(projectionInverse);
