@@ -9,6 +9,7 @@ import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 public class TextureStageParameters extends Parameters {
 	private final TextureStage stage;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public TextureStageParameters(Patch patch, TextureStage stage,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {

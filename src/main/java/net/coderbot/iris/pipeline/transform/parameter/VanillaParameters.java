@@ -12,6 +12,7 @@ public class VanillaParameters extends GeometryInfoParameters {
 	public final AlphaTest alpha;
 	public final ShaderAttributeInputs inputs;
 	public final boolean hasChunkOffset;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public VanillaParameters(
 			Patch patch,
