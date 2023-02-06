@@ -6,6 +6,7 @@ public class InputAvailability {
 	public final boolean texture;
 	public final boolean lightmap;
 	public final boolean overlay;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public InputAvailability(boolean texture, boolean lightmap, boolean overlay) {
 		this.texture = texture;
@@ -42,10 +43,10 @@ public class InputAvailability {
 	@Override
 	public String toString() {
 		return "InputAvailability{" +
-			"texture=" + texture +
-			", lightmap=" + lightmap +
-			", overlay=" + overlay +
-			'}';
+				"texture=" + texture +
+				", lightmap=" + lightmap +
+				", overlay=" + overlay +
+				'}';
 	}
 
 	@Override

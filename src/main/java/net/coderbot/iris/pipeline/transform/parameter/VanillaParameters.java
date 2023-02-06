@@ -8,28 +8,31 @@ import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 import net.coderbot.iris.pipeline.transform.Patch;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-public class VanillaParameters extends OverlayParameters {
+public class VanillaParameters extends GeometryInfoParameters {
 	public final AlphaTest alpha;
 	public final ShaderAttributeInputs inputs;
 	public final boolean hasChunkOffset;
-	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public VanillaParameters(Patch patch, AlphaTest alpha, boolean hasChunkOffset,
-			ShaderAttributeInputs inputs, boolean hasGeometry, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		super(patch, hasGeometry);
+	public VanillaParameters(
+			Patch patch,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+			AlphaTest alpha, boolean hasChunkOffset,
+			ShaderAttributeInputs inputs, boolean hasGeometry) {
+		super(patch, textureMap, hasGeometry);
 		this.alpha = alpha;
 		this.hasChunkOffset = hasChunkOffset;
-		this.textureMap = textureMap;
 		this.inputs = inputs;
-	}
-
-	public Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap() {
-		return textureMap;
 	}
 
 	@Override
 	public AlphaTest getAlphaTest() {
 		return alpha;
+	}
+
+	@Override
+	public TextureStage getTextureStage() {
+		return TextureStage.GBUFFERS_AND_SHADOW;
 	}
 
 	@Override
@@ -39,7 +42,6 @@ public class VanillaParameters extends OverlayParameters {
 		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
 		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
 		result = prime * result + (hasChunkOffset ? 1231 : 1237);
-		result = prime * result + ((textureMap == null) ? 0 : textureMap.hashCode());
 		return result;
 	}
 
@@ -63,11 +65,6 @@ public class VanillaParameters extends OverlayParameters {
 		} else if (!inputs.equals(other.inputs))
 			return false;
 		if (hasChunkOffset != other.hasChunkOffset)
-			return false;
-		if (textureMap == null) {
-			if (other.textureMap != null)
-				return false;
-		} else if (!textureMap.equals(other.textureMap))
 			return false;
 		return true;
 	}
