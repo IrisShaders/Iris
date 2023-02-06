@@ -13,6 +13,7 @@ public abstract class Parameters implements JobParameters {
 	public final Patch patch;
 	public PatchShaderType type; // may only be set by TransformPatcher
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public Parameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		this.patch = patch;

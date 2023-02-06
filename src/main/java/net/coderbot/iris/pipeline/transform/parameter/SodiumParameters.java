@@ -16,8 +16,8 @@ public class SodiumParameters extends Parameters {
 	public final float positionScale;
 	public final float positionOffset;
 	public final float textureScale;
-
 	public AlphaTest alpha;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public SodiumParameters(Patch patch,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,

@@ -9,6 +9,7 @@ import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 public class AttributeParameters extends GeometryInfoParameters {
 	public final InputAvailability inputs;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public AttributeParameters(Patch patch,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
