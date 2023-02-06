@@ -12,7 +12,7 @@ public class ShaderAttributeInputs {
 	private boolean normal;
 	private boolean newLines;
 	private boolean glint;
-	// WARNING: if any new field is added you must update the hashCode and equals methods!
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean glint) {
 		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL) {

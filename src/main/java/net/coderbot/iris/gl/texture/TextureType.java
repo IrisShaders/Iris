@@ -8,7 +8,8 @@ import java.nio.ByteBuffer;
 public enum TextureType {
 	TEXTURE_1D(GL30C.GL_TEXTURE_1D),
 	TEXTURE_2D(GL30C.GL_TEXTURE_2D),
-	TEXTURE_3D(GL30C.GL_TEXTURE_3D);
+	TEXTURE_3D(GL30C.GL_TEXTURE_3D),
+	TEXTURE_RECTANGLE(GL30C.GL_TEXTURE_3D);
 
 	private final int glType;
 
@@ -25,7 +26,7 @@ public enum TextureType {
 			case TEXTURE_1D:
 				IrisRenderSystem.texImage1D(texture, getGlType(), 0, internalFormat, sizeX, 0, format, pixelType, pixels);
 				break;
-			case TEXTURE_2D:
+			case TEXTURE_2D, TEXTURE_RECTANGLE:
 				IrisRenderSystem.texImage2D(texture, getGlType(), 0, internalFormat, sizeX, sizeY, 0, format, pixelType, pixels);
 				break;
 			case TEXTURE_3D:

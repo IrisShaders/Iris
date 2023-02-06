@@ -43,7 +43,7 @@
   "options.iris.shaders.disabled": "Shaders: Disabilitate",
   "options.iris.shaders.enabled": "Shaders: Abilitate",
   "options.iris.shaders.nonePresent": "Shaders: Nessuna Shader presente",
-  "options.iris.back": "Indietor",
+  "options.iris.back": "Indietro",
   "options.iris.reset": "Resetta",
   "options.iris.reset.tooltip": "Resetta TUTTE le opzioni e applica?",
   "options.iris.reset.tooltip.holdShift": "Tieni premuto SHIFT e click per resettare",

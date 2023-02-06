@@ -110,6 +110,11 @@ public class CustomTextureManager {
 			ownedRawTextures.add(texture);
 
 			return texture;
+		} else if (textureData instanceof CustomTextureData.RawDataRect rawDataRect) {
+			GlTexture texture = new GlTexture(TextureType.TEXTURE_RECTANGLE, rawDataRect.getSizeX(), rawDataRect.getSizeY(), 0, rawDataRect.getInternalFormat().getGlFormat(), rawDataRect.getPixelFormat().getGlFormat(), rawDataRect.getPixelType().getGlFormat(), rawDataRect.getContent(), rawDataRect.getFilteringData());
+			ownedRawTextures.add(texture);
+
+			return texture;
 		} else if (textureData instanceof CustomTextureData.RawData2D) {
 			CustomTextureData.RawData2D rawData2D = (CustomTextureData.RawData2D) textureData;
 			GlTexture texture = new GlTexture(TextureType.TEXTURE_2D, rawData2D.getSizeX(), rawData2D.getSizeY(), 0, rawData2D.getInternalFormat().getGlFormat(), rawData2D.getPixelFormat().getGlFormat(), rawData2D.getPixelType().getGlFormat(), rawData2D.getContent(), rawData2D.getFilteringData());

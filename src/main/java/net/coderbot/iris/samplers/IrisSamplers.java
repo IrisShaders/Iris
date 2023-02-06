@@ -12,6 +12,7 @@ import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
+import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 
@@ -80,10 +81,15 @@ public class IrisSamplers {
 		// TODO: Keep this up to date with the actual definitions.
 		// TODO: Don't query image presence using the sampler interface even though the current underlying implementation
 		//       is the same.
-		ImmutableList<String> shadowSamplers = ImmutableList.of("shadowtex0", "shadowtex0HW", "shadowtex1", "shadowtex1HW", "shadow", "watershadow",
-				"shadowcolor", "shadowcolor0", "shadowcolor1", "shadowcolorimg0", "shadowcolorimg1");
+		ImmutableList.Builder<String> shadowSamplers = ImmutableList.<String>builder().add("shadowtex0", "shadowtex0HW", "shadowtex1", "shadowtex1HW", "shadow", "watershadow",
+				"shadowcolor");
 
-		for (String samplerName : shadowSamplers) {
+		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS; i++) {
+			shadowSamplers.add("shadowcolor" + i);
+			shadowSamplers.add("shadowcolorimg" + i);
+		}
+
+		for (String samplerName : shadowSamplers.build()) {
 			if (samplers.hasSampler(samplerName)) {
 				return true;
 			}
@@ -110,11 +116,17 @@ public class IrisSamplers {
 		}
 
 		if (flipped == null) {
-			samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(0), "shadowcolor", "shadowcolor0");
-			samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(1), "shadowcolor1");
+			samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(0), "shadowcolor");
+			for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS; i++) {
+				int finalI = i;
+				samplers.addDynamicSampler(() -> shadowRenderTargets.getColorTextureId(finalI), "shadowcolor" + i);
+			}
 		} else {
-			samplers.addDynamicSampler(() -> flipped.contains(0) ? shadowRenderTargets.get(0).getAltTexture() : shadowRenderTargets.get(0).getMainTexture(), "shadowcolor", "shadowcolor0");
-			samplers.addDynamicSampler(() -> flipped.contains(1) ? shadowRenderTargets.get(1).getAltTexture() : shadowRenderTargets.get(1).getMainTexture(), "shadowcolor1");
+			samplers.addDynamicSampler(() -> flipped.contains(0) ? shadowRenderTargets.get(0).getAltTexture() : shadowRenderTargets.get(0).getMainTexture(), "shadowcolor");
+			for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS; i++) {
+				int finalI = i;
+				samplers.addDynamicSampler(() -> flipped.contains(finalI) ? shadowRenderTargets.get(finalI).getAltTexture() : shadowRenderTargets.get(finalI).getMainTexture(), "shadowcolor" + i);
+			}
 		}
 
 		if (shadowRenderTargets.isHardwareFiltered(0)) {
