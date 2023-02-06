@@ -1,6 +1,8 @@
 package net.coderbot.iris.pipeline.transform.transformer;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +30,8 @@ import io.github.douira.glsl_transformer.ast.node.external_declaration.EmptyDecl
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
 import io.github.douira.glsl_transformer.ast.node.statement.Statement;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
@@ -36,7 +40,6 @@ import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericT
 import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
@@ -106,11 +109,15 @@ public class CompatibilityTransformer {
 				unusedFunctions.add(definition);
 				if (PatchedShaderPrinter.prettyPrintShaders) {
 					LOGGER.warn("Removing unused function " + functionName);
-				}/* else if (unusedFunctions.size() == 1) {
-					LOGGER.warn(
-							"Removing unused function " + functionName
-									+ " and omitting further such messages outside of debug mode. See debugging.md for more information.");
-				}*/
+				} /*
+					 * else if (unusedFunctions.size() == 1) {
+					 * LOGGER.warn(
+					 * "Removing unused function " + functionName
+					 * +
+					 * " and omitting further such messages outside of debug mode. See debugging.md for more information."
+					 * );
+					 * }
+					 */
 				continue;
 			}
 
@@ -561,5 +568,142 @@ public class CompatibilityTransformer {
 
 			prevType = type;
 		}
+	}
+
+	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<ExternalDeclaration>(
+			"out float name;",
+			Matcher.externalDeclarationPattern) {
+		{
+			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
+			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
+			markClassWildcard("name*",
+					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+		}
+
+		@Override
+		public boolean matchesExtract(ExternalDeclaration tree) {
+			boolean result = super.matchesExtract(tree);
+			if (!result) {
+				return false;
+			}
+
+			// look for an out qualifier but no layout qualifier
+			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
+			var hasOutQualifier = false;
+			for (TypeQualifierPart part : qualifier.getParts()) {
+				if (part instanceof StorageQualifier) {
+					StorageQualifier storageQualifier = (StorageQualifier) part;
+					if (storageQualifier.storageType == StorageType.OUT) {
+						hasOutQualifier = true;
+					}
+				} else if (part instanceof LayoutQualifier) {
+					return false;
+				}
+			}
+			return hasOutQualifier;
+		}
+	};
+
+	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
+			.withExternalDeclaration("out __type __name;");
+
+	static {
+		layoutedOutDeclarationTemplate.markLocalReplacement(
+				layoutedOutDeclarationTemplate.getSourceRoot().nodeIndex.getOne(TypeQualifier.class));
+		layoutedOutDeclarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
+		layoutedOutDeclarationTemplate.markLocalReplacement("__name", DeclarationMember.class);
+	}
+
+	record NewDeclarationData(TypeQualifier qualifier, TypeSpecifier type, DeclarationMember member, int number) {
+	}
+
+	private static final String attachTargetPrefix = "outColor";
+
+	public static void transformFragmentCore(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
+		// do layout attachment (attaches a location(layout = 4) to the out declaration
+		// outColor4 for example)
+
+		// iterate the declarations
+		ArrayList<NewDeclarationData> newDeclarationData = new ArrayList<NewDeclarationData>();
+		ArrayList<ExternalDeclaration> declarationsToRemove = new ArrayList<ExternalDeclaration>();
+		for (DeclarationExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
+			if (!nonLayoutOutDeclarationMatcher.matchesExtract(declaration)) {
+				continue;
+			}
+
+			// find the matching outColor members
+			List<DeclarationMember> members = nonLayoutOutDeclarationMatcher
+					.getNodeMatch("name*", DeclarationMember.class)
+					.getAncestor(TypeAndInitDeclaration.class)
+					.getMembers();
+			TypeQualifier typeQualifier = nonLayoutOutDeclarationMatcher.getNodeMatch("qualifier", TypeQualifier.class);
+			BuiltinNumericTypeSpecifier typeSpecifier = nonLayoutOutDeclarationMatcher.getNodeMatch("type",
+					BuiltinNumericTypeSpecifier.class);
+			int addedDeclarations = 0;
+			for (DeclarationMember member : members) {
+				String name = member.getName().getName();
+				if (!name.startsWith(attachTargetPrefix)) {
+					continue;
+				}
+
+				// get the number suffix after the prefix
+				String numberSuffix = name.substring(attachTargetPrefix.length());
+				if (numberSuffix.isEmpty()) {
+					continue;
+				}
+
+				// make sure it's a number and is between 0 and 7
+				int number;
+				try {
+					number = Integer.parseInt(numberSuffix);
+				} catch (NumberFormatException e) {
+					continue;
+				}
+				if (number < 0 || 7 < number) {
+					continue;
+				}
+
+				newDeclarationData.add(new NewDeclarationData(typeQualifier, typeSpecifier, member, number));
+				addedDeclarations++;
+			}
+
+			// if the member list is now empty, remove the declaration
+			if (addedDeclarations == members.size()) {
+				declarationsToRemove.add(declaration);
+			}
+		}
+		tree.getChildren().removeAll(declarationsToRemove);
+		for (ExternalDeclaration declaration : declarationsToRemove) {
+			declaration.detachParent();
+		}
+
+		// for test consistency: sort the new declarations by position in the
+		// original declaration and then translation unit index
+		newDeclarationData.sort(Comparator
+				.<NewDeclarationData>comparingInt(
+						data -> tree.getChildren().indexOf(data.member.getAncestor(ExternalDeclaration.class)))
+				.thenComparingInt(
+						data -> data.member.getAncestor(TypeAndInitDeclaration.class).getMembers().indexOf(data.member)));
+
+		// generate new declarations with layout qualifiers for each outColor member
+		ArrayList<ExternalDeclaration> newDeclarations = new ArrayList<ExternalDeclaration>();
+
+		// Note: since everything is wrapped in a big Root.indexBuildSession, we don't
+		// need to do it manually here
+		for (NewDeclarationData data : newDeclarationData) {
+			DeclarationMember member = data.member;
+			member.detach();
+			TypeQualifier newQualifier = data.qualifier.cloneInto(root);
+			newQualifier.getChildren()
+					.add(new LayoutQualifier(Stream.of(new NamedLayoutQualifierPart(
+							new Identifier("location"),
+							new LiteralExpression(Type.INT32, data.number)))));
+			ExternalDeclaration newDeclaration = layoutedOutDeclarationTemplate.getInstanceFor(root,
+					newQualifier,
+					data.type.cloneInto(root),
+					member);
+			newDeclarations.add(newDeclaration);
+		}
+		tree.injectNodes(ASTInjectionPoint.BEFORE_DECLARATIONS, newDeclarations);
 	}
 }

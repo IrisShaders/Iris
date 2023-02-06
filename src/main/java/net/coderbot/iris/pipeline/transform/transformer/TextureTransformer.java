@@ -47,24 +47,25 @@ public class TextureTransformer {
 	}
 
 	private static boolean isTypeValid(TextureType expectedType, BuiltinFixedTypeSpecifier.BuiltinType extractedType) {
-		if (expectedType == TextureType.TEXTURE_1D) {
-			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D ||
-			extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER1D ||
-			extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER1D;
-		} else if (expectedType == TextureType.TEXTURE_RECTANGLE) {
-			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2DRECT ||
-				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2DRECT ||
-				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2DRECT;
-		} else if (expectedType == TextureType.TEXTURE_2D) {
-			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D ||
-				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2D ||
-				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2D;
-		} else if (expectedType == TextureType.TEXTURE_3D) {
-			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D ||
-				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER3D ||
-				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER3D;
-		} else {
-			throw new IllegalStateException("Unexpected enum! " + expectedType);
+		switch (expectedType) {
+			case TEXTURE_1D:
+				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D ||
+					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER1D ||
+					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER1D;
+			case TEXTURE_RECTANGLE:
+				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2DRECT ||
+					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2DRECT ||
+					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2DRECT;
+			case TEXTURE_2D:
+				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D ||
+					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2D ||
+					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2D;
+			case TEXTURE_3D:
+				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D ||
+					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER3D ||
+					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER3D;
+			default:
+				throw new IllegalStateException("Unexpected enum! " + expectedType);
 		}
 	}
 }
