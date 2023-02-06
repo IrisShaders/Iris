@@ -14,7 +14,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.AttributeParameters;
-import net.coderbot.iris.pipeline.transform.parameter.OverlayParameters;
+import net.coderbot.iris.pipeline.transform.parameter.GeometryInfoParameters;
 import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
 /**
@@ -130,7 +130,7 @@ public class AttributeTransformer {
 			ASTParser t,
 			TranslationUnit tree,
 			Root root,
-			OverlayParameters parameters) {
+			GeometryInfoParameters parameters) {
 		// delete original declaration
 		root.processMatches(t, uniformVec4EntityColor, ASTNode::detachAndDelete);
 

@@ -16,26 +16,24 @@ public class SodiumParameters extends Parameters {
 	public final float positionScale;
 	public final float positionOffset;
 	public final float textureScale;
-	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 
 	public AlphaTest alpha;
 
-	public SodiumParameters(Patch patch, AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		super(patch);
+	public SodiumParameters(Patch patch,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+			AlphaTest cutoutAlpha,
+			AlphaTest defaultAlpha,
+			ShaderAttributeInputs inputs,
+			float positionScale, float positionOffset, float textureScale) {
+		super(patch, textureMap);
 		this.cutoutAlpha = cutoutAlpha;
 		this.defaultAlpha = defaultAlpha;
 		this.inputs = inputs;
 		this.positionScale = positionScale;
 		this.positionOffset = positionOffset;
 		this.textureScale = textureScale;
-		this.textureMap = textureMap;
 
 		this.alpha = defaultAlpha;
-	}
-
-	public Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap() {
-		return textureMap;
 	}
 
 	public void setAlphaFor(PatchShaderType type) {
@@ -56,6 +54,11 @@ public class SodiumParameters extends Parameters {
 	}
 
 	@Override
+	public TextureStage getTextureStage() {
+		return TextureStage.GBUFFERS_AND_SHADOW;
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
@@ -65,7 +68,6 @@ public class SodiumParameters extends Parameters {
 		result = prime * result + Float.floatToIntBits(positionScale);
 		result = prime * result + Float.floatToIntBits(positionOffset);
 		result = prime * result + Float.floatToIntBits(textureScale);
-		result = prime * result + ((textureMap == null) ? 0 : textureMap.hashCode());
 		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
 		return result;
 	}
@@ -99,11 +101,6 @@ public class SodiumParameters extends Parameters {
 		if (Float.floatToIntBits(positionOffset) != Float.floatToIntBits(other.positionOffset))
 			return false;
 		if (Float.floatToIntBits(textureScale) != Float.floatToIntBits(other.textureScale))
-			return false;
-		if (textureMap == null) {
-			if (other.textureMap != null)
-				return false;
-		} else if (!textureMap.equals(other.textureMap))
 			return false;
 		if (alpha == null) {
 			if (other.alpha != null)
