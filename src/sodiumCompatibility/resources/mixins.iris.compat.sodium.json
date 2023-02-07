@@ -11,6 +11,7 @@
   },
   "client": [
     "block_id.MixinChunkBuildBuffers",
+    "block_id.MixinChunkVertexBufferBuilder",
     "block_id.MixinChunkRenderRebuildTask",
     "directional_shading.MixinFlatLightPipeline",
     "directional_shading.MixinSmoothLightPipeline",
@@ -20,6 +21,9 @@
     "options.MixinSodiumGameOptionPages",
     "options.MixinSodiumGameOptions",
     "options.MixinSodiumOptionsGUI",
+    "fast_render.MixinCube",
+    "fast_render.MixinModelPart",
+    "font.MixinGlyphRenderer",
     "pbr_animation.MixinTextureAtlasSprite",
     "separate_ao.MixinBlockRenderer",
     "separate_ao.MixinFluidRenderer",
@@ -37,15 +41,19 @@
     "shadow_map.frustum.MixinCullEverythingFrustum",
     "shadow_map.frustum.MixinNonCullingFrustum",
     "sky.MixinLevelRenderer",
-    "vertex_format.entity.MixinBufferBuilder_ExtendedVertexFormatCompat",
+    "vertex_format.entity.MixinEntityRenderDispatcher",
+    "vertex_format.entity.MixinModelVertex",
     "vertex_format.ChunkMeshAttributeAccessor",
-    "vertex_format.MixinFluidRenderer",
+    "vertex_format.CommonVertexElementAccessor",
     "vertex_format.GlVertexAttributeFormatAccessor",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinGlVertexFormatBuilder",
     "vertex_format.MixinModelVertexType",
     "vertex_format.MixinRegionChunkRenderer",
     "vertex_format.MixinRenderRegionArenas",
-    "vertex_format.MixinRenderSectionManager"
+    "vertex_format.MixinRenderSectionManager",
+    "vertex_format.MixinCommonVertexElements",
+    "vertex_format.MixinVertexSerializerCache",
+    "vertex_format.MixinVertexTransform"
   ]
 }

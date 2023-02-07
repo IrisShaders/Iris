@@ -2,21 +2,21 @@ package net.coderbot.iris.compat.sodium.mixin.block_id;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import me.jellysquid.mods.sodium.client.SodiumClientMod;
-import me.jellysquid.mods.sodium.client.model.vertex.VertexSink;
-import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
-import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
+import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexBufferBuilder;
+import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexType;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
 import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import net.minecraft.world.level.block.state.BlockState;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -25,6 +25,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(ChunkBuildBuffers.class)
 public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
+	@Shadow
+	@Final
+	private ChunkVertexBufferBuilder[] vertexBuffers;
 	@Unique
 	private BlockContextHolder contextHolder;
 
@@ -39,16 +42,13 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 		}
 	}
 
-	@Redirect(method = "init", remap = false, at = @At(value = "INVOKE",
-			target = "Lme/jellysquid/mods/sodium/client/model/vertex/type/ChunkVertexType;createBufferWriter(Lme/jellysquid/mods/sodium/client/model/vertex/buffer/VertexBufferView;)Lme/jellysquid/mods/sodium/client/model/vertex/VertexSink;", remap = false))
-	private VertexSink iris$redirectWriterCreation(ChunkVertexType instance, VertexBufferView vertexBufferView) {
-		VertexSink sink = instance.createBufferWriter(vertexBufferView, SodiumClientMod.isDirectMemoryAccessEnabled());
-
-		if (sink instanceof ContextAwareVertexWriter) {
-			((ContextAwareVertexWriter) sink).iris$setContextHolder(contextHolder);
+	@Inject(method = "<init>", remap = false, at = @At(value = "TAIL", remap = false))
+	private void iris$redirectWriterCreation(ChunkVertexType vertexType, BlockRenderPassManager renderPassManager, CallbackInfo ci) {
+		for (ChunkVertexBufferBuilder builder : this.vertexBuffers) {
+			if (builder instanceof ContextAwareVertexWriter) {
+				((ContextAwareVertexWriter) builder).iris$setContextHolder(contextHolder);
+			}
 		}
-
-		return sink;
 	}
 
 	@Override
