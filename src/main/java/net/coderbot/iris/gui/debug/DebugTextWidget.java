@@ -118,12 +118,12 @@ public class DebugTextWidget
 		}
 
 		public void addLine(Font arg, Component arg2, int i) {
-			this.helper.addChild(MultiLineTextWidget.create(this.width, arg, arg2), this.helper.newCellSettings().paddingBottom(i));
+			this.helper.addChild(new MultiLineTextWidget(this.width, 1, arg2, arg), this.helper.newCellSettings().paddingBottom(i));
 			this.narration.append(arg2).append("\n");
 		}
 
 		public void addHeader(Font arg, Component arg2) {
-			this.helper.addChild(MultiLineTextWidget.createCentered(this.width - 64, arg, arg2), this.alignHeader);
+			this.helper.addChild(new MultiLineTextWidget(this.width - 64, 1, arg2, arg).setCentered(true), this.alignHeader);
 			this.narration.append(arg2).append("\n");
 		}
 

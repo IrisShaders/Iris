@@ -130,7 +130,6 @@ public abstract class MixinCloudRenderer {
 			RenderSystem.enableCull();
 		}
 
-		RenderSystem.disableTexture();
 		RenderSystem.setShaderColor((float) color.x, (float) color.y, (float) color.z, 0.8f);
 
 		matrices.pushPose();
@@ -181,7 +180,7 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3)
+	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3)
 	private VertexFormatDescription modifyArgIris(VertexFormatDescription vertexFormatDescription) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return CloudVertex.FORMAT;
