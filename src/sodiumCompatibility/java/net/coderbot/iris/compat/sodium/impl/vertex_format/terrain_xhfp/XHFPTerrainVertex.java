@@ -1,6 +1,6 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import org.joml.Vector3f;
@@ -19,32 +19,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 	private int vertexCount;
 	private float uSum;
 	private float vSum;
-
-	// TODO: FIX
-
-	/*@Override
-	public void copyQuadAndFlipNormal() {
-		ensureCapacity(4);
-
-		MemoryUtil.memCopy(this.writePointer - STRIDE * 4, this.writePointer, STRIDE * 4);
-
-		// Now flip vertex normals
-		int packedNormal = MemoryUtil.memGetInt(this.writePointer + 32);
-		int inverted = NormalHelper.invertPackedNormal(packedNormal);
-
-		MemoryUtil.memPutInt(this.writePointer + 32, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE * 2, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE * 3, inverted);
-
-		// We just wrote 4 vertices, advance by 4
-		for (int i = 0; i < 4; i++) {
-			this.advance();
-		}
-
-		// Ensure vertices are flushed
-		this.flush();
-	}*/
+	private boolean flipUpcomingNormal;
 
 	@Override
 	public void iris$setContextHolder(BlockContextHolder holder) {
@@ -52,8 +27,8 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 	}
 
 	@Override
-	public void copyQuadAndFlipNormal() {
-		// TODO FIX
+	public void flipUpcomingQuadNormal() {
+		flipUpcomingNormal = true;
 	}
 
 	@Override
@@ -132,6 +107,11 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 			quad.setup(ptr, STRIDE);
 			NormalHelper.computeFaceNormal(normal, quad);
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
+
+			if (flipUpcomingNormal) {
+				packedNormal = NormalHelper.invertPackedNormal(packedNormal);
+				flipUpcomingNormal = false;
+			}
 
 			MemoryUtil.memPutInt(ptr + 32, packedNormal);
 			MemoryUtil.memPutInt(ptr + 32 - STRIDE, packedNormal);

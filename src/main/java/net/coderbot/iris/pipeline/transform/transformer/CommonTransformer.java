@@ -23,7 +23,6 @@ import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTyp
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier.BuiltinType.TypeKind;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
@@ -330,7 +329,7 @@ public class CommonTransformer {
 			int minimum,
 			int maximum) {
 		root.replaceReferenceExpressions(t,
-				((PrefixIdentifierIndex<?, ?>) root.identifierIndex).prefixQueryFlat("gl_MultiTexCoord")
+				root.getPrefixIdentifierIndex().prefixQueryFlat("gl_MultiTexCoord")
 						.filter(id -> {
 							int index = Integer.parseInt(id.getName().substring("gl_MultiTexCoord".length()));
 							return index >= minimum && index <= maximum;

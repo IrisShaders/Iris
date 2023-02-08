@@ -51,6 +51,10 @@ public class TextureTransformer {
 			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D ||
 			extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER1D ||
 			extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER1D;
+		} else if (expectedType == TextureType.TEXTURE_RECTANGLE) {
+			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2DRECT ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2DRECT ||
+				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2DRECT;
 		} else if (expectedType == TextureType.TEXTURE_2D) {
 			return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D ||
 				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2D ||
