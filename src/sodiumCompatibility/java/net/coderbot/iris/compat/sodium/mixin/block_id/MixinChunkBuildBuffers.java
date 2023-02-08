@@ -4,8 +4,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexBufferBuilder;
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 	@Shadow
 	@Final
-	private ChunkVertexBufferBuilder[] vertexBuffers;
+	private ChunkMeshBufferBuilder[] vertexBuffers;
 	@Unique
 	private BlockContextHolder contextHolder;
 
@@ -44,7 +44,7 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 
 	@Inject(method = "<init>", remap = false, at = @At(value = "TAIL", remap = false))
 	private void iris$redirectWriterCreation(ChunkVertexType vertexType, BlockRenderPassManager renderPassManager, CallbackInfo ci) {
-		for (ChunkVertexBufferBuilder builder : this.vertexBuffers) {
+		for (ChunkMeshBufferBuilder builder : this.vertexBuffers) {
 			if (builder instanceof ContextAwareVertexWriter) {
 				((ContextAwareVertexWriter) builder).iris$setContextHolder(contextHolder);
 			}

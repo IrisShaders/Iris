@@ -2,9 +2,9 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeFormat;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
-import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkMeshAttribute;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisGlVertexAttributeFormat;
 

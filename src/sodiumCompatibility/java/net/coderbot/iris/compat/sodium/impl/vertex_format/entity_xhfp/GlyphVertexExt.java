@@ -3,9 +3,9 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.render.RenderGlobal;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
+import me.jellysquid.mods.sodium.client.render.vertex.buffer.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
@@ -14,6 +14,8 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+
+import static me.jellysquid.mods.sodium.client.render.vertex.VertexElementSerializer.*;
 
 public final class GlyphVertexExt {
 	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.TERRAIN);
@@ -44,13 +46,10 @@ public final class GlyphVertexExt {
 		uSum += u;
 		vSum += v;
 
-		MemoryUtil.memPutFloat(i, x);
-		MemoryUtil.memPutFloat(i + 4, y);
-		MemoryUtil.memPutFloat(i + 8, z);
-		MemoryUtil.memPutInt(i + 12, color);
-		MemoryUtil.memPutFloat(i + 16, u);
-		MemoryUtil.memPutFloat(i + 20, v);
-		MemoryUtil.memPutInt(i + 24, light);
+		setPositionXYZ(ptr, x, y, z);
+		setColorABGR(ptr + OFFSET_COLOR, color);
+		setTextureUV(ptr + OFFSET_TEXTURE, u, v);
+		setLightUV(ptr + OFFSET_LIGHT, light);
 
 		if (vertexCount == 4) {
 			endQuad(ptr);
@@ -76,10 +75,9 @@ public final class GlyphVertexExt {
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
 		for (long vertex = 0; vertex < 4; vertex++) {
-			MemoryUtil.memPutFloat(ptr + 36 - STRIDE * vertex, uSum);
-			MemoryUtil.memPutFloat(ptr + 40 - STRIDE * vertex, vSum);
-			MemoryUtil.memPutInt(ptr + 28 - STRIDE * vertex, normal);
-			MemoryUtil.memPutInt(ptr + 44 - STRIDE * vertex, tangent);
+			setTextureUV(ptr + 36 - STRIDE * vertex, uSum, vSum);
+			setNormalXYZ(ptr + 28 - STRIDE * vertex, normal);
+			setNormalXYZ(ptr + 44 - STRIDE * vertex, tangent);
 		}
 
 		uSum = 0;

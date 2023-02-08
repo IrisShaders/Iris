@@ -3,9 +3,9 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.render.RenderGlobal;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
+import me.jellysquid.mods.sodium.client.render.vertex.buffer.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import me.jellysquid.mods.sodium.common.util.MatrixHelper;
 import net.coderbot.iris.vertices.IrisVertexFormats;
@@ -17,6 +17,8 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+
+import static me.jellysquid.mods.sodium.client.render.vertex.VertexElementSerializer.*;
 
 public final class EntityVertex {
 	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.ENTITY);
@@ -35,45 +37,25 @@ public final class EntityVertex {
 
 	public static void write(long ptr,
 							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal, int tangent) {
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_COLOR, color);
-
-		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 0, u);
-		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 4, v);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_LIGHT, light);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_OVERLAY, overlay);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_NORMAL, normal);
-		MemoryUtil.memPutInt(ptr + OFFSET_TANGENT, tangent);
-
-		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE, midU);
-		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE + 4, midV);
+		setPositionXYZ(ptr, x, y, z);
+		setColorABGR(ptr + OFFSET_COLOR, color);
+		setTextureUV(ptr + OFFSET_TEXTURE, u, v);
+		setLightUV(ptr + OFFSET_LIGHT, light);
+		setOverlayUV(ptr + OFFSET_OVERLAY, overlay);
+		setNormalXYZ(ptr + OFFSET_NORMAL, normal);
+		setNormalXYZ(ptr + OFFSET_TANGENT, tangent);
+		setTextureUV(ptr + OFFSET_MID_TEXTURE, midU, midV);
 	}
 
 	public static void write2(long ptr,
 							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal) {
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_COLOR, color);
-
-		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 0, u);
-		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 4, v);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_LIGHT, light);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_OVERLAY, overlay);
-
-		MemoryUtil.memPutInt(ptr + OFFSET_NORMAL, normal);
-
-		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE, midU);
-		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE + 4, midV);
+		setPositionXYZ(ptr, x, y, z);
+		setColorABGR(ptr + OFFSET_COLOR, color);
+		setTextureUV(ptr + OFFSET_TEXTURE, u, v);
+		setLightUV(ptr + OFFSET_LIGHT, light);
+		setOverlayUV(ptr + OFFSET_OVERLAY, overlay);
+		setNormalXYZ(ptr + OFFSET_NORMAL, normal);
+		setTextureUV(ptr + OFFSET_MID_TEXTURE, midU, midV);
 	}
 
 	public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, int light, int overlay, int color) {
@@ -131,7 +113,7 @@ public final class EntityVertex {
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quadView);
 
 		for (long vertex = 0; vertex < 4; vertex++) {
-			MemoryUtil.memPutInt(ptr + 44 - STRIDE * vertex, tangent);
+			setNormalXYZ(ptr + 44 - STRIDE * vertex, tangent);
 		}
 	}
 }
