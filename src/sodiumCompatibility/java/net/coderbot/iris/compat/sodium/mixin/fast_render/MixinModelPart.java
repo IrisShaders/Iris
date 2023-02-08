@@ -98,9 +98,9 @@ public class MixinModelPart {
 						var tex = quad.textures[i];
 
 						if (extend) {
-							EntityVertex.write(ptr, pos.x, pos.y, pos.z, color, tex.x, tex.y, midU, midV, light, overlay, normal, tangent);
+							EntityVertex.write(ptr, pos.x, pos.y, pos.z, color, tex.x, tex.y, midU, midV, overlay, light, normal, tangent);
 						} else {
-							ModelVertex.write(ptr, pos.x, pos.y, pos.z, color, tex.x, tex.y, light, overlay, normal);
+							ModelVertex.write(ptr, pos.x, pos.y, pos.z, color, tex.x, tex.y, overlay, light, normal);
 						}
 
 						ptr += extend ? EntityVertex.STRIDE : ModelVertex.STRIDE;

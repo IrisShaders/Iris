@@ -75,9 +75,10 @@ public final class GlyphVertexExt {
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
 		for (long vertex = 0; vertex < 4; vertex++) {
-			setTextureUV(ptr + 36 - STRIDE * vertex, uSum, vSum);
-			setNormalXYZ(ptr + 28 - STRIDE * vertex, normal);
-			setNormalXYZ(ptr + 44 - STRIDE * vertex, tangent);
+			MemoryUtil.memPutFloat(ptr + 36 - STRIDE * vertex, uSum);
+			MemoryUtil.memPutFloat(ptr + 40 - STRIDE * vertex, vSum);
+			MemoryUtil.memPutInt(ptr + 28 - STRIDE * vertex, normal);
+			MemoryUtil.memPutInt(ptr + 44 - STRIDE * vertex, tangent);
 		}
 
 		uSum = 0;

@@ -36,7 +36,7 @@ public final class EntityVertex {
 	private static Vector3f lastNormal = new Vector3f();
 
 	public static void write(long ptr,
-							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal, int tangent) {
+							 float x, float y, float z, int color, float u, float v, float midU, float midV, int overlay, int light, int normal, int tangent) {
 		setPositionXYZ(ptr, x, y, z);
 		setColorABGR(ptr + OFFSET_COLOR, color);
 		setTextureUV(ptr + OFFSET_TEXTURE, u, v);

@@ -3,6 +3,7 @@ package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexElementType;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Final;
@@ -33,20 +34,20 @@ public class MixinVertexElementType {
 	static {
 		int baseOrdinal = $VALUES.length;
 
-		net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes.TANGENT
-				= VertexElementTypeAccessor.createVertexElementType("TANGENT", baseOrdinal, IrisVertexFormats.TANGENT_ELEMENT);
-		net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes.MID_TEX_COORD
+		IrisVertexElementTypes.BLOCK_ID
+				= VertexElementTypeAccessor.createVertexElementType("BLOCK_ID", baseOrdinal, IrisVertexFormats.ENTITY_ELEMENT);
+		IrisVertexElementTypes.MID_TEX_COORD
 				= VertexElementTypeAccessor.createVertexElementType("MID_TEX_COORD", baseOrdinal + 1, IrisVertexFormats.MID_TEXTURE_ELEMENT);
-		net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes.BLOCK_ID
-				= VertexElementTypeAccessor.createVertexElementType("BLOCK_ID", baseOrdinal + 2, IrisVertexFormats.ENTITY_ELEMENT);
-		net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes.MID_BLOCK
+		IrisVertexElementTypes.TANGENT
+				= VertexElementTypeAccessor.createVertexElementType("TANGENT", baseOrdinal + 2, IrisVertexFormats.TANGENT_ELEMENT);
+		IrisVertexElementTypes.MID_BLOCK
 				= VertexElementTypeAccessor.createVertexElementType("MID_BLOCK", baseOrdinal + 3, IrisVertexFormats.MID_BLOCK_ELEMENT);
 
 		$VALUES = ArrayUtils.addAll($VALUES,
-				net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes.TANGENT,
-				net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes.MID_TEX_COORD,
-				net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes.BLOCK_ID,
-				net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes.MID_BLOCK);
+				IrisVertexElementTypes.BLOCK_ID,
+				IrisVertexElementTypes.MID_TEX_COORD,
+				IrisVertexElementTypes.TANGENT,
+				IrisVertexElementTypes.MID_BLOCK);
 
 		COUNT = $VALUES.length;
 	}
