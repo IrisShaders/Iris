@@ -336,6 +336,10 @@ public class ShadowRenderer {
 	}
 
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
+		if (IrisVideoSettings.getOverriddenShadowDistance(IrisVideoSettings.shadowDistance) == 0) {
+			return;
+		}
+
 		Minecraft client = Minecraft.getInstance();
 
 		levelRenderer.getLevel().getProfiler().popPush("shadows");
@@ -642,6 +646,11 @@ public class ShadowRenderer {
 	}
 
 	public void addDebugText(List<String> messages) {
+		if (IrisVideoSettings.getOverriddenShadowDistance(IrisVideoSettings.shadowDistance) == 0) {
+			messages.add("[" + Iris.MODNAME + "] Shadow Maps: off, shadow distance 0");
+			return;
+		}
+
 		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
 			messages.add("[" + Iris.MODNAME + "] Shadow Maps: " + debugStringOverall);
 			messages.add("[" + Iris.MODNAME + "] Shadow Distance Terrain: " + terrainFrustumHolder.getDistanceInfo() + " Entity: " + entityFrustumHolder.getDistanceInfo());
