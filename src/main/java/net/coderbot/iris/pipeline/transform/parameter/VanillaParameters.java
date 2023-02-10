@@ -49,6 +49,7 @@ public class VanillaParameters extends GeometryInfoParameters {
 		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
 		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
 		result = prime * result + (hasChunkOffset ? 1231 : 1237);
+		result = prime * result + (isLines ? 1931 : 1937);
 		return result;
 	}
 
@@ -72,6 +73,8 @@ public class VanillaParameters extends GeometryInfoParameters {
 		} else if (!inputs.equals(other.inputs))
 			return false;
 		if (hasChunkOffset != other.hasChunkOffset)
+			return false;
+		if (isLines != other.isLines)
 			return false;
 		return true;
 	}
