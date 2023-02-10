@@ -99,9 +99,9 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
 		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_format
 		// TODO: can we pack this into one short?
-		buffer.putShort(i + 36, materialId);
-		buffer.putShort(i + 38, renderType);
-		buffer.putInt(i + 40, packedMidBlock);
+		buffer.putShort(i + 32, materialId);
+		buffer.putShort(i + 34, renderType);
+		buffer.putInt(i + 36, packedMidBlock);
 
 		if (vertexCount == 4) {
 			vertexCount = 0;
@@ -136,15 +136,18 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 			uSum *= 0.25f;
 			vSum *= 0.25f;
 
-			buffer.putFloat(i + 20, uSum);
-			buffer.putFloat(i + 20 - STRIDE, uSum);
-			buffer.putFloat(i + 20 - STRIDE * 2, uSum);
-			buffer.putFloat(i + 20 - STRIDE * 3, uSum);
+			short midU = XHFPModelVertexType.encodeBlockTexture(uSum);
+			short midV = XHFPModelVertexType.encodeBlockTexture(vSum);
 
-			buffer.putFloat(i + 24, vSum);
-			buffer.putFloat(i + 24 - STRIDE, vSum);
-			buffer.putFloat(i + 24 - STRIDE * 2, vSum);
-			buffer.putFloat(i + 24 - STRIDE * 3, vSum);
+			buffer.putShort(i + 20, midU);
+			buffer.putShort(i + 20 - STRIDE, midU);
+			buffer.putShort(i + 20 - STRIDE * 2, midU);
+			buffer.putShort(i + 20 - STRIDE * 3, midU);
+
+			buffer.putShort(i + 22, midV);
+			buffer.putShort(i + 22 - STRIDE, midV);
+			buffer.putShort(i + 22 - STRIDE * 2, midV);
+			buffer.putShort(i + 22 - STRIDE * 3, midV);
 
 			uSum = 0;
 			vSum = 0;
@@ -157,17 +160,17 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 			NormalHelper.computeFaceNormal(normal, quad);
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
-			buffer.putInt(i + 32, packedNormal);
-			buffer.putInt(i + 32 - STRIDE, packedNormal);
-			buffer.putInt(i + 32 - STRIDE * 2, packedNormal);
-			buffer.putInt(i + 32 - STRIDE * 3, packedNormal);
+			buffer.putInt(i + 28, packedNormal);
+			buffer.putInt(i + 28 - STRIDE, packedNormal);
+			buffer.putInt(i + 28 - STRIDE * 2, packedNormal);
+			buffer.putInt(i + 28 - STRIDE * 3, packedNormal);
 
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, quad);
 
-			buffer.putInt(i + 28, tangent);
-			buffer.putInt(i + 28 - STRIDE, tangent);
-			buffer.putInt(i + 28 - STRIDE * 2, tangent);
-			buffer.putInt(i + 28 - STRIDE * 3, tangent);
+			buffer.putInt(i + 24, tangent);
+			buffer.putInt(i + 24 - STRIDE, tangent);
+			buffer.putInt(i + 24 - STRIDE * 2, tangent);
+			buffer.putInt(i + 24 - STRIDE * 3, tangent);
 		}
 
 		this.advance();
