@@ -677,14 +677,6 @@ public class CompatibilityTransformer {
 			declaration.detachParent();
 		}
 
-		// for test consistency: sort the new declarations by position in the
-		// original declaration and then translation unit index
-		newDeclarationData.sort(Comparator
-				.<NewDeclarationData>comparingInt(
-						data -> tree.getChildren().indexOf(data.member.getAncestor(ExternalDeclaration.class)))
-				.thenComparingInt(
-						data -> data.member.getAncestor(TypeAndInitDeclaration.class).getMembers().indexOf(data.member)));
-
 		// generate new declarations with layout qualifiers for each outColor member
 		ArrayList<ExternalDeclaration> newDeclarations = new ArrayList<ExternalDeclaration>();
 
