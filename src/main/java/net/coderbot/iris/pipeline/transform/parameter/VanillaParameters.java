@@ -6,23 +6,30 @@ import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 import net.coderbot.iris.pipeline.transform.Patch;
+import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 public class VanillaParameters extends GeometryInfoParameters {
 	public final AlphaTest alpha;
 	public final ShaderAttributeInputs inputs;
 	public final boolean hasChunkOffset;
+	private final boolean isLines;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public VanillaParameters(
 			Patch patch,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
-			AlphaTest alpha, boolean hasChunkOffset,
+			AlphaTest alpha, boolean isLines, boolean hasChunkOffset,
 			ShaderAttributeInputs inputs, boolean hasGeometry) {
 		super(patch, textureMap, hasGeometry);
 		this.alpha = alpha;
+		this.isLines = isLines;
 		this.hasChunkOffset = hasChunkOffset;
 		this.inputs = inputs;
+	}
+
+	public boolean isLines() {
+		return isLines;
 	}
 
 	@Override

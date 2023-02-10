@@ -62,9 +62,9 @@ public class SodiumTransformer {
 		// TODO: Should probably add the normal matrix as a proper uniform that's
 		// computed on the CPU-side of things
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix",
-				"mat3(iris_NormalMatrix)");
+				"iris_NormalMatrix");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"uniform mat4 iris_NormalMatrix;");
+				"uniform mat3 iris_NormalMatrix;");
 
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform mat4 iris_ModelViewMatrixInverse;");
@@ -89,13 +89,13 @@ public class SodiumTransformer {
 					// translated from sodium's chunk_vertex.glsl
 					"vec3 _vert_position;",
 					"vec2 _vert_tex_diffuse_coord;",
-					"vec2 _vert_tex_light_coord;",
+					"ivec2 _vert_tex_light_coord;",
 					"vec4 _vert_color;",
 					"uint _draw_id;",
 					"in vec4 a_PosId;",
 					"in vec4 a_Color;",
 					"in vec2 a_TexCoord;",
-					"in vec2 a_LightCoord;",
+					"in ivec2 a_LightCoord;",
 					"void _vert_init() {" +
 							"_vert_position = (a_PosId.xyz * " + String.valueOf(parameters.positionScale) + " + "
 							+ String.valueOf(parameters.positionOffset) + ");" +

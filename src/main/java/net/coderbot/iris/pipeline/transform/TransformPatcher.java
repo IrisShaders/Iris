@@ -6,6 +6,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.coderbot.iris.pipeline.transform.transformer.CompositeCoreTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.SodiumCoreTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.VanillaCoreTransformer;
+import net.coderbot.iris.shaderpack.loading.ProgramId;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -216,22 +220,28 @@ public class TransformPatcher {
 						default:
 							// TODO: Implement Optifine's special core profile mode
 							// handling of Optifine's special core profile mode
-							if (profile == Profile.CORE || version.number >= 150 && profile == null) {
-								if (parameters.type == PatchShaderType.VERTEX) {
-									throw new IllegalStateException(
-											"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless) See debugging.md for more information.");
+							boolean isLine = (parameters.patch == Patch.VANILLA && ((VanillaParameters) parameters).isLines());
+							if (profile == Profile.CORE || version.number >= 150 && profile == null || isLine) {
+								switch (parameters.patch) {
+									case COMPOSITE:
+										CompositeCoreTransformer.transform(transformer, tree, root, parameters);
+										break;
+									case SODIUM:
+										SodiumParameters sodiumParameters = (SodiumParameters) parameters;
+										sodiumParameters.setAlphaFor(type);
+										SodiumCoreTransformer.transform(transformer, tree, root, sodiumParameters);
+										break;
+									case VANILLA:
+										VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+										break;
 								}
 
-								CompatibilityTransformer.transformFragmentCore(transformer, tree, root, parameters);
+								if (parameters.type == PatchShaderType.FRAGMENT) {
+									CompatibilityTransformer.transformFragmentCore(transformer, tree, root, parameters);
+								}
 							} else {
 								// patch the version number to at least 330
-								if (version.number >= 330) {
-									if (profile != Profile.COMPATIBILITY) {
-										throw new IllegalStateException(
-												"Expected \"compatibility\" after the GLSL version: #version " + version + " "
-														+ profile + ". See debugging.md for more information.");
-									}
-								} else {
+								if (version.number < 330) {
 									versionStatement.version = Version.GLSL33;
 								}
 								versionStatement.profile = Profile.CORE;
@@ -346,12 +356,12 @@ public class TransformPatcher {
 
 	public static Map<PatchShaderType, String> patchVanilla(
 			String vertex, String geometry, String fragment,
-			AlphaTest alpha,
+			AlphaTest alpha, boolean isLines,
 			boolean hasChunkOffset,
 			ShaderAttributeInputs inputs,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
-				new VanillaParameters(Patch.VANILLA, textureMap, alpha, hasChunkOffset, inputs, geometry != null));
+				new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null));
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(

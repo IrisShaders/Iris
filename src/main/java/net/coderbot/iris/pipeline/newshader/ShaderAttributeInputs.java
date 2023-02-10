@@ -13,8 +13,8 @@ public class ShaderAttributeInputs {
 	private boolean newLines;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright) {
-		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL) {
+	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines) {
+		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL && !isLines) {
 			newLines = true;
 		}
 

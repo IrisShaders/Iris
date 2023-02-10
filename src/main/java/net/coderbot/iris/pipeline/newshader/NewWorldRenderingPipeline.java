@@ -102,6 +102,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final CustomUniforms customUniforms;
 	private final ShadowCompositeRenderer shadowCompositeRenderer;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTextureMap;
+	private final ProgramFallbackResolver resolver;
 
 	private ShadowRenderTargets shadowRenderTargets;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
@@ -178,7 +179,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.prepareBeforeShadow = programSet.getPackDirectives().isPrepareBeforeShadow();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 
-		ProgramFallbackResolver resolver = new ProgramFallbackResolver(programSet);
+		this.resolver = new ProgramFallbackResolver(programSet);
 
 		this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings().orElseGet(() -> {
 			if (programSet.getDeferred().length > 0) {
@@ -502,13 +503,17 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 										boolean isIntensity, boolean isFullbright) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+		boolean isLines = programId == ProgramId.Line && resolver.has(ProgramId.Line);
+
+
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isLines);
 
 		Supplier<ImmutableSet<Integer>> flipped =
 			() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
+
 		ExtendedShader extendedShader = NewShaderTests.create(this, name, source, programId, beforeTranslucent, afterTranslucent,
-				baseline, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, fogMode, isIntensity, isFullbright, false, customUniforms);
+				baseline, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, fogMode, isIntensity, isFullbright, false, isLines, customUniforms);
 
 		loadedShaders.add(extendedShader);
 
@@ -552,12 +557,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private ShaderInstance createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright) throws IOException {
 		GlFramebuffer framebuffer = this.shadowRenderTargets.getMainRenderBuffer();
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+		boolean isLines = programId == ProgramId.Line && resolver.has(ProgramId.Line);
+
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isLines);
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
 
 		ExtendedShader extendedShader = NewShaderTests.create(this, name, source, programId, framebuffer, framebuffer, baseline,
-				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, FogMode.PER_VERTEX, isIntensity, isFullbright, true, customUniforms);
+				fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, FogMode.PER_VERTEX, isIntensity, isFullbright, true, isLines, customUniforms);
 
 		loadedShaders.add(extendedShader);
 

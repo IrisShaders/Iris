@@ -18,6 +18,7 @@ import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32C;
 
@@ -35,7 +36,7 @@ public class IrisChunkShaderInterface {
 	@Nullable
 	private final GlUniformFloat3v uniformRegionOffset;
 	@Nullable
-	private final GlUniformMatrix4f uniformNormalMatrix;
+	private final GlUniformMatrix3f uniformNormalMatrix;
 	@Nullable
 	private final GlUniformBlock uniformBlockDrawParameters;
 
@@ -56,7 +57,7 @@ public class IrisChunkShaderInterface {
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("iris_ProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrixInverse = contextExt.bindUniformIfPresent("iris_ProjectionMatrixInverse", GlUniformMatrix4f::new);
 		this.uniformRegionOffset = contextExt.bindUniformIfPresent("u_RegionOffset", GlUniformFloat3v::new);
-		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("iris_NormalMatrix", GlUniformMatrix4f::new);
+		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("iris_NormalMatrix", GlUniformMatrix3f::new);
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
 		this.customUniforms = customUniforms;
 
@@ -129,10 +130,10 @@ public class IrisChunkShaderInterface {
 			this.uniformModelViewMatrixInverse.set(invertedMatrix);
 			if (this.uniformNormalMatrix != null) {
 				invertedMatrix.transpose();
-				this.uniformNormalMatrix.set(invertedMatrix);
+				this.uniformNormalMatrix.set(new Matrix3f(invertedMatrix));
 			}
 		} else if (this.uniformNormalMatrix != null) {
-			Matrix4f normalMatrix = new Matrix4f(modelView);
+			Matrix3f normalMatrix = new Matrix3f(modelView);
 			normalMatrix.invert();
 			normalMatrix.transpose();
 			this.uniformNormalMatrix.set(normalMatrix);
