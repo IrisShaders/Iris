@@ -133,6 +133,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 			quad.setup(ptr, STRIDE);
 			if (flipUpcomingNormal) {
 				NormalHelper.computeFaceNormalFlipped(normal, quad);
+				flipUpcomingNormal = false;
 			} else {
 				NormalHelper.computeFaceNormal(normal, quad);
 			}
