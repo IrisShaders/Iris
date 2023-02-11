@@ -131,13 +131,14 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 			// https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
 			quad.setup(ptr, STRIDE);
-			NormalHelper.computeFaceNormal(normal, quad);
+			if (flipUpcomingNormal) {
+				NormalHelper.computeFaceNormalFlipped(normal, quad);
+			} else {
+				NormalHelper.computeFaceNormal(normal, quad);
+			}
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
-			if (flipUpcomingNormal) {
-				packedNormal = NormalHelper.invertPackedNormal(packedNormal);
-				flipUpcomingNormal = false;
-			}
+
 
 			MemoryUtil.memPutInt(ptr + 32, packedNormal);
 			MemoryUtil.memPutInt(ptr + 32 - STRIDE, packedNormal);
