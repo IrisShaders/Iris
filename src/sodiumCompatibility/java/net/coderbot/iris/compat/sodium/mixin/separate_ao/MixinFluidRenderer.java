@@ -35,6 +35,11 @@ public class MixinFluidRenderer {
 		((ContextAwareVertexWriter) buffers.getVertexBuffer()).flipUpcomingQuadNormal();
 	}
 
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/pipeline/FluidRenderer;writeQuad(Lme/jellysquid/mods/sodium/client/render/chunk/compile/buffers/ChunkModelBuilder;Lnet/minecraft/core/BlockPos;Lme/jellysquid/mods/sodium/client/model/quad/ModelQuadView;Lme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadFacing;Lme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadWinding;)V", ordinal = 4))
+	private void iris$flipNextQuad2(BlockAndTintGetter world, FluidState fluidState, BlockPos pos, BlockPos offset, ChunkModelBuilder buffers, CallbackInfoReturnable<Boolean> cir) {
+		((ContextAwareVertexWriter) buffers.getVertexBuffer()).flipUpcomingQuadNormal();
+	}
+
     @Redirect(method = "updateQuad", remap = false,
             at = @At(value = "INVOKE", target = "me/jellysquid/mods/sodium/client/util/color/ColorABGR.mul (IF)I", remap = false))
     private int iris$applySeparateAo(int color, float ao) {
