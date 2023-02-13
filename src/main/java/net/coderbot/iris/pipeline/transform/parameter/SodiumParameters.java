@@ -16,8 +16,11 @@ public class SodiumParameters extends Parameters {
 	public final float positionScale;
 	public final float positionOffset;
 	public final float textureScale;
-	public AlphaTest alpha;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
+
+	// DO NOT include this field in hashCode or equals, it's mutable!
+	// (See use of setAlphaFor in TransformPatcher)
+	public AlphaTest alpha;
 
 	public SodiumParameters(Patch patch,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
@@ -68,7 +71,6 @@ public class SodiumParameters extends Parameters {
 		result = prime * result + Float.floatToIntBits(positionScale);
 		result = prime * result + Float.floatToIntBits(positionOffset);
 		result = prime * result + Float.floatToIntBits(textureScale);
-		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
 		return result;
 	}
 
@@ -101,11 +103,6 @@ public class SodiumParameters extends Parameters {
 		if (Float.floatToIntBits(positionOffset) != Float.floatToIntBits(other.positionOffset))
 			return false;
 		if (Float.floatToIntBits(textureScale) != Float.floatToIntBits(other.textureScale))
-			return false;
-		if (alpha == null) {
-			if (other.alpha != null)
-				return false;
-		} else if (!alpha.equals(other.alpha))
 			return false;
 		return true;
 	}
