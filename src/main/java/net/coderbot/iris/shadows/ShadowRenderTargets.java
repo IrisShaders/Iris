@@ -37,6 +37,7 @@ public class ShadowRenderTargets {
 	private boolean fullClearRequired;
 	private boolean translucentDepthDirty;
 	private boolean[] hardwareFiltered;
+	private boolean[] linearFiltered;
 	private InternalTextureFormat[] formats;
 	private IntList buffersToBeCleared;
 	private int size;
@@ -49,6 +50,7 @@ public class ShadowRenderTargets {
 		formats = new InternalTextureFormat[size];
 		flipped = new boolean[size];
 		hardwareFiltered = new boolean[size];
+		linearFiltered = new boolean[size];
 		buffersToBeCleared = new IntArrayList();
 
 		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
@@ -56,6 +58,7 @@ public class ShadowRenderTargets {
 
 		for (int i = 0; i < shadowDirectives.getDepthSamplingSettings().size(); i++) {
 			this.hardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
+			this.linearFiltered[i] = !shadowDirectives.getDepthSamplingSettings().get(i).getNearest();
 		}
 
 		this.resolution = resolution;
@@ -302,6 +305,10 @@ public class ShadowRenderTargets {
 		return hardwareFiltered[i];
 	}
 
+	public boolean isLinearFiltered(int i) {
+		return linearFiltered[i];
+	}
+
 	public int getNumColorTextures() {
 		return targets.length;
 	}
@@ -324,4 +331,5 @@ public class ShadowRenderTargets {
 	public IntList getBuffersToBeCleared() {
 		return buffersToBeCleared;
 	}
+
 }

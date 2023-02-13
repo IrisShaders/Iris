@@ -5,8 +5,6 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.image.GlImage;
-import net.coderbot.iris.gl.image.ImageHolder;
-import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.sampler.GlSampler;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
@@ -34,7 +32,8 @@ public class IrisSamplers {
 	// TODO: In composite programs, there shouldn't be any reserved textures.
 	// We need a way to restore these texture bindings.
 	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(1, 2);
-	private static GlSampler SHADOW_SAMPLER;
+	private static GlSampler SHADOW_SAMPLER_NEAREST;
+	private static GlSampler SHADOW_SAMPLER_LINEAR;
 	private static GlSampler LINEAR_MIPMAP;
 	private static GlSampler NEAREST_MIPMAP;
 
@@ -43,7 +42,8 @@ public class IrisSamplers {
 	}
 
 	public static void initRenderer() {
-		SHADOW_SAMPLER = new GlSampler(false, false, true, true);
+		SHADOW_SAMPLER_NEAREST = new GlSampler(false, false, true, true);
+		SHADOW_SAMPLER_LINEAR = new GlSampler(true, false, true, true);
 		LINEAR_MIPMAP = new GlSampler(true, true, false, false);
 		NEAREST_MIPMAP = new GlSampler(false, true, false, false);
 	}
@@ -130,12 +130,12 @@ public class IrisSamplers {
 
 		if (waterShadowEnabled) {
 			usesShadows = true;
-			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? SHADOW_SAMPLER : null), "shadowtex0", "watershadow");
-			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? SHADOW_SAMPLER : null),
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? SHADOW_SAMPLER_NEAREST : null), "shadowtex0", "watershadow");
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? SHADOW_SAMPLER_NEAREST : null),
 					"shadowtex1", "shadow");
 		} else {
-			usesShadows = samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? SHADOW_SAMPLER : null), "shadowtex0", "shadow");
-			usesShadows |= samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? SHADOW_SAMPLER : null), "shadowtex1");
+			usesShadows = samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? SHADOW_SAMPLER_NEAREST : null), "shadowtex0", "shadow");
+			usesShadows |= samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? SHADOW_SAMPLER_NEAREST : null), "shadowtex1");
 		}
 
 		if (flipped == null) {
@@ -162,11 +162,11 @@ public class IrisSamplers {
 		}
 
 		if (shadowRenderTargets.isHardwareFiltered(0) && separateHardwareSamplers) {
-			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, SHADOW_SAMPLER, "shadowtex0HW");
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, shadowRenderTargets.isLinearFiltered(0) ? SHADOW_SAMPLER_LINEAR : SHADOW_SAMPLER_NEAREST, "shadowtex0HW");
 		}
 
 		if (shadowRenderTargets.isHardwareFiltered(1) && separateHardwareSamplers) {
-			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, SHADOW_SAMPLER, "shadowtex1HW");
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, shadowRenderTargets.isLinearFiltered(1) ? SHADOW_SAMPLER_LINEAR : SHADOW_SAMPLER_NEAREST, "shadowtex1HW");
 		}
 
 		return usesShadows;
