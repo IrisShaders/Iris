@@ -14,28 +14,30 @@ public class SodiumParameters extends Parameters {
 	public final float positionScale;
 	public final float positionOffset;
 	public final float textureScale;
-	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
-
 	public AlphaTest alpha;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public SodiumParameters(Patch patch, AlphaTest alpha, ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		super(patch);
-		this.alpha = alpha;
+	public SodiumParameters(Patch patch,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+			AlphaTest alpha,
+			ShaderAttributeInputs inputs,
+			float positionScale, float positionOffset, float textureScale) {
+		super(patch, textureMap);
 		this.inputs = inputs;
 		this.positionScale = positionScale;
 		this.positionOffset = positionOffset;
 		this.textureScale = textureScale;
-		this.textureMap = textureMap;
-	}
 
-	public Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap() {
-		return textureMap;
+		this.alpha = alpha;
 	}
-
 	@Override
 	public AlphaTest getAlphaTest() {
 		return alpha;
+	}
+
+	@Override
+	public TextureStage getTextureStage() {
+		return TextureStage.GBUFFERS_AND_SHADOW;
 	}
 
 	@Override
@@ -46,7 +48,6 @@ public class SodiumParameters extends Parameters {
 		result = prime * result + Float.floatToIntBits(positionScale);
 		result = prime * result + Float.floatToIntBits(positionOffset);
 		result = prime * result + Float.floatToIntBits(textureScale);
-		result = prime * result + ((textureMap == null) ? 0 : textureMap.hashCode());
 		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
 		return result;
 	}
@@ -70,11 +71,6 @@ public class SodiumParameters extends Parameters {
 		if (Float.floatToIntBits(positionOffset) != Float.floatToIntBits(other.positionOffset))
 			return false;
 		if (Float.floatToIntBits(textureScale) != Float.floatToIntBits(other.textureScale))
-			return false;
-		if (textureMap == null) {
-			if (other.textureMap != null)
-				return false;
-		} else if (!textureMap.equals(other.textureMap))
 			return false;
 		if (alpha == null) {
 			if (other.alpha != null)
