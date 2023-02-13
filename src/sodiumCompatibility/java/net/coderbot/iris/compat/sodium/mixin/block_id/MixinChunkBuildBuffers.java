@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.BakedChunkModelBuilder;
-import me.jellysquid.mods.sodium.client.render.chunk.passes.RenderPass;
+import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 	@Shadow
 	@Final
-	private Reference2ReferenceOpenHashMap<RenderPass, BakedChunkModelBuilder> builders;
+	private Reference2ReferenceOpenHashMap<TerrainRenderPass, BakedChunkModelBuilder> builders;
 	@Unique
 	private BlockContextHolder contextHolder;
 

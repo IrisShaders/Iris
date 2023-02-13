@@ -2,8 +2,8 @@ package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
 import me.jellysquid.mods.sodium.client.gl.GlObject;
 import me.jellysquid.mods.sodium.client.gl.shader.*;
-import me.jellysquid.mods.sodium.client.render.chunk.passes.RenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
+import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
@@ -236,7 +236,7 @@ public class IrisChunkProgramOverrides {
     }
 
     @Nullable
-    public GlProgram<IrisChunkShaderInterface> getProgramOverride(RenderPass pass, ChunkVertexType vertexType) {
+    public GlProgram<IrisChunkShaderInterface> getProgramOverride(TerrainRenderPass pass, ChunkVertexType vertexType) {
 		if (versionCounterForSodiumShaderReload != Iris.getPipelineManager().getVersionCounterForSodiumShaderReload()) {
 			versionCounterForSodiumShaderReload = Iris.getPipelineManager().getVersionCounterForSodiumShaderReload();
 			deleteShaders();
@@ -274,7 +274,7 @@ public class IrisChunkProgramOverrides {
         }
     }
 
-    public void bindFramebuffer(RenderPass pass) {
+    public void bindFramebuffer(TerrainRenderPass pass) {
 		SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
 		boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 

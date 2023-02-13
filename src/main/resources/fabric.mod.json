@@ -32,7 +32,6 @@
     "iris-batched-entity-rendering.mixins.json",
     "mixins.iris.fantastic.json",
     "mixins.iris.vertexformat.json",
-    "mixins.iris.bettermipmaps.json",
     "mixins.iris.optimized-stitching.json",
     "mixins.iris.compat.indigo.json",
     "mixins.iris.compat.sodium.json",
