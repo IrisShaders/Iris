@@ -406,7 +406,6 @@ public class ProgramSet {
 			case Terrain: return getGbuffersTerrain();
 			case TerrainSolid: return getGbuffersTerrainSolid();
 			case TerrainCutout: return getGbuffersTerrainCutout();
-			case TerrainCutoutMip: return getGbuffersTerrainCutout();
 			case DamagedBlock: return getGbuffersDamagedBlock();
 			case Block: return getGbuffersBlock();
 			case BeaconBeam: return getGbuffersBeaconBeam();
