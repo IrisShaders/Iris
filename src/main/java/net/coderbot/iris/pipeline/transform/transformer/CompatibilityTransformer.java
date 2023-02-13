@@ -2,7 +2,6 @@ package net.coderbot.iris.pipeline.transform.transformer;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -473,6 +472,20 @@ public class CompatibilityTransformer {
 							Type inType = inTypeSpecifier.type;
 							Type outType = outTypeSpecifier.type;
 
+							// check if the out declaration is an array-type, if so, skip it.
+							// this only checks the out declaration because it's the one that when it's an
+							// array type means that both declarations are arrays and we're not just in the
+							// case of a geometry shader where the in declaration is an array and the out
+							// declaration is not
+							if (outTypeSpecifier.getArraySpecifier() != null) {
+								LOGGER.warn(
+										"The out declaration '" + name + "' in the " + prevPatchTypes.glShaderType.name()
+												+ " shader that has a missing corresponding in declaration in the next stage "
+												+ type.name()
+												+ " has an array type and could not be compatibility-patched. See debugging.md for more information.");
+								continue;
+							}
+
 							// skip if the type matches, nothing has to be done
 							if (inType == outType) {
 								// if the types match but it's never assigned a value,
@@ -484,6 +497,12 @@ public class CompatibilityTransformer {
 								// add an initialization statement for this declaration
 								prevTree.prependMainFunctionBody(getInitializer(prevRoot, name, inType));
 								outDeclarations.put(name, null);
+
+								LOGGER.warn(
+										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
+												+ " shader that is never assigned to in the previous stage "
+												+ prevType.name()
+												+ " has been compatibility-patched by adding an initialization for it. See debugging.md for more information.");
 								continue;
 							}
 
