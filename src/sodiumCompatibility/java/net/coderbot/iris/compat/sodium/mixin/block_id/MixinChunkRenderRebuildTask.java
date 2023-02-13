@@ -12,8 +12,6 @@ import me.jellysquid.mods.sodium.client.util.task.CancellationSource;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
 import net.coderbot.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.chunk.VisGraph;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
@@ -47,27 +45,25 @@ public class MixinChunkRenderRebuildTask {
 	}
 
 	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
-			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getChunkRenderType(" +
-						"Lnet/minecraft/world/level/block/state/BlockState;" +
-					")Lnet/minecraft/client/renderer/RenderType;"))
-	private RenderType iris$wrapGetBlockLayer(BlockState blockState, ChunkBuildContext context) {
+			target = "Lme/jellysquid/mods/sodium/client/world/WorldSlice;getBlockState(III)Lnet/minecraft/world/level/block/state/BlockState;"))
+	private BlockState iris$wrapGetBlockLayer(WorldSlice instance, int x, int y, int z, ChunkBuildContext context) {
+		BlockState state = instance.getBlockState(x, y, z);
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(blockState, ExtendedDataHelper.BLOCK_RENDER_TYPE);
+			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(state, ExtendedDataHelper.BLOCK_RENDER_TYPE);
 		}
 
-		return ItemBlockRenderTypes.getChunkRenderType(blockState);
+		return state;
 	}
 
 	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
-			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getRenderLayer(" +
-						"Lnet/minecraft/world/level/material/FluidState;" +
-					")Lnet/minecraft/client/renderer/RenderType;"))
-	private RenderType iris$wrapGetFluidLayer(FluidState fluidState, ChunkBuildContext context) {
+		target = "Lnet/minecraft/world/level/block/state/BlockState;getFluidState()Lnet/minecraft/world/level/material/FluidState;"))
+	private FluidState iris$wrapGetFluidLayer(BlockState instance, ChunkBuildContext context) {
+		FluidState state = instance.getFluidState();
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE);
+			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(instance, ExtendedDataHelper.BLOCK_RENDER_TYPE);
 		}
 
-		return ItemBlockRenderTypes.getRenderLayer(fluidState);
+		return state;
 	}
 
 	@Inject(method = "performBuild",

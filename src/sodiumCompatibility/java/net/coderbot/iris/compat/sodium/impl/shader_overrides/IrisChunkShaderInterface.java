@@ -36,8 +36,6 @@ public class IrisChunkShaderInterface {
 	private final GlUniformFloat3v uniformRegionOffset;
 	@Nullable
 	private final GlUniformMatrix4f uniformNormalMatrix;
-	@Nullable
-	private final GlUniformBlock uniformBlockDrawParameters;
 
 	private final BlendModeOverride blendModeOverride;
 	private final IrisShaderFogComponent fogShaderComponent;
@@ -57,7 +55,6 @@ public class IrisChunkShaderInterface {
 		this.uniformProjectionMatrixInverse = contextExt.bindUniformIfPresent("iris_ProjectionMatrixInverse", GlUniformMatrix4f::new);
 		this.uniformRegionOffset = contextExt.bindUniformIfPresent("u_RegionOffset", GlUniformFloat3v::new);
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("iris_NormalMatrix", GlUniformMatrix4f::new);
-		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
 		this.customUniforms = customUniforms;
 
 		this.alpha = alpha;
@@ -136,12 +133,6 @@ public class IrisChunkShaderInterface {
 			normalMatrix.invert();
 			normalMatrix.transpose();
 			this.uniformNormalMatrix.set(normalMatrix);
-		}
-	}
-
-	public void setDrawUniforms(GlMutableBuffer buffer) {
-		if (this.uniformBlockDrawParameters != null) {
-			this.uniformBlockDrawParameters.bindBuffer(buffer);
 		}
 	}
 

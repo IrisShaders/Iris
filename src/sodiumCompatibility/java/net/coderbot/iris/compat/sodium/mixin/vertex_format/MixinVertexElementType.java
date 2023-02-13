@@ -2,7 +2,7 @@ package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexElementType;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.CommonVertexAttribute;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisVertexElementTypes;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import org.apache.commons.lang3.ArrayUtils;
@@ -13,18 +13,18 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 /**
- * Uses some rather hacky shenanigans to add a few new enum values to {@link VertexElementType} corresponding to our
+ * Uses some rather hacky shenanigans to add a few new enum values to {@link CommonVertexAttribute} corresponding to our
  * extended vertex attributes.
  *
  * Credit goes to Nuclearfarts for the trick.
  */
-@Mixin(VertexElementType.class)
+@Mixin(CommonVertexAttribute.class)
 public class MixinVertexElementType {
 	@SuppressWarnings("target")
 	@Shadow(remap = false)
 	@Final
 	@Mutable
-	private static VertexElementType[] $VALUES;
+	private static CommonVertexAttribute[] $VALUES;
 
 	@Mutable
 	@Shadow

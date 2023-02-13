@@ -8,8 +8,8 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import me.jellysquid.mods.sodium.client.render.immediate.CloudRenderer;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
-import me.jellysquid.mods.sodium.client.render.vertex.formats.ColorVertex;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.ColorVertex;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.CloudVertex;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -181,7 +181,7 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3)
+	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILnet/caffeinemc/mods/sodium/api/vertex/format/VertexFormatDescription;)V"), index = 3)
 	private VertexFormatDescription modifyArgIris(VertexFormatDescription vertexFormatDescription) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return CloudVertex.FORMAT;

@@ -5,6 +5,7 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.SodiumParameters;
 
 public class SodiumTransformer {
@@ -13,7 +14,7 @@ public class SodiumTransformer {
 			TranslationUnit tree,
 			Root root,
 			SodiumParameters parameters) {
-		CommonTransformer.transform(t, tree, root, parameters);
+		CommonTransformer.transform(t, tree, root, parameters, "iris_alphaTestValue");
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
@@ -99,37 +100,49 @@ public class SodiumTransformer {
 					"ivec2 _vert_tex_light_coord;",
 					"vec4 _vert_color;",
 					"uint _draw_id;",
+					"uint _material_params;",
 					"in vec4 a_PosId;",
 					"in vec4 a_Color;",
 					"in vec2 a_TexCoord;",
 					"in ivec2 a_LightCoord;",
+					"flat out uint v_Material;",
 					"void _vert_init() {" +
 							"_vert_position = (a_PosId.xyz * " + parameters.positionScale + " + "
 							+ parameters.positionOffset + ");" +
 							"_vert_tex_diffuse_coord = (a_TexCoord * " + parameters.textureScale + ");" +
 							"_vert_tex_light_coord = a_LightCoord;" +
 							"_vert_color = " + separateAoValue + ";" +
-							"_draw_id = uint(a_PosId.w); }",
+							"uint params = uint(a_PosId.w);" +
+							"_draw_id = (params >> 8u) & 0xFFu;" +
+							"_material_params = (params >> 0u) & 0xFFu;" +
+							"v_Material = _material_params; }",
 
-					// translated from sodium's chunk_parameters.glsl
-					// Comment on the struct:
-					// Older AMD drivers can't handle vec3 in std140 layouts correctly The alignment
-					// requirement is 16 bytes (4 float components) anyways, so we're not wasting
-					// extra memory with this, only fixing broken drivers.
-					"struct DrawParameters { vec4 offset; };",
-					"layout(std140) uniform ubo_DrawParameters {DrawParameters Chunks[256]; };",
+					"uvec3 _get_relative_chunk_coord(uint pos) { return uvec3(pos) >> uvec3(5u, 3u, 0u) & uvec3(7u, 3u, 7u); }",
 
+					"vec3 _get_draw_translation(uint pos) { return _get_relative_chunk_coord(pos) * vec3(16.0f); }",
 					"uniform mat4 iris_ProjectionMatrix;",
 					"uniform mat4 iris_ModelViewMatrix;",
 					"uniform vec3 u_RegionOffset;",
-					// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-					"vec4 getVertexPosition() { return vec4(u_RegionOffset + Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }");
+					"vec4 getVertexPosition() { return vec4(_vert_position + u_RegionOffset + _get_draw_translation(_draw_id), 1.0); }");
 			tree.prependMainFunctionBody(t, "_vert_init();");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 		} else {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform mat4 iris_ModelViewMatrix;",
 					"uniform mat4 iris_ProjectionMatrix;");
+		}
+
+		if (parameters.type == PatchShaderType.FRAGMENT_CUTOUT || parameters.type == PatchShaderType.FRAGMENT) {
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "const uint MATERIAL_USE_MIP_OFFSET = 0u;",
+				"const uint MATERIAL_ALPHA_CUTOFF_OFFSET = 1u;",
+				"const float[4] ALPHA_CUTOFF = float[4](0.0f, 0.1f, 0.1f, 1.0f);",
+				"float iris_alphaTestValue;",
+				"flat in uint v_Material;",
+				"float _material_alpha_cutoff(uint material) {\n" +
+					"    return ALPHA_CUTOFF[(material >> MATERIAL_ALPHA_CUTOFF_OFFSET) & 3u];\n" +
+					"}",
+				"void _frag_init() { iris_alphaTestValue = _material_alpha_cutoff(v_Material); }");
+			tree.prependMainFunctionBody(t, "_frag_init();");
 		}
 
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",

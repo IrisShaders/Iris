@@ -1,6 +1,6 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format;
 
-import me.jellysquid.mods.sodium.client.render.vertex.serializers.VertexSerializer;
+import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.GlyphVertexExt;
 import org.lwjgl.system.MemoryUtil;

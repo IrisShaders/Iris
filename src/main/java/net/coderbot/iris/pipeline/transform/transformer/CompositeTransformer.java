@@ -34,7 +34,7 @@ public class CompositeTransformer {
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
-		CommonTransformer.transform(t, tree, root, parameters);
+		CommonTransformer.transform(t, tree, root, parameters, null);
 		CompositeDepthTransformer.transform(t, tree, root);
 
 		// TODO: More solid way to handle texture matrices

@@ -93,7 +93,7 @@ public class CommonTransformer {
 			ASTParser t,
 			TranslationUnit tree,
 			Root root,
-			Parameters parameters) {
+			Parameters parameters, String alphaTestThreshold) {
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
@@ -156,7 +156,7 @@ public class CommonTransformer {
 			// insert alpha test for iris_FragData0 in the fragment shader
 			if (parameters.getAlphaTest() != AlphaTest.ALWAYS && replaceIndexesSet.contains(0L)) {
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_currentAlphaTest;");
-				tree.appendMainFunctionBody(t, parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
+				tree.appendMainFunctionBody(t, parameters.getAlphaTest().toExpression("iris_FragData0.a", alphaTestThreshold != null ? alphaTestThreshold : "iris_currentAlphaTest", "	"));
 			}
 		}
 

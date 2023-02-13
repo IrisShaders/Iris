@@ -2,12 +2,18 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
-import me.jellysquid.mods.sodium.client.render.RenderGlobal;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
-import me.jellysquid.mods.sodium.client.render.vertex.buffer.VertexBufferWriter;
-import me.jellysquid.mods.sodium.client.util.Norm3b;
-import me.jellysquid.mods.sodium.common.util.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
+import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.ColorAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.LightAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.NormalAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.OverlayAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.PositionAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.coderbot.iris.vertices.QuadView;
@@ -18,10 +24,8 @@ import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import static me.jellysquid.mods.sodium.client.render.vertex.VertexElementSerializer.*;
-
 public final class EntityVertex {
-	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.ENTITY);
+	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.instance().get(IrisVertexFormats.ENTITY);
 	public static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
 
 	private static final int OFFSET_POSITION = 0;
@@ -37,32 +41,32 @@ public final class EntityVertex {
 
 	public static void write(long ptr,
 							 float x, float y, float z, int color, float u, float v, float midU, float midV, int overlay, int light, int normal, int tangent) {
-		setPositionXYZ(ptr, x, y, z);
-		setColorABGR(ptr + OFFSET_COLOR, color);
-		setTextureUV(ptr + OFFSET_TEXTURE, u, v);
-		setLightUV(ptr + OFFSET_LIGHT, light);
-		setOverlayUV(ptr + OFFSET_OVERLAY, overlay);
-		setNormalXYZ(ptr + OFFSET_NORMAL, normal);
-		setNormalXYZ(ptr + OFFSET_TANGENT, tangent);
-		setTextureUV(ptr + OFFSET_MID_TEXTURE, midU, midV);
+		PositionAttribute.put(ptr, x, y, z);
+		ColorAttribute.set(ptr + OFFSET_COLOR, color);
+		TextureAttribute.put(ptr + OFFSET_TEXTURE, u, v);
+		LightAttribute.set(ptr + OFFSET_LIGHT, light);
+		OverlayAttribute.set(ptr + OFFSET_OVERLAY, overlay);
+		NormalAttribute.set(ptr + OFFSET_NORMAL, normal);
+		NormalAttribute.set(ptr + OFFSET_TANGENT, tangent);
+		TextureAttribute.put(ptr + OFFSET_MID_TEXTURE, midU, midV);
 	}
 
 	public static void write2(long ptr,
 							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal) {
-		setPositionXYZ(ptr, x, y, z);
-		setColorABGR(ptr + OFFSET_COLOR, color);
-		setTextureUV(ptr + OFFSET_TEXTURE, u, v);
-		setLightUV(ptr + OFFSET_LIGHT, light);
-		setOverlayUV(ptr + OFFSET_OVERLAY, overlay);
-		setNormalXYZ(ptr + OFFSET_NORMAL, normal);
-		setTextureUV(ptr + OFFSET_MID_TEXTURE, midU, midV);
+		PositionAttribute.put(ptr, x, y, z);
+		ColorAttribute.set(ptr + OFFSET_COLOR, color);
+		TextureAttribute.put(ptr + OFFSET_TEXTURE, u, v);
+		LightAttribute.set(ptr + OFFSET_LIGHT, light);
+		OverlayAttribute.set(ptr + OFFSET_OVERLAY, overlay);
+		NormalAttribute.set(ptr + OFFSET_NORMAL, normal);
+		TextureAttribute.put(ptr + OFFSET_MID_TEXTURE, midU, midV);
 	}
 
 	public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, int light, int overlay, int color) {
 		Matrix3f matNormal = matrices.normal();
 		Matrix4f matPosition = matrices.pose();
 
-		try (MemoryStack stack = RenderGlobal.VERTEX_DATA.push()) {
+		try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
 			long buffer = stack.nmalloc(4 * STRIDE);
 			long ptr = buffer;
 
@@ -70,9 +74,9 @@ public final class EntityVertex {
 			var n = quad.getNormal();
 
 			// The normal vector
-			float nx = Norm3b.unpackX(n);
-			float ny = Norm3b.unpackY(n);
-			float nz = Norm3b.unpackZ(n);
+			float nx = NormI8.unpackX(n);
+			float ny = NormI8.unpackY(n);
+			float nz = NormI8.unpackZ(n);
 
 			float midU = ((quad.getTexU(0) + quad.getTexU(1) + quad.getTexU(2) + quad.getTexU(3)) * 0.25f);
 			float midV = ((quad.getTexV(0) + quad.getTexV(1) + quad.getTexV(2) + quad.getTexV(3)) * 0.25f);
@@ -83,7 +87,7 @@ public final class EntityVertex {
 			float nzt = MatrixHelper.transformNormalZ(matNormal, nx, ny, nz);
 
 			// The packed transformed normal vector
-			var nt = Norm3b.pack(nxt, nyt, nzt);
+			var nt = NormI8.pack(nxt, nyt, nzt);
 
 			for (int i = 0; i < 4; i++) {
 				// The position vector
@@ -113,7 +117,7 @@ public final class EntityVertex {
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quadView);
 
 		for (long vertex = 0; vertex < 4; vertex++) {
-			setNormalXYZ(ptr + 44 - STRIDE * vertex, tangent);
+			NormalAttribute.set(ptr + 44 - STRIDE * vertex, tangent);
 		}
 	}
 }
