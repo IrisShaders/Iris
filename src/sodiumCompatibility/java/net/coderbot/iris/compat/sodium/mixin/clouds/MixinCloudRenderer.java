@@ -181,7 +181,7 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3)
+	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3)
 	private VertexFormatDescription modifyArgIris(VertexFormatDescription vertexFormatDescription) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return CloudVertex.FORMAT;

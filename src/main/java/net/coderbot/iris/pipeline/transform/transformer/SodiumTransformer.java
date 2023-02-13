@@ -91,6 +91,7 @@ public class SodiumTransformer {
 				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 						"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 			}
+			String separateAoValue = parameters.isSeparateAo ? "a_Color" : "vec4(a_Color.rgb * a_Color.a, 1.0)";
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					// translated from sodium's chunk_vertex.glsl
 					"vec3 _vert_position;",
@@ -103,11 +104,11 @@ public class SodiumTransformer {
 					"in vec2 a_TexCoord;",
 					"in ivec2 a_LightCoord;",
 					"void _vert_init() {" +
-							"_vert_position = (a_PosId.xyz * " + String.valueOf(parameters.positionScale) + " + "
-							+ String.valueOf(parameters.positionOffset) + ");" +
-							"_vert_tex_diffuse_coord = (a_TexCoord * " + String.valueOf(parameters.textureScale) + ");" +
+							"_vert_position = (a_PosId.xyz * " + parameters.positionScale + " + "
+							+ parameters.positionOffset + ");" +
+							"_vert_tex_diffuse_coord = (a_TexCoord * " + parameters.textureScale + ");" +
 							"_vert_tex_light_coord = a_LightCoord;" +
-							"_vert_color = a_Color;" +
+							"_vert_color = " + separateAoValue + ";" +
 							"_draw_id = uint(a_PosId.w); }",
 
 					// translated from sodium's chunk_parameters.glsl

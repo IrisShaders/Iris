@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline.transform.parameter;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
@@ -19,6 +20,7 @@ public class SodiumParameters extends Parameters {
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
 
 	public AlphaTest alpha;
+	public boolean isSeparateAo;
 
 	public SodiumParameters(Patch patch, AlphaTest cutoutAlpha, AlphaTest defaultAlpha, ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
@@ -30,6 +32,7 @@ public class SodiumParameters extends Parameters {
 		this.positionOffset = positionOffset;
 		this.textureScale = textureScale;
 		this.textureMap = textureMap;
+		this.isSeparateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo();
 
 		this.alpha = defaultAlpha;
 	}
@@ -67,6 +70,7 @@ public class SodiumParameters extends Parameters {
 		result = prime * result + Float.floatToIntBits(textureScale);
 		result = prime * result + ((textureMap == null) ? 0 : textureMap.hashCode());
 		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
+		result = prime * result + ((isSeparateAo) ? 0 : 91);
 		return result;
 	}
 
@@ -108,7 +112,9 @@ public class SodiumParameters extends Parameters {
 		if (alpha == null) {
 			if (other.alpha != null)
 				return false;
-		} else if (!alpha.equals(other.alpha))
+		} else if (!alpha.equals(other.alpha)) {
+			return false;
+	    } else if (isSeparateAo == other.isSeparateAo)
 			return false;
 		return true;
 	}
