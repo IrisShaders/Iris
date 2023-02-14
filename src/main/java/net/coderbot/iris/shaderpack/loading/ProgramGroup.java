@@ -1,6 +1,8 @@
 package net.coderbot.iris.shaderpack.loading;
 
 public enum ProgramGroup {
+	Setup("setup"),
+	Begin("begin"),
 	Shadow("shadow"),
 	ShadowComposite("shadowcomp"),
 	Prepare("prepare"),

@@ -6,6 +6,7 @@ public class InputAvailability {
 	public final boolean texture;
 	public final boolean lightmap;
 	public final boolean overlay;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public InputAvailability(boolean texture, boolean lightmap, boolean overlay) {
 		this.texture = texture;
@@ -42,19 +43,19 @@ public class InputAvailability {
 	@Override
 	public String toString() {
 		return "InputAvailability{" +
-			"texture=" + texture +
-			", lightmap=" + lightmap +
-			", overlay=" + overlay +
-			'}';
+				"texture=" + texture +
+				", lightmap=" + lightmap +
+				", overlay=" + overlay +
+				'}';
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + (texture ? 1231 : 1237);
 		result = prime * result + (lightmap ? 1231 : 1237);
 		result = prime * result + (overlay ? 1231 : 1237);
-		result = prime * result + (texture ? 1231 : 1237);
 		return result;
 	}
 
@@ -67,11 +68,11 @@ public class InputAvailability {
 		if (getClass() != obj.getClass())
 			return false;
 		InputAvailability other = (InputAvailability) obj;
+		if (texture != other.texture)
+			return false;
 		if (lightmap != other.lightmap)
 			return false;
 		if (overlay != other.overlay)
-			return false;
-		if (texture != other.texture)
 			return false;
 		return true;
 	}

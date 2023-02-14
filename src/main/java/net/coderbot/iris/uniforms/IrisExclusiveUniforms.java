@@ -107,7 +107,8 @@ public class IrisExclusiveUniforms {
 
 	private static Vector3d getEyePosition() {
 		Objects.requireNonNull(Minecraft.getInstance().getCameraEntity());
-		return new Vector3d(Minecraft.getInstance().getCameraEntity().getX(), Minecraft.getInstance().getCameraEntity().getEyeY(), Minecraft.getInstance().getCameraEntity().getZ());
+		Vec3 pos = Minecraft.getInstance().getCameraEntity().getEyePosition(CapturedRenderingState.INSTANCE.getTickDelta());
+		return new Vector3d(pos.x, pos.y, pos.z);
 	}
 
 	public static class WorldInfoUniforms {
