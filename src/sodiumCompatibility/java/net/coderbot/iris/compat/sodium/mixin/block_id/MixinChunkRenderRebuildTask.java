@@ -12,7 +12,9 @@ import me.jellysquid.mods.sodium.client.util.task.CancellationSource;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
 import net.coderbot.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
+import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.chunk.VisGraph;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -45,14 +47,14 @@ public class MixinChunkRenderRebuildTask {
 	}
 
 	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
-			target = "Lme/jellysquid/mods/sodium/client/world/WorldSlice;getBlockState(III)Lnet/minecraft/world/level/block/state/BlockState;"))
-	private BlockState iris$wrapGetBlockLayer(WorldSlice instance, int x, int y, int z, ChunkBuildContext context) {
-		BlockState state = instance.getBlockState(x, y, z);
+			target = "Lnet/minecraft/client/renderer/block/BlockModelShaper;getBlockModel(Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/client/resources/model/BakedModel;"))
+	private BakedModel iris$wrapGetBlockLayer(BlockModelShaper instance, BlockState state, ChunkBuildContext context) {
+		BakedModel model = instance.getBlockModel(state);
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(state, ExtendedDataHelper.BLOCK_RENDER_TYPE);
 		}
 
-		return state;
+		return model;
 	}
 
 	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
@@ -60,7 +62,7 @@ public class MixinChunkRenderRebuildTask {
 	private FluidState iris$wrapGetFluidLayer(BlockState instance, ChunkBuildContext context) {
 		FluidState state = instance.getFluidState();
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(instance, ExtendedDataHelper.BLOCK_RENDER_TYPE);
+			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(state.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE);
 		}
 
 		return state;
