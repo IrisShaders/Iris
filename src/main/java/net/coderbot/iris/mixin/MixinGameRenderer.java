@@ -164,19 +164,10 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getRendertypeCutoutMippedShader", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideCutoutMippedShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
-			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
-		} else if (isBlockEntities() || isEntities()) {
-			override(ShaderKey.MOVING_BLOCK, cir);
-		} else if (shouldOverrideShaders()) {
-			override(ShaderKey.TERRAIN_CUTOUT_MIPPED, cir);
-		}
-	}
-
-	@Inject(method = "getRendertypeCutoutShader", at = @At("HEAD"), cancellable = true)
+	@Inject(method = {
+		"getRendertypeCutoutShader",
+		"getRendertypeCutoutMippedShader"
+	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);

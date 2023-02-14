@@ -23,7 +23,6 @@ public enum ProgramId {
 
 	Terrain(ProgramGroup.Gbuffers, "terrain", TexturedLit),
 	TerrainSolid(ProgramGroup.Gbuffers, "terrain_solid", Terrain),
-	TerrainCutoutMip(ProgramGroup.Gbuffers, "terrain_cutout_mip", Terrain),
 	TerrainCutout(ProgramGroup.Gbuffers, "terrain_cutout", Terrain),
 	DamagedBlock(ProgramGroup.Gbuffers, "damagedblock", Terrain),
 

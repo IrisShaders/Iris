@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.coderbot.iris.Iris;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -242,7 +243,6 @@ public class TransformPatcher {
 										break;
 									case SODIUM:
 										SodiumParameters sodiumParameters = (SodiumParameters) parameters;
-										sodiumParameters.setAlphaFor(type);
 										SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
 										break;
 									case VANILLA:
@@ -291,12 +291,6 @@ public class TransformPatcher {
 			inputs.put(PatchShaderType.VERTEX, vertex);
 			inputs.put(PatchShaderType.GEOMETRY, geometry);
 			inputs.put(PatchShaderType.FRAGMENT, fragment);
-
-			// the sodium terrain transformer transforms the fragment shader in two
-			// different ways
-			if (parameters instanceof SodiumParameters && ((SodiumParameters) parameters).hasCutoutAlpha()) {
-				inputs.put(PatchShaderType.FRAGMENT_CUTOUT, fragment);
-			}
 
 			result = transformer.transform(inputs, parameters);
 			if (useCache) {
@@ -354,16 +348,13 @@ public class TransformPatcher {
 				new VanillaParameters(Patch.VANILLA, textureMap, alpha, hasChunkOffset, inputs, geometry != null));
 	}
 
-	public static Map<PatchShaderType, String> patchSodium(
-			String vertex, String geometry, String fragment,
-			AlphaTest cutoutAlpha,
-			AlphaTest defaultAlpha,
-			ShaderAttributeInputs inputs,
+	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
+			AlphaTest alpha, ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
-				new SodiumParameters(Patch.SODIUM, textureMap, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset,
-						textureScale));
+			new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs, positionScale, positionOffset,
+				textureScale));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(

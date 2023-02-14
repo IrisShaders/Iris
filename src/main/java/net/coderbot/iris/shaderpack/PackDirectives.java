@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -37,6 +38,7 @@ public class PackDirectives {
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, TextureScaleOverride> scaleOverrides = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
+	private Int2IntArrayMap bufferObjects;
 
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
@@ -50,6 +52,7 @@ public class PackDirectives {
 		drynessHalfLife = 200.0f;
 		eyeBrightnessHalfLife = 10.0f;
 		centerDepthHalfLife = 1.0F;
+		bufferObjects = new Int2IntArrayMap();
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -71,6 +74,7 @@ public class PackDirectives {
 		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
 		particleRenderingSettings = properties.getParticleRenderingSettings();
 		textureMap = properties.getCustomTexturePatching();
+		bufferObjects = properties.getBufferObjects();
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -84,6 +88,7 @@ public class PackDirectives {
 		prepareBeforeShadow = directives.prepareBeforeShadow;
 		particleRenderingSettings = directives.particleRenderingSettings;
 		textureMap = directives.textureMap;
+		bufferObjects = directives.bufferObjects;
 	}
 
 	public int getNoiseTextureResolution() {
@@ -171,6 +176,10 @@ public class PackDirectives {
 
 	public PackShadowDirectives getShadowDirectives() {
 		return shadowDirectives;
+	}
+
+	public Int2IntArrayMap getBufferObjects() {
+		return bufferObjects;
 	}
 
 	private static float clamp(float val, float lo, float hi) {
