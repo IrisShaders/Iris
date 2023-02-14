@@ -272,10 +272,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 				this.shaderStorageBufferHolder.setupBuffers();
 			} else {
-				Iris.logger.fatal("Shader storage buffers/immutable buffer storage is not supported on this graphics card, however the shaderpack requested them? Let's hope it's not a problem.");
-				for (int i = 0; i < 16; i++) {
-					IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, 0);
-				}
+				throw new IllegalStateException("Shader storage buffers/immutable buffer storage is not supported on this graphics card, however the shaderpack requested them? This shouldn't be possible.");
 			}
 		} else {
 			for (int i = 0; i < 16; i++) {
