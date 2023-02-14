@@ -51,6 +51,7 @@ public class SodiumParameters extends Parameters {
 		result = prime * result + Float.floatToIntBits(positionScale);
 		result = prime * result + Float.floatToIntBits(positionOffset);
 		result = prime * result + Float.floatToIntBits(textureScale);
+		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
 		return result;
 	}
 
@@ -73,6 +74,11 @@ public class SodiumParameters extends Parameters {
 		if (Float.floatToIntBits(positionOffset) != Float.floatToIntBits(other.positionOffset))
 			return false;
 		if (Float.floatToIntBits(textureScale) != Float.floatToIntBits(other.textureScale))
+			return false;
+		if (alpha == null) {
+			if (other.alpha != null)
+				return false;
+		} else if (!alpha.equals(other.alpha))
 			return false;
 		return true;
 	}
