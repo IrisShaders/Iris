@@ -5,9 +5,9 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import me.jellysquid.mods.sodium.client.gl.device.CommandList;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
-import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderList;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
+import me.jellysquid.mods.sodium.client.render.chunk.lists.ChunkRenderList;
 import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
@@ -70,7 +70,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void iris$onInit(SodiumWorldRenderer worldRenderer, ClientLevel world, int renderDistance, CommandList commandList, CallbackInfo ci) {
-        this.chunkRenderListSwap = new ChunkRenderList();
+        this.chunkRenderListSwap = null;
         this.tickableChunksSwap = new ObjectArrayList<>();
         this.visibleBlockEntitiesSwap = new ObjectArrayList<>();
         this.needsUpdateSwap = true;
