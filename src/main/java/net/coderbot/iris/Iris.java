@@ -208,12 +208,14 @@ public class Iris {
 			return;
 		}
 
-		setDebug(irisConfig.areDebugOptionsEnabled());
-
 		PBRTextureManager.INSTANCE.init();
 
 		// Only load the shader pack when we can access OpenGL
 		loadShaderpack();
+	}
+
+	public static void duringRenderSystemInit() {
+		setDebug(irisConfig.areDebugOptionsEnabled());
 	}
 
 	/**

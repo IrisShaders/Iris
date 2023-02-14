@@ -47,6 +47,7 @@ public class StandardMacros {
 		define(standardDefines, getOsString());
 		define(standardDefines, getVendor());
 		define(standardDefines, getRenderer());
+		define(standardDefines, "IS_IRIS");
 
 		for (String glExtension : getGlExtensions()) {
 			define(standardDefines, glExtension);

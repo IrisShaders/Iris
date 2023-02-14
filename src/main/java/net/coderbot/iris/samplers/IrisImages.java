@@ -1,12 +1,15 @@
 package net.coderbot.iris.samplers;
 
 import com.google.common.collect.ImmutableSet;
+import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.image.ImageHolder;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 
+import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -63,11 +66,17 @@ public class IrisImages {
 			if (flipped == null) {
 				textureID = () -> shadowRenderTargets.getColorTextureId(index);
 			} else {
-				textureID = () -> flipped.contains(index) ? shadowRenderTargets.get(index).getAltTexture() : shadowRenderTargets.get(index).getMainTexture();
+				textureID = () -> flipped.contains(index) ? shadowRenderTargets.getOrCreate(index).getAltTexture() : shadowRenderTargets.getOrCreate(index).getMainTexture();
 			}
 			InternalTextureFormat format = shadowRenderTargets.getColorTextureFormat(index);
 
 			images.addTextureImage(textureID, format, "shadowcolorimg" + i);
 		}
+	}
+
+	public static void addCustomImages(ImageHolder images, Set<GlImage> customImages) {
+		customImages.forEach(image -> {
+			images.addTextureImage(image::getId, image.getInternalFormat(), image.getName());
+		});
 	}
 }

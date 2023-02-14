@@ -93,7 +93,7 @@ public class NewShaderTests {
 
 		String shaderJsonString = shaderJson.toString();
 
-		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment, shaderJsonString);
+		PatchedShaderPrinter.debugPatchedShaders(name, vertex, geometry, fragment, shaderJsonString);
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, geometry, fragment);
 
