@@ -21,6 +21,7 @@ import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL33C;
 
@@ -77,8 +78,10 @@ public class IrisChunkShaderInterface {
 	}
 
 	public void startDrawing() {
-		bindTexture(ChunkShaderTextureSlot.BLOCK, getTextureId(ChunkShaderTextureSlot.BLOCK));
-		bindTexture(ChunkShaderTextureSlot.LIGHT, getTextureId(ChunkShaderTextureSlot.LIGHT));
+		IrisRenderSystem.bindTextureToUnit(GL30C.GL_TEXTURE_2D, 0, RenderSystem.getShaderTexture(0));
+		RenderSystem.activeTexture(GL30C.GL_TEXTURE2);
+		RenderSystem.bindTexture(RenderSystem.getShaderTexture(2));
+
 
 		if (blendModeOverride != null) {
 			blendModeOverride.apply();
