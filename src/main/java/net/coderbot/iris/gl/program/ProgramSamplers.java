@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.gl.sampler.GlSampler;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
@@ -150,13 +151,13 @@ public class ProgramSamplers {
 		}
 
 		@Override
-		public boolean addDefaultSampler(IntSupplier sampler, String... names) {
+		public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
 			if (nextUnit != 0) {
 				// TODO: Relax this restriction!
 				throw new IllegalStateException("Texture unit 0 is already used.");
 			}
 
-			return addDynamicSampler(TextureType.TEXTURE_2D, sampler, true, null, names);
+			return addDynamicSampler(TextureType.TEXTURE_2D, texture, sampler, true, notifier, names);
 		}
 
 		/**
@@ -164,20 +165,20 @@ public class ProgramSamplers {
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
 		@Override
-		public boolean addDynamicSampler(TextureType type, IntSupplier sampler, String... names) {
-			return addDynamicSampler(type, sampler, false, null, names);
+		public boolean addDynamicSampler(TextureType type, IntSupplier texture, GlSampler sampler, String... names) {
+			return addDynamicSampler(type, texture, sampler, false, null, names);
 		}
 
 		@Override
-		public boolean addDynamicSampler(TextureType type, IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
-			return addDynamicSampler(type, sampler, false, notifier, names);
+		public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
+			return addDynamicSampler(type, texture, sampler, false, notifier, names);
 		}
 
 		/**
 		 * Adds a sampler
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
-		private boolean addDynamicSampler(TextureType type, IntSupplier sampler, boolean used, ValueUpdateNotifier notifier, String... names) {
+		private boolean addDynamicSampler(TextureType type, IntSupplier texture, GlSampler sampler, boolean used, ValueUpdateNotifier notifier, String... names) {
 			if (notifier != null) {
 				notifiersToReset.add(notifier);
 			}
@@ -208,7 +209,7 @@ public class ProgramSamplers {
 				return false;
 			}
 
-			samplers.add(new SamplerBinding(type, nextUnit, sampler, notifier));
+			samplers.add(new SamplerBinding(type, nextUnit, texture, sampler, notifier));
 
 			remainingUnits--;
 			nextUnit++;
@@ -287,6 +288,13 @@ public class ProgramSamplers {
 		}
 
 		@Override
+		public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
+			texture = getOverride(texture, names);
+
+			return samplerHolder.addDefaultSampler(type, texture, notifier, sampler, names);
+		}
+
+		@Override
 		public boolean addDynamicSampler(IntSupplier sampler, String... names) {
 			sampler = getOverride(sampler, names);
 
@@ -294,10 +302,10 @@ public class ProgramSamplers {
 		}
 
 		@Override
-		public boolean addDynamicSampler(TextureType type, IntSupplier sampler, String... names) {
-			sampler = getOverride(sampler, names);
+		public boolean addDynamicSampler(TextureType type, IntSupplier texture, GlSampler sampler, String... names) {
+			texture = getOverride(texture, names);
 
-			return samplerHolder.addDynamicSampler(type, sampler, names);
+			return samplerHolder.addDynamicSampler(type, texture, sampler, names);
 		}
 
 		@Override
@@ -308,10 +316,8 @@ public class ProgramSamplers {
 		}
 
 		@Override
-		public boolean addDynamicSampler(TextureType type, IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
-			sampler = getOverride(sampler, names);
-
-			return samplerHolder.addDynamicSampler(type, sampler, notifier, names);
+		public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
+			return false;
 		}
 	}
 }

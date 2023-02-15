@@ -7,6 +7,7 @@ public class AlphaTest {
 
 	private final AlphaTestFunction function;
 	private final float reference;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public AlphaTest(AlphaTestFunction function, float reference) {
 		this.function = function;
@@ -24,8 +25,8 @@ public class AlphaTest {
 			return "// alpha test disabled\n";
 		} else if (this == AlphaTests.VERTEX_ALPHA) {
 			return indentation + "if (!(" + alphaAccessor + " > iris_vertexColor.a)) {\n" +
-				indentation + "    discard;\n" +
-				indentation + "}\n";
+					indentation + "    discard;\n" +
+					indentation + "}\n";
 		} else if (function == AlphaTestFunction.NEVER) {
 			return "discard;\n";
 		}

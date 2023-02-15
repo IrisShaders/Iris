@@ -3,6 +3,8 @@ package net.coderbot.iris.gl;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.sampler.GlSampler;
+import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -16,8 +18,13 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL32C;
+import org.lwjgl.opengl.GL33C;
 import org.lwjgl.opengl.GL40C;
 import org.lwjgl.opengl.GL42C;
+import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL45C;
+import org.lwjgl.opengl.NVXGPUMemoryInfo;
 import org.lwjgl.opengl.GL45C;
 import org.lwjgl.system.MemoryUtil;
 
@@ -34,6 +41,7 @@ public class IrisRenderSystem {
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
 	private static boolean supportsCompute;
+	private static int[] samplers;
 
 	public static void initRenderer() {
 		if (GL.getCapabilities().OpenGL45) {
@@ -50,6 +58,8 @@ public class IrisRenderSystem {
 		hasMultibind = GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind;
 
 		supportsCompute = GL.getCapabilities().glDispatchCompute != MemoryUtil.NULL;
+
+		samplers = new int[SamplerLimits.get().getMaxTextureUnits()];
 	}
 
 	public static void getIntegerv(int pname, int[] params) {
@@ -197,6 +207,17 @@ public class IrisRenderSystem {
 		return dsaState.bufferStorage(target, data, usage);
 	}
 
+	public static void bufferStorage(int target, long size, int flags) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		// The ARB version is identical to GL44 and redirects, so this should work on ARB as well.
+		GL45C.glBufferStorage(target, size, flags);
+	}
+
+	public static void bindBufferBase(int target, Integer index, int buffer) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL43C.glBindBufferBase(target, index, buffer);
+	}
+
 	public static void vertexAttrib4f(int index, float v0, float v1, float v2, float v3) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glVertexAttrib4f(index, v0, v1, v2, v3);
@@ -233,6 +254,22 @@ public class IrisRenderSystem {
 		} else {
 			return 0;
 		}
+	}
+
+	public static boolean supportsSSBO() {
+		return GL.getCapabilities().OpenGL44 || (GL.getCapabilities().GL_ARB_shader_storage_buffer_object && GL.getCapabilities().GL_ARB_buffer_storage);
+	}
+
+	public static boolean supportsImageLoadStore() {
+		return GL.getCapabilities().OpenGL42 || ((GL.getCapabilities().GL_ARB_shader_image_load_store || GL.getCapabilities().GL_EXT_shader_image_load_store) && GL.getCapabilities().GL_ARB_buffer_storage);
+	}
+
+	public static void genBuffers(int[] buffers) {
+		GL43C.glGenBuffers(buffers);
+	}
+
+	public static void clearBufferSubData(int glShaderStorageBuffer, int glR8, long offset, long size, int glRed, int glByte, int[] ints) {
+		GL43C.glClearBufferSubData(glShaderStorageBuffer, glR8, offset, size, glRed, glByte, ints);
 	}
 
 	public static void getProgramiv(int program, int value, int[] storage) {
@@ -320,7 +357,51 @@ public class IrisRenderSystem {
 		return supportsCompute;
 	}
 
-	public interface DSAAccess {
+    public static int genSampler() {
+		return GL33C.glGenSamplers();
+    }
+
+	public static void destroySampler(int glId) {
+		GL33C.glDeleteSamplers(glId);
+	}
+
+	public static void bindSamplerToUnit(int unit, int sampler) {
+		if (samplers[unit] == sampler) {
+			return;
+		}
+
+		GL33C.glBindSampler(unit, sampler);
+
+		samplers[unit] = sampler;
+	}
+
+
+	public static void samplerParameteri(int sampler, int pname, int param) {
+		GL33C.glSamplerParameteri(sampler, pname, param);
+	}
+
+	public static void samplerParameterf(int sampler, int pname, float param) {
+		GL33C.glSamplerParameterf(sampler, pname, param);
+	}
+
+	public static void samplerParameteriv(int sampler, int pname, int[] params) {
+		GL33C.glSamplerParameteriv(sampler, pname, params);
+	}
+
+	public static long getVRAM() {
+		if (GL.getCapabilities().GL_NVX_gpu_memory_info) {
+			return GL32C.glGetInteger(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX) * 1024L;
+		} else {
+			return 4294967296L;
+		}
+	}
+
+    public static void deleteBuffers(int glId) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL43C.glDeleteBuffers(glId);
+    }
+
+    public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
 
 		void texParameteri(int texture, int target, int pname, int param);
@@ -395,6 +476,10 @@ public class IrisRenderSystem {
 
 		@Override
 		public void bindTextureToUnit(int target, int unit, int texture) {
+			if (GlStateManagerAccessor.getTEXTURES()[unit].binding == texture) {
+				return;
+			}
+
 			ARBDirectStateAccess.glBindTextureUnit(unit, texture);
 
 			// Manually fix GLStateManager bindings...
