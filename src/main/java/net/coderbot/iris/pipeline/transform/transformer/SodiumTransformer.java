@@ -101,21 +101,26 @@ public class SodiumTransformer {
 					"vec4 _vert_color;",
 					"uint _draw_id;",
 					"uint _material_params;",
-					"in vec4 a_PosId;",
+					"in uvec4 a_PosId;",
 					"in vec4 a_Color;",
 					"in vec2 a_TexCoord;",
 					"in ivec2 a_LightCoord;",
-					"flat out uint v_Material;",
+					"out float iris_alphaTestValue;",
+				"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
+				"const uint MATERIAL_ALPHA_CUTOFF_OFFSET = 1u;",
+				"const float[4] ALPHA_CUTOFF = float[4](0.0f, 0.1f, 0.1f, 1.0f);",
+				"float _material_alpha_cutoff(uint material) {\n" +
+					"    return ALPHA_CUTOFF[(material >> MATERIAL_ALPHA_CUTOFF_OFFSET) & 3u];\n" +
+					"}",
 					"void _vert_init() {" +
-							"_vert_position = (a_PosId.xyz * " + parameters.positionScale + " + "
+							"_vert_position = (vec3(a_PosId.xyz) * " + parameters.positionScale + " + "
 							+ parameters.positionOffset + ");" +
 							"_vert_tex_diffuse_coord = (a_TexCoord * " + parameters.textureScale + ");" +
 							"_vert_tex_light_coord = a_LightCoord;" +
 							"_vert_color = " + separateAoValue + ";" +
-							"uint params = uint(a_PosId.w);" +
-							"_draw_id = (params >> 8u) & 0xFFu;" +
-							"_material_params = (params >> 0u) & 0xFFu;" +
-							"v_Material = _material_params; }",
+							"_draw_id = (a_PosId.w >> 8u) & 0xFFu;" +
+							"_material_params = (a_PosId.w >> 0u) & 0xFFu;" +
+							"iris_alphaTestValue = _material_alpha_cutoff(_material_params); }",
 
 					"uvec3 _get_relative_chunk_coord(uint pos) { return uvec3(pos) >> uvec3(5u, 3u, 0u) & uvec3(7u, 3u, 7u); }",
 
@@ -133,16 +138,8 @@ public class SodiumTransformer {
 		}
 
 		if (parameters.type == PatchShaderType.FRAGMENT_CUTOUT || parameters.type == PatchShaderType.FRAGMENT) {
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "const uint MATERIAL_USE_MIP_OFFSET = 0u;",
-				"const uint MATERIAL_ALPHA_CUTOFF_OFFSET = 1u;",
-				"const float[4] ALPHA_CUTOFF = float[4](0.0f, 0.1f, 0.1f, 1.0f);",
-				"float iris_alphaTestValue;",
-				"flat in uint v_Material;",
-				"float _material_alpha_cutoff(uint material) {\n" +
-					"    return ALPHA_CUTOFF[(material >> MATERIAL_ALPHA_CUTOFF_OFFSET) & 3u];\n" +
-					"}",
-				"void _frag_init() { iris_alphaTestValue = _material_alpha_cutoff(v_Material); }");
-			tree.prependMainFunctionBody(t, "_frag_init();");
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+				"in float iris_alphaTestValue;");
 		}
 
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
