@@ -6,6 +6,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
+import net.coderbot.iris.pipeline.transform.parameter.GeometryInfoParameters;
 import net.coderbot.iris.pipeline.transform.parameter.SodiumParameters;
 
 public class SodiumTransformer {
@@ -132,16 +133,23 @@ public class SodiumTransformer {
 					"uniform mat4 iris_ProjectionMatrix;");
 		}
 
-		if (parameters.type == PatchShaderType.FRAGMENT) {
+		if (parameters.type == PatchShaderType.GEOMETRY) {
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+				"flat in uint v_Material[];",
+				"flat out uint v_MaterialGS;",
+				"void _geom_init() { v_MaterialGS = v_Material[0]; }");
+			tree.prependMainFunctionBody(t, "_geom_init();");
+		} else if (parameters.type == PatchShaderType.FRAGMENT) {
+			boolean hasGeometry = parameters.hasGeometry;
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "const uint MATERIAL_USE_MIP_OFFSET = 0u;",
 				"const uint MATERIAL_ALPHA_CUTOFF_OFFSET = 1u;",
 				"const float[4] ALPHA_CUTOFF = float[4](0.0f, 0.1f, 0.1f, 1.0f);",
 				"float iris_alphaTestValue;",
-				"flat in uint v_Material;",
+				"flat in uint " + (hasGeometry ? "v_MaterialGS" : "v_Material") + ";",
 				"float _material_alpha_cutoff(uint material) {\n" +
 					"    return ALPHA_CUTOFF[(material >> MATERIAL_ALPHA_CUTOFF_OFFSET) & 3u];\n" +
 					"}",
-				"void _frag_init() { iris_alphaTestValue = _material_alpha_cutoff(v_Material); }");
+				"void _frag_init() { iris_alphaTestValue = _material_alpha_cutoff(" + (hasGeometry ? "v_MaterialGS" : "v_Material")  + "); }");
 			tree.prependMainFunctionBody(t, "_frag_init();");
 		}
 
