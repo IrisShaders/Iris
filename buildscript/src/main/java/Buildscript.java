@@ -1,8 +1,14 @@
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UncheckedIOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,8 +33,11 @@ import io.github.coolcrabs.brachyura.processing.ProcessingSink;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
 import io.github.coolcrabs.brachyura.project.java.BuildModule;
+import io.github.coolcrabs.brachyura.util.AtomicFile;
+import io.github.coolcrabs.brachyura.util.FileSystemUtil;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
+import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.format.MappingFormat;
@@ -100,10 +109,47 @@ public class Buildscript extends SimpleFabricProject {
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "3.0.13+fbde993d53"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.10.8+12a6ba2c17"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
+			JavaJarDependency sodium;
 			if (CUSTOM_SODIUM) {
-				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				sodium = new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", "")));
+				d.add(sodium, ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			} else {
-				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.3-0.4.9"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				sodium = Maven.getMavenJarDep("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.3-0.4.9"));
+				d.add(sodium, ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			}
+			try {
+				try (FileSystem sfs = FileSystemUtil.newJarFileSystem(sodium.jar)) {
+					Files.walkFileTree(sfs.getPath("META-INF/jars"), new SimpleFileVisitor<Path>(){
+						@Override
+						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+							String fileName = file.getFileName().toString();
+							if (fileName.endsWith(".jar")) {
+								boolean shouldUse = false;
+								String name = null;
+								String version = null;
+								if (fileName.startsWith("sodium-api-")) {
+									shouldUse = true;
+									name = "sodium-api";
+									version = fileName.replace("sodium-api-", "").replace(".jar", "");
+								}
+								if (shouldUse) {
+									Path p = PathUtil.resolveAndCreateDir(getLocalBrachyuraPath(), "sodiumlibs").resolve(name + "-" + version + ".jar");
+									boolean unstable = version.endsWith("unstable");
+									if (unstable || !Files.exists(p)) {
+										try (AtomicFile f = new AtomicFile(p)) {
+											Files.copy(file, f.tempPath, StandardCopyOption.REPLACE_EXISTING);
+											f.commit();
+										}
+									}
+									d.add(new JavaJarDependency(p, null, unstable ? null : new MavenId("net.caffeinemc", name, version)), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+								}
+							}
+							return super.visitFile(file, attrs);
+						}
+					});
+				}
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
 			}
 		} else {
 			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.19.3-0.4.9"), ModDependencyFlag.COMPILE);
