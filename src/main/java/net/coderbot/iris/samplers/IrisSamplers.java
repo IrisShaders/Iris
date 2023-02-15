@@ -49,7 +49,7 @@ public class IrisSamplers {
 	}
 
 	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped,
-											   RenderTargets renderTargets, ImmutableSet<Integer> mipmapped, boolean isFullscreenPass) {
+											   RenderTargets renderTargets, boolean isFullscreenPass) {
 		// colortex0,1,2,3 are only able to be sampled from fullscreen passes.
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.
 		int startIndex = isFullscreenPass ? 0 : 4;
@@ -70,13 +70,6 @@ public class IrisSamplers {
 
 			RenderTarget target = renderTargets.get(index);
 
-			GlSampler sampler;
-			if (mipmapped.contains(index)) {
-				sampler = target.getInternalFormat().getPixelFormat().isInteger() ? NEAREST_MIPMAP : LINEAR_MIPMAP;
-			} else {
-				sampler = null;
-			}
-
 			final String name = "colortex" + i;
 
 			// TODO: How do custom textures interact with aliases?
@@ -86,9 +79,9 @@ public class IrisSamplers {
 
 				// colortex0 is the default sampler in fullscreen passes
 				if (i == 0 && isFullscreenPass) {
-					samplers.addDefaultSampler(TextureType.TEXTURE_2D, texture, null, sampler, name, legacyName);
+					samplers.addDefaultSampler(TextureType.TEXTURE_2D, texture, null, null, name, legacyName);
 				} else {
-					samplers.addDynamicSampler(TextureType.TEXTURE_2D, texture, sampler, name, legacyName);
+					samplers.addDynamicSampler(TextureType.TEXTURE_2D, texture, null, name, legacyName);
 				}
 			} else {
 				samplers.addDynamicSampler(texture, name);
@@ -130,12 +123,12 @@ public class IrisSamplers {
 
 		if (waterShadowEnabled) {
 			usesShadows = true;
-			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? SHADOW_SAMPLER_NEAREST : null), "shadowtex0", "watershadow");
-			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? SHADOW_SAMPLER_NEAREST : null),
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? shadowRenderTargets.isLinearFiltered(0) ? SHADOW_SAMPLER_LINEAR : SHADOW_SAMPLER_NEAREST : null), "shadowtex0", "watershadow");
+			samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? shadowRenderTargets.isLinearFiltered(1) ? SHADOW_SAMPLER_LINEAR : SHADOW_SAMPLER_NEAREST : null),
 					"shadowtex1", "shadow");
 		} else {
-			usesShadows = samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? SHADOW_SAMPLER_NEAREST : null), "shadowtex0", "shadow");
-			usesShadows |= samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? SHADOW_SAMPLER_NEAREST : null), "shadowtex1");
+			usesShadows = samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTexture()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(0) ? shadowRenderTargets.isLinearFiltered(0) ? SHADOW_SAMPLER_LINEAR : SHADOW_SAMPLER_NEAREST : null), "shadowtex0", "shadow");
+			usesShadows |= samplers.addDynamicSampler(TextureType.TEXTURE_2D, shadowRenderTargets.getDepthTextureNoTranslucents()::getTextureId, separateHardwareSamplers ? null : (shadowRenderTargets.isHardwareFiltered(1) ? shadowRenderTargets.isLinearFiltered(1) ? SHADOW_SAMPLER_LINEAR : SHADOW_SAMPLER_NEAREST : null), "shadowtex1");
 		}
 
 		if (flipped == null) {
