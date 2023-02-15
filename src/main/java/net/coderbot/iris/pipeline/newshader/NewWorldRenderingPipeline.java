@@ -318,7 +318,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, ImmutableSet.of(), false);
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 			IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 
 			if (!shouldBindPBR) {
@@ -359,7 +359,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeShadow, renderTargets, ImmutableSet.of(), false);
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeShadow, renderTargets, false);
 			IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 
 			if (!shouldBindPBR) {
@@ -534,7 +534,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 					ProgramSamplers.customTextureSamplerInterceptor(builder,
 						customTextureManager.getCustomTextureIdMap(textureStage));
 
-				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, ImmutableSet.of(), false);
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
 				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
@@ -593,7 +593,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 					ProgramSamplers.customTextureSamplerInterceptor(builder,
 						customTextureManager.getCustomTextureIdMap(textureStage));
 
-				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, ImmutableSet.of(), true);
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, true);
 				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 				IrisSamplers.addCompositeSamplers(builder, renderTargets);
 				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
@@ -711,7 +711,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				ProgramSamplers.customTextureSamplerInterceptor(samplers,
 						customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
 
-		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, ImmutableSet.of(), false);
+		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false);
 		IrisSamplers.addCustomTextures(samplerHolder, customTextureManager.getIrisCustomTextures());
 		IrisImages.addRenderTargetImages(images, flipped, renderTargets);
 
