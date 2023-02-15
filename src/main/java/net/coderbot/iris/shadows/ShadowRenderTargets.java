@@ -274,9 +274,12 @@ public class ShadowRenderTargets {
 			actualDrawBuffers[i] = i;
 
 			if (drawBuffers[i] >= getRenderTargetCount()) {
-				// TODO: This causes resource leaks, also we should really verify this in the shaderpack parser...
-				throw new IllegalStateException("Render target with index " + drawBuffers[i] + " is not supported, only "
-					+ getRenderTargetCount() + " render targets are supported with this current feature configuration.");
+				// If a shader is using an invalid drawbuffer, they're most likely relying on the Optifine behavior of ignoring DRAWBUFFERS in the shadow pass.
+				// We need to fix this for them, since apparantly this is a common issue.
+				// Iris.logger.warn("Invalid framebuffer was attempted to be created! Forcing a framebuffer with DRAWBUFFERS 01 for shadow.");
+				ownedFramebuffers.remove(framebuffer);
+				framebuffer.destroy();
+				return createColorFramebuffer(stageWritesToMain, new int[] { 0, 1 });
 			}
 
 			RenderTarget target = this.getOrCreate(drawBuffers[i]);
