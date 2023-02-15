@@ -319,6 +319,11 @@ public class Iris {
 			return false;
 		}
 
+		if (!isValidShaderpack(shaderPackRoot)) {
+			logger.error("Pack \"{}\" is not valid! Can't load it.", name);
+			return false;
+		}
+
 		Path shaderPackPath;
 
 		if (shaderPackRoot.toString().endsWith(".zip")) {
@@ -494,6 +499,10 @@ public class Iris {
 		} catch (IOException e) {
 			// TODO: Better error handling
 		}
+	}
+
+	public static boolean isValidToShowPack(Path pack) {
+		return Files.isDirectory(pack) || pack.toString().endsWith(".zip");
 	}
 
 	public static boolean isValidShaderpack(Path pack) {

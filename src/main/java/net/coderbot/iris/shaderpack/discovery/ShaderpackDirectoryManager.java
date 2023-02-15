@@ -71,7 +71,7 @@ public class ShaderpackDirectoryManager {
 		};
 
 		try (Stream<Path> list = Files.list(root)) {
-			return list.filter(Iris::isValidShaderpack)
+			return list.filter(Iris::isValidToShowPack)
 				.map(path -> path.getFileName().toString())
 				.sorted(comparator).collect(Collectors.toList());
 		}
