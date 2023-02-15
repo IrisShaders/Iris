@@ -132,7 +132,7 @@ public class SodiumTransformer {
 					"uniform mat4 iris_ProjectionMatrix;");
 		}
 
-		if (parameters.type == PatchShaderType.FRAGMENT_CUTOUT || parameters.type == PatchShaderType.FRAGMENT) {
+		if (parameters.type == PatchShaderType.FRAGMENT) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "const uint MATERIAL_USE_MIP_OFFSET = 0u;",
 				"const uint MATERIAL_ALPHA_CUTOFF_OFFSET = 1u;",
 				"const float[4] ALPHA_CUTOFF = float[4](0.0f, 0.1f, 0.1f, 1.0f);",

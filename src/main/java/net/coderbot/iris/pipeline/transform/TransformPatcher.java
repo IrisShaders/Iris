@@ -212,7 +212,7 @@ public class TransformPatcher {
 						case COMPUTE:
 							// we can assume the version is at least 400 because it's a compute shader
 							versionStatement.profile = Profile.CORE;
-							CommonTransformer.transform(transformer, tree, root, parameters);
+							CommonTransformer.transform(transformer, tree, root, parameters, null);
 							break;
 						default:
 							// TODO: Implement Optifine's special core profile mode
