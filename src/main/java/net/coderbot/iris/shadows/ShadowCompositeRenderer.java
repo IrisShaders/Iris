@@ -6,6 +6,8 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.program.ComputeProgram;
@@ -36,7 +38,9 @@ import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 
@@ -97,7 +101,7 @@ public class ShadowCompositeRenderer {
 
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, renderTargets);
 			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, renderTargets);
-			int[] drawBuffers = new int[]{0, 1};
+			int[] drawBuffers = source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers();
 
 			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
@@ -188,7 +192,7 @@ public class ShadowCompositeRenderer {
 			}
 
 			if (ranCompute) {
-				IrisRenderSystem.memoryBarrier(40);
+				IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 			}
 
 			Program.unbind();
@@ -225,7 +229,9 @@ public class ShadowCompositeRenderer {
 
 		for (int i = 0; i < renderTargets.getRenderTargetCount(); i++) {
 			// Reset mipmapping states at the end of the frame.
-			resetRenderTarget(renderTargets.get(i));
+			if (renderTargets.get(i) != null) {
+				resetRenderTarget(renderTargets.get(i));
+			}
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
@@ -288,7 +294,7 @@ public class ShadowCompositeRenderer {
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 		IrisSamplers.addCustomTextures(customTextureSamplerInterceptor, irisCustomTextures);
 
-		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped);
+		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 		IrisImages.addShadowColorImages(builder, targets, flipped);
 
 		Program build = builder.build();
@@ -323,7 +329,7 @@ public class ShadowCompositeRenderer {
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 				IrisSamplers.addCustomTextures(customTextureSamplerInterceptor, irisCustomTextures);
 
-				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped);
+				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 				IrisImages.addShadowColorImages(builder, targets, flipped);
 
 				programs[i] = builder.buildCompute();

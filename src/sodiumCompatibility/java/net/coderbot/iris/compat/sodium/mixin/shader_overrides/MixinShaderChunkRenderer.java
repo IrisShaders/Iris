@@ -8,7 +8,6 @@ import me.jellysquid.mods.sodium.client.gl.shader.ShaderConstants;
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderParser;
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
-import me.jellysquid.mods.sodium.client.gl.texture.GlSampler;
 import me.jellysquid.mods.sodium.client.render.chunk.ShaderChunkRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderTextureSlot;
@@ -53,10 +52,6 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
     @Shadow(remap = false)
 	@Final
 	protected ChunkVertexType vertexType;
-
-	@Shadow
-	@Final
-	protected EnumMap<ChunkShaderTextureSlot, GlSampler> samplers;
 
 	@Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void iris$onInit(RenderDevice device, ChunkVertexType vertexType, CallbackInfo ci) {
@@ -104,7 +99,7 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 		}
 
 		override.bind();
-		override.getInterface().startDrawing(this.samplers);
+		override.getInterface().startDrawing();
 	}
 
     @Inject(method = "end", at = @At("HEAD"), remap = false, cancellable = true)

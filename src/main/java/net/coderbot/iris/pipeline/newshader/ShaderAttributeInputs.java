@@ -116,7 +116,7 @@ public class ShaderAttributeInputs {
 			return false;
 		if (light != other.light)
 			return false;
-		if (normal != other.normal)
+		if (light != other.light)
 			return false;
 		if (newLines != other.newLines)
 			return false;

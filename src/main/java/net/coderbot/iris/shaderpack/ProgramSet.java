@@ -22,8 +22,11 @@ public class ProgramSet {
 
 	private final ProgramSource[] shadowcomp;
 	private final ComputeSource[][] shadowCompCompute;
+	private final ProgramSource[] begin;
+	private final ComputeSource[][] beginCompute;
 	private final ProgramSource[] prepare;
 	private final ComputeSource[][] prepareCompute;
+	private final ComputeSource[] setup;
 
 	private final ProgramSource gbuffersBasic;
 	private final ProgramSource gbuffersLine;
@@ -31,6 +34,8 @@ public class ProgramSet {
 	private final ProgramSource gbuffersTextured;
 	private final ProgramSource gbuffersTexturedLit;
 	private final ProgramSource gbuffersTerrain;
+	private final ProgramSource gbuffersTerrainSolid;
+	private final ProgramSource gbuffersTerrainCutout;
 	private ProgramSource gbuffersDamagedBlock;
 	private final ProgramSource gbuffersSkyBasic;
 	private final ProgramSource gbuffersSkyTextured;
@@ -84,6 +89,14 @@ public class ProgramSet {
 			this.shadowCompCompute[i] = readComputeArray(directory, sourceProvider, "shadowcomp" + ((i == 0) ? "" : i));
 		}
 
+		this.setup = readProgramArray(directory, sourceProvider, "setup");
+
+		this.begin = readProgramArray(directory, sourceProvider, "begin", shaderProperties);
+		this.beginCompute = new ComputeSource[begin.length][];
+		for (int i = 0; i < begin.length; i++) {
+			this.beginCompute[i] = readComputeArray(directory, sourceProvider, "begin" + ((i == 0) ? "" : i));
+		}
+
 		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
 		this.prepareCompute = new ComputeSource[prepare.length][];
 		for (int i = 0; i < prepare.length; i++) {
@@ -96,6 +109,8 @@ public class ProgramSet {
 		this.gbuffersTextured = readProgramSource(directory, sourceProvider, "gbuffers_textured", this, shaderProperties);
 		this.gbuffersTexturedLit = readProgramSource(directory, sourceProvider, "gbuffers_textured_lit", this, shaderProperties);
 		this.gbuffersTerrain = readProgramSource(directory, sourceProvider, "gbuffers_terrain", this, shaderProperties);
+		this.gbuffersTerrainSolid = readProgramSource(directory, sourceProvider, "gbuffers_terrain_solid", this, shaderProperties);
+		this.gbuffersTerrainCutout = readProgramSource(directory, sourceProvider, "gbuffers_terrain_cutout", this, shaderProperties);
 		this.gbuffersDamagedBlock = readProgramSource(directory, sourceProvider, "gbuffers_damagedblock", this, shaderProperties);
 		this.gbuffersSkyBasic = readProgramSource(directory, sourceProvider, "gbuffers_skybasic", this, shaderProperties);
 		this.gbuffersSkyTextured = readProgramSource(directory, sourceProvider, "gbuffers_skytextured", this, shaderProperties);
@@ -164,6 +179,19 @@ public class ProgramSet {
 		return programs;
 	}
 
+	private ComputeSource[] readProgramArray(AbsolutePackPath directory,
+											 Function<AbsolutePackPath, String> sourceProvider, String name) {
+		ComputeSource[] programs = new ComputeSource[99];
+
+		for (int i = 0; i < programs.length; i++) {
+			String suffix = i == 0 ? "" : Integer.toString(i);
+
+			programs[i] = readComputeSource(directory, sourceProvider, name + suffix, this);
+		}
+
+		return programs;
+	}
+
 	private ComputeSource[] readComputeArray(AbsolutePackPath directory,
 											 Function<AbsolutePackPath, String> sourceProvider, String name) {
 		ComputeSource[] programs = new ComputeSource[27];
@@ -189,14 +217,25 @@ public class ProgramSet {
 
 		programs.add(shadow);
 		programs.addAll(Arrays.asList(shadowcomp));
+		programs.addAll(Arrays.asList(begin));
 		programs.addAll(Arrays.asList(prepare));
 
 		programs.addAll (Arrays.asList(
-				gbuffersBasic, gbuffersBeaconBeam, gbuffersTextured, gbuffersTexturedLit, gbuffersTerrain,
+				gbuffersBasic, gbuffersBeaconBeam, gbuffersTextured, gbuffersTexturedLit, gbuffersTerrain, gbuffersTerrainSolid, gbuffersTerrainCutout,
 				gbuffersDamagedBlock, gbuffersSkyBasic, gbuffersSkyTextured, gbuffersClouds, gbuffersWeather,
 				gbuffersEntities, gbuffersEntitiesTrans, gbuffersEntitiesGlowing, gbuffersGlint, gbuffersEntityEyes, gbuffersBlock,
 				gbuffersHand
 		));
+
+		for (ComputeSource computeSource : setup) {
+			if (computeSource != null) {
+				computes.add(computeSource);
+			}
+		}
+
+		for (ComputeSource[] computeSources : beginCompute) {
+			computes.addAll(Arrays.asList(computeSources));
+		}
 
 		for (ComputeSource[] computeSources : compositeCompute) {
 			computes.addAll(Arrays.asList(computeSources));
@@ -265,8 +304,16 @@ public class ProgramSet {
 		return shadowcomp;
 	}
 
+	public ProgramSource[] getBegin() {
+		return begin;
+	}
+
 	public ProgramSource[] getPrepare() {
 		return prepare;
+	}
+
+	public ComputeSource[] getSetup() {
+		return setup;
 	}
 
 	public Optional<ProgramSource> getGbuffersBasic() {
@@ -287,6 +334,14 @@ public class ProgramSet {
 
 	public Optional<ProgramSource> getGbuffersTerrain() {
 		return gbuffersTerrain.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersTerrainSolid() {
+		return gbuffersTerrainSolid.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersTerrainCutout() {
+		return gbuffersTerrainCutout.requireValid();
 	}
 
 	public Optional<ProgramSource> getGbuffersDamagedBlock() {
@@ -348,6 +403,8 @@ public class ProgramSet {
 			case SkyTextured: return getGbuffersSkyTextured();
 			case Clouds: return getGbuffersClouds();
 			case Terrain: return getGbuffersTerrain();
+			case TerrainSolid: return getGbuffersTerrainSolid();
+			case TerrainCutout: return getGbuffersTerrainCutout();
 			case DamagedBlock: return getGbuffersDamagedBlock();
 			case Block: return getGbuffersBlock();
 			case BeaconBeam: return getGbuffersBeaconBeam();
@@ -391,6 +448,10 @@ public class ProgramSet {
 
 	public ComputeSource[][] getShadowCompCompute() {
 		return shadowCompCompute;
+	}
+
+	public ComputeSource[][] getBeginCompute() {
+		return beginCompute;
 	}
 
 	public ComputeSource[][] getPrepareCompute() {

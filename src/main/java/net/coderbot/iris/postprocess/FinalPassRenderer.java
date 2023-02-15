@@ -6,8 +6,10 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -44,9 +46,11 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class FinalPassRenderer {
@@ -58,6 +62,7 @@ public class FinalPassRenderer {
 	private final GlFramebuffer baseline;
 	private final GlFramebuffer colorHolder;
 	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
+	private final Set<GlImage> customImages;
 	private int lastColorTextureId;
 	private int lastColorTextureVersion;
 	private final TextureAccess noiseTexture;
@@ -73,13 +78,14 @@ public class FinalPassRenderer {
 							 CenterDepthSampler centerDepthSampler,
 							 Supplier<ShadowRenderTargets> shadowTargetsSupplier,
 							 Object2ObjectMap<String, TextureAccess> customTextureIds,
-							 Object2ObjectMap<String, TextureAccess> irisCustomTextures, ImmutableSet<Integer> flippedAtLeastOnce
+							 Object2ObjectMap<String, TextureAccess> irisCustomTextures, Set<GlImage> customImages, ImmutableSet<Integer> flippedAtLeastOnce
 							, CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
 		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.customTextureIds = customTextureIds;
 		this.irisCustomTextures = irisCustomTextures;
+		this.customImages = customImages;
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
 		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
@@ -204,7 +210,7 @@ public class FinalPassRenderer {
 				}
 			}
 
-			IrisRenderSystem.memoryBarrier(40);
+			IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 
 			if (!finalPass.mipmappedBuffers.isEmpty()) {
 				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
@@ -359,13 +365,16 @@ public class FinalPassRenderer {
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+		IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+		IrisImages.addCustomImages(builder, customImages);
+
 		IrisSamplers.addCustomTextures(builder, irisCustomTextures);
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null);
+			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 			IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
 		}
 
@@ -408,14 +417,16 @@ public class FinalPassRenderer {
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
 				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 
 				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+				IrisImages.addCustomImages(builder, customImages);
 
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 				IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null);
+					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 					IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
 				}
 

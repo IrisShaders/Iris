@@ -119,7 +119,7 @@ public final class OptionAnnotatedSource {
 			"noiseTextureResolution"
 		);
 
-		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS; i++) {
+		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS; i++) {
 			values.add("shadowcolor" + i + "Mipmap");
 			values.add("shadowColor" + i + "Mipmap");
 			values.add("shadowcolor" + i + "Nearest");
