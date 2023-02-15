@@ -146,7 +146,7 @@ public class ParsedString {
 		if (!(text.length() <= position)) {
 			char next = text.charAt(position);
 
-			if (!Character.isWhitespace(next)) {
+			if (!Character.isWhitespace(next) && next != ';') {
 				return null;
 			}
 		}
