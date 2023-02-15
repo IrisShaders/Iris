@@ -6,7 +6,6 @@ import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
-import me.jellysquid.mods.sodium.client.gl.texture.GlSampler;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderTextureSlot;
 import me.jellysquid.mods.sodium.client.util.TextureUtil;
 import net.coderbot.iris.gl.IrisRenderSystem;
@@ -77,10 +76,9 @@ public class IrisChunkShaderInterface {
 		this.irisProgramImages = isShadowPass ? pipeline.initShadowImages(handle) : pipeline.initTerrainImages(handle);
 	}
 
-	@Deprecated // the shader interface should not modify pipeline state
-	public void startDrawing(EnumMap<ChunkShaderTextureSlot, GlSampler> samplers) {
-		bindTexture(ChunkShaderTextureSlot.BLOCK, getTextureId(ChunkShaderTextureSlot.BLOCK_MIPPED), samplers.get(ChunkShaderTextureSlot.BLOCK_MIPPED));
-		bindTexture(ChunkShaderTextureSlot.LIGHT, getTextureId(ChunkShaderTextureSlot.LIGHT), samplers.get(ChunkShaderTextureSlot.LIGHT));
+	public void startDrawing() {
+		bindTexture(ChunkShaderTextureSlot.BLOCK, getTextureId(ChunkShaderTextureSlot.BLOCK));
+		bindTexture(ChunkShaderTextureSlot.LIGHT, getTextureId(ChunkShaderTextureSlot.LIGHT));
 
 		if (blendModeOverride != null) {
 			blendModeOverride.apply();
@@ -101,9 +99,6 @@ public class IrisChunkShaderInterface {
 	}
 
 	public void restore() {
-		this.unbindTexture(ChunkShaderTextureSlot.BLOCK);
-		this.unbindTexture(ChunkShaderTextureSlot.LIGHT);
-
 		if (blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();
 		}
@@ -123,26 +118,15 @@ public class IrisChunkShaderInterface {
 
 	@Deprecated // the shader interface should not modify pipeline state
 	public void endDrawing() {
-		for (ChunkShaderTextureSlot slot : ChunkShaderTextureSlot.VALUES) {
-			this.unbindTexture(slot);
-		}
 	}
 
-	@Deprecated(forRemoval = true) // should be handled properly in GFX instead.
-	private void bindTexture(ChunkShaderTextureSlot slot, int textureId, GlSampler sampler) {
+	private void bindTexture(ChunkShaderTextureSlot slot, int textureId) {
 		IrisRenderSystem.bindTextureToUnit(GL33C.GL_TEXTURE_2D, slot.ordinal(), textureId);
-
-		GL33C.glBindSampler(slot.ordinal(), sampler.handle());
-	}
-
-	@Deprecated(forRemoval = true) // should be handled properly in GFX instead.
-	private void unbindTexture(ChunkShaderTextureSlot slot) {
-		GL33C.glBindSampler(slot.ordinal(), 0);
 	}
 
 	private static int getTextureId(ChunkShaderTextureSlot slot) {
 		return switch (slot) {
-			case BLOCK, BLOCK_MIPPED -> TextureUtil.getBlockTextureId();
+			case BLOCK -> TextureUtil.getBlockTextureId();
 			case LIGHT -> TextureUtil.getLightTextureId();
 		};
 	}
