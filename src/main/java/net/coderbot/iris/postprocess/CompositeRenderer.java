@@ -276,7 +276,6 @@ public class CompositeRenderer {
 			renderPass.framebuffer.bind();
 			renderPass.program.use();
 			if (renderPass.blendModeOverride != null) {
-				System.out.println("BLENDING ");
 				renderPass.blendModeOverride.apply();
 			}
 
