@@ -1,5 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.font;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
@@ -7,6 +8,7 @@ import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.GlyphVertex;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.GlyphVertexExt;
 import net.coderbot.iris.vertices.ImmediateState;
+import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import org.joml.Math;

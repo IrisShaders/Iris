@@ -23,6 +23,7 @@
     "options.MixinSodiumOptionsGUI",
     "fast_render.MixinCube",
     "fast_render.MixinModelPart",
+    "font.MixinFont",
     "font.MixinGlyphRenderer",
     "pbr_animation.MixinTextureAtlasSprite",
     "shader_overrides.MixinGlProgram",
