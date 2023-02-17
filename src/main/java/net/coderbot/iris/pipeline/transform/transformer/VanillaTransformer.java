@@ -20,7 +20,7 @@ public class VanillaTransformer {
 			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
 		}
 
-		CommonTransformer.transform(t, tree, root, parameters);
+		CommonTransformer.transform(t, tree, root, parameters, null);
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine

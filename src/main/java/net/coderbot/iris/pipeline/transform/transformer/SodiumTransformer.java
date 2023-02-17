@@ -5,6 +5,8 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.transform.PatchShaderType;
+import net.coderbot.iris.pipeline.transform.parameter.GeometryInfoParameters;
 import net.coderbot.iris.pipeline.transform.parameter.SodiumParameters;
 
 public class SodiumTransformer {
@@ -13,7 +15,7 @@ public class SodiumTransformer {
 			TranslationUnit tree,
 			Root root,
 			SodiumParameters parameters) {
-		CommonTransformer.transform(t, tree, root, parameters);
+		CommonTransformer.transform(t, tree, root, parameters, (parameters.hasGeometry ? "iris_alphaTestValueGS" : "iris_alphaTestValue"));
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
@@ -91,6 +93,7 @@ public class SodiumTransformer {
 				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 						"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 			}
+			String separateAoValue = parameters.isSeparateAo ? "a_Color" : "vec4(a_Color.rgb * a_Color.a, 1.0)";
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					// translated from sodium's chunk_vertex.glsl
 					"vec3 _vert_position;",
@@ -98,37 +101,53 @@ public class SodiumTransformer {
 					"ivec2 _vert_tex_light_coord;",
 					"vec4 _vert_color;",
 					"uint _draw_id;",
-					"in vec4 a_PosId;",
+					"uint _material_params;",
+					"in uvec4 a_PosId;",
 					"in vec4 a_Color;",
 					"in vec2 a_TexCoord;",
 					"in ivec2 a_LightCoord;",
+					"out float iris_alphaTestValue;",
+				"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
+				"const uint MATERIAL_ALPHA_CUTOFF_OFFSET = 1u;",
+				"const float[4] ALPHA_CUTOFF = float[4](0.0f, 0.1f, 0.1f, 1.0f);",
+				"float _material_alpha_cutoff(uint material) {\n" +
+					"    return ALPHA_CUTOFF[(material >> MATERIAL_ALPHA_CUTOFF_OFFSET) & 3u];\n" +
+					"}",
 					"void _vert_init() {" +
-							"_vert_position = (a_PosId.xyz * " + String.valueOf(parameters.positionScale) + " + "
-							+ String.valueOf(parameters.positionOffset) + ");" +
-							"_vert_tex_diffuse_coord = (a_TexCoord * " + String.valueOf(parameters.textureScale) + ");" +
+							"_vert_position = (vec3(a_PosId.xyz) * " + parameters.positionScale + " + "
+							+ parameters.positionOffset + ");" +
+							"_vert_tex_diffuse_coord = (a_TexCoord * " + parameters.textureScale + ");" +
 							"_vert_tex_light_coord = a_LightCoord;" +
-							"_vert_color = a_Color;" +
-							"_draw_id = uint(a_PosId.w); }",
+							"_vert_color = " + separateAoValue + ";" +
+							"_draw_id = (a_PosId.w >> 8u) & 0xFFu;" +
+							"_material_params = (a_PosId.w >> 0u) & 0xFFu;" +
+							"iris_alphaTestValue = _material_alpha_cutoff(_material_params); }",
 
-					// translated from sodium's chunk_parameters.glsl
-					// Comment on the struct:
-					// Older AMD drivers can't handle vec3 in std140 layouts correctly The alignment
-					// requirement is 16 bytes (4 float components) anyways, so we're not wasting
-					// extra memory with this, only fixing broken drivers.
-					"struct DrawParameters { vec4 offset; };",
-					"layout(std140) uniform ubo_DrawParameters {DrawParameters Chunks[256]; };",
+					"uvec3 _get_relative_chunk_coord(uint pos) { return uvec3(pos) >> uvec3(5u, 3u, 0u) & uvec3(7u, 3u, 7u); }",
 
+					"vec3 _get_draw_translation(uint pos) { return _get_relative_chunk_coord(pos) * vec3(16.0f); }",
 					"uniform mat4 iris_ProjectionMatrix;",
 					"uniform mat4 iris_ModelViewMatrix;",
 					"uniform vec3 u_RegionOffset;",
-					// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-					"vec4 getVertexPosition() { return vec4(u_RegionOffset + Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }");
+					"vec4 getVertexPosition() { return vec4(_vert_position + u_RegionOffset + _get_draw_translation(_draw_id), 1.0); }");
 			tree.prependMainFunctionBody(t, "_vert_init();");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 		} else {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform mat4 iris_ModelViewMatrix;",
 					"uniform mat4 iris_ProjectionMatrix;");
+		}
+
+		if (parameters.type == PatchShaderType.GEOMETRY) {
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+				"in float iris_alphaTestValue[];",
+				"out float iris_alphaTestValueGS;",
+				"void _geom_init() { iris_alphaTestValueGS = iris_alphaTestValue[0]; }");
+			tree.prependMainFunctionBody(t, "_geom_init();");
+		} else if (parameters.type == PatchShaderType.FRAGMENT) {
+			boolean hasGeometry = parameters.hasGeometry;
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "const uint MATERIAL_USE_MIP_OFFSET = 0u;",
+				"in float " + (hasGeometry ? "iris_alphaTestValueGS" : "iris_alphaTestValue") + ";");
 		}
 
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",

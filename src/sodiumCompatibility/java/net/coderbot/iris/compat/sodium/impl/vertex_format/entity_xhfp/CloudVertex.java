@@ -1,8 +1,8 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
-import me.jellysquid.mods.sodium.common.util.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.joml.Matrix4f;
@@ -10,7 +10,7 @@ import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
 public final class CloudVertex {
-	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.CLOUDS);
+	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.instance().get(IrisVertexFormats.CLOUDS);
 
 	public static final int STRIDE = IrisVertexFormats.CLOUDS.getVertexSize();
 

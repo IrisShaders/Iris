@@ -583,7 +583,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null), stage, customTextureMap), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 				} catch (RuntimeException e) {
 					// TODO: Better error handling
-					throw new RuntimeException("Shader compilation failed!", e);
+					if (e instanceof ShaderCompileException) {
+						throw e;
+					} else {
+						throw new RuntimeException("Shader compilation failed!", e);
+					}
 				}
 
 				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);

@@ -3,12 +3,12 @@ package net.coderbot.iris.compat.sodium.mixin.fast_render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.jellysquid.mods.sodium.client.model.ModelCuboidAccessor;
-import me.jellysquid.mods.sodium.client.render.RenderGlobal;
 import me.jellysquid.mods.sodium.client.render.immediate.model.ModelCuboid;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
-import me.jellysquid.mods.sodium.client.render.vertex.formats.ModelVertex;
-import me.jellysquid.mods.sodium.client.util.Norm3b;
-import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
+import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
+import net.caffeinemc.mods.sodium.api.util.ColorABGR;
+import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.coderbot.iris.vertices.ImmediateState;
 import net.coderbot.iris.vertices.NormalHelper;
@@ -68,7 +68,7 @@ public class MixinModelPart {
 			cuboid.updateVertices(matrices.pose());
 
 
-			try (MemoryStack stack = RenderGlobal.VERTEX_DATA.push()) {
+			try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
 				long buffer = stack.nmalloc(4 * 6 * (extend ? EntityVertex.STRIDE : ModelVertex.STRIDE));
 				long ptr = buffer;
 
@@ -98,9 +98,9 @@ public class MixinModelPart {
 						var tex = quad.textures[i];
 
 						if (extend) {
-							EntityVertex.write(ptr, pos.x, pos.y, pos.z, color, tex.x, tex.y, midU, midV, light, overlay, normal, tangent);
+							EntityVertex.write(ptr, pos.x, pos.y, pos.z, color, tex.x, tex.y, midU, midV, overlay, light, normal, tangent);
 						} else {
-							ModelVertex.write(ptr, pos.x, pos.y, pos.z, color, tex.x, tex.y, light, overlay, normal);
+							ModelVertex.write(ptr, pos.x, pos.y, pos.z, color, tex.x, tex.y, overlay, light, normal);
 						}
 
 						ptr += extend ? EntityVertex.STRIDE : ModelVertex.STRIDE;
@@ -115,9 +115,9 @@ public class MixinModelPart {
 	private int getTangent(int normal, float x0, float y0, float z0, float u0, float v0, float x1, float y1, float z1, float u1, float v1, float x2, float y2, float z2, float u2, float v2) {
 		// Capture all of the relevant vertex positions
 
-		float normalX = Norm3b.unpackX(normal);
-		float normalY = Norm3b.unpackY(normal);
-		float normalZ = Norm3b.unpackZ(normal);
+		float normalX = NormI8.unpackX(normal);
+		float normalY = NormI8.unpackY(normal);
+		float normalZ = NormI8.unpackZ(normal);
 
 		float edge1x = x1 - x0;
 		float edge1y = y1 - y0;

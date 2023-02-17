@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline.transform.parameter;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
@@ -9,7 +10,7 @@ import net.coderbot.iris.pipeline.transform.Patch;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-public class SodiumParameters extends Parameters {
+public class SodiumParameters extends GeometryInfoParameters {
 	public final ShaderAttributeInputs inputs;
 	public final float positionScale;
 	public final float positionOffset;
@@ -19,20 +20,23 @@ public class SodiumParameters extends Parameters {
 	// DO NOT include this field in hashCode or equals, it's mutable!
 	// (See use of setAlphaFor in TransformPatcher)
 	public AlphaTest alpha;
+	public boolean isSeparateAo;
 
-	public SodiumParameters(Patch patch,
+	public SodiumParameters(Patch patch, boolean hasGeometry,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
 			AlphaTest alpha,
 			ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale) {
-		super(patch, textureMap);
+		super(patch, textureMap, hasGeometry);
 		this.inputs = inputs;
 		this.positionScale = positionScale;
 		this.positionOffset = positionOffset;
 		this.textureScale = textureScale;
+		this.isSeparateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo();
 
 		this.alpha = alpha;
 	}
+
 	@Override
 	public AlphaTest getAlphaTest() {
 		return alpha;
@@ -52,6 +56,7 @@ public class SodiumParameters extends Parameters {
 		result = prime * result + Float.floatToIntBits(positionOffset);
 		result = prime * result + Float.floatToIntBits(textureScale);
 		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
+		result = prime * result + ((isSeparateAo) ? 0 : 91);
 		return result;
 	}
 
@@ -78,7 +83,9 @@ public class SodiumParameters extends Parameters {
 		if (alpha == null) {
 			if (other.alpha != null)
 				return false;
-		} else if (!alpha.equals(other.alpha))
+		} else if (!alpha.equals(other.alpha)) {
+			return false;
+	    } else if (isSeparateAo == other.isSeparateAo)
 			return false;
 		return true;
 	}

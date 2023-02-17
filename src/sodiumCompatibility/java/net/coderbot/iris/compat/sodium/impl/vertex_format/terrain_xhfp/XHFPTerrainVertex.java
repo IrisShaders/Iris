@@ -1,6 +1,7 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
+import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.Material;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import org.joml.Vector3f;
@@ -21,32 +22,6 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 	private float vSum;
 	private boolean flipUpcomingNormal;
 
-	// TODO: FIX
-
-	/*@Override
-	public void copyQuadAndFlipNormal() {
-		ensureCapacity(4);
-
-		MemoryUtil.memCopy(this.writePointer - STRIDE * 4, this.writePointer, STRIDE * 4);
-
-		// Now flip vertex normals
-		int packedNormal = MemoryUtil.memGetInt(this.writePointer + 32);
-		int inverted = NormalHelper.invertPackedNormal(packedNormal);
-
-		MemoryUtil.memPutInt(this.writePointer + 32, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE * 2, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE * 3, inverted);
-
-		// We just wrote 4 vertices, advance by 4
-		for (int i = 0; i < 4; i++) {
-			this.advance();
-		}
-
-		// Ensure vertices are flushed
-		this.flush();
-	}*/
-
 	@Override
 	public void iris$setContextHolder(BlockContextHolder holder) {
 		this.contextHolder = holder;
@@ -58,7 +33,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 	}
 
 	@Override
-	public long write(long ptr,
+	public long write(long ptr, Material material,
 					  Vertex vertex, int chunkId) {
 		uSum += vertex.u;
 		vSum += vertex.v;
@@ -67,7 +42,8 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 		MemoryUtil.memPutShort(ptr + 0, XHFPModelVertexType.encodePosition(vertex.x));
 		MemoryUtil.memPutShort(ptr + 2, XHFPModelVertexType.encodePosition(vertex.y));
 		MemoryUtil.memPutShort(ptr + 4, XHFPModelVertexType.encodePosition(vertex.z));
-		MemoryUtil.memPutShort(ptr + 6, (short) chunkId);
+		MemoryUtil.memPutByte(ptr + 6, material.bits());
+		MemoryUtil.memPutByte(ptr + 7, (byte) chunkId);
 
 		MemoryUtil.memPutInt(ptr + 8, vertex.color);
 

@@ -11,7 +11,7 @@
   },
   "client": [
     "block_id.MixinChunkBuildBuffers",
-    "block_id.MixinChunkVertexBufferBuilder",
+    "block_id.MixinChunkMeshBufferBuilder",
     "block_id.MixinChunkRenderRebuildTask",
     "directional_shading.MixinFlatLightPipeline",
     "directional_shading.MixinSmoothLightPipeline",
@@ -25,9 +25,6 @@
     "fast_render.MixinModelPart",
     "font.MixinGlyphRenderer",
     "pbr_animation.MixinTextureAtlasSprite",
-    "separate_ao.MixinBlockRenderer",
-    "separate_ao.MixinFluidRenderer",
-    "shader_overrides.MixinBlockRenderPass",
     "shader_overrides.MixinGlProgram",
     "shader_overrides.MixinRegionChunkRenderer",
     "shader_overrides.MixinShaderChunkRenderer",
@@ -44,7 +41,8 @@
     "vertex_format.entity.MixinEntityRenderDispatcher",
     "vertex_format.entity.MixinModelVertex",
     "vertex_format.ChunkMeshAttributeAccessor",
-    "vertex_format.CommonVertexElementAccessor",
+    "vertex_format.MixinFluidRenderer",
+    "vertex_format.VertexElementTypeAccessor",
     "vertex_format.GlVertexAttributeFormatAccessor",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinGlVertexFormatBuilder",
@@ -52,8 +50,8 @@
     "vertex_format.MixinRegionChunkRenderer",
     "vertex_format.MixinRenderRegionArenas",
     "vertex_format.MixinRenderSectionManager",
-    "vertex_format.MixinCommonVertexElements",
+    "vertex_format.MixinVertexElementType",
     "vertex_format.MixinVertexSerializerCache",
-    "vertex_format.MixinVertexTransform"
+    "vertex_format.MixinSpriteCoordinateExpander"
   ]
 }

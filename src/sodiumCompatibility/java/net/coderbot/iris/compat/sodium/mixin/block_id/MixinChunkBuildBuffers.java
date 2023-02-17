@@ -1,11 +1,13 @@
 package net.coderbot.iris.compat.sodium.mixin.block_id;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
-import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexBufferBuilder;
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.BakedChunkModelBuilder;
+import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
@@ -27,12 +29,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 	@Shadow
 	@Final
-	private ChunkVertexBufferBuilder[] vertexBuffers;
+	private Reference2ReferenceOpenHashMap<TerrainRenderPass, BakedChunkModelBuilder> builders;
 	@Unique
 	private BlockContextHolder contextHolder;
 
 	@Inject(method = "<init>", at = @At("RETURN"), remap = false)
-	private void iris$onConstruct(ChunkVertexType vertexType, BlockRenderPassManager renderPassManager, CallbackInfo ci) {
+	private void iris$onConstruct(ChunkVertexType vertexType, CallbackInfo ci) {
 		Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
 
 		if (blockStateIds != null) {
@@ -43,10 +45,10 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 	}
 
 	@Inject(method = "<init>", remap = false, at = @At(value = "TAIL", remap = false))
-	private void iris$redirectWriterCreation(ChunkVertexType vertexType, BlockRenderPassManager renderPassManager, CallbackInfo ci) {
-		for (ChunkVertexBufferBuilder builder : this.vertexBuffers) {
-			if (builder instanceof ContextAwareVertexWriter) {
-				((ContextAwareVertexWriter) builder).iris$setContextHolder(contextHolder);
+	private void iris$redirectWriterCreation(ChunkVertexType vertexType, CallbackInfo ci) {
+		for (BakedChunkModelBuilder builder : this.builders.values()) {
+			if (builder.getVertexBuffer() instanceof ContextAwareVertexWriter) {
+				((ContextAwareVertexWriter) builder.getVertexBuffer()).iris$setContextHolder(contextHolder);
 			}
 		}
 	}

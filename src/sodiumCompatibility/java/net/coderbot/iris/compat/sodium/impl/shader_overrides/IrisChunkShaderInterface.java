@@ -6,6 +6,8 @@ import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderTextureSlot;
+import me.jellysquid.mods.sodium.client.util.TextureUtil;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
@@ -19,8 +21,11 @@ import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32C;
+import org.lwjgl.opengl.GL33C;
 
+import java.util.EnumMap;
 import java.util.List;
 
 public class IrisChunkShaderInterface {
@@ -36,8 +41,6 @@ public class IrisChunkShaderInterface {
 	private final GlUniformFloat3v uniformRegionOffset;
 	@Nullable
 	private final GlUniformMatrix4f uniformNormalMatrix;
-	@Nullable
-	private final GlUniformBlock uniformBlockDrawParameters;
 
 	private final BlendModeOverride blendModeOverride;
 	private final IrisShaderFogComponent fogShaderComponent;
@@ -57,7 +60,6 @@ public class IrisChunkShaderInterface {
 		this.uniformProjectionMatrixInverse = contextExt.bindUniformIfPresent("iris_ProjectionMatrixInverse", GlUniformMatrix4f::new);
 		this.uniformRegionOffset = contextExt.bindUniformIfPresent("u_RegionOffset", GlUniformFloat3v::new);
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("iris_NormalMatrix", GlUniformMatrix4f::new);
-		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
 		this.customUniforms = customUniforms;
 
 		this.alpha = alpha;
@@ -75,12 +77,11 @@ public class IrisChunkShaderInterface {
 		this.irisProgramImages = isShadowPass ? pipeline.initShadowImages(handle) : pipeline.initTerrainImages(handle);
 	}
 
-	public void setup() {
-		// See IrisSamplers#addLevelSamplers
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
-		// This is what is expected by the rest of rendering state, failure to do this will cause blurry textures on particles.
-		GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
+	public void startDrawing() {
+		IrisRenderSystem.bindTextureToUnit(GL30C.GL_TEXTURE_2D, 0, RenderSystem.getShaderTexture(0));
+		RenderSystem.activeTexture(GL30C.GL_TEXTURE2);
+		RenderSystem.bindTexture(RenderSystem.getShaderTexture(2));
+
 
 		if (blendModeOverride != null) {
 			blendModeOverride.apply();
@@ -118,6 +119,21 @@ public class IrisChunkShaderInterface {
 		}
 	}
 
+	@Deprecated // the shader interface should not modify pipeline state
+	public void endDrawing() {
+	}
+
+	private void bindTexture(ChunkShaderTextureSlot slot, int textureId) {
+		IrisRenderSystem.bindTextureToUnit(GL33C.GL_TEXTURE_2D, slot.ordinal(), textureId);
+	}
+
+	private static int getTextureId(ChunkShaderTextureSlot slot) {
+		return switch (slot) {
+			case BLOCK -> TextureUtil.getBlockTextureId();
+			case LIGHT -> TextureUtil.getLightTextureId();
+		};
+	}
+
 	public void setModelViewMatrix(Matrix4f modelView) {
 		if (this.uniformModelViewMatrix != null) {
 			this.uniformModelViewMatrix.set(modelView);
@@ -136,12 +152,6 @@ public class IrisChunkShaderInterface {
 			normalMatrix.invert();
 			normalMatrix.transpose();
 			this.uniformNormalMatrix.set(normalMatrix);
-		}
-	}
-
-	public void setDrawUniforms(GlMutableBuffer buffer) {
-		if (this.uniformBlockDrawParameters != null) {
-			this.uniformBlockDrawParameters.bindBuffer(buffer);
 		}
 	}
 

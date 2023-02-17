@@ -1,10 +1,10 @@
 package net.coderbot.iris.compat.sodium.mixin.font;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import me.jellysquid.mods.sodium.client.render.RenderGlobal;
-import me.jellysquid.mods.sodium.client.render.vertex.formats.GlyphVertex;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
-import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
+import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
+import net.caffeinemc.mods.sodium.api.util.ColorABGR;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.GlyphVertex;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.GlyphVertexExt;
 import net.coderbot.iris.vertices.ImmediateState;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -72,7 +72,7 @@ public class MixinGlyphRenderer {
 
 		boolean ext = extend();
 		int stride = ext ? GlyphVertexExt.STRIDE : GlyphVertex.STRIDE;
-		try (MemoryStack stack = RenderGlobal.VERTEX_DATA.push()) {
+		try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
 			long buffer = stack.nmalloc(4 * stride);
 			long ptr = buffer;
 
@@ -93,7 +93,7 @@ public class MixinGlyphRenderer {
 	}
 
 	private boolean extend() {
-		return IrisApi.getInstance().isShaderPackInUse() && ImmediateState.renderWithExtendedVertexFormat;
+		return IrisApi.getInstance().isShaderPackInUse() && ImmediateState.isRenderingLevel;
 	}
 
 	private static void write(boolean ext, long buffer,
@@ -105,7 +105,7 @@ public class MixinGlyphRenderer {
 		if (ext) {
 			GlyphVertexExt.write(buffer, x2, y2, z2, color, u, v, light);
 		} else {
-			GlyphVertex.write(buffer, x2, y2, z2, color, u, v, light);
+			GlyphVertex.put(buffer, x2, y2, z2, color, u, v, light);
 		}
 	}
 

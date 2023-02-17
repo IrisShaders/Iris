@@ -2,11 +2,15 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
-import me.jellysquid.mods.sodium.client.render.RenderGlobal;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
-import me.jellysquid.mods.sodium.client.util.Norm3b;
+import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
+import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.ColorAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.LightAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.PositionAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.joml.Matrix3f;
@@ -16,7 +20,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 public final class GlyphVertexExt {
-	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.TERRAIN);
+	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.instance().get(IrisVertexFormats.TERRAIN);
 	public static final int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
 
 	private static final int OFFSET_POSITION = 0;
@@ -44,13 +48,10 @@ public final class GlyphVertexExt {
 		uSum += u;
 		vSum += v;
 
-		MemoryUtil.memPutFloat(i, x);
-		MemoryUtil.memPutFloat(i + 4, y);
-		MemoryUtil.memPutFloat(i + 8, z);
-		MemoryUtil.memPutInt(i + 12, color);
-		MemoryUtil.memPutFloat(i + 16, u);
-		MemoryUtil.memPutFloat(i + 20, v);
-		MemoryUtil.memPutInt(i + 24, light);
+		PositionAttribute.put(ptr, x, y, z);
+		ColorAttribute.set(ptr + OFFSET_COLOR, color);
+		TextureAttribute.put(ptr + OFFSET_TEXTURE, u, v);
+		LightAttribute.set(ptr + OFFSET_LIGHT, light);
 
 		if (vertexCount == 4) {
 			endQuad(ptr);
@@ -89,7 +90,7 @@ public final class GlyphVertexExt {
 		Matrix3f matNormal = matrices.normal();
 		Matrix4f matPosition = matrices.pose();
 
-		try (MemoryStack stack = RenderGlobal.VERTEX_DATA.push()) {
+		try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
 			long buffer = stack.nmalloc(4 * STRIDE);
 			long ptr = buffer;
 
@@ -97,9 +98,9 @@ public final class GlyphVertexExt {
 			var n = quad.getNormal();
 
 			// The normal vector
-			float nx = Norm3b.unpackX(n);
-			float ny = Norm3b.unpackY(n);
-			float nz = Norm3b.unpackZ(n);
+			float nx = NormI8.unpackX(n);
+			float ny = NormI8.unpackY(n);
+			float nz = NormI8.unpackZ(n);
 
 			// The transformed normal vector
 			float nxt = (matNormal.m00() * nx) + (matNormal.m10() * ny) + (matNormal.m20() * nz);
@@ -107,7 +108,7 @@ public final class GlyphVertexExt {
 			float nzt = (matNormal.m02() * nx) + (matNormal.m12() * ny) + (matNormal.m22() * nz);
 
 			// The packed transformed normal vector
-			var nt = Norm3b.pack(nxt, nyt, nzt);
+			var nt = NormI8.pack(nxt, nyt, nzt);
 
 			for (int i = 0; i < 4; i++) {
 				// The position vector
