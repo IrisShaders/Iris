@@ -414,35 +414,37 @@ public class ShaderProperties {
 					Iris.logger.error("Image " + key2 + " is invalid! Format: " + format + " Internal format: " + internalFormat + " Pixel type: " + pixelType);
 				}
 
-				boolean relative = Boolean.parseBoolean(parts[4]);
+				boolean clear = Boolean.parseBoolean(parts[4]);
+
+				boolean relative = Boolean.parseBoolean(parts[5]);
 
 				if (relative) { // Is relative?
-					float relativeWidth = Float.parseFloat(parts[5]);
-					float relativeHeight = Float.parseFloat(parts[6]);
-					image = new ImageInformation(key2, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, 0, 0, 0, true, relativeWidth, relativeHeight);
+					float relativeWidth = Float.parseFloat(parts[6]);
+					float relativeHeight = Float.parseFloat(parts[7]);
+					image = new ImageInformation(key2, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, 0, 0, 0, clear, true, relativeWidth, relativeHeight);
 				} else {
 					TextureType type;
 					int width, height, depth;
-					if (parts.length == 6) {
+					if (parts.length == 7) {
 						type = TextureType.TEXTURE_1D;
-						width = Integer.parseInt(parts[5]);
+						width = Integer.parseInt(parts[6]);
 						height = 0;
 						depth = 0;
-					} else if (parts.length == 7) {
-						type = TextureType.TEXTURE_2D;
-						width = Integer.parseInt(parts[5]);
-						height = Integer.parseInt(parts[6]);
-						depth = 0;
 					} else if (parts.length == 8) {
+						type = TextureType.TEXTURE_2D;
+						width = Integer.parseInt(parts[6]);
+						height = Integer.parseInt(parts[7]);
+						depth = 0;
+					} else if (parts.length == 9) {
 						type = TextureType.TEXTURE_3D;
-						width = Integer.parseInt(parts[5]);
-						height = Integer.parseInt(parts[6]);
-						depth = Integer.parseInt(parts[7]);
+						width = Integer.parseInt(parts[6]);
+						height = Integer.parseInt(parts[7]);
+						depth = Integer.parseInt(parts[8]);
 					} else {
 						Iris.logger.error("Unknown image type! " + key2 + " = " + value);
 						return;
 					}
-					image = new ImageInformation(key2, samplerName, type, format, internalFormat, pixelType, width, height, depth, false, 0, 0);
+					image = new ImageInformation(key2, samplerName, type, format, internalFormat, pixelType, width, height, depth, clear, false, 0, 0);
 				}
 
 				irisCustomImages.add(image);

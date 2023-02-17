@@ -19,8 +19,9 @@ public class GlImage extends GlResource {
 	protected final PixelFormat format;
 	protected final InternalTextureFormat internalTextureFormat;
 	protected final PixelType pixelType;
+	private final boolean clear;
 
-	public GlImage(String name, String samplerName, TextureType target, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType, int width, int height, int depth) {
+	public GlImage(String name, String samplerName, TextureType target, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType, boolean clear, int width, int height, int depth) {
 		super(IrisRenderSystem.createTexture(target.getGlType()));
 
 		this.name = name;
@@ -29,6 +30,7 @@ public class GlImage extends GlResource {
 		this.format = format;
 		this.internalTextureFormat = internalFormat;
 		this.pixelType = pixelType;
+		this.clear = clear;
 
 		IrisRenderSystem.bindTextureForSetup(target.getGlType(), getGlId());
 		target.apply(getGlId(), width, height, depth, internalFormat.getGlFormat(), format.getGlFormat(), pixelType.getGlFormat(), null);
@@ -71,6 +73,10 @@ public class GlImage extends GlResource {
 		return target;
 	}
 
+	public boolean shouldClear() {
+		return clear;
+	}
+
 	public int getId() {
 		return getGlId();
 	}
@@ -98,13 +104,21 @@ public class GlImage extends GlResource {
 		return "GlImage name " + name + " format " + format + "internalformat " + internalTextureFormat + " pixeltype " + pixelType;
 	}
 
+	public PixelFormat getFormat() {
+		return format;
+	}
+
+	public PixelType getPixelType() {
+		return pixelType;
+	}
+
 	public static class Relative extends GlImage {
 
 		private final float relativeHeight;
 		private final float relativeWidth;
 
-		public Relative(String name, String samplerName, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType, float relativeWidth, float relativeHeight, int currentWidth, int currentHeight) {
-			super(name, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, (int) (currentWidth * relativeWidth), (int) (currentHeight * relativeHeight), 0);
+		public Relative(String name, String samplerName, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType, boolean clear, float relativeWidth, float relativeHeight, int currentWidth, int currentHeight) {
+			super(name, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, clear, (int) (currentWidth * relativeWidth), (int) (currentHeight * relativeHeight), 0);
 
 			this.relativeWidth = relativeWidth;
 			this.relativeHeight = relativeHeight;

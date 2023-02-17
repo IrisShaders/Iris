@@ -87,6 +87,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.ARBClearTexture;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
@@ -171,6 +172,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private ParticleRenderingSettings particleRenderingSettings;
 	private PackDirectives packDirectives;
 	private Set<GlImage> customImages;
+	private GlImage[] clearImages;
 	private final ShaderPack pack;
 	private PackShadowDirectives shadowDirectives;
 
@@ -201,13 +203,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.customImages = new HashSet<>();
 		for (ImageInformation information : programSet.getPack().getIrisCustomImages()) {
 			if (information.isRelative()) {
-				customImages.add(new GlImage.Relative(information.name(), information.samplerName(), information.format(), information.internalTextureFormat(), information.type(), information.relativeWidth(), information.relativeHeight(), main.width, main.height));
+				customImages.add(new GlImage.Relative(information.name(), information.samplerName(), information.format(), information.internalTextureFormat(), information.type(), information.clear(), information.relativeWidth(), information.relativeHeight(), main.width, main.height));
 			} else {
-				customImages.add(new GlImage(information.name(), information.samplerName(), information.target(), information.format(), information.internalTextureFormat(), information.type(), information.width(), information.height(), information.depth()));
+				customImages.add(new GlImage(information.name(), information.samplerName(), information.target(), information.format(), information.internalTextureFormat(), information.type(), information.clear(), information.width(), information.height(), information.depth()));
 			}
 		}
 
-		customImages.forEach(Object::toString);
+		this.clearImages = customImages.stream().filter(GlImage::shouldClear).toArray(GlImage[]::new);
 
 		ProgramFallbackResolver resolver = new ProgramFallbackResolver(programSet);
 
@@ -820,6 +822,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 		Vector4f emptyClearColor = new Vector4f(1.0F);
 
+		for (GlImage image : clearImages) {
+			ARBClearTexture.glClearTexImage(image.getId(), 0, image.getFormat().getGlFormat(), image.getPixelType().getGlFormat(), (int[]) null);
+		}
+
 		if (shadowRenderTargets != null) {
 			if (packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
 				if (shadowRenderTargets.isFullClearRequired()) {
@@ -1098,6 +1104,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void destroy() {
 		destroyed = true;
+
+		customImages.forEach(GlImage::destroy);
 
 		destroyShaders();
 
