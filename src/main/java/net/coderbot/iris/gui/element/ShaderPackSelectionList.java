@@ -34,11 +34,6 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	}
 
 	@Override
-	public boolean isFocused() {
-		return false;
-	}
-
-	@Override
 	public int getRowWidth() {
 		return Math.min(308, width - 50);
 	}
@@ -138,20 +133,12 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 	public static abstract class BaseEntry extends ObjectSelectionList.Entry<BaseEntry> {
 		protected BaseEntry() {}
-
-
-		@Override
-		public boolean isFocused() {
-			return false;
-		}
 	}
 
 	public static class ShaderPackEntry extends BaseEntry {
 		private final String packName;
 		private final ShaderPackSelectionList list;
 		private final int index;
-
-
 
 		public ShaderPackEntry(int index, ShaderPackSelectionList list, String packName) {
 			this.packName = packName;
