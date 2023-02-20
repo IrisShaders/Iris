@@ -379,15 +379,4 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 			return Component.translatable("narrator.select");
 		}
 	}
-
-	@Override
-	public void setRenderSelection(boolean bl) {
-		super.setRenderSelection(false);
-	}
-
-	// TODO: Proper keyboard navigation
-	@Override
-	protected void renderSelection(PoseStack arg, int i, int j, int k, int l, int m) {
-
-	}
 }
