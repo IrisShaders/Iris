@@ -28,7 +28,7 @@ public final class GlyphVertexExt {
 	private static final int OFFSET_TEXTURE = 16;
 	private static final int OFFSET_MID_TEXTURE = 36;
 	private static final int OFFSET_OVERLAY = 24;
-	private static final int OFFSET_LIGHT = 28;
+	private static final int OFFSET_LIGHT = 24;
 	private static final int OFFSET_NORMAL = 32;
 
 

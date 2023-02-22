@@ -164,6 +164,7 @@ public class ShaderSynthesizer {
 			shader.append("flat ");
 		}
 		shader.append("in vec4 iris_vertexColor;\n");
+		shader.append("float iris_vertexColorAlpha = iris_vertexColor.a;\n");
 
 		if (inputs.hasTex()) {
 			shader.append("uniform sampler2D gtexture;\n");
