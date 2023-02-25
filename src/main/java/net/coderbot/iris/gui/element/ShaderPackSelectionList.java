@@ -198,7 +198,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		protected BaseEntry() {}
 	}
 
-	public static class ShaderPackEntry extends BaseEntry {
+	public class ShaderPackEntry extends BaseEntry {
 		private final String packName;
 		private final ShaderPackSelectionList list;
 		private final int index;
@@ -301,6 +301,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 				this.list.select(this.index);
 				didAnything = true;
 			}
+
+			ShaderPackSelectionList.this.screen.setFocused(ShaderPackSelectionList.this.screen.getBottomRowOption());
 
 			return didAnything;
 		}

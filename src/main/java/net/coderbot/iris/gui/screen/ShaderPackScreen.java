@@ -3,7 +3,6 @@ package net.coderbot.iris.gui.screen;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
@@ -81,6 +80,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 	private boolean guiHidden = false;
 	private float guiButtonHoverTimer = 0.0f;
+	private Button openFolderButton;
 
 	public ShaderPackScreen(Screen parent) {
 		super(Component.translatable("options.iris.shaderPackSelection.title"));
@@ -245,8 +245,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, button -> this.dropChangesAndClose()).bounds(bottomCenter - 104, this.height - 27, 100, 20
 				).build());
 
-			this.addRenderableWidget(Button.builder(Component.translatable("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()).bounds(topCenter - 78, this.height - 51, 152, 20
-				).build());
+			this.openFolderButton = Button.builder(Component.translatable("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()).bounds(topCenter - 78, this.height - 51, 152, 20
+			).build();
+			this.addRenderableWidget(openFolderButton);
 
 			this.screenSwitchButton = this.addRenderableWidget(Button.builder(Component.translatable("options.iris.shaderPackList"), button -> {
 					this.optionMenuOpen = !this.optionMenuOpen;
@@ -620,5 +621,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		return this.hoveredElementCommentTimer > 20 &&
 				this.hoveredElementCommentTitle.isPresent() &&
 				!this.hoveredElementCommentBody.isEmpty();
+	}
+
+	public Button getBottomRowOption() {
+		return openFolderButton;
 	}
 }
