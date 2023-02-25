@@ -35,6 +35,7 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 	private boolean isLabelTrimmed;
 	private int maxLabelWidth;
 	private int valueSectionWidth;
+	protected boolean usedKeyboard;
 
 	public BaseOptionElementWidget(T element) {
 		super(element);
@@ -54,6 +55,9 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 	}
 
 	protected final void updateRenderParams(int minValueSectionWidth) {
+		// Check if we used the keyboard to access this value
+		usedKeyboard = isFocused();
+
 		// Lazy init of value label
 		if (this.valueLabel == null) {
 			this.valueLabel = createValueLabel();

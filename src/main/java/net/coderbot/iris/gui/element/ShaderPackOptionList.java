@@ -19,6 +19,7 @@ import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -188,14 +189,14 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 			// Draw the reset button's tooltip
 			if (this.resetButton.isHovered() || this.resetButton.isFocused()) {
 				Component tooltip = !resetButton.disabled ? RESET_TOOLTIP : RESET_HOLD_SHIFT_TOOLTIP;
-				queueBottomRightAnchoredTooltip(poseStack, mouseX, mouseY, font, tooltip);
+				queueBottomRightAnchoredTooltip(poseStack, this.resetButton.getRectangle().getBoundInDirection(ScreenDirection.RIGHT), this.resetButton.getRectangle().position().y(), font, tooltip);
 			}
 			// Draw the import/export button tooltips
 			if (this.importButton.isHovered() || this.importButton.isFocused()) {
-				queueBottomRightAnchoredTooltip(poseStack, mouseX, mouseY, font, IMPORT_TOOLTIP);
+				queueBottomRightAnchoredTooltip(poseStack, this.importButton.getRectangle().getBoundInDirection(ScreenDirection.RIGHT), this.importButton.getRectangle().position().y(), font, IMPORT_TOOLTIP);
 			}
 			if (this.exportButton.isHovered() || this.exportButton.isFocused()) {
-				queueBottomRightAnchoredTooltip(poseStack, mouseX, mouseY, font, EXPORT_TOOLTIP);
+				queueBottomRightAnchoredTooltip(poseStack, this.exportButton.getRectangle().getBoundInDirection(ScreenDirection.RIGHT), this.exportButton.getRectangle().position().y(), font, EXPORT_TOOLTIP);
 			}
 		}
 

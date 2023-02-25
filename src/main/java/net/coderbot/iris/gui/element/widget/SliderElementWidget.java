@@ -6,6 +6,7 @@ import net.coderbot.iris.shaderpack.option.menu.OptionMenuStringOptionElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.navigation.ScreenAxis;
+import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
@@ -24,19 +25,39 @@ public class SliderElementWidget extends StringElementWidget {
 	public void render(PoseStack poseStack, int mouseX, int mouseY, float tickDelta, boolean hovered) {
 		this.updateRenderParams(35);
 
+
 		if (!hovered && !isFocused()) {
+			if (usedKeyboard) {
+				usedKeyboard = false;
+				mouseDown = false;
+			}
 			this.renderOptionWithValue(poseStack, false, (float)valueIndex / (valueCount - 1), PREVIEW_SLIDER_WIDTH);
 		} else {
 			this.renderSlider(poseStack);
 		}
 
-		if (Screen.hasShiftDown()) {
-			renderTooltip(poseStack, SET_TO_DEFAULT, mouseX, mouseY, hovered);
-		} else if (!this.screen.isDisplayingComment()) {
-			renderTooltip(poseStack, this.unmodifiedLabel, mouseX, mouseY, hovered);
+		if (usedKeyboard) {
+			if (Screen.hasShiftDown()) {
+				renderTooltip(poseStack, SET_TO_DEFAULT, bounds.getBoundInDirection(ScreenDirection.RIGHT), bounds.position().y(), hovered);
+			} else if (!this.screen.isDisplayingComment()) {
+				renderTooltip(poseStack, this.unmodifiedLabel, bounds.getBoundInDirection(ScreenDirection.RIGHT), bounds.position().y(), hovered);
+			}
+		} else {
+			if (Screen.hasShiftDown()) {
+				renderTooltip(poseStack, SET_TO_DEFAULT, mouseX, mouseY, hovered);
+			} else if (!this.screen.isDisplayingComment()) {
+				renderTooltip(poseStack, this.unmodifiedLabel, mouseX, mouseY, hovered);
+			}
 		}
 
-		if (this.mouseDown) {
+		if (usedKeyboard) {
+			if (!isFocused()) {
+				usedKeyboard = false;
+				this.onReleased();
+			}
+		}
+
+		if (this.mouseDown && !usedKeyboard) {
 			// Release if the mouse went off the slider
 			if (!hovered) {
 				this.onReleased();
@@ -106,6 +127,40 @@ public class SliderElementWidget extends StringElementWidget {
 		}
 
 		// Do not use base widget's button click behavior
+		return false;
+	}
+
+	@Override
+	public boolean keyPressed(int keycode, int scancode, int modifiers) {
+		if (keycode == GLFW.GLFW_KEY_ENTER) {
+			if (Screen.hasShiftDown()) {
+				if (this.applyOriginalValue()) {
+					this.navigation.refresh();
+				}
+				GuiUtil.playButtonClickSound();
+
+				return true;
+			}
+
+			mouseDown = !mouseDown;
+			usedKeyboard = true;
+			GuiUtil.playButtonClickSound();
+
+			return true;
+		}
+
+		if (mouseDown && usedKeyboard) {
+			if (keycode == GLFW.GLFW_KEY_LEFT) {
+				valueIndex = Math.max(0, valueIndex - 1);
+				this.updateLabels();
+				return true;
+			} else if (keycode == GLFW.GLFW_KEY_RIGHT) {
+				valueIndex = Math.min(valueCount - 1, valueIndex + 1);
+				this.updateLabels();
+				return true;
+			}
+		}
+
 		return false;
 	}
 
