@@ -26,3 +26,4 @@ mutable field net/minecraft/client/renderer/ShaderInstance CHUNK_OFFSET Lcom/moj
 mutable field net/minecraft/client/renderer/ShaderInstance COLOR_MODULATOR Lcom/mojang/blaze3d/shaders/Uniform;
 accessible field net/minecraft/client/renderer/ShaderInstance uniforms Ljava/util/List;
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
+accessible class net/minecraft/client/gui/components/AbstractSelectionList$Entry

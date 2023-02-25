@@ -520,6 +520,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			discardChanges();
 		}
 
+		try {
+			shaderPackList.close();
+		} catch (IOException e) {
+			Iris.logger.error("Failed to safely close shaderpack selection!", e);
+		}
+
 		this.minecraft.setScreen(parent);
 	}
 

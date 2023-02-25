@@ -1,10 +1,12 @@
 package net.coderbot.iris.gui.element;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 
-public class IrisObjectSelectionList<E extends ContainerObjectSelectionList.Entry<E>> extends ContainerObjectSelectionList<E> {
+public class IrisObjectSelectionList<E extends AbstractSelectionList.Entry<E>> extends AbstractSelectionList<E> {
 	public IrisObjectSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right, int itemHeight) {
 		super(client, width, height, top, bottom, itemHeight);
 
@@ -21,5 +23,10 @@ public class IrisObjectSelectionList<E extends ContainerObjectSelectionList.Entr
 
 	public void select(int entry) {
 		setSelected(this.getEntry(entry));
+	}
+
+	@Override
+	public void updateNarration(NarrationElementOutput p0) {
+
 	}
 }

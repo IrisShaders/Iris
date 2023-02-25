@@ -374,7 +374,7 @@ public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOpti
 
 			for (int i = 0; i < widgets.size(); i++) {
 				AbstractElementWidget<?> widget = widgets.get(i);
-				boolean widgetHovered = hovered && (getHoveredWidget(mouseX) == i);
+				boolean widgetHovered = (hovered && (getHoveredWidget(mouseX) == i)) || getFocused() == widget;
 
 				widget.bounds = new ScreenRectangle(x + (int)((singleWidgetWidth + 2) * i), y, (int) singleWidgetWidth, entryHeight + 2);
 				widget.render(poseStack, mouseX, mouseY, tickDelta, widgetHovered);
