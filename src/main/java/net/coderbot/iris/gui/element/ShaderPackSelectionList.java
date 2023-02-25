@@ -211,6 +211,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 
 		public ShaderPackEntry(int index, ShaderPackSelectionList list, String packName) {
+			this.bounds = ScreenRectangle.empty();
 			this.packName = packName;
 			this.list = list;
 			this.index = index;
@@ -234,6 +235,11 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			Font font = Minecraft.getInstance().font;
 			int color = 0xFFFFFF;
 			String name = packName;
+
+			if (hovered) {
+				GuiUtil.bindIrisWidgetsTexture();
+				GuiUtil.drawButton(poseStack, x - 2, y - 2, entryWidth, entryHeight + 4, hovered, false);
+			}
 
 			boolean shadersEnabled = list.getTopButtonRow().shadersEnabled;
 
@@ -265,6 +271,20 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 				return false;
 			}
 
+			return doThing();
+		}
+
+		@Override
+		public boolean keyPressed(int keycode, int pInt1, int pInt2) {
+			// Only do anything on key-press
+			if (keycode != GLFW.GLFW_KEY_ENTER) {
+				return false;
+			}
+
+			return doThing();
+		}
+
+		private boolean doThing() {
 			boolean didAnything = false;
 
 			// UX: If shaders are disabled, then clicking a shader in the list will also
@@ -334,41 +354,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			GuiUtil.bindIrisWidgetsTexture();
-
-			drawSelectionHighlight(poseStack, x, y, entryWidth, entryHeight);
+			GuiUtil.drawButton(poseStack, x - 2, y - 2, entryWidth, entryHeight + 2, hovered, false);
 			drawCenteredString(poseStack, Minecraft.getInstance().font, getEnableDisableLabel(), (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
-		}
-
-		protected void drawSelectionHighlight(PoseStack poseStack, int x, int y, int entryWidth, int entryHeight) {
-			int i = ShaderPackSelectionList.this.x0 + (ShaderPackSelectionList.this.width - entryWidth) / 2;
-			int j = ShaderPackSelectionList.this.x0 + (ShaderPackSelectionList.this.width + entryWidth) / 2;
-			/*int halfWidth = entryWidth / 2;
-			int halfHeight = entryHeight / 2;
-GuiUtil.bindIrisWidgetsTexture();
-			// V offset for which button texture to use
-			int vOffset = 86;
-
-			// Sets RenderSystem to use solid white as the tint color for blend mode, and enables blend mode
-			RenderSystem.enableBlend();
-			// Top left section
-			GuiComponent.blit(poseStack, x, y - 2, 0, vOffset, halfWidth, halfHeight, 256, 256);
-			// Top right section
-			GuiComponent.blit(poseStack, x + halfWidth, y - 2, 200 - (entryWidth - halfWidth), vOffset, entryWidth - halfWidth, halfHeight, 256, 256);
-			// Bottom left section
-			GuiComponent.blit(poseStack, x, y + halfHeight, 0, vOffset + (20 - (entryHeight - halfHeight)), halfWidth, entryHeight - halfHeight + 2, 256, 256);
-			// Bottom right section
-			GuiComponent.blit(poseStack, x + halfWidth, y + halfHeight, 200 - (entryWidth - halfWidth), vOffset + (20 - (entryHeight - halfHeight)), entryWidth - halfWidth, entryHeight - halfHeight + 2, 256, 256);
-*/
-			int r = 86;
-			int g = 86;
-			int b = 86;
-			int a = 86;
-
-			RenderSystem.enableBlend();
-			int color = (int)(0.5 * 255.0f) << 24 & 0xFF000000;
-
-			fill(poseStack, i, y - 2, j, y + entryHeight + 2, -1);
-			fill(poseStack, i + 1, y - 1, j - 1, y + entryHeight + 1, color);
 		}
 
 		private Component getEnableDisableLabel() {

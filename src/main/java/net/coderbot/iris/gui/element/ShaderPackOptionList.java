@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-public class ShaderPackOptionList extends IrisObjectSelectionList<ShaderPackOptionList.BaseEntry> {
+public class ShaderPackOptionList extends IrisContainerObjectSelectionList<ShaderPackOptionList.BaseEntry> {
 	private final List<AbstractElementWidget<?>> elementWidgets = new ArrayList<>();
 	private final ShaderPackScreen screen;
 	private final NavigationController navigation;
