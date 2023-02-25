@@ -5,6 +5,7 @@ import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuStringOptionElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.navigation.ScreenAxis;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
@@ -20,13 +21,13 @@ public class SliderElementWidget extends StringElementWidget {
 	}
 
 	@Override
-	public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
-		this.updateRenderParams(width, 35);
+	public void render(PoseStack poseStack, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+		this.updateRenderParams(35);
 
-		if (!hovered) {
-			this.renderOptionWithValue(poseStack, x, y, width, height, false, (float)valueIndex / (valueCount - 1), PREVIEW_SLIDER_WIDTH);
+		if (!hovered && !isFocused()) {
+			this.renderOptionWithValue(poseStack, false, (float)valueIndex / (valueCount - 1), PREVIEW_SLIDER_WIDTH);
 		} else {
-			this.renderSlider(poseStack, x, y, width, height, mouseX, mouseY, tickDelta);
+			this.renderSlider(poseStack);
 		}
 
 		if (Screen.hasShiftDown()) {
@@ -41,32 +42,32 @@ public class SliderElementWidget extends StringElementWidget {
 				this.onReleased();
 			}
 
-			whileDragging(x, width, mouseX);
+			whileDragging(mouseX);
 		}
 	}
 
-	private void renderSlider(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta) {
+	private void renderSlider(PoseStack poseStack) {
 		GuiUtil.bindIrisWidgetsTexture();
 
 		// Draw background button
-		GuiUtil.drawButton(poseStack, x, y, width, height, false, false);
+		GuiUtil.drawButton(poseStack, bounds.position().x(), bounds.position().y(), bounds.width(), bounds.height(), isFocused(), false);
 		// Draw slider area
-		GuiUtil.drawButton(poseStack, x + 2, y + 2, width - 4, height - 4, false, true);
+		GuiUtil.drawButton(poseStack, bounds.position().x() + 2, bounds.position().y() + 2, bounds.width() - 4, bounds.height() - 4, false, true);
 
 		// Range of x values the slider can occupy
-		int sliderSpace = (width - 8) - ACTIVE_SLIDER_WIDTH;
+		int sliderSpace = (bounds.width() - 8) - ACTIVE_SLIDER_WIDTH;
 		// Position of slider
-		int sliderPos = (x + 4) + (int)(((float)valueIndex / (valueCount - 1)) * sliderSpace);
+		int sliderPos = (bounds.position().x() + 4) + (int)(((float)valueIndex / (valueCount - 1)) * sliderSpace);
 		// Draw slider
-		GuiUtil.drawButton(poseStack, sliderPos, y + 4, ACTIVE_SLIDER_WIDTH, height - 8, this.mouseDown, false);
+		GuiUtil.drawButton(poseStack, sliderPos, bounds.position().y() + 4, ACTIVE_SLIDER_WIDTH, bounds.height() - 8, this.mouseDown, false);
 
 		// Draw value label
 		Font font = Minecraft.getInstance().font;
-		font.drawShadow(poseStack, this.valueLabel, (int)(x + (width * 0.5)) - (int)(font.width(this.valueLabel) * 0.5), y + 7, 0xFFFFFF);
+		font.drawShadow(poseStack, this.valueLabel, bounds.getCenterInAxis(ScreenAxis.HORIZONTAL) - (int)(font.width(this.valueLabel) * 0.5), bounds.position().y() + 7, 0xFFFFFF);
 	}
 
-	private void whileDragging(int x, int width, int mouseX) {
-		float mousePositionAcrossWidget = Mth.clamp((float)(mouseX - (x + 4)) / (width - 8), 0, 1);
+	private void whileDragging(int mouseX) {
+		float mousePositionAcrossWidget = Mth.clamp((float)(mouseX - (bounds.position().x() + 4)) / (bounds.width() - 8), 0, 1);
 
 		int newValueIndex = Math.min(valueCount - 1, (int)(mousePositionAcrossWidget * valueCount));
 

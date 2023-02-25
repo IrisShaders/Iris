@@ -46,11 +46,11 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 	}
 
 	@Override
-	public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
-		this.updateRenderParams(width, 0);
+	public void render(PoseStack poseStack, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+		this.updateRenderParams(0);
 
-		this.renderOptionWithValue(poseStack, x, y, width, height, hovered);
-		this.tryRenderTooltip(poseStack, mouseX, mouseY, hovered);
+		this.renderOptionWithValue(poseStack, hovered || isFocused());
+		this.tryRenderTooltip(poseStack, mouseX, mouseY, hovered || isFocused());
 	}
 
 	private void increment(int amount) {

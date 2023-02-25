@@ -1,5 +1,7 @@
 package net.coderbot.iris.gui.element;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
@@ -7,7 +9,10 @@ import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
@@ -15,6 +20,7 @@ import net.minecraft.network.chat.TextColor;
 
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Function;
 
 public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
@@ -131,7 +137,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		return topButtonRow;
 	}
 
-	public static abstract class BaseEntry extends ObjectSelectionList.Entry<BaseEntry> {
+	public static abstract class BaseEntry extends ContainerObjectSelectionList.Entry<BaseEntry> {
 		protected BaseEntry() {}
 	}
 
@@ -156,12 +162,6 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		public String getPackName() {
 			return packName;
-		}
-
-		// Appears to be some accessibility thing
-		@Override
-		public Component getNarration() {
-			return Component.translatable("narrator.select", packName);
 		}
 
 		@Override
@@ -219,6 +219,16 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 			return didAnything;
 		}
+
+		@Override
+		public List<? extends GuiEventListener> children() {
+			return ImmutableList.of();
+		}
+
+		@Override
+		public List<? extends NarratableEntry> narratables() {
+			return ImmutableList.of();
+		}
 	}
 
 	public static class LabelEntry extends BaseEntry {
@@ -228,15 +238,19 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			this.label = label;
 		}
 
-		// Appears to be some accessibility thing
-		@Override
-		public Component getNarration() {
-			return label;
-		}
-
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			drawCenteredString(poseStack, Minecraft.getInstance().font, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xC2C2C2);
+		}
+
+		@Override
+		public List<? extends GuiEventListener> children() {
+			return ImmutableList.of();
+		}
+
+		@Override
+		public List<? extends NarratableEntry> narratables() {
+			return ImmutableList.of();
 		}
 	}
 
@@ -304,15 +318,24 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			return this.allowEnableShadersButton ? this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL : NONE_PRESENT_LABEL;
 		}
 
-		// Appears to be some accessibility thing
-		@Override
-		public Component getNarration() {
-			return Component.translatable("narration.button", this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL);
-		}
-
 		@Override
 		public boolean mouseClicked(double mouseX, double mouseY, int button) {
 			return this.buttons.mouseClicked(mouseX, mouseY, button);
+		}
+
+		@Override
+		public boolean keyPressed(int keycode, int scancode, int modifiers) {
+			return this.buttons.keyPressed(keycode, scancode, modifiers);
+		}
+
+		@Override
+		public List<? extends GuiEventListener> children() {
+			return ImmutableList.copyOf(Iterables.concat(buttons.children(), List.of(this.enableDisableButton, this.refreshPacksButton)));
+		}
+
+		@Override
+		public List<? extends NarratableEntry> narratables() {
+			return ImmutableList.of();
 		}
 
 		// Renders the label at an offset as to not look misaligned with the rest of the menu
