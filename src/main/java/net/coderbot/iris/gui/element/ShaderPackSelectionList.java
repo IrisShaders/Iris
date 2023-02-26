@@ -72,6 +72,15 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	}
 
 	@Override
+	public boolean keyPressed(int pContainerEventHandler0, int pInt1, int pInt2) {
+		if (pContainerEventHandler0 == GLFW.GLFW_KEY_UP) {
+			if (getFocused() == getFirstElement()) return true;
+		}
+
+		return super.keyPressed(pContainerEventHandler0, pInt1, pInt2);
+	}
+
+	@Override
 	public void render(PoseStack pAbstractSelectionList0, int pInt1, int pInt2, float pFloat3) {
 		if (keyValid) {
 			for (WatchEvent<?> event : key.pollEvents()) {
@@ -109,7 +118,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	public void refresh() {
 		this.clearEntries();
 
-		Collection<String> names;
+		List<String> names;
 
 		try {
 			names = Iris.getShaderpacksDirectoryManager().enumerate();
@@ -157,6 +166,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		Iris.getIrisConfig().getShaderPackName().ifPresent(currentPackName -> {
 			if (name.equals(currentPackName)) {
 				setSelected(entry);
+				setFocused(entry);
+				centerScrollOn(entry);
 				setApplied(entry);
 			}
 		});
@@ -216,6 +227,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			this.list = list;
 			this.index = index;
 		}
+
 
 		public boolean isApplied() {
 			return list.getApplied() == this;
@@ -356,7 +368,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			GuiUtil.bindIrisWidgetsTexture();
-			GuiUtil.drawButton(poseStack, x - 2, y - 2, entryWidth, entryHeight + 2, hovered, false);
+			GuiUtil.drawButton(poseStack, x - 2, y - 2, entryWidth, entryHeight + 2, hovered, !allowEnableShadersButton);
 			drawCenteredString(poseStack, Minecraft.getInstance().font, getEnableDisableLabel(), (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
 		}
 

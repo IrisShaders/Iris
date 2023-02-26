@@ -258,7 +258,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 					// list (but not applying) would open the settings for the previous pack, rather
 					// than opening the settings for the selected (but not applied) pack.
 					this.applyChanges();
-
+					setFocused(shaderPackList.getFocused());
 					this.init();
 				}
 			).bounds(topCenter + 78, this.height - 51, 152, 20
@@ -369,6 +369,23 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 				return true;
 			}
+		} else if (key == GLFW.GLFW_KEY_TAB) {
+			if (!optionMenuOpen) {
+				shaderPackList.keyPressed(GLFW.GLFW_KEY_ENTER, 0, 0);
+			}
+
+			this.optionMenuOpen = !this.optionMenuOpen;
+
+			// UX: Apply changes before switching screens to avoid unintuitive behavior
+			//
+			// Not doing this leads to unintuitive behavior, since selecting a pack in the
+			// list (but not applying) would open the settings for the previous pack, rather
+			// than opening the settings for the selected (but not applied) pack.
+			this.applyChanges();
+
+			this.init();
+
+			this.setFocused(null);
 		}
 
 		return this.guiHidden || super.keyPressed(key, j, k);

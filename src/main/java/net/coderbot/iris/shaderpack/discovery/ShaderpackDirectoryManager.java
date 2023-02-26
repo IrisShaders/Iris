@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,7 +56,7 @@ public class ShaderpackDirectoryManager {
 		}
 	}
 
-	public Collection<String> enumerate() throws IOException {
+	public List<String> enumerate() throws IOException {
 		// Make sure the list is sorted since not all OSes sort the list of files in the directory.
 		// Case-insensitive sorting is the most intuitive for the user, but we then sort naturally
 		// afterwards so that we don't alternate cases weirdly in the sorted list.
