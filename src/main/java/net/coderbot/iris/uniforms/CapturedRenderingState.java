@@ -23,6 +23,7 @@ public class CapturedRenderingState {
 	private Runnable entityIdListener = null;
 
 	private float currentAlphaTest;
+	private float cloudTime;
 
 	private CapturedRenderingState() {
 	}
@@ -117,5 +118,13 @@ public class CapturedRenderingState {
 
     public void setDarknessLightFactor(float factor) {
 		darknessLightFactor = factor;
+	}
+
+    public float getCloudTime() {
+		return this.cloudTime;
+    }
+
+	public void setCloudTime(float cloudTime) {
+		this.cloudTime = cloudTime;
 	}
 }

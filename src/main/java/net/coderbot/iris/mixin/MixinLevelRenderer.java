@@ -59,6 +59,9 @@ public class MixinLevelRenderer {
 	@Shadow
 	private RenderBuffers renderBuffers;
 
+	@Shadow
+	private int ticks;
+
 	// Begin shader rendering after buffers have been cleared.
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
 	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
@@ -75,6 +78,7 @@ public class MixinLevelRenderer {
 		CapturedRenderingState.INSTANCE.setGbufferModelView(poseStack.last().pose());
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projection);
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
+		CapturedRenderingState.INSTANCE.setCloudTime((ticks + tickDelta) * 0.03F);
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 
