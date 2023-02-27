@@ -10,7 +10,6 @@ import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import net.coderbot.iris.gui.debug.DebugLoadFailedGridScreen;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
-import net.coderbot.iris.layer.BaseClass;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.PipelineManager;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -113,7 +112,6 @@ public class Iris {
 	 * <p>This is called right before options are loaded, so we can add key bindings here.</p>
 	 */
 	public void onEarlyInitialize() {
-		BaseClass.a();
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
 					sodiumInstalled = true;

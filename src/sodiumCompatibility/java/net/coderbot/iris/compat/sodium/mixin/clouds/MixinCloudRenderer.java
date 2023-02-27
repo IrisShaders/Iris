@@ -161,6 +161,8 @@ public abstract class MixinCloudRenderer {
 		RenderSystem.disableBlend();
 		RenderSystem.depthFunc(GL30C.GL_LEQUAL);
 
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+
 		RenderSystem.enableCull();
 
 		RenderSystem.setShaderFogEnd(previousEnd);

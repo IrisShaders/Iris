@@ -9,6 +9,7 @@
     "MixinBufferBuilder",
     "MixinBufferBuilder_SegmentRendering",
     "MixinRenderBuffers",
+    "MixinSheets",
     "MixinDebugScreenOverlay",
     "MixinFishingHookRenderer",
     "MixinBufferSource",
