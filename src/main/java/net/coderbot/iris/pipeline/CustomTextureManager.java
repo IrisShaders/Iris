@@ -180,7 +180,7 @@ public class CustomTextureManager {
 
 						TextureFormat textureFormat = TextureFormatLoader.getFormat();
 						if (textureFormat != null) {
-							int previousBinding = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
+							int previousBinding = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 							GlStateManager._bindTexture(pbrTexture.getId());
 							textureFormat.setupTextureParameters(pbrType, pbrTexture);
 							GlStateManager._bindTexture(previousBinding);

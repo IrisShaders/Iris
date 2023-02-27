@@ -474,7 +474,7 @@ public class IrisRenderSystem {
 
 		@Override
 		public void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
-			int previous = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
+			int previous = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 			GlStateManager._bindTexture(destTexture);
 			GL32C.glCopyTexSubImage2D(target, i, i1, i2, i3, i4, width, height);
 			GlStateManager._bindTexture(previous);

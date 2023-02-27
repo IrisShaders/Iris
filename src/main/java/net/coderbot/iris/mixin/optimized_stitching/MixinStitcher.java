@@ -35,7 +35,7 @@ public class MixinStitcher {
 	 * @reason Optimize region creation to allow for a smaller atlas
 	 */
 	@Overwrite
-	private boolean expand(Holder holder) {
+	private boolean expand(Holder<?> holder) {
 		int newEffectiveWidth = Mth.smallestEncompassingPowerOfTwo(storageX + ((StitcherHolderAccessor) (Object) holder).getWidth());
 		int newEffectiveHeight = Mth.smallestEncompassingPowerOfTwo(storageY + ((StitcherHolderAccessor) (Object) holder).getHeight());
 		boolean canFitWidth = newEffectiveWidth <= maxWidth;

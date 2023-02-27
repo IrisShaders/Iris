@@ -400,6 +400,18 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
+		"getRendertypeTextBackgroundShader",
+		"getRendertypeTextBackgroundSeeThroughShader"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideTextBackgroundShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			override(ShaderKey.SHADOW_TEXT_BG, cir);
+		} else {
+			override(ShaderKey.TEXT_BG, cir);
+		}
+	}
+
+	@Inject(method = {
 			"getRendertypeTextIntensityShader",
 			"getRendertypeTextIntensitySeeThroughShader"
 	}, at = @At("HEAD"), cancellable = true)

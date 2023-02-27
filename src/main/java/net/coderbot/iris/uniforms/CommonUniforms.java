@@ -266,7 +266,7 @@ public final class CommonUniforms {
 
 		Vec3 feet = client.cameraEntity.position();
 		Vec3 eyes = new Vec3(feet.x, client.cameraEntity.getEyeY(), feet.z);
-		BlockPos eyeBlockPos = new BlockPos(eyes);
+		BlockPos eyeBlockPos = BlockPos.containing(eyes);
 
 		int blockLight = client.level.getBrightness(LightLayer.BLOCK, eyeBlockPos);
 		int skyLight = client.level.getBrightness(LightLayer.SKY, eyeBlockPos);

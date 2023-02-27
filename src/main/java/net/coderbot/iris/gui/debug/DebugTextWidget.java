@@ -5,10 +5,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractScrollWidget;
-import net.minecraft.client.gui.components.GridWidget;
-import net.minecraft.client.gui.components.LayoutSettings;
 import net.minecraft.client.gui.components.MultiLineTextWidget;
-import net.minecraft.client.gui.components.SpacerWidget;
+import net.minecraft.client.gui.layouts.GridLayout;
+import net.minecraft.client.gui.layouts.LayoutSettings;
+import net.minecraft.client.gui.layouts.SpacerElement;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
@@ -81,7 +81,7 @@ public class DebugTextWidget
 		int l = this.getX() + this.innerPadding();
 		arg.pushPose();
 		arg.translate(l, k, 0.0);
-		this.content.container().render(arg, i, j, f);
+		this.content.container().visitWidgets(element -> element.render(arg, i, j, f));
 		arg.popPose();
 	}
 
@@ -94,22 +94,22 @@ public class DebugTextWidget
 		return this.width - this.totalInnerPadding();
 	}
 
-	record Content(GridWidget container, Component narration) {
+	record Content(GridLayout container, Component narration) {
 	}
 
 	static class ContentBuilder {
 		private final int width;
-		private final GridWidget grid;
-		private final GridWidget.RowHelper helper;
+		private final GridLayout grid;
+		private final GridLayout.RowHelper helper;
 		private final LayoutSettings alignHeader;
 		private final MutableComponent narration = Component.empty();
 
 		public ContentBuilder(int i) {
 			this.width = i;
-			this.grid = new GridWidget();
+			this.grid = new GridLayout();
 			this.grid.defaultCellSetting().alignHorizontallyLeft();
 			this.helper = this.grid.createRowHelper(1);
-			this.helper.addChild(SpacerWidget.width(i));
+			this.helper.addChild(SpacerElement.width(i));
 			this.alignHeader = this.helper.newCellSettings().alignHorizontallyCenter().paddingHorizontal(32);
 		}
 
@@ -118,21 +118,21 @@ public class DebugTextWidget
 		}
 
 		public void addLine(Font arg, Component arg2, int i) {
-			this.helper.addChild(MultiLineTextWidget.create(this.width, arg, arg2), this.helper.newCellSettings().paddingBottom(i));
+			this.helper.addChild(new MultiLineTextWidget(this.width, 1, arg2, arg), this.helper.newCellSettings().paddingBottom(i));
 			this.narration.append(arg2).append("\n");
 		}
 
 		public void addHeader(Font arg, Component arg2) {
-			this.helper.addChild(MultiLineTextWidget.createCentered(this.width - 64, arg, arg2), this.alignHeader);
+			this.helper.addChild(new MultiLineTextWidget(this.width - 64, 1, arg2, arg).setCentered(true), this.alignHeader);
 			this.narration.append(arg2).append("\n");
 		}
 
 		public void addSpacer(int i) {
-			this.helper.addChild(SpacerWidget.height(i));
+			this.helper.addChild(SpacerElement.height(i));
 		}
 
 		public Content build() {
-			this.grid.pack();
+			this.grid.arrangeElements();
 			return new Content(this.grid, this.narration);
 		}
 	}

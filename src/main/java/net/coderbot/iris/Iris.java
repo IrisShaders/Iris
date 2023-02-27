@@ -3,7 +3,6 @@ package net.coderbot.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.bridge.game.GameVersion;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
@@ -11,6 +10,7 @@ import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import net.coderbot.iris.gui.debug.DebugLoadFailedGridScreen;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.coderbot.iris.layer.BaseClass;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.PipelineManager;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -101,7 +101,7 @@ public class Iris {
 	private static boolean fallback;
 
 	// Change this for snapshots!
-	private static String backupVersionNumber = "1.19.3";
+	private static String backupVersionNumber = "1.19.4";
 
 	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
@@ -113,6 +113,7 @@ public class Iris {
 	 * <p>This is called right before options are loaded, so we can add key bindings here.</p>
 	 */
 	public void onEarlyInitialize() {
+		BaseClass.a();
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
 					sodiumInstalled = true;

@@ -58,7 +58,7 @@ public class MixinClientLanguage {
 	}
 
 	@Inject(method = "getOrDefault", at = @At("HEAD"), cancellable = true)
-	private void iris$addLanguageEntries(String key, CallbackInfoReturnable<String> cir) {
+	private void iris$addLanguageEntries(String key, String value, CallbackInfoReturnable<String> cir) {
 		String override = iris$lookupOverriddenEntry(key);
 
 		if (override != null) {
@@ -112,14 +112,14 @@ public class MixinClientLanguage {
 		return null;
 	}
 
-	@Inject(method = LOAD, at = @At("HEAD"))
-	private static void check(ResourceManager resourceManager, List<LanguageInfo> definitions, CallbackInfoReturnable<ClientLanguage> cir) {
-		// Make sure the language codes dont carry over!
+	@Inject(method = "loadFrom", at = @At("HEAD"))
+	private static void check(ResourceManager resourceManager, List<String> definitions, boolean bl, CallbackInfoReturnable<ClientLanguage> cir) {
+		// Make sure the language codes don't carry over!
 		languageCodes.clear();
 
 		// Reverse order due to how minecraft has English and then the primary language in the language definitions list
 		new LinkedList<>(definitions).descendingIterator().forEachRemaining(languageDefinition -> {
-			languageCodes.add(languageDefinition.getCode());
+			languageCodes.add(languageDefinition);
 		});
 	}
 }

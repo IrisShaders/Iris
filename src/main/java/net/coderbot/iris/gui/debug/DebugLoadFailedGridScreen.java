@@ -5,9 +5,9 @@ import net.coderbot.iris.Iris;
 import net.fabricmc.loader.impl.util.ExceptionUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.FrameWidget;
-import net.minecraft.client.gui.components.GridWidget;
-import net.minecraft.client.gui.components.LayoutSettings;
+import net.minecraft.client.gui.layouts.FrameLayout;
+import net.minecraft.client.gui.layouts.GridLayout;
+import net.minecraft.client.gui.layouts.LayoutSettings;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -27,7 +27,7 @@ public class DebugLoadFailedGridScreen extends Screen {
 	@Override
 	protected void init() {
 		super.init();
-		GridWidget widget = new GridWidget();
+		GridLayout widget = new GridLayout();
 		LayoutSettings layoutSettings = widget.newCellSettings().alignVerticallyTop().alignHorizontallyCenter();
 		LayoutSettings layoutSettings4 = widget.newCellSettings().alignVerticallyTop().paddingTop(30).alignHorizontallyCenter();
 		LayoutSettings layoutSettings2 = widget.newCellSettings().alignVerticallyTop().paddingTop(30).alignHorizontallyLeft();
@@ -49,11 +49,11 @@ public class DebugLoadFailedGridScreen extends Screen {
 		widget.addChild(Button.builder(Component.literal("Copy error"), arg2 -> {
 			this.minecraft.keyboardHandler.setClipboard(ExceptionUtils.getStackTrace(exception));
 		}).width(100).build(), numWidgets, 0, 1, 2, layoutSettings4);
-		widget.pack();
+		widget.arrangeElements();
 
-		FrameWidget.centerInRectangle(widget, 0, 0, this.width, this.height);
+		FrameLayout.centerInRectangle(widget, 0, 0, this.width, this.height);
 
-		this.addRenderableWidget(widget);
+		widget.visitWidgets(this::addRenderableWidget);
 	}
 
 	@Override

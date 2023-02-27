@@ -496,7 +496,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		return createShader(name, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
-				key.isIntensity(), key.shouldIgnoreLightmap());
+				key.isIntensity(), key.shouldIgnoreLightmap(), key.isGlint());
 	}
 
 	@Override
@@ -506,10 +506,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	private ShaderInstance createShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FogMode fogMode,
-										boolean isIntensity, boolean isFullbright) throws IOException {
+										boolean isIntensity, boolean isFullbright, boolean isGlint) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, source.getDirectives().getDrawBuffers());
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isGlint);
 
 		Supplier<ImmutableSet<Integer>> flipped =
 			() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
@@ -559,7 +559,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private ShaderInstance createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright) throws IOException {
 		GlFramebuffer framebuffer = this.shadowRenderTargets.getMainRenderBuffer();
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, false);
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> (prepareBeforeShadow ? flippedAfterPrepare : flippedBeforeShadow);
 
@@ -664,7 +664,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			TextureFormat textureFormat = TextureFormatLoader.getFormat();
 			if (textureFormat != null) {
-				int previousBinding = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
+				int previousBinding = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 				textureFormat.setupTextureParameters(PBRType.NORMAL, pbrHolder.getNormalTexture());
 				textureFormat.setupTextureParameters(PBRType.SPECULAR, pbrHolder.getSpecularTexture());
 				GlStateManager._bindTexture(previousBinding);
@@ -786,7 +786,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
 		if (skyType == DimensionSpecialEffects.SkyType.NORMAL) {
-			RenderSystem.disableTexture();
 			RenderSystem.depthMask(false);
 
 			RenderSystem.setShaderColor(fogColor.x, fogColor.y, fogColor.z, fogColor.w);
@@ -794,7 +793,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), GameRenderer.getPositionShader());
 
 			RenderSystem.depthMask(true);
-			RenderSystem.enableTexture();
 		}
 	}
 

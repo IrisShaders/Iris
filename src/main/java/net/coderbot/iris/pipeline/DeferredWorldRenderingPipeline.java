@@ -1197,7 +1197,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
 		if (skyType == DimensionSpecialEffects.SkyType.NORMAL) {
-			RenderSystem.disableTexture();
 			RenderSystem.depthMask(false);
 
 			Vector3d fogColor = CapturedRenderingState.INSTANCE.getFogColor();
@@ -1206,7 +1205,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), GameRenderer.getPositionShader());
 
 			RenderSystem.depthMask(true);
-			RenderSystem.enableTexture();
 		}
 	}
 
