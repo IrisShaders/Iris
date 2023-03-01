@@ -57,6 +57,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			watcher1 = FileSystems.getDefault().newWatchService();
 			key1 = Iris.getShaderpacksDirectory().register(watcher1,
 				StandardWatchEventKinds.ENTRY_CREATE,
+				StandardWatchEventKinds.ENTRY_MODIFY,
 				StandardWatchEventKinds.ENTRY_DELETE);
 			keyValid = true;
 		} catch (IOException e) {
