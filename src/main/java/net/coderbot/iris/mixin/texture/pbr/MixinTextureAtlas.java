@@ -22,6 +22,10 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 	@Shadow
 	@Final
 	private ResourceLocation location;
+	@Shadow
+	private int height;
+	@Shadow
+	private int width;
 	@Unique
 	private PBRAtlasHolder pbrHolder;
 
@@ -71,11 +75,11 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 
 	@Override
 	public int getWidth() {
-		return prep.width();
+		return this.width;
 	}
 
 	@Override
 	public int getHeight() {
-		return prep.height();
+		return this.height;
 	}
 }
