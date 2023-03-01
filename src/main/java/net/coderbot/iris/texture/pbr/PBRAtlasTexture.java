@@ -6,12 +6,14 @@ import net.coderbot.iris.mixin.texture.AnimatedTextureAccessor;
 import net.coderbot.iris.mixin.texture.FrameInfoAccessor;
 import net.coderbot.iris.mixin.texture.SpriteContentsAccessor;
 import net.coderbot.iris.mixin.texture.TickerAccessor;
+import net.coderbot.iris.texture.pbr.loader.AtlasPBRLoader;
 import net.coderbot.iris.texture.util.TextureExporter;
 import net.coderbot.iris.texture.util.TextureManipulationUtil;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.Dumpable;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -19,10 +21,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
-public class PBRAtlasTexture extends AbstractTexture {
+public class PBRAtlasTexture extends AbstractTexture implements Dumpable {
 	protected final TextureAtlas atlasTexture;
 	protected final PBRType type;
 	protected final ResourceLocation id;
@@ -86,10 +94,6 @@ public class PBRAtlasTexture extends AbstractTexture {
 			case SPECULAR:
 				pbrHolder.setSpecularAtlas(this);
 				break;
-		}
-
-		if (PBRTextureManager.DEBUG) {
-			TextureExporter.exportTextures("pbr_debug/atlas", id.getNamespace() + "_" + id.getPath().replaceAll("/", "_"), glId, mipLevel, atlasWidth, atlasHeight);
 		}
 	}
 
@@ -166,5 +170,25 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 	@Override
 	public void load(ResourceManager manager) {
+	}
+
+	@Override
+	public void dumpContents(ResourceLocation location, Path path) throws IOException {
+		String lvString3 = getAtlasId().toDebugFileName();
+		TextureUtil.writeAsPNG(path, lvString3, this.getId(), AtlasPBRLoader.fetchAtlasMipLevel(atlasTexture), ((TextureAtlasExtension) atlasTexture).getWidth(), ((TextureAtlasExtension) atlasTexture).getHeight());
+		dumpSpriteNames(path, lvString3, this.sprites);
+	}
+
+	private static void dumpSpriteNames(Path pPath0, String pString1, Map<ResourceLocation, TextureAtlasSprite> pMap2) {
+		Path lvPath3 = pPath0.resolve(pString1 + ".txt");
+		try (BufferedWriter lvWriter4 = Files.newBufferedWriter(lvPath3, new OpenOption[0]);){
+			for (Map.Entry lvMap$Entry6 : pMap2.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()) {
+				TextureAtlasSprite lvTextureAtlasSprite7 = (TextureAtlasSprite)lvMap$Entry6.getValue();
+				lvWriter4.write(String.format(Locale.ROOT, "%s\tx=%d\ty=%d\tw=%d\th=%d%n", lvMap$Entry6.getKey(), lvTextureAtlasSprite7.getX(), lvTextureAtlasSprite7.getY(), lvTextureAtlasSprite7.contents().width(), lvTextureAtlasSprite7.contents().height()));
+			}
+		}
+		catch (IOException lvIOException4) {
+			Iris.logger.warn("Failed to write file {}", lvPath3, lvIOException4);
+		}
 	}
 }

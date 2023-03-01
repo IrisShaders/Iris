@@ -14,12 +14,14 @@ import net.coderbot.iris.texture.pbr.loader.PBRTextureLoader.PBRTextureConsumer;
 import net.coderbot.iris.texture.pbr.loader.PBRTextureLoaderRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.Dumpable;
 import org.jetbrains.annotations.NotNull;
+
+import java.nio.file.Path;
 
 public class PBRTextureManager {
 	public static final PBRTextureManager INSTANCE = new PBRTextureManager();
 
-	public static final boolean DEBUG = System.getProperty("iris.pbr.debug") != null;
 
 	// TODO: Figure out how to merge these two.
 	private static Runnable normalTextureChangeListener;
@@ -147,7 +149,7 @@ public class PBRTextureManager {
 		}
 	}
 
-	private class PBRTextureConsumerImpl implements PBRTextureConsumer {
+    private class PBRTextureConsumerImpl implements PBRTextureConsumer {
 		private AbstractTexture normalTexture;
 		private AbstractTexture specularTexture;
 		private boolean changed;

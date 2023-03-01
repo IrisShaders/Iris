@@ -34,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -107,7 +108,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		}
 	}
 
-	protected static int fetchAtlasMipLevel(TextureAtlas atlas) {
+	public static int fetchAtlasMipLevel(TextureAtlas atlas) {
 		TextureAtlasSprite missingSprite = atlas.getSprite(MissingTextureAtlasSprite.getLocation());
 		return ((SpriteContentsAccessor) missingSprite.contents()).getMainImage().length - 1;
 	}
@@ -231,6 +232,25 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		atlas.setFrameOnSprite(target, targetFrame);
 		atlas.setSubFrameOnSprite(target, ticks + atlas.getSubFrameFromSprite(source));
 	}
+
+	public void dumpTextures(Path path) {
+		normalAtlases.forEach((original, normal) -> {
+			try {
+				normal.dumpContents(null, path);
+			} catch (IOException e) {
+				Iris.logger.error("Failed to write normal textures!", e);
+			}
+		});
+
+		specularAtlases.forEach((original, specular) -> {
+			try {
+				specular.dumpContents(null, path);
+			} catch (IOException e) {
+				Iris.logger.error("Failed to write specular textures!", e);
+			}
+		});
+	}
+
 
 	protected static class PBRTextureAtlasSpriteInfo extends SpriteContents implements CustomMipmapGenerator.Provider {
 		protected final PBRType pbrType;
