@@ -7,8 +7,4 @@ public interface TextureAtlasExtension {
 	PBRAtlasHolder getPBRHolder();
 
 	PBRAtlasHolder getOrCreatePBRHolder();
-
-	int getWidth();
-
-	int getHeight();
 }

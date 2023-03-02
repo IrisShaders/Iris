@@ -1,10 +1,11 @@
 package net.coderbot.iris.mixin.texture;
 
+import net.minecraft.client.renderer.texture.SpriteContents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(targets = "net/minecraft/client/renderer/texture/SpriteContents$FrameInfo")
-public interface FrameInfoAccessor {
+@Mixin(SpriteContents.FrameInfo.class)
+public interface SpriteContentsFrameInfoAccessor {
 	@Accessor("index")
 	int getIndex();
 

@@ -25,7 +25,7 @@
     "fast_render.MixinModelPart",
     "font.MixinFont",
     "font.MixinGlyphRenderer",
-    "pbr_animation.MixinTextureAtlasSprite",
+    "pbr_animation.MixinSpriteContents",
     "shader_overrides.MixinGlProgram",
     "shader_overrides.MixinRegionChunkRenderer",
     "shader_overrides.MixinShaderChunkRenderer",
