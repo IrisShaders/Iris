@@ -9,6 +9,7 @@ import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
+import net.coderbot.iris.mixin.texture.TextureAtlasAccessor;
 import net.coderbot.iris.pipeline.newshader.FogMode;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
@@ -17,31 +18,25 @@ import net.coderbot.iris.texture.TextureInfoCache.TextureInfo;
 import net.coderbot.iris.texture.TextureTracker;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
 import net.coderbot.iris.uniforms.transforms.SmoothedVec2f;
-import org.joml.Math;
-import org.joml.Vector2f;
-import org.joml.Vector2i;
-import org.joml.Vector3d;
-import org.joml.Vector4f;
-import org.joml.Vector4i;
-import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.Objects;
-import java.util.function.IntSupplier;
+import org.joml.Math;
+import org.joml.Vector2f;
+import org.joml.Vector2i;
+import org.joml.Vector3d;
+import org.joml.Vector4f;
+import org.joml.Vector4i;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
@@ -73,9 +68,9 @@ public final class CommonUniforms {
 			int glId = RenderSystem.getShaderTexture(0);
 
 			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
-			if (texture instanceof TextureAtlas) {
-				TextureInfo info = TextureInfoCache.INSTANCE.getInfo(glId);
-				return new Vector2i(info.getWidth(), info.getHeight());
+			if (texture instanceof TextureAtlas atlas) {
+				TextureAtlasAccessor atlasAccessor = (TextureAtlasAccessor) atlas;
+				return new Vector2i(atlasAccessor.callGetWidth(), atlasAccessor.callGetHeight());
 			}
 
 			return ZERO_VECTOR_2i;

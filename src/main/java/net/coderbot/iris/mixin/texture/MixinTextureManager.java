@@ -2,9 +2,6 @@ package net.coderbot.iris.mixin.texture;
 
 import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
-import net.coderbot.iris.texture.pbr.loader.AtlasPBRLoader;
-import net.coderbot.iris.texture.pbr.loader.PBRTextureLoaderRegistry;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,9 +21,9 @@ public class MixinTextureManager {
 		PBRTextureManager.INSTANCE.clear();
 	}
 
-	@Inject(method = "_dumpAllSheets", at = @At("TAIL"))
-	private void iris$dumpPBR(Path path, CallbackInfo ci) {
-		((AtlasPBRLoader) PBRTextureLoaderRegistry.INSTANCE.getLoader(TextureAtlas.class)).dumpTextures(path);
+	@Inject(method = "_dumpAllSheets(Ljava/nio/file/Path;)V", at = @At("RETURN"))
+	private void iris$onInnerDumpTextures(Path path, CallbackInfo ci) {
+		PBRTextureManager.INSTANCE.dumpTextures(path);
 	}
 
 	@Inject(method = "close()V", at = @At("TAIL"), remap = false)

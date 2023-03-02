@@ -1,11 +1,11 @@
 package net.coderbot.iris.texture.pbr;
 
 import com.mojang.blaze3d.platform.TextureUtil;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.mixin.texture.SpriteContentsAnimatedTextureAccessor;
 import net.coderbot.iris.mixin.texture.SpriteContentsFrameInfoAccessor;
 import net.coderbot.iris.mixin.texture.SpriteContentsTickerAccessor;
 import net.coderbot.iris.texture.pbr.loader.AtlasPBRLoader.PBRTextureAtlasSprite;
-import net.coderbot.iris.texture.util.TextureExporter;
 import net.coderbot.iris.texture.util.TextureManipulationUtil;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
@@ -19,17 +19,25 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-public class PBRAtlasTexture extends AbstractTexture {
+public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 	protected final TextureAtlas atlasTexture;
 	protected final PBRType type;
 	protected final ResourceLocation id;
 	protected final Map<ResourceLocation, PBRTextureAtlasSprite> texturesByName = new HashMap<>();
 	protected final List<TextureAtlasSprite.Ticker> animatedTextures = new ArrayList<>();
+	protected int width;
+	protected int height;
+	protected int mipLevel;
 
 	public PBRAtlasTexture(TextureAtlas atlasTexture, PBRType type) {
 		this.atlasTexture = atlasTexture;
@@ -64,6 +72,9 @@ public class PBRAtlasTexture extends AbstractTexture {
 		int glId = getId();
 		TextureUtil.prepareImage(glId, mipLevel, atlasWidth, atlasHeight);
 		TextureManipulationUtil.fillWithColor(glId, mipLevel, type.getDefaultValue());
+		width = atlasWidth;
+		height = atlasHeight;
+		this.mipLevel = mipLevel;
 
 		for (PBRTextureAtlasSprite sprite : texturesByName.values()) {
 			try {
@@ -86,10 +97,6 @@ public class PBRAtlasTexture extends AbstractTexture {
 			case SPECULAR:
 				pbrHolder.setSpecularAtlas(this);
 				break;
-		}
-
-		if (PBRTextureManager.DEBUG) {
-			TextureExporter.exportTextures("pbr_debug/atlas", id.getNamespace() + "_" + id.getPath().replaceAll("/", "_"), glId, mipLevel, atlasWidth, atlasHeight);
 		}
 	}
 
@@ -182,5 +189,29 @@ public class PBRAtlasTexture extends AbstractTexture {
 
 	@Override
 	public void load(ResourceManager manager) {
+	}
+
+	@Override
+	public void dumpContents(ResourceLocation id, Path path) throws IOException {
+		String fileName = id.toDebugFileName();
+		TextureUtil.writeAsPNG(path, fileName, getId(), mipLevel, width, height);
+		dumpSpriteNames(path, fileName, texturesByName);
+	}
+
+	protected static void dumpSpriteNames(Path dir, String fileName, Map<ResourceLocation, PBRTextureAtlasSprite> sprites) {
+		Path path = dir.resolve(fileName + ".txt");
+		try (BufferedWriter writer = Files.newBufferedWriter(path)) {
+			for (Map.Entry<ResourceLocation, PBRTextureAtlasSprite> entry : sprites.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()) {
+				PBRTextureAtlasSprite sprite = entry.getValue();
+				writer.write(String.format(Locale.ROOT, "%s\tx=%d\ty=%d\tw=%d\th=%d%n", entry.getKey(), sprite.getX(), sprite.getY(), sprite.contents().width(), sprite.contents().height()));
+			}
+		} catch (IOException e) {
+			Iris.logger.warn("Failed to write file {}", path, e);
+		}
+	}
+
+	@Override
+	public ResourceLocation getDefaultDumpLocation() {
+		return id;
 	}
 }
