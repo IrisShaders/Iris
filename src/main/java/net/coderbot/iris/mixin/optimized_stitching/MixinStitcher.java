@@ -1,6 +1,5 @@
 package net.coderbot.iris.mixin.optimized_stitching;
 
-import net.coderbot.iris.mixin.texture.StitcherHolderAccessor;
 import net.minecraft.client.renderer.texture.Stitcher;
 import net.minecraft.client.renderer.texture.Stitcher.Holder;
 import net.minecraft.client.renderer.texture.Stitcher.Region;
@@ -13,10 +12,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.List;
 
 @Mixin(Stitcher.class)
-public class MixinStitcher {
+public class MixinStitcher<T extends Stitcher.Entry> {
 	@Shadow
 	@Final
-	private List<Region> storage;
+	private List<Region<T>> storage;
 	@Shadow
 	private int storageX;
 	@Shadow
@@ -35,9 +34,9 @@ public class MixinStitcher {
 	 * @reason Optimize region creation to allow for a smaller atlas
 	 */
 	@Overwrite
-	private boolean expand(Holder<?> holder) {
-		int newEffectiveWidth = Mth.smallestEncompassingPowerOfTwo(storageX + ((StitcherHolderAccessor) (Object) holder).getWidth());
-		int newEffectiveHeight = Mth.smallestEncompassingPowerOfTwo(storageY + ((StitcherHolderAccessor) (Object) holder).getHeight());
+	private boolean expand(Holder<T> holder) {
+		int newEffectiveWidth = Mth.smallestEncompassingPowerOfTwo(storageX + holder.width());
+		int newEffectiveHeight = Mth.smallestEncompassingPowerOfTwo(storageY + holder.height());
 		boolean canFitWidth = newEffectiveWidth <= maxWidth;
 		boolean canFitHeight = newEffectiveHeight <= maxHeight;
 
@@ -112,7 +111,7 @@ public class MixinStitcher {
 					 *
 					 * Vanilla does not perform this check.
 					 */
-					growWidth = ((StitcherHolderAccessor) (Object) holder).getWidth() > storageX;
+					growWidth = holder.width() > storageX;
 				}
 			} else {
 				if (wouldGrowEffectiveHeight) {
@@ -141,17 +140,17 @@ public class MixinStitcher {
 		}
 		// Iris end
 
-		Region region;
+		Region<T> region;
 		if (growWidth) {
 			if (storageY == 0) {
-				storageY = ((StitcherHolderAccessor) (Object) holder).getHeight();
+				storageY = holder.height();
 			}
 
-			region = new Region(storageX, 0, ((StitcherHolderAccessor) (Object) holder).getWidth(), storageY);
-			storageX += ((StitcherHolderAccessor) (Object) holder).getWidth();
+			region = new Region<>(storageX, 0, holder.width(), storageY);
+			storageX += holder.width();
 		} else {
-			region = new Region(0, storageY, storageX, ((StitcherHolderAccessor) (Object) holder).getHeight());
-			storageY += ((StitcherHolderAccessor) (Object) holder).getHeight();
+			region = new Region<>(0, storageY, storageX, holder.height());
+			storageY += holder.height();
 		}
 
 		region.add(holder);

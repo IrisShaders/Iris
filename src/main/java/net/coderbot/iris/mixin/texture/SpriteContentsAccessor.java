@@ -7,9 +7,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(SpriteContents.class)
 public interface SpriteContentsAccessor {
-	@Accessor
-	SpriteContents.AnimatedTexture getAnimatedTexture();
-
 	@Accessor("byMipLevel")
-	NativeImage[] getMainImage();
+	NativeImage[] getByMipLevel();
+
+	@Accessor("animatedTexture")
+	SpriteContents.AnimatedTexture getAnimatedTexture();
 }
