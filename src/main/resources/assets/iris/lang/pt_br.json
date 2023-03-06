@@ -6,6 +6,7 @@
   "iris.shaders.debug.disabled": "A depuração foi desativada.",
   "iris.shaders.debug.failure": "Não foi possível ativar a depuração pois seu computador não suporta os recursos necessários.",
   "iris.shaders.debug.restart": "Você não tem o contexto de depuração, reinicie o jogo para ativá-lo.",
+  "iris.shaders.ssbofailure": "O recurso requisitado pelo sombreador (SSBO) não é suportado pelo seu GPU e pode não funcionar corretamente.",
   "iris.keybind.reload": "Recarregar sombreadores",
   "iris.keybind.shaderPackSelection": "Abrir/Fechar tela de pacotes de sombreadores",
   "iris.keybind.toggleShaders": "Alternar sombreadores",
@@ -23,6 +24,7 @@
   "iris.unsupported.pc": "seu computador",
   "iris.unsupported.pack": "Sombreadores incompatíveis!",
   "iris.unsupported.pack.description": "Este pacote de sombreadores possui recursos não suportados pelo %s, tente outro pacote. Lista: %s",
+  "iris.unsupported.pack.macos": "\nO macOS é conhecido por apresentar problemas com vários sombreadores.",
   "options.iris.apply": "Aplicar",
   "options.iris.refresh": "Recarregar",
   "options.iris.openShaderPackFolder": "Abrir pasta de pacotes",
@@ -56,6 +58,7 @@
   "options.iris.shadowDistance": "Distância das sombras",
   "options.iris.shadowDistance.enabled": "Permite alterar a distância máxima das sombras. O terreno e as entidades além dessa distância não projetarão sombras. O desempenho do jogo pode ser melhorado significativamente ao reduzir este valor.",
   "options.iris.shadowDistance.disabled": "Seu pacote de sombreadores já definiu um valor da distância das sombras e você não poderá alterá-lo.",
+  "options.iris.shadowDistance.sodium_tooltip": "A distância das sombras permite controlar o quão longe o terreno será carregado com sombras. Distâncias menores significam menos terrenos sendo carregados, o que melhora o desempenho do jogo. Esta opção não pode ser alterada por pacotes que definem uma distância das sombras e ela é limitada pelo alcance visual.",
   "options.iris.gui.hide": "Ocultar interface",
   "options.iris.gui.show": "Exibir interface",
 
