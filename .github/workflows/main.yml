@@ -1,0 +1,56 @@
+# This workflow will build a Java project with Brachyra
+
+# For more information see: docs/development/brachyura.md
+
+name: Java CI with Brachyura
+
+on: [push, pull_request]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Set up JDK 17
+
+      uses: actions/setup-java@v1
+
+      with:
+
+        java-version: 17
+
+    - name: Cache Brachyura directory
+
+      uses: actions/cache@v2
+
+      with:
+
+        path: |
+
+          .brachyura
+
+          ~/.brachyura
+
+        key: ${{ runner.os }}-brachyura-${{ hashFiles('**/Buildscript.java') }}
+
+        restore-keys: ${{ runner.os }}-brachyura
+
+    - name: Build with Brachyura
+
+      run: java -jar brachyura-bootstrap-0.jar build
+
+    - name: Upload built JAR
+
+      uses: actions/upload-artifact@v3
+
+      with:
+
+        name: iris-artifacts
+
+        path: build/libs
+
