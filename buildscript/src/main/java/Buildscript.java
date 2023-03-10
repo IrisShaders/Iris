@@ -42,7 +42,7 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String MC_VERSION = "1.19.4-rc1";
+	static final String MC_VERSION = "1.19.4-rc2";
 	static final String customSodiumName = "sodium-fabric-mc1.19.4-rc1-0.4.10+rev.ced3b01.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
@@ -68,7 +68,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public FabricLoader getLoader() {
-		return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.14.10"));
+		return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.14.17"));
 	}
 
 	@Override
