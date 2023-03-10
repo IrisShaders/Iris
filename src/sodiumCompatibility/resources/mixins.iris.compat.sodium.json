@@ -28,6 +28,7 @@
     "shader_overrides.MixinGlProgram",
     "shader_overrides.MixinRegionChunkRenderer",
     "shader_overrides.MixinShaderChunkRenderer",
+    "shader_overrides.MixinBlockRenderPass",
     "shader_overrides.MixinShaderType",
     "shader_overrides.ShaderTypeAccessor",
     "shadow_map.MixinRegionChunkRenderer",
@@ -41,8 +42,6 @@
     "vertex_format.entity.MixinEntityRenderDispatcher",
     "vertex_format.entity.MixinModelVertex",
     "vertex_format.ChunkMeshAttributeAccessor",
-    "vertex_format.MixinFluidRenderer",
-    "vertex_format.VertexElementTypeAccessor",
     "vertex_format.GlVertexAttributeFormatAccessor",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinGlVertexFormatBuilder",
@@ -52,8 +51,9 @@
     "vertex_format.MixinRenderSectionManager",
     "vertex_format.MixinCommonVertexElements",
     "vertex_format.CommonVertexElementAccessor",
-    "vertex_format.MixinVertexElementType",
     "vertex_format.MixinVertexSerializerCache",
-    "vertex_format.MixinSpriteCoordinateExpander"
+    "vertex_format.MixinVertexTransform",
+    "separate_ao.MixinBlockRenderer",
+    "separate_ao.MixinFluidRenderer"
   ]
 }
