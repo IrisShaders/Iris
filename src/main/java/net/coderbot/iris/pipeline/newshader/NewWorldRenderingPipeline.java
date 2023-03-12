@@ -214,7 +214,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		ProgramFallbackResolver resolver = new ProgramFallbackResolver(programSet);
 
 		this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings().orElseGet(() -> {
-			if (programSet.getDeferred().length > 0) {
+			if (programSet.getDeferred().length > 0 && !programSet.getPackDirectives().shouldUseSeparateEntityDraws()) {
 				return ParticleRenderingSettings.AFTER;
 			} else {
 				return ParticleRenderingSettings.MIXED;
