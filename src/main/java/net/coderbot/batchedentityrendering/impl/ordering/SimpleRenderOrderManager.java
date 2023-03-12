@@ -1,5 +1,6 @@
 package net.coderbot.batchedentityrendering.impl.ordering;
 
+import net.coderbot.batchedentityrendering.impl.TransparencyType;
 import net.minecraft.client.renderer.RenderType;
 
 import java.util.LinkedHashSet;
@@ -33,7 +34,12 @@ public class SimpleRenderOrderManager implements RenderOrderManager {
         renderTypes.clear();
     }
 
-    public Iterable<RenderType> getRenderOrder() {
+	@Override
+	public void resetType(TransparencyType type) {
+
+	}
+
+	public Iterable<RenderType> getRenderOrder() {
         return renderTypes;
     }
 }
