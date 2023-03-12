@@ -25,6 +25,7 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	public FixedFunctionWorldRenderingPipeline() {
 		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		BlockRenderingSettings.INSTANCE.setUseSeparateAo(false);
+		BlockRenderingSettings.INSTANCE.setSeparateEntityDraws(false);
 		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(1.0f);
 		BlockRenderingSettings.INSTANCE.setUseExtendedVertexFormat(false);
 		BlockRenderingSettings.INSTANCE.setBlockTypeIds(null);

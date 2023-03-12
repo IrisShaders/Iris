@@ -7,6 +7,7 @@ import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.coderbot.batchedentityrendering.impl.Groupable;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.batchedentityrendering.impl.TransparencyType;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -68,21 +69,25 @@ public class MixinLevelRenderer {
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void batchedentityrendering$beginTranslucents(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {
-		/*Minecraft.getInstance().getProfiler().popPush("entity_draws_opaque");
-		if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource source) {
-			source.endBatchWithType(TransparencyType.OPAQUE);
+		if (BlockRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
+			Minecraft.getInstance().getProfiler().popPush("entity_draws_opaque");
+			if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource source) {
+				source.endBatchWithType(TransparencyType.OPAQUE);
+			} else {
+				this.renderBuffers.bufferSource().endBatch();
+			}
 		} else {
+			Minecraft.getInstance().getProfiler().popPush("entity_draws");
 			this.renderBuffers.bufferSource().endBatch();
-		}*/
-
-		Minecraft.getInstance().getProfiler().popPush("entity_draws");
-		this.renderBuffers.bufferSource().endBatch();
+		}
 	}
 
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void batchedentityrendering$endTranslucents(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {
-		//this.renderBuffers.bufferSource().endBatch();
+		if (BlockRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
+			this.renderBuffers.bufferSource().endBatch();
+		}
 	}
 
 	@Inject(method = "renderLevel", at = @At("RETURN"))
