@@ -56,7 +56,6 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 * [Sildur's Enhanced Default](https://sildurs-shaders.github.io/)
 * [Sildur's Vibrant Shaders](https://sildurs-shaders.github.io/)
 
-
 ### projectLUMA and derivatives
 
 * [projectLUMA](https://www.curseforge.com/minecraft/customization/projectluma)
@@ -70,18 +69,15 @@ NVIDIA or AMD GPU required, does not work on Mesa drivers or Intel Windows drive
 
 ### Legacy Chocapic and derivatives
 
-"Modern Chocapic" (Chocapic v7-v9) is not supported on Iris yet, but Chocapic v4-v6 work.
-
 * [Chocapic v4 - v6](https://www.mediafire.com/folder/qs3lb60h0zw6t/Older_versions)
 * [Triliton's Shaders](https://www.curseforge.com/minecraft/customization/trilitons-shaders)
 * [RedHat shaders](https://modrinth.com/shader/redhat-shaders)
 * [Edi's Shaders](https://download2038.mediafire.com/z9lt7h9j6axg/142fc1vtr1cqcuf/Edi%C2%B4s+Shader+OFFICIAL+V3+ULTRA.zip)
 * [TME Shaders](https://github.com/CrankerMan/TME-Shaders)
 
-
 ### Continuum
 
-The paid versions are not supported, but Continuum 2.0.5 works decently.
+The paid versions are not supported, but Continuum 2.0.5 works decently. Future versions of Continuum will not be supported due to them switching to their own Focal Engine.
 
 * [Continuum 2.0.5](https://continuum.graphics/downloads)
 
