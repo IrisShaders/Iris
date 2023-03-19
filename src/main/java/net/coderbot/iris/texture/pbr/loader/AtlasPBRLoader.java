@@ -82,7 +82,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	@Nullable
 	protected PBRTextureAtlasSprite createPBRSprite(TextureAtlasSprite sprite, ResourceManager resourceManager, TextureAtlas atlas, int atlasWidth, int atlasHeight, int mipLevel, PBRType pbrType) {
 		ResourceLocation spriteName = sprite.contents().name();
-		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(spriteName, true);
+		ResourceLocation pbrImageLocation = getPBRImageLocation(spriteName, pbrType);
 
 		Optional<Resource> optionalResource = resourceManager.getResource(pbrImageLocation);
 		if (!optionalResource.isPresent()) {
@@ -154,6 +154,15 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		PBRSpriteContents pbrSpriteContents = new PBRSpriteContents(pbrSpriteName, new FrameSize(frameWidth, frameHeight), nativeImage, animationMetadata, pbrType);
 		pbrSpriteContents.increaseMipLevel(mipLevel);
 		return new PBRTextureAtlasSprite(pbrSpriteName, pbrSpriteContents, atlasWidth, atlasHeight, sprite.getX(), sprite.getY(), sprite);
+	}
+
+	protected ResourceLocation getPBRImageLocation(ResourceLocation spriteName, PBRType pbrType) {
+		String path = pbrType.appendSuffix(spriteName.getPath());
+		// Temporary fix for CIT Resewn. CIT Resewn has sprites that are not in the textures/ folder, so a custom check must be used here to avoid that assumption.
+		if (path.startsWith("optifine/cit/")) {
+			return new ResourceLocation(spriteName.getNamespace(), path + ".png");
+		}
+		return new ResourceLocation(spriteName.getNamespace(), "textures/" + path + ".png");
 	}
 
 	protected static class PBRSpriteContents extends SpriteContents implements CustomMipmapGenerator.Provider {

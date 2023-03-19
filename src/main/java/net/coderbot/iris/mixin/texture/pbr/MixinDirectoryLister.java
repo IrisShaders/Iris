@@ -19,9 +19,12 @@ public class MixinDirectoryLister {
 	private void iris$modifyForEachAction(Args args, ResourceManager resourceManager, SpriteSource.Output output) {
 		BiConsumer<? super ResourceLocation, ? super Resource> action = args.get(0);
 		BiConsumer<? super ResourceLocation, ? super Resource> wrappedAction = (location, resource) -> {
-			ResourceLocation baseLocation = PBRType.removeSuffix(location);
-			if (baseLocation != null && resourceManager.getResource(baseLocation).isPresent()) {
-				return;
+			String basePath = PBRType.removeSuffix(location.getPath());
+			if (basePath != null) {
+				ResourceLocation baseLocation = location.withPath(basePath);
+				if (resourceManager.getResource(baseLocation).isPresent()) {
+					return;
+				}
 			}
 			action.accept(location, resource);
 		};
