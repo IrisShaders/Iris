@@ -45,7 +45,7 @@ public enum ShaderKey {
 	HAND_WATER_DIFFUSE     (ProgramId.HandWater,   AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
 	LIGHTNING              (ProgramId.Entities,    AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,              FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
 	LEASH                  (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
-	TEXT_BG                (ProgramId.Basic,       AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
+	TEXT_BG                (ProgramId.EntitiesTrans,AlphaTests.ONE_TENTH_ALPHA,DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	PARTICLES              (ProgramId.TexturedLit, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	WEATHER                (ProgramId.Weather,     AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,                    FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	CRUMBLING              (ProgramId.DamagedBlock,AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN,                       FogMode.OFF,          LightingModel.LIGHTMAP  ),
