@@ -1,5 +1,6 @@
 package net.coderbot.iris.texture.pbr;
 
+import net.coderbot.iris.Iris;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +36,8 @@ public enum PBRType {
 		} else {
 			newPath = path + suffix;
 		}
+		// Temporary fix for CIT Resewn. CIT Resewn has atlases that are not in the textures/ folder, so a custom check must be used here to avoid that assumption.
+		if (newPath.startsWith("optifine/cit")) return new ResourceLocation(location.getNamespace(), newPath + ".png");
 		return new ResourceLocation(location.getNamespace(), isAtlas ? "textures/" + newPath + ".png" : newPath);
 	}
 
