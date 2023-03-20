@@ -308,7 +308,7 @@ public class CompatibilityTransformer {
 				new Identifier(name),
 				type.isScalar()
 						? LiteralExpression.getDefaultValue(type)
-						: Root.indexNodes(root, () -> new FunctionCallExpression(
+						: root.indexNodes(() -> new FunctionCallExpression(
 								new Identifier(type.getMostCompactName()),
 								Stream.of(LiteralExpression.getDefaultValue(type)))));
 	}
