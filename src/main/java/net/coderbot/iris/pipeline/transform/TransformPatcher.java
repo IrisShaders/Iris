@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.coderbot.iris.Iris;
-import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +16,9 @@ import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.query.RootSupplier;
+import io.github.douira.glsl_transformer.ast.query.index.ExternalDeclarationIndex;
+import io.github.douira.glsl_transformer.ast.query.index.NodeIndex;
 import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
 import io.github.douira.glsl_transformer.token_filter.ChannelFilter;
@@ -156,11 +157,19 @@ public class TransformPatcher {
 
 	private static final List<String> internalPrefixes = List.of("iris_", "irisMain", "moj_import");
 
+	private static final RootSupplier PREFIX_UNORDERED_ED_EXACT = new RootSupplier(
+			NodeIndex::withUnordered,
+			PrefixIdentifierIndex::withPrefix,
+			ExternalDeclarationIndex::withOnlyExact);
+
 	static {
-		Root.identifierIndexFactory = PrefixIdentifierIndex::withPrefix;
 		transformer = new EnumASTTransformer<Parameters, PatchShaderType>(PatchShaderType.class) {
+			{
+				setRootSupplier(PREFIX_UNORDERED_ED_EXACT);
+			}
+
 			@Override
-			public TranslationUnit parseTranslationUnit(String input) throws RecognitionException {
+			public TranslationUnit parseTranslationUnit(Root rootInstance, String input) {
 				// parse #version directive using an efficient regex before parsing so that the
 				// parser can be set to the correct version
 				Matcher matcher = versionPattern.matcher(input);
@@ -174,7 +183,7 @@ public class TransformPatcher {
 				}
 				transformer.getLexer().version = version;
 
-				return super.parseTranslationUnit(input);
+				return super.parseTranslationUnit(rootInstance, input);
 			}
 		};
 		transformer.setTransformation((trees, parameters) -> {
@@ -198,7 +207,7 @@ public class TransformPatcher {
 											+ id.getName() + ". See debugging.md for more information.");
 						});
 
-				Root.indexBuildSession(tree, () -> {
+				Root.indexBuildSession(root, () -> {
 					VersionStatement versionStatement = tree.getVersionStatement();
 					if (versionStatement == null) {
 						throw new IllegalStateException("Missing the version statement!");
@@ -353,8 +362,8 @@ public class TransformPatcher {
 			float positionScale, float positionOffset, float textureScale,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
-			new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs, positionScale, positionOffset,
-				textureScale));
+				new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs, positionScale, positionOffset,
+						textureScale));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(
