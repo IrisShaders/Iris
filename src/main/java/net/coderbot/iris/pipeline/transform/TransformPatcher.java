@@ -17,9 +17,6 @@ import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.RootSupplier;
-import io.github.douira.glsl_transformer.ast.query.index.ExternalDeclarationIndex;
-import io.github.douira.glsl_transformer.ast.query.index.NodeIndex;
-import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
 import io.github.douira.glsl_transformer.token_filter.ChannelFilter;
 import io.github.douira.glsl_transformer.token_filter.TokenChannel;
@@ -157,15 +154,10 @@ public class TransformPatcher {
 
 	private static final List<String> internalPrefixes = List.of("iris_", "irisMain", "moj_import");
 
-	private static final RootSupplier PREFIX_UNORDERED_ED_EXACT = new RootSupplier(
-			NodeIndex::withUnordered,
-			PrefixIdentifierIndex::withPrefix,
-			ExternalDeclarationIndex::withOnlyExact);
-
 	static {
 		transformer = new EnumASTTransformer<Parameters, PatchShaderType>(PatchShaderType.class) {
 			{
-				setRootSupplier(PREFIX_UNORDERED_ED_EXACT);
+				setRootSupplier(RootSupplier.PREFIX_UNORDERED_ED_EXACT);
 			}
 
 			@Override
@@ -207,7 +199,7 @@ public class TransformPatcher {
 											+ id.getName() + ". See debugging.md for more information.");
 						});
 
-				Root.indexBuildSession(root, () -> {
+				root.indexBuildSession(() -> {
 					VersionStatement versionStatement = tree.getVersionStatement();
 					if (versionStatement == null) {
 						throw new IllegalStateException("Missing the version statement!");
