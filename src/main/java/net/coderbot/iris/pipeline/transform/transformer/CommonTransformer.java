@@ -28,6 +28,7 @@ import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
+import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -36,11 +37,11 @@ import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
 public class CommonTransformer {
 	public static final AutoHintedMatcher<Expression> glTextureMatrix0 = new AutoHintedMatcher<>(
-			"gl_TextureMatrix[0]", Matcher.expressionPattern);
+			"gl_TextureMatrix[0]", ParseShape.EXPRESSION);
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
-			"gl_TextureMatrix[1]", Matcher.expressionPattern);
+			"gl_TextureMatrix[1]", ParseShape.EXPRESSION);
 	public static final Matcher<ExternalDeclaration> sampler = new Matcher<>(
-			"uniform Type name;", Matcher.externalDeclarationPattern) {
+			"uniform Type name;", ParseShape.EXTERNAL_DECLARATION) {
 		{
 			markClassedPredicateWildcard("type",
 					pattern.getRoot().identifierIndex.getUnique("Type").getAncestor(TypeSpecifier.class),
@@ -52,7 +53,7 @@ public class CommonTransformer {
 	};
 
 	private static final AutoHintedMatcher<Expression> glFragDataI = new AutoHintedMatcher<>(
-			"gl_FragData[index]", Matcher.expressionPattern) {
+			"gl_FragData[index]", ParseShape.EXPRESSION) {
 		{
 			markClassedPredicateWildcard("index",
 					pattern.getRoot().identifierIndex.getUnique("index").getAncestor(ReferenceExpression.class),
@@ -83,7 +84,7 @@ public class CommonTransformer {
 				id -> {
 					FunctionCallExpression functionCall = (FunctionCallExpression) id.getParent();
 					functionCall.getFunctionName().setName(innerName);
-					FunctionCallExpression wrapper = (FunctionCallExpression) t.parseExpression(id, "vec4()");
+					FunctionCallExpression wrapper = (FunctionCallExpression) t.parseExpression(root, "vec4()");
 					functionCall.replaceBy(wrapper);
 					wrapper.getParameters().add(functionCall);
 				});
@@ -146,7 +147,7 @@ public class CommonTransformer {
 			}
 			for (long index : replaceIndexesSet) {
 				tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS,
-						fragDataDeclaration.getInstanceFor(tree,
+						fragDataDeclaration.getInstanceFor(root,
 								new LiteralExpression(Type.INT32, index),
 								new Identifier("iris_FragData" + index)));
 			}
