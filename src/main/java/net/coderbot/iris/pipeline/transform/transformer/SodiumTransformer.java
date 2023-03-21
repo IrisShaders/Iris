@@ -13,7 +13,7 @@ public class SodiumTransformer {
 			TranslationUnit tree,
 			Root root,
 			SodiumParameters parameters) {
-		CommonTransformer.transform(t, tree, root, parameters);
+		CommonTransformer.transform(t, tree, root, parameters, false);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");

@@ -218,20 +218,24 @@ public class TransformPatcher {
 						case COMPUTE:
 							// we can assume the version is at least 400 because it's a compute shader
 							versionStatement.profile = Profile.CORE;
-							CommonTransformer.transform(transformer, tree, root, parameters);
+							CommonTransformer.transform(transformer, tree, root, parameters, true);
 							break;
 						default:
 							// TODO: Implement Optifine's special core profile mode
 							// handling of Optifine's special core profile mode
 							boolean isLine = (parameters.patch == Patch.VANILLA && ((VanillaParameters) parameters).isLines());
 							if (profile == Profile.CORE || version.number >= 150 && profile == null || isLine) {
+								// patch the version number to at least 330
+								if (version.number < 330) {
+									versionStatement.version = Version.GLSL33;
+								}
+
 								switch (parameters.patch) {
 									case COMPOSITE:
 										CompositeCoreTransformer.transform(transformer, tree, root, parameters);
 										break;
 									case SODIUM:
 										SodiumParameters sodiumParameters = (SodiumParameters) parameters;
-										sodiumParameters.setAlphaFor(type);
 										SodiumCoreTransformer.transform(transformer, tree, root, sodiumParameters);
 										break;
 									case VANILLA:

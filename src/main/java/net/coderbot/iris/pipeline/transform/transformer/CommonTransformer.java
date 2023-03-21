@@ -40,6 +40,8 @@ public class CommonTransformer {
 			"gl_TextureMatrix[0]", ParseShape.EXPRESSION);
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", ParseShape.EXPRESSION);
+	public static final AutoHintedMatcher<Expression> glTextureMatrix2 = new AutoHintedMatcher<>(
+			"gl_TextureMatrix[2]", ParseShape.EXPRESSION);
 	public static final Matcher<ExternalDeclaration> sampler = new Matcher<>(
 			"uniform Type name;", ParseShape.EXTERNAL_DECLARATION) {
 		{
@@ -72,13 +74,13 @@ public class CommonTransformer {
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
 	private static final List<Long> replaceIndexes = new ArrayList<>();
 
-	private static void renameFunctionCall(Root root, String oldName, String newName) {
+	static void renameFunctionCall(Root root, String oldName, String newName) {
 		root.process(root.identifierIndex.getStream(oldName)
 				.filter(id -> id.getParent() instanceof FunctionCallExpression),
 				id -> id.setName(newName));
 	}
 
-	private static void renameAndWrapShadow(ASTParser t, Root root, String oldName, String innerName) {
+	static void renameAndWrapShadow(ASTParser t, Root root, String oldName, String innerName) {
 		root.process(root.identifierIndex.getStream(oldName)
 				.filter(id -> id.getParent() instanceof FunctionCallExpression),
 				id -> {
@@ -94,7 +96,7 @@ public class CommonTransformer {
 			ASTParser t,
 			TranslationUnit tree,
 			Root root,
-			Parameters parameters) {
+			Parameters parameters, boolean core) {
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
@@ -155,7 +157,7 @@ public class CommonTransformer {
 			replaceIndexes.clear();
 
 			// insert alpha test for iris_FragData0 in the fragment shader
-			if (parameters.getAlphaTest() != AlphaTest.ALWAYS && replaceIndexesSet.contains(0L)) {
+			if ((parameters.getAlphaTest() != AlphaTest.ALWAYS && !core) && replaceIndexesSet.contains(0L)) {
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_currentAlphaTest;");
 				tree.appendMainFunctionBody(t, parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
 			}
