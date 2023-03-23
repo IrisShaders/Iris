@@ -65,7 +65,7 @@ public final class ComputeProgram extends GlResource {
 
 	public void dispatch(float width, float height) {
 		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::allowConcurrentCompute).orElse(false)) {
-			IrisRenderSystem.memoryBarrier(40);
+			IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 		}
 
 		IrisRenderSystem.dispatchCompute(getWorkGroups(width, height));

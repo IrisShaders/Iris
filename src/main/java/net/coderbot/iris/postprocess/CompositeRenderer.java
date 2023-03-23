@@ -3,6 +3,7 @@ package net.coderbot.iris.postprocess;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -12,8 +13,12 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
@@ -46,6 +51,7 @@ import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.Map;
 import java.util.Objects;
@@ -62,6 +68,7 @@ public class CompositeRenderer {
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
 	private final CustomUniforms customUniforms;
 	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
+	private final Set<GlImage> customImages;
 	private TextureStage textureStage;
 	private WorldRenderingPipeline pipeline;
 
@@ -69,7 +76,7 @@ public class CompositeRenderer {
 							 TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
 							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
 							 Supplier<ShadowRenderTargets> shadowTargetsSupplier, TextureStage textureStage,
-							 Object2ObjectMap<String, TextureAccess> customTextureIds, Object2ObjectMap<String, TextureAccess> irisCustomTextures, ImmutableMap<Integer, Boolean> explicitPreFlips,
+							 Object2ObjectMap<String, TextureAccess> customTextureIds, Object2ObjectMap<String, TextureAccess> irisCustomTextures, Set<GlImage> customImages, ImmutableMap<Integer, Boolean> explicitPreFlips,
 							 CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
 		this.noiseTexture = noiseTexture;
@@ -79,6 +86,7 @@ public class CompositeRenderer {
 		this.customTextureIds = customTextureIds;
 		this.customUniforms = customUniforms;
 		this.irisCustomTextures = irisCustomTextures;
+		this.customImages = customImages;
 		this.textureStage = textureStage;
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
@@ -114,6 +122,7 @@ public class CompositeRenderer {
 			ProgramDirectives directives = source.getDirectives();
 
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
+			pass.blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(null);
 			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
 			int[] drawBuffers = directives.getDrawBuffers();
 
@@ -197,6 +206,7 @@ public class CompositeRenderer {
 		int viewWidth;
 		int viewHeight;
 		Program program;
+		BlendModeOverride blendModeOverride;
 		ComputeProgram[] computes;
 		GlFramebuffer framebuffer;
 		ImmutableSet<Integer> flippedAtLeastOnce;
@@ -243,7 +253,7 @@ public class CompositeRenderer {
 			}
 
 			if (ranCompute) {
-				IrisRenderSystem.memoryBarrier(40);
+				IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 			}
 
 			Program.unbind();
@@ -266,11 +276,16 @@ public class CompositeRenderer {
 
 			renderPass.framebuffer.bind();
 			renderPass.program.use();
+			if (renderPass.blendModeOverride != null) {
+				renderPass.blendModeOverride.apply();
+			}
 
 			// program is the identifier for composite :shrug:
 			this.customUniforms.push(renderPass.program);
 
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
+
+			BlendModeOverride.restore();
 		}
 
 		FullScreenQuadRenderer.INSTANCE.end();
@@ -351,14 +366,16 @@ public class CompositeRenderer {
 
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
 		IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+		IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 
 		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+		IrisImages.addCustomImages(builder, customImages);
 
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null);
+			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 			IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
 		}
 
@@ -402,14 +419,16 @@ public class CompositeRenderer {
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
 				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
+				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 
 				IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+				IrisImages.addCustomImages(builder, customImages);
 
 				IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 				IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null);
+					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 					IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
 				}
 

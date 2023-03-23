@@ -70,6 +70,28 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
         return finalSegments;
     }
 
+	public List<BufferSegment> getSegmentsForType(TransparencyType transparencyType) {
+		if (currentType == null) {
+			return Collections.emptyList();
+		}
+
+		if (((BlendingStateHolder) currentType).getTransparencyType() == transparencyType) {
+			if (shouldSortOnUpload(currentType)) {
+				buffer.setQuadSortOrigin(0, 0, 0);
+			}
+
+			buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
+
+			currentType = null;
+		}
+
+		List<BufferSegment> finalSegments = buffers.stream().filter(segment -> ((BlendingStateHolder) segment.type()).getTransparencyType() == transparencyType).toList();
+
+		buffers.removeAll(finalSegments);
+
+		return finalSegments;
+	}
+
     private static boolean shouldSortOnUpload(RenderType type) {
         return ((RenderTypeAccessor) type).shouldSortOnUpload();
     }

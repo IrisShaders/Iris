@@ -45,6 +45,7 @@ import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
+import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
@@ -56,7 +57,7 @@ public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
 	private static final AutoHintedMatcher<Expression> sildursWaterFract = new AutoHintedMatcher<>(
-			"fract(worldpos.y + 0.001)", Matcher.expressionPattern);
+			"fract(worldpos.y + 0.001)", ParseShape.EXPRESSION);
 
 	private static StorageQualifier getConstQualifier(TypeQualifier qualifier) {
 		if (qualifier == null) {
@@ -235,7 +236,7 @@ public class CompatibilityTransformer {
 		private final StorageType storageType;
 
 		public DeclarationMatcher(StorageType storageType) {
-			super("out float name;", Matcher.externalDeclarationPattern);
+			super("out float name;", ParseShape.EXTERNAL_DECLARATION);
 			this.storageType = storageType;
 		}
 
@@ -308,7 +309,7 @@ public class CompatibilityTransformer {
 				new Identifier(name),
 				type.isScalar()
 						? LiteralExpression.getDefaultValue(type)
-						: Root.indexNodes(root, () -> new FunctionCallExpression(
+						: root.indexNodes(() -> new FunctionCallExpression(
 								new Identifier(type.getMostCompactName()),
 								Stream.of(LiteralExpression.getDefaultValue(type)))));
 	}
@@ -592,7 +593,7 @@ public class CompatibilityTransformer {
 
 	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<ExternalDeclaration>(
 			"out float name;",
-			Matcher.externalDeclarationPattern) {
+			ParseShape.EXTERNAL_DECLARATION) {
 		{
 			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
 			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
@@ -696,14 +697,6 @@ public class CompatibilityTransformer {
 		for (ExternalDeclaration declaration : declarationsToRemove) {
 			declaration.detachParent();
 		}
-
-		// for test consistency: sort the new declarations by position in the
-		// original declaration and then translation unit index
-		newDeclarationData.sort(Comparator
-				.<NewDeclarationData>comparingInt(
-						data -> tree.getChildren().indexOf(data.member.getAncestor(ExternalDeclaration.class)))
-				.thenComparingInt(
-						data -> data.member.getAncestor(TypeAndInitDeclaration.class).getMembers().indexOf(data.member)));
 
 		// generate new declarations with layout qualifiers for each outColor member
 		ArrayList<ExternalDeclaration> newDeclarations = new ArrayList<ExternalDeclaration>();

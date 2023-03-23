@@ -47,7 +47,7 @@ public class NewShaderTests {
 										GlFramebuffer writingToAfterTranslucent, GlFramebuffer baseline, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, ShaderAttributeInputs inputs, FrameUpdateNotifier updateNotifier,
 										NewWorldRenderingPipeline parent, Supplier<ImmutableSet<Integer>> flipped, FogMode fogMode, boolean isIntensity,
-										boolean isFullbright, boolean isShadowPass, CustomUniforms customUniforms) throws IOException {
+										boolean isFullbright, boolean isShadowPass, boolean isLines, CustomUniforms customUniforms) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(programId.getBlendModeOverride());
 
@@ -55,7 +55,7 @@ public class NewShaderTests {
 			source.getVertexSource().orElseThrow(RuntimeException::new),
 			source.getGeometrySource().orElse(null),
 			source.getFragmentSource().orElseThrow(RuntimeException::new),
-			alpha, true, inputs, pipeline.getTextureMap());
+			alpha, isLines, true, inputs, pipeline.getTextureMap());
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
@@ -94,7 +94,7 @@ public class NewShaderTests {
 
 		String shaderJsonString = shaderJson.toString();
 
-		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment, shaderJsonString);
+		PatchedShaderPrinter.debugPatchedShaders(name, vertex, geometry, fragment, shaderJsonString);
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, geometry, fragment);
 

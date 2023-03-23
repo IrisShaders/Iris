@@ -14,8 +14,8 @@ public class ShaderAttributeInputs {
 	private boolean glint;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean glint) {
-		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL) {
+	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines, boolean glint) {
+		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL && !isLines) {
 			newLines = true;
 		}
 

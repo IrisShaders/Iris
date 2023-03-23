@@ -16,17 +16,22 @@ public interface SamplerHolder {
 	 * Throws an exception if texture unit 0 is already allocated or reserved in some way. Do not call this
 	 * function after calls to addDynamicSampler, it must be called before any calls to addDynamicSampler.
 	 */
-	boolean addDefaultSampler(IntSupplier sampler, String... names);
-
-	default boolean addDynamicSampler(IntSupplier sampler, String... names) {
-		return addDynamicSampler(TextureType.TEXTURE_2D, sampler, names);
+	default boolean addDefaultSampler(IntSupplier sampler, String... names) {
+		return addDefaultSampler(TextureType.TEXTURE_2D, sampler, null, null, names);
 	}
 
-	boolean addDynamicSampler(TextureType type, IntSupplier sampler, String... names);
+	boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names);
 
-	default boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
-		return addDynamicSampler(TextureType.TEXTURE_2D, sampler, notifier, names);
+
+	default boolean addDynamicSampler(IntSupplier texture, String... names) {
+		return addDynamicSampler(TextureType.TEXTURE_2D, texture, null, names);
 	}
 
-	boolean addDynamicSampler(TextureType type, IntSupplier sampler, ValueUpdateNotifier notifier, String... names);
+	boolean addDynamicSampler(TextureType type, IntSupplier texture, GlSampler sampler, String... names);
+
+	default boolean addDynamicSampler(IntSupplier texture, ValueUpdateNotifier notifier, String... names) {
+		return addDynamicSampler(TextureType.TEXTURE_2D, texture, notifier, null, names);
+	}
+
+	boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names);
 }

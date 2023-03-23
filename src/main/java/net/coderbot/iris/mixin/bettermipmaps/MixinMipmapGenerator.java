@@ -1,5 +1,7 @@
 package net.coderbot.iris.mixin.bettermipmaps;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import net.coderbot.iris.helpers.ColorSRGB;
 import net.minecraft.client.renderer.texture.MipmapGenerator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -24,15 +26,6 @@ import org.spongepowered.asm.mixin.Unique;
  */
 @Mixin(MipmapGenerator.class)
 public class MixinMipmapGenerator {
-	// Generate some color tables for gamma correction.
-	private static final float[] SRGB_TO_LINEAR = new float[256];
-
-	static {
-		for (int i = 0; i < 256; i++) {
-			SRGB_TO_LINEAR[i] = (float) Math.pow(i / 255.0, 2.2);
-		}
-	}
-
 	/**
 	 * @author coderbot
 	 * @reason replace the vanilla blending function with our improved function
@@ -46,14 +39,9 @@ public class MixinMipmapGenerator {
 	}
 
 	@Unique
-	private static int unpackAlpha(int color) {
-		return (color >>> 24) & 255;
-	}
-
-	@Unique
 	private static int weightedAverageColor(int one, int two) {
-		int alphaOne = unpackAlpha(one);
-		int alphaTwo = unpackAlpha(two);
+		int alphaOne = NativeImage.getA(one);
+		int alphaTwo = NativeImage.getA(two);
 
 		// In the case where the alpha values of the same, we can get by with an unweighted average.
 		if (alphaOne == alphaTwo) {
@@ -64,62 +52,51 @@ public class MixinMipmapGenerator {
 		// We just take the value of the other pixel as-is. To compensate for not changing the color value, we
 		// divide the alpha value by 4 instead of 2.
 		if (alphaOne == 0) {
-			return (two & 0x00FFFFFF) | ((alphaTwo / 4) << 24);
+			return (two & 0x00FFFFFF) | ((alphaTwo >> 2) << 24);
 		}
 
 		if (alphaTwo == 0) {
-			return (one & 0x00FFFFFF) | ((alphaOne / 4) << 24);
+			return (one & 0x00FFFFFF) | ((alphaOne >> 2) << 24);
 		}
 
 		// Use the alpha values to compute relative weights of each color.
 		float scale = 1.0f / (alphaOne + alphaTwo);
+
 		float relativeWeightOne = alphaOne * scale;
 		float relativeWeightTwo = alphaTwo * scale;
 
 		// Convert the color components into linear space, then multiply the corresponding weight.
-		float oneR = unpackLinearComponent(one, 0) * relativeWeightOne;
-		float oneG = unpackLinearComponent(one, 8) * relativeWeightOne;
-		float oneB = unpackLinearComponent(one, 16) * relativeWeightOne;
-		float twoR = unpackLinearComponent(two, 0) * relativeWeightTwo;
-		float twoG = unpackLinearComponent(two, 8) * relativeWeightTwo;
-		float twoB = unpackLinearComponent(two, 16) * relativeWeightTwo;
+		float oneR = ColorSRGB.srgbToLinear(NativeImage.getR(one)) * relativeWeightOne;
+		float oneG = ColorSRGB.srgbToLinear(NativeImage.getG(one)) * relativeWeightOne;
+		float oneB = ColorSRGB.srgbToLinear(NativeImage.getB(one)) * relativeWeightOne;
+
+		float twoR = ColorSRGB.srgbToLinear(NativeImage.getR(two)) * relativeWeightTwo;
+		float twoG = ColorSRGB.srgbToLinear(NativeImage.getG(two)) * relativeWeightTwo;
+		float twoB = ColorSRGB.srgbToLinear(NativeImage.getB(two)) * relativeWeightTwo;
 
 		// Combine the color components of each color
 		float linearR = oneR + twoR;
 		float linearG = oneG + twoG;
 		float linearB = oneB + twoB;
 
-		// Take the average alpha of both pixels
-		int averageAlpha = (alphaOne + alphaTwo) / 2;
+		// Take the average alpha of both alpha values
+		int averageAlpha = (alphaOne + alphaTwo) >> 1;
 
 		// Convert to sRGB and pack the colors back into an integer.
-		return packLinearToSrgb(linearR, linearG, linearB, averageAlpha);
-	}
-
-	@Unique
-	private static float unpackLinearComponent(int color, int shift) {
-		return SRGB_TO_LINEAR[(color >> shift) & 255];
-	}
-
-	@Unique
-	private static int packLinearToSrgb(float r, float g, float b, int a) {
-		int srgbR = (int) (Math.pow(r, 1.0 / 2.2) * 255.0);
-		int srgbG = (int) (Math.pow(g, 1.0 / 2.2) * 255.0);
-		int srgbB = (int) (Math.pow(b, 1.0 / 2.2) * 255.0);
-
-		return (a << 24) | (srgbB << 16) | (srgbG << 8) | srgbR;
+		return ColorSRGB.linearToSrgb(linearR, linearG, linearB, averageAlpha);
 	}
 
 	// Computes a non-weighted average of the two sRGB colors in linear space, avoiding brightness losses.
 	@Unique
 	private static int averageRgb(int a, int b, int alpha) {
-		float ar = unpackLinearComponent(a, 0);
-		float ag = unpackLinearComponent(a, 8);
-		float ab = unpackLinearComponent(a, 16);
-		float br = unpackLinearComponent(b, 0);
-		float bg = unpackLinearComponent(b, 8);
-		float bb = unpackLinearComponent(b, 16);
+		float ar = ColorSRGB.srgbToLinear(NativeImage.getR(a));
+		float ag = ColorSRGB.srgbToLinear(NativeImage.getG(a));
+		float ab = ColorSRGB.srgbToLinear(NativeImage.getB(a));
 
-		return packLinearToSrgb((ar + br) / 2.0f, (ag + bg) / 2.0f, (ab + bb) / 2.0f, alpha);
+		float br = ColorSRGB.srgbToLinear(NativeImage.getR(b));
+		float bg = ColorSRGB.srgbToLinear(NativeImage.getG(b));
+		float bb = ColorSRGB.srgbToLinear(NativeImage.getB(b));
+
+		return ColorSRGB.linearToSrgb((ar + br) * 0.5f, (ag + bg) * 0.5f, (ab + bb) * 0.5f, alpha);
 	}
 }

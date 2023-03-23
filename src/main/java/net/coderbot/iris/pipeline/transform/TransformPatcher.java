@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +16,7 @@ import io.github.douira.glsl_transformer.ast.node.Version;
 import io.github.douira.glsl_transformer.ast.node.VersionStatement;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
+import io.github.douira.glsl_transformer.ast.query.RootSupplier;
 import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
 import io.github.douira.glsl_transformer.token_filter.ChannelFilter;
 import io.github.douira.glsl_transformer.token_filter.TokenChannel;
@@ -39,9 +38,12 @@ import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
 import net.coderbot.iris.pipeline.transform.transformer.AttributeTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.CommonTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.CompatibilityTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.CompositeCoreTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.CompositeTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.SodiumCoreTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.SodiumTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.TextureTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.VanillaCoreTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.VanillaTransformer;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
@@ -156,10 +158,13 @@ public class TransformPatcher {
 	private static final List<String> internalPrefixes = List.of("iris_", "irisMain", "moj_import");
 
 	static {
-		Root.identifierIndexFactory = PrefixIdentifierIndex::withPrefix;
 		transformer = new EnumASTTransformer<Parameters, PatchShaderType>(PatchShaderType.class) {
+			{
+				setRootSupplier(RootSupplier.PREFIX_UNORDERED_ED_EXACT);
+			}
+
 			@Override
-			public TranslationUnit parseTranslationUnit(String input) throws RecognitionException {
+			public TranslationUnit parseTranslationUnit(Root rootInstance, String input) {
 				// parse #version directive using an efficient regex before parsing so that the
 				// parser can be set to the correct version
 				Matcher matcher = versionPattern.matcher(input);
@@ -173,7 +178,7 @@ public class TransformPatcher {
 				}
 				transformer.getLexer().version = version;
 
-				return super.parseTranslationUnit(input);
+				return super.parseTranslationUnit(rootInstance, input);
 			}
 		};
 		transformer.setTransformation((trees, parameters) -> {
@@ -197,7 +202,7 @@ public class TransformPatcher {
 											+ id.getName() + ". See debugging.md for more information.");
 						});
 
-				Root.indexBuildSession(tree, () -> {
+				root.indexBuildSession(() -> {
 					VersionStatement versionStatement = tree.getVersionStatement();
 					if (versionStatement == null) {
 						throw new IllegalStateException("Missing the version statement!");
@@ -211,27 +216,39 @@ public class TransformPatcher {
 						case COMPUTE:
 							// we can assume the version is at least 400 because it's a compute shader
 							versionStatement.profile = Profile.CORE;
-							CommonTransformer.transform(transformer, tree, root, parameters);
+							CommonTransformer.transform(transformer, tree, root, parameters, true);
 							break;
 						default:
 							// TODO: Implement Optifine's special core profile mode
 							// handling of Optifine's special core profile mode
-							if (profile == Profile.CORE || version.number >= 150 && profile == null) {
-								if (parameters.type == PatchShaderType.VERTEX) {
-									throw new IllegalStateException(
-											"Vertex shaders with existing core profile found, aborting this part of patching. (Compatibility patches are applied nonetheless) See debugging.md for more information.");
+							boolean isLine = (parameters.patch == Patch.VANILLA && ((VanillaParameters) parameters).isLines());
+							if (profile == Profile.CORE || version.number >= 150 && profile == null || isLine) {
+								// patch the version number to at least 330
+								if (version.number < 330) {
+									versionStatement.version = Version.GLSL33;
 								}
 
-								CompatibilityTransformer.transformFragmentCore(transformer, tree, root, parameters);
+								switch (parameters.patch) {
+									case COMPOSITE:
+										CompositeCoreTransformer.transform(transformer, tree, root, parameters);
+										break;
+									case SODIUM:
+										SodiumParameters sodiumParameters = (SodiumParameters) parameters;
+										SodiumCoreTransformer.transform(transformer, tree, root, sodiumParameters);
+										break;
+									case VANILLA:
+										VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+										break;
+									default:
+										throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
+								}
+
+								if (parameters.type == PatchShaderType.FRAGMENT) {
+									CompatibilityTransformer.transformFragmentCore(transformer, tree, root, parameters);
+								}
 							} else {
 								// patch the version number to at least 330
-								if (version.number >= 330) {
-									if (profile != Profile.COMPATIBILITY) {
-										throw new IllegalStateException(
-												"Expected \"compatibility\" after the GLSL version: #version " + version + " "
-														+ profile + ". See debugging.md for more information.");
-									}
-								} else {
+								if (version.number < 330) {
 									versionStatement.version = Version.GLSL33;
 								}
 								versionStatement.profile = Profile.CORE;
@@ -242,7 +259,6 @@ public class TransformPatcher {
 										break;
 									case SODIUM:
 										SodiumParameters sodiumParameters = (SodiumParameters) parameters;
-										sodiumParameters.setAlphaFor(type);
 										SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
 										break;
 									case VANILLA:
@@ -292,12 +308,6 @@ public class TransformPatcher {
 			inputs.put(PatchShaderType.GEOMETRY, geometry);
 			inputs.put(PatchShaderType.FRAGMENT, fragment);
 
-			// the sodium terrain transformer transforms the fragment shader in two
-			// different ways
-			if (parameters instanceof SodiumParameters && ((SodiumParameters) parameters).hasCutoutAlpha()) {
-				inputs.put(PatchShaderType.FRAGMENT_CUTOUT, fragment);
-			}
-
 			result = transformer.transform(inputs, parameters);
 			if (useCache) {
 				cache.put(key, result);
@@ -346,23 +356,20 @@ public class TransformPatcher {
 
 	public static Map<PatchShaderType, String> patchVanilla(
 			String vertex, String geometry, String fragment,
-			AlphaTest alpha,
+			AlphaTest alpha, boolean isLines,
 			boolean hasChunkOffset,
 			ShaderAttributeInputs inputs,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
-				new VanillaParameters(Patch.VANILLA, textureMap, alpha, hasChunkOffset, inputs, geometry != null));
+				new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null));
 	}
 
-	public static Map<PatchShaderType, String> patchSodium(
-			String vertex, String geometry, String fragment,
-			AlphaTest cutoutAlpha,
-			AlphaTest defaultAlpha,
-			ShaderAttributeInputs inputs,
+	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
+			AlphaTest alpha, ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, fragment,
-				new SodiumParameters(Patch.SODIUM, textureMap, cutoutAlpha, defaultAlpha, inputs, positionScale, positionOffset,
+				new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs, positionScale, positionOffset,
 						textureScale));
 	}
 
