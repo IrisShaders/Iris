@@ -6,11 +6,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.coderbot.iris.pipeline.transform.transformer.CompositeCoreTransformer;
-import net.coderbot.iris.pipeline.transform.transformer.SodiumCoreTransformer;
-import net.coderbot.iris.pipeline.transform.transformer.VanillaCoreTransformer;
-import net.coderbot.iris.shaderpack.loading.ProgramId;
-import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,9 +38,12 @@ import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
 import net.coderbot.iris.pipeline.transform.transformer.AttributeTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.CommonTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.CompatibilityTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.CompositeCoreTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.CompositeTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.SodiumCoreTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.SodiumTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.TextureTransformer;
+import net.coderbot.iris.pipeline.transform.transformer.VanillaCoreTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.VanillaTransformer;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
@@ -241,6 +239,8 @@ public class TransformPatcher {
 									case VANILLA:
 										VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
 										break;
+									default:
+										throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
 								}
 
 								if (parameters.type == PatchShaderType.FRAGMENT) {

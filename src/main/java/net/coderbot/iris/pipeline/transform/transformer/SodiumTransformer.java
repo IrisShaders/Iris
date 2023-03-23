@@ -86,39 +86,17 @@ public class SodiumTransformer {
 						"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 			}
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					// translated from sodium's chunk_vertex.glsl
-					"vec3 _vert_position;",
-					"vec2 _vert_tex_diffuse_coord;",
-					"ivec2 _vert_tex_light_coord;",
-					"vec4 _vert_color;",
-					"uint _draw_id;",
-					"in vec4 a_PosId;",
-					"in vec4 a_Color;",
-					"in vec2 a_TexCoord;",
-					"in ivec2 a_LightCoord;",
-					"void _vert_init() {" +
-							"_vert_position = (a_PosId.xyz * " + String.valueOf(parameters.positionScale) + " + "
-							+ String.valueOf(parameters.positionOffset) + ");" +
-							"_vert_tex_diffuse_coord = (a_TexCoord * " + String.valueOf(parameters.textureScale) + ");" +
-							"_vert_tex_light_coord = a_LightCoord;" +
-							"_vert_color = a_Color;" +
-							"_draw_id = uint(a_PosId.w); }",
-
-					// translated from sodium's chunk_parameters.glsl
-					// Comment on the struct:
-					// Older AMD drivers can't handle vec3 in std140 layouts correctly The alignment
-					// requirement is 16 bytes (4 float components) anyways, so we're not wasting
-					// extra memory with this, only fixing broken drivers.
-					"struct DrawParameters { vec4 offset; };",
-					"layout(std140) uniform ubo_DrawParameters {DrawParameters Chunks[256]; };",
-
 					"uniform mat4 iris_ProjectionMatrix;",
 					"uniform mat4 iris_ModelViewMatrix;",
 					"uniform vec3 u_RegionOffset;",
 					// _draw_translation replaced with Chunks[_draw_id].offset.xyz
 					"vec4 getVertexPosition() { return vec4(u_RegionOffset + Chunks[_draw_id].offset.xyz + _vert_position, 1.0); }");
-			tree.prependMainFunctionBody(t, "_vert_init();");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
+
+			// inject here so that _vert_position is available to the above. (injections
+			// inject in reverse order if performed piece-wise but in correct order if
+			// performed as an array of injections)
+			injectVertInit(t, tree, root, parameters);
 		} else {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform mat4 iris_ModelViewMatrix;",
@@ -129,5 +107,38 @@ public class SodiumTransformer {
 				"(iris_ProjectionMatrix * iris_ModelViewMatrix)");
 
 		CommonTransformer.applyIntelHd4000Workaround(root);
+	}
+
+	public static void injectVertInit(
+			ASTParser t,
+			TranslationUnit tree,
+			Root root,
+			SodiumParameters parameters) {
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+				// translated from sodium's chunk_vertex.glsl
+				"vec3 _vert_position;",
+				"vec2 _vert_tex_diffuse_coord;",
+				"ivec2 _vert_tex_light_coord;",
+				"vec4 _vert_color;",
+				"uint _draw_id;",
+				"in vec4 a_PosId;",
+				"in vec4 a_Color;",
+				"in vec2 a_TexCoord;",
+				"void _vert_init() {" +
+						"_vert_position = (a_PosId.xyz * " + parameters.positionScale + " + "
+						+ parameters.positionOffset + ");" +
+						"_vert_tex_diffuse_coord = (a_TexCoord * " + parameters.textureScale + ");" +
+						"_vert_tex_light_coord = a_LightCoord;" +
+						"_vert_color = a_Color;" +
+						"_draw_id = uint(a_PosId.w); }",
+
+				// translated from sodium's chunk_parameters.glsl
+				// Comment on the struct:
+				// Older AMD drivers can't handle vec3 in std140 layouts correctly The alignment
+				// requirement is 16 bytes (4 float components) anyways, so we're not wasting
+				// extra memory with this, only fixing broken drivers.
+				"struct DrawParameters { vec4 offset; };",
+				"layout(std140) uniform ubo_DrawParameters {DrawParameters Chunks[256]; };");
+		tree.prependMainFunctionBody(t, "_vert_init();");
 	}
 }

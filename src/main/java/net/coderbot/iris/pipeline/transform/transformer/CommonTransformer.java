@@ -92,11 +92,28 @@ public class CommonTransformer {
 				});
 	}
 
+	public static void upgradeStorageQualifiers(
+			ASTParser t,
+			TranslationUnit tree,
+			Root root,
+			Parameters parameters) {
+		for (StorageQualifier qualifier : root.nodeIndex.get(StorageQualifier.class)) {
+			if (qualifier.storageType == StorageType.ATTRIBUTE) {
+				qualifier.storageType = StorageType.IN;
+			} else if (qualifier.storageType == StorageType.VARYING) {
+				qualifier.storageType = parameters.type.glShaderType == ShaderType.VERTEX
+						? StorageType.OUT
+						: StorageType.IN;
+			}
+		}
+	}
+
 	public static void transform(
 			ASTParser t,
 			TranslationUnit tree,
 			Root root,
-			Parameters parameters, boolean core) {
+			Parameters parameters,
+			boolean core) {
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
@@ -159,20 +176,13 @@ public class CommonTransformer {
 			// insert alpha test for iris_FragData0 in the fragment shader
 			if ((parameters.getAlphaTest() != AlphaTest.ALWAYS && !core) && replaceIndexesSet.contains(0L)) {
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_currentAlphaTest;");
-				tree.appendMainFunctionBody(t, parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
+				tree.appendMainFunctionBody(t,
+						parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
 			}
 		}
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX || parameters.type.glShaderType == ShaderType.FRAGMENT) {
-			for (StorageQualifier qualifier : root.nodeIndex.get(StorageQualifier.class)) {
-				if (qualifier.storageType == StorageType.ATTRIBUTE) {
-					qualifier.storageType = StorageType.IN;
-				} else if (qualifier.storageType == StorageType.VARYING) {
-					qualifier.storageType = parameters.type.glShaderType == ShaderType.VERTEX
-							? StorageType.OUT
-							: StorageType.IN;
-				}
-			}
+			upgradeStorageQualifiers(t, tree, root, parameters);
 		}
 
 		// addition: rename all uses of texture and gcolor to gtexture if it's *not*
