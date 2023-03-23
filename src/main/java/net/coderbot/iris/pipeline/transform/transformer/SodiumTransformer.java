@@ -124,6 +124,7 @@ public class SodiumTransformer {
 				"in vec4 a_PosId;",
 				"in vec4 a_Color;",
 				"in vec2 a_TexCoord;",
+				"in ivec2 a_LightCoord;",
 				"void _vert_init() {" +
 						"_vert_position = (a_PosId.xyz * " + parameters.positionScale + " + "
 						+ parameters.positionOffset + ");" +
