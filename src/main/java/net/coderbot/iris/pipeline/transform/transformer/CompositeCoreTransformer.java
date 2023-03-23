@@ -18,10 +18,11 @@ public class CompositeCoreTransformer {
 			root.replaceReferenceExpressions(t, "modelViewMatrix", "mat4(1.0)");
 			// This is used to scale the quad projection matrix from (0, 1) to (-1, 1).
 			root.replaceReferenceExpressions(t, "projectionMatrix",
-				"mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0), vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
+					"mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0), vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0))");
 			root.replaceReferenceExpressions(t, "modelViewMatrixInverse", "mat4(1.0)");
-			root.replaceReferenceExpressions(t, "projectionMatrixInverse", "inverse(mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0), vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0)))");
-			root.replaceReferenceExpressions(t , "textureMatrix", "mat4(1.0)");
+			root.replaceReferenceExpressions(t, "projectionMatrixInverse",
+					"inverse(mat4(vec4(2.0, 0.0, 0.0, 0.0), vec4(0.0, 2.0, 0.0, 0.0), vec4(0.0), vec4(-1.0, -1.0, 0.0, 1.0)))");
+			root.replaceReferenceExpressions(t, "textureMatrix", "mat4(1.0)");
 		}
 	}
 }

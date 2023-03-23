@@ -2,20 +2,18 @@ package net.coderbot.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.index.ExternalDeclarationIndex;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
-import net.coderbot.iris.gl.shader.ShaderType;
+import io.github.douira.glsl_transformer.ast.transform.Template;
+import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
-import net.coderbot.iris.shaderpack.transform.Transformations;
-
-import static net.coderbot.iris.pipeline.transform.transformer.CommonTransformer.renameAndWrapShadow;
-import static net.coderbot.iris.pipeline.transform.transformer.CommonTransformer.renameFunctionCall;
 
 public class VanillaCoreTransformer {
 	public static void transform(
@@ -23,7 +21,6 @@ public class VanillaCoreTransformer {
 			TranslationUnit tree,
 			Root root,
 			VanillaParameters parameters) {
-
 
 		if (parameters.inputs.hasOverlay()) {
 			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
@@ -42,28 +39,22 @@ public class VanillaCoreTransformer {
 		root.rename("textureMatrix", "iris_TextureMat");
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "iris_TextureMat");
-		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "mat4(vec4(0.00390625, 0.0, 0.0, 0.0), vec4(0.0, 0.00390625, 0.0, 0.0), vec4(0.0, 0.0, 0.00390625, 0.0), vec4(0.03125, 0.03125, 0.03125, 1.0))");
-		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix2, "mat4(vec4(0.00390625, 0.0, 0.0, 0.0), vec4(0.0, 0.00390625, 0.0, 0.0), vec4(0.0, 0.0, 0.00390625, 0.0), vec4(0.03125, 0.03125, 0.03125, 1.0))");
-		addIfNotExists(root, t, tree, "iris_TextureMat", "mat4", false);
-		addIfNotExists(root, t, tree, "iris_ProjMat", "mat4", false);
-		addIfNotExists(root, t, tree, "iris_ProjMatInverse", "mat4", false);
-		addIfNotExists(root, t, tree, "iris_ModelViewMat", "mat4", false);
-		addIfNotExists(root, t, tree, "iris_ModelViewMatInverse", "mat4", false);
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1,
+				"mat4(vec4(0.00390625, 0.0, 0.0, 0.0), vec4(0.0, 0.00390625, 0.0, 0.0), vec4(0.0, 0.0, 0.00390625, 0.0), vec4(0.03125, 0.03125, 0.03125, 1.0))");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix2,
+				"mat4(vec4(0.00390625, 0.0, 0.0, 0.0), vec4(0.0, 0.00390625, 0.0, 0.0), vec4(0.0, 0.0, 0.00390625, 0.0), vec4(0.03125, 0.03125, 0.03125, 1.0))");
+		addIfNotExists(root, t, tree, "iris_TextureMat", Type.F32MAT4X4, StorageType.UNIFORM);
+		addIfNotExists(root, t, tree, "iris_ProjMat", Type.F32MAT4X4, StorageType.UNIFORM);
+		addIfNotExists(root, t, tree, "iris_ProjMatInverse", Type.F32MAT4X4, StorageType.UNIFORM);
+		addIfNotExists(root, t, tree, "iris_ModelViewMat", Type.F32MAT4X4, StorageType.UNIFORM);
+		addIfNotExists(root, t, tree, "iris_ModelViewMatInverse", Type.F32MAT4X4, StorageType.UNIFORM);
 		root.rename("normalMatrix", "iris_NormalMat");
 		root.rename("gl_NormalMatrix", "iris_NormalMat");
-		addIfNotExists(root, t, tree, "iris_NormalMat", "mat3", false);
+		addIfNotExists(root, t, tree, "iris_NormalMat", Type.F32MAT3X3, StorageType.UNIFORM);
 		root.rename("chunkOffset", "iris_ChunkOffset");
-		addIfNotExists(root, t, tree, "iris_ChunkOffset", "vec3", false);
+		addIfNotExists(root, t, tree, "iris_ChunkOffset", Type.F32VEC3, StorageType.UNIFORM);
 
-		for (StorageQualifier qualifier : root.nodeIndex.get(StorageQualifier.class)) {
-			if (qualifier.storageType == StorageQualifier.StorageType.ATTRIBUTE) {
-				qualifier.storageType = StorageQualifier.StorageType.IN;
-			} else if (qualifier.storageType == StorageQualifier.StorageType.VARYING) {
-				qualifier.storageType = parameters.type.glShaderType == ShaderType.VERTEX
-					? StorageQualifier.StorageType.OUT
-					: StorageQualifier.StorageType.IN;
-			}
-		}
+		CommonTransformer.upgradeStorageQualifiers(t, tree, root, parameters);
 
 		if (parameters.type == PatchShaderType.VERTEX) {
 			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(iris_Position, 1.0)");
@@ -79,18 +70,34 @@ public class VanillaCoreTransformer {
 			root.rename("vaUV1", "iris_UV1");
 			root.rename("vaUV2", "iris_UV2");
 
-			addIfNotExists(root, t, tree, "iris_Color", "vec4", true);
-			addIfNotExists(root, t, tree, "iris_Position", "vec3", true);
-			addIfNotExists(root, t, tree, "iris_Normal", "vec3", true);
-			addIfNotExists(root, t, tree, "iris_UV0", "vec2", true);
-			addIfNotExists(root, t, tree, "iris_UV1", "vec2", true);
-			addIfNotExists(root, t, tree, "iris_UV2", "vec2", true);
+			addIfNotExists(root, t, tree, "iris_Color", Type.F32VEC4, StorageType.IN);
+			addIfNotExists(root, t, tree, "iris_Position", Type.F32VEC3, StorageType.IN);
+			addIfNotExists(root, t, tree, "iris_Normal", Type.F32VEC3, StorageType.IN);
+			addIfNotExists(root, t, tree, "iris_UV0", Type.F32VEC2, StorageType.IN);
+			addIfNotExists(root, t, tree, "iris_UV1", Type.F32VEC2, StorageType.IN);
+			addIfNotExists(root, t, tree, "iris_UV2", Type.F32VEC2, StorageType.IN);
 		}
 	}
 
-	private static void addIfNotExists(Root root, ASTParser t, TranslationUnit tree, String name, String type, boolean attribute) {
-		if (root.externalDeclarationIndex.getStream(name).noneMatch((entry) -> entry.declaration() instanceof DeclarationExternalDeclaration)) {
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, (attribute ? "in " : "uniform ") + type + " " + name + ";");
+	private static final Template<ExternalDeclaration> inputDeclarationTemplate = Template.withExternalDeclaration(
+			"uniform int __name;");
+
+	static {
+		inputDeclarationTemplate.markLocalReplacement(
+				inputDeclarationTemplate.getSourceRoot().nodeIndex.getOne(StorageQualifier.class));
+		inputDeclarationTemplate.markLocalReplacement(
+				inputDeclarationTemplate.getSourceRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
+		inputDeclarationTemplate.markIdentifierReplacement("__name");
+	}
+
+	private static void addIfNotExists(Root root, ASTParser t, TranslationUnit tree, String name, Type type,
+			StorageType storageType) {
+		if (root.externalDeclarationIndex.getStream(name)
+				.noneMatch((entry) -> entry.declaration() instanceof DeclarationExternalDeclaration)) {
+			tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inputDeclarationTemplate.getInstanceFor(root,
+					new StorageQualifier(storageType),
+					new BuiltinNumericTypeSpecifier(type),
+					new Identifier(name)));
 		}
 	}
 }

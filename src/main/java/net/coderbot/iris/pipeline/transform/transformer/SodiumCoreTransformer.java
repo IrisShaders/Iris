@@ -32,29 +32,29 @@ public class SodiumCoreTransformer {
 			root.replaceReferenceExpressions(t, "textureMatrix", "mat4(1.0)");
 
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				// translated from sodium's chunk_vertex.glsl
-				"vec3 _vert_position;",
-				"vec2 _vert_tex_diffuse_coord;",
-				"ivec2 _vert_tex_light_coord;",
-				"vec4 _vert_color;",
-				"uint _draw_id;",
-				"in vec4 a_PosId;",
-				"in vec4 a_Color;",
-				"in vec2 a_TexCoord;",
-				"void _vert_init() {" +
-					"_vert_position = (a_PosId.xyz * " + parameters.positionScale + " + "
-					+ parameters.positionOffset + ");" +
-					"_vert_tex_diffuse_coord = (a_TexCoord * " + parameters.textureScale + ");" +
-					"_vert_color = a_Color;" +
-					"_draw_id = uint(a_PosId.w); }",
+					// translated from sodium's chunk_vertex.glsl
+					"vec3 _vert_position;",
+					"vec2 _vert_tex_diffuse_coord;",
+					"ivec2 _vert_tex_light_coord;",
+					"vec4 _vert_color;",
+					"uint _draw_id;",
+					"in vec4 a_PosId;",
+					"in vec4 a_Color;",
+					"in vec2 a_TexCoord;",
+					"void _vert_init() {" +
+							"_vert_position = (a_PosId.xyz * " + parameters.positionScale + " + "
+							+ parameters.positionOffset + ");" +
+							"_vert_tex_diffuse_coord = (a_TexCoord * " + parameters.textureScale + ");" +
+							"_vert_color = a_Color;" +
+							"_draw_id = uint(a_PosId.w); }",
 
-				// translated from sodium's chunk_parameters.glsl
-				// Comment on the struct:
-				// Older AMD drivers can't handle vec3 in std140 layouts correctly The alignment
-				// requirement is 16 bytes (4 float components) anyways, so we're not wasting
-				// extra memory with this, only fixing broken drivers.
-				"struct DrawParameters { vec4 offset; };",
-				"layout(std140) uniform ubo_DrawParameters {DrawParameters Chunks[256]; };");
+					// translated from sodium's chunk_parameters.glsl
+					// Comment on the struct:
+					// Older AMD drivers can't handle vec3 in std140 layouts correctly The alignment
+					// requirement is 16 bytes (4 float components) anyways, so we're not wasting
+					// extra memory with this, only fixing broken drivers.
+					"struct DrawParameters { vec4 offset; };",
+					"layout(std140) uniform ubo_DrawParameters {DrawParameters Chunks[256]; };");
 			tree.prependMainFunctionBody(t, "_vert_init();");
 		}
 	}
