@@ -141,7 +141,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			List<BufferSegment> segments = builder.getSegmentsForType(transparencyType);
 
 			for (BufferSegment segment : segments) {
-				typeToSegment.computeIfAbsent(segment.getRenderType(), (type) -> new ArrayList<>()).add(segment);
+				typeToSegment.computeIfAbsent(segment.type(), (type) -> new ArrayList<>()).add(segment);
 			}
 		}
 

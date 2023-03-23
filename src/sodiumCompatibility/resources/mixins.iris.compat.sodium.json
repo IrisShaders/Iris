@@ -39,7 +39,6 @@
     "vertex_format.entity.MixinBufferBuilder_ExtendedVertexFormatCompat",
     "vertex_format.ChunkMeshAttributeAccessor",
     "vertex_format.MixinFluidRenderer",
-    "vertex_format.MixinGlAbstractTesselation",
     "vertex_format.GlVertexAttributeFormatAccessor",
     "vertex_format.MixinChunkMeshAttribute",
     "vertex_format.MixinGlVertexFormatBuilder",
