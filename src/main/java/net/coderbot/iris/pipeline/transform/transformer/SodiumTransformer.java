@@ -1,11 +1,15 @@
 package net.coderbot.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.SodiumParameters;
+
+import static net.coderbot.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
 public class SodiumTransformer {
 	public static void transform(
@@ -114,17 +118,13 @@ public class SodiumTransformer {
 			TranslationUnit tree,
 			Root root,
 			SodiumParameters parameters) {
-		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 				// translated from sodium's chunk_vertex.glsl
 				"vec3 _vert_position;",
 				"vec2 _vert_tex_diffuse_coord;",
 				"ivec2 _vert_tex_light_coord;",
 				"vec4 _vert_color;",
 				"uint _draw_id;",
-				"in vec4 a_PosId;",
-				"in vec4 a_Color;",
-				"in vec2 a_TexCoord;",
-				"in ivec2 a_LightCoord;",
 				"void _vert_init() {" +
 						"_vert_position = (a_PosId.xyz * " + parameters.positionScale + " + "
 						+ parameters.positionOffset + ");" +
@@ -140,6 +140,10 @@ public class SodiumTransformer {
 				// extra memory with this, only fixing broken drivers.
 				"struct DrawParameters { vec4 offset; };",
 				"layout(std140) uniform ubo_DrawParameters {DrawParameters Chunks[256]; };");
+		addIfNotExists(root, t, tree, "a_PosId", Type.F32VEC4, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "a_TexCoord", Type.F32VEC2, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "a_Color", Type.F32VEC4, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "a_LightCoord", Type.I32VEC2, StorageQualifier.StorageType.IN);
 		tree.prependMainFunctionBody(t, "_vert_init();");
 	}
 }

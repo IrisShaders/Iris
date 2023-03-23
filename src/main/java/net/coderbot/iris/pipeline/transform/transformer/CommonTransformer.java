@@ -21,6 +21,7 @@ import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifie
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier.BuiltinType.TypeKind;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
@@ -348,5 +349,27 @@ public class CommonTransformer {
 							return index >= minimum && index <= maximum;
 						}),
 				"vec4(0.0, 0.0, 0.0, 1.0)");
+	}
+
+	private static final Template<ExternalDeclaration> inputDeclarationTemplate = Template.withExternalDeclaration(
+		"uniform int __name;");
+
+	static {
+		inputDeclarationTemplate.markLocalReplacement(
+			inputDeclarationTemplate.getSourceRoot().nodeIndex.getOne(StorageQualifier.class));
+		inputDeclarationTemplate.markLocalReplacement(
+			inputDeclarationTemplate.getSourceRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
+		inputDeclarationTemplate.markIdentifierReplacement("__name");
+	}
+
+	public static void addIfNotExists(Root root, ASTParser t, TranslationUnit tree, String name, Type type,
+									   StorageType storageType) {
+		if (root.externalDeclarationIndex.getStream(name)
+			.noneMatch((entry) -> entry.declaration() instanceof DeclarationExternalDeclaration)) {
+			tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inputDeclarationTemplate.getInstanceFor(root,
+				new StorageQualifier(storageType),
+				new BuiltinNumericTypeSpecifier(type),
+				new Identifier(name)));
+		}
 	}
 }

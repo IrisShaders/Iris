@@ -15,6 +15,8 @@ import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
 
+import static net.coderbot.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
+
 public class VanillaCoreTransformer {
 	public static void transform(
 			ASTParser t,
@@ -76,28 +78,6 @@ public class VanillaCoreTransformer {
 			addIfNotExists(root, t, tree, "iris_UV0", Type.F32VEC2, StorageType.IN);
 			addIfNotExists(root, t, tree, "iris_UV1", Type.F32VEC2, StorageType.IN);
 			addIfNotExists(root, t, tree, "iris_UV2", Type.F32VEC2, StorageType.IN);
-		}
-	}
-
-	private static final Template<ExternalDeclaration> inputDeclarationTemplate = Template.withExternalDeclaration(
-			"uniform int __name;");
-
-	static {
-		inputDeclarationTemplate.markLocalReplacement(
-				inputDeclarationTemplate.getSourceRoot().nodeIndex.getOne(StorageQualifier.class));
-		inputDeclarationTemplate.markLocalReplacement(
-				inputDeclarationTemplate.getSourceRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
-		inputDeclarationTemplate.markIdentifierReplacement("__name");
-	}
-
-	private static void addIfNotExists(Root root, ASTParser t, TranslationUnit tree, String name, Type type,
-			StorageType storageType) {
-		if (root.externalDeclarationIndex.getStream(name)
-				.noneMatch((entry) -> entry.declaration() instanceof DeclarationExternalDeclaration)) {
-			tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inputDeclarationTemplate.getInstanceFor(root,
-					new StorageQualifier(storageType),
-					new BuiltinNumericTypeSpecifier(type),
-					new Identifier(name)));
 		}
 	}
 }
