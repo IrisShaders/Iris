@@ -21,6 +21,7 @@ import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifie
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier.BuiltinType.TypeKind;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
@@ -40,6 +41,8 @@ public class CommonTransformer {
 			"gl_TextureMatrix[0]", ParseShape.EXPRESSION);
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
 			"gl_TextureMatrix[1]", ParseShape.EXPRESSION);
+	public static final AutoHintedMatcher<Expression> glTextureMatrix2 = new AutoHintedMatcher<>(
+			"gl_TextureMatrix[2]", ParseShape.EXPRESSION);
 	public static final Matcher<ExternalDeclaration> sampler = new Matcher<>(
 			"uniform Type name;", ParseShape.EXTERNAL_DECLARATION) {
 		{
@@ -72,13 +75,13 @@ public class CommonTransformer {
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
 	private static final List<Long> replaceIndexes = new ArrayList<>();
 
-	private static void renameFunctionCall(Root root, String oldName, String newName) {
+	static void renameFunctionCall(Root root, String oldName, String newName) {
 		root.process(root.identifierIndex.getStream(oldName)
 				.filter(id -> id.getParent() instanceof FunctionCallExpression),
 				id -> id.setName(newName));
 	}
 
-	private static void renameAndWrapShadow(ASTParser t, Root root, String oldName, String innerName) {
+	static void renameAndWrapShadow(ASTParser t, Root root, String oldName, String innerName) {
 		root.process(root.identifierIndex.getStream(oldName)
 				.filter(id -> id.getParent() instanceof FunctionCallExpression),
 				id -> {
@@ -90,11 +93,28 @@ public class CommonTransformer {
 				});
 	}
 
-	public static void transform(
+	public static void upgradeStorageQualifiers(
 			ASTParser t,
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
+		for (StorageQualifier qualifier : root.nodeIndex.get(StorageQualifier.class)) {
+			if (qualifier.storageType == StorageType.ATTRIBUTE) {
+				qualifier.storageType = StorageType.IN;
+			} else if (qualifier.storageType == StorageType.VARYING) {
+				qualifier.storageType = parameters.type.glShaderType == ShaderType.VERTEX
+						? StorageType.OUT
+						: StorageType.IN;
+			}
+		}
+	}
+
+	public static void transform(
+			ASTParser t,
+			TranslationUnit tree,
+			Root root,
+			Parameters parameters,
+			boolean core) {
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
@@ -155,22 +175,15 @@ public class CommonTransformer {
 			replaceIndexes.clear();
 
 			// insert alpha test for iris_FragData0 in the fragment shader
-			if (parameters.getAlphaTest() != AlphaTest.ALWAYS && replaceIndexesSet.contains(0L)) {
+			if ((parameters.getAlphaTest() != AlphaTest.ALWAYS && !core) && replaceIndexesSet.contains(0L)) {
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform float iris_currentAlphaTest;");
-				tree.appendMainFunctionBody(t, parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
+				tree.appendMainFunctionBody(t,
+						parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_currentAlphaTest", "	"));
 			}
 		}
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX || parameters.type.glShaderType == ShaderType.FRAGMENT) {
-			for (StorageQualifier qualifier : root.nodeIndex.get(StorageQualifier.class)) {
-				if (qualifier.storageType == StorageType.ATTRIBUTE) {
-					qualifier.storageType = StorageType.IN;
-				} else if (qualifier.storageType == StorageType.VARYING) {
-					qualifier.storageType = parameters.type.glShaderType == ShaderType.VERTEX
-							? StorageType.OUT
-							: StorageType.IN;
-				}
-			}
+			upgradeStorageQualifiers(t, tree, root, parameters);
 		}
 
 		// addition: rename all uses of texture and gcolor to gtexture if it's *not*
@@ -336,5 +349,27 @@ public class CommonTransformer {
 							return index >= minimum && index <= maximum;
 						}),
 				"vec4(0.0, 0.0, 0.0, 1.0)");
+	}
+
+	private static final Template<ExternalDeclaration> inputDeclarationTemplate = Template.withExternalDeclaration(
+		"uniform int __name;");
+
+	static {
+		inputDeclarationTemplate.markLocalReplacement(
+			inputDeclarationTemplate.getSourceRoot().nodeIndex.getOne(StorageQualifier.class));
+		inputDeclarationTemplate.markLocalReplacement(
+			inputDeclarationTemplate.getSourceRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
+		inputDeclarationTemplate.markIdentifierReplacement("__name");
+	}
+
+	public static void addIfNotExists(Root root, ASTParser t, TranslationUnit tree, String name, Type type,
+									   StorageType storageType) {
+		if (root.externalDeclarationIndex.getStream(name)
+			.noneMatch((entry) -> entry.declaration() instanceof DeclarationExternalDeclaration)) {
+			tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inputDeclarationTemplate.getInstanceFor(root,
+				new StorageQualifier(storageType),
+				new BuiltinNumericTypeSpecifier(type),
+				new Identifier(name)));
+		}
 	}
 }

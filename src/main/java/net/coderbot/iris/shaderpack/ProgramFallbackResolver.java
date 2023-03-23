@@ -20,6 +20,10 @@ public class ProgramFallbackResolver {
 		return Optional.ofNullable(resolveNullable(id));
 	}
 
+	public boolean has(ProgramId id) {
+		return programs.get(id).isPresent();
+	}
+
 	@Nullable
 	public ProgramSource resolveNullable(ProgramId id) {
 		if (cache.containsKey(id)) {
