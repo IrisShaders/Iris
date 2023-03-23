@@ -123,6 +123,7 @@ public class CommonTransformer {
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"out float iris_FogFragCoord;");
+			tree.prependMainFunctionBody(t, "iris_FogFragCoord = 0.0f;");
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in float iris_FogFragCoord;");
