@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -76,16 +77,16 @@ public class MixinTextureAtlasSprite {
 			long pPixel = ppPixel + (pixelIndex * 4);
 
 			int color = MemoryUtil.memGetInt(pPixel);
-			int alpha = NativeImage.getA(color);
+			int alpha = FastColor.ABGR32.alpha(color);
 
 			// Ignore all fully-transparent pixels for the purposes of computing an average color.
 			if (alpha != 0) {
 				float weight = (float) alpha;
 
 				// Make sure to convert to linear space so that we don't lose brightness.
-				r += ColorSRGB.srgbToLinear(NativeImage.getR(color)) * weight;
-				g += ColorSRGB.srgbToLinear(NativeImage.getG(color)) * weight;
-				b += ColorSRGB.srgbToLinear(NativeImage.getB(color)) * weight;
+				r += ColorSRGB.srgbToLinear(FastColor.ABGR32.red(color)) * weight;
+				g += ColorSRGB.srgbToLinear(FastColor.ABGR32.green(color)) * weight;
+				b += ColorSRGB.srgbToLinear(FastColor.ABGR32.blue(color)) * weight;
 
 				totalWeight += weight;
 			}
@@ -108,7 +109,7 @@ public class MixinTextureAtlasSprite {
 			long pPixel = ppPixel + (pixelIndex * 4);
 
 			int color = MemoryUtil.memGetInt(pPixel);
-			int alpha = NativeImage.getA(color);
+			int alpha = FastColor.ABGR32.alpha(color);
 
 			// Replace the color values of pixels which are fully transparent, since they have no color data.
 			if (alpha == 0) {

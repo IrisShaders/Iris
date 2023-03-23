@@ -674,7 +674,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		FallbackShader shader = NewShaderTests.createFallback(name, beforeTranslucent, afterTranslucent,
 				key.getAlphaTest(), key.getVertexFormat(), null, this, key.getFogMode(),
-				key.hasDiffuseLighting(), key.isIntensity(), key.shouldIgnoreLightmap());
+				key == ShaderKey.GLINT, key.hasDiffuseLighting(), key.isIntensity(), key.shouldIgnoreLightmap());
 
 		loadedShaders.add(shader);
 
@@ -695,7 +695,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		FallbackShader shader = NewShaderTests.createFallback(name, framebuffer, framebuffer,
 				key.getAlphaTest(), key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(),
-				key.hasDiffuseLighting(), key.isIntensity(), key.shouldIgnoreLightmap());
+				key == ShaderKey.GLINT, key.hasDiffuseLighting(), key.isIntensity(), key.shouldIgnoreLightmap());
 
 		loadedShaders.add(shader);
 

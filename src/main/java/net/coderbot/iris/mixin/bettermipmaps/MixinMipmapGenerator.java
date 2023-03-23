@@ -3,6 +3,7 @@ package net.coderbot.iris.mixin.bettermipmaps;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.coderbot.iris.helpers.ColorSRGB;
 import net.minecraft.client.renderer.texture.MipmapGenerator;
+import net.minecraft.util.FastColor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
@@ -40,8 +41,8 @@ public class MixinMipmapGenerator {
 
 	@Unique
 	private static int weightedAverageColor(int one, int two) {
-		int alphaOne = NativeImage.getA(one);
-		int alphaTwo = NativeImage.getA(two);
+		int alphaOne = FastColor.ABGR32.alpha(one);
+		int alphaTwo = FastColor.ABGR32.alpha(two);
 
 		// In the case where the alpha values of the same, we can get by with an unweighted average.
 		if (alphaOne == alphaTwo) {
@@ -66,13 +67,13 @@ public class MixinMipmapGenerator {
 		float relativeWeightTwo = alphaTwo * scale;
 
 		// Convert the color components into linear space, then multiply the corresponding weight.
-		float oneR = ColorSRGB.srgbToLinear(NativeImage.getR(one)) * relativeWeightOne;
-		float oneG = ColorSRGB.srgbToLinear(NativeImage.getG(one)) * relativeWeightOne;
-		float oneB = ColorSRGB.srgbToLinear(NativeImage.getB(one)) * relativeWeightOne;
+		float oneR = ColorSRGB.srgbToLinear(FastColor.ABGR32.red(one)) * relativeWeightOne;
+		float oneG = ColorSRGB.srgbToLinear(FastColor.ABGR32.green(one)) * relativeWeightOne;
+		float oneB = ColorSRGB.srgbToLinear(FastColor.ABGR32.blue(one)) * relativeWeightOne;
 
-		float twoR = ColorSRGB.srgbToLinear(NativeImage.getR(two)) * relativeWeightTwo;
-		float twoG = ColorSRGB.srgbToLinear(NativeImage.getG(two)) * relativeWeightTwo;
-		float twoB = ColorSRGB.srgbToLinear(NativeImage.getB(two)) * relativeWeightTwo;
+		float twoR = ColorSRGB.srgbToLinear(FastColor.ABGR32.red(two)) * relativeWeightTwo;
+		float twoG = ColorSRGB.srgbToLinear(FastColor.ABGR32.green(two)) * relativeWeightTwo;
+		float twoB = ColorSRGB.srgbToLinear(FastColor.ABGR32.blue(two)) * relativeWeightTwo;
 
 		// Combine the color components of each color
 		float linearR = oneR + twoR;
@@ -89,13 +90,13 @@ public class MixinMipmapGenerator {
 	// Computes a non-weighted average of the two sRGB colors in linear space, avoiding brightness losses.
 	@Unique
 	private static int averageRgb(int a, int b, int alpha) {
-		float ar = ColorSRGB.srgbToLinear(NativeImage.getR(a));
-		float ag = ColorSRGB.srgbToLinear(NativeImage.getG(a));
-		float ab = ColorSRGB.srgbToLinear(NativeImage.getB(a));
+		float ar = ColorSRGB.srgbToLinear(FastColor.ABGR32.red(a));
+		float ag = ColorSRGB.srgbToLinear(FastColor.ABGR32.green(a));
+		float ab = ColorSRGB.srgbToLinear(FastColor.ABGR32.blue(a));
 
-		float br = ColorSRGB.srgbToLinear(NativeImage.getR(b));
-		float bg = ColorSRGB.srgbToLinear(NativeImage.getG(b));
-		float bb = ColorSRGB.srgbToLinear(NativeImage.getB(b));
+		float br = ColorSRGB.srgbToLinear(FastColor.ABGR32.red(b));
+		float bg = ColorSRGB.srgbToLinear(FastColor.ABGR32.green(b));
+		float bb = ColorSRGB.srgbToLinear(FastColor.ABGR32.blue(b));
 
 		return ColorSRGB.linearToSrgb((ar + br) * 0.5f, (ag + bg) * 0.5f, (ab + bb) * 0.5f, alpha);
 	}

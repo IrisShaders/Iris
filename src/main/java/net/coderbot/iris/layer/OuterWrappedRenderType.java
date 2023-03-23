@@ -95,4 +95,9 @@ public class OuterWrappedRenderType extends RenderType implements WrappableRende
 	public TransparencyType getTransparencyType() {
 		return ((BlendingStateHolder) wrapped).getTransparencyType();
 	}
+
+	@Override
+	public void setTransparencyType(TransparencyType transparencyType) {
+		((BlendingStateHolder) wrapped).setTransparencyType(transparencyType);
+	}
 }
