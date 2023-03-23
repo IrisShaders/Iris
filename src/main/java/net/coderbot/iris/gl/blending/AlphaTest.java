@@ -24,7 +24,7 @@ public class AlphaTest {
 		if (function == AlphaTestFunction.ALWAYS) {
 			return "// alpha test disabled\n";
 		} else if (this == AlphaTests.VERTEX_ALPHA) {
-			return indentation + "if (!(" + alphaAccessor + " > iris_vertexColor.a)) {\n" +
+			return indentation + "if (!(" + alphaAccessor + " > iris_vertexColorAlpha)) {\n" +
 					indentation + "    discard;\n" +
 					indentation + "}\n";
 		} else if (function == AlphaTestFunction.NEVER) {

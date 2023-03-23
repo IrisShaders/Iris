@@ -130,6 +130,56 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		profiler.pop();
 	}
 
+	public void endBatchWithType(TransparencyType transparencyType) {
+		ProfilerFiller profiler = Minecraft.getInstance().getProfiler();
+
+		profiler.push("collect");
+
+		Map<RenderType, List<BufferSegment>> typeToSegment = new HashMap<>();
+
+		for (SegmentedBufferBuilder builder : builders) {
+			List<BufferSegment> segments = builder.getSegmentsForType(transparencyType);
+
+			for (BufferSegment segment : segments) {
+				typeToSegment.computeIfAbsent(segment.getRenderType(), (type) -> new ArrayList<>()).add(segment);
+			}
+		}
+
+		profiler.popPush("resolve ordering");
+
+		Iterable<RenderType> renderOrder = renderOrderManager.getRenderOrder();
+
+		profiler.popPush("draw buffers");
+
+		List<RenderType> types = new ArrayList<>();
+
+		for (RenderType type : renderOrder) {
+			if (((BlendingStateHolder) type).getTransparencyType() != transparencyType) {
+				continue;
+			}
+
+			types.add(type);
+
+			type.setupRenderState();
+
+			renderTypes += 1;
+
+			for (BufferSegment segment : typeToSegment.getOrDefault(type, Collections.emptyList())) {
+				segmentRenderer.drawInner(segment);
+				drawCalls += 1;
+			}
+
+			type.clearRenderState();
+		}
+
+		profiler.popPush("reset type " + transparencyType);
+
+		renderOrderManager.resetType(transparencyType);
+		types.forEach(affinities::remove);
+
+		profiler.pop();
+	}
+
 	public int getDrawCalls() {
 		return drawCalls;
 	}

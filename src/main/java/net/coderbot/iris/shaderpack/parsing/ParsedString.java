@@ -142,6 +142,15 @@ public class ParsedString {
 			}
 		}
 
+		// Attempted fix for RRe36's packs. Number should not be used if there is text *after* the number!
+		if (!(text.length() <= position)) {
+			char next = text.charAt(position);
+
+			if (!Character.isWhitespace(next) && next != ';') {
+				return null;
+			}
+		}
+
 		return takeCharacters(position);
 	}
 

@@ -21,6 +21,7 @@ public class BlockRenderingSettings {
 	private boolean disableDirectionalShading;
 	private boolean useSeparateAo;
 	private boolean useExtendedVertexFormat;
+	private boolean separateEntityDraws;
 
 	public BlockRenderingSettings() {
 		reloadRequired = false;
@@ -30,6 +31,7 @@ public class BlockRenderingSettings {
 		disableDirectionalShading = false;
 		useSeparateAo = false;
 		useExtendedVertexFormat = false;
+		separateEntityDraws = false;
 	}
 
 	public boolean isReloadRequired() {
@@ -129,5 +131,13 @@ public class BlockRenderingSettings {
 
 		this.reloadRequired = true;
 		this.useExtendedVertexFormat = useExtendedVertexFormat;
+	}
+
+    public boolean shouldSeparateEntityDraws() {
+		return separateEntityDraws;
+    }
+
+	public void setSeparateEntityDraws(boolean separateEntityDraws) {
+		this.separateEntityDraws = separateEntityDraws;
 	}
 }

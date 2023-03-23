@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.program.ComputeProgram;
@@ -120,6 +121,7 @@ public class CompositeRenderer {
 			ProgramDirectives directives = source.getDirectives();
 
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
+			pass.blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(null);
 			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
 			int[] drawBuffers = directives.getDrawBuffers();
 
@@ -203,6 +205,7 @@ public class CompositeRenderer {
 		int viewWidth;
 		int viewHeight;
 		Program program;
+		BlendModeOverride blendModeOverride;
 		ComputeProgram[] computes;
 		GlFramebuffer framebuffer;
 		ImmutableSet<Integer> flippedAtLeastOnce;
@@ -272,11 +275,16 @@ public class CompositeRenderer {
 
 			renderPass.framebuffer.bind();
 			renderPass.program.use();
+			if (renderPass.blendModeOverride != null) {
+				renderPass.blendModeOverride.apply();
+			}
 
 			// program is the identifier for composite :shrug:
 			this.customUniforms.push(renderPass.program);
 
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
+
+			BlendModeOverride.restore();
 		}
 
 		FullScreenQuadRenderer.INSTANCE.end();

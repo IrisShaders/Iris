@@ -44,6 +44,8 @@ public class ProgramSet {
 	private final ProgramSource gbuffersWeather;
 	private final ProgramSource gbuffersEntities;
 	private final ProgramSource gbuffersEntitiesTrans;
+	private final ProgramSource gbuffersParticles;
+	private final ProgramSource gbuffersParticlesTrans;
 	private final ProgramSource gbuffersEntitiesGlowing;
 	private final ProgramSource gbuffersGlint;
 	private final ProgramSource gbuffersEntityEyes;
@@ -119,6 +121,8 @@ public class ProgramSet {
 		this.gbuffersWeather = readProgramSource(directory, sourceProvider, "gbuffers_weather", this, shaderProperties);
 		this.gbuffersEntities = readProgramSource(directory, sourceProvider, "gbuffers_entities", this, shaderProperties);
 		this.gbuffersEntitiesTrans = readProgramSource(directory, sourceProvider, "gbuffers_entities_translucent", this, shaderProperties);
+		this.gbuffersParticles = readProgramSource(directory, sourceProvider, "gbuffers_particles", this, shaderProperties);
+		this.gbuffersParticlesTrans = readProgramSource(directory, sourceProvider, "gbuffers_particles_translucent", this, shaderProperties);
 		this.gbuffersEntitiesGlowing = readProgramSource(directory, sourceProvider, "gbuffers_entities_glowing", this, shaderProperties);
 		this.gbuffersGlint = readProgramSource(directory, sourceProvider, "gbuffers_armor_glint", this, shaderProperties);
 		this.gbuffersEntityEyes = readProgramSource(directory, sourceProvider, "gbuffers_spidereyes", this, shaderProperties);
@@ -373,6 +377,14 @@ public class ProgramSet {
 		return gbuffersEntitiesTrans.requireValid();
 	}
 
+	public Optional<ProgramSource> getGbuffersParticles() {
+		return gbuffersParticles.requireValid();
+	}
+
+	public Optional<ProgramSource> getGbuffersParticlesTrans() {
+		return gbuffersParticlesTrans.requireValid();
+	}
+
 	public Optional<ProgramSource> getGbuffersEntitiesGlowing() {
 		return gbuffersEntitiesGlowing.requireValid();
 	}
@@ -411,6 +423,8 @@ public class ProgramSet {
 			case BeaconBeam: return getGbuffersBeaconBeam();
 			case Entities: return getGbuffersEntities();
 			case EntitiesTrans: return getGbuffersEntitiesTrans();
+			case Particles: return getGbuffersParticles();
+			case ParticlesTrans: return getGbuffersParticlesTrans();
 			case EntitiesGlowing: return getGbuffersEntitiesGlowing();
 			case ArmorGlint: return getGbuffersGlint();
 			case SpiderEyes: return getGbuffersEntityEyes();

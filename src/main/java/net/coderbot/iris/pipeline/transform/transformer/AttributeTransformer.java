@@ -8,9 +8,9 @@ import io.github.douira.glsl_transformer.ast.node.abstract_node.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
-import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.parser.ParseShape;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.AttributeParameters;
@@ -123,7 +123,7 @@ public class AttributeTransformer {
 	}
 
 	private static final AutoHintedMatcher<ExternalDeclaration> uniformVec4EntityColor = new AutoHintedMatcher<>(
-			"uniform vec4 entityColor;", Matcher.externalDeclarationPattern);
+			"uniform vec4 entityColor;", ParseShape.EXTERNAL_DECLARATION);
 
 	// Add entity color -> overlay color attribute support.
 	public static void patchOverlayColor(
@@ -172,6 +172,8 @@ public class AttributeTransformer {
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in vec4 entityColor;", "in vec4 iris_vertexColor;");
+
+			tree.prependMainFunctionBody(t, "float iris_vertexColorAlpha = iris_vertexColor.a;");
 
 			// Different output name to avoid a name collision in the geometry shader.
 			if (parameters.hasGeometry) {
