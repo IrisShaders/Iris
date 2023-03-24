@@ -52,7 +52,11 @@ public class ProgramUniforms {
 	}
 
 	private static long getCurrentTick() {
-		return Objects.requireNonNull(Minecraft.getInstance().level).getGameTime();
+		if (Minecraft.getInstance().level == null) {
+			return 0L;
+		} else {
+			return Minecraft.getInstance().level.getGameTime();
+		}
 	}
 
 	public void update() {
@@ -338,6 +342,8 @@ public class ProgramUniforms {
 		if (type == GL20C.GL_FLOAT) {
 			return UniformType.FLOAT;
 		} else if (type == GL20C.GL_INT) {
+			return UniformType.INT;
+		} else if (type == GL20C.GL_BOOL) {
 			return UniformType.INT;
 		} else if (type == GL20C.GL_FLOAT_MAT4) {
 			return UniformType.MAT4;

@@ -42,7 +42,7 @@ There are a few possible reasons:
 
 ## Why are entities becoming invisible randomly?
 
-You probably have GraalVM installed. Install a normal version of Java to fix the issue.
+You probably have an outdated version of GraalVM installed. Install a normal version of Java or update to GraalVM 22.3 to fix the [issue](https://github.com/oracle/graal/issues/4849).
 
 ## What shaders have been tested and are working with Iris?
 

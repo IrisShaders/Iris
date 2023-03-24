@@ -23,7 +23,6 @@ public enum ProgramId {
 
 	Terrain(ProgramGroup.Gbuffers, "terrain", TexturedLit),
 	TerrainSolid(ProgramGroup.Gbuffers, "terrain_solid", Terrain),
-	TerrainCutoutMip(ProgramGroup.Gbuffers, "terrain_cutout_mip", Terrain),
 	TerrainCutout(ProgramGroup.Gbuffers, "terrain_cutout", Terrain),
 	DamagedBlock(ProgramGroup.Gbuffers, "damagedblock", Terrain),
 
@@ -33,6 +32,8 @@ public enum ProgramId {
 
 	Entities(ProgramGroup.Gbuffers, "entities", TexturedLit),
 	EntitiesTrans(ProgramGroup.Gbuffers, "entities_translucent", Entities),
+	Particles(ProgramGroup.Gbuffers, "particles", TexturedLit),
+	ParticlesTrans(ProgramGroup.Gbuffers, "particles_translucent", Particles),
 	EntitiesGlowing(ProgramGroup.Gbuffers, "entities_glowing", Entities),
 	ArmorGlint(ProgramGroup.Gbuffers, "armor_glint", Textured),
 	SpiderEyes(ProgramGroup.Gbuffers, "spidereyes", Textured,

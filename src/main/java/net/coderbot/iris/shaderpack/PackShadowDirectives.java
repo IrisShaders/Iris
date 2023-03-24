@@ -1,17 +1,22 @@
 package net.coderbot.iris.shaderpack;
 
 import com.google.common.collect.ImmutableList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.vendored.joml.Vector4f;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class PackShadowDirectives {
 	// Bump this up if you want more shadow color buffers!
 	// This is currently set at 2 for ShadersMod / OptiFine parity but can theoretically be bumped up to 8.
 	// TODO: Make this configurable?
-	public static final int MAX_SHADOW_COLOR_BUFFERS = 2;
+	public static final int MAX_SHADOW_COLOR_BUFFERS_IRIS = 8;
+	public static final int MAX_SHADOW_COLOR_BUFFERS_OF = 2;
 
 	private final OptionalBoolean shadowEnabled;
 
@@ -32,7 +37,7 @@ public class PackShadowDirectives {
 	private final OptionalBoolean cullingState;
 
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
-	private final ImmutableList<SamplingSettings> colorSamplingSettings;
+	private final Int2ObjectMap<SamplingSettings> colorSamplingSettings;
 
 	public PackShadowDirectives(ShaderProperties properties) {
 		// By default, the shadow map has a resolution of 1024x1024. It's recommended to increase this for better
@@ -85,11 +90,7 @@ public class PackShadowDirectives {
 
 		ImmutableList.Builder<SamplingSettings> colorSamplingSettings = ImmutableList.builder();
 
-		for (int i = 0; i < MAX_SHADOW_COLOR_BUFFERS; i++) {
-			colorSamplingSettings.add(new SamplingSettings());
-		}
-
-		this.colorSamplingSettings = colorSamplingSettings.build();
+		this.colorSamplingSettings = new Int2ObjectArrayMap<>();
 	}
 
 	public PackShadowDirectives(PackShadowDirectives shadowDirectives) {
@@ -171,7 +172,7 @@ public class PackShadowDirectives {
 		return depthSamplingSettings;
 	}
 
-	public ImmutableList<SamplingSettings> getColorSamplingSettings() {
+	public Int2ObjectMap<SamplingSettings> getColorSamplingSettings() {
 		return colorSamplingSettings;
 	}
 
@@ -245,21 +246,19 @@ public class PackShadowDirectives {
 		}
 	}
 
-	private static void acceptColorMipmapSettings(DirectiveHolder directives, ImmutableList<SamplingSettings> samplers) {
+	private static void acceptColorMipmapSettings(DirectiveHolder directives, Int2ObjectMap<SamplingSettings> samplers) {
 		// Get the default base value for the shadow depth mipmap setting
 		directives.acceptConstBooleanDirective("generateShadowColorMipmap", mipmap -> {
-			for (SamplingSettings samplerSettings : samplers) {
-				samplerSettings.setMipmap(mipmap);
-			}
+			samplers.forEach((i, sampler) -> sampler.setMipmap(mipmap));
 		});
 
 		// Find any per-sampler overrides for the shadow depth mipmap setting
 		for (int i = 0; i < samplers.size(); i++) {
 			String name = "shadowcolor" + i + "Mipmap";
-			directives.acceptConstBooleanDirective(name, samplers.get(i)::setMipmap);
+			directives.acceptConstBooleanDirective(name, samplers.computeIfAbsent(i, sa -> new SamplingSettings())::setMipmap);
 
 			name = "shadowColor" + i + "Mipmap";
-			directives.acceptConstBooleanDirective(name, samplers.get(i)::setMipmap);
+			directives.acceptConstBooleanDirective(name, samplers.computeIfAbsent(i, sa -> new SamplingSettings())::setMipmap);
 		}
 	}
 
@@ -279,31 +278,31 @@ public class PackShadowDirectives {
 		}
 	}
 
-	private static void acceptColorFilteringSettings(DirectiveHolder directives, ImmutableList<SamplingSettings> samplers) {
+	private static void acceptColorFilteringSettings(DirectiveHolder directives, Int2ObjectMap<SamplingSettings> samplers) {
 		for (int i = 0; i < samplers.size(); i++) {
 			String name = "shadowcolor" + i + "Nearest";
 
-			directives.acceptConstBooleanDirective(name, samplers.get(i)::setNearest);
+			directives.acceptConstBooleanDirective(name, samplers.computeIfAbsent(i, sa -> new SamplingSettings())::setNearest);
 
 			name = "shadowColor" + i + "Nearest";
 
-			directives.acceptConstBooleanDirective(name, samplers.get(i)::setNearest);
+			directives.acceptConstBooleanDirective(name, samplers.computeIfAbsent(i, sa -> new SamplingSettings())::setNearest);
 
 			name = "shadowColor" + i + "MinMagNearest";
 
-			directives.acceptConstBooleanDirective(name, samplers.get(i)::setNearest);
+			directives.acceptConstBooleanDirective(name, samplers.computeIfAbsent(i, sa -> new SamplingSettings())::setNearest);
 		}
 	}
 
-	private void acceptBufferDirectives(DirectiveHolder directives, ImmutableList<SamplingSettings> settings) {
-		for (int i = 0; i < settings.size(); i++) {
+	private void acceptBufferDirectives(DirectiveHolder directives, Int2ObjectMap<SamplingSettings> settings) {
+		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS; i++) {
 			String bufferName = "shadowcolor" + i;
 			int finalI = i;
 			directives.acceptConstStringDirective(bufferName + "Format", format -> {
 				Optional<InternalTextureFormat> internalFormat = InternalTextureFormat.fromString(format);
 
 				if (internalFormat.isPresent()) {
-					settings.get(finalI).setFormat(internalFormat.get());
+					settings.computeIfAbsent(finalI, sa -> new SamplingSettings()).setFormat(internalFormat.get());
 				} else {
 					Iris.logger.warn("Unrecognized internal texture format " + format + " specified for " + bufferName + "Format, ignoring.");
 				}
@@ -311,14 +310,14 @@ public class PackShadowDirectives {
 
 			// TODO: Only for composite and deferred
 			directives.acceptConstBooleanDirective(bufferName + "Clear",
-				shouldClear -> settings.get(finalI).setClear(shouldClear));
+				shouldClear -> settings.computeIfAbsent(finalI, sa -> new SamplingSettings()).setClear(shouldClear));
 
 			// TODO: Only for composite, deferred, and final
 
 			// Note: This is still relevant even if shouldClear is false,
 			// since this will be the initial color of the buffer.
 			directives.acceptConstVec4Directive(bufferName + "ClearColor",
-				clearColor -> settings.get(finalI).setClearColor(clearColor));
+				clearColor -> settings.computeIfAbsent(finalI, sa -> new SamplingSettings()).setClearColor(clearColor));
 		}
 	}
 

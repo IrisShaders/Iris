@@ -6,6 +6,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector3i;
 import org.lwjgl.opengl.GL43C;
@@ -54,14 +55,17 @@ public final class ComputeProgram extends GlResource {
 		return cachedWorkGroups;
 	}
 
-	public void dispatch(float width, float height) {
+	public void use() {
 		ProgramManager.glUseProgram(getGlId());
+
 		uniforms.update();
 		samplers.update();
 		images.update();
+	}
 
+	public void dispatch(float width, float height) {
 		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::allowConcurrentCompute).orElse(false)) {
-			IrisRenderSystem.memoryBarrier(40);
+			IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 		}
 
 		IrisRenderSystem.dispatchCompute(getWorkGroups(width, height));

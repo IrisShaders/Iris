@@ -1,16 +1,17 @@
 package net.coderbot.iris.mixin.bettermipmaps;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.coderbot.iris.helpers.ColorSRGB;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
-import org.spongepowered.asm.mixin.Final;
+import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
+import java.util.Locale;
 import java.util.Objects;
 
 @Mixin(TextureAtlasSprite.class)
@@ -59,76 +60,69 @@ public class MixinTextureAtlasSprite {
 	 * black color does not leak over into sampling.
 	 */
 	@Unique
-	private void iris$fillInTransparentPixelColors(NativeImage nativeImage) {
+	private static void iris$fillInTransparentPixelColors(NativeImage nativeImage) {
+		final long ppPixel = getPointerRGBA(nativeImage);
+		final int pixelCount = nativeImage.getHeight() * nativeImage.getWidth();
+
 		// Calculate an average color from all pixels that are not completely transparent.
-		//
 		// This average is weighted based on the (non-zero) alpha value of the pixel.
 		float r = 0.0f;
 		float g = 0.0f;
 		float b = 0.0f;
-		float totalAlpha = 0.0f;
 
-		for (int y = 0; y < nativeImage.getHeight(); y++) {
-			for (int x = 0; x < nativeImage.getWidth(); x++) {
-				int color = nativeImage.getPixelRGBA(x, y);
-				int alpha = (color >> 24) & 255;
+		float totalWeight = 0.0f;
 
-				if (alpha == 0) {
-					// Ignore all fully-transparent pixels for the purposes of computing an average color.
-					continue;
-				}
+		for (int pixelIndex = 0; pixelIndex < pixelCount; pixelIndex++) {
+			long pPixel = ppPixel + (pixelIndex * 4);
 
-				totalAlpha += alpha;
+			int color = MemoryUtil.memGetInt(pPixel);
+			int alpha = NativeImage.getA(color);
+
+			// Ignore all fully-transparent pixels for the purposes of computing an average color.
+			if (alpha != 0) {
+				float weight = (float) alpha;
 
 				// Make sure to convert to linear space so that we don't lose brightness.
-				r += iris$unpackLinearComponent(color, 0) * alpha;
-				g += iris$unpackLinearComponent(color, 8) * alpha;
-				b += iris$unpackLinearComponent(color, 16) * alpha;
+				r += ColorSRGB.srgbToLinear(NativeImage.getR(color)) * weight;
+				g += ColorSRGB.srgbToLinear(NativeImage.getG(color)) * weight;
+				b += ColorSRGB.srgbToLinear(NativeImage.getB(color)) * weight;
+
+				totalWeight += weight;
 			}
 		}
 
-		r /= totalAlpha;
-		g /= totalAlpha;
-		b /= totalAlpha;
-
-		// If there weren't any pixels that were not fully transparent, bail out.
-		if (totalAlpha == 0.0f) {
+		// Bail if none of the pixels are semi-transparent.
+		if (totalWeight == 0.0f) {
 			return;
 		}
 
+		r /= totalWeight;
+		g /= totalWeight;
+		b /= totalWeight;
+
 		// Convert that color in linear space back to sRGB.
 		// Use an alpha value of zero - this works since we only replace pixels with an alpha value of 0.
-		int resultColor = iris$packLinearToSrgb(r, g, b);
+		int averageColor = ColorSRGB.linearToSrgb(r, g, b, 0);
 
-		for (int y = 0; y < nativeImage.getHeight(); y++) {
-			for (int x = 0; x < nativeImage.getWidth(); x++) {
-				int color = nativeImage.getPixelRGBA(x, y);
-				int alpha = (color >> 24) & 255;
+		for (int pixelIndex = 0; pixelIndex < pixelCount; pixelIndex++) {
+			long pPixel = ppPixel + (pixelIndex * 4);
 
-				// If this pixel has nonzero alpha, don't touch it.
-				if (alpha > 0) {
-					continue;
-				}
+			int color = MemoryUtil.memGetInt(pPixel);
+			int alpha = NativeImage.getA(color);
 
-				// Replace the color values of this pixel with the average colors.
-				nativeImage.setPixelRGBA(x, y, resultColor);
+			// Replace the color values of pixels which are fully transparent, since they have no color data.
+			if (alpha == 0) {
+				MemoryUtil.memPutInt(pPixel, averageColor);
 			}
 		}
 	}
 
-	// Unpacks a single color component into linear color space from sRGB.
-	@Unique
-	private static float iris$unpackLinearComponent(int color, int shift) {
-		return SRGB_TO_LINEAR[(color >> shift) & 255];
-	}
+	private static long getPointerRGBA(NativeImage nativeImage) {
+		if (nativeImage.format() != NativeImage.Format.RGBA) {
+			throw new IllegalArgumentException(String.format(Locale.ROOT,
+				"Tried to get pointer to RGBA pixel data on NativeImage of wrong format; have %s", nativeImage.format()));
+		}
 
-	// Packs 3 color components into sRGB from linear color space.
-	@Unique
-	private static int iris$packLinearToSrgb(float r, float g, float b) {
-		int srgbR = (int) (Math.pow(r, 1.0 / 2.2) * 255.0);
-		int srgbG = (int) (Math.pow(g, 1.0 / 2.2) * 255.0);
-		int srgbB = (int) (Math.pow(b, 1.0 / 2.2) * 255.0);
-
-		return (srgbB << 16) | (srgbG << 8) | srgbR;
+		return nativeImage.pixels;
 	}
 }

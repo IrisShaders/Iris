@@ -1,26 +1,29 @@
 package net.coderbot.iris.shadows;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
-import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class ShadowRenderTargets {
 	private final RenderTarget[] targets;
+	private final PackShadowDirectives shadowDirectives;
 	private final DepthTexture mainDepth;
 	private final DepthTexture noTranslucents;
 	private final GlFramebuffer depthSourceFb;
@@ -29,35 +32,33 @@ public class ShadowRenderTargets {
 
 	private final List<GlFramebuffer> ownedFramebuffers;
 	private final int resolution;
+	private final WorldRenderingPipeline pipeline;
 
 	private boolean fullClearRequired;
 	private boolean translucentDepthDirty;
 	private boolean[] hardwareFiltered;
+	private boolean[] linearFiltered;
 	private InternalTextureFormat[] formats;
 	private IntList buffersToBeCleared;
+	private int size;
 
-	public ShadowRenderTargets(int resolution, PackShadowDirectives shadowDirectives) {
-		targets = new RenderTarget[shadowDirectives.getColorSamplingSettings().size()];
-		formats = new InternalTextureFormat[shadowDirectives.getColorSamplingSettings().size()];
-		flipped = new boolean[shadowDirectives.getColorSamplingSettings().size()];
-		hardwareFiltered = new boolean[shadowDirectives.getColorSamplingSettings().size()];
+	public ShadowRenderTargets(WorldRenderingPipeline pipeline, int resolution, PackShadowDirectives shadowDirectives) {
+		this.pipeline = pipeline;
+		this.shadowDirectives = shadowDirectives;
+		this.size = pipeline.hasFeature(FeatureFlags.HIGHER_SHADOWCOLOR) ? PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS : PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_OF;
+		targets = new RenderTarget[size];
+		formats = new InternalTextureFormat[size];
+		flipped = new boolean[size];
+		hardwareFiltered = new boolean[size];
+		linearFiltered = new boolean[size];
 		buffersToBeCleared = new IntArrayList();
 
 		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 		this.noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 
-		for (int i = 0; i < shadowDirectives.getColorSamplingSettings().size(); i++) {
-			PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().get(i);
-			targets[i] = RenderTarget.builder().setDimensions(resolution, resolution)
-				.setInternalFormat(settings.getFormat())
-				.setPixelFormat(settings.getFormat().getPixelFormat()).build();
-			formats[i] = settings.getFormat();
-
-			if (settings.getClear()) {
-				buffersToBeCleared.add(i);
-			}
-
+		for (int i = 0; i < shadowDirectives.getDepthSamplingSettings().size(); i++) {
 			this.hardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
+			this.linearFiltered[i] = !shadowDirectives.getDepthSamplingSettings().get(i).getNearest();
 		}
 
 		this.resolution = resolution;
@@ -91,7 +92,9 @@ public class ShadowRenderTargets {
 		}
 
 		for (RenderTarget target : targets) {
-			target.destroy();
+			if (target != null) {
+				target.destroy();
+			}
 		}
 
 		mainDepth.destroy();
@@ -104,6 +107,50 @@ public class ShadowRenderTargets {
 
 	public RenderTarget get(int index) {
 		return targets[index];
+	}
+
+	/**
+	 * Gets the render target assigned to an index, and creates it if it does not exist.
+	 * This is a <b>expensive</b> opetation nad may block other tasks! Use it sparingly, and use {@code get()} if possible.
+	 * @param index The index of the render target to get
+	 * @return The existing or a new render target, if no existing one exists
+	 */
+	public RenderTarget getOrCreate(int index) {
+		if (targets[index] != null) {
+			return targets[index];
+		}
+
+		create(index);
+		return targets[index];
+	}
+
+	private void create(int index) {
+		if (index > size) {
+			throw new IllegalStateException("Tried to access buffer higher than allowed limit of " + size + "! If you're trying to use shadowcolor2-7, you need to activate it's feature flag!");
+		}
+
+
+		PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().computeIfAbsent(index, i -> new PackShadowDirectives.SamplingSettings());
+		targets[index] = RenderTarget.builder().setDimensions(resolution, resolution)
+			.setInternalFormat(settings.getFormat())
+			.setPixelFormat(settings.getFormat().getPixelFormat()).build();
+		formats[index] = settings.getFormat();
+		if (settings.getClear()) {
+			buffersToBeCleared.add(index);
+		}
+
+		if (settings.getClear()) {
+			buffersToBeCleared.add(index);
+		}
+
+		fullClearRequired = true;
+		pipeline.onShadowBufferChange();
+	}
+
+	public void createIfEmpty(int index) {
+		if (targets[index] == null) {
+			create(index);
+		}
 	}
 
 	public int getResolution() {
@@ -227,12 +274,15 @@ public class ShadowRenderTargets {
 			actualDrawBuffers[i] = i;
 
 			if (drawBuffers[i] >= getRenderTargetCount()) {
-				// TODO: This causes resource leaks, also we should really verify this in the shaderpack parser...
-				throw new IllegalStateException("Render target with index " + drawBuffers[i] + " is not supported, only "
-					+ getRenderTargetCount() + " render targets are supported.");
+				// If a shader is using an invalid drawbuffer, they're most likely relying on the Optifine behavior of ignoring DRAWBUFFERS in the shadow pass.
+				// We need to fix this for them, since apparantly this is a common issue.
+				// Iris.logger.warn("Invalid framebuffer was attempted to be created! Forcing a framebuffer with DRAWBUFFERS 01 for shadow.");
+				ownedFramebuffers.remove(framebuffer);
+				framebuffer.destroy();
+				return createColorFramebuffer(stageWritesToMain, new int[] { 0, 1 });
 			}
 
-			RenderTarget target = this.get(drawBuffers[i]);
+			RenderTarget target = this.getOrCreate(drawBuffers[i]);
 
 			int textureId = stageWritesToMain.contains(drawBuffers[i]) ? target.getMainTexture() : target.getAltTexture();
 
@@ -242,7 +292,8 @@ public class ShadowRenderTargets {
 		framebuffer.drawBuffers(actualDrawBuffers);
 		framebuffer.readBuffer(0);
 
-		if (!framebuffer.isComplete()) {
+		int status = framebuffer.getStatus();
+		if (status != GL30C.GL_FRAMEBUFFER_COMPLETE) {
 			throw new IllegalStateException("Unexpected error while creating framebuffer");
 		}
 
@@ -255,6 +306,10 @@ public class ShadowRenderTargets {
 
 	public boolean isHardwareFiltered(int i) {
 		return hardwareFiltered[i];
+	}
+
+	public boolean isLinearFiltered(int i) {
+		return linearFiltered[i];
 	}
 
 	public int getNumColorTextures() {
@@ -279,4 +334,5 @@ public class ShadowRenderTargets {
 	public IntList getBuffersToBeCleared() {
 		return buffersToBeCleared;
 	}
+
 }
