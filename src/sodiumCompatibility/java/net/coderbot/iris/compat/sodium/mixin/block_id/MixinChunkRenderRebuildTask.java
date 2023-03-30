@@ -1,8 +1,11 @@
 package net.coderbot.iris.compat.sodium.mixin.block_id;
 
 import me.jellysquid.mods.sodium.client.gl.compile.ChunkBuildContext;
+import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadWinding;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkRenderBounds;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkRenderData;
 import me.jellysquid.mods.sodium.client.render.chunk.tasks.ChunkRenderRebuildTask;
@@ -15,6 +18,7 @@ import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.chunk.VisGraph;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,6 +33,8 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
  */
 @Mixin(ChunkRenderRebuildTask.class)
 public class MixinChunkRenderRebuildTask {
+	private ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
+
 	@Inject(method = "performBuild", at = @At(value = "INVOKE",
 			target = "net/minecraft/world/level/block/state/BlockState.getRenderShape()" +
 					"Lnet/minecraft/world/level/block/RenderShape;"),
@@ -39,7 +45,22 @@ public class MixinChunkRenderRebuildTask {
 								  ChunkRenderCacheLocal cacheLocal,
 								  WorldSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
 								  BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset,
-								  int relY, int relZ, int relX) {
+								  int relY, int relZ, int relX, BlockState blockState) {
+		if (blockState.getBlock() instanceof LightBlock) {
+			ChunkModelBuilder buildBuffers = buffers.get(RenderType.cutout());
+			((ChunkBuildBuffersExt) buffers).iris$setLocalPos(0, 0, 0);
+			((ChunkBuildBuffersExt) buffers).iris$setMaterialId(blockState, (short) 0);
+			for (int i = 0; i < 4; i++) {
+				vertices[i].x = relX;
+				vertices[i].y = relY;
+				vertices[i].z = relZ;
+				vertices[i].u = 0;
+				vertices[i].v = 0;
+				vertices[i].color = 0;
+				vertices[i].light = (blockState.getLightEmission() << 4);
+			}
+			buildBuffers.getIndexBuffer(ModelQuadFacing.UNASSIGNED).add(buildBuffers.getVertexBuffer().push(vertices), ModelQuadWinding.CLOCKWISE);
+		}
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) context.buffers).iris$setLocalPos(relX, relY, relZ);
 		}
