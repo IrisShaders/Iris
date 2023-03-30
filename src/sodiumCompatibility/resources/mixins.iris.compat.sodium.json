@@ -20,6 +20,7 @@
     "options.MixinSodiumGameOptions",
     "options.MixinSodiumOptionsGUI",
     "pbr_animation.MixinTextureAtlasSprite",
+    "separate_ao.MixinBufferBuilder_IntrinsicSeparateAo",
     "separate_ao.MixinBlockRenderer",
     "separate_ao.MixinFluidRenderer",
     "shader_overrides.MixinBlockRenderPass",
