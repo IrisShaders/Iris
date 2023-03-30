@@ -56,7 +56,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		uSum += u;
 		vSum += v;
 
-		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, contextHolder.blockId, contextHolder.renderType, chunkId, ExtendedDataHelper.computeMidBlock(posX, posY, posZ, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
+		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, contextHolder.blockId, contextHolder.renderType, chunkId, contextHolder.ignoreMidBlock ? 0 : ExtendedDataHelper.computeMidBlock(posX, posY, posZ, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 	}
 
 	private void writeQuadInternal(float posX, float posY, float posZ, int color,
