@@ -50,6 +50,7 @@ public class ProgramSet {
 	private final ProgramSource gbuffersGlint;
 	private final ProgramSource gbuffersEntityEyes;
 	private final ProgramSource gbuffersBlock;
+	private final ProgramSource gbuffersBlockTrans;
 	private final ProgramSource gbuffersHand;
 
 	private final ProgramSource[] deferred;
@@ -127,6 +128,7 @@ public class ProgramSet {
 		this.gbuffersGlint = readProgramSource(directory, sourceProvider, "gbuffers_armor_glint", this, shaderProperties);
 		this.gbuffersEntityEyes = readProgramSource(directory, sourceProvider, "gbuffers_spidereyes", this, shaderProperties);
 		this.gbuffersBlock = readProgramSource(directory, sourceProvider, "gbuffers_block", this, shaderProperties);
+		this.gbuffersBlockTrans = readProgramSource(directory, sourceProvider, "gbuffers_block_translucent", this, shaderProperties);
 		this.gbuffersHand = readProgramSource(directory, sourceProvider, "gbuffers_hand", this, shaderProperties);
 
 		this.deferred = readProgramArray(directory, sourceProvider, "deferred", shaderProperties);
@@ -228,7 +230,7 @@ public class ProgramSet {
 		programs.addAll (Arrays.asList(
 				gbuffersBasic, gbuffersBeaconBeam, gbuffersTextured, gbuffersTexturedLit, gbuffersTerrain, gbuffersTerrainSolid, gbuffersTerrainCutout,
 				gbuffersDamagedBlock, gbuffersSkyBasic, gbuffersSkyTextured, gbuffersClouds, gbuffersWeather,
-				gbuffersEntities, gbuffersEntitiesTrans, gbuffersEntitiesGlowing, gbuffersGlint, gbuffersEntityEyes, gbuffersBlock,
+				gbuffersEntities, gbuffersEntitiesTrans, gbuffersEntitiesGlowing, gbuffersGlint, gbuffersEntityEyes, gbuffersBlock, gbuffersBlockTrans,
 				gbuffersHand
 		));
 
@@ -401,6 +403,10 @@ public class ProgramSet {
 		return gbuffersBlock.requireValid();
 	}
 
+	public Optional<ProgramSource> getGbuffersBlockTrans() {
+		return gbuffersBlockTrans.requireValid();
+	}
+
 	public Optional<ProgramSource> getGbuffersHand() {
 		return gbuffersHand.requireValid();
 	}
@@ -420,6 +426,7 @@ public class ProgramSet {
 			case TerrainCutout: return getGbuffersTerrainCutout();
 			case DamagedBlock: return getGbuffersDamagedBlock();
 			case Block: return getGbuffersBlock();
+			case BlockTrans: return getGbuffersBlockTrans();
 			case BeaconBeam: return getGbuffersBeaconBeam();
 			case Entities: return getGbuffersEntities();
 			case EntitiesTrans: return getGbuffersEntitiesTrans();
