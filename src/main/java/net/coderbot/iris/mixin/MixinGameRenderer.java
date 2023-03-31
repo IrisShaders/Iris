@@ -227,7 +227,7 @@ public class MixinGameRenderer {
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
 		} else if (isBlockEntities()) {
-			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+			override(ShaderKey.BE_TRANSLUCENT, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_TRANSLUCENT, cir);
 		}
