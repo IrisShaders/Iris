@@ -36,8 +36,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
  */
 @Mixin(ChunkRenderRebuildTask.class)
 public class MixinChunkRenderRebuildTask {
-	private ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
-
 	@Inject(method = "performBuild", at = @At(value = "INVOKE",
 			target = "net/minecraft/world/level/block/state/BlockState.getRenderShape()" +
 					"Lnet/minecraft/world/level/block/RenderShape;"),
@@ -54,16 +52,20 @@ public class MixinChunkRenderRebuildTask {
 			((ChunkBuildBuffersExt) buffers).iris$setLocalPos(0, 0, 0);
 			((ChunkBuildBuffersExt) buffers).iris$ignoreMidBlock(true);
 			((ChunkBuildBuffersExt) buffers).iris$setMaterialId(blockState, (short) 0);
+
+			int vertexStart = buildBuffers.getVertexSink().getVertexCount();
+
 			for (int i = 0; i < 4; i++) {
-				vertices[i].x = (float) ((relX & 15)) + 0.25f;
-				vertices[i].y = (float) ((relY & 15)) + 0.25f;
-				vertices[i].z = (float) ((relZ & 15)) + 0.25f;
-				vertices[i].u = 0;
-				vertices[i].v = 0;
-				vertices[i].color = 0;
-				vertices[i].light = blockState.getLightEmission() << 4 | blockState.getLightEmission() << 20;
+				float x = (float) ((relX & 15)) + 0.25f;
+				float y = (float) ((relY & 15)) + 0.25f;
+				float z = (float) ((relZ & 15)) + 0.25f;
+				float u = 0;
+				float v = 0;
+				int color = 0;
+				int light = blockState.getLightEmission() << 4 | blockState.getLightEmission() << 20;
+				buildBuffers.getVertexSink().writeVertex(x, y, z, color, u, v, light, buildBuffers.getChunkId());
 			}
-			buildBuffers.getIndexBuffer(ModelQuadFacing.UNASSIGNED).add(buildBuffers.getVertexBuffer().push(vertices), ModelQuadWinding.CLOCKWISE);
+			buildBuffers.getIndexBufferBuilder(ModelQuadFacing.UNASSIGNED).add(vertexStart, ModelQuadWinding.CLOCKWISE);
 			((ChunkBuildBuffersExt) buffers).iris$ignoreMidBlock(false);
 			return;
 		}
