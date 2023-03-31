@@ -63,9 +63,13 @@ public class MixinChunkRenderRebuildTask {
 				float v = 0;
 				int color = 0;
 				int light = blockState.getLightEmission() << 4 | blockState.getLightEmission() << 20;
+				bounds.addBlock(relX & 15, relY & 15, relZ & 15);
+
 				buildBuffers.getVertexSink().writeVertex(x, y, z, color, u, v, light, buildBuffers.getChunkId());
 			}
 			buildBuffers.getIndexBufferBuilder(ModelQuadFacing.UNASSIGNED).add(vertexStart, ModelQuadWinding.CLOCKWISE);
+
+			buildBuffers.getVertexSink().flush();
 			((ChunkBuildBuffersExt) buffers).iris$ignoreMidBlock(false);
 			return;
 		}
