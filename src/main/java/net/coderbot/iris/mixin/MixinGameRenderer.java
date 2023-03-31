@@ -220,6 +220,7 @@ public class MixinGameRenderer {
 		"getRendertypeEntityTranslucentShader",
 		"getRendertypeEntityTranslucentCullShader",
 		"getRendertypeItemEntityTranslucentCullShader",
+		"getRendertypeEntityNoOutlineShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityTranslucentShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
@@ -265,8 +266,7 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
-			"getRendertypeEntitySolidShader",
-			"getRendertypeEntityNoOutlineShader",
+			"getRendertypeEntitySolidShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntitySolidDiffuseShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
