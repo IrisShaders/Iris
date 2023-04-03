@@ -175,7 +175,7 @@ public class ProgramSet {
 	private ProgramSource[] readProgramArray(AbsolutePackPath directory,
 											 Function<AbsolutePackPath, String> sourceProvider, String name,
 											 ShaderProperties shaderProperties) {
-		ProgramSource[] programs = new ProgramSource[99];
+		ProgramSource[] programs = new ProgramSource[100];
 
 		for (int i = 0; i < programs.length; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
@@ -188,7 +188,7 @@ public class ProgramSet {
 
 	private ComputeSource[] readProgramArray(AbsolutePackPath directory,
 											 Function<AbsolutePackPath, String> sourceProvider, String name) {
-		ComputeSource[] programs = new ComputeSource[99];
+		ComputeSource[] programs = new ComputeSource[100];
 
 		for (int i = 0; i < programs.length; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
