@@ -161,6 +161,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			// ENTITY_ELEMENT
 			this.putShort(0, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 			this.putShort(2, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+			this.putShort(4, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 		}
 
 		this.nextElement();
@@ -229,7 +230,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		} else {
 			midUOffset = 12;
 			midVOffset = 8;
-			normalOffset = 20;
+			normalOffset = 22;
 			tangentOffset = 4;
 		}
 

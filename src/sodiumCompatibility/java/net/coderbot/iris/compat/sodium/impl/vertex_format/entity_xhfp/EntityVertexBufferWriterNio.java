@@ -46,6 +46,7 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 		buffer.putInt(i + 28, light);
 		buffer.putShort(i + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 		buffer.putShort(i + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+		buffer.putShort(i + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 
 		if (vertexCount == 4) {
 			this.endQuad(normal);
@@ -87,10 +88,10 @@ public class EntityVertexBufferWriterNio extends VertexBufferWriterNio implement
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
 		for (int vertex = 0; vertex < 4; vertex++) {
-			buffer.putFloat(i + 40 - STRIDE * vertex, uSum);
-			buffer.putFloat(i + 44 - STRIDE * vertex, vSum);
+			buffer.putFloat(i + 42 - STRIDE * vertex, uSum);
+			buffer.putFloat(i + 46 - STRIDE * vertex, vSum);
 			buffer.putInt(i + 32 - STRIDE * vertex, normal);
-			buffer.putInt(i + 48 - STRIDE * vertex, tangent);
+			buffer.putInt(i + 50 - STRIDE * vertex, tangent);
 		}
 
 		uSum = 0;
