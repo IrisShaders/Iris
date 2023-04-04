@@ -200,11 +200,19 @@ public class AttributeTransformer {
 		root.processMatches(t, uniformIntBlockEntityId, ASTNode::detachAndDelete);
 
 
-		root.replaceReferenceExpressions(t, "entityId",
-			"iris_entityInfo.x");
+		if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
+			root.replaceReferenceExpressions(t, "entityId",
+				"iris_entityInfo[0].x");
 
-		root.replaceReferenceExpressions(t, "blockEntityId",
-			"iris_entityInfo.y");
+			root.replaceReferenceExpressions(t, "blockEntityId",
+				"iris_entityInfo[0].y");
+		} else {
+			root.replaceReferenceExpressions(t, "entityId",
+				"iris_entityInfo.x");
+
+			root.replaceReferenceExpressions(t, "blockEntityId",
+				"iris_entityInfo.y");
+		}
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// add our own declarations
@@ -220,20 +228,12 @@ public class AttributeTransformer {
 			tree.prependMainFunctionBody(t,
 					"iris_entityInfo = iris_Entity;");
 		} else if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
-			root.replaceReferenceExpressions(t, "entityId",
-				"iris_entityInfo[0].x");
-
-			root.replaceReferenceExpressions(t, "blockEntityId",
-				"iris_entityInfo[0].y");
-			// replace read references to grab the color from the first vertex.
-			root.replaceReferenceExpressions(t, "entityColor", "entityColor[0]");
-
 			// TODO: this is passthrough behavior
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"flat out ivec2 iris_entityInfoGS;",
 					"flat in ivec2 iris_entityInfo[];");
 			tree.prependMainFunctionBody(t,
-					"iris_EntityGS = iris_Entity[0];");
+					"iris_entityInfoGS = iris_entityInfo[0];");
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"flat in ivec2 iris_entityInfo;");
