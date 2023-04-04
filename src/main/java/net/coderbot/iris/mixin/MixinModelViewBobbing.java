@@ -66,6 +66,8 @@ public class MixinModelViewBobbing {
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lorg/joml/Matrix4f;)V"))
 	private void iris$applyBobbingToModelView(float tickDelta, long limitTime, PoseStack matrix, CallbackInfo ci) {
+		if (!areShadersOn) return;
+
 		matrix.last().pose().mul(bobbingEffectsModel);
 
 		bobbingEffectsModel = null;

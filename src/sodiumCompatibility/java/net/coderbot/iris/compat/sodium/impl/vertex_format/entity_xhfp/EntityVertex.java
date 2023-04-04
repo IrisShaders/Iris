@@ -8,6 +8,7 @@ import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import me.jellysquid.mods.sodium.common.util.MatrixHelper;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.coderbot.iris.vertices.QuadView;
@@ -25,11 +26,11 @@ public final class EntityVertex {
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;
 	private static final int OFFSET_TEXTURE = 16;
-	private static final int OFFSET_MID_TEXTURE = 36;
+	private static final int OFFSET_MID_TEXTURE = 40;
 	private static final int OFFSET_OVERLAY = 24;
 	private static final int OFFSET_LIGHT = 28;
 	private static final int OFFSET_NORMAL = 32;
-	private static final int OFFSET_TANGENT = 44;
+	private static final int OFFSET_TANGENT = 48;
 
 	private static Vector3f lastNormal = new Vector3f();
 
@@ -53,6 +54,10 @@ public final class EntityVertex {
 
 		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE, midU);
 		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE + 4, midV);
+
+		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+		MemoryUtil.memPutShort(ptr + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+
 	}
 
 	public static void write2(long ptr,
@@ -74,6 +79,10 @@ public final class EntityVertex {
 
 		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE, midU);
 		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE + 4, midV);
+
+		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+		MemoryUtil.memPutShort(ptr + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+
 	}
 
 	public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, int light, int overlay, int color) {
@@ -131,7 +140,7 @@ public final class EntityVertex {
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quadView);
 
 		for (long vertex = 0; vertex < 4; vertex++) {
-			MemoryUtil.memPutInt(ptr + 44 - STRIDE * vertex, tangent);
+			MemoryUtil.memPutInt(ptr + 48 - STRIDE * vertex, tangent);
 		}
 	}
 }
