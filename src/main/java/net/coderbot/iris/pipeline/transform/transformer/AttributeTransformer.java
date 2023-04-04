@@ -233,7 +233,7 @@ public class AttributeTransformer {
 					"flat out ivec2 iris_entityInfoGS;",
 					"flat in ivec2 iris_entityInfo[];");
 			tree.prependMainFunctionBody(t,
-					"iris_EntityGS = iris_Entity[0];");
+					"iris_entityInfoGS = iris_entityInfo[0];");
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"flat in ivec2 iris_entityInfo;");
