@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.VertexFormatElement;
 
 public class IrisVertexFormats {
 	public static final VertexFormatElement ENTITY_ELEMENT;
+	public static final VertexFormatElement ENTITY_ID_ELEMENT;
 	public static final VertexFormatElement MID_TEXTURE_ELEMENT;
 	public static final VertexFormatElement TANGENT_ELEMENT;
 	public static final VertexFormatElement MID_BLOCK_ELEMENT;
@@ -16,6 +17,7 @@ public class IrisVertexFormats {
 
 	static {
 		ENTITY_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
+		ENTITY_ID_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Type.USHORT, VertexFormatElement.Usage.UV, 2);
 		MID_TEXTURE_ELEMENT = new VertexFormatElement(12, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
 		TANGENT_ELEMENT = new VertexFormatElement(13, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
 		MID_BLOCK_ELEMENT = new VertexFormatElement(14, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
@@ -42,8 +44,9 @@ public class IrisVertexFormats {
 		entityElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2); // 32
 		entityElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL); // 35
 		entityElements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING); // 36
-		entityElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT); // 44
-		entityElements.put("at_tangent", TANGENT_ELEMENT); // 48
+		entityElements.put("iris_Entity", ENTITY_ID_ELEMENT); // 40
+		entityElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT); // 48
+		entityElements.put("at_tangent", TANGENT_ELEMENT); // 52
 
 		TERRAIN = new VertexFormat(terrainElements.build());
 		ENTITY = new VertexFormat(entityElements.build());

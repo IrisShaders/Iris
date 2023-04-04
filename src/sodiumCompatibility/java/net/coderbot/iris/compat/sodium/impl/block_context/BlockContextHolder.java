@@ -13,6 +13,7 @@ public class BlockContextHolder {
 
 	public short blockId;
 	public short renderType;
+	public boolean ignoreMidBlock;
 
 	public BlockContextHolder() {
 		this.blockStateIds = Object2IntMaps.emptyMap();

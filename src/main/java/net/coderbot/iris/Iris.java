@@ -291,7 +291,7 @@ public class Iris {
 		// Attempt to load an external shaderpack if it is available
 		Optional<String> externalName = irisConfig.getShaderPackName();
 
-		if (!externalName.isPresent()) {
+		if (externalName.isEmpty()) {
 			logger.info("Shaders are disabled because no valid shaderpack is selected");
 
 			setShadersDisabled();

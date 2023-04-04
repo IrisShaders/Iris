@@ -108,7 +108,7 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 		types.put(type, new MapDigraph<>());
 	}
 
-    public Iterable<RenderType> getRenderOrder() {
+    public List<RenderType> getRenderOrder() {
         int layerCount = 0;
 
         for (Digraph<RenderType> graph : types.values()) {
