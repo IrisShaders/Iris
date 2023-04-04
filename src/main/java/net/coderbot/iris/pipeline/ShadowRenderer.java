@@ -7,6 +7,7 @@ import com.mojang.math.Matrix4f;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
+import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.coderbot.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
@@ -495,9 +496,11 @@ public class ShadowRenderer {
 
 		levelRenderer.getLevel().getProfiler().popPush("draw entities");
 
-		// NB: Don't try to draw the translucent parts of entities afterwards. It'll cause problems since some
+		// NB: Don't try to draw the translucent parts of entities afterwards in the shadow pass. It'll cause problems since some
 		// shader packs assume that everything drawn afterwards is actually translucent and should cast a colored
 		// shadow...
+		if (bufferSource instanceof FullyBufferedMultiBufferSource fullyBufferedMultiBufferSource) fullyBufferedMultiBufferSource.readyUp();
+
 		bufferSource.endBatch();
 
 		copyPreTranslucentDepth(levelRenderer);

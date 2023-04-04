@@ -63,7 +63,7 @@ public class TranslucencyRenderOrderManager implements RenderOrderManager {
 		renderTypes.get(type).clear();
 	}
 
-	public Iterable<RenderType> getRenderOrder() {
+	public List<RenderType> getRenderOrder() {
         int layerCount = 0;
 
         for (LinkedHashSet<RenderType> set : renderTypes.values()) {

@@ -4,6 +4,7 @@ import net.coderbot.batchedentityrendering.impl.TransparencyType;
 import net.minecraft.client.renderer.RenderType;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 
 public class SimpleRenderOrderManager implements RenderOrderManager {
     private final LinkedHashSet<RenderType> renderTypes;
@@ -39,7 +40,7 @@ public class SimpleRenderOrderManager implements RenderOrderManager {
 
 	}
 
-	public Iterable<RenderType> getRenderOrder() {
-        return renderTypes;
+	public List<RenderType> getRenderOrder() {
+        return List.copyOf(renderTypes);
     }
 }
