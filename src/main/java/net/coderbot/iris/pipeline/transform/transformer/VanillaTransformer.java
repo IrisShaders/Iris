@@ -20,6 +20,8 @@ public class VanillaTransformer {
 			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
 		}
 
+		AttributeTransformer.patchEntityId(t, tree, root, parameters);
+
 		CommonTransformer.transform(t, tree, root, parameters, false);
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
