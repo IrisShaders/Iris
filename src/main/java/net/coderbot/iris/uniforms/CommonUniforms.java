@@ -84,12 +84,6 @@ public final class CommonUniforms {
 
 		}, StateUpdateNotifiers.bindTextureNotifier);
 
-		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity,
-				CapturedRenderingState.INSTANCE.getEntityIdNotifier());
-
-		uniforms.uniform1i("blockEntityId", CapturedRenderingState.INSTANCE::getCurrentRenderedBlockEntity,
-				CapturedRenderingState.INSTANCE.getBlockEntityIdNotifier());
-
 		uniforms.uniform4i("blendFunc", () -> {
 			GlStateManager.BlendState blend = GlStateManagerAccessor.getBLEND();
 

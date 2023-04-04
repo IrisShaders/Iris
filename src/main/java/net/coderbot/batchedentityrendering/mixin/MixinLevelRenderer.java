@@ -69,6 +69,10 @@ public class MixinLevelRenderer {
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void batchedentityrendering$beginTranslucents(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {
+		if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource fullyBufferedMultiBufferSource) {
+			fullyBufferedMultiBufferSource.readyUp();
+		}
+
 		if (BlockRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
 			Minecraft.getInstance().getProfiler().popPush("entity_draws_opaque");
 			if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource source) {

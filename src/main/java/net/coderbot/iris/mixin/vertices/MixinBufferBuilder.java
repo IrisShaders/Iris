@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import org.joml.Vector3f;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.BufferBuilderPolygonView;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
@@ -172,8 +173,14 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			// ENTITY_ELEMENT
 			this.putShort(0, currentBlock);
 			this.putShort(2, currentRenderType);
-			this.nextElement();
+		} else {
+			// ENTITY_ELEMENT
+			this.putShort(0, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+			this.putShort(2, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
 		}
+
+		this.nextElement();
+
 		// MID_TEXTURE_ELEMENT
 		this.putFloat(0, 0);
 		this.putFloat(4, 0);
@@ -238,7 +245,7 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 		} else {
 			midUOffset = 12;
 			midVOffset = 8;
-			normalOffset = 16;
+			normalOffset = 20;
 			tangentOffset = 4;
 		}
 

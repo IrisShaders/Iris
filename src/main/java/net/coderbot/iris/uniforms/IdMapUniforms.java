@@ -43,7 +43,6 @@ public final class IdMapUniforms {
 		// TODO: Figure out API.
 			//.uniformVanilla3f(PER_FRAME, "heldBlockLightColor", mainHandSupplier::getLightColor)
 			//.uniformVanilla3f(PER_FRAME, "heldBlockLightColor2", offHandSupplier::getLightColor);
-
 	}
 
 	/**

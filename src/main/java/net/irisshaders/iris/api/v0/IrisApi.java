@@ -25,7 +25,7 @@ public interface IrisApi {
 	 * if they wish to check whether given API calls are available on
 	 * the currently installed Iris version.
 	 *
-	 * @return The current minor revision. Currently, revision 1.
+	 * @return The current minor revision. Currently, revision 2.
 	 */
 	int getMinorApiRevision();
 
@@ -105,4 +105,12 @@ public interface IrisApi {
 	 * @since API 0.1
 	 */
 	IrisTextVertexSink createTextVertexSink(int maxQuadCount, IntFunction<ByteBuffer> bufferProvider);
+
+	/**
+	 * Gets the sun path rotation used by the current shader pack.
+	 *
+	 * @return The sun path rotation as specified by the shader pack, or 0 if no shader pack is in use.
+	 * @since API v0.2
+	 */
+	float getSunPathRotation();
 }

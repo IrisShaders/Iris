@@ -22,6 +22,7 @@ public class BlockRenderingSettings {
 	private boolean useSeparateAo;
 	private boolean useExtendedVertexFormat;
 	private boolean separateEntityDraws;
+	private boolean voxelizeLightBlocks;
 
 	public BlockRenderingSettings() {
 		reloadRequired = false;
@@ -32,6 +33,7 @@ public class BlockRenderingSettings {
 		useSeparateAo = false;
 		useExtendedVertexFormat = false;
 		separateEntityDraws = false;
+		voxelizeLightBlocks = false;
 	}
 
 	public boolean isReloadRequired() {
@@ -131,6 +133,19 @@ public class BlockRenderingSettings {
 
 		this.reloadRequired = true;
 		this.useExtendedVertexFormat = useExtendedVertexFormat;
+	}
+
+	public boolean shouldVoxelizeLightBlocks() {
+		return voxelizeLightBlocks;
+	}
+
+	public void setVoxelizeLightBlocks(boolean voxelizeLightBlocks) {
+		if (voxelizeLightBlocks == this.voxelizeLightBlocks) {
+			return;
+		}
+
+		this.reloadRequired = true;
+		this.voxelizeLightBlocks = voxelizeLightBlocks;
 	}
 
     public boolean shouldSeparateEntityDraws() {

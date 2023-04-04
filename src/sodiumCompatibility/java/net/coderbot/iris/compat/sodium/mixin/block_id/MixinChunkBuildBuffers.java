@@ -65,4 +65,9 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 	public void iris$resetBlockContext() {
 		this.contextHolder.reset();
 	}
+
+	@Override
+	public void iris$ignoreMidBlock(boolean state) {
+		this.contextHolder.ignoreMidBlock = state;
+	}
 }

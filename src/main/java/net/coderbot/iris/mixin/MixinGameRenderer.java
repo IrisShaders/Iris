@@ -219,6 +219,7 @@ public class MixinGameRenderer {
 		"getRendertypeEntityTranslucentShader",
 		"getRendertypeEntityTranslucentCullShader",
 		"getRendertypeItemEntityTranslucentCullShader",
+		"getRendertypeEntityNoOutlineShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityTranslucentShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
@@ -226,7 +227,7 @@ public class MixinGameRenderer {
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
 		} else if (isBlockEntities()) {
-			override(ShaderKey.BLOCK_ENTITY_DIFFUSE, cir);
+			override(ShaderKey.BE_TRANSLUCENT, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.ENTITIES_TRANSLUCENT, cir);
 		}
@@ -264,8 +265,7 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
-			"getRendertypeEntitySolidShader",
-			"getRendertypeEntityNoOutlineShader",
+			"getRendertypeEntitySolidShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntitySolidDiffuseShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {

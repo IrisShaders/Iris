@@ -17,10 +17,8 @@ public class CapturedRenderingState {
 	private float darknessLightFactor;
 	private float tickDelta;
 	private int currentRenderedBlockEntity;
-	private Runnable blockEntityIdListener = null;
 
 	private int currentRenderedEntity = -1;
-	private Runnable entityIdListener = null;
 
 	private float currentAlphaTest;
 	private float cloudTime;
@@ -74,10 +72,6 @@ public class CapturedRenderingState {
 
 	public void setCurrentBlockEntity(int entity) {
 		this.currentRenderedBlockEntity = entity;
-
-		if (this.blockEntityIdListener != null) {
-			this.blockEntityIdListener.run();
-		}
 	}
 
 	public int getCurrentRenderedBlockEntity() {
@@ -86,18 +80,6 @@ public class CapturedRenderingState {
 
 	public void setCurrentEntity(int entity) {
 		this.currentRenderedEntity = entity;
-
-		if (this.entityIdListener != null) {
-			this.entityIdListener.run();
-		}
-	}
-
-	public ValueUpdateNotifier getEntityIdNotifier() {
-		return listener -> this.entityIdListener = listener;
-	}
-
-	public ValueUpdateNotifier getBlockEntityIdNotifier() {
-		return listener -> this.blockEntityIdListener = listener;
 	}
 
 	public int getCurrentRenderedEntity() {

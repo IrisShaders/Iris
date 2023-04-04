@@ -18,6 +18,7 @@ public class ProgramCreator {
 
 		// TODO: This is *really* hardcoded, we need to refactor this to support external calls
 		// to glBindAttribLocation
+		GlStateManager._glBindAttribLocation(program, 11, "iris_Entity");
 		GlStateManager._glBindAttribLocation(program, 11, "mc_Entity");
 		GlStateManager._glBindAttribLocation(program, 12, "mc_midTexCoord");
 		GlStateManager._glBindAttribLocation(program, 13, "at_tangent");
