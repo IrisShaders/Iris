@@ -17,6 +17,7 @@ public class BlockRenderingSettings {
 	private Object2IntMap<BlockState> blockStateIds;
 	private Map<Block, RenderType> blockTypeIds;
 	private Object2IntFunction<NamespacedId> entityIds;
+	private Object2IntFunction<NamespacedId> itemIds;
 	private float ambientOcclusionLevel;
 	private boolean disableDirectionalShading;
 	private boolean hasVillagerConversionId;
@@ -62,6 +63,11 @@ public class BlockRenderingSettings {
 		return entityIds;
 	}
 
+	@Nullable
+	public Object2IntFunction<NamespacedId> getItemIds() {
+		return itemIds;
+	}
+
 	public void setBlockStateIds(Object2IntMap<BlockState> blockStateIds) {
 		if (this.blockStateIds != null && this.blockStateIds.equals(blockStateIds)) {
 			return;
@@ -84,6 +90,11 @@ public class BlockRenderingSettings {
 		// note: no reload needed, entities are rebuilt every frame.
 		this.entityIds = entityIds;
 		this.hasVillagerConversionId = entityIds.containsKey(new NamespacedId("minecraft", "zombie_villager_converting"));
+	}
+
+	public void setItemIds(Object2IntFunction<NamespacedId> itemIds) {
+		// note: no reload needed, entities are rebuilt every frame.
+		this.itemIds = itemIds;
 	}
 
 	public float getAmbientOcclusionLevel() {
