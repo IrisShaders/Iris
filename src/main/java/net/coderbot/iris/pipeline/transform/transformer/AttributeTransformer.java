@@ -16,6 +16,7 @@ import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.AttributeParameters;
 import net.coderbot.iris.pipeline.transform.parameter.GeometryInfoParameters;
 import net.coderbot.iris.pipeline.transform.parameter.Parameters;
+import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
 
 /**
  * Implements AttributeShaderTransformer
@@ -61,7 +62,6 @@ public class AttributeTransformer {
 		patchTextureMatrices(t, tree, root, parameters.inputs.lightmap);
 
 		if (parameters.inputs.overlay) {
-			patchEntityId(t, tree, root, parameters);
 			patchOverlayColor(t, tree, root, parameters);
 		}
 
@@ -127,10 +127,10 @@ public class AttributeTransformer {
 			"uniform vec4 entityColor;", ParseShape.EXTERNAL_DECLARATION);
 
 	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntEntityId = new AutoHintedMatcher<>(
-			"uniform int entityId;", Matcher.externalDeclarationPattern);
+			"uniform int entityId;", ParseShape.EXTERNAL_DECLARATION);
 
 	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntBlockEntityId = new AutoHintedMatcher<>(
-			"uniform int blockEntityId;", Matcher.externalDeclarationPattern);
+			"uniform int blockEntityId;", ParseShape.EXTERNAL_DECLARATION);
 
 	// Add entity color -> overlay color attribute support.
 	public static void patchOverlayColor(
@@ -194,7 +194,7 @@ public class AttributeTransformer {
 			ASTParser t,
 			TranslationUnit tree,
 			Root root,
-			OverlayParameters parameters) {
+			VanillaParameters parameters) {
 		// delete original declaration
 		root.processMatches(t, uniformIntEntityId, ASTNode::detachAndDelete);
 		root.processMatches(t, uniformIntBlockEntityId, ASTNode::detachAndDelete);
@@ -217,7 +217,7 @@ public class AttributeTransformer {
 			// Create our own main function to wrap the existing main function, so that we
 			// can pass through the overlay color at the end to the geometry or fragment
 			// stage.
-			tree.prependMain(t,
+			tree.prependMainFunctionBody(t,
 					"iris_entityInfo = iris_Entity;");
 		} else if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
 			root.replaceReferenceExpressions(t, "entityId",
@@ -232,7 +232,7 @@ public class AttributeTransformer {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"flat out ivec2 iris_entityInfoGS;",
 					"flat in ivec2 iris_entityInfo[];");
-			tree.prependMain(t,
+			tree.prependMainFunctionBody(t,
 					"iris_EntityGS = iris_Entity[0];");
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
