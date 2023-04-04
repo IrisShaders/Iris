@@ -31,6 +31,7 @@ public class PackDirectives {
 	private boolean moon;
 	private boolean rainDepth;
 	private boolean separateAo;
+	private boolean voxelizeLightBlocks;
 	private boolean separateEntityDraws;
 	private boolean oldLighting;
 	private boolean concurrentCompute;
@@ -67,6 +68,7 @@ public class PackDirectives {
 		moon = properties.getMoon().orElse(true);
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
+		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
 		concurrentCompute = properties.getConcurrentCompute().orElse(false);
@@ -83,6 +85,7 @@ public class PackDirectives {
 		this(supportedRenderTargets, new PackShadowDirectives(directives.getShadowDirectives()));
 		cloudSetting = directives.cloudSetting;
 		separateAo = directives.separateAo;
+		voxelizeLightBlocks = directives.voxelizeLightBlocks;
 		separateEntityDraws = directives.separateEntityDraws;
 		oldLighting = directives.oldLighting;
 		concurrentCompute = directives.concurrentCompute;
@@ -152,6 +155,10 @@ public class PackDirectives {
 
 	public boolean shouldUseSeparateAo() {
 		return separateAo;
+	}
+
+	public boolean shouldVoxelizeLightBlocks() {
+		return voxelizeLightBlocks;
 	}
 
 	public boolean shouldUseSeparateEntityDraws() {

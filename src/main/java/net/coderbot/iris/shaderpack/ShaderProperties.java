@@ -71,6 +71,7 @@ public class ShaderProperties {
 	private OptionalBoolean concurrentCompute = OptionalBoolean.DEFAULT;
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
+	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateEntityDraws = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowCulling = OptionalBoolean.DEFAULT;
@@ -160,6 +161,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "allowConcurrentCompute", bool -> concurrentCompute = bool);
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
+			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
 			handleBooleanDirective(key, value, "separateEntityDraws", bool -> separateEntityDraws = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
@@ -702,6 +704,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getSeparateAo() {
 		return separateAo;
+	}
+
+	public OptionalBoolean getVoxelizeLightBlocks() {
+		return voxelizeLightBlocks;
 	}
 
 	public OptionalBoolean getSeparateEntityDraws() {
