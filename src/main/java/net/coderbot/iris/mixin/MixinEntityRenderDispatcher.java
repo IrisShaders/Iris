@@ -2,8 +2,12 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
@@ -23,11 +27,32 @@ public class MixinEntityRenderDispatcher {
 	private static final String RENDER_BLOCK_SHADOW =
 		"renderBlockShadow(Lcom/mojang/blaze3d/vertex/PoseStack$Pose;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;DDDFF)V";
 
+	@Unique
+	private static final NamespacedId id = new NamespacedId("minecraft", "entity_shadow");
+
+	@Unique
+	private static int cachedId;
+
 	@Inject(method = RENDER_SHADOW, at = @At("HEAD"), cancellable = true)
 	private static void iris$maybeSuppressEntityShadow(PoseStack poseStack, MultiBufferSource bufferSource,
 													   Entity entity, float opacity, float tickDelta, LevelReader level,
 													   float radius, CallbackInfo ci) {
-		iris$maybeSuppressShadow(ci);
+		if (!iris$maybeSuppressShadow(ci)) {
+			Object2IntFunction<NamespacedId> entityIds = BlockRenderingSettings.INSTANCE.getEntityIds();
+
+			if (entityIds == null) {
+				return;
+			}
+
+			cachedId = CapturedRenderingState.INSTANCE.getCurrentRenderedEntity();
+			CapturedRenderingState.INSTANCE.setCurrentEntity(entityIds.getInt(id));
+		}
+	}
+
+	@Inject(method = RENDER_SHADOW, at = @At("RETURN"))
+	private static void restoreShadow(PoseStack pPoseStack0, MultiBufferSource pMultiBufferSource1, Entity pEntity2, float pFloat3, float pFloat4, LevelReader pLevelReader5, float pFloat6, CallbackInfo ci) {
+		CapturedRenderingState.INSTANCE.setCurrentEntity(cachedId);
+		cachedId = 0;
 	}
 
 	// The underlying method called by renderShadow.
@@ -49,11 +74,14 @@ public class MixinEntityRenderDispatcher {
 	}
 
 	@Unique
-	private static void iris$maybeSuppressShadow(CallbackInfo ci) {
+	private static boolean iris$maybeSuppressShadow(CallbackInfo ci) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null && pipeline.shouldDisableVanillaEntityShadows()) {
 			ci.cancel();
+			return true;
 		}
+
+		return false;
 	}
 }
