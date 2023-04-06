@@ -40,8 +40,8 @@ public final class IdMapUniforms {
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2", offHandSupplier::getIntID)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", mainHandSupplier::getLightValue)
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", offHandSupplier::getLightValue)
-			.uniformVanilla3f(PER_FRAME, "heldBlockLightColor", mainHandSupplier::getLightColor)
-			.uniformVanilla3f(PER_FRAME, "heldBlockLightColor2", offHandSupplier::getLightColor);
+			.uniform3f(PER_FRAME, "heldBlockLightColor", mainHandSupplier::getLightColor)
+			.uniform3f(PER_FRAME, "heldBlockLightColor2", offHandSupplier::getLightColor);
 	}
 
 	/**

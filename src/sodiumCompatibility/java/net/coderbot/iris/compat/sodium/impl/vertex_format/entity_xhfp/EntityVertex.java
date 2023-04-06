@@ -26,11 +26,11 @@ public final class EntityVertex {
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;
 	private static final int OFFSET_TEXTURE = 16;
-	private static final int OFFSET_MID_TEXTURE = 40;
+	private static final int OFFSET_MID_TEXTURE = 42;
 	private static final int OFFSET_OVERLAY = 24;
 	private static final int OFFSET_LIGHT = 28;
 	private static final int OFFSET_NORMAL = 32;
-	private static final int OFFSET_TANGENT = 48;
+	private static final int OFFSET_TANGENT = 50;
 
 	private static Vector3f lastNormal = new Vector3f();
 
@@ -57,6 +57,7 @@ public final class EntityVertex {
 
 		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 		MemoryUtil.memPutShort(ptr + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+		MemoryUtil.memPutShort(ptr + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 
 	}
 
@@ -82,6 +83,7 @@ public final class EntityVertex {
 
 		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 		MemoryUtil.memPutShort(ptr + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+		MemoryUtil.memPutShort(ptr + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 
 	}
 
@@ -140,7 +142,7 @@ public final class EntityVertex {
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quadView);
 
 		for (long vertex = 0; vertex < 4; vertex++) {
-			MemoryUtil.memPutInt(ptr + 48 - STRIDE * vertex, tangent);
+			MemoryUtil.memPutInt(ptr + 50 - STRIDE * vertex, tangent);
 		}
 	}
 }
