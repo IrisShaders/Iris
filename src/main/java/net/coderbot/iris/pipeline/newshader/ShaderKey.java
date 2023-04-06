@@ -54,7 +54,7 @@ public enum ShaderKey {
 	BLOCK_ENTITY           (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	BLOCK_ENTITY_BRIGHT    (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.FULLBRIGHT),
 	BLOCK_ENTITY_DIFFUSE   (ProgramId.Block,       AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
-	BE_TRANSLUCENT         (ProgramId.BlockTrans,  AlphaTests.OFF,             IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
+	BE_TRANSLUCENT         (ProgramId.BlockTrans,  AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY,                        FogMode.PER_VERTEX,   LightingModel.DIFFUSE_LM),
 	BEACON                 (ProgramId.BeaconBeam,  AlphaTests.OFF,             DefaultVertexFormat.BLOCK,                       FogMode.PER_FRAGMENT, LightingModel.FULLBRIGHT),
 	GLINT                  (ProgramId.ArmorGlint,  AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_TEX,                FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),
 	LINES                  (ProgramId.Line,        AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_NORMAL,       FogMode.PER_VERTEX,   LightingModel.LIGHTMAP  ),

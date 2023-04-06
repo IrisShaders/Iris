@@ -124,7 +124,14 @@ public class IrisExclusiveUniforms {
 			});
 			uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "heightLimit", () -> {
 				if (level != null) {
-					return level.getMaxBuildHeight();
+					return level.dimensionType().height();
+				} else {
+					return 256;
+				}
+			});
+			uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "logicalHeightLimit", () -> {
+				if (level != null) {
+					return level.dimensionType().logicalHeight();
 				} else {
 					return 256;
 				}
