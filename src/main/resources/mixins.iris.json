@@ -54,6 +54,8 @@
     "MixinVertexBuffer",
     "entity_render_context.MixinBlockEntityRenderDispatcher",
     "entity_render_context.MixinEntityRenderDispatcher",
+    "entity_render_context.MixinHumanoidArmorLayer",
+    "entity_render_context.MixinItemRenderer",
     "fabulous.MixinDisableFabulousGraphics",
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",

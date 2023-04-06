@@ -132,6 +132,9 @@ public class AttributeTransformer {
 	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntBlockEntityId = new AutoHintedMatcher<>(
 			"uniform int blockEntityId;", ParseShape.EXTERNAL_DECLARATION);
 
+	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntCurrentRenderedItemId = new AutoHintedMatcher<>(
+			"uniform int currentRenderedItemId;", ParseShape.EXTERNAL_DECLARATION);
+
 	// Add entity color -> overlay color attribute support.
 	public static void patchOverlayColor(
 			ASTParser t,
@@ -198,6 +201,7 @@ public class AttributeTransformer {
 		// delete original declaration
 		root.processMatches(t, uniformIntEntityId, ASTNode::detachAndDelete);
 		root.processMatches(t, uniformIntBlockEntityId, ASTNode::detachAndDelete);
+		root.processMatches(t, uniformIntCurrentRenderedItemId, ASTNode::detachAndDelete);
 
 
 		if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
@@ -206,12 +210,18 @@ public class AttributeTransformer {
 
 			root.replaceReferenceExpressions(t, "blockEntityId",
 				"iris_entityInfo[0].y");
+
+			root.replaceReferenceExpressions(t, "currentRenderedItemId",
+				"iris_entityInfo[0].z");
 		} else {
 			root.replaceReferenceExpressions(t, "entityId",
 				"iris_entityInfo.x");
 
 			root.replaceReferenceExpressions(t, "blockEntityId",
 				"iris_entityInfo.y");
+
+			root.replaceReferenceExpressions(t, "currentRenderedItemId",
+				"iris_entityInfo.z");
 		}
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
@@ -219,8 +229,8 @@ public class AttributeTransformer {
 			// TODO: We're exposing entityColor to this stage even if it isn't declared in
 			// this stage. But this is needed for the pass-through behavior.
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"flat out ivec2 iris_entityInfo;",
-					"in ivec2 iris_Entity;");
+					"flat out ivec3 iris_entityInfo;",
+					"in ivec3 iris_Entity;");
 
 			// Create our own main function to wrap the existing main function, so that we
 			// can pass through the overlay color at the end to the geometry or fragment
@@ -230,13 +240,13 @@ public class AttributeTransformer {
 		} else if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
 			// TODO: this is passthrough behavior
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"flat out ivec2 iris_entityInfoGS;",
-					"flat in ivec2 iris_entityInfo[];");
+					"flat out ivec3 iris_entityInfoGS;",
+					"flat in ivec3 iris_entityInfo[];");
 			tree.prependMainFunctionBody(t,
 					"iris_entityInfoGS = iris_entityInfo[0];");
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"flat in ivec2 iris_entityInfo;");
+					"flat in ivec3 iris_entityInfo;");
 
 			// Different output name to avoid a name collision in the geometry shader.
 			if (parameters.hasGeometry) {

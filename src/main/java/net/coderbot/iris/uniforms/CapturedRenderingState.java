@@ -19,6 +19,7 @@ public class CapturedRenderingState {
 	private int currentRenderedBlockEntity;
 
 	private int currentRenderedEntity = -1;
+	private int currentRenderedItem = -1;
 
 	private float currentAlphaTest;
 	private float cloudTime;
@@ -84,6 +85,14 @@ public class CapturedRenderingState {
 
 	public int getCurrentRenderedEntity() {
 		return currentRenderedEntity;
+	}
+
+	public void setCurrentRenderedItem(int item) {
+		this.currentRenderedItem = item;
+	}
+
+	public int getCurrentRenderedItem() {
+		return currentRenderedItem;
 	}
 
     public float getCurrentAlphaTest() {
