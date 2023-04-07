@@ -733,6 +733,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IrisSamplers.addLevelSamplers(samplers, this, whitePixel, availability);
 		IrisSamplers.addWorldDepthSamplers(samplerHolder, this.renderTargets);
 		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
+		IrisSamplers.addCustomImages(samplerHolder, customImages);
 
 		if (isShadowPass || IrisSamplers.hasShadowSamplers(samplerHolder)) {
 			if (!isShadowPass) {
