@@ -732,7 +732,7 @@ public class ShaderProperties {
 
 	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
 		// Before is implied if separateEntityDraws is true.
-		if (separateEntityDraws == OptionalBoolean.TRUE) return Optional.of(ParticleRenderingSettings.BEFORE);
+		if (separateEntityDraws == OptionalBoolean.TRUE) return Optional.of(ParticleRenderingSettings.MIXED);
 		return particleRenderingSettings;
 	}
 
