@@ -61,7 +61,11 @@ public class VanillaCoreTransformer {
 		if (parameters.type == PatchShaderType.VERTEX) {
 			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(iris_Position, 1.0)");
 			root.rename("vaPosition", "iris_Position");
-			root.rename("vaColor", "iris_Color");
+			if (parameters.inputs.hasColor()) {
+				root.replaceReferenceExpressions(t, "vaColor", "iris_Color * iris_ColorModulator");
+			} else {
+				root.replaceReferenceExpressions(t, "vaColor", "iris_ColorModulator");
+			}
 			root.rename("gl_Color", "iris_Color");
 			root.rename("vaNormal", "iris_Normal");
 			root.rename("gl_Normal", "iris_Normal");
@@ -73,6 +77,7 @@ public class VanillaCoreTransformer {
 			root.rename("vaUV2", "iris_UV2");
 
 			addIfNotExists(root, t, tree, "iris_Color", Type.F32VEC4, StorageType.IN);
+			addIfNotExists(root, t, tree, "iris_ColorModulator", Type.F32VEC4, StorageType.UNIFORM);
 			addIfNotExists(root, t, tree, "iris_Position", Type.F32VEC3, StorageType.IN);
 			addIfNotExists(root, t, tree, "iris_Normal", Type.F32VEC3, StorageType.IN);
 			addIfNotExists(root, t, tree, "iris_UV0", Type.F32VEC2, StorageType.IN);

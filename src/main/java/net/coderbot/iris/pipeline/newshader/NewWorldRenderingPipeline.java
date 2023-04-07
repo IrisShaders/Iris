@@ -732,6 +732,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false);
 		IrisSamplers.addCustomTextures(samplerHolder, customTextureManager.getIrisCustomTextures());
 		IrisImages.addRenderTargetImages(images, flipped, renderTargets);
+		IrisImages.addCustomImages(images, customImages);
 
 		if (!shouldBindPBR) {
 			shouldBindPBR = IrisSamplers.hasPBRSamplers(samplerHolder);
@@ -740,6 +741,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IrisSamplers.addLevelSamplers(samplers, this, whitePixel, availability);
 		IrisSamplers.addWorldDepthSamplers(samplerHolder, this.renderTargets);
 		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
+		IrisSamplers.addCustomImages(samplerHolder, customImages);
 
 		if (isShadowPass || IrisSamplers.hasShadowSamplers(samplerHolder)) {
 			if (!isShadowPass) {
