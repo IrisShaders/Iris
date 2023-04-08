@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.options;
+package net.irisshaders.iris.compat.sodium.impl.options;
 
 import java.util.function.BooleanSupplier;
 

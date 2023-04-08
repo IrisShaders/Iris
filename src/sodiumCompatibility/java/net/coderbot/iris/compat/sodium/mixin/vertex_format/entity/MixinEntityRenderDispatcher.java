@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.vertex_format.entity;
+package net.irisshaders.iris.compat.sodium.mixin.vertex_format.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -8,16 +8,14 @@ import me.jellysquid.mods.sodium.client.render.vertex.formats.ModelVertex;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
 import me.jellysquid.mods.sodium.common.util.MatrixHelper;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
-import net.coderbot.iris.vertices.ImmediateState;
-import net.coderbot.iris.vertices.NormalHelper;
+import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
+import net.irisshaders.iris.vertices.ImmediateState;
+import net.irisshaders.iris.vertices.NormalHelper;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

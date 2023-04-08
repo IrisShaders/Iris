@@ -1,8 +1,8 @@
-package net.coderbot.iris.compat.sodium.mixin.shadow_map.frustum;
+package net.irisshaders.iris.compat.sodium.mixin.shadow_map.frustum;
 
 import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
 import me.jellysquid.mods.sodium.client.util.frustum.FrustumAdapter;
-import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
+import net.irisshaders.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -14,7 +14,7 @@ public abstract class MixinAdvancedShadowCullingFrustum implements Frustum, Frus
 	@Override
 	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		// TODO: Visibility.INSIDE
-		return switch(fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ)) {
+		return switch (fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ)) {
 			case 0 -> Visibility.OUTSIDE;
 			case 1 -> Visibility.INSIDE;
 			case 2 -> Visibility.INTERSECT;

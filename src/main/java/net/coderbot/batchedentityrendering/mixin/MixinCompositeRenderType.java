@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "net/minecraft/client/renderer/RenderType$CompositeRenderType")
 public abstract class MixinCompositeRenderType extends RenderType implements BlendingStateHolder {
 	private static final String INIT =
-			"<init>(Ljava/lang/String;Lcom/mojang/blaze3d/vertex/VertexFormat;Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;IZZLnet/minecraft/client/renderer/RenderType$CompositeState;)V";
+		"<init>(Ljava/lang/String;Lcom/mojang/blaze3d/vertex/VertexFormat;Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;IZZLnet/minecraft/client/renderer/RenderType$CompositeState;)V";
 
 	@Unique
 	private TransparencyType transparencyType;
@@ -34,7 +34,7 @@ public abstract class MixinCompositeRenderType extends RenderType implements Ble
 		} else if (transparency == RenderStateShardAccessor.getNO_TRANSPARENCY()) {
 			transparencyType = TransparencyType.OPAQUE;
 		} else if (transparency == RenderStateShardAccessor.getGLINT_TRANSPARENCY() ||
-				transparency == RenderStateShardAccessor.getCRUMBLING_TRANSPARENCY()) {
+			transparency == RenderStateShardAccessor.getCRUMBLING_TRANSPARENCY()) {
 			transparencyType = TransparencyType.DECAL;
 		} else {
 			transparencyType = TransparencyType.GENERAL_TRANSPARENT;

@@ -61,11 +61,9 @@
   "options.iris.shadowDistance.sodium_tooltip": "Varjude nähtavuskaugus määrab, kui kaugel olevat maastikku saab varjutuskäigul renderdada. Väiksemad kaugused tähendavad vähema maastiku renderdamist, mis parandab kaadrisagedust. Seda valikut ei saa muuta pakkide puhul, mis määravad varjude nähtavuskauguse ise. Tegelik varjude nähtavuskaugus on piiratud nähtavuskauguse valikuga.",
   "options.iris.gui.hide": "Peida liides",
   "options.iris.gui.show": "Kuva liides",
-  
   "pack.iris.select.title": "Vali",
   "pack.iris.configure.title": "Seadista",
   "pack.iris.list.label": "+ Varjutajapakkide lisamiseks sikuta need siia",
-
   "label.iris.true": "Sees",
   "label.iris.false": "Väljas"
 }

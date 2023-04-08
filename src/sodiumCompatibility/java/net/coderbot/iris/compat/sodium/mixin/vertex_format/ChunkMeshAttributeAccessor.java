@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.vertex_format;
+package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import org.spongepowered.asm.mixin.Mixin;

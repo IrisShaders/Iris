@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.vertex_format;
+package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeBinding;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
@@ -6,10 +6,9 @@ import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
 import me.jellysquid.mods.sodium.client.render.chunk.RegionChunkRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexType;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
+import net.irisshaders.iris.block_rendering.BlockRenderingSettings;
+import net.irisshaders.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
+import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,16 +34,16 @@ public class MixinRegionChunkRenderer {
 		GlVertexFormat<ChunkMeshAttribute> vertexFormat = vertexType.getVertexFormat();
 
 		vertexAttributeBindings = ArrayUtils.addAll(vertexAttributeBindings,
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_BLOCK,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_BLOCK)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_BLOCK,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_BLOCK)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))
 		);
 	}
 }

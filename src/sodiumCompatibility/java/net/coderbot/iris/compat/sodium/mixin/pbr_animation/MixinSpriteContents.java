@@ -1,8 +1,8 @@
-package net.coderbot.iris.compat.sodium.mixin.pbr_animation;
+package net.irisshaders.iris.compat.sodium.mixin.pbr_animation;
 
 import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
-import net.coderbot.iris.texture.pbr.PBRSpriteHolder;
-import net.coderbot.iris.texture.pbr.SpriteContentsExtension;
+import net.irisshaders.iris.texture.pbr.PBRSpriteHolder;
+import net.irisshaders.iris.texture.pbr.SpriteContentsExtension;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.spongepowered.asm.mixin.Mixin;

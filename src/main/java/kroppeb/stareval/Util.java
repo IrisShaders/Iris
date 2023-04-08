@@ -7,7 +7,7 @@ public class Util {
 		init.accept(item);
 		return item;
 	}
-	
+
 }
 
 

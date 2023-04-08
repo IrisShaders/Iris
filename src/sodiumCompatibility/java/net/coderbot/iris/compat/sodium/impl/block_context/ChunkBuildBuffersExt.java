@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.block_context;
+package net.irisshaders.iris.compat.sodium.impl.block_context;
 
 import net.minecraft.world.level.block.state.BlockState;
 

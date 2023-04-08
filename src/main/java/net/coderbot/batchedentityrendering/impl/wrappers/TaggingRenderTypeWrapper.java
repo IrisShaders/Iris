@@ -9,60 +9,60 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class TaggingRenderTypeWrapper extends RenderType implements WrappableRenderType {
-    private final int tag;
-    private final RenderType wrapped;
+	private final int tag;
+	private final RenderType wrapped;
 
-    public TaggingRenderTypeWrapper(String name, RenderType wrapped, int tag) {
-        super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
-                wrapped.affectsCrumbling(), shouldSortOnUpload(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
+	public TaggingRenderTypeWrapper(String name, RenderType wrapped, int tag) {
+		super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
+			wrapped.affectsCrumbling(), shouldSortOnUpload(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
 
-        this.tag = tag;
-        this.wrapped = wrapped;
-    }
+		this.tag = tag;
+		this.wrapped = wrapped;
+	}
 
-    @Override
-    public RenderType unwrap() {
-        return this.wrapped;
-    }
+	private static boolean shouldSortOnUpload(RenderType type) {
+		return ((RenderTypeAccessor) type).shouldSortOnUpload();
+	}
 
-    @Override
-    public Optional<RenderType> outline() {
-        return this.wrapped.outline();
-    }
+	@Override
+	public RenderType unwrap() {
+		return this.wrapped;
+	}
 
-    @Override
-    public boolean isOutline() {
-        return this.wrapped.isOutline();
-    }
+	@Override
+	public Optional<RenderType> outline() {
+		return this.wrapped.outline();
+	}
 
-    @Override
-    public boolean equals(@Nullable Object object) {
-        if (object == null) {
-            return false;
-        }
+	@Override
+	public boolean isOutline() {
+		return this.wrapped.isOutline();
+	}
 
-        if (object.getClass() != this.getClass()) {
-            return false;
-        }
+	@Override
+	public boolean equals(@Nullable Object object) {
+		if (object == null) {
+			return false;
+		}
 
-        TaggingRenderTypeWrapper other = (TaggingRenderTypeWrapper) object;
+		if (object.getClass() != this.getClass()) {
+			return false;
+		}
 
-        return this.tag == other.tag && Objects.equals(this.wrapped, other.wrapped);
-    }
+		TaggingRenderTypeWrapper other = (TaggingRenderTypeWrapper) object;
 
-    @Override
-    public int hashCode() {
-        // Add one so that we don't have the exact same hash as the wrapped object.
-        // This means that we won't have a guaranteed collision if we're inserted to a map alongside the unwrapped object.
-        return this.wrapped.hashCode() + 1;
-    }
+		return this.tag == other.tag && Objects.equals(this.wrapped, other.wrapped);
+	}
 
-    @Override
-    public String toString() {
-        return "tagged(" +tag+ "):" + this.wrapped.toString();
-    }
+	@Override
+	public int hashCode() {
+		// Add one so that we don't have the exact same hash as the wrapped object.
+		// This means that we won't have a guaranteed collision if we're inserted to a map alongside the unwrapped object.
+		return this.wrapped.hashCode() + 1;
+	}
 
-    private static boolean shouldSortOnUpload(RenderType type) {
-        return ((RenderTypeAccessor) type).shouldSortOnUpload();
-    }
+	@Override
+	public String toString() {
+		return "tagged(" + tag + "):" + this.wrapped.toString();
+	}
 }

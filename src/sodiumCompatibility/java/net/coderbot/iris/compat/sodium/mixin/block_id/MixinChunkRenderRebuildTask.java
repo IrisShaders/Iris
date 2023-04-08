@@ -1,23 +1,22 @@
-package net.coderbot.iris.compat.sodium.mixin.block_id;
+package net.irisshaders.iris.compat.sodium.mixin.block_id;
 
 import me.jellysquid.mods.sodium.client.gl.compile.ChunkBuildContext;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadWinding;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderCache;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderContext;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkRenderBounds;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkRenderData;
 import me.jellysquid.mods.sodium.client.render.chunk.tasks.ChunkRenderRebuildTask;
 import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
 import me.jellysquid.mods.sodium.client.util.task.CancellationSource;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
-import net.coderbot.iris.vertices.ExtendedDataHelper;
+import net.irisshaders.iris.block_rendering.BlockRenderingSettings;
+import net.irisshaders.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
+import net.irisshaders.iris.vertices.ExtendedDataHelper;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.chunk.VisGraph;
@@ -25,7 +24,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -38,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
  */
 @Mixin(ChunkRenderRebuildTask.class)
 public class MixinChunkRenderRebuildTask {
-	private ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
+	private final ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
 
 	@Inject(method = "performBuild", at = @At(value = "INVOKE",
 		target = "net/minecraft/world/level/block/state/BlockState.getRenderShape()" +
@@ -76,9 +74,9 @@ public class MixinChunkRenderRebuildTask {
 	}
 
 	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
-			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getChunkRenderType(" +
-						"Lnet/minecraft/world/level/block/state/BlockState;" +
-					")Lnet/minecraft/client/renderer/RenderType;"))
+		target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getChunkRenderType(" +
+			"Lnet/minecraft/world/level/block/state/BlockState;" +
+			")Lnet/minecraft/client/renderer/RenderType;"))
 	private RenderType iris$wrapGetBlockLayer(BlockState blockState, ChunkBuildContext context) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(blockState, ExtendedDataHelper.BLOCK_RENDER_TYPE);
@@ -88,9 +86,9 @@ public class MixinChunkRenderRebuildTask {
 	}
 
 	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
-			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getRenderLayer(" +
-						"Lnet/minecraft/world/level/material/FluidState;" +
-					")Lnet/minecraft/client/renderer/RenderType;"))
+		target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getRenderLayer(" +
+			"Lnet/minecraft/world/level/material/FluidState;" +
+			")Lnet/minecraft/client/renderer/RenderType;"))
 	private RenderType iris$wrapGetFluidLayer(FluidState fluidState, ChunkBuildContext context) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE);
@@ -100,7 +98,7 @@ public class MixinChunkRenderRebuildTask {
 	}
 
 	@Inject(method = "performBuild",
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;hasBlockEntity()Z"))
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;hasBlockEntity()Z"))
 	private void iris$resetContext(ChunkBuildContext buildContext, CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult> cir) {
 		if (buildContext.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) buildContext.buffers).iris$resetBlockContext();

@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
+package net.irisshaders.iris.compat.sodium.mixin.shader_overrides;
 
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import net.minecraft.client.renderer.RenderType;
@@ -17,7 +17,7 @@ public class MixinBlockRenderPass {
 	@Mutable
 	private float alphaCutoff;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
+	@Inject(method = "<init>", at = @At("RETURN"))
 	public void changeAlphaCutoff(String layer, int ordinal, RenderType renderType, boolean translucent, float alphaCutoff, CallbackInfo ci) {
 		if (renderType == RenderType.cutoutMipped()) {
 			this.alphaCutoff = 0.1F;

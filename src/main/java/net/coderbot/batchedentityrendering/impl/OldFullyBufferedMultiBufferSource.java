@@ -20,10 +20,9 @@ public class OldFullyBufferedMultiBufferSource extends MultiBufferSource.BufferS
 	private final Map<RenderType, BufferBuilder> bufferBuilders;
 	private final Object2IntMap<RenderType> unused;
 	private final Set<BufferBuilder> activeBuffers;
-	private boolean flushed;
-
 	private final Set<RenderType> typesThisFrame;
 	private final List<RenderType> typesInOrder;
+	private boolean flushed;
 
 	public OldFullyBufferedMultiBufferSource() {
 		super(new BufferBuilder(0), Collections.emptyMap());
@@ -97,7 +96,7 @@ public class OldFullyBufferedMultiBufferSource extends MultiBufferSource.BufferS
 
 			if (activeBuffers.contains(buffer)) {
 				throw new IllegalStateException(
-						"A buffer was simultaneously marked as inactive and as active, something is very wrong...");
+					"A buffer was simultaneously marked as inactive and as active, something is very wrong...");
 			}
 		});
 

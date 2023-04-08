@@ -1,12 +1,11 @@
-package net.coderbot.iris.compat.sodium.mixin.vertex_format;
+package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import me.jellysquid.mods.sodium.client.render.vertex.transform.CommonVertexElement;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisCommonVertexElements;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisCommonVertexElements;
-import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisCommonVertexElements;
+import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,39 +16,38 @@ import org.spongepowered.asm.mixin.Shadow;
 /**
  * Uses some rather hacky shenanigans to add a few new enum values to {@link ChunkMeshAttribute} corresponding to our
  * extended vertex attributes.
- *
+ * <p>
  * Credit goes to Nuclearfarts for the trick.
  */
 @Mixin(CommonVertexElement.class)
 public class MixinCommonVertexElements {
+	@Mutable
+	@Shadow
+	@Final
+	public static int COUNT;
 	@SuppressWarnings("target")
 	@Shadow(remap = false)
 	@Final
 	@Mutable
 	private static CommonVertexElement[] $VALUES;
 
-	@Mutable
-	@Shadow
-	@Final
-	public static int COUNT;
-
 	static {
 		int baseOrdinal = $VALUES.length;
 
 		IrisCommonVertexElements.TANGENT
-				= CommonVertexElementAccessor.createCommonVertexElement("TANGENT", baseOrdinal);
+			= CommonVertexElementAccessor.createCommonVertexElement("TANGENT", baseOrdinal);
 		IrisCommonVertexElements.MID_TEX_COORD
-				= CommonVertexElementAccessor.createCommonVertexElement("MID_TEX_COORD", baseOrdinal + 1);
+			= CommonVertexElementAccessor.createCommonVertexElement("MID_TEX_COORD", baseOrdinal + 1);
 		IrisCommonVertexElements.BLOCK_ID
-				= CommonVertexElementAccessor.createCommonVertexElement("BLOCK_ID", baseOrdinal + 2);
+			= CommonVertexElementAccessor.createCommonVertexElement("BLOCK_ID", baseOrdinal + 2);
 		IrisCommonVertexElements.MID_BLOCK
-				= CommonVertexElementAccessor.createCommonVertexElement("MID_BLOCK", baseOrdinal + 3);
+			= CommonVertexElementAccessor.createCommonVertexElement("MID_BLOCK", baseOrdinal + 3);
 
 		$VALUES = ArrayUtils.addAll($VALUES,
-				IrisCommonVertexElements.TANGENT,
-				IrisCommonVertexElements.MID_TEX_COORD,
-				IrisCommonVertexElements.BLOCK_ID,
-				IrisCommonVertexElements.MID_BLOCK);
+			IrisCommonVertexElements.TANGENT,
+			IrisCommonVertexElements.MID_TEX_COORD,
+			IrisCommonVertexElements.BLOCK_ID,
+			IrisCommonVertexElements.MID_BLOCK);
 
 		COUNT = $VALUES.length;
 	}

@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
+package net.irisshaders.iris.compat.sodium.mixin.shader_overrides;
 
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
 import org.spongepowered.asm.mixin.Mixin;

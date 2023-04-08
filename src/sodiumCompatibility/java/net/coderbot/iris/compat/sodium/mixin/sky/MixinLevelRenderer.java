@@ -1,8 +1,7 @@
-package net.coderbot.iris.compat.sodium.mixin.sky;
+package net.irisshaders.iris.compat.sodium.mixin.sky;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import org.joml.Matrix4f;
-import net.coderbot.iris.Iris;
+import net.irisshaders.iris.Iris;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.FogRenderer;
@@ -13,6 +12,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -53,7 +53,7 @@ public class MixinLevelRenderer {
 			boolean isSubmersed = camera.getFluidInCamera() != FogType.NONE;
 			boolean hasBlindness = cameraEntity instanceof LivingEntity && ((LivingEntity) cameraEntity).hasEffect(MobEffects.BLINDNESS);
 			boolean useThickFog = this.minecraft.level.effects().isFoggyAt(Mth.floor(cameraPosition.x()),
-					Mth.floor(cameraPosition.y())) || this.minecraft.gui.getBossOverlay().shouldCreateWorldFog();
+				Mth.floor(cameraPosition.y())) || this.minecraft.gui.getBossOverlay().shouldCreateWorldFog();
 
 			if (isSubmersed || hasBlindness || useThickFog) {
 				ci.cancel();

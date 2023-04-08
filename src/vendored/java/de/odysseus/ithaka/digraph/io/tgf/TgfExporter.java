@@ -34,9 +34,9 @@ public class TgfExporter {
 	}
 
 	public <V> void export(
-			TgfLabelProvider<V> provider,
-			Digraph<V> digraph,
-			Writer writer) throws IOException {
+		TgfLabelProvider<V> provider,
+		Digraph<V> digraph,
+		Writer writer) throws IOException {
 		Map<V, Integer> index = new HashMap<>();
 		int n = 0;
 

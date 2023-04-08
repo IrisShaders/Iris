@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
+package net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
@@ -7,8 +7,8 @@ import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
-import net.coderbot.iris.vertices.IrisVertexFormats;
-import net.coderbot.iris.vertices.NormalHelper;
+import net.irisshaders.iris.vertices.IrisVertexFormats;
+import net.irisshaders.iris.vertices.NormalHelper;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -35,7 +35,8 @@ public final class GlyphVertexExt {
 	private static float uSum;
 	private static float vSum;
 
-	private static Vector3f lastNormal = new Vector3f();
+	private static final Vector3f lastNormal = new Vector3f();
+	private static final QuadViewEntity.QuadViewEntityUnsafe quadView = new QuadViewEntity.QuadViewEntityUnsafe();
 
 	public static void write(long ptr, float x, float y, float z, int color, float u, float v, int light) {
 		long i = ptr;
@@ -85,6 +86,7 @@ public final class GlyphVertexExt {
 		uSum = 0;
 		vSum = 0;
 	}
+
 	public static void writeQuadVertices(VertexBufferWriter writer, PoseStack.Pose matrices, ModelQuadView quad, int light, int color) {
 		Matrix3f matNormal = matrices.normal();
 		Matrix4f matPosition = matrices.pose();
@@ -129,7 +131,6 @@ public final class GlyphVertexExt {
 			writer.push(stack, buffer, 4, FORMAT);
 		}
 	}
-	private static QuadViewEntity.QuadViewEntityUnsafe quadView = new QuadViewEntity.QuadViewEntityUnsafe();
 
 	private static void endQuad(long ptr, float normalX, float normalY, float normalZ) {
 		quadView.setup(ptr, STRIDE);

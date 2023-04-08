@@ -25,16 +25,12 @@ import java.util.SortedMap;
 public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRenderBuffers, DrawCallTrackingRenderBuffers {
 	@Unique
 	private final FullyBufferedMultiBufferSource buffered = new FullyBufferedMultiBufferSource();
-
-	@Unique
-	private int begins = 0;
-
-	@Unique
-	private int maxBegins = 0;
-
 	@Unique
 	private final OutlineBufferSource outlineBufferSource = new OutlineBufferSource(buffered);
-
+	@Unique
+	private int begins = 0;
+	@Unique
+	private int maxBegins = 0;
 	@Shadow
 	@Final
 	private MultiBufferSource.BufferSource bufferSource;

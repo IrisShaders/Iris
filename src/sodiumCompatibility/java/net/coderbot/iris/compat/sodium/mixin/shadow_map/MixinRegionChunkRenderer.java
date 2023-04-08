@@ -1,7 +1,7 @@
-package net.coderbot.iris.compat.sodium.mixin.shadow_map;
+package net.irisshaders.iris.compat.sodium.mixin.shadow_map;
 
 import me.jellysquid.mods.sodium.client.render.chunk.RegionChunkRenderer;
-import net.coderbot.iris.shadows.ShadowRenderingState;
+import net.irisshaders.iris.shadows.ShadowRenderingState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -15,8 +15,8 @@ public class MixinRegionChunkRenderer {
 	private boolean isBlockFaceCullingEnabled;
 
 	@Redirect(method = "buildDrawBatches", remap = false,
-			at = @At(value = "FIELD",
-					target = "me/jellysquid/mods/sodium/client/render/chunk/RegionChunkRenderer.isBlockFaceCullingEnabled : Z"))
+		at = @At(value = "FIELD",
+			target = "me/jellysquid/mods/sodium/client/render/chunk/RegionChunkRenderer.isBlockFaceCullingEnabled : Z"))
 	private boolean iris$disableBlockFaceCullingInShadowPass(RegionChunkRenderer renderer) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			return false;

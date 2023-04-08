@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.fast_render;
+package net.irisshaders.iris.compat.sodium.mixin.fast_render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -9,9 +9,9 @@ import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.render.vertex.formats.ModelVertex;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
-import net.coderbot.iris.vertices.ImmediateState;
-import net.coderbot.iris.vertices.NormalHelper;
+import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
+import net.irisshaders.iris.vertices.ImmediateState;
+import net.irisshaders.iris.vertices.NormalHelper;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.model.geom.ModelPart;
 import org.lwjgl.system.MemoryStack;

@@ -1,15 +1,14 @@
-package net.coderbot.iris.compat.sodium.mixin.block_id;
+package net.irisshaders.iris.compat.sodium.mixin.block_id;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
 import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexBufferBuilder;
 import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexType;
-import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
-import net.coderbot.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
-import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
+import net.irisshaders.iris.block_rendering.BlockRenderingSettings;
+import net.irisshaders.iris.compat.sodium.impl.block_context.BlockContextHolder;
+import net.irisshaders.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
+import net.irisshaders.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,14 +1,14 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
+package net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
 import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
-import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
-import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
+import net.irisshaders.iris.compat.sodium.impl.block_context.BlockContextHolder;
+import net.irisshaders.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
+import net.irisshaders.iris.vertices.ExtendedDataHelper;
+import net.irisshaders.iris.vertices.NormalHelper;
 import org.joml.Vector3f;
-import net.coderbot.iris.vertices.ExtendedDataHelper;
-import net.coderbot.iris.vertices.NormalHelper;
 import org.lwjgl.system.MemoryUtil;
 
-import static net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
+import static net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp.XHFPModelVertexType.STRIDE;
 
 public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertexWriter {
 	private final QuadViewTerrain.QuadViewTerrainUnsafe quad = new QuadViewTerrain.QuadViewTerrainUnsafe();
@@ -64,7 +64,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 		vSum += vertex.v;
 		vertexCount++;
 
-		MemoryUtil.memPutShort(ptr + 0, XHFPModelVertexType.encodePosition(vertex.x));
+		MemoryUtil.memPutShort(ptr, XHFPModelVertexType.encodePosition(vertex.x));
 		MemoryUtil.memPutShort(ptr + 2, XHFPModelVertexType.encodePosition(vertex.y));
 		MemoryUtil.memPutShort(ptr + 4, XHFPModelVertexType.encodePosition(vertex.z));
 		MemoryUtil.memPutShort(ptr + 6, (short) chunkId);
@@ -138,7 +138,6 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 				NormalHelper.computeFaceNormal(normal, quad);
 			}
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
-
 
 
 			MemoryUtil.memPutInt(ptr + 32, packedNormal);

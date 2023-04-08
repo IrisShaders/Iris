@@ -1,9 +1,9 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format;
+package net.irisshaders.iris.compat.sodium.impl.vertex_format;
 
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 
 /**
- * Initialized by {@link net.coderbot.iris.compat.sodium.mixin.vertex_format.MixinChunkMeshAttribute}
+ * Initialized by {@link net.irisshaders.iris.compat.sodium.mixin.vertex_format.MixinChunkMeshAttribute}
  */
 public class IrisChunkMeshAttributes {
 	public static ChunkMeshAttribute NORMAL;

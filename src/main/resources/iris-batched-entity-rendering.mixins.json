@@ -5,20 +5,20 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "ChunkBufferBuilderPackAccessor",
-    "OutlineBufferSourceAccessor",
+    "CompositeStateAccessor",
     "MixinBufferBuilder",
     "MixinBufferBuilder_SegmentRendering",
-    "MixinRenderBuffers",
-    "MixinSheets",
-    "MixinDebugScreenOverlay",
-    "MixinFishingHookRenderer",
     "MixinBufferSource",
     "MixinCompositeRenderType",
+    "MixinDebugScreenOverlay",
+    "MixinFishingHookRenderer",
     "MixinLevelRenderer",
     "MixinLevelRenderer_EntityListSorting",
-    "CompositeStateAccessor",
-    "RenderTypeAccessor",
-    "RenderStateShardAccessor"
+    "MixinRenderBuffers",
+    "MixinSheets",
+    "OutlineBufferSourceAccessor",
+    "RenderStateShardAccessor",
+    "RenderTypeAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -61,11 +61,9 @@
   "options.iris.shadowDistance.sodium_tooltip": "The shadow render distance controls how far away terrain can potentially be rendered in the shadow pass. Lower distances mean that less terrain will be rendered, improving frame rates. This option cannot be changed on packs which explicitly specify a shadow render distance. The actual shadow render distance is capped by the View Distance setting.",
   "options.iris.gui.hide": "Hide GUI",
   "options.iris.gui.show": "Show GUI",
-
   "pack.iris.select.title": "Select",
   "pack.iris.configure.title": "Configure",
   "pack.iris.list.label": "+ Drag and Drop Shader Packs to add",
-
   "label.iris.true": "On",
   "label.iris.false": "Off"
 }

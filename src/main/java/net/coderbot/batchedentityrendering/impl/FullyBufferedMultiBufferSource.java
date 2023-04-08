@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.coderbot.batchedentityrendering.impl.ordering.GraphTranslucencyRenderOrderManager;
 import net.coderbot.batchedentityrendering.impl.ordering.RenderOrderManager;
-import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
+import net.irisshaders.iris.fantastic.WrappingMultiBufferSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -28,14 +28,15 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	 * An LRU cache mapping RenderType objects to a relevant buffer.
 	 */
 	private final LinkedHashMap<RenderType, Integer> affinities;
-	private int drawCalls;
-	private int renderTypes;
-
 	private final BufferSegmentRenderer segmentRenderer;
 	private final UnflushableWrapper unflushableWrapper;
 	private final List<Function<RenderType, RenderType>> wrappingFunctionStack;
+	private int drawCalls;
+	private int renderTypes;
 	private Function<RenderType, RenderType> wrappingFunction = null;
-
+	private boolean isReady;
+	private final Map<RenderType, List<BufferSegment>> typeToSegment = new HashMap<>();
+	private List<RenderType> renderOrder = new ArrayList<>();
 	public FullyBufferedMultiBufferSource() {
 		super(new BufferBuilder(0), Collections.emptyMap());
 
@@ -54,10 +55,6 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		this.unflushableWrapper = new UnflushableWrapper(this);
 		this.wrappingFunctionStack = new ArrayList<>();
 	}
-
-	private boolean isReady;
-	private Map<RenderType, List<BufferSegment>> typeToSegment = new HashMap<>();
-	private List<RenderType> renderOrder = new ArrayList<>();
 
 	@Override
 	public VertexConsumer getBuffer(RenderType renderType) {

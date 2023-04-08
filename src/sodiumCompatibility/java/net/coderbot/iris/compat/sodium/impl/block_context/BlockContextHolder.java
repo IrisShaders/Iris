@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.block_context;
+package net.irisshaders.iris.compat.sodium.impl.block_context;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;

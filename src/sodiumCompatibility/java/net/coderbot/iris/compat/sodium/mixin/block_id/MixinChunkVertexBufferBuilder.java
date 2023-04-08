@@ -1,9 +1,9 @@
-package net.coderbot.iris.compat.sodium.mixin.block_id;
+package net.irisshaders.iris.compat.sodium.mixin.block_id;
 
 import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexBufferBuilder;
 import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
-import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
-import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
+import net.irisshaders.iris.compat.sodium.impl.block_context.BlockContextHolder;
+import net.irisshaders.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

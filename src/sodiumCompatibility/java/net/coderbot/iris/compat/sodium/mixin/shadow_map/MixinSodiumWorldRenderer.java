@@ -1,13 +1,12 @@
-package net.coderbot.iris.compat.sodium.mixin.shadow_map;
+package net.irisshaders.iris.compat.sodium.mixin.shadow_map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
-import net.coderbot.iris.shadows.ShadowRenderingState;
-import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
+import net.irisshaders.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
+import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.culling.Frustum;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,17 +18,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Ensures that the state of the chunk render visibility graph gets properly swapped when in the shadow map pass,
  * because we must maintain one visibility graph for the shadow camera and one visibility graph for the player camera.
- *
+ * <p>
  * Also ensures that the visibility graph is always rebuilt in the shadow pass, since the shadow camera is generally
  * always moving.
  */
 @Mixin(SodiumWorldRenderer.class)
 public class MixinSodiumWorldRenderer {
-    @Shadow(remap = false)
-    private RenderSectionManager renderSectionManager;
+	@Shadow(remap = false)
+	private RenderSectionManager renderSectionManager;
 
-    @Unique
-    private boolean wasRenderingShadows = false;
+	@Unique
+	private boolean wasRenderingShadows = false;
 
 	@Shadow(remap = false)
 	private double lastCameraX, lastCameraY, lastCameraZ, lastCameraPitch, lastCameraYaw;
@@ -63,16 +62,16 @@ public class MixinSodiumWorldRenderer {
 		iris$swapLastCameraYaw = tmp;
 	}
 
-    @Unique
-    private void iris$ensureStateSwapped() {
-        if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+	@Unique
+	private void iris$ensureStateSwapped() {
+		if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
 				((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
 				swapCachedCameraPositions();
 			}
 
-            wasRenderingShadows = true;
-        } else if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			wasRenderingShadows = true;
+		} else if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
 				((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
 				swapCachedCameraPositions();
@@ -80,48 +79,48 @@ public class MixinSodiumWorldRenderer {
 
 			wasRenderingShadows = false;
 		}
-    }
+	}
 
-    @Inject(method = "scheduleTerrainUpdate()V", remap = false,
-            at = @At(value = "INVOKE",
-                    target = "me/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager.markGraphDirty ()V",
-                    remap = false))
-    private void iris$ensureStateSwappedBeforeMarkDirty(CallbackInfo ci) {
-        iris$ensureStateSwapped();
-    }
+	@Inject(method = "scheduleTerrainUpdate()V", remap = false,
+		at = @At(value = "INVOKE",
+			target = "me/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager.markGraphDirty ()V",
+			remap = false))
+	private void iris$ensureStateSwappedBeforeMarkDirty(CallbackInfo ci) {
+		iris$ensureStateSwapped();
+	}
 
-    // note: inject after the reload() check, but before the markDirty() call. This injection point was chosen just
-    //       because it's relatively solid and is in between those two calls.
-    @Inject(method = "updateChunks", remap = false,
-            at = @At(value = "FIELD",
-                     target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
-                     ordinal = 0,
-                     remap = false))
-    private void iris$ensureStateSwappedInUpdateChunks(Camera camera, me.jellysquid.mods.sodium.client.util.frustum.Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
-        iris$ensureStateSwapped();
-    }
+	// note: inject after the reload() check, but before the markDirty() call. This injection point was chosen just
+	//       because it's relatively solid and is in between those two calls.
+	@Inject(method = "updateChunks", remap = false,
+		at = @At(value = "FIELD",
+			target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
+			ordinal = 0,
+			remap = false))
+	private void iris$ensureStateSwappedInUpdateChunks(Camera camera, me.jellysquid.mods.sodium.client.util.frustum.Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
+		iris$ensureStateSwapped();
+	}
 
-    @Redirect(method = "updateChunks", remap = false,
-            at = @At(value = "FIELD",
-                    target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
-                    ordinal = 0,
-                    remap = false))
-    private double iris$forceChunkGraphRebuildInShadowPass(SodiumWorldRenderer worldRenderer) {
-        if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            // Returning NaN forces the comparison with the current camera to return false, making SodiumWorldRenderer
-            // think that the chunk graph always needs to be rebuilt. This is generally true in the shadow map pass,
-            // unless time is frozen.
-            //
-            // TODO: Detect when the sun/moon isn't moving
-            return Double.NaN;
-        } else {
-            return lastCameraX;
-        }
-    }
+	@Redirect(method = "updateChunks", remap = false,
+		at = @At(value = "FIELD",
+			target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
+			ordinal = 0,
+			remap = false))
+	private double iris$forceChunkGraphRebuildInShadowPass(SodiumWorldRenderer worldRenderer) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			// Returning NaN forces the comparison with the current camera to return false, making SodiumWorldRenderer
+			// think that the chunk graph always needs to be rebuilt. This is generally true in the shadow map pass,
+			// unless time is frozen.
+			//
+			// TODO: Detect when the sun/moon isn't moving
+			return Double.NaN;
+		} else {
+			return lastCameraX;
+		}
+	}
 
-    @Inject(method = "drawChunkLayer",  remap = false, at = @At("HEAD"))
-    private void iris$beforeDrawChunkLayer(RenderType renderType, PoseStack poseStack, double x, double y,
+	@Inject(method = "drawChunkLayer", remap = false, at = @At("HEAD"))
+	private void iris$beforeDrawChunkLayer(RenderType renderType, PoseStack poseStack, double x, double y,
 										   double z, CallbackInfo ci) {
-        iris$ensureStateSwapped();
-    }
+		iris$ensureStateSwapped();
+	}
 }

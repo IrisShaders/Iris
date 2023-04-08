@@ -12,52 +12,56 @@ import java.util.List;
 import java.util.Objects;
 
 public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTrackingBuffer {
-    private final BufferBuilder buffer;
-    private RenderType currentType;
+	private final BufferBuilder buffer;
 	private final List<BufferSegment> buffers;
+	private RenderType currentType;
 
-    public SegmentedBufferBuilder() {
-        // 2 MB initial allocation
-        this.buffer = new BufferBuilder(512 * 1024);
+	public SegmentedBufferBuilder() {
+		// 2 MB initial allocation
+		this.buffer = new BufferBuilder(512 * 1024);
 		this.buffers = new ArrayList<>();
-        this.currentType = null;
-    }
+		this.currentType = null;
+	}
 
-    @Override
-    public VertexConsumer getBuffer(RenderType renderType) {
-        if (!Objects.equals(currentType, renderType)) {
-            if (currentType != null) {
-                if (shouldSortOnUpload(currentType)) {
-                    buffer.setQuadSortOrigin(0, 0, 0);
-                }
+	private static boolean shouldSortOnUpload(RenderType type) {
+		return ((RenderTypeAccessor) type).shouldSortOnUpload();
+	}
 
-                buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
-            }
+	@Override
+	public VertexConsumer getBuffer(RenderType renderType) {
+		if (!Objects.equals(currentType, renderType)) {
+			if (currentType != null) {
+				if (shouldSortOnUpload(currentType)) {
+					buffer.setQuadSortOrigin(0, 0, 0);
+				}
 
-            buffer.begin(renderType.mode(), renderType.format());
+				buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
+			}
 
-            currentType = renderType;
-        }
+			buffer.begin(renderType.mode(), renderType.format());
 
-        // Use duplicate vertices to break up triangle strips
-        // https://developer.apple.com/library/archive/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/Art/degenerate_triangle_strip_2x.png
-        // This works by generating zero-area triangles that don't end up getting rendered.
-        // TODO: How do we handle DEBUG_LINE_STRIP?
-        if (RenderTypeUtil.isTriangleStripDrawMode(currentType)) {
-            ((BufferBuilderExt) buffer).splitStrip();
-        }
+			currentType = renderType;
+		}
 
-        return buffer;
-    }
+		// Use duplicate vertices to break up triangle strips
+		// https://developer.apple.com/library/archive/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/Art/degenerate_triangle_strip_2x.png
+		// This works by generating zero-area triangles that don't end up getting rendered.
+		// TODO: How do we handle DEBUG_LINE_STRIP?
+		if (RenderTypeUtil.isTriangleStripDrawMode(currentType)) {
+			((BufferBuilderExt) buffer).splitStrip();
+		}
 
-    public List<BufferSegment> getSegments() {
-        if (currentType == null) {
-            return Collections.emptyList();
-        }
+		return buffer;
+	}
 
-        if (shouldSortOnUpload(currentType)) {
-            buffer.setQuadSortOrigin(0, 0, 0);
-        }
+	public List<BufferSegment> getSegments() {
+		if (currentType == null) {
+			return Collections.emptyList();
+		}
+
+		if (shouldSortOnUpload(currentType)) {
+			buffer.setQuadSortOrigin(0, 0, 0);
+		}
 
 		buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
 
@@ -67,8 +71,8 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
 
 		buffers.clear();
 
-        return finalSegments;
-    }
+		return finalSegments;
+	}
 
 	public List<BufferSegment> getSegmentsForType(TransparencyType transparencyType) {
 		if (currentType == null) {
@@ -92,19 +96,15 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
 		return finalSegments;
 	}
 
-    private static boolean shouldSortOnUpload(RenderType type) {
-        return ((RenderTypeAccessor) type).shouldSortOnUpload();
-    }
+	@Override
+	public int getAllocatedSize() {
+		return ((MemoryTrackingBuffer) buffer).getAllocatedSize();
+	}
 
-    @Override
-    public int getAllocatedSize() {
-        return ((MemoryTrackingBuffer) buffer).getAllocatedSize();
-    }
-
-    @Override
-    public int getUsedSize() {
-        return ((MemoryTrackingBuffer) buffer).getUsedSize();
-    }
+	@Override
+	public int getUsedSize() {
+		return ((MemoryTrackingBuffer) buffer).getUsedSize();
+	}
 
 	@Override
 	public void freeAndDeleteBuffer() {

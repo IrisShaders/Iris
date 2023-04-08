@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.shader_overrides;
+package net.irisshaders.iris.compat.sodium.impl.shader_overrides;
 
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
 import org.joml.Matrix3f;

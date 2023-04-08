@@ -1,10 +1,10 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
+package net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
+import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.common.util.MatrixHelper;
-import net.coderbot.iris.vertices.IrisVertexFormats;
-import net.coderbot.iris.vertices.NormalHelper;
+import net.irisshaders.iris.vertices.IrisVertexFormats;
+import net.irisshaders.iris.vertices.NormalHelper;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
@@ -45,11 +45,11 @@ public final class CloudVertex {
 
 	public static void write(long ptr, float x, float y, float z, int color) {
 		vertexCount++;
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION, x);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
 
-		MemoryUtil.memPutInt(ptr + OFFSET_COLOR + 0, color);
+		MemoryUtil.memPutInt(ptr + OFFSET_COLOR, color);
 
 		if (vertexCount == 4) {
 			vertexCount = 0;

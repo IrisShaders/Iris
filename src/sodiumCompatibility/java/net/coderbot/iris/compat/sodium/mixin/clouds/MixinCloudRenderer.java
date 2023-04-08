@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.clouds;
+package net.irisshaders.iris.compat.sodium.mixin.clouds;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -10,12 +10,12 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import me.jellysquid.mods.sodium.client.render.immediate.CloudRenderer;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.formats.ColorVertex;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.CloudVertex;
-import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
-import net.coderbot.iris.pipeline.newshader.ShaderKey;
-import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.CloudVertex;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.newshader.CoreWorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.newshader.ShaderKey;
+import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -39,22 +39,28 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(CloudRenderer.class)
 public abstract class MixinCloudRenderer {
 	@Shadow
-	protected abstract void rebuildGeometry(BufferBuilder bufferBuilder, int cloudDistance, int centerCellX, int centerCellZ);
-
-	@Shadow
 	private ShaderInstance clouds;
-
-	@Shadow
-	protected abstract void applyFogModifiers(ClientLevel world, FogRenderer.FogData fogData, LocalPlayer player, int cloudDistance, float tickDelta);
-
 	@Shadow
 	@Final
 	private FogRenderer.FogData fogData;
 	@Unique
 	private VertexBuffer vertexBufferWithNormals;
-
 	@Unique
 	private int prevCenterCellXIris, prevCenterCellYIris, cachedRenderDistanceIris;
+
+	@Inject(method = "writeVertex", at = @At("HEAD"), cancellable = true, remap = false)
+	private static void writeIrisVertex(long buffer, float x, float y, float z, int color, CallbackInfoReturnable<Long> cir) {
+		if (IrisApi.getInstance().isShaderPackInUse()) {
+			CloudVertex.write(buffer, x, y, z, color);
+			cir.setReturnValue(buffer + 20L);
+		}
+	}
+
+	@Shadow
+	protected abstract void rebuildGeometry(BufferBuilder bufferBuilder, int cloudDistance, int centerCellX, int centerCellZ);
+
+	@Shadow
+	protected abstract void applyFogModifiers(ClientLevel world, FogRenderer.FogData fogData, LocalPlayer player, int cloudDistance, float tickDelta);
 
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
 	private void buildIrisVertexBuffer(ClientLevel world, LocalPlayer player, PoseStack matrices, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
@@ -172,14 +178,6 @@ public abstract class MixinCloudRenderer {
 	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lorg/lwjgl/system/MemoryStack;nmalloc(I)J"))
 	private int allocateNewSize(int size) {
 		return IrisApi.getInstance().isShaderPackInUse() ? 480 : size;
-	}
-
-	@Inject(method = "writeVertex", at = @At("HEAD"), cancellable = true, remap = false)
-	private static void writeIrisVertex(long buffer, float x, float y, float z, int color, CallbackInfoReturnable<Long> cir) {
-		if (IrisApi.getInstance().isShaderPackInUse()) {
-			CloudVertex.write(buffer, x, y, z, color);
-			cir.setReturnValue(buffer + 20L);
-		}
 	}
 
 	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/vertex/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILme/jellysquid/mods/sodium/client/render/vertex/VertexFormatDescription;)V"), index = 3)

@@ -2,7 +2,7 @@ package net.coderbot.batchedentityrendering.mixin;
 
 import net.coderbot.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.coderbot.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
-import net.coderbot.iris.Iris;
+import net.irisshaders.iris.Iris;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,16 +19,16 @@ import java.util.List;
  */
 @Mixin(value = DebugScreenOverlay.class, priority = 1010)
 public abstract class MixinDebugScreenOverlay {
-    @Inject(method = "getGameInformation", at = @At("RETURN"))
-    private void batchedentityrendering$appendStats(CallbackInfoReturnable<List<String>> cir) {
-        List<String> messages = cir.getReturnValue();
+	@Inject(method = "getGameInformation", at = @At("RETURN"))
+	private void batchedentityrendering$appendStats(CallbackInfoReturnable<List<String>> cir) {
+		List<String> messages = cir.getReturnValue();
 
 		DrawCallTrackingRenderBuffers drawTracker = (DrawCallTrackingRenderBuffers) Minecraft.getInstance().renderBuffers();
 
-        // blank line separator
+		// blank line separator
 		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
 			messages.add("");
 			messages.add("[Entity Batching] " + BatchingDebugMessageHelper.getDebugMessage(drawTracker));
 		}
-    }
+	}
 }

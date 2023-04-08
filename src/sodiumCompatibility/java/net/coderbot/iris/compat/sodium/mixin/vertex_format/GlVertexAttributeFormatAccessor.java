@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.mixin.vertex_format;
+package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeFormat;
 import org.spongepowered.asm.mixin.Mixin;

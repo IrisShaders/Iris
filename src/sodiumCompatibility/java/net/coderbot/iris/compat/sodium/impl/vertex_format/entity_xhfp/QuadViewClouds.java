@@ -1,6 +1,6 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
+package net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
-import net.coderbot.iris.vertices.QuadView;
+import net.irisshaders.iris.vertices.QuadView;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;

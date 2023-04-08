@@ -26,19 +26,8 @@ import java.util.OptionalInt;
  * @param <V> vertex type
  */
 public class DoubledDigraphAdapter<V> extends DigraphAdapter<V> implements DoubledDigraph<V> {
-	/**
-	 * Factory creating <code>DoubledDigraph</code>.
-	 *
-	 * @param factory delegate factory
-	 * @return doubled de.odysseus.ithaka.digraph factory
-	 */
-	public static <V> DigraphFactory<DoubledDigraphAdapter<V>> getAdapterFactory(final DigraphFactory<? extends Digraph<V>> factory) {
-		return () -> new DoubledDigraphAdapter<>(factory);
-	}
-
 	private final DoubledDigraphAdapter<V> reverse;
 	private final DigraphFactory<? extends Digraph<V>> factory;
-
 	public DoubledDigraphAdapter() {
 		this(MapDigraph.getDefaultDigraphFactory());
 	}
@@ -53,6 +42,16 @@ public class DoubledDigraphAdapter<V> extends DigraphAdapter<V> implements Doubl
 		super(factory.create());
 		this.factory = factory;
 		this.reverse = reverse;
+	}
+
+	/**
+	 * Factory creating <code>DoubledDigraph</code>.
+	 *
+	 * @param factory delegate factory
+	 * @return doubled de.odysseus.ithaka.digraph factory
+	 */
+	public static <V> DigraphFactory<DoubledDigraphAdapter<V>> getAdapterFactory(final DigraphFactory<? extends Digraph<V>> factory) {
+		return () -> new DoubledDigraphAdapter<>(factory);
 	}
 
 	protected DoubledDigraphAdapter<V> createReverse() {

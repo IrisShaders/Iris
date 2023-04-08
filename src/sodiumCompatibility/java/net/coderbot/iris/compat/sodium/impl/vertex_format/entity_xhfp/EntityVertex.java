@@ -1,4 +1,4 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
+package net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
@@ -8,11 +8,9 @@ import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import me.jellysquid.mods.sodium.common.util.MatrixHelper;
-import net.coderbot.iris.uniforms.CapturedRenderingState;
-import net.coderbot.iris.vertices.IrisVertexFormats;
-import net.coderbot.iris.vertices.NormalHelper;
-import net.coderbot.iris.vertices.QuadView;
-import org.jetbrains.annotations.NotNull;
+import net.irisshaders.iris.uniforms.CapturedRenderingState;
+import net.irisshaders.iris.vertices.IrisVertexFormats;
+import net.irisshaders.iris.vertices.NormalHelper;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -32,17 +30,18 @@ public final class EntityVertex {
 	private static final int OFFSET_NORMAL = 32;
 	private static final int OFFSET_TANGENT = 50;
 
-	private static Vector3f lastNormal = new Vector3f();
+	private static final Vector3f lastNormal = new Vector3f();
+	private static final QuadViewEntity.QuadViewEntityUnsafe quadView = new QuadViewEntity.QuadViewEntityUnsafe();
 
 	public static void write(long ptr,
 							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal, int tangent) {
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION, x);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
 
 		MemoryUtil.memPutInt(ptr + OFFSET_COLOR, color);
 
-		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 0, u);
+		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE, u);
 		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 4, v);
 
 		MemoryUtil.memPutInt(ptr + OFFSET_LIGHT, light);
@@ -62,14 +61,14 @@ public final class EntityVertex {
 	}
 
 	public static void write2(long ptr,
-							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal) {
-		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
+							  float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal) {
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION, x);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
 
 		MemoryUtil.memPutInt(ptr + OFFSET_COLOR, color);
 
-		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 0, u);
+		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE, u);
 		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 4, v);
 
 		MemoryUtil.memPutInt(ptr + OFFSET_LIGHT, light);
@@ -134,7 +133,6 @@ public final class EntityVertex {
 			writer.push(stack, buffer, 4, FORMAT);
 		}
 	}
-	private static QuadViewEntity.QuadViewEntityUnsafe quadView = new QuadViewEntity.QuadViewEntityUnsafe();
 
 	private static void endQuad(long ptr, float normalX, float normalY, float normalZ) {
 		quadView.setup(ptr, STRIDE);

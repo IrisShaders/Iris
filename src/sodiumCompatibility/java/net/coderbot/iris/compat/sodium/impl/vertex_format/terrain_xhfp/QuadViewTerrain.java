@@ -1,6 +1,6 @@
-package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
+package net.irisshaders.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
-import net.coderbot.iris.vertices.QuadView;
+import net.irisshaders.iris.vertices.QuadView;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -11,27 +11,27 @@ public abstract class QuadViewTerrain implements QuadView {
 
 	@Override
 	public float x(int index) {
-		return XHFPModelVertexType.decodePosition(getShort(writePointer - stride * (3 - index)));
+		return XHFPModelVertexType.decodePosition(getShort(writePointer - (long) stride * (3 - index)));
 	}
 
 	@Override
 	public float y(int index) {
-		return XHFPModelVertexType.decodePosition(getShort(writePointer + 2 - stride * (3 - index)));
+		return XHFPModelVertexType.decodePosition(getShort(writePointer + 2 - (long) stride * (3 - index)));
 	}
 
 	@Override
 	public float z(int index) {
-		return XHFPModelVertexType.decodePosition(getShort(writePointer + 4 - stride * (3 - index)));
+		return XHFPModelVertexType.decodePosition(getShort(writePointer + 4 - (long) stride * (3 - index)));
 	}
 
 	@Override
 	public float u(int index) {
-		return XHFPModelVertexType.decodeBlockTexture(getShort(writePointer + 12 - stride * (3 - index)));
+		return XHFPModelVertexType.decodeBlockTexture(getShort(writePointer + 12 - (long) stride * (3 - index)));
 	}
 
 	@Override
 	public float v(int index) {
-		return XHFPModelVertexType.decodeBlockTexture(getShort(writePointer + 14 - stride * (3 - index)));
+		return XHFPModelVertexType.decodeBlockTexture(getShort(writePointer + 14 - (long) stride * (3 - index)));
 	}
 
 	abstract short getShort(long writePointer);
