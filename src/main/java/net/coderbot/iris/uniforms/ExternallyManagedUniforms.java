@@ -35,6 +35,7 @@ public class ExternallyManagedUniforms {
 		addMat4(uniformHolder, "iris_ModelViewMatrix");
 		addMat3(uniformHolder, "iris_NormalMatrix");
 		addFloat(uniformHolder, "iris_TextureScale");
+		addFloat(uniformHolder, "iris_GlintAlpha");
 		addFloat(uniformHolder, "iris_ModelScale");
 		addFloat(uniformHolder, "iris_ModelOffset");
 		addVec3(uniformHolder, "iris_CameraTranslation");
