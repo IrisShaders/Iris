@@ -276,7 +276,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				throw new IllegalStateException("Shader storage buffers/immutable buffer storage is not supported on this graphics card, however the shaderpack requested them? This shouldn't be possible.");
 			}
 		} else {
-			for (int i = 0; i < SamplerLimits.get().getMaxShaderStorageUnits(); i++) {
+			for (int i = 0; i < Math.min(16, SamplerLimits.get().getMaxShaderStorageUnits()); i++) {
 				IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, 0);
 			}
 		}
