@@ -239,7 +239,7 @@ public class IrisRenderSystem {
 
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		if (GL.getCapabilities().OpenGL42) {
+		if (GL.getCapabilities().OpenGL42 || GL.getCapabilities().GL_ARB_shader_image_load_store) {
 			GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
 		} else {
 			EXTShaderImageLoadStore.glBindImageTextureEXT(unit, texture, level, layered, layer, access, format);
@@ -247,7 +247,7 @@ public class IrisRenderSystem {
 	}
 
 	public static int getMaxImageUnits() {
-		if (GL.getCapabilities().OpenGL42) {
+		if (GL.getCapabilities().OpenGL42 || GL.getCapabilities().GL_ARB_shader_image_load_store) {
 			return GlStateManager._getInteger(GL42C.GL_MAX_IMAGE_UNITS);
 		} else if (GL.getCapabilities().GL_EXT_shader_image_load_store) {
 			return GlStateManager._getInteger(EXTShaderImageLoadStore.GL_MAX_IMAGE_UNITS_EXT);
@@ -261,7 +261,7 @@ public class IrisRenderSystem {
 	}
 
 	public static boolean supportsImageLoadStore() {
-		return GL.getCapabilities().OpenGL42 || ((GL.getCapabilities().GL_ARB_shader_image_load_store || GL.getCapabilities().GL_EXT_shader_image_load_store) && GL.getCapabilities().GL_ARB_buffer_storage);
+		return GL.getCapabilities().glBindImageTexture != 0L || GL.getCapabilities().OpenGL42 || ((GL.getCapabilities().GL_ARB_shader_image_load_store || GL.getCapabilities().GL_EXT_shader_image_load_store) && GL.getCapabilities().GL_ARB_buffer_storage);
 	}
 
 	public static void genBuffers(int[] buffers) {
