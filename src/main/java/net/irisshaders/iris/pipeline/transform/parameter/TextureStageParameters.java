@@ -11,8 +11,10 @@ public class TextureStageParameters extends Parameters {
 	private final TextureStage stage;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public TextureStageParameters(Patch patch, TextureStage stage,
-								  Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+	public TextureStageParameters(
+			Patch patch,
+			TextureStage stage,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		super(patch, textureMap);
 		this.stage = stage;
 	}
