@@ -122,3 +122,5 @@ Extra shadowcolor buffers have been added. To use them, activate the feature fla
 
 - [Update Taiwan Chinese translation](https://github.com/IrisShaders/Iris/pull/1905) (notlin4)
 - [Add new translations and improve translation consistency in Polish](https://github.com/IrisShaders/Iris/pull/1883) (bascioTOja)
+- [Updating Brazilian Portuguese translations](https://github.com/IrisShaders/Iris/pull/1933) (Draacoun)
+- [Updating Korean translations](https://github.com/IrisShaders/Iris/pull/1934) (xphere07)
