@@ -86,6 +86,7 @@ public class ShaderProperties {
 	private OptionalBoolean backFaceTranslucent = OptionalBoolean.DEFAULT;
 	private OptionalBoolean rainDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean concurrentCompute = OptionalBoolean.DEFAULT;
+	private OptionalBoolean controlsColorSpace = OptionalBoolean.DEFAULT;
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
@@ -159,6 +160,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "backFace.translucent", bool -> backFaceTranslucent = bool);
 			handleBooleanDirective(key, value, "rain.depth", bool -> rainDepth = bool);
 			handleBooleanDirective(key, value, "allowConcurrentCompute", bool -> concurrentCompute = bool);
+			handleBooleanDirective(key, value, "controlColorSpace", bool -> controlsColorSpace = bool);
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
@@ -738,6 +740,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getConcurrentCompute() {
 		return concurrentCompute;
+	}
+
+	public OptionalBoolean getControlsColorSpace() {
+		return controlsColorSpace;
 	}
 
 	public OptionalBoolean getPrepareBeforeShadow() {

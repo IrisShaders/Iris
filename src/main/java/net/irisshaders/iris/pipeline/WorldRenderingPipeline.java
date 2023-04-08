@@ -84,4 +84,6 @@ public interface WorldRenderingPipeline {
 	boolean hasFeature(FeatureFlags flags);
 
 	float getSunPathRotation();
+
+    void colorSpaceChanged();
 }

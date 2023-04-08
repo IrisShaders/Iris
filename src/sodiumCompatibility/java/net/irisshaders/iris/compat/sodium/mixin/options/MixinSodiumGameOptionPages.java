@@ -43,6 +43,24 @@ public class MixinSodiumGameOptionPages {
 		return builder;
 	}
 
+	@Redirect(method = "quality", remap = false,
+		slice = @Slice(
+			from = @At(value = "CONSTANT", args = "stringValue=options.graphics"),
+			to = @At(value = "CONSTANT", args = "stringValue=options.renderClouds")
+		),
+		at = @At(value = "INVOKE", remap = false,
+			target = "me/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder.add (" +
+				"Lme/jellysquid/mods/sodium/client/gui/options/Option;" +
+				")Lme/jellysquid/mods/sodium/client/gui/options/OptionGroup$Builder;"),
+		allow = 1)
+	private static OptionGroup.Builder iris$addColorSpaceOption(OptionGroup.Builder builder,
+																	   Option<?> candidate) {
+		builder.add(candidate);
+		builder.add(IrisSodiumOptions.createColorSpaceButton(vanillaOpts));
+
+		return builder;
+	}
+
 	@ModifyArg(method = "quality", remap = false,
 		slice = @Slice(
 			from = @At(value = "CONSTANT", args = "stringValue=options.graphics"),

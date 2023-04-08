@@ -37,6 +37,7 @@ public class PackDirectives {
 	private boolean separateEntityDraws;
 	private boolean oldLighting;
 	private boolean concurrentCompute;
+	private boolean controlsColorSpace;
 	private boolean oldHandLight;
 	private boolean prepareBeforeShadow;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
@@ -71,6 +72,7 @@ public class PackDirectives {
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
 		oldLighting = properties.getOldLighting().orElse(false);
 		concurrentCompute = properties.getConcurrentCompute().orElse(false);
+		controlsColorSpace = properties.getControlsColorSpace().orElse(false);
 		oldHandLight = properties.getOldHandLight().orElse(true);
 		explicitFlips = properties.getExplicitFlips();
 		scaleOverrides = properties.getTextureScaleOverrides();
@@ -178,6 +180,10 @@ public class PackDirectives {
 
 	public boolean getConcurrentCompute() {
 		return concurrentCompute;
+	}
+
+	public boolean controlsColorSpace() {
+		return controlsColorSpace;
 	}
 
 	public boolean isPrepareBeforeShadow() {

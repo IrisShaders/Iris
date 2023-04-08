@@ -8,8 +8,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.block_rendering.BlockMaterialMapping;
 import net.irisshaders.iris.block_rendering.BlockRenderingSettings;
+import net.irisshaders.iris.colorspace.ColorSpaceConverter;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gbuffer_overrides.matching.InputAvailability;
 import net.irisshaders.iris.gbuffer_overrides.matching.SpecialCondition;
@@ -30,6 +32,7 @@ import net.irisshaders.iris.gl.sampler.SamplerLimits;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.TextureType;
+import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
@@ -167,6 +170,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final Set<GlImage> customImages;
 	private final GlImage[] clearImages;
 	private final PackShadowDirectives shadowDirectives;
+	private final ColorSpaceConverter colorSpaceConverter;
+	private final boolean controlsColorSpace;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		PatchedShaderPrinter.resetPrintState();
@@ -184,6 +189,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
+		this.controlsColorSpace = programSet.getPackDirectives().controlsColorSpace();
 
 		this.resolver = new ProgramFallbackResolver(programSet);
 		this.pack = programSet.getPack();
@@ -228,6 +234,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		} else {
 			forcedShadowRenderDistanceChunks = OptionalInt.empty();
 		}
+
+		this.colorSpaceConverter = new ColorSpaceConverter(main.getColorTextureId(), IrisVideoSettings.colorSpace, main.width, main.height);
 
 		this.customUniforms = programSet.getPack().customUniforms.build(
 			holder -> CommonUniforms.addNonDynamicUniforms(holder, programSet.getPack().getIdMap(), programSet.getPackDirectives(), this.updateNotifier)
@@ -890,6 +898,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			compositeRenderer.recalculateSizes();
 			finalPassRenderer.recalculateSwapPassSize();
 
+			colorSpaceConverter.changeMainRenderTarget(main.getColorTextureId(), main.width, main.height);
+
 			customImages.forEach(image -> image.updateNewSize(main.width, main.height));
 
 			this.clearPassesFull.forEach(clearPass -> renderTargets.destroyFramebuffer(clearPass.getFramebuffer()));
@@ -1036,6 +1046,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		centerDepthSampler.sampleCenterDepth();
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
+
+		if (!controlsColorSpace) {
+			colorSpaceConverter.processColorSpace();
+		}
 	}
 
 	@Override
@@ -1186,6 +1200,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public float getSunPathRotation() {
 		return sunPathRotation;
+	}
+
+	@Override
+	public void colorSpaceChanged() {
+		colorSpaceConverter.changeCurrentColorSpace(IrisVideoSettings.colorSpace);
 	}
 
 	protected AbstractTexture getWhitePixel() {

@@ -216,4 +216,9 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 		// No sun tilt
 		return 0;
 	}
+
+	@Override
+	public void colorSpaceChanged() {
+
+	}
 }

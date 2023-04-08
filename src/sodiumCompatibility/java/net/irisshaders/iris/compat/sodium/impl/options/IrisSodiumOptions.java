@@ -8,7 +8,9 @@ import me.jellysquid.mods.sodium.client.gui.options.control.CyclingControl;
 import me.jellysquid.mods.sodium.client.gui.options.control.SliderControl;
 import me.jellysquid.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.colorspace.ColorSpace;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
 
@@ -36,6 +38,27 @@ public class IrisSodiumOptions {
 		((OptionImplExtended) maxShadowDistanceSlider).iris$dynamicallyEnable(IrisVideoSettings::isShadowDistanceSliderEnabled);
 
 		return maxShadowDistanceSlider;
+	}
+
+	public static OptionImpl<Options, ColorSpace> createColorSpaceButton(MinecraftOptionsStorage vanillaOpts) {
+		return OptionImpl.createBuilder(ColorSpace.class, vanillaOpts)
+			.setName(Component.translatable("options.iris.colorSpace"))
+			.setTooltip(Component.translatable("options.iris.colorSpace.sodium_tooltip"))
+			.setControl(option -> new CyclingControl<>(option, ColorSpace.class,
+				new Component[] { Component.literal("SRGB"), Component.literal("DCI_P3"), Component.literal("Display P3"), Component.literal("REC2020"), Component.literal("Adobe RGB") }))
+			.setBinding((options, value) -> {
+					IrisVideoSettings.colorSpace = value;
+					Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::colorSpaceChanged);
+					try {
+						Iris.getIrisConfig().save();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				},
+				options -> IrisVideoSettings.colorSpace)
+			.setImpact(OptionImpact.LOW)
+			.setEnabled(true)
+			.build();
 	}
 
 	public static OptionImpl<Options, SupportedGraphicsMode> createLimitedVideoSettingsButton(MinecraftOptionsStorage vanillaOpts) {

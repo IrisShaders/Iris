@@ -1,6 +1,7 @@
 package net.irisshaders.iris.config;
 
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.colorspace.ColorSpace;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 
 import java.io.IOException;
@@ -140,6 +141,14 @@ public class IrisConfig {
 			save();
 		}
 
+		try {
+			IrisVideoSettings.colorSpace = ColorSpace.valueOf(properties.getProperty("colorSpace", "SRGB"));
+		} catch (IllegalArgumentException e) {
+			Iris.logger.error("Color space setting reset; value is invalid.");
+			IrisVideoSettings.colorSpace = ColorSpace.SRGB;
+			save();
+		}
+
 		if (shaderPackName != null) {
 			if (shaderPackName.equals("(internal)") || shaderPackName.isEmpty()) {
 				shaderPackName = null;
@@ -159,6 +168,7 @@ public class IrisConfig {
 		properties.setProperty("enableDebugOptions", enableDebugOptions ? "true" : "false");
 		properties.setProperty("disableUpdateMessage", disableUpdateMessage ? "true" : "false");
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
+		properties.setProperty("colorSpace", IrisVideoSettings.colorSpace.name());
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
 		try (OutputStream os = Files.newOutputStream(propertiesPath)) {
 			properties.store(os, COMMENT);

@@ -8,6 +8,7 @@ import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.colorspace.ColorSpace;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.texture.TextureDefinition;
 import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
@@ -160,12 +161,20 @@ public class ShaderPack {
 
 		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream().filter(flag -> !FeatureFlags.isInvalid(flag)).collect(Collectors.toList());
 
+
+		List<StringPair> newEnvDefines = new ArrayList<>();
+		environmentDefines.forEach(newEnvDefines::add);
 		if (!optionalFeatureFlags.isEmpty()) {
-			List<StringPair> newEnvDefines = new ArrayList<>();
-			environmentDefines.forEach(newEnvDefines::add);
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
-			environmentDefines = ImmutableList.copyOf(newEnvDefines);
 		}
+
+		if (shaderProperties.getControlsColorSpace().orElse(false)) {
+			for (ColorSpace colorSpace : ColorSpace.values()) {
+				newEnvDefines.add(new StringPair("COLOR_SPACE_" + colorSpace.name(), String.valueOf(colorSpace.ordinal())));
+			}
+		}
+
+		environmentDefines = ImmutableList.copyOf(newEnvDefines);
 
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
