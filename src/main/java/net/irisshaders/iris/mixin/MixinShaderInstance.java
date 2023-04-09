@@ -28,7 +28,7 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 	private static boolean shouldOverrideShaders() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof WorldRenderingPipeline) {
+		if (pipeline != null) {
 			return pipeline.shouldOverrideShaders();
 		} else {
 			return false;

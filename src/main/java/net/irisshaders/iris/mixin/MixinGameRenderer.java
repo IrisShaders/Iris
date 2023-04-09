@@ -450,7 +450,7 @@ public class MixinGameRenderer {
 	private static boolean shouldOverrideShaders() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof WorldRenderingPipeline) {
+		if (pipeline != null) {
 			return pipeline.shouldOverrideShaders();
 		} else {
 			return false;
@@ -460,7 +460,7 @@ public class MixinGameRenderer {
 	private static void override(ShaderKey key, CallbackInfoReturnable<ShaderInstance> cir) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof WorldRenderingPipeline) {
+		if (pipeline != null && pipeline.shouldOverrideShaders()) {
 			ShaderInstance override = pipeline.getShaderMap().getShader(key);
 
 			if (override != null) {

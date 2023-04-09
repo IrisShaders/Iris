@@ -13,7 +13,6 @@ import me.jellysquid.mods.sodium.client.render.vertex.formats.ColorVertex;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.CloudVertex;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.newshader.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.ShaderKey;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -192,7 +191,7 @@ public abstract class MixinCloudRenderer {
 	private ShaderInstance getClouds() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof WorldRenderingPipeline) {
+		if (pipeline != null && pipeline.shouldOverrideShaders()) {
 			return ((WorldRenderingPipeline) pipeline).getShaderMap().getShader(ShaderKey.CLOUDS_SODIUM);
 		}
 

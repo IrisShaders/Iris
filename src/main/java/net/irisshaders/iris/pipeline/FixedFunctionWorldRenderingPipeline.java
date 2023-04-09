@@ -33,6 +33,16 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public ShaderMap getShaderMap() {
+		return null;
+	}
+
+	@Override
+	public boolean shouldOverrideShaders() {
+		return false;
+	}
+
+	@Override
 	public void onShadowBufferChange() {
 
 	}
