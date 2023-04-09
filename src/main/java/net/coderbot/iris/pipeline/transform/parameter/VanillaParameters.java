@@ -6,7 +6,6 @@ import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 import net.coderbot.iris.pipeline.transform.Patch;
-import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 public class VanillaParameters extends GeometryInfoParameters {
@@ -49,7 +48,7 @@ public class VanillaParameters extends GeometryInfoParameters {
 		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
 		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
 		result = prime * result + (hasChunkOffset ? 1231 : 1237);
-		result = prime * result + (isLines ? 1931 : 1937);
+		result = prime * result + (isLines ? 1231 : 1237);
 		return result;
 	}
 

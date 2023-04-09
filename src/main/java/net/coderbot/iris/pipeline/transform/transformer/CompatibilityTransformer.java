@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,9 +36,12 @@ import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifie
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructDeclarator;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructMember;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
@@ -228,6 +232,44 @@ public class CompatibilityTransformer {
 					id -> id.setName(newName))) {
 				LOGGER.warn("Renamed reserved word \"" + reservedWord + "\" to \"" + newName + "\".");
 			}
+		}
+
+		// transform that moves unsized array specifiers on struct members from the type
+		// to the identifier of a type and init declaration. Some drivers appear to not
+		// be able to detect the unsized array if it's on the type.
+		for (StructMember structMember : root.nodeIndex.get(StructMember.class)) {
+			// check if the type specifier has an array specifier
+			TypeSpecifier typeSpecifier = structMember.getType().getTypeSpecifier();
+			ArraySpecifier arraySpecifier = typeSpecifier.getArraySpecifier();
+			if (arraySpecifier == null) {
+				continue;
+			}
+
+			// check if the array specifier is unsized
+			if (!arraySpecifier.getChildren().isNullEmpty()) {
+				continue;
+			}
+
+			// remove itself from the parent (makes it null)
+			arraySpecifier.detach();
+
+			// move the empty array specifier to all members
+			boolean reusedOriginal = false;
+			for (StructDeclarator declarator : structMember.getDeclarators()) {
+				if (declarator.getArraySpecifier() != null) {
+					throw new IllegalStateException("Member already has an array specifier");
+				}
+
+				// clone the array specifier into this member, re-use if possible
+				declarator.setArraySpecifier(reusedOriginal ? arraySpecifier.cloneInto(root) : arraySpecifier);
+				reusedOriginal = true;
+			}
+
+			LOGGER.warn(
+					"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) "
+							+ structMember.getDeclarators().stream().map(StructDeclarator::getName).map(Identifier::getName)
+									.collect(Collectors.joining(", "))
+							+ ".");
 		}
 	}
 
@@ -590,39 +632,12 @@ public class CompatibilityTransformer {
 		}
 	}
 
-	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<ExternalDeclaration>(
-			"out float name;",
-			ParseShape.EXTERNAL_DECLARATION) {
-		{
-			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
-			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*",
-					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
-		}
+	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher=new Matcher<ExternalDeclaration>("out float name;",ParseShape.EXTERNAL_DECLARATION){{markClassWildcard("qualifier",pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));markClassWildcard("type",pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));markClassWildcard("name*",pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));}
 
-		@Override
-		public boolean matchesExtract(ExternalDeclaration tree) {
-			boolean result = super.matchesExtract(tree);
-			if (!result) {
-				return false;
-			}
+	@Override public boolean matchesExtract(ExternalDeclaration tree){boolean result=super.matchesExtract(tree);if(!result){return false;}
 
-			// look for an out qualifier but no layout qualifier
-			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
-			var hasOutQualifier = false;
-			for (TypeQualifierPart part : qualifier.getParts()) {
-				if (part instanceof StorageQualifier) {
-					StorageQualifier storageQualifier = (StorageQualifier) part;
-					if (storageQualifier.storageType == StorageType.OUT) {
-						hasOutQualifier = true;
-					}
-				} else if (part instanceof LayoutQualifier) {
-					return false;
-				}
-			}
-			return hasOutQualifier;
-		}
-	};
+	// look for an out qualifier but no layout qualifier
+	TypeQualifier qualifier=getNodeMatch("qualifier",TypeQualifier.class);var hasOutQualifier=false;for(TypeQualifierPart part:qualifier.getParts()){if(part instanceof StorageQualifier){StorageQualifier storageQualifier=(StorageQualifier)part;if(storageQualifier.storageType==StorageType.OUT){hasOutQualifier=true;}}else if(part instanceof LayoutQualifier){return false;}}return hasOutQualifier;}};
 
 	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
 			.withExternalDeclaration("out __type __name;");
