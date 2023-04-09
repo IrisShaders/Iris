@@ -16,10 +16,13 @@ public class VanillaParameters extends GeometryInfoParameters {
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public VanillaParameters(
-		Patch patch,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
-		AlphaTest alpha, boolean isLines, boolean hasChunkOffset,
-		ShaderAttributeInputs inputs, boolean hasGeometry) {
+			Patch patch,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+			AlphaTest alpha,
+			boolean isLines,
+			boolean hasChunkOffset,
+			ShaderAttributeInputs inputs,
+			boolean hasGeometry) {
 		super(patch, textureMap, hasGeometry);
 		this.alpha = alpha;
 		this.isLines = isLines;

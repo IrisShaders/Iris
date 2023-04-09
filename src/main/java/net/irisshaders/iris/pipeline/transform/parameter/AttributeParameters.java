@@ -11,10 +11,11 @@ public class AttributeParameters extends GeometryInfoParameters {
 	public final InputAvailability inputs;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public AttributeParameters(Patch patch,
-							   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
-							   boolean hasGeometry,
-							   InputAvailability inputs) {
+	public AttributeParameters(
+			Patch patch,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+			boolean hasGeometry,
+			InputAvailability inputs) {
 		super(patch, textureMap, hasGeometry);
 		this.inputs = inputs;
 	}
@@ -43,6 +44,7 @@ public class AttributeParameters extends GeometryInfoParameters {
 		AttributeParameters other = (AttributeParameters) obj;
 		if (inputs == null) {
 			return other.inputs == null;
-		} else return inputs.equals(other.inputs);
+		} else
+			return inputs.equals(other.inputs);
 	}
 }

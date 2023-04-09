@@ -19,11 +19,12 @@ public class SodiumParameters extends Parameters {
 	// (See use of setAlphaFor in TransformPatcher)
 	public AlphaTest alpha;
 
-	public SodiumParameters(Patch patch,
-							Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
-							AlphaTest alpha,
-							ShaderAttributeInputs inputs,
-							float positionScale, float positionOffset, float textureScale) {
+	public SodiumParameters(
+			Patch patch,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+			AlphaTest alpha,
+			ShaderAttributeInputs inputs,
+			float positionScale, float positionOffset, float textureScale) {
 		super(patch, textureMap);
 		this.inputs = inputs;
 		this.positionScale = positionScale;
@@ -77,6 +78,7 @@ public class SodiumParameters extends Parameters {
 			return false;
 		if (alpha == null) {
 			return other.alpha == null;
-		} else return alpha.equals(other.alpha);
+		} else
+			return alpha.equals(other.alpha);
 	}
 }
