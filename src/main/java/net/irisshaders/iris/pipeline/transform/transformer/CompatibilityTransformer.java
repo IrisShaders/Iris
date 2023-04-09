@@ -34,7 +34,7 @@ import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.shader.ShaderType;
-import net.irisshaders.iris.pipeline.PatchedShaderPrinter;
+import net.irisshaders.iris.parsing.PatchedShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 import org.apache.logging.log4j.LogManager;
@@ -104,8 +104,8 @@ public class CompatibilityTransformer {
 	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
 		.withExternalDeclaration("out __type __name;");
 	private static final String attachTargetPrefix = "outColor";
-	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 	private static final List<String> reservedWords = List.of("texture");
+	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
 	static {
 		declarationTemplate

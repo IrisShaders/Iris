@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline.newshader;
+package net.irisshaders.iris.exceptions;
 
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.minecraft.server.ChainedJsonException;

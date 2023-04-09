@@ -10,9 +10,7 @@ import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.program.ProgramImages;
 import net.irisshaders.iris.gl.program.ProgramSamplers;
 import net.irisshaders.iris.gl.program.ProgramUniforms;
-import net.irisshaders.iris.pipeline.newshader.AlphaTests;
-import net.irisshaders.iris.pipeline.newshader.FogMode;
-import net.irisshaders.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.irisshaders.iris.parsing.PatchedShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.rendertarget.RenderTargets;
@@ -74,6 +72,7 @@ public class SodiumTerrainPipeline {
 	List<BufferBlendOverride> shadowBufferOverrides;
 	Optional<AlphaTest> shadowAlpha;
 	ProgramSet programSet;
+
 	public SodiumTerrainPipeline(WorldRenderingPipeline parent, ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
 								 IntFunction<ProgramSamplers> createShadowSamplers, IntFunction<ProgramImages> createTerrainImages, IntFunction<ProgramImages> createShadowImages,
 								 RenderTargets targets,

@@ -1,10 +1,12 @@
-package net.irisshaders.iris.pipeline;
+package net.irisshaders.iris.renderers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
-import net.irisshaders.iris.mixin.GameRendererAccessor;
-import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.api.v0.IrisApi;
+import net.irisshaders.iris.mixin.GameRendererAccessor;
+import net.irisshaders.iris.pipeline.WorldRenderingPhase;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;

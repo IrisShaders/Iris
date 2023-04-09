@@ -5,7 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
-import net.irisshaders.iris.pipeline.newshader.FogMode;
+import net.irisshaders.iris.pipeline.FogMode;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 

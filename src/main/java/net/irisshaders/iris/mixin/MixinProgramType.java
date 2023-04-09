@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin;
 
 import com.mojang.blaze3d.shaders.Program;
-import net.irisshaders.iris.pipeline.newshader.IrisProgramTypes;
+import net.irisshaders.iris.pipeline.IrisProgramTypes;
 import org.apache.commons.lang3.ArrayUtils;
 import org.lwjgl.opengl.GL32C;
 import org.spongepowered.asm.mixin.Final;

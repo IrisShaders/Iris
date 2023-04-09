@@ -11,7 +11,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
 import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
 import net.irisshaders.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
-import net.irisshaders.iris.pipeline.ShadowRenderer;
+import net.irisshaders.iris.renderers.ShadowRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;

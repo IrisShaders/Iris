@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline;
+package net.irisshaders.iris.renderers;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;

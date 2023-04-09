@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline.newshader;
+package net.irisshaders.iris.pipeline;
 
 import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
 import com.mojang.blaze3d.shaders.Program;

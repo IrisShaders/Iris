@@ -6,10 +6,9 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.newshader.CoreWorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.newshader.ExtendedShader;
-import net.irisshaders.iris.pipeline.newshader.ShaderInstanceInterface;
-import net.irisshaders.iris.pipeline.newshader.fallback.FallbackShader;
+import net.irisshaders.iris.pipeline.ExtendedShader;
+import net.irisshaders.iris.pipeline.ShaderInstanceInterface;
+import net.irisshaders.iris.pipeline.fallback.FallbackShader;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.slf4j.Logger;
@@ -29,8 +28,8 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 	private static boolean shouldOverrideShaders() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			return ((CoreWorldRenderingPipeline) pipeline).shouldOverrideShaders();
+		if (pipeline instanceof WorldRenderingPipeline) {
+			return pipeline.shouldOverrideShaders();
 		} else {
 			return false;
 		}

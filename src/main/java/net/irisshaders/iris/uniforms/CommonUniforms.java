@@ -11,7 +11,7 @@ import net.irisshaders.iris.layer.GbufferPrograms;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.irisshaders.iris.mixin.texture.TextureAtlasAccessor;
-import net.irisshaders.iris.pipeline.newshader.FogMode;
+import net.irisshaders.iris.pipeline.FogMode;
 import net.irisshaders.iris.shaderpack.IdMap;
 import net.irisshaders.iris.shaderpack.PackDirectives;
 import net.irisshaders.iris.texture.TextureInfoCache;

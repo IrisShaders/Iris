@@ -59,7 +59,7 @@ public class IrisVideoSettings {
 			}
 		});
 
-    public static int getOverriddenShadowDistance(int base) {
+	public static int getOverriddenShadowDistance(int base) {
 		return Iris.getPipelineManager().getPipeline()
 			.map(pipeline -> pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(base))
 			.orElse(base);

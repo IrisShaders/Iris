@@ -2,7 +2,7 @@ package net.irisshaders.iris.mixin;
 
 import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.shaders.Shader;
-import net.irisshaders.iris.pipeline.newshader.ExtendedShader;
+import net.irisshaders.iris.pipeline.ExtendedShader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline.newshader;
+package net.irisshaders.iris.pipeline;
 
 public enum FogMode {
 	/**

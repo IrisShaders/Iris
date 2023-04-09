@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline;
+package net.irisshaders.iris.pipeline.clearing;
 
 import org.joml.Vector4f;
 

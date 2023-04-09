@@ -1,8 +1,8 @@
 package net.irisshaders.iris.mixin;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.sodium.SodiumVersionCheck;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;

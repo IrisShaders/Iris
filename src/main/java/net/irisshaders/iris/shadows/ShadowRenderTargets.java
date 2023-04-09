@@ -30,14 +30,13 @@ public class ShadowRenderTargets {
 	private final List<GlFramebuffer> ownedFramebuffers;
 	private final int resolution;
 	private final WorldRenderingPipeline pipeline;
-
-	private boolean fullClearRequired;
-	private boolean translucentDepthDirty;
 	private final boolean[] hardwareFiltered;
 	private final boolean[] linearFiltered;
 	private final InternalTextureFormat[] formats;
 	private final IntList buffersToBeCleared;
 	private final int size;
+	private boolean fullClearRequired;
+	private boolean translucentDepthDirty;
 
 	public ShadowRenderTargets(WorldRenderingPipeline pipeline, int resolution, PackShadowDirectives shadowDirectives) {
 		this.pipeline = pipeline;

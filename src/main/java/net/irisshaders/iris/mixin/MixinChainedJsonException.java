@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin;
 
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
-import net.irisshaders.iris.pipeline.newshader.FakeChainedJsonException;
+import net.irisshaders.iris.exceptions.FakeChainedJsonException;
 import net.minecraft.server.ChainedJsonException;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

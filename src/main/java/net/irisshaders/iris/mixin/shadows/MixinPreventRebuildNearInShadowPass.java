@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin.shadows;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.irisshaders.iris.pipeline.ShadowRenderer;
+import net.irisshaders.iris.renderers.ShadowRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;

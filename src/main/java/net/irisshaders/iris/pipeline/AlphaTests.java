@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline.newshader;
+package net.irisshaders.iris.pipeline;
 
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.AlphaTestFunction;

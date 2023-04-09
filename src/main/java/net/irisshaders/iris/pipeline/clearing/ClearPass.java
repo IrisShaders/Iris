@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline;
+package net.irisshaders.iris.pipeline.clearing;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;

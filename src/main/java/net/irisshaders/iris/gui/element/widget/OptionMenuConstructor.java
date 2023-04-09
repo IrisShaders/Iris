@@ -6,15 +6,7 @@ import net.irisshaders.iris.gui.NavigationController;
 import net.irisshaders.iris.gui.element.ShaderPackOptionList;
 import net.irisshaders.iris.gui.element.screen.ElementWidgetScreenData;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
-import net.irisshaders.iris.shaderpack.option.menu.OptionMenuBooleanOptionElement;
-import net.irisshaders.iris.shaderpack.option.menu.OptionMenuContainer;
-import net.irisshaders.iris.shaderpack.option.menu.OptionMenuElement;
-import net.irisshaders.iris.shaderpack.option.menu.OptionMenuElementScreen;
-import net.irisshaders.iris.shaderpack.option.menu.OptionMenuLinkElement;
-import net.irisshaders.iris.shaderpack.option.menu.OptionMenuMainElementScreen;
-import net.irisshaders.iris.shaderpack.option.menu.OptionMenuProfileElement;
-import net.irisshaders.iris.shaderpack.option.menu.OptionMenuStringOptionElement;
-import net.irisshaders.iris.shaderpack.option.menu.OptionMenuSubElementScreen;
+import net.irisshaders.iris.shaderpack.option.menu.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 

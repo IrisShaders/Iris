@@ -3,7 +3,6 @@ package net.irisshaders.iris.colorspace;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.program.ComputeProgram;
@@ -82,18 +81,18 @@ public class ColorSpaceConverter {
 			source = JcppProcessor.glslPreprocessSource(source, Collections.EMPTY_LIST);
 
 			String vertex = """
-				#version 150 core
+					#version 150 core
 
-				in vec3 Position;
-				in vec2 UV0;
+					in vec3 Position;
+					in vec2 UV0;
 
-				out vec2 texCoord;
+					out vec2 texCoord;
 
-				void main() {
-					gl_Position = vec4(Position.xy * 2.0 - 1.0, 0.0, 1.0);
-					texCoord = UV0;
-				}
-			""";
+					void main() {
+						gl_Position = vec4(Position.xy * 2.0 - 1.0, 0.0, 1.0);
+						texCoord = UV0;
+					}
+				""";
 			ProgramBuilder builder = ProgramBuilder.begin("colorSpace", vertex, null, source, ImmutableSet.of());
 			builder.addDefaultSampler(() -> target, "mainImage");
 
@@ -141,6 +140,7 @@ public class ColorSpaceConverter {
 			throw new RuntimeException(e);
 		}
 	}
+
 	public void processColorSpace() {
 		if (colorSpace == ColorSpace.SRGB || shouldSkipColorSpaceConversion) {
 			// Packs output in SRGB by default.

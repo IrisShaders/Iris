@@ -65,6 +65,7 @@ public class ShaderProperties {
 	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
 	private final Int2IntArrayMap bufferObjects = new Int2IntArrayMap();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
@@ -100,7 +101,6 @@ public class ShaderProperties {
 	private List<String> mainScreenOptions = null;
 	private Integer mainScreenColumnCount = null;
 	private String noiseTexturePath = null;
-	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
 	private List<String> requiredFeatureFlags = new ArrayList<>();
 	private List<String> optionalFeatureFlags = new ArrayList<>();
 

@@ -18,9 +18,9 @@ import net.irisshaders.iris.gl.program.ProgramUniforms;
 import net.irisshaders.iris.gl.sampler.SamplerLimits;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.texture.TextureAccess;
-import net.irisshaders.iris.pipeline.PatchedShaderPrinter;
+import net.irisshaders.iris.parsing.PatchedShaderPrinter;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.newshader.FogMode;
+import net.irisshaders.iris.pipeline.FogMode;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.rendertarget.Blaze3dRenderTargetExt;
@@ -66,9 +66,9 @@ public class FinalPassRenderer {
 	private final CenterDepthSampler centerDepthSampler;
 	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final CustomUniforms customUniforms;
+	private final WorldRenderingPipeline pipeline;
 	private int lastColorTextureId;
 	private int lastColorTextureVersion;
-	private final WorldRenderingPipeline pipeline;
 
 	// TODO: The length of this argument list is getting a bit ridiculous
 	public FinalPassRenderer(WorldRenderingPipeline pipeline, ProgramSet pack, RenderTargets renderTargets, TextureAccess noiseTexture,

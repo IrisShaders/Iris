@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline.newshader;
+package net.irisshaders.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -8,7 +8,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.block_rendering.BlockMaterialMapping;
 import net.irisshaders.iris.block_rendering.BlockRenderingSettings;
 import net.irisshaders.iris.colorspace.ColorSpaceConverter;
@@ -36,16 +35,13 @@ import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
-import net.irisshaders.iris.pipeline.ClearPass;
-import net.irisshaders.iris.pipeline.ClearPassCreator;
-import net.irisshaders.iris.pipeline.CustomTextureManager;
-import net.irisshaders.iris.pipeline.HorizonRenderer;
-import net.irisshaders.iris.pipeline.PatchedShaderPrinter;
-import net.irisshaders.iris.pipeline.ShadowRenderer;
-import net.irisshaders.iris.pipeline.SodiumTerrainPipeline;
-import net.irisshaders.iris.pipeline.WorldRenderingPhase;
-import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.newshader.fallback.FallbackShader;
+import net.irisshaders.iris.pipeline.clearing.ClearPass;
+import net.irisshaders.iris.pipeline.clearing.ClearPassCreator;
+import net.irisshaders.iris.exceptions.FakeChainedJsonException;
+import net.irisshaders.iris.renderers.HorizonRenderer;
+import net.irisshaders.iris.parsing.PatchedShaderPrinter;
+import net.irisshaders.iris.renderers.ShadowRenderer;
+import net.irisshaders.iris.pipeline.fallback.FallbackShader;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.postprocess.BufferFlipper;
 import net.irisshaders.iris.postprocess.CenterDepthSampler;
@@ -108,7 +104,7 @@ import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline, RenderTargetStateListener {
+public class NewWorldRenderingPipeline implements WorldRenderingPipeline, RenderTargetStateListener {
 	private final RenderTargets renderTargets;
 	private final ShaderMap shaderMap;
 	private final CustomUniforms customUniforms;
@@ -148,6 +144,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShadowRenderer shadowRenderer;
 	private final int shadowMapResolution;
 	private final ShaderPack pack;
+	@Nullable
+	private final ComputeProgram[] shadowComputes;
+	private final ParticleRenderingSettings particleRenderingSettings;
+	private final PackDirectives packDirectives;
+	private final Set<GlImage> customImages;
+	private final GlImage[] clearImages;
+	private final PackShadowDirectives shadowDirectives;
+	private final ColorSpaceConverter colorSpaceConverter;
+	private final boolean controlsColorSpace;
 	public boolean isBeforeTranslucent;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
 	private ShadowRenderTargets shadowRenderTargets;
@@ -157,21 +162,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private ImmutableList<ClearPass> clearPasses;
 	private ImmutableList<ClearPass> shadowClearPasses;
 	private ImmutableList<ClearPass> shadowClearPassesFull;
-	@Nullable
-	private final ComputeProgram[] shadowComputes;
 	private boolean destroyed = false;
 	private boolean isRenderingWorld;
 	private boolean isMainBound;
 	private boolean shouldBindPBR;
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
-	private final ParticleRenderingSettings particleRenderingSettings;
-	private final PackDirectives packDirectives;
-	private final Set<GlImage> customImages;
-	private final GlImage[] clearImages;
-	private final PackShadowDirectives shadowDirectives;
-	private final ColorSpaceConverter colorSpaceConverter;
-	private final boolean controlsColorSpace;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		PatchedShaderPrinter.resetPrintState();

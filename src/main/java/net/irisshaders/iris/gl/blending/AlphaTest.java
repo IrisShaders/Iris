@@ -1,6 +1,6 @@
 package net.irisshaders.iris.gl.blending;
 
-import net.irisshaders.iris.pipeline.newshader.AlphaTests;
+import net.irisshaders.iris.pipeline.AlphaTests;
 
 public class AlphaTest {
 	public static final AlphaTest ALWAYS = new AlphaTest(AlphaTestFunction.ALWAYS, 0.0f);
