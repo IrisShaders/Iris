@@ -21,10 +21,11 @@ import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifie
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
-import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructDeclarator;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructMember;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
@@ -50,7 +51,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CompatibilityTransformer {
@@ -306,44 +306,35 @@ public class CompatibilityTransformer {
 			}
 		}
 
-		// transform that moves unsized array specifiers from the type to the
-		// identifier of a type and init declaration. Some drivers appear to not be able
-		// to detect the unsized array if it's on the type.
-		for (DeclarationExternalDeclaration declarationExternalDeclaration : root.nodeIndex
-				.get(DeclarationExternalDeclaration.class)) {
-			if (declarationExternalDeclaration.getDeclaration() instanceof TypeAndInitDeclaration declaration) {
-				// check if the type specifier has an array specifier
-				TypeSpecifier typeSpecifier = declaration.getType().getTypeSpecifier();
-				ArraySpecifier arraySpecifier = typeSpecifier.getArraySpecifier();
-				if (arraySpecifier == null) {
-					continue;
+		// transform that moves unsized array specifiers on struct members from the type
+		// to the identifier of a type and init declaration. Some drivers appear to not
+		// be able to detect the unsized array if it's on the type.
+		for (StructMember structMember : root.nodeIndex.get(StructMember.class)) {
+			// check if the type specifier has an array specifier
+			var typeSpecifier = structMember.getType().getTypeSpecifier();
+			var arraySpecifier = typeSpecifier.getArraySpecifier();
+			if (arraySpecifier == null) {
+				continue;
+			}
+
+			// check if the array specifier is unsized
+			if (!arraySpecifier.getChildren().isNullEmpty()) {
+				continue;
+			}
+
+			// remove itself from the parent (makes it null)
+			arraySpecifier.detach();
+
+			// move the empty array specifier to all members
+			var reusedOriginal = false;
+			for (StructDeclarator declarator : structMember.getDeclarators()) {
+				if (declarator.getArraySpecifier() != null) {
+					throw new IllegalStateException("Member already has an array specifier");
 				}
 
-				// check if the array specifier is unsized
-				if (!arraySpecifier.getChildren().isNullEmpty()) {
-					continue;
-				}
-
-				// remove itself from the parent (makes it null)
-				arraySpecifier.detach();
-
-				// move the empty array specifier to all members
-				var reusedOriginal = false;
-				for (DeclarationMember member : declaration.getMembers()) {
-					if (member.getArraySpecifier() != null) {
-						throw new IllegalStateException("Member already has an array specifier");
-					}
-
-					// clone the array specifier into this member, re-use if possible
-					member.setArraySpecifier(reusedOriginal ? arraySpecifier.cloneInto(root) : arraySpecifier);
-					reusedOriginal = true;
-				}
-
-				LOGGER.warn(
-						"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) "
-								+ declaration.getMembers().stream().map(DeclarationMember::getName).map(Identifier::getName)
-										.collect(Collectors.joining(", "))
-								+ ".");
+				// clone the array specifier into this member, re-use if possible
+				declarator.setArraySpecifier(reusedOriginal ? arraySpecifier.cloneInto(root) : arraySpecifier);
+				reusedOriginal = true;
 			}
 		}
 	}
