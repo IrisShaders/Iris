@@ -6,7 +6,7 @@
   "iris.shaders.debug.disabled": "调试已禁用。",
   "iris.shaders.debug.failure": "无法启用调试，你的电脑不支持调试功能。",
   "iris.shaders.debug.restart": "没有调试环境，请重启以启用调试。",
-  "iris.shaders.ssbofailure": "光影请求了一个特定的功能（SSBO），但您的 GPU 不支持，可能无法正常工作。",
+  "iris.shaders.ssbofailure": "光影请求了你的 GPU 所不支持的特定功能（SSBO），可能无法正常工作。",
   "iris.keybind.reload": "重新加载光影包",
   "iris.keybind.shaderPackSelection": "光影包选择界面",
   "iris.keybind.toggleShaders": "启用/禁用光影",
