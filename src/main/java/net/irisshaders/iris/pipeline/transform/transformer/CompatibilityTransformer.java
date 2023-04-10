@@ -21,6 +21,7 @@ import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifie
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
@@ -36,7 +37,7 @@ import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.shader.ShaderType;
-import net.irisshaders.iris.pipeline.PatchedShaderPrinter;
+import net.irisshaders.iris.parsing.PatchedShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 import org.apache.logging.log4j.LogManager;
@@ -51,6 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CompatibilityTransformer {
@@ -106,8 +108,8 @@ public class CompatibilityTransformer {
 	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
 		.withExternalDeclaration("out __type __name;");
 	private static final String attachTargetPrefix = "outColor";
-	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 	private static final List<String> reservedWords = List.of("texture");
+	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
 	static {
 		declarationTemplate
@@ -311,8 +313,8 @@ public class CompatibilityTransformer {
 		// be able to detect the unsized array if it's on the type.
 		for (StructMember structMember : root.nodeIndex.get(StructMember.class)) {
 			// check if the type specifier has an array specifier
-			var typeSpecifier = structMember.getType().getTypeSpecifier();
-			var arraySpecifier = typeSpecifier.getArraySpecifier();
+			TypeSpecifier typeSpecifier = structMember.getType().getTypeSpecifier();
+			ArraySpecifier arraySpecifier = typeSpecifier.getArraySpecifier();
 			if (arraySpecifier == null) {
 				continue;
 			}
@@ -326,7 +328,7 @@ public class CompatibilityTransformer {
 			arraySpecifier.detach();
 
 			// move the empty array specifier to all members
-			var reusedOriginal = false;
+			boolean reusedOriginal = false;
 			for (StructDeclarator declarator : structMember.getDeclarators()) {
 				if (declarator.getArraySpecifier() != null) {
 					throw new IllegalStateException("Member already has an array specifier");
@@ -336,6 +338,12 @@ public class CompatibilityTransformer {
 				declarator.setArraySpecifier(reusedOriginal ? arraySpecifier.cloneInto(root) : arraySpecifier);
 				reusedOriginal = true;
 			}
+
+			LOGGER.warn(
+					"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) "
+							+ structMember.getDeclarators().stream().map(StructDeclarator::getName).map(Identifier::getName)
+									.collect(Collectors.joining(", "))
+							+ ".");
 		}
 	}
 

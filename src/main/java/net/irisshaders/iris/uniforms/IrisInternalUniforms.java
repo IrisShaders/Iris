@@ -2,7 +2,7 @@ package net.irisshaders.iris.uniforms;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
-import net.irisshaders.iris.pipeline.newshader.FogMode;
+import net.irisshaders.iris.pipeline.FogMode;
 import org.joml.Vector4f;
 
 import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;

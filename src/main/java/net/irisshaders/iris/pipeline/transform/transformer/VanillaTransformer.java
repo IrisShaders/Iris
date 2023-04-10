@@ -5,7 +5,7 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.irisshaders.iris.gl.shader.ShaderType;
-import net.irisshaders.iris.pipeline.newshader.AlphaTests;
+import net.irisshaders.iris.pipeline.AlphaTests;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
 
 public class VanillaTransformer {

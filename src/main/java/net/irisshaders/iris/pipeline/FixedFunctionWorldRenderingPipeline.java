@@ -33,6 +33,16 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public ShaderMap getShaderMap() {
+		return null;
+	}
+
+	@Override
+	public boolean shouldOverrideShaders() {
+		return false;
+	}
+
+	@Override
 	public void onShadowBufferChange() {
 
 	}
@@ -215,5 +225,10 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	public float getSunPathRotation() {
 		// No sun tilt
 		return 0;
+	}
+
+	@Override
+	public void colorSpaceChanged() {
+
 	}
 }

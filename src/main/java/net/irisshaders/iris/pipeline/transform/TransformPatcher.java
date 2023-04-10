@@ -17,8 +17,8 @@ import net.irisshaders.iris.gbuffer_overrides.matching.InputAvailability;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
-import net.irisshaders.iris.pipeline.PatchedShaderPrinter;
-import net.irisshaders.iris.pipeline.newshader.ShaderAttributeInputs;
+import net.irisshaders.iris.parsing.PatchedShaderPrinter;
+import net.irisshaders.iris.pipeline.ShaderAttributeInputs;
 import net.irisshaders.iris.pipeline.transform.parameter.AttributeParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.ComputeParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
@@ -67,6 +67,7 @@ public class TransformPatcher {
 	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = new LRUCache<>(400);
 	private static final List<String> internalPrefixes = List.of("iris_", "irisMain", "moj_import");
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
+	private static final EnumASTTransformer<Parameters, PatchShaderType> transformer;
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	// TODO: Only do the NewLines patches if the source code isn't from
 	// gbuffers_lines (what does this mean?)
@@ -80,7 +81,6 @@ public class TransformPatcher {
 			return true;
 		}
 	};
-	private static final EnumASTTransformer<Parameters, PatchShaderType> transformer;
 
 	static {
 		transformer = new EnumASTTransformer<Parameters, PatchShaderType>(PatchShaderType.class) {

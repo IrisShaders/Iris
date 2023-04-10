@@ -1,8 +1,8 @@
 package net.irisshaders.iris.mixin;
 
-import net.irisshaders.iris.Iris;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.irisshaders.iris.Iris;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;

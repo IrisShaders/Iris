@@ -1,7 +1,7 @@
 package net.irisshaders.iris.uniforms;
 
 import net.irisshaders.iris.gl.uniform.UniformHolder;
-import net.irisshaders.iris.pipeline.ShadowRenderer;
+import net.irisshaders.iris.renderers.ShadowRenderer;
 import net.irisshaders.iris.shaderpack.PackDirectives;
 import net.irisshaders.iris.shadows.ShadowMatrices;
 import org.joml.Matrix4f;

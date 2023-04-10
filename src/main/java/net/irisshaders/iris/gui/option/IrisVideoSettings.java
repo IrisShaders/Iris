@@ -1,6 +1,7 @@
 package net.irisshaders.iris.gui.option;
 
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.colorspace.ColorSpace;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.gui.components.Tooltip;
@@ -13,6 +14,7 @@ public class IrisVideoSettings {
 	private static final Tooltip DISABLED_TOOLTIP = Tooltip.create(Component.translatable("options.iris.shadowDistance.disabled"));
 	private static final Tooltip ENABLED_TOOLTIP = Tooltip.create(Component.translatable("options.iris.shadowDistance.enabled"));
 	public static int shadowDistance = 32;
+	public static ColorSpace colorSpace;
 	public static final OptionInstance<Integer> RENDER_DISTANCE = new ShadowDistanceOption<Integer>("options.iris.shadowDistance",
 		mc -> {
 			WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();

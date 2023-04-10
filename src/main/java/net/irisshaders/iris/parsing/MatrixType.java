@@ -13,6 +13,7 @@ public class MatrixType<T> extends Type.ObjectType {
 	public static MatrixType<Matrix4f> MAT4 = new MatrixType<>("mat4", Matrix4f::new);
 	final String name;
 	private final Supplier<T> supplier;
+
 	public MatrixType(String name, Supplier<T> supplier) {
 		this.name = name;
 		this.supplier = supplier;

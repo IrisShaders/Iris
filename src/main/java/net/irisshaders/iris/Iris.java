@@ -3,6 +3,10 @@ package net.irisshaders.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.Version;
 import net.irisshaders.iris.compat.sodium.SodiumVersionCheck;
 import net.irisshaders.iris.config.IrisConfig;
 import net.irisshaders.iris.gl.GLDebug;
@@ -13,7 +17,7 @@ import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.newshader.NewWorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.NewWorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.DimensionId;
 import net.irisshaders.iris.shaderpack.OptionalBoolean;
 import net.irisshaders.iris.shaderpack.ProgramSet;
@@ -24,10 +28,6 @@ import net.irisshaders.iris.shaderpack.option.Profile;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
 import net.irisshaders.iris.texture.pbr.PBRTextureManager;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.api.Version;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.KeyMapping;
@@ -68,6 +68,8 @@ public class Iris {
 
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
+	// Change this for snapshots!
+	private static final String backupVersionNumber = "1.19.4";
 	public static DimensionId lastDimension = null;
 	private static Path shaderpacksDirectory;
 	private static ShaderpackDirectoryManager shaderpacksDirectoryManager;
@@ -90,8 +92,6 @@ public class Iris {
 	private static Version IRIS_VERSION;
 	private static UpdateChecker updateChecker;
 	private static boolean fallback;
-	// Change this for snapshots!
-	private static final String backupVersionNumber = "1.19.4";
 
 	/**
 	 * Called once RenderSystem#initRenderer has completed. This means that we can safely access OpenGL.

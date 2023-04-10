@@ -6,11 +6,12 @@ import net.irisshaders.iris.JomlConversions;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
+import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.layer.GbufferPrograms;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.irisshaders.iris.mixin.texture.TextureAtlasAccessor;
-import net.irisshaders.iris.pipeline.newshader.FogMode;
+import net.irisshaders.iris.pipeline.FogMode;
 import net.irisshaders.iris.shaderpack.IdMap;
 import net.irisshaders.iris.shaderpack.PackDirectives;
 import net.irisshaders.iris.texture.TextureInfoCache;
@@ -135,6 +136,7 @@ public final class CommonUniforms {
 			.uniform1b(PER_FRAME, "is_sneaking", CommonUniforms::isSneaking)
 			.uniform1b(PER_FRAME, "is_sprinting", CommonUniforms::isSprinting)
 			.uniform1b(PER_FRAME, "is_hurt", CommonUniforms::isHurt)
+			.uniform1i(PER_FRAME, "colorSpace", () -> IrisVideoSettings.colorSpace.ordinal())
 			.uniform1b(PER_FRAME, "is_invisible", CommonUniforms::isInvisible)
 			.uniform1b(PER_FRAME, "is_burning", CommonUniforms::isBurning)
 			// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect

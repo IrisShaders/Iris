@@ -65,6 +65,7 @@ public class ShaderProperties {
 	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
 	private final Int2IntArrayMap bufferObjects = new Int2IntArrayMap();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
@@ -86,6 +87,7 @@ public class ShaderProperties {
 	private OptionalBoolean backFaceTranslucent = OptionalBoolean.DEFAULT;
 	private OptionalBoolean rainDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean concurrentCompute = OptionalBoolean.DEFAULT;
+	private OptionalBoolean controlsColorSpace = OptionalBoolean.DEFAULT;
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
@@ -99,7 +101,6 @@ public class ShaderProperties {
 	private List<String> mainScreenOptions = null;
 	private Integer mainScreenColumnCount = null;
 	private String noiseTexturePath = null;
-	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
 	private List<String> requiredFeatureFlags = new ArrayList<>();
 	private List<String> optionalFeatureFlags = new ArrayList<>();
 
@@ -159,6 +160,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "backFace.translucent", bool -> backFaceTranslucent = bool);
 			handleBooleanDirective(key, value, "rain.depth", bool -> rainDepth = bool);
 			handleBooleanDirective(key, value, "allowConcurrentCompute", bool -> concurrentCompute = bool);
+			handleBooleanDirective(key, value, "controlColorSpace", bool -> controlsColorSpace = bool);
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
@@ -738,6 +740,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getConcurrentCompute() {
 		return concurrentCompute;
+	}
+
+	public OptionalBoolean getControlsColorSpace() {
+		return controlsColorSpace;
 	}
 
 	public OptionalBoolean getPrepareBeforeShadow() {

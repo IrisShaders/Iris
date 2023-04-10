@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.pipeline.HandRenderer;
+import net.irisshaders.iris.renderers.HandRenderer;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.shaderpack.StringPair;
 import net.irisshaders.iris.texture.format.TextureFormat;

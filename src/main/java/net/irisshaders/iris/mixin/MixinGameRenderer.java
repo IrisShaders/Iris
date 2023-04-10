@@ -5,14 +5,13 @@ import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.pipeline.HandRenderer;
-import net.irisshaders.iris.pipeline.ShadowRenderer;
+import net.irisshaders.iris.api.v0.IrisApi;
+import net.irisshaders.iris.renderers.HandRenderer;
+import net.irisshaders.iris.renderers.ShadowRenderer;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.newshader.CoreWorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.newshader.IrisProgramTypes;
-import net.irisshaders.iris.pipeline.newshader.ShaderKey;
-import net.irisshaders.iris.api.v0.IrisApi;
+import net.irisshaders.iris.pipeline.IrisProgramTypes;
+import net.irisshaders.iris.pipeline.ShaderKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -451,8 +450,8 @@ public class MixinGameRenderer {
 	private static boolean shouldOverrideShaders() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			return ((CoreWorldRenderingPipeline) pipeline).shouldOverrideShaders();
+		if (pipeline != null) {
+			return pipeline.shouldOverrideShaders();
 		} else {
 			return false;
 		}
@@ -461,8 +460,8 @@ public class MixinGameRenderer {
 	private static void override(ShaderKey key, CallbackInfoReturnable<ShaderInstance> cir) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			ShaderInstance override = ((CoreWorldRenderingPipeline) pipeline).getShaderMap().getShader(key);
+		if (pipeline != null && pipeline.shouldOverrideShaders()) {
+			ShaderInstance override = pipeline.getShaderMap().getShader(key);
 
 			if (override != null) {
 				cir.setReturnValue(override);

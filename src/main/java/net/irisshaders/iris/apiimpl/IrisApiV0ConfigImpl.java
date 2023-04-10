@@ -1,8 +1,8 @@
 package net.irisshaders.iris.apiimpl;
 
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.config.IrisConfig;
 import net.irisshaders.iris.api.v0.IrisApiConfig;
+import net.irisshaders.iris.config.IrisConfig;
 
 import java.io.IOException;
 

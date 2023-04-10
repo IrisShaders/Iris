@@ -17,6 +17,10 @@ import java.util.List;
 import java.util.OptionalInt;
 
 public interface WorldRenderingPipeline {
+	ShaderMap getShaderMap();
+
+	boolean shouldOverrideShaders();
+
 	void onShadowBufferChange();
 
 	void beginLevelRendering();
@@ -84,4 +88,6 @@ public interface WorldRenderingPipeline {
 	boolean hasFeature(FeatureFlags flags);
 
 	float getSunPathRotation();
+
+	void colorSpaceChanged();
 }
