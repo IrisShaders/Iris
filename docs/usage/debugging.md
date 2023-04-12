@@ -39,6 +39,7 @@ The following is a list of the compatibility patches that are applied to shader 
 - If the out declaration does exist but is never assigned to, an initialization is created. If the out declaration has an array type, compatibility patching is skipped for it and a warning is produced.
 - When the types of declared and used input and output variables don't match, some drivers will error. To mitigate this, the type of the declaration is changed to match the type in the later stage (the fragment shader). An internal variable with the original type is added so that the code can assign a value to it. At the end of the `main` function this value is either truncated or padded to patch the expected type.
 - Unused functions are removed. Some drivers don't do certain semantic checks on unused functions which may result in errors when the code is then compiled with stricter drivers that do perform these checks before unused code removal. This heuristic is not perfect and may fail to remove unreachable functions that are used in another unreachable function.
+- In struct bodies (of the form `{ <struct members> }`) unsized array specifiers are moved from the type to the identifier of the member. A member `int[] foo` is transformed into `int foo[]`. This is done because the specification only requires support for the latter form while the former is unsupported by some drivers.
 
 ### Version Statement
 
