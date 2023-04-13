@@ -66,6 +66,6 @@ public class MixinBlockEntityRenderDispatcher {
 	@Inject(method = "render", at = @At(value = "INVOKE", target = RUN_REPORTED, shift = At.Shift.AFTER))
 	private void iris$afterRender(BlockEntity blockEntity, float tickDelta, PoseStack matrix,
 								  MultiBufferSource bufferSource, CallbackInfo ci) {
-		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(-1);
+		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(0);
 	}
 }

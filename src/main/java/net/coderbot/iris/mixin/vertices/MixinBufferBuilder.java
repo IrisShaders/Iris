@@ -244,10 +244,10 @@ public abstract class MixinBufferBuilder implements BufferVertexConsumer, BlockS
 			normalOffset = 24;
 			tangentOffset = 8;
 		} else {
-			midUOffset = 12;
-			midVOffset = 8;
-			normalOffset = 22;
-			tangentOffset = 4;
+			midUOffset = 14;
+			midVOffset = 10;
+			normalOffset = 24;
+			tangentOffset = 6;
 		}
 
 		for (int vertex = 0; vertex < vertexAmount; vertex++) {
