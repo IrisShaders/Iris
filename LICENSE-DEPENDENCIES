@@ -1,6 +1,8 @@
 Incompatible licenses:
 
-glsl-transformer is licensed under the GNU GPL Version 3 License, with Minecraft Linking Exception. Details on this exception can be found in https://github.com/IrisShaders/glsl-transformer/blob/main/LICENSE.EXCEPTION.
-This exception does not allow linking (using its API in some way) with glsl-transformer unless the only incompatible linker is Minecraft, and the source linking it is under the GPL or LGPL.
+glsl-transformer is licensed under the glsl-transformer Noncommercial License 1.0.0. Details on this can be found in https://github.com/IrisShaders/glsl-transformer/blob/main/LICENSE.
+The license text is short and easy to understand, but the gist is that you may distribute unmodified editions of this library and them in new works, under the condition that you qualify as a noncommercial entity. If you need to modify it, you may only do so in private or by contributing the changes back to the IrisShaders/glsl-transformer repository under the Contributor License Agreement. Using and distributing this library as part of a noncommercial, meaning access to it is not conditioned on payment or other compensation, Minecraft mod or related software falls under the allowed purposes. You are required to obtain a commercial license for using this library for any purpose other than a noncommercial one.
 
 This license is not applicable if linking with a program (Iris) containing glsl-transformer, unless the linker interacts with the library's API directly.
+
+tl;dr: If you intend to just depend on Iris and need to depend on the transformer due to that, you're fine. If you intend to use the transformer in any way, you must follow the license as followed above.

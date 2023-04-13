@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinVertexFormatElement {
 	@Inject(method = "supportsUsage", at = @At("HEAD"), cancellable = true)
 	private void iris$fixGenericAttributes(int index, VertexFormatElement.Usage type, CallbackInfoReturnable<Boolean> cir) {
-		if (type == VertexFormatElement.Usage.GENERIC) {
+		if (type == VertexFormatElement.Usage.GENERIC || type == VertexFormatElement.Usage.PADDING) {
 			cir.setReturnValue(true);
 		}
 	}
