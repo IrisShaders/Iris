@@ -327,10 +327,24 @@ public class ProgramUniforms {
 			typeName = "sampler2DShadow";
 		} else if (type == GL20C.GL_SAMPLER_1D_SHADOW) {
 			typeName = "sampler1DShadow";
+		} else if (type == ARBShaderImageLoadStore.GL_IMAGE_1D) {
+			typeName = "image1D";
 		} else if (type == ARBShaderImageLoadStore.GL_IMAGE_2D) {
 			typeName = "image2D";
 		} else if (type == ARBShaderImageLoadStore.GL_IMAGE_3D) {
 			typeName = "image3D";
+		} else if (type == ARBShaderImageLoadStore.GL_INT_IMAGE_1D) {
+			typeName = "iimage1D";
+		} else if (type == ARBShaderImageLoadStore.GL_INT_IMAGE_2D) {
+			typeName = "iimage2D";
+		} else if (type == ARBShaderImageLoadStore.GL_INT_IMAGE_3D) {
+			typeName = "iimage3D";
+		} else if (type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_1D) {
+			typeName = "uimage1D";
+		} else if (type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_2D) {
+			typeName = "uimage2D";
+		} else if (type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_3D) {
+			typeName = "uimage3D";
 		} else {
 			typeName = "(unknown:" + type + ")";
 		}
@@ -395,7 +409,12 @@ public class ProgramUniforms {
 	private static boolean isImage(int type) {
 		return type == ARBShaderImageLoadStore.GL_IMAGE_1D
 			|| type == ARBShaderImageLoadStore.GL_IMAGE_2D
+			|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_1D
 			|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_2D
+			|| type == ARBShaderImageLoadStore.GL_UNSIGNED_INT_IMAGE_3D
+			|| type == ARBShaderImageLoadStore.GL_INT_IMAGE_1D
+			|| type == ARBShaderImageLoadStore.GL_INT_IMAGE_2D
+			|| type == ARBShaderImageLoadStore.GL_INT_IMAGE_3D
 			|| type == ARBShaderImageLoadStore.GL_IMAGE_3D
 			|| type == ARBShaderImageLoadStore.GL_IMAGE_1D_ARRAY
 			|| type == ARBShaderImageLoadStore.GL_IMAGE_2D_ARRAY;
