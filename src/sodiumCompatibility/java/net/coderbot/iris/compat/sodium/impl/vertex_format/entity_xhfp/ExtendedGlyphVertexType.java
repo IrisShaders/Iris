@@ -19,7 +19,7 @@ public class ExtendedGlyphVertexType implements VanillaVertexType<GlyphVertexSin
 
 	@Override
 	public GlyphVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
-		return direct ? new GlyphVertexBufferWriterUnsafe(buffer) : new GlyphVertexBufferWriterNio(buffer);
+		return direct ? new EntityVertexBufferWriterUnsafe(buffer) : new EntityVertexBufferWriterNio(buffer);
 	}
 
 	@Override

@@ -18,11 +18,11 @@ public class MixinVertexFormat {
 	@Inject(method = "setupBufferState", at = @At("HEAD"), cancellable = true)
 	private void iris$onSetupBufferState(CallbackInfo ci) {
 		if (BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
-			if ((Object) this == DefaultVertexFormat.BLOCK || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
+			if ((Object) this == DefaultVertexFormat.BLOCK) {
 				IrisVertexFormats.TERRAIN.setupBufferState();
 
 				ci.cancel();
-			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
+			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				IrisVertexFormats.ENTITY.setupBufferState();
 
 				ci.cancel();
@@ -33,11 +33,11 @@ public class MixinVertexFormat {
 	@Inject(method = "clearBufferState", at = @At("HEAD"), cancellable = true)
 	private void iris$onClearBufferState(CallbackInfo ci) {
 		if (BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
-			if ((Object) this == DefaultVertexFormat.BLOCK || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
+			if ((Object) this == DefaultVertexFormat.BLOCK) {
 				IrisVertexFormats.TERRAIN.clearBufferState();
 
 				ci.cancel();
-			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
+			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				IrisVertexFormats.ENTITY.clearBufferState();
 
 				ci.cancel();
