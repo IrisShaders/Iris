@@ -55,4 +55,13 @@ public class IrisVertexFormats {
 		TERRAIN = new VertexFormat(terrainElements.build());
 		ENTITY = new VertexFormat(entityElements.build());
 	}
+
+	private static void debug(VertexFormat format) {
+		Iris.logger.info("Vertex format: " + format);
+		int byteIndex = 0;
+		for (VertexFormatElement element : format.getElements()) {
+			Iris.logger.info(element + " @ " + byteIndex + " is " + element.getType() + " " + element.getUsage());
+			byteIndex += element.getByteSize();
+		}
+	}
 }
