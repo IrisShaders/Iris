@@ -1,19 +1,21 @@
 package net.coderbot.iris.vertices;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import org.joml.Vector3f;
 import net.irisshaders.iris.api.v0.IrisTextVertexSink;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.util.function.IntFunction;
 
 public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
-	static VertexFormat format = IrisVertexFormats.TERRAIN;
+	static VertexFormat format = IrisVertexFormats.ENTITY;
 	private final ByteBuffer buffer;
 	private final TextQuadView quad = new TextQuadView();
 	private final Vector3f saveNormal = new Vector3f();
-	private static final int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
+	private static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
 	private int vertexCount;
 	private long elementOffset;
 	private float uSum;
@@ -55,7 +57,11 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 		MemoryUtil.memPutInt(i + 12, color);
 		MemoryUtil.memPutFloat(i + 16, u);
 		MemoryUtil.memPutFloat(i + 20, v);
-		MemoryUtil.memPutInt(i + 24, light);
+		MemoryUtil.memPutInt(i + 24, OverlayTexture.NO_OVERLAY);
+		MemoryUtil.memPutInt(i + 28, light);
+		MemoryUtil.memPutShort(i + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+		MemoryUtil.memPutShort(i + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+		MemoryUtil.memPutShort(i + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 
 		if (vertexCount == 4) {
 			// TODO: compute this at the head of quad()
@@ -73,10 +79,10 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 			int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
 			for (long vertex = 0; vertex < 4; vertex++) {
-				MemoryUtil.memPutFloat(i + 36 - STRIDE * vertex, uSum);
-				MemoryUtil.memPutFloat(i + 40 - STRIDE * vertex, vSum);
-				MemoryUtil.memPutInt(i + 28 - STRIDE * vertex, normal);
-				MemoryUtil.memPutInt(i + 44 - STRIDE * vertex, tangent);
+				MemoryUtil.memPutFloat(i + 42 - STRIDE * vertex, uSum);
+				MemoryUtil.memPutFloat(i + 46 - STRIDE * vertex, vSum);
+				MemoryUtil.memPutInt(i + 32 - STRIDE * vertex, normal);
+				MemoryUtil.memPutInt(i + 50 - STRIDE * vertex, tangent);
 			}
 
 			uSum = 0;
