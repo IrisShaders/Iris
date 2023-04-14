@@ -1,6 +1,6 @@
 # Iris 1.6 Changelog (full)
 
-Iris 1.6 has released for 1.18.2, 1.19.2, and 1.19.4.
+Iris 1.6.1 has released for 1.18.2, 1.19.2, and 1.19.4.
 
 This release was developed by IMS.
 
