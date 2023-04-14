@@ -74,9 +74,9 @@ public enum ShaderKey {
 	SHADOW_LEASH           (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.OFF,          LightingModel.LIGHTMAP  ),
 	SHADOW_LIGHTNING       (ProgramId.Shadow,      AlphaTests.OFF,             DefaultVertexFormat.POSITION_COLOR,     			FogMode.OFF,          LightingModel.FULLBRIGHT),
 	SHADOW_PARTICLES       (ProgramId.Shadow,      AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE,	     			FogMode.OFF,          LightingModel.LIGHTMAP  ),
-	SHADOW_TEXT           (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  IrisVertexFormats.TERRAIN                       , FogMode.OFF,          LightingModel.LIGHTMAP  ),
+	SHADOW_TEXT           (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  IrisVertexFormats.ENTITY                       , FogMode.OFF,          LightingModel.LIGHTMAP  ),
 	SHADOW_TEXT_BG        (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  DefaultVertexFormat.POSITION_COLOR_LIGHTMAP,     FogMode.OFF ,          LightingModel.LIGHTMAP  ),
-	SHADOW_TEXT_INTENSITY (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  IrisVertexFormats.TERRAIN                       , FogMode.OFF,          LightingModel.LIGHTMAP  );
+	SHADOW_TEXT_INTENSITY (ProgramId.Shadow,       AlphaTests.NON_ZERO_ALPHA,  IrisVertexFormats.ENTITY                       , FogMode.OFF,          LightingModel.LIGHTMAP  );
 
 	private final ProgramId program;
 	private final AlphaTest alphaTest;
