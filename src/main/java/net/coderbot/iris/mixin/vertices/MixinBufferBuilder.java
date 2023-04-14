@@ -138,7 +138,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 
 	@Override
 	public @NotNull VertexConsumer uv2(int pBufferVertexConsumer0, int pInt1) {
-		if (injectNormalAndUV1) {
+		if (injectNormalAndUV1 && currentElement == DefaultVertexFormat.ELEMENT_UV1) {
 			this.putShort(0, (short) 0);
 			this.putShort(2, (short) 10);
 			this.nextElement();
