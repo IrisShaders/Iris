@@ -3,6 +3,7 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format;
 import me.jellysquid.mods.sodium.client.render.vertex.serializers.VertexSerializer;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.GlyphVertexExt;
+import net.coderbot.iris.vertices.IrisVertexFormats;
 import org.lwjgl.system.MemoryUtil;
 
 public class EntityToTerrainVertexSerializer implements VertexSerializer {
@@ -23,7 +24,7 @@ public class EntityToTerrainVertexSerializer implements VertexSerializer {
 			MemoryUtil.memPutInt(dst + 44, MemoryUtil.memGetInt(src + 44L));
 
 			src += EntityVertex.STRIDE;
-			dst += GlyphVertexExt.STRIDE;
+			dst += IrisVertexFormats.TERRAIN.getVertexSize();
 		}
 
 	}

@@ -7,8 +7,10 @@ import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -16,16 +18,17 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 public final class GlyphVertexExt {
-	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.TERRAIN);
-	public static final int STRIDE = IrisVertexFormats.TERRAIN.getVertexSize();
+	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.ENTITY);
+	public static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
 
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;
 	private static final int OFFSET_TEXTURE = 16;
-	private static final int OFFSET_MID_TEXTURE = 36;
+	private static final int OFFSET_MID_TEXTURE = 42;
 	private static final int OFFSET_OVERLAY = 24;
 	private static final int OFFSET_LIGHT = 28;
 	private static final int OFFSET_NORMAL = 32;
+	private static final int OFFSET_TANGENT = 50;
 
 
 	private static final QuadViewEntity.QuadViewEntityUnsafe quad = new QuadViewEntity.QuadViewEntityUnsafe();
@@ -44,13 +47,22 @@ public final class GlyphVertexExt {
 		uSum += u;
 		vSum += v;
 
-		MemoryUtil.memPutFloat(i, x);
-		MemoryUtil.memPutFloat(i + 4, y);
-		MemoryUtil.memPutFloat(i + 8, z);
-		MemoryUtil.memPutInt(i + 12, color);
-		MemoryUtil.memPutFloat(i + 16, u);
-		MemoryUtil.memPutFloat(i + 20, v);
-		MemoryUtil.memPutInt(i + 24, light);
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_COLOR, color);
+
+		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 0, u);
+		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 4, v);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_LIGHT, light);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_OVERLAY, OverlayTexture.NO_OVERLAY);
+
+		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+		MemoryUtil.memPutShort(ptr + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+		MemoryUtil.memPutShort(ptr + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 
 		if (vertexCount == 4) {
 			endQuad(ptr);
@@ -76,10 +88,10 @@ public final class GlyphVertexExt {
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
 		for (long vertex = 0; vertex < 4; vertex++) {
-			MemoryUtil.memPutFloat(ptr + 36 - STRIDE * vertex, uSum);
-			MemoryUtil.memPutFloat(ptr + 40 - STRIDE * vertex, vSum);
-			MemoryUtil.memPutInt(ptr + 28 - STRIDE * vertex, normal);
-			MemoryUtil.memPutInt(ptr + 44 - STRIDE * vertex, tangent);
+			MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE - STRIDE * vertex, uSum);
+			MemoryUtil.memPutFloat(ptr + (OFFSET_MID_TEXTURE + 4) - STRIDE * vertex, vSum);
+			MemoryUtil.memPutInt(ptr + OFFSET_NORMAL - STRIDE * vertex, normal);
+			MemoryUtil.memPutInt(ptr + OFFSET_TANGENT - STRIDE * vertex, tangent);
 		}
 
 		uSum = 0;

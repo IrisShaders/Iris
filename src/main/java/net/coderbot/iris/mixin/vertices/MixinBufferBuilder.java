@@ -148,29 +148,17 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	@ModifyArg(method = "begin", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;switchFormat(Lcom/mojang/blaze3d/vertex/VertexFormat;)V"))
 	private VertexFormat iris$afterBeginSwitchFormat(VertexFormat arg) {
 		if (extending) {
-			if (format == DefaultVertexFormat.NEW_ENTITY) {
-				this.switchFormat(IrisVertexFormats.ENTITY);
-				this.iris$isTerrain = false;
-			} else {
+			if (format == DefaultVertexFormat.BLOCK) {
 				this.switchFormat(IrisVertexFormats.TERRAIN);
 				this.iris$isTerrain = true;
-			}
-		}
-		return arg;
-	}
-
-
-	@ModifyArg(method = "begin", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;switchFormat(Lcom/mojang/blaze3d/vertex/VertexFormat;)V"))
-	private VertexFormat iris$afterBeginSwitchFormat(VertexFormat arg) {
-		if (extending) {
-			if (format == DefaultVertexFormat.NEW_ENTITY) {
-				return IrisVertexFormats.ENTITY;
 			} else {
-				return IrisVertexFormats.TERRAIN;
+				this.switchFormat(IrisVertexFormats.ENTITY);
+				this.iris$isTerrain = false;
 			}
 		}
 		return arg;
 	}
+
 
 
 	@Inject(method = "discard()V", at = @At("HEAD"))
