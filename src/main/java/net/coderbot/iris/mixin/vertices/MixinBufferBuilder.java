@@ -162,6 +162,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	@Inject(method = "discard()V", at = @At("HEAD"))
 	private void iris$onDiscard(CallbackInfo ci) {
 		extending = false;
+		injectNormalAndUV1 = false;
 		vertexCount = 0;
 	}
 
