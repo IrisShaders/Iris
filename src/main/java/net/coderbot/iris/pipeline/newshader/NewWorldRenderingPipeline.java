@@ -459,7 +459,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
 			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
 			this.shadowCompositeRenderer = new ShadowCompositeRenderer(this, programSet.getPackDirectives(), programSet.getShadowComposite(), programSet.getShadowCompCompute(), this.shadowRenderTargets, customTextureManager.getNoiseTexture(), updateNotifier,
-				customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), programSet.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customTextureManager.getIrisCustomTextures(), customUniforms);
+				customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), customImages, programSet.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customTextureManager.getIrisCustomTextures(), customUniforms);
 
 			if (programSet.getPackDirectives().getShadowDirectives().isShadowEnabled().orElse(true)) {
 				this.shadowRenderer = new ShadowRenderer(programSet.getShadow().orElse(null),

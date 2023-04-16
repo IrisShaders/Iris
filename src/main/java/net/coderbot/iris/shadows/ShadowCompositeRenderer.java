@@ -7,6 +7,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -43,6 +44,7 @@ import org.lwjgl.opengl.GL43C;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class ShadowCompositeRenderer {
 	private final ShadowRenderTargets renderTargets;
@@ -55,16 +57,18 @@ public class ShadowCompositeRenderer {
 	private final CustomUniforms customUniforms;
 	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
 	private final WorldRenderingPipeline pipeline;
+	private final Set<GlImage> irisCustomImages;
 
 	public ShadowCompositeRenderer(WorldRenderingPipeline pipeline, PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, ShadowRenderTargets renderTargets,
 								   TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
-								   Object2ObjectMap<String, TextureAccess> customTextureIds, ImmutableMap<Integer, Boolean> explicitPreFlips, Object2ObjectMap<String, TextureAccess> irisCustomTextures, CustomUniforms customUniforms) {
+								   Object2ObjectMap<String, TextureAccess> customTextureIds, Set<GlImage> customImages, ImmutableMap<Integer, Boolean> explicitPreFlips, Object2ObjectMap<String, TextureAccess> irisCustomTextures, CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
 		this.noiseTexture = noiseTexture;
 		this.updateNotifier = updateNotifier;
 		this.renderTargets = renderTargets;
 		this.customTextureIds = customTextureIds;
 		this.irisCustomTextures = irisCustomTextures;
+		this.irisCustomImages = customImages;
 		this.customUniforms = customUniforms;
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
@@ -296,7 +300,8 @@ public class ShadowCompositeRenderer {
 
 		IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 		IrisImages.addShadowColorImages(builder, targets, flipped);
-
+		IrisImages.addCustomImages(builder, irisCustomImages);
+		IrisSamplers.addCustomImages(builder, irisCustomImages);
 		Program build = builder.build();
 		this.customUniforms.mapholderToPass(builder, build);
 
@@ -332,6 +337,8 @@ public class ShadowCompositeRenderer {
 				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, targets, flipped, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 				IrisImages.addShadowColorImages(builder, targets, flipped);
 
+				IrisImages.addCustomImages(builder, irisCustomImages);
+				IrisSamplers.addCustomImages(builder, irisCustomImages);
 				programs[i] = builder.buildCompute();
 
 				this.customUniforms.mapholderToPass(builder, programs[i]);
