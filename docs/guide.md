@@ -81,8 +81,8 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    ![fabricsuccess](guide-resources/fabricsuccess.png)  
    Click OK and close the installer.
 8. Download Iris and Sodium from your website of choice:
-    - Iris Shaders: [Curseforge](https://www.curseforge.com/minecraft/mc-mods/irisshaders), [Modrinth](https://modrinth.com/mod/iris)  
-    - Sodium: [Curseforge](https://www.curseforge.com/minecraft/mc-mods/sodium), [Modrinth](https://modrinth.com/mod/sodium)  
+    - Iris Shaders: [Modrinth](https://modrinth.com/mod/iris) or [Curseforge](https://www.curseforge.com/minecraft/mc-mods/irisshaders) (Old, pre 1.20 versions only)
+    - Sodium: [Modrinth](https://modrinth.com/mod/sodium), [Curseforge](https://www.curseforge.com/minecraft/mc-mods/sodium)
    
    The following table shows which version of Sodium you need based on your Minecraft version:
    
