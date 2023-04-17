@@ -352,7 +352,7 @@ public class CompositeRenderer {
 					IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
-			throw new RuntimeException("Shader compilation failed!", e);
+			throw new RuntimeException("Shader compilation failed for " + source.getName() + "!", e);
 		}
 
 
@@ -403,7 +403,7 @@ public class CompositeRenderer {
 					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null), textureStage, pipeline.getTextureMap()), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 				} catch (RuntimeException e) {
 					// TODO: Better error handling
-					throw new RuntimeException("Shader compilation failed!", e);
+					throw new RuntimeException("Shader compilation failed for compute " + source.getName() + "!", e);
 				}
 
 				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);

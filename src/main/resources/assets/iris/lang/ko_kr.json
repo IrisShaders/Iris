@@ -18,7 +18,7 @@
   "iris.sodium.failure.reason.notFound": "Iris를 최상의 성능으로 쓰기 위한 Sodium이 설치되어 있지 않습니다. Sodium을 내려받아 mods 폴더에 넣어 게임을 다시 실행하십시오.",
   "iris.sodium.failure.reason.incompatible": "Iris를 최상의 성능으로 쓰기 위한 Sodium의 버전이 호환되지 않습니다. Iris와 맞는 버전의 Sodium을 내려받아 mods 폴더에 넣고, 호환되지 않는 버전의 Sodium을 제거한 뒤 게임을 다시 실행하십시오.",
   "iris.nec.failure.title": "[%s] Not Enough Crashes 모드가 감지되었습니다.",
-  "iris.nec.failure.description": "Not Enough Crashes는 충돌이 처리될 때 게임을 예기치 못하게 중단할 수 있으며 정확한 충돌 결과를 표시하지 않습니다.\n이에 대한 좋은 대체재로서, MixinTrace와 Crafty Crashes는 충돌 원인을 보다 안정적으로 식별하며 게임을 중단하지 않습니다.",
+  "iris.nec.failure.description": "Not Enough Crashes는 충돌이 처리될 때 게임을 예기치 못하게 중단할 수 있으며 정확한 충돌 결과를 표시하지 않습니다.\n이에 대한 좋은 대체재로서, MixinTrace는 충돌 원인을 보다 안정적으로 식별하며 게임을 중단하지 않습니다.",
   "iris.unsupported.irisorpc": "Iris 또는 사용자의 PC",
   "iris.unsupported.iris": "Iris",
   "iris.unsupported.pc": "사용자의 PC",

@@ -17,7 +17,7 @@
   "iris.sodium.failure.reason.notFound": "Az Iris-nak szüksége van a Sodium modra a megfelelő teljesítményhez, de a Sodium mod nincs telepítve.\nKérlek töltsd le a Sodium modot, helyezd a mods mappába, és indítsd újra a játékot.",
   "iris.sodium.failure.reason.incompatible": "Az Iris-nak szüksége van a Sodium modra a megfelelő teljesítményhez, de a Sodium modnak nem a megfelelő verziója van feltelepítve.\nKérlek töltsd le a helyes verziót, majd helyezd a mods mappába és törölj minden más verziót, végük indítsd újra a játékot.",
   "iris.nec.failure.title": "[%s] Not Enough Crashes észlelve!",
-  "iris.nec.failure.description": "A Not Enough Crashes súlyosan rongálhatja a játékot, ezentúé nem ad pontos részleteket a hibákról.\nJó alternatívák a MixinTrace és a Crafty Crashes, ezek megbízhatóan tudják elemezni a hiba forrását.",
+  "iris.nec.failure.description": "A Not Enough Crashes súlyosan rongálhatja a játékot, ezentúé nem ad pontos részleteket a hibákról.\nJó alternatívák a MixinTrace, ezek megbízhatóan tudják elemezni a hiba forrását.",
   "iris.unsupported.irisorpc": "Iris vagy a PC-d",
   "iris.unsupported.iris": "Iris",
   "iris.unsupported.pc": "a PC-d",

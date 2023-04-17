@@ -352,7 +352,7 @@ public class FinalPassRenderer {
 					IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
-			throw new RuntimeException("Shader compilation failed!", e);
+			throw new RuntimeException("Shader compilation failed for final!", e);
 		}
 
 		CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
@@ -401,7 +401,7 @@ public class FinalPassRenderer {
 					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null), TextureStage.COMPOSITE_AND_FINAL, pipeline.getTextureMap()), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 				} catch (RuntimeException e) {
 					// TODO: Better error handling
-					throw new RuntimeException("Shader compilation failed!", e);
+					throw new RuntimeException("Shader compilation failed for final compute " + source.getName() + "!", e);
 				}
 
 				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
