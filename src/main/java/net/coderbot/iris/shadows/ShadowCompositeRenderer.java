@@ -287,7 +287,7 @@ public class ShadowCompositeRenderer {
 				IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
-			throw new RuntimeException("Shader compilation failed!", e);
+			throw new RuntimeException("Shader compilation failed for shadow composite " + source.getName() + "!", e);
 		}
 
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
@@ -324,7 +324,7 @@ public class ShadowCompositeRenderer {
 						IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 				} catch (RuntimeException e) {
 					// TODO: Better error handling
-					throw new RuntimeException("Shader compilation failed!", e);
+					throw new RuntimeException("Shader compilation failed for shadowcomp compute " + source.getName() + "!", e);
 				}
 
 				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
