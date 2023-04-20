@@ -111,9 +111,7 @@ public class CompatibilityTransformer {
 				// TODO: integrate into debug mode (allow user to disable this behavior for
 				// debugging purposes)
 				unusedFunctions.add(definition);
-				if (PatchedShaderPrinter.prettyPrintShaders) {
-					LOGGER.warn("Removing unused function " + functionName);
-				} /*
+				 /*
 					 * else if (unusedFunctions.size() == 1) {
 					 * LOGGER.warn(
 					 * "Removing unused function " + functionName
@@ -145,8 +143,10 @@ public class CompatibilityTransformer {
 		}
 
 		// remove collected unused functions
-		for (FunctionDefinition definition : unusedFunctions) {
-			definition.detachAndDelete();
+		if (!Iris.getIrisConfig().areDebugOptionsEnabled()) {
+			for (FunctionDefinition definition : unusedFunctions) {
+				definition.detachAndDelete();
+			}
 		}
 
 		// find the reference expressions for the const parameters
