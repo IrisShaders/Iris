@@ -56,7 +56,7 @@ The following is a short list, more alternatives can be found through further re
 
 Better Grass/Snow - [LambdaBetterGrass](https://modrinth.com/mod/lambdabettergrass)
 
-Chunk Caching - [Bobby](https://modrinth.com/mod/bobby) -
+Chunk Caching - [Bobby](https://modrinth.com/mod/bobby)
 
 Connected Textures - [Continuity](https://modrinth.com/mod/continuity)
 
@@ -74,3 +74,5 @@ Various OptiFine features including toggles for animations, particles, and fog -
 Zoom - [OkZoomer](https://modrinth.com/mod/ok-zoomer) or [Logical Zoom](https://modrinth.com/mod/logical-zoom), [Spy Zoom](https://modrinth.com/mod/spyzoom) for a vanilla alternative
 
 You will also need [Indium](https://modrinth.com/mod/indium/) and [Fabric-API](https://modrinth.com/mod/fabric-api) for most mods as well as [ModMenu](https://modrinth.com/mod/modmenu) for settings.
+
+**If installing all those one by one sounds overwhelming, there are also modpacks that do it for you, such as [Fabulously Optimized](https://modrinth.com/modpack/fabulously-optimized).**
