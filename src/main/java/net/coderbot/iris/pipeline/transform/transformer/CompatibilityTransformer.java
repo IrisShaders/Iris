@@ -632,12 +632,39 @@ public class CompatibilityTransformer {
 		}
 	}
 
-	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher=new Matcher<ExternalDeclaration>("out float name;",ParseShape.EXTERNAL_DECLARATION){{markClassWildcard("qualifier",pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));markClassWildcard("type",pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));markClassWildcard("name*",pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));}
+	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<ExternalDeclaration>(
+			"out float name;",
+			ParseShape.EXTERNAL_DECLARATION) {
+		{
+			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
+			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
+			markClassWildcard("name*",
+					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+		}
 
-	@Override public boolean matchesExtract(ExternalDeclaration tree){boolean result=super.matchesExtract(tree);if(!result){return false;}
+		@Override
+		public boolean matchesExtract(ExternalDeclaration tree) {
+			boolean result = super.matchesExtract(tree);
+			if (!result) {
+				return false;
+			}
 
-	// look for an out qualifier but no layout qualifier
-	TypeQualifier qualifier=getNodeMatch("qualifier",TypeQualifier.class);var hasOutQualifier=false;for(TypeQualifierPart part:qualifier.getParts()){if(part instanceof StorageQualifier){StorageQualifier storageQualifier=(StorageQualifier)part;if(storageQualifier.storageType==StorageType.OUT){hasOutQualifier=true;}}else if(part instanceof LayoutQualifier){return false;}}return hasOutQualifier;}};
+			// look for an out qualifier but no layout qualifier
+			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
+			var hasOutQualifier = false;
+			for (TypeQualifierPart part : qualifier.getParts()) {
+				if (part instanceof StorageQualifier) {
+					StorageQualifier storageQualifier = (StorageQualifier) part;
+					if (storageQualifier.storageType == StorageType.OUT) {
+						hasOutQualifier = true;
+					}
+				} else if (part instanceof LayoutQualifier) {
+					return false;
+				}
+			}
+			return hasOutQualifier;
+		}
+	};
 
 	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
 			.withExternalDeclaration("out __type __name;");
