@@ -13,7 +13,7 @@ Here are a few recommendations to help you get started.
         - Mixin error-checking
         - Workspace highlighting
 - If you are facing an issue that can only be easily reproduced on servers, use the [AuthMe](https://modrinth.com/mod/auth-me) mod to log in while using the development environment. This is often way easier than using print statement debugging & constantly recompiling the mod.
-- - For 1.19.3 and older: Add LazyDFU to your mods folder
+- _For 1.19.3 and older:_ Add LazyDFU to your mods folder
     - LazyDFU makes the game start up faster, by deferring DFU compiling until it's needed.
       - Download [LazyDFU](https://modrinth.com/mod/lazydfu) and place it in the run/mods folder to add it.
 
