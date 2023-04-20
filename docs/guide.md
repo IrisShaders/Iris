@@ -198,7 +198,7 @@ ReplayMod provides builds of Sodium that are compatible with a specific version 
 
 ### Immersive Portals
 
-Check the [Immersive Portals Curseforge page](https://www.curseforge.com/minecraft/mc-mods/immersive-portals-mod) for notes on compatibility with Iris and Sodium.
+Check the [Immersive Portals Wiki](https://qouteall.fun/immptl/wiki/#sodium-compatibility) for notes on compatibility with Iris and Sodium.
 
 ## Support and useful links
 

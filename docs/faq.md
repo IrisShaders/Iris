@@ -54,23 +54,23 @@ Iris is specifically a shaders mod. Other features are not planned for Iris. How
 
 The following is a short list, more alternatives can be found through further research, the list is alphabetical.
 
-Better Grass/Snow - [LambdaBetterGrass](https://www.curseforge.com/minecraft/mc-mods/lambdabettergrass)
+Better Grass/Snow - [LambdaBetterGrass](https://modrinth.com/mod/lambdabettergrass)
 
-Chunk Caching - [Bobby](https://www.curseforge.com/minecraft/mc-mods/bobby) -
+Chunk Caching - [Bobby](https://modrinth.com/mod/bobby) -
 
 Connected Textures - [Continuity](https://modrinth.com/mod/continuity)
 
 Custom Item Textures - [CIT-Resewn](https://modrinth.com/mod/cit-resewn) -
 You need to enable “Broken Paths” or MANY PACKS WILL NOT WORK.
 
-Dynamic Lights - [LambDynamicLights](https://www.curseforge.com/minecraft/mc-mods/lambdynamiclights)
+Dynamic Lights - [LambDynamicLights](https://modrinth.com/mod/lambdynamiclights)
 
-Smart Leaves - [Cull Leaves](https://www.curseforge.com/minecraft/mc-mods/cull-leaves)
+Smart Leaves - [Cull Leaves](https://modrinth.com/mod/cull-leaves)
 
-Performance - Iris already requires [Sodium](https://modrinth.com/mod/sodium), but we also recommend [Lithium](https://modrinth.com/mod/lithium), [Hydrogen](https://modrinth.com/mod/hydrogen), and [FerriteCore](https://www.curseforge.com/minecraft/mc-mods/ferritecore-fabric). You can also use either [Phosphor](https://modrinth.com/mod/phosphor) or [Starlight](https://modrinth.com/mod/starlight).
+Performance - Iris already requires [Sodium](https://modrinth.com/mod/sodium), but we also recommend [Lithium](https://modrinth.com/mod/lithium), [Hydrogen](https://modrinth.com/mod/hydrogen), and [FerriteCore](https://modrinth.com/mod/ferrite-core). You can also use either [Phosphor](https://modrinth.com/mod/phosphor) or [Starlight](https://modrinth.com/mod/starlight).
 
-Various OptiFine features including toggles for animations, particles, and fog - [Sodium Extra](https://www.curseforge.com/minecraft/mc-mods/sodium-extra)
+Various OptiFine features including toggles for animations, particles, and fog - [Sodium Extra](https://modrinth.com/mod/sodium-extra)
 
-Zoom - [OkZoomer](https://www.curseforge.com/minecraft/mc-mods/ok-zoomer) or [Logical Zoom](https://www.curseforge.com/minecraft/mc-mods/logical-zoom), [Spy Zoom](https://modrinth.com/mod/spyzoom) for a vanilla alternative
+Zoom - [OkZoomer](https://modrinth.com/mod/ok-zoomer) or [Logical Zoom](https://modrinth.com/mod/logical-zoom), [Spy Zoom](https://modrinth.com/mod/spyzoom) for a vanilla alternative
 
-You will also need [Indium](https://modrinth.com/mod/indium/) and [Fabric-API](https://www.curseforge.com/minecraft/mc-mods/fabric-api) for most mods as well as [ModMenu](https://www.curseforge.com/minecraft/mc-mods/modmenu) for settings.
+You will also need [Indium](https://modrinth.com/mod/indium/) and [Fabric-API](https://modrinth.com/mod/fabric-api) for most mods as well as [ModMenu](https://modrinth.com/mod/modmenu) for settings.
