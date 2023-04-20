@@ -75,4 +75,4 @@ Zoom - [OkZoomer](https://modrinth.com/mod/ok-zoomer) or [Logical Zoom](https://
 
 You will also need [Indium](https://modrinth.com/mod/indium/) and [Fabric-API](https://modrinth.com/mod/fabric-api) for most mods as well as [ModMenu](https://modrinth.com/mod/modmenu) for settings.
 
-**If installing all those one by one sounds overwhelming, there are also modpacks that do it for you, such as [Fabulously Optimized](https://modrinth.com/modpack/fabulously-optimized).**
+**If installing all those one by one sounds overwhelming, there are also modpacks that do it for you, such as [Fabulously Optimized](https://modrinth.com/modpack/fabulously-optimized) or [Additive](https://modrinth.com/modpack/additive).**
