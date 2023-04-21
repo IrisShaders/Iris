@@ -52,7 +52,6 @@ import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
