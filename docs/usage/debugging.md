@@ -48,7 +48,7 @@ The profile of compute shaders is always set to core.
 
 ## Debug Mode
 
-The debug mode can be activated by pressing CTRL + D on the shader selection screen (only in 1.19.3+ until backported) or by setting the option `enableDebugOptions=true` in Iris' settings file. With this mode enabled a number of debug features are activated.
+The debug mode can be activated by pressing CTRL + D or Command + D on macOS on the shader selection screen or by setting the option `enableDebugOptions=true` in Iris' settings file. With this mode enabled a number of debug features are activated.
 
 - Pretty printing: The patched shader pack code is saved to the `patched_shaders` folder that is created game instance folder. Any previous files in this folder will be deleted. The files are named based on the input files they originate from and are numbered based on their order of processing. In debug mode, the code is printed with indentation whitespace. Otherwise, you'll notice that the code has been effectively minified. Also note that enabling this mode will slow down patching somewhat since more work is being done and files are written to disk.
 - Printing of errored programs: When the transformer fails to parse a shader pack or an exception occurs during transformation, the exception is printed in the console but with debug mode enabled the program the error originated from is printed as `errored_program` in `patched_shaders`.
