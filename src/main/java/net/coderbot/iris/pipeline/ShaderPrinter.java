@@ -31,11 +31,19 @@ public class ShaderPrinter {
 	}
 
 	public static class ProgramPrintBuilder {
+		// copy the debug flag if for some reason the debug flag changes during the
+		// lifetime of this builder object
 		private final boolean isActive = Iris.getIrisConfig().areDebugOptionsEnabled();
+
+		// the prefix is created at instantiation time so that all sources attached to
+		// this builder use the same counter prefix
 		private final String prefix = isActive ? String.format("%03d_", ++programCounter) : null;
+
+		// the prefix and the sources list aren't created if debug is disabled
 		private final List<String> sources = isActive ? new ArrayList<>(PatchShaderType.values().length * 2) : null;
+
 		private String name;
-		private boolean done = false;
+		private boolean done = false; // makes the print function idempotent
 
 		public ProgramPrintBuilder(String name) {
 			setName(name);
@@ -84,7 +92,7 @@ public class ShaderPrinter {
 				return;
 			}
 			done = true;
-			if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
+			if (isActive) {
 				if (!outputLocationCleared) {
 					try {
 						if (Files.exists(debugOutDir)) {

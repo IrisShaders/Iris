@@ -269,7 +269,7 @@ public class CompatibilityTransformer {
 					"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) "
 							+ structMember.getDeclarators().stream().map(StructDeclarator::getName).map(Identifier::getName)
 									.collect(Collectors.joining(", "))
-							+ ".");
+							+ ". See debugging.md for more information.");
 		}
 	}
 
