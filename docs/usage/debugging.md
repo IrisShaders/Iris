@@ -46,25 +46,12 @@ The version statement `#version <number> <profile>` where the number is required
 
 The profile of compute shaders is always set to core.
 
-## Debugging Features
+## Debug Mode
 
-### Pretty Printing
+The debug mode can be activated by pressing CTRL + D on the shader selection screen (TODO: buggy) or by setting the option `enableDebugOptions=true` in Iris' settings file. With this mode enabled a number of debug features are activated.
 
-Printing the patched shader pack code as it is sent to the driver can be enabled by setting the following Java Argument:
-
-```sh
--Diris.prettyPrintShaders=true
-```
-
-This will print the patched shader pack code to the `patched_shaders` folder that is created game instance folder. Any previous files in this folder will be deleted. The files are named based on the input files they originate from and are numbered based on their order of processing.
-
-With this option enabled, the code is printed with indentation whitespace. Otherwise, you'll notice that the code has been effectively minified.
-
-Also note that enabling this mode will slow down patching somewhat since more work is being done and files are written to disk.
-
-### Debug Mode
-
-A debug mode with additional features is being worked on.
+- Pretty printing: The patched shader pack code is saved to the `patched_shaders` folder that is created game instance folder. Any previous files in this folder will be deleted. The files are named based on the input files they originate from and are numbered based on their order of processing. In debug mode, the code is printed with indentation whitespace. Otherwise, you'll notice that the code has been effectively minified. Also note that enabling this mode will slow down patching somewhat since more work is being done and files are written to disk.
+- Printing of errored programs: When the transformer fails to parse a shader pack or an exception occurs during transformation, the exception is printed in the console but with debug mode enabled the program the error originated from is printed as `errored_program` in `patched_shaders`.
 
 ## List of GLSL Language Specifications
 

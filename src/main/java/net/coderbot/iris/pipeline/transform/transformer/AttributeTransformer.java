@@ -10,6 +10,7 @@ import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.ast.transform.TransformationException;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
@@ -29,7 +30,7 @@ public class AttributeTransformer {
 			AttributeParameters parameters) {
 		if (tree.getVersionStatement().getNormalizedProfile().isCore()) {
 			if (parameters.type == PatchShaderType.VERTEX) {
-				throw new IllegalStateException("Vertex shaders must be in the compatibility profile to run properly!");
+				throw new TransformationException("Vertex shaders must be in the compatibility profile to run properly!");
 			}
 			return;
 		}

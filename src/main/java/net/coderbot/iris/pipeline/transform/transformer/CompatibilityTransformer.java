@@ -48,6 +48,7 @@ import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
+import io.github.douira.glsl_transformer.ast.transform.TransformationException;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
@@ -193,7 +194,7 @@ public class CompatibilityTransformer {
 
 						// the name may not be the same as the parameter name
 						if (constIdsInFunction.contains(memberName)) {
-							throw new IllegalStateException("Illegal redefinition of const parameter " + name);
+							throw new TransformationException("Illegal redefinition of const parameter " + name);
 						}
 
 						constIdsInFunction.add(memberName);
@@ -256,7 +257,7 @@ public class CompatibilityTransformer {
 			boolean reusedOriginal = false;
 			for (StructDeclarator declarator : structMember.getDeclarators()) {
 				if (declarator.getArraySpecifier() != null) {
-					throw new IllegalStateException("Member already has an array specifier");
+					throw new TransformationException("Member already has an array specifier");
 				}
 
 				// clone the array specifier into this member, re-use if possible
@@ -578,7 +579,7 @@ public class CompatibilityTransformer {
 								}
 							}
 							if (outMember == null) {
-								throw new IllegalStateException("The targeted out declaration member is missing!");
+								throw new TransformationException("The targeted out declaration member is missing!");
 							}
 							outMember.getName().replaceByAndDelete(new Identifier(name));
 
