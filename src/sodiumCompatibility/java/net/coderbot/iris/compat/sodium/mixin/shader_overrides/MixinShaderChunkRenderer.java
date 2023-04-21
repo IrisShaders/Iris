@@ -69,7 +69,7 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "mat4 iris_LightmapTextureMatrix = mat4(vec4(0.00390625, 0.0, 0.0, 0.0), vec4(0.0, 0.00390625, 0.0, 0.0), vec4(0.0, 0.0, 0.00390625, 0.0), vec4(0.03125, 0.03125, 0.03125, 1.0));");
 
-			Iris.logger.warn(transformations.toString());
+			// Iris.logger.warn(transformations.toString());
 			return new GlShader(type, name, transformations.toString());
 		} else {
 			return ShaderLoader.loadShader(type, name, constants);
