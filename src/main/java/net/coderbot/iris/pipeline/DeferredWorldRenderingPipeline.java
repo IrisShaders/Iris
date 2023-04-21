@@ -684,7 +684,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 
-		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment, null);
 
 		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
 			IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);

@@ -341,7 +341,7 @@ public class FinalPassRenderer {
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
-		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment, null);
 
 		Objects.requireNonNull(flipped);
 

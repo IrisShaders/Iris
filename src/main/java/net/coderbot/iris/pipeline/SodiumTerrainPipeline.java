@@ -154,7 +154,7 @@ public class SodiumTerrainPipeline {
 			terrainSolidGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			terrainSolidFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium_solid", terrainSolidVertex.orElse(null), terrainSolidGeometry.orElse(null), terrainSolidFragment.orElse(null));
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium_solid", terrainSolidVertex.orElse(null), terrainSolidGeometry.orElse(null), terrainSolidFragment.orElse(null), null);
 		}, () -> {
 			terrainSolidBlendOverride = null;
 			terrainSolidBufferOverrides = Collections.emptyList();
@@ -184,7 +184,7 @@ public class SodiumTerrainPipeline {
 			terrainCutoutGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			terrainCutoutFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium_cutout", terrainCutoutVertex.orElse(null), terrainCutoutGeometry.orElse(null), terrainCutoutFragment.orElse(null));
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium_cutout", terrainCutoutVertex.orElse(null), terrainCutoutGeometry.orElse(null), terrainCutoutFragment.orElse(null), null);
 		}, () -> {
 			terrainCutoutBlendOverride = null;
 			terrainCutoutBufferOverrides = Collections.emptyList();
@@ -216,7 +216,7 @@ public class SodiumTerrainPipeline {
 			translucentGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			translucentFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", translucentVertex.orElse(null), translucentGeometry.orElse(null), translucentFragment.orElse(null));
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", translucentVertex.orElse(null), translucentGeometry.orElse(null), translucentFragment.orElse(null), null);
 		}, () -> {
 			translucentBlendOverride = null;
 			translucentBufferOverrides = Collections.emptyList();
@@ -254,8 +254,8 @@ public class SodiumTerrainPipeline {
 			shadowCutoutFragment = Optional.ofNullable(transformedCutout.get(PatchShaderType.FRAGMENT));
 			shadowFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", shadowVertex.orElse(null), shadowGeometry.orElse(null), shadowFragment.orElse(null));
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium_cutout", null, null, shadowCutoutFragment.orElse(null));
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", shadowVertex.orElse(null), shadowGeometry.orElse(null), shadowFragment.orElse(null), null);
+			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium_cutout", null, null, shadowCutoutFragment.orElse(null), null);
 		}, () -> {
 			shadowBlendOverride = null;
 			shadowBufferOverrides = Collections.emptyList();

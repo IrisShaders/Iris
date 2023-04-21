@@ -64,8 +64,4 @@ public class PatchedShaderPrinter {
 			}
 		}
 	}
-
-	public static void debugPatchedShaders(String name, String vertex, String geometry, String fragment) {
-		debugPatchedShaders(name, vertex, geometry, fragment, null);
-	}
 }
