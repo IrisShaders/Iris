@@ -15,16 +15,13 @@ import net.fabricmc.loader.api.FabricLoader;
 public class PatchedShaderPrinter {
 	private static boolean outputLocationCleared = false;
 	private static int programCounter = 0;
-	public static final boolean prettyPrintShaders = FabricLoader.getInstance().isDevelopmentEnvironment()
-			|| System.getProperty("iris.prettyPrintShaders", "false").equals("true");
-
 	public static void resetPrintState() {
 		outputLocationCleared = false;
 		programCounter = 0;
 	}
 
 	public static void debugPatchedShaders(String name, String vertex, String geometry, String fragment, String json) {
-		if (prettyPrintShaders) {
+		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
 			final Path debugOutDir = FabricLoader.getInstance().getGameDir().resolve("patched_shaders");
 			if (!outputLocationCleared) {
 				try {

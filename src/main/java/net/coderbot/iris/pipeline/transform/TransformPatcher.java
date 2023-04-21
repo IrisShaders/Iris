@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.coderbot.iris.Iris;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -302,7 +303,7 @@ public class TransformPatcher {
 
 		// if there is no cache result, transform the shaders
 		if (result == null) {
-			transformer.setPrintType(PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.SIMPLE);
+			transformer.setPrintType(Iris.getIrisConfig().areDebugOptionsEnabled() ? PrintType.INDENTED : PrintType.SIMPLE);
 			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
 			inputs.put(PatchShaderType.VERTEX, vertex);
 			inputs.put(PatchShaderType.GEOMETRY, geometry);
@@ -334,7 +335,7 @@ public class TransformPatcher {
 
 		// if there is no cache result, transform the shaders
 		if (result == null) {
-			transformer.setPrintType(PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.SIMPLE);
+			transformer.setPrintType(Iris.getIrisConfig().areDebugOptionsEnabled() ? PrintType.INDENTED : PrintType.SIMPLE);
 			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
 			inputs.put(PatchShaderType.COMPUTE, compute);
 
