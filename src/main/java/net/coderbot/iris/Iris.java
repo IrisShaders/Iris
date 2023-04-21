@@ -437,7 +437,7 @@ public class Iris {
 		logger.info("Shaders are disabled");
 	}
 
-	private static void setDebug(boolean enable) {
+	public static void setDebug(boolean enable) {
 		int success;
 		if (enable) {
 			success = GLDebug.setupDebugMessageCallback();
