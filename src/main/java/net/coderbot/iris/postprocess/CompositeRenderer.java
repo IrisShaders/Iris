@@ -30,7 +30,7 @@ import net.coderbot.iris.gl.texture.TextureAccess;
 import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
-import net.coderbot.iris.pipeline.PatchedShaderPrinter;
+import net.coderbot.iris.pipeline.ShaderPrinter;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.pipeline.newshader.FogMode;
@@ -343,7 +343,8 @@ public class CompositeRenderer {
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
-		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+
+		ShaderPrinter.printProgram(source.getName()).addSources(transformed).print();
 
 		Objects.requireNonNull(flipped);
 		ProgramBuilder builder;
@@ -355,7 +356,7 @@ public class CompositeRenderer {
 			throw e;
 		} catch (RuntimeException e) {
 			// TODO: Better error handling
-			throw new RuntimeException("Shader compilation failed!", e);
+			throw new RuntimeException("Shader compilation failed for " + source.getName() + "!", e);
 		}
 
 
@@ -403,12 +404,16 @@ public class CompositeRenderer {
 				ProgramBuilder builder;
 
 				try {
-					builder = ProgramBuilder.beginCompute(source.getName(), TransformPatcher.patchCompute(source.getSource().orElse(null), textureStage, pipeline.getTextureMap()), IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+					String transformed =  TransformPatcher.patchCompute(source.getSource().orElse(null), textureStage, pipeline.getTextureMap());
+
+					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
+
+					builder = ProgramBuilder.beginCompute(source.getName(), transformed, IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
 				} catch (ShaderCompileException e) {
 					throw e;
 				} catch (RuntimeException e) {
 					// TODO: Better error handling
-					throw new RuntimeException("Shader compilation failed!", e);
+					throw new RuntimeException("Shader compilation failed for compute " + source.getName() + "!", e);
 				}
 
 				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);

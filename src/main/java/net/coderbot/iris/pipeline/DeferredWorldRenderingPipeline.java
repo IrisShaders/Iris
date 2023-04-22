@@ -287,7 +287,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			return shadowRenderTargets;
 		};
 
-		PatchedShaderPrinter.resetPrintState();
+		ShaderPrinter.resetPrintState();
 
 		this.prepareRenderer = new CompositeRenderer(this, programs.getPackDirectives(), programs.getPrepare(), programs.getPrepareCompute(), renderTargets,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
@@ -404,7 +404,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
 
 				this.shadowCompositeRenderer = new ShadowCompositeRenderer(this, programs.getPackDirectives(), programs.getShadowComposite(), programs.getShadowCompCompute(), this.shadowRenderTargets, customTextureManager.getNoiseTexture(), updateNotifier,
-					customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), programs.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customTextureManager.getIrisCustomTextures(), customUniforms);
+					customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), null, programs.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customTextureManager.getIrisCustomTextures(), customUniforms);
 				this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
 					programs.getPackDirectives(), shadowRenderTargets, shadowCompositeRenderer, customUniforms, false);
 			} else {
@@ -684,7 +684,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 
-		PatchedShaderPrinter.debugPatchedShaders(source.getName(), vertex, geometry, fragment);
+		ShaderPrinter.printProgram(source.getName()).addSources(transformed).print();
 
 		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
 			IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);

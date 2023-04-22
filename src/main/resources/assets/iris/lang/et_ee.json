@@ -18,7 +18,7 @@
   "iris.sodium.failure.reason.notFound": "Iris vajab hea jõudluse saavutamiseks Sodiumi, ent Sodium ei ole paigaldatud. Palun laadi Sodium alla, aseta see oma mods kausta ning taaskäivita mäng.",
   "iris.sodium.failure.reason.incompatible": "Iris vajab hea jõudluse saavutamiseks Sodiumi, ent leiti ühildumatu versioon. Palun laadi sobiv Sodiumi versioon alla, aseta see oma mods kausta, kustuta sobimatu versioon ning taaskäivita mäng.",
   "iris.nec.failure.title": "[%s] Tuvastati Not Enough Crashes!",
-  "iris.nec.failure.description": "Not Enough Crashes võib krahhide käsitlemisel mängu tõsiselt lõhkuda ning ei anna täpseid tulemusi.\nHead alternatiivid on MixinTrace ja Crafty Crashes, mis suudavad krahhi põhjuse usaldusväärsemalt tuvastada ja ei aseta mängu vigasesse olekusse.",
+  "iris.nec.failure.description": "Not Enough Crashes võib krahhide käsitlemisel mängu tõsiselt lõhkuda ning ei anna täpseid tulemusi.\nHead alternatiivid on MixinTrace, mis suudavad krahhi põhjuse usaldusväärsemalt tuvastada ja ei aseta mängu vigasesse olekusse.",
   "iris.unsupported.irisorpc": "Iris või sinu arvuti",
   "iris.unsupported.iris": "Iris",
   "iris.unsupported.pc": "sinu arvuti",
@@ -61,7 +61,7 @@
   "options.iris.shadowDistance.sodium_tooltip": "Varjude nähtavuskaugus määrab, kui kaugel olevat maastikku saab varjutuskäigul renderdada. Väiksemad kaugused tähendavad vähema maastiku renderdamist, mis parandab kaadrisagedust. Seda valikut ei saa muuta pakkide puhul, mis määravad varjude nähtavuskauguse ise. Tegelik varjude nähtavuskaugus on piiratud nähtavuskauguse valikuga.",
   "options.iris.gui.hide": "Peida liides",
   "options.iris.gui.show": "Kuva liides",
-  
+
   "pack.iris.select.title": "Vali",
   "pack.iris.configure.title": "Seadista",
   "pack.iris.list.label": "+ Varjutajapakkide lisamiseks sikuta need siia",

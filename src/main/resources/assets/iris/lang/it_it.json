@@ -17,7 +17,7 @@
   "iris.sodium.failure.reason.notFound": "Iris ha bisogno di Sodium per una buona performance, ma Sodium non è installato. Per favore scarica Sodium, mettilo nella cartella delle mod e riavvia il gioco.",
   "iris.sodium.failure.reason.incompatible": "Iris ha bisogno di Sodium per una buona performance, ma una versione incompatibile è stata trovata. Per favore scarica la corretta verisone di Sodium, mettilo nella cartella delle mod, elimina la vecchia versione e riavvia il gioco.",
   "iris.nec.failure.title": "[%s] Not Enough Crashes Trovato!",
-  "iris.nec.failure.description": "Not Enough Crashes può rompere il gioco durante i crash e non dà risultati accurati. Buone alternative sono MixinTrace e Crafty Crashes, che possono identificare la causa di un crash meglio e non mettono il gioco in uno stato invalido.",
+  "iris.nec.failure.description": "Not Enough Crashes può rompere il gioco durante i crash e non dà risultati accurati. Buone alternative sono MixinTrace, che possono identificare la causa di un crash meglio e non mettono il gioco in uno stato invalido.",
   "iris.unsupported.irisorpc": "Iris o il tuo PC",
   "iris.unsupported.iris": "Iris",
   "iris.unsupported.pc": "il tuo PC",

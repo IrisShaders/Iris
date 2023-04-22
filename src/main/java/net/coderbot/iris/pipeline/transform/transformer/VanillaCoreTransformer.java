@@ -1,21 +1,14 @@
 package net.coderbot.iris.pipeline.transform.transformer;
 
-import io.github.douira.glsl_transformer.ast.node.Identifier;
+import static net.coderbot.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
+
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
-import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
-import io.github.douira.glsl_transformer.ast.transform.Template;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
-
-import static net.coderbot.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
 public class VanillaCoreTransformer {
 	public static void transform(

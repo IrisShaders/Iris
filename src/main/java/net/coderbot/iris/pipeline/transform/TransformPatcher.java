@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,16 +19,19 @@ import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.RootSupplier;
 import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.TransformationException;
+import io.github.douira.glsl_transformer.parser.ParsingException;
 import io.github.douira.glsl_transformer.token_filter.ChannelFilter;
 import io.github.douira.glsl_transformer.token_filter.TokenChannel;
 import io.github.douira.glsl_transformer.token_filter.TokenFilter;
 import io.github.douira.glsl_transformer.util.LRUCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
-import net.coderbot.iris.pipeline.PatchedShaderPrinter;
+import net.coderbot.iris.pipeline.ShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 import net.coderbot.iris.pipeline.transform.parameter.AttributeParameters;
 import net.coderbot.iris.pipeline.transform.parameter.ComputeParameters;
@@ -283,6 +287,18 @@ public class TransformPatcher {
 
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
 
+	private static Map<PatchShaderType, String> transformInternal(
+			Map<PatchShaderType, String> inputs,
+			Parameters parameters) {
+		try {
+			return transformer.transform(inputs, parameters);
+		} catch (TransformationException | ParsingException | ParseCancellationException e) {
+			// print the offending programs and rethrow to stop the loading process
+			ShaderPrinter.printProgram("errored_program").addSources(inputs).print();
+			throw e;
+		}
+	}
+
 	private static Map<PatchShaderType, String> transform(String vertex, String geometry, String fragment,
 			Parameters parameters) {
 		// stop if all are null
@@ -302,13 +318,13 @@ public class TransformPatcher {
 
 		// if there is no cache result, transform the shaders
 		if (result == null) {
-			transformer.setPrintType(PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.SIMPLE);
+			transformer.setPrintType(Iris.getIrisConfig().areDebugOptionsEnabled() ? PrintType.INDENTED : PrintType.SIMPLE);
 			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
 			inputs.put(PatchShaderType.VERTEX, vertex);
 			inputs.put(PatchShaderType.GEOMETRY, geometry);
 			inputs.put(PatchShaderType.FRAGMENT, fragment);
 
-			result = transformer.transform(inputs, parameters);
+			result = transformInternal(inputs, parameters);
 			if (useCache) {
 				cache.put(key, result);
 			}
@@ -334,11 +350,11 @@ public class TransformPatcher {
 
 		// if there is no cache result, transform the shaders
 		if (result == null) {
-			transformer.setPrintType(PatchedShaderPrinter.prettyPrintShaders ? PrintType.INDENTED : PrintType.SIMPLE);
+			transformer.setPrintType(Iris.getIrisConfig().areDebugOptionsEnabled() ? PrintType.INDENTED : PrintType.SIMPLE);
 			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
 			inputs.put(PatchShaderType.COMPUTE, compute);
 
-			result = transformer.transform(inputs, parameters);
+			result = transformInternal(inputs, parameters);
 			if (useCache) {
 				cache.put(key, result);
 			}

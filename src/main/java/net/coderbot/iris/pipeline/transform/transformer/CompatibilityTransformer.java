@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -36,20 +37,23 @@ import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifie
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructDeclarator;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructMember;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
+import io.github.douira.glsl_transformer.ast.transform.TransformationException;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
@@ -108,9 +112,7 @@ public class CompatibilityTransformer {
 				// TODO: integrate into debug mode (allow user to disable this behavior for
 				// debugging purposes)
 				unusedFunctions.add(definition);
-				if (PatchedShaderPrinter.prettyPrintShaders) {
-					LOGGER.warn("Removing unused function " + functionName);
-				} /*
+				 /*
 					 * else if (unusedFunctions.size() == 1) {
 					 * LOGGER.warn(
 					 * "Removing unused function " + functionName
@@ -142,8 +144,10 @@ public class CompatibilityTransformer {
 		}
 
 		// remove collected unused functions
-		for (FunctionDefinition definition : unusedFunctions) {
-			definition.detachAndDelete();
+		if (!Iris.getIrisConfig().areDebugOptionsEnabled()) {
+			for (FunctionDefinition definition : unusedFunctions) {
+				definition.detachAndDelete();
+			}
 		}
 
 		// find the reference expressions for the const parameters
@@ -191,7 +195,7 @@ public class CompatibilityTransformer {
 
 						// the name may not be the same as the parameter name
 						if (constIdsInFunction.contains(memberName)) {
-							throw new IllegalStateException("Illegal redefinition of const parameter " + name);
+							throw new TransformationException("Illegal redefinition of const parameter " + name);
 						}
 
 						constIdsInFunction.add(memberName);
@@ -229,6 +233,44 @@ public class CompatibilityTransformer {
 					id -> id.setName(newName))) {
 				LOGGER.warn("Renamed reserved word \"" + reservedWord + "\" to \"" + newName + "\".");
 			}
+		}
+
+		// transform that moves unsized array specifiers on struct members from the type
+		// to the identifier of a type and init declaration. Some drivers appear to not
+		// be able to detect the unsized array if it's on the type.
+		for (StructMember structMember : root.nodeIndex.get(StructMember.class)) {
+			// check if the type specifier has an array specifier
+			TypeSpecifier typeSpecifier = structMember.getType().getTypeSpecifier();
+			ArraySpecifier arraySpecifier = typeSpecifier.getArraySpecifier();
+			if (arraySpecifier == null) {
+				continue;
+			}
+
+			// check if the array specifier is unsized
+			if (!arraySpecifier.getChildren().isNullEmpty()) {
+				continue;
+			}
+
+			// remove itself from the parent (makes it null)
+			arraySpecifier.detach();
+
+			// move the empty array specifier to all members
+			boolean reusedOriginal = false;
+			for (StructDeclarator declarator : structMember.getDeclarators()) {
+				if (declarator.getArraySpecifier() != null) {
+					throw new TransformationException("Member already has an array specifier");
+				}
+
+				// clone the array specifier into this member, re-use if possible
+				declarator.setArraySpecifier(reusedOriginal ? arraySpecifier.cloneInto(root) : arraySpecifier);
+				reusedOriginal = true;
+			}
+
+			LOGGER.warn(
+					"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) "
+							+ structMember.getDeclarators().stream().map(StructDeclarator::getName).map(Identifier::getName)
+									.collect(Collectors.joining(", "))
+							+ ". See debugging.md for more information.");
 		}
 	}
 
@@ -538,7 +580,7 @@ public class CompatibilityTransformer {
 								}
 							}
 							if (outMember == null) {
-								throw new IllegalStateException("The targeted out declaration member is missing!");
+								throw new TransformationException("The targeted out declaration member is missing!");
 							}
 							outMember.getName().replaceByAndDelete(new Identifier(name));
 

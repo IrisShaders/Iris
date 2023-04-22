@@ -1,6 +1,6 @@
 # Iris installation and usage guide
 
-This guide is created to serve as an all-in-one reference for all the things you might want to know about the Iris Shaders mod. It will be periodically updated as the mod itself evolves.  
+This guide is created to serve as an all-in-one reference for all the things you might want to know about the Iris Shaders mod. It will be periodically updated as the mod itself evolves.
 Last updated on December 8th, 2022.
 
 ### Introduction
@@ -27,65 +27,65 @@ This method is recommended for users who want to play with **Iris shaders only, 
 1. Go to the [Iris shaders download page](https://irisshaders.net/download).
 
 2. Click on "Download universal JAR".
-3. Save the file anywhere on your computer and run it.  
+3. Save the file anywhere on your computer and run it.
    Java is required to run the installer. If your system doesn't have Java installed, download and install Java from [Adoptium Java downloads](https://adoptium.net/).
    If you are using Windows and are still unable to run the installer, try using [Jarfix](https://johann.loefflmann.net/en/software/jarfix/index.html).
-4. The following window should open:   
+4. The following window should open:
    ![installer](guide-resources/installer.png)
 5. Under the "Select game version" dropdown, select your preferred Minecraft version.
 6. Click Install.
-7. If you get the following prompt:  
-   ![launcherprompt](guide-resources/launcherprompt.png)  
+7. If you get the following prompt:
+   ![launcherprompt](guide-resources/launcherprompt.png)
    Select **Microsoft Store / Xbox** if you have updated to the new launcher. Otherwise, select **Standalone (Win32)**.
-8. You should see the button say "Completed!" below the full progress bar:  
+8. You should see the button say "Completed!" below the full progress bar:
    ![success](guide-resources/success.png)
 9. Close the installer.
-10. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):  
-    ![profile](guide-resources/profile.png)  
+10. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):
+    ![profile](guide-resources/profile.png)
     Play the game with this profile selected to run Iris Shaders!
 
 ### For use with other Fabric mods
 
-This method is recommended for users who want to **use other Fabric mods in combination with Iris Shaders**.  
+This method is recommended for users who want to **use other Fabric mods in combination with Iris Shaders**.
 Make sure to check the [**Compatibility with other Fabric mods**](#compatibility-with-other-fabric-mods) section to ensure all your other mods are going to work properly with Iris and Sodium.
 
 1. Follow steps 1 to 5 under the [For standalone use](#for-standalone-use) section.
 
-2. Under "Installation type", select **"Fabric install"**:  
+2. Under "Installation type", select **"Fabric install"**:
    ![check](guide-resources/check.png)
 3. Follow steps 6 to 9 under the [For standalone use](#for-standalone-use) section.
 4. Place your other Fabric mods in the mods folder. The location of the mods folder depends on your operating system:
-    - Windows: `%APPDATA%\.minecraft\mods`  
-    - Linux: `~/.minecraft/mods`  
+    - Windows: `%APPDATA%\.minecraft\mods`
+    - Linux: `~/.minecraft/mods`
     - MacOS: `~/Library/Application Support/minecraft/mods`
-5. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):  
-   ![fabricprofile](guide-resources/fabricprofile.png)  
+5. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):
+   ![fabricprofile](guide-resources/fabricprofile.png)
    Play the game with this profile selected to run the game with Iris Shaders and the rest of your Fabric mods!
-    
+
 ### Manual installation
 
-This method is for users who want to manually install Iris and Sodium, and optionally use them with other Fabric mods.  
-Make sure to check the [**Compatibility with other Fabric mods**](#compatibility-with-other-fabric-mods) section to ensure all your other mods are going to work properly with Iris and Sodium.  
+This method is for users who want to manually install Iris and Sodium, and optionally use them with other Fabric mods.
+Make sure to check the [**Compatibility with other Fabric mods**](#compatibility-with-other-fabric-mods) section to ensure all your other mods are going to work properly with Iris and Sodium.
 **If you already have a Fabric profile set up, start from step 8**.
 
 1. Go to the [Fabric loader download page](https://fabricmc.net/use/).
 2. Click on "Download installer (Universal/.JAR)".
-3. Save the file anywhere on your computer and run it.  
-   Java is required to run the installer. If your system doesn't have Java installed, download and install Java from [Adoptium Java downloads](https://adoptium.net/).  
+3. Save the file anywhere on your computer and run it.
+   Java is required to run the installer. If your system doesn't have Java installed, download and install Java from [Adoptium Java downloads](https://adoptium.net/).
    If you are using Windows and are still unable to run the installer, try using [Jarfix](https://johann.loefflmann.net/en/software/jarfix/index.html).
-4. The following window should open:  
+4. The following window should open:
    ![fabricinstaller](guide-resources/fabricinstaller.png)
 5. Under the "Minecraft Version" dropdown, select your preferred Minecraft version.
 6. Click Install.
-7. You should get the following prompt:  
-   ![fabricsuccess](guide-resources/fabricsuccess.png)  
+7. You should get the following prompt:
+   ![fabricsuccess](guide-resources/fabricsuccess.png)
    Click OK and close the installer.
 8. Download Iris and Sodium from the following website:
-    - Iris Shaders: [Modrinth](https://modrinth.com/mod/iris)  
-    - Sodium: [Modrinth](https://modrinth.com/mod/sodium)  
-   
+    - Iris Shaders: [Modrinth](https://modrinth.com/mod/iris)
+    - Sodium: [Modrinth](https://modrinth.com/mod/sodium)
+
    The following table shows which version of Sodium you need based on your Minecraft version:
-   
+
    | Minecraft    | Sodium       |
    |:------------:|:------------:|
    | 1.16.5       | 1.16.5-0.2.0 |
@@ -94,32 +94,32 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    | 1.19.3       | 1.19.3-0.4.9 |
    | 1.19.4       | 1.19.4-0.4.10 |
 9. Place the downloaded files (and optionally your other Fabric mods) into the mods folder. The location of the mods folder depends on  your operating system:
-    - Windows: `%APPDATA%\.minecraft\mods`  
-    - Linux: `~/.minecraft/mods`  
+    - Windows: `%APPDATA%\.minecraft\mods`
+    - Linux: `~/.minecraft/mods`
     - MacOS: `~/Library/Application Support/minecraft/mods`
-10. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):  
-    ![fabricprofile](guide-resources/fabricprofile.png)  
+10. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):
+    ![fabricprofile](guide-resources/fabricprofile.png)
     Play the game with this profile selected to run the game with Iris Shaders and the rest of your Fabric mods!
 
 ## Using Iris
 
-After you install Iris using one of the methods described in the [Installing Iris](#installing-iris) section, make sure that it is properly installed by going into the Minecraft video settings. The video settings menu should look like this:  
+After you install Iris using one of the methods described in the [Installing Iris](#installing-iris) section, make sure that it is properly installed by going into the Minecraft video settings. The video settings menu should look like this:
 
 ![videosettings](guide-resources/videosettings.png)
 
-You probably noticed that the menu is completely different. It is a reworked video settings menu provided by Sodium. In the **General** and **Quality** tab, you can find all the usual settings from vanilla Minecraft which you can change to fit your preferences. The settings in the Performance and Advanced tabs should not be modified in most cases.  
+You probably noticed that the menu is completely different. It is a reworked video settings menu provided by Sodium. In the **General** and **Quality** tab, you can find all the usual settings from vanilla Minecraft which you can change to fit your preferences. The settings in the Performance and Advanced tabs should not be modified in most cases.
 
-Shader packs are managed in the **Shader packs** tab. The shader pack menu should look like this:  
+Shader packs are managed in the **Shader packs** tab. The shader pack menu should look like this:
 
 ![shaderpacksmenu](guide-resources/shaderpacksmenu.png)
 
-This menu shows shader packs which are in the shader packs folder. You can add new shader packs by dragging and dropping them into this menu, or by clicking the "Open Shader Pack Folder..." button and adding the shader packs into the opened folder. After adding your shader packs to the shader pack folder, click the refresh button in the top right to refresh the list of shaders. To select a shader pack, click on "Shaders: Disabled" to enable them. After that, select the shader pack you want to enable by clicking on it, then enable the selected shader by clicking the Apply button.  
+This menu shows shader packs which are in the shader packs folder. You can add new shader packs by dragging and dropping them into this menu, or by clicking the "Open Shader Pack Folder..." button and adding the shader packs into the opened folder. After adding your shader packs to the shader pack folder, click the refresh button in the top right to refresh the list of shaders. To select a shader pack, click on "Shaders: Disabled" to enable them. After that, select the shader pack you want to enable by clicking on it, then enable the selected shader by clicking the Apply button.
 
 In the following example, we have successfully enabled Complementary Shaders. Notice how the font of the enabled shader changed to yellow - this is used to indicate that the shader is, in fact, enabled:
 
 ![shaderenabled](guide-resources/shaderenabled.png)
 
-After enabling the selected shader, you can now configure it by clicking on the "Shader Pack Settings..." button. The shader pack settings menu is going to look different for each shader, since the available options are defined by the shader itself. For example, this is how the menu looks like with Complementary Shaders enabled:  
+After enabling the selected shader, you can now configure it by clicking on the "Shader Pack Settings..." button. The shader pack settings menu is going to look different for each shader, since the available options are defined by the shader itself. For example, this is how the menu looks like with Complementary Shaders enabled:
 
 ![shadersettingsmenu](guide-resources/shadersettingsmenu.png)
 
@@ -129,9 +129,9 @@ Here you can edit the shader pack options provided by the shader itself. The opt
 - ![exportbutton](guide-resources/exportbutton.png) Export button: Exports your currently active shader settings to a .txt file. Useful for sharing your custom shader settings.
 - ![resetbutton](guide-resources/resetbutton.png) Reset button: Hold Left SHIFT and click this button to restore the default settings for the selected shader.
 
-After you're done with customizing the shader, click Apply to apply the changes. You can now go back to the shader pack list by clicking on the "Shader Pack List..." button, or to the video settings menu by clicking the "Done" button.  
+After you're done with customizing the shader, click Apply to apply the changes. You can now go back to the shader pack list by clicking on the "Shader Pack List..." button, or to the video settings menu by clicking the "Done" button.
 
-You can now load your world and play Minecraft with shaders! While in game, you can use **keyboard shortcuts** which allow you to quickly manage your shaders:  
+You can now load your world and play Minecraft with shaders! While in game, you can use **keyboard shortcuts** which allow you to quickly manage your shaders:
 
 - Pressing "**O**" opens up the shader packs menu with a transparent background, so you can see the changes you're making to the shader settings happen in real time.
 - Pressing "**K**" toggles shaders on and off.
@@ -158,7 +158,7 @@ Iris and Sodium are made with high mod compatibility in mind, so they should be 
 
 ### Sodium's incompatibility with the Fabric Rendering API
 
-If you are using **ANY** of the following mods:  
+If you are using **ANY** of the following mods:
 
 - Applied Energistics 2
 - Art of Alchemy
@@ -178,14 +178,14 @@ If you are using **ANY** of the following mods:
 
 ... and many others which could possibly utilize the Fabric Rendering API, **you will experience issues when playing the game**.
 
-**Solution**: Download **Indium** ([Modrinth](https://modrinth.com/mod/indium)) and add it to your mods folder.  
+**Solution**: Download **Indium** ([Modrinth](https://modrinth.com/mod/indium)) and add it to your mods folder.
 
 Make sure to download the version that supports your current version of Sodium:
 
 | Sodium       | Indium       |
 |:------------:|:------------:|
 | 1.16.5-0.2.0 | 1.0.0 for 1.16.5 |
-| 1.18.2-0.4.1 | 1.0.7 for 1.18.2 |  
+| 1.18.2-0.4.1 | 1.0.7 for 1.18.2 |
 | 1.19.2-0.4.4 | 1.0.9 for 1.19.2 |
 | 1.19.3-0.4.9 | 1.0.14 for 1.19.3|
 | 1.19.4-0.4.10 | 1.0.15 for 1.19.4|

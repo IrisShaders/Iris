@@ -112,7 +112,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.fillGradient(poseStack, 0, 0, width, height, 0x4F232323, 0x4F232323);
 		}
 
-		if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_D)) {
+		if (Screen.hasControlDown() && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_D)) {
 			Minecraft.getInstance().setScreen(new ConfirmScreen((option) -> {
 				Iris.setDebug(option);
 				Minecraft.getInstance().setScreen(this);
