@@ -6,7 +6,6 @@ import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 import net.coderbot.iris.pipeline.transform.Patch;
-import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 public class SodiumParameters extends Parameters {
