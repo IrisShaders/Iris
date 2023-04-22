@@ -116,15 +116,15 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 			short midU = XHFPModelVertexType.encodeBlockTexture(uSum);
 			short midV = XHFPModelVertexType.encodeBlockTexture(vSum);
 
-			MemoryUtil.memPutShort(i + 20, midU);
-			MemoryUtil.memPutShort(i + 20 - STRIDE, midU);
-			MemoryUtil.memPutShort(i + 20 - STRIDE * 2, midU);
-			MemoryUtil.memPutShort(i + 20 - STRIDE * 3, midU);
+			MemoryUtil.memPutShort(ptr + 20, midU);
+			MemoryUtil.memPutShort(ptr + 20 - STRIDE, midU);
+			MemoryUtil.memPutShort(ptr + 20 - STRIDE * 2, midU);
+			MemoryUtil.memPutShort(ptr + 20 - STRIDE * 3, midU);
 
-			MemoryUtil.memPutShort(i + 22, midV);
-			MemoryUtil.memPutShort(i + 22 - STRIDE, midV);
-			MemoryUtil.memPutShort(i + 22 - STRIDE * 2, midV);
-			MemoryUtil.memPutShort(i + 22 - STRIDE * 3, midV);
+			MemoryUtil.memPutShort(ptr + 22, midV);
+			MemoryUtil.memPutShort(ptr + 22 - STRIDE, midV);
+			MemoryUtil.memPutShort(ptr + 22 - STRIDE * 2, midV);
+			MemoryUtil.memPutShort(ptr + 22 - STRIDE * 3, midV);
 
 			uSum = 0;
 			vSum = 0;
