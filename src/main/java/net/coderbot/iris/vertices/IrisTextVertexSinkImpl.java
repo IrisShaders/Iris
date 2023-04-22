@@ -35,7 +35,14 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	public ByteBuffer getUnderlyingByteBuffer() {
 		return buffer;
 	}
-
+	private static final int OFFSET_POSITION = 0;
+	private static final int OFFSET_COLOR = 12;
+	private static final int OFFSET_TEXTURE = 16;
+	private static final int OFFSET_MID_TEXTURE = 42;
+	private static final int OFFSET_OVERLAY = 24;
+	private static final int OFFSET_LIGHT = 28;
+	private static final int OFFSET_NORMAL = 32;
+	private static final int OFFSET_TANGENT = 50;
 	@Override
 	public void quad(float minX, float minY, float maxX, float maxY, float z, int color, float minU, float minV, float maxU, float maxV, int light) {
 		vertex(minX, minY, z, color, minU, minV, light);
@@ -49,26 +56,27 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 		uSum += u;
 		vSum += v;
 
-		long i = elementOffset;
+		long ptr = elementOffset;
 
-		MemoryUtil.memPutFloat(i, x);
-		MemoryUtil.memPutFloat(i + 4, y);
-		MemoryUtil.memPutFloat(i + 8, z);
-		MemoryUtil.memPutInt(i + 12, color);
-		MemoryUtil.memPutFloat(i + 16, u);
-		MemoryUtil.memPutFloat(i + 20, v);
-		MemoryUtil.memPutInt(i + 24, OverlayTexture.NO_OVERLAY);
-		MemoryUtil.memPutInt(i + 28, light);
-		MemoryUtil.memPutShort(i + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
-		MemoryUtil.memPutShort(i + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
-		MemoryUtil.memPutShort(i + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
+		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_COLOR, color);
+
+		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 0, u);
+		MemoryUtil.memPutFloat(ptr + OFFSET_TEXTURE + 4, v);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_LIGHT, light);
+
+		MemoryUtil.memPutInt(ptr + OFFSET_OVERLAY, OverlayTexture.NO_OVERLAY);
 
 		if (vertexCount == 4) {
 			// TODO: compute this at the head of quad()
 			vertexCount = 0;
 			uSum *= 0.25;
 			vSum *= 0.25;
-			quad.setup(elementOffset, IrisVertexFormats.TERRAIN.getVertexSize());
+			quad.setup(elementOffset, IrisVertexFormats.ENTITY.getVertexSize());
 
 			NormalHelper.computeFaceNormal(saveNormal, quad);
 			float normalX = saveNormal.x;
@@ -79,10 +87,10 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 			int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
 			for (long vertex = 0; vertex < 4; vertex++) {
-				MemoryUtil.memPutFloat(i + 42 - STRIDE * vertex, uSum);
-				MemoryUtil.memPutFloat(i + 46 - STRIDE * vertex, vSum);
-				MemoryUtil.memPutInt(i + 32 - STRIDE * vertex, normal);
-				MemoryUtil.memPutInt(i + 50 - STRIDE * vertex, tangent);
+				MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE - STRIDE * vertex, uSum);
+				MemoryUtil.memPutFloat(ptr + (OFFSET_MID_TEXTURE + 4) - STRIDE * vertex, vSum);
+				MemoryUtil.memPutInt(ptr + OFFSET_NORMAL - STRIDE * vertex, normal);
+				MemoryUtil.memPutInt(ptr + OFFSET_TANGENT - STRIDE * vertex, tangent);
 			}
 
 			uSum = 0;
