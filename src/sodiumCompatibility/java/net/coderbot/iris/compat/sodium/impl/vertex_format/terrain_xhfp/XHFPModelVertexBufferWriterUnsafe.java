@@ -34,13 +34,13 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		MemoryUtil.memCopy(this.writePointer - STRIDE * 4, this.writePointer, STRIDE * 4);
 
 		// Now flip vertex normals
-		int packedNormal = MemoryUtil.memGetInt(this.writePointer + 32);
+		int packedNormal = MemoryUtil.memGetInt(this.writePointer + 28);
 		int inverted = NormalHelper.invertPackedNormal(packedNormal);
 
-		MemoryUtil.memPutInt(this.writePointer + 32, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE * 2, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE * 3, inverted);
+		MemoryUtil.memPutInt(this.writePointer + 28, inverted);
+		MemoryUtil.memPutInt(this.writePointer + 28 + STRIDE, inverted);
+		MemoryUtil.memPutInt(this.writePointer + 28 + STRIDE * 2, inverted);
+		MemoryUtil.memPutInt(this.writePointer + 28 + STRIDE * 3, inverted);
 
 		// We just wrote 4 vertices, advance by 4
 		for (int i = 0; i < 4; i++) {

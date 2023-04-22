@@ -45,13 +45,13 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 		dst.put(src);
 
 		// Now flip vertex normals
-		int packedNormal = this.byteBuffer.getInt(this.writeOffset + 32);
+		int packedNormal = this.byteBuffer.getInt(this.writeOffset + 28);
 		int inverted = NormalHelper.invertPackedNormal(packedNormal);
 
-		this.byteBuffer.putInt(this.writeOffset + 32, inverted);
-		this.byteBuffer.putInt(this.writeOffset + 32 + STRIDE, inverted);
-		this.byteBuffer.putInt(this.writeOffset + 32 + STRIDE * 2, inverted);
-		this.byteBuffer.putInt(this.writeOffset + 32 + STRIDE * 3, inverted);
+		this.byteBuffer.putInt(this.writeOffset + 28, inverted);
+		this.byteBuffer.putInt(this.writeOffset + 28 + STRIDE, inverted);
+		this.byteBuffer.putInt(this.writeOffset + 28 + STRIDE * 2, inverted);
+		this.byteBuffer.putInt(this.writeOffset + 28 + STRIDE * 3, inverted);
 
 		// We just wrote 4 vertices, advance by 4
 		for (int i = 0; i < 4; i++) {
