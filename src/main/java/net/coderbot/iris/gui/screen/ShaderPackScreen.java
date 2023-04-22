@@ -114,10 +114,10 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			Minecraft.getInstance().setScreen(new ConfirmScreen((option) -> {
 				Iris.setDebug(option);
 				Minecraft.getInstance().setScreen(this);
-			}, new TextComponent("Shader debug mode toggle"),
-				new TextComponent("Debug mode helps investigate problems and shows shader errors. Would you like to enable it?"),
-				new TextComponent("Yes"),
-				new TextComponent("No")));
+			}, Component.literal("Shader debug mode toggle"),
+				Component.literal("Debug mode helps investigate problems and shows shader errors. Would you like to enable it?"),
+				Component.literal("Yes"),
+				Component.literal("No")));
 		}
 
 		if (!this.guiHidden) {
