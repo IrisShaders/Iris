@@ -1,6 +1,7 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
+import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.Material;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import org.joml.Vector3f;
@@ -59,7 +60,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 
 	@Override
 	public long write(long ptr,
-					  Vertex vertex, int chunkId) {
+					  Material material, ChunkVertexEncoder.Vertex vertex, int chunkId) {
 		uSum += vertex.u;
 		vSum += vertex.v;
 		vertexCount++;
@@ -67,7 +68,9 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 		MemoryUtil.memPutShort(ptr + 0, XHFPModelVertexType.encodePosition(vertex.x));
 		MemoryUtil.memPutShort(ptr + 2, XHFPModelVertexType.encodePosition(vertex.y));
 		MemoryUtil.memPutShort(ptr + 4, XHFPModelVertexType.encodePosition(vertex.z));
-		MemoryUtil.memPutShort(ptr + 6, (short) chunkId);
+
+		MemoryUtil.memPutByte(ptr + 6, material.bits());
+		MemoryUtil.memPutByte(ptr + 7, (byte) chunkId);
 
 		MemoryUtil.memPutInt(ptr + 8, vertex.color);
 

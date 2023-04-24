@@ -2,12 +2,12 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
-import me.jellysquid.mods.sodium.client.render.RenderGlobal;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexBufferWriter;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
-import me.jellysquid.mods.sodium.client.util.Norm3b;
-import me.jellysquid.mods.sodium.common.util.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
+import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
+import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
@@ -20,7 +20,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 public final class EntityVertex {
-	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.get(IrisVertexFormats.ENTITY);
+	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.instance().get(IrisVertexFormats.ENTITY);
 	public static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
 
 	private static final int OFFSET_POSITION = 0;
@@ -91,7 +91,7 @@ public final class EntityVertex {
 		Matrix3f matNormal = matrices.normal();
 		Matrix4f matPosition = matrices.pose();
 
-		try (MemoryStack stack = RenderGlobal.VERTEX_DATA.push()) {
+		try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
 			long buffer = stack.nmalloc(4 * STRIDE);
 			long ptr = buffer;
 
@@ -99,9 +99,9 @@ public final class EntityVertex {
 			var n = quad.getNormal();
 
 			// The normal vector
-			float nx = Norm3b.unpackX(n);
-			float ny = Norm3b.unpackY(n);
-			float nz = Norm3b.unpackZ(n);
+			float nx = NormI8.unpackX(n);
+			float ny = NormI8.unpackY(n);
+			float nz = NormI8.unpackZ(n);
 
 			float midU = ((quad.getTexU(0) + quad.getTexU(1) + quad.getTexU(2) + quad.getTexU(3)) * 0.25f);
 			float midV = ((quad.getTexV(0) + quad.getTexV(1) + quad.getTexV(2) + quad.getTexV(3)) * 0.25f);
@@ -112,7 +112,7 @@ public final class EntityVertex {
 			float nzt = MatrixHelper.transformNormalZ(matNormal, nx, ny, nz);
 
 			// The packed transformed normal vector
-			var nt = Norm3b.pack(nxt, nyt, nzt);
+			var nt = NormI8.pack(nxt, nyt, nzt);
 
 			for (int i = 0; i < 4; i++) {
 				// The position vector

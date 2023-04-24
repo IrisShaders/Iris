@@ -1,20 +1,20 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
-import me.jellysquid.mods.sodium.client.render.vertex.transform.CommonVertexElement;
-import me.jellysquid.mods.sodium.client.render.vertex.transform.VertexTransform;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisCommonVertexElements;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(VertexTransform.class)
+@Mixin(VertexFormatElement.class)
 public class MixinVertexTransform {
+	// TODO SODIUM FIX
 	/**
 	 * @author IMS
 	 * @reason Rewrite to edit midTexCoord too
 	 */
+	/*
 	@Overwrite(remap = false)
 	public static void transformSprite(long ptr, int count, VertexFormatDescription format,
 									   float minU, float minV, float maxU, float maxV) {
@@ -60,5 +60,5 @@ public class MixinVertexTransform {
 		}
 
 
-	}
+	}*/
 }
