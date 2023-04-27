@@ -59,7 +59,6 @@
     "fabulous.MixinDisableFabulousGraphics",
     "gui.MixinGui",
     "gui.MixinVideoSettingsScreen",
-    "math.MixinMatrix4f",
     "rendertype.MixinRenderStateShard_Tagging",
     "rendertype.RenderTypeAccessor",
     "rendertype.RenderStateShardAccessor",
