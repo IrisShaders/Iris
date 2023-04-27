@@ -11,7 +11,9 @@ import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
+import net.coderbot.iris.pipeline.newshader.AlphaTests;
 import net.coderbot.iris.pipeline.transform.parameter.SodiumParameters;
 
 import java.util.Set;
@@ -124,7 +126,7 @@ public class SodiumTransformer {
 				String alphaCutoffName = parameters.hasGeometry ? "iris_alphaCutoffGS" : "iris_alphaCutoff";
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in float iris_alphaCutoff;");
 				tree.appendMainFunctionBody(t,
-					parameters.getAlphaTest().toExpression("iris_FragData0.a", "iris_alphaCutoff", "	"));
+					AlphaTests.NON_ZERO_ALPHA.toExpression("iris_FragData0.a", "iris_alphaCutoff", "	"));
 			}
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform mat4 iris_ModelViewMatrix;",

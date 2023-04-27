@@ -1,7 +1,6 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
@@ -16,14 +15,11 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.samplers.IrisSamplers;
-import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32C;
-import org.lwjgl.opengl.GL45C;
 
 import java.util.List;
 
@@ -99,11 +95,6 @@ public class IrisChunkShaderInterface {
 		irisProgramSamplers.update();
 		irisProgramImages.update();
 		customUniforms.push(this);
-
-		RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
-
-		GL45C.glBindTextureUnit(IrisSamplers.ALBEDO_TEXTURE_UNIT, TextureUtil.getBlockTextureId());
-		GL45C.glBindTextureUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, TextureUtil.getLightTextureId());
 	}
 
 	public void restore() {

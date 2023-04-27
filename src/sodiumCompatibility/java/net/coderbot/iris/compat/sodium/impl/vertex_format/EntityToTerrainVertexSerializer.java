@@ -10,12 +10,7 @@ public class EntityToTerrainVertexSerializer implements VertexSerializer {
 	@Override
 	public void serialize(long src, long dst, int vertexCount) {
 		for(int vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
-			MemoryUtil.memPutFloat(dst, MemoryUtil.memGetFloat(src + 0L));
-			MemoryUtil.memPutFloat(dst + 4, MemoryUtil.memGetFloat(src + 4L));
-			MemoryUtil.memPutFloat(dst + 8, MemoryUtil.memGetFloat(src + 8L));
-			MemoryUtil.memPutInt(dst + 12, MemoryUtil.memGetInt(src + 12L));
-			MemoryUtil.memPutFloat(dst + 16, MemoryUtil.memGetFloat(src + 16L));
-			MemoryUtil.memPutFloat(dst + 20, MemoryUtil.memGetFloat(src + 20L));
+			MemoryUtil.memCopy(src, dst, 24);
 			MemoryUtil.memPutInt(dst + 24, MemoryUtil.memGetInt(src + 28L));
 			MemoryUtil.memPutInt(dst + 28, MemoryUtil.memGetInt(src + 32L));
 			MemoryUtil.memPutInt(dst + 32, 0);

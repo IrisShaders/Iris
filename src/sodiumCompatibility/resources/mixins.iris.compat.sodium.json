@@ -21,8 +21,6 @@
     "options.MixinSodiumGameOptionPages",
     "options.MixinSodiumGameOptions",
     "options.MixinSodiumOptionsGUI",
-    "fast_render.MixinCube",
-    "fast_render.MixinModelPart",
     "font.MixinGlyphRenderer",
     "pbr_animation.MixinSpriteContents",
     "shader_overrides.MixinGlProgram",
@@ -39,8 +37,6 @@
     "shadow_map.frustum.MixinCullEverythingFrustum",
     "shadow_map.frustum.MixinNonCullingFrustum",
     "sky.MixinLevelRenderer",
-    "vertex_format.entity.MixinEntityRenderDispatcher",
-    "vertex_format.entity.MixinModelVertex",
     "vertex_format.ChunkMeshAttributeAccessor",
     "vertex_format.GlVertexAttributeFormatAccessor",
     "vertex_format.MixinChunkMeshAttribute",
@@ -54,6 +50,5 @@
     "vertex_format.MixinVertexSerializerCache",
     "vertex_format.MixinVertexTransform",
     "separate_ao.MixinBlockRenderer",
-    "separate_ao.MixinFluidRenderer"
   ]
 }
