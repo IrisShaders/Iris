@@ -109,7 +109,7 @@ public class CommonTransformer {
 		}
 	}
 
-	public static Set<Long> transform(
+	public static void transform(
 			ASTParser t,
 			TranslationUnit tree,
 			Root root,
@@ -251,8 +251,6 @@ public class CommonTransformer {
 
 		renameAndWrapShadow(t, root, "shadow2D", "texture");
 		renameAndWrapShadow(t, root, "shadow2DLod", "textureLod");
-
-		return replaceIndexesSet;
 	}
 
 	private static class RenameTargetResult {

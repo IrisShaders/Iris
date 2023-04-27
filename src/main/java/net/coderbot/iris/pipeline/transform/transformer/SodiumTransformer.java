@@ -26,7 +26,7 @@ public class SodiumTransformer {
 			TranslationUnit tree,
 			Root root,
 			SodiumParameters parameters) {
-		Set<Long> replaceSet = CommonTransformer.transform(t, tree, root, parameters, false);
+		CommonTransformer.transform(t, tree, root, parameters, false);
 
 		replaceMidTexCoord(t, tree, root, parameters.textureScale);
 
@@ -119,15 +119,6 @@ public class SodiumTransformer {
 			// performed as an array of injections)
 			injectVertInit(t, tree, root, parameters);
 		} else {
-			if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
-				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in float iris_alphaCutoff[];", "out float iris_alphaCutoffGS;");
-				tree.prependMainFunctionBody(t, "iris_alphaCutoffGS = iris_alphaCutoff[0];");
-			} else if (parameters.type.glShaderType == ShaderType.FRAGMENT && replaceSet.contains(0L)) {
-				String alphaCutoffName = parameters.hasGeometry ? "iris_alphaCutoffGS" : "iris_alphaCutoff";
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in float iris_alphaCutoff;");
-				tree.appendMainFunctionBody(t,
-					AlphaTests.NON_ZERO_ALPHA.toExpression("iris_FragData0.a", "iris_alphaCutoff", "	"));
-			}
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"uniform mat4 iris_ModelViewMatrix;",
 					"uniform mat4 iris_ProjectionMatrix;");
@@ -152,15 +143,9 @@ public class SodiumTransformer {
 				"ivec2 _vert_tex_light_coord;",
 				"vec4 _vert_color;",
 				"uint _draw_id;",
-				"out float iris_alphaCutoff;",
 				"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
-					"const uint MATERIAL_ALPHA_CUTOFF_OFFSET = 1u;",
-					"const float[4] ALPHA_CUTOFF = float[4](0.0f, 0.1f, 0.5f, 1.0f);",
 					"float _material_mip_bias(uint material) {\n" +
 					"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
-					"}",
-					"float _material_alpha_cutoff(uint material) {\n" +
-					"    return ALPHA_CUTOFF[(material >> MATERIAL_ALPHA_CUTOFF_OFFSET) & 3u];\n" +
 					"}",
 				"void _vert_init() {" +
 						"_vert_position = (vec3(a_PosId.xyz) * " + parameters.positionScale + " + "
@@ -168,8 +153,7 @@ public class SodiumTransformer {
 						"_vert_tex_diffuse_coord = (a_TexCoord * " + parameters.textureScale + ");" +
 						"_vert_tex_light_coord = a_LightCoord;" +
 						"_vert_color = " + separateAo + ";" +
-						"_draw_id = (a_PosId.w >> 8u) & 0xFFu;" +
-						"iris_alphaCutoff = _material_alpha_cutoff((a_PosId.w >> 0u) & 0xFFu); }",
+						"_draw_id = (a_PosId.w >> 8u) & 0xFFu; }",
 
 			"uvec3 _get_relative_chunk_coord(uint pos) {\n" +
 				"    return uvec3(pos) >> uvec3(5u, 3u, 0u) & uvec3(7u, 3u, 7u);\n" +

@@ -34,7 +34,7 @@ public class SodiumParameters extends GeometryInfoParameters {
 	}
 	@Override
 	public AlphaTest getAlphaTest() {
-		return AlphaTest.ALWAYS;
+		return alpha;
 	}
 
 	@Override

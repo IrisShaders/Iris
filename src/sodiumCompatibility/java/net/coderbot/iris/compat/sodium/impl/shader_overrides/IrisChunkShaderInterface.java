@@ -15,6 +15,7 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
@@ -81,6 +82,7 @@ public class IrisChunkShaderInterface {
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, TextureUtil.getLightTextureId());
 		// This is what is expected by the rest of rendering state, failure to do this will cause blurry textures on particles.
 		GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
+		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alpha);
 
 		if (blendModeOverride != null) {
 			blendModeOverride.apply();
