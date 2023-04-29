@@ -395,7 +395,7 @@ public class PackShadowDirectives {
 		}
 
 		public boolean getNearest() {
-			return this.nearest;
+			return this.nearest || this.format.getPixelFormat().isInteger();
 		}
 
 		public boolean getClear() {
