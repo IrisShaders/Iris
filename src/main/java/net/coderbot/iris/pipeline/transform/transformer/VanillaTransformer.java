@@ -17,7 +17,9 @@ public class VanillaTransformer {
 		// this happens before common to make sure the renaming of attributes is done on
 		// attribute inserted by this
 		if (parameters.inputs.hasOverlay()) {
-			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
+			if (!parameters.inputs.isText()) {
+				AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
+			}
 			AttributeTransformer.patchEntityId(t, tree, root, parameters);
 		}
 
