@@ -132,6 +132,10 @@ public enum ShaderKey {
 		return this == GLINT;
 	}
 
+	public boolean isText() {
+		return this.name().contains("TEXT");
+	}
+
 	enum LightingModel {
 		FULLBRIGHT,
 		LIGHTMAP,
