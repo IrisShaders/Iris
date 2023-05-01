@@ -112,6 +112,10 @@ public class Iris {
 	 * <p>This is called right before options are loaded, so we can add key bindings here.</p>
 	 */
 	public void onEarlyInitialize() {
+		if (SodiumVersionCheck.isAllowedVersion("aaaaa")) {
+			Iris.logger.warn("If you're seeing this, IMS screwed up and forgot to re-add the Sodium check. Please yell at him.");
+		}
+
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
 				modContainer -> {
 					sodiumInstalled = true;

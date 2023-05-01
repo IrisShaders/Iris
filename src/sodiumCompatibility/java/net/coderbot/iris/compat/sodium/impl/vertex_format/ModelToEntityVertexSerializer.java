@@ -3,13 +3,14 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.GlyphVertexExt;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.lwjgl.system.MemoryUtil;
 
-public class EntityToTerrainVertexSerializer implements VertexSerializer {
+public class ModelToEntityVertexSerializer implements VertexSerializer {
 	@Override
 	public void serialize(long src, long dst, int vertexCount) {
 		// Only accept quads, to be safe
@@ -28,19 +29,17 @@ public class EntityToTerrainVertexSerializer implements VertexSerializer {
 			midU /= 4;
 			midV /= 4;
 
-			for (int j = 0; j < 4; j++) {
-				MemoryUtil.memCopy(src, dst, 24);
-				MemoryUtil.memPutInt(dst + 24, MemoryUtil.memGetInt(src + 28L));
-				MemoryUtil.memPutInt(dst + 28, normal);
-				MemoryUtil.memPutShort(dst + 32, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
-				MemoryUtil.memPutShort(dst + 34, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
-				MemoryUtil.memPutFloat(dst + 36, midU);
-				MemoryUtil.memPutFloat(dst + 40, midV);
-				MemoryUtil.memPutInt(dst + 44, tangent);
-				MemoryUtil.memPutInt(dst + 48, 0);
+		    for (int j = 0; j < 4; j++) {
+				MemoryUtil.memCopy(src, dst, 36);
+				MemoryUtil.memPutShort(dst + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+				MemoryUtil.memPutShort(dst + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+				MemoryUtil.memPutShort(dst + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+				MemoryUtil.memPutFloat(dst + 42, midU);
+				MemoryUtil.memPutFloat(dst + 46, midV);
+				MemoryUtil.memPutInt(dst + 50, tangent);
 
 				src += ModelVertex.STRIDE;
-				dst += IrisVertexFormats.TERRAIN.getVertexSize();
+				dst += IrisVertexFormats.ENTITY.getVertexSize();
 			}
 		}
 	}

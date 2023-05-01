@@ -3,7 +3,7 @@ package net.coderbot.iris.pipeline;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
-import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
@@ -149,7 +149,7 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				AlphaTest.ALWAYS, inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			terrainSolidVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			terrainSolidGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			terrainSolidFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
@@ -179,7 +179,7 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				terrainCutoutAlpha.orElse(AlphaTests.ONE_TENTH_ALPHA), inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			terrainCutoutVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			terrainCutoutGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			terrainCutoutFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
@@ -211,7 +211,7 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				translucentAlpha.orElse(AlphaTest.ALWAYS), inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			translucentVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			translucentGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			translucentFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
@@ -242,13 +242,13 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				AlphaTest.ALWAYS, inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			Map<PatchShaderType, String> transformedCutout = TransformPatcher.patchSodium(
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				shadowAlpha.get(), inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			shadowVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			shadowGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			shadowCutoutFragment = Optional.ofNullable(transformedCutout.get(PatchShaderType.FRAGMENT));

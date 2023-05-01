@@ -1,13 +1,14 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
-import me.jellysquid.mods.sodium.client.render.vertex.transform.CommonVertexElement;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.CommonVertexAttribute;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(CommonVertexElement.class)
+@Mixin(CommonVertexAttribute.class)
 public interface CommonVertexElementAccessor {
 	@Invoker(value = "<init>")
-	static CommonVertexElement createCommonVertexElement(String name, int ordinal) {
+	static CommonVertexAttribute createCommonVertexElement(String name, int ordinal, VertexFormatElement element) {
 		throw new AssertionError();
 	}
 }

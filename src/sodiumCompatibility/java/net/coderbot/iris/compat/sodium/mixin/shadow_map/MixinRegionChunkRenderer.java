@@ -14,7 +14,7 @@ public class MixinRegionChunkRenderer {
 	@Final
 	private boolean isBlockFaceCullingEnabled;
 
-	@Redirect(method = "buildDrawBatches", remap = false,
+	@Redirect(method = "addDrawCalls", remap = false,
 			at = @At(value = "FIELD",
 					target = "me/jellysquid/mods/sodium/client/render/chunk/RegionChunkRenderer.isBlockFaceCullingEnabled : Z"))
 	private boolean iris$disableBlockFaceCullingInShadowPass(RegionChunkRenderer renderer) {

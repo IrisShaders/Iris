@@ -22,7 +22,7 @@ public class SodiumCoreTransformer {
 
 		if (parameters.type == PatchShaderType.VERTEX) {
 			// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-			root.replaceReferenceExpressions(t, "vaPosition", "Chunks[_draw_id].offset.xyz + _vert_position");
+			root.replaceReferenceExpressions(t, "vaPosition", "_get_draw_translation(_draw_id) + _vert_position");
 			root.replaceReferenceExpressions(t, "vaColor", "_vert_color");
 			root.rename("vaNormal", "iris_Normal");
 			root.replaceReferenceExpressions(t, "vaUV0", "_vert_tex_diffuse_coord");

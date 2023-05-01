@@ -1,14 +1,13 @@
 package net.coderbot.iris.compat.sodium.impl.vertex_format;
 
-import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
-import me.jellysquid.mods.sodium.client.render.vertex.transform.CommonVertexElement;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.CommonVertexAttribute;
 
 /**
  * Initialized by {@link net.coderbot.iris.compat.sodium.mixin.vertex_format.MixinChunkMeshAttribute}
  */
 public class IrisCommonVertexElements {
-	public static CommonVertexElement TANGENT;
-	public static CommonVertexElement MID_TEX_COORD;
-	public static CommonVertexElement BLOCK_ID;
-	public static CommonVertexElement MID_BLOCK;
+	public static CommonVertexAttribute TANGENT;
+	public static CommonVertexAttribute MID_TEX_COORD;
+	public static CommonVertexAttribute BLOCK_ID;
+	public static CommonVertexAttribute MID_BLOCK;
 }
