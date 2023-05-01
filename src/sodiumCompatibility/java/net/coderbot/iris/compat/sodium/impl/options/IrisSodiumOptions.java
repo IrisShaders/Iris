@@ -11,7 +11,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
-
+import net.minecraft.text.Text;
 
 
 import java.io.IOException;
