@@ -108,23 +108,6 @@ public class MixinGameRenderer {
 			override(ShaderKey.TEXTURED_COLOR, cir);
 		}
 	}
-
-	// TODO: getBlockShader
-
-	@Inject(method = "getNewEntityShader", at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideNewEntityShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
-			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
-		} else if (HandRenderer.INSTANCE.isActive()) {
-			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_BRIGHT : ShaderKey.HAND_WATER_BRIGHT, cir);
-		} else if (isBlockEntities()) {
-			override(ShaderKey.BLOCK_ENTITY_BRIGHT, cir);
-		} else if (shouldOverrideShaders()) {
-			override(ShaderKey.ENTITIES_SOLID_BRIGHT, cir);
-		}
-	}
-
 	@Inject(method = {
 			"getParticleShader"
 	}, at = @At("HEAD"), cancellable = true)

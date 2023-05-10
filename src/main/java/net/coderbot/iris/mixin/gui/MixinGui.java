@@ -9,7 +9,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
@@ -27,7 +27,7 @@ public class MixinGui {
 	@Shadow @Final private Minecraft minecraft;
 
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
-	public void iris$handleHudHidingScreens(PoseStack poseStack, float tickDelta, CallbackInfo ci) {
+	public void iris$handleHudHidingScreens(GuiGraphics pGui0, float pFloat1, CallbackInfo ci) {
 		Screen screen = this.minecraft.screen;
 
 		if (screen instanceof HudHideable) {
@@ -37,7 +37,7 @@ public class MixinGui {
 
 	// TODO: Move this to a more appropriate mixin
 	@Inject(method = "render", at = @At("RETURN"))
-	public void iris$displayBigSodiumWarning(PoseStack poseStack, float tickDelta, CallbackInfo ci) {
+	public void iris$displayBigSodiumWarning(GuiGraphics guiGraphics, float pFloat1, CallbackInfo ci) {
 		if (Iris.isSodiumInstalled()
 				|| Minecraft.getInstance().options.renderDebug
 				|| !Iris.getCurrentPack().isPresent()) {
@@ -57,13 +57,13 @@ public class MixinGui {
 			final int lineWidth = font.width(string);
 			final int y = 2 + lineHeight * i;
 
-			GuiComponent.fill(poseStack, 1, y - 1, 2 + lineWidth + 1, y + lineHeight - 1, 0x9050504E);
-			font.draw(poseStack, string, 2.0F, y, 0xFFFF55);
+			guiGraphics.fill(1, y - 1, 2 + lineWidth + 1, y + lineHeight - 1, 0x9050504E);
+			guiGraphics.drawString(font, string, 2, y, 0xFFFF55);
 		}
 	}
 
 	@Inject(method = "renderVignette", at = @At("HEAD"), cancellable = true)
-	private void iris$disableVignetteRendering(PoseStack pGui0, Entity pEntity1, CallbackInfo ci) {
+	private void iris$disableVignetteRendering(GuiGraphics pGui0, Entity pEntity1, CallbackInfo ci) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null && !pipeline.shouldRenderVignette()) {

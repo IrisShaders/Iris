@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.fabricmc.loader.impl.util.ExceptionUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.FrameLayout;
 import net.minecraft.client.gui.layouts.GridLayout;
@@ -57,12 +58,12 @@ public class DebugLoadFailedGridScreen extends Screen {
 	}
 
 	@Override
-	public void render(PoseStack poseStack, int i, int j, float f) {
+	public void render(GuiGraphics guiGraphics, int i, int j, float f) {
 		if (this.minecraft.level == null) {
-			this.renderBackground(poseStack);
+			this.renderBackground(guiGraphics);
 		} else {
-			this.fillGradient(poseStack, 0, 0, width, height, 0x4F232323, 0x4F232323);
+			guiGraphics.fillGradient(0, 0, width, height, 0x4F232323, 0x4F232323);
 		}
-		super.render(poseStack, i, j, f);
+		super.render(guiGraphics, i, j, f);
 	}
 }

@@ -2,6 +2,7 @@ package net.coderbot.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexSorting;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -131,7 +132,7 @@ public class OldFullyBufferedMultiBufferSource extends MultiBufferSource.BufferS
 		}
 
 		if (activeBuffers.remove(buffer)) {
-			type.end(buffer, 0, 0, 0);
+			type.end(buffer, VertexSorting.DISTANCE_TO_ORIGIN);
 			buffer.clear();
 		} else {
 			// Schedule the buffer for removal next frame if it isn't used this frame.

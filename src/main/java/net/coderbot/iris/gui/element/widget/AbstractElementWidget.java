@@ -5,6 +5,7 @@ import net.coderbot.iris.gui.NavigationController;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuElement;
 import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -20,7 +21,7 @@ public abstract class AbstractElementWidget<T extends OptionMenuElement> impleme
 
 	public static final AbstractElementWidget<OptionMenuElement> EMPTY = new AbstractElementWidget<OptionMenuElement>(null) {
 		@Override
-		public void render(PoseStack poseStack, int mouseX, int mouseY, float tickDelta, boolean hovered) {}
+		public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float tickDelta, boolean hovered) {}
 
 		@Override
 		public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent pGuiEventListener0) {
@@ -39,7 +40,7 @@ public abstract class AbstractElementWidget<T extends OptionMenuElement> impleme
 
 	public void init(ShaderPackScreen screen, NavigationController navigation) {}
 
-	public abstract void render(PoseStack poseStack, int mouseX, int mouseY, float tickDelta, boolean hovered);
+	public abstract void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float tickDelta, boolean hovered);
 
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {

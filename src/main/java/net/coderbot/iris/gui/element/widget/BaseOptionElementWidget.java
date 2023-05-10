@@ -9,6 +9,7 @@ import net.coderbot.iris.shaderpack.option.menu.OptionMenuElement;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -79,14 +80,14 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 		this.isLabelTrimmed = font.width(this.label) > this.maxLabelWidth;
 	}
 
-	protected final void renderOptionWithValue(PoseStack poseStack, boolean hovered, float sliderPosition, int sliderWidth) {
+	protected final void renderOptionWithValue(GuiGraphics guiGraphics, boolean hovered, float sliderPosition, int sliderWidth) {
 		GuiUtil.bindIrisWidgetsTexture();
 
 		// Draw button background
-		GuiUtil.drawButton(poseStack, bounds.position().x(), bounds.position().y(), bounds.width(), bounds.height(), hovered, false);
+		GuiUtil.drawButton(guiGraphics, bounds.position().x(), bounds.position().y(), bounds.width(), bounds.height(), hovered, false);
 
 		// Draw the value box
-		GuiUtil.drawButton(poseStack, bounds.getBoundInDirection(ScreenDirection.RIGHT) - (this.valueSectionWidth + 2), bounds.position().y() + 2, this.valueSectionWidth, bounds.height() - 4, false, true);
+		GuiUtil.drawButton(guiGraphics, bounds.getBoundInDirection(ScreenDirection.RIGHT) - (this.valueSectionWidth + 2), bounds.position().y() + 2, this.valueSectionWidth, bounds.height() - 4, false, true);
 
 		// Draw the preview slider
 		if (sliderPosition >= 0) {
@@ -96,32 +97,32 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 			// Position of slider
 			int sliderPos = (bounds.getBoundInDirection(ScreenDirection.RIGHT) - this.valueSectionWidth) + (int)(sliderPosition * sliderSpace);
 
-			GuiUtil.drawButton(poseStack, sliderPos, bounds.position().y() + 4, sliderWidth, bounds.height() - 8, false, false);
+			GuiUtil.drawButton(guiGraphics, sliderPos, bounds.position().y() + 4, sliderWidth, bounds.height() - 8, false, false);
 		}
 
 		Font font = Minecraft.getInstance().font;
 
 		// Draw the label
-		font.drawShadow(poseStack, this.trimmedLabel, bounds.position().x() + 6, bounds.position().y() + 7, 0xFFFFFF);
+		guiGraphics.drawString(font, this.trimmedLabel, bounds.position().x() + 6, bounds.position().y() + 7, 0xFFFFFF);
 		// Draw the value label
-		font.drawShadow(poseStack, this.valueLabel, (bounds.getBoundInDirection(ScreenDirection.RIGHT) - 2) - (int)(this.valueSectionWidth * 0.5) - (int)(font.width(this.valueLabel) * 0.5), bounds.position().y() + 7, 0xFFFFFF);
+		guiGraphics.drawString(font, this.valueLabel, (bounds.getBoundInDirection(ScreenDirection.RIGHT) - 2) - (int)(this.valueSectionWidth * 0.5) - (int)(font.width(this.valueLabel) * 0.5), bounds.position().y() + 7, 0xFFFFFF);
 	}
 
-	protected final void renderOptionWithValue(PoseStack poseStack, boolean hovered) {
-		this.renderOptionWithValue(poseStack, hovered, -1, 0);
+	protected final void renderOptionWithValue(GuiGraphics guiGraphics, boolean hovered) {
+		this.renderOptionWithValue(guiGraphics, hovered, -1, 0);
 	}
 
-	protected final void tryRenderTooltip(PoseStack poseStack, int mouseX, int mouseY, boolean hovered) {
+	protected final void tryRenderTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY, boolean hovered) {
 		if (Screen.hasShiftDown()) {
-			renderTooltip(poseStack, SET_TO_DEFAULT, mouseX, mouseY, hovered);
+			renderTooltip(guiGraphics, SET_TO_DEFAULT, mouseX, mouseY, hovered);
 		} else if (this.isLabelTrimmed && !this.screen.isDisplayingComment()) {
-			renderTooltip(poseStack, this.unmodifiedLabel, mouseX, mouseY, hovered);
+			renderTooltip(guiGraphics, this.unmodifiedLabel, mouseX, mouseY, hovered);
 		}
 	}
 
-	protected final void renderTooltip(PoseStack poseStack, Component text, int mouseX, int mouseY, boolean hovered) {
+	protected final void renderTooltip(GuiGraphics guiGraphics, Component text, int mouseX, int mouseY, boolean hovered) {
 		if (hovered) {
-			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(Minecraft.getInstance().font, poseStack, text, mouseX + 2, mouseY - 16));
+			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(Minecraft.getInstance().font, guiGraphics, text, mouseX + 2, mouseY - 16));
 		}
 	}
 

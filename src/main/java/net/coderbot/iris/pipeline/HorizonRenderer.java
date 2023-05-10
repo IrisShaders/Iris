@@ -64,7 +64,7 @@ public class HorizonRenderer {
 		buildHorizon(currentRenderDistance * 16, buffer);
 		BufferBuilder.RenderedBuffer renderedBuffer = buffer.end();
 
-		this.buffer = new VertexBuffer();
+		this.buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 		this.buffer.bind();
 		this.buffer.upload(renderedBuffer);
 		VertexBuffer.unbind();

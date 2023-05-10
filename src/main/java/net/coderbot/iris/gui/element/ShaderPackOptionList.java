@@ -15,6 +15,7 @@ import net.coderbot.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -161,20 +162,20 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		}
 
 		@Override
-		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			// Draw dividing line
-			fill(poseStack, x - 3, (y + entryHeight) - 2, x + entryWidth, (y + entryHeight) - 1, 0x66BEBEBE);
+			guiGraphics.fill(x - 3, (y + entryHeight) - 2, x + entryWidth, (y + entryHeight) - 1, 0x66BEBEBE);
 
 			Font font = Minecraft.getInstance().font;
 
 			// Draw header text
-			drawCenteredString(poseStack, font, text, x + (int)(entryWidth * 0.5), y + 5, 0xFFFFFF);
+			guiGraphics.drawCenteredString(font, text, x + (int)(entryWidth * 0.5), y + 5, 0xFFFFFF);
 
 			GuiUtil.bindIrisWidgetsTexture();
 
 			// Draw back button if present
 			if (this.backButton != null) {
-				backButton.render(poseStack, x, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, hovered);
+				backButton.render(guiGraphics, x, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, hovered);
 			}
 
 			boolean shiftDown = Screen.hasShiftDown();
@@ -184,25 +185,25 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 			this.resetButton.text = !resetButton.disabled ? RESET_BUTTON_TEXT_ACTIVE : RESET_BUTTON_TEXT_INACTIVE;
 
 			// Draw the utility buttons
-			this.utilityButtons.renderRightAligned(poseStack, (x + entryWidth) - 3, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, hovered);
+			this.utilityButtons.renderRightAligned(guiGraphics, (x + entryWidth) - 3, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, hovered);
 
 			// Draw the reset button's tooltip
 			if (this.resetButton.isHovered() || this.resetButton.isFocused()) {
 				Component tooltip = !resetButton.disabled ? RESET_TOOLTIP : RESET_HOLD_SHIFT_TOOLTIP;
-				queueBottomRightAnchoredTooltip(poseStack, this.resetButton.getRectangle().getBoundInDirection(ScreenDirection.RIGHT), this.resetButton.getRectangle().position().y(), font, tooltip);
+				queueBottomRightAnchoredTooltip(guiGraphics, this.resetButton.getRectangle().getBoundInDirection(ScreenDirection.RIGHT), this.resetButton.getRectangle().position().y(), font, tooltip);
 			}
 			// Draw the import/export button tooltips
 			if (this.importButton.isHovered() || this.importButton.isFocused()) {
-				queueBottomRightAnchoredTooltip(poseStack, this.importButton.getRectangle().getBoundInDirection(ScreenDirection.RIGHT), this.importButton.getRectangle().position().y(), font, IMPORT_TOOLTIP);
+				queueBottomRightAnchoredTooltip(guiGraphics, this.importButton.getRectangle().getBoundInDirection(ScreenDirection.RIGHT), this.importButton.getRectangle().position().y(), font, IMPORT_TOOLTIP);
 			}
 			if (this.exportButton.isHovered() || this.exportButton.isFocused()) {
-				queueBottomRightAnchoredTooltip(poseStack, this.exportButton.getRectangle().getBoundInDirection(ScreenDirection.RIGHT), this.exportButton.getRectangle().position().y(), font, EXPORT_TOOLTIP);
+				queueBottomRightAnchoredTooltip(guiGraphics, this.exportButton.getRectangle().getBoundInDirection(ScreenDirection.RIGHT), this.exportButton.getRectangle().position().y(), font, EXPORT_TOOLTIP);
 			}
 		}
 
-		private void queueBottomRightAnchoredTooltip(PoseStack poseStack, int x, int y, Font font, Component text) {
+		private void queueBottomRightAnchoredTooltip(GuiGraphics guiGraphics, int x, int y, Font font, Component text) {
 			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(
-					font, poseStack, text,
+					font, guiGraphics, text,
 					x - (font.width(text) + 10), y - 16
 			));
 		}
@@ -361,7 +362,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		}
 
 		@Override
-		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			this.cachedWidth = entryWidth;
 			this.cachedPosX = x;
 
@@ -378,7 +379,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 				boolean widgetHovered = (hovered && (getHoveredWidget(mouseX) == i)) || getFocused() == widget;
 
 				widget.bounds = new ScreenRectangle(x + (int)((singleWidgetWidth + 2) * i), y, (int) singleWidgetWidth, entryHeight + 2);
-				widget.render(poseStack, mouseX, mouseY, tickDelta, widgetHovered);
+				widget.render(guiGraphics, mouseX, mouseY, tickDelta, widgetHovered);
 
 				screen.setElementHoveredStatus(widget, widgetHovered);
 			}

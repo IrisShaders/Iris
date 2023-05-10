@@ -1,5 +1,6 @@
 package net.coderbot.batchedentityrendering.impl;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.coderbot.batchedentityrendering.mixin.RenderTypeAccessor;
@@ -28,7 +29,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
         if (!Objects.equals(currentType, renderType)) {
             if (currentType != null) {
                 if (shouldSortOnUpload(currentType)) {
-                    buffer.setQuadSortOrigin(0, 0, 0);
+					buffer.setQuadSorting(RenderSystem.getVertexSorting());
                 }
 
                 buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
@@ -56,7 +57,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
         }
 
         if (shouldSortOnUpload(currentType)) {
-            buffer.setQuadSortOrigin(0, 0, 0);
+			buffer.setQuadSorting(RenderSystem.getVertexSorting());
         }
 
 		buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
@@ -77,7 +78,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
 
 		if (((BlendingStateHolder) currentType).getTransparencyType() == transparencyType) {
 			if (shouldSortOnUpload(currentType)) {
-				buffer.setQuadSortOrigin(0, 0, 0);
+				buffer.setQuadSorting(RenderSystem.getVertexSorting());
 			}
 
 			buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
