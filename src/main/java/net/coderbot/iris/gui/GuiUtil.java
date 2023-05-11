@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -89,15 +90,15 @@ public final class GuiUtil {
 		int innerColor = 0xDE000000;
 
 		// Top border section
-		guiGraphics.fill(x, y, x + width, y + 1, borderColor);
+		guiGraphics.fill(RenderType.guiOverlay(), x, y, x + width, y + 1, borderColor);
 		// Bottom border section
-		guiGraphics.fill(x, (y + height) - 1, x + width, y + height, borderColor);
+		guiGraphics.fill(RenderType.guiOverlay(), x, (y + height) - 1, x + width, y + height, borderColor);
 		// Left border section
-		guiGraphics.fill(x, y + 1, x + 1, (y + height) - 1, borderColor);
+		guiGraphics.fill(RenderType.guiOverlay(), x, y + 1, x + 1, (y + height) - 1, borderColor);
 		// Right border section
-		guiGraphics.fill((x + width) - 1, y + 1, x + width, (y + height) - 1, borderColor);
+		guiGraphics.fill(RenderType.guiOverlay(), (x + width) - 1, y + 1, x + width, (y + height) - 1, borderColor);
 		// Inner section
-		guiGraphics.fill(x + 1, y + 1, (x + width) - 1, (y + height) - 1, innerColor);
+		guiGraphics.fill(RenderType.guiOverlay(), x + 1, y + 1, (x + width) - 1, (y + height) - 1, innerColor);
 	}
 
 	/**
