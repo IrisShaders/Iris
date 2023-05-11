@@ -375,6 +375,15 @@ public class IrisRenderSystem {
 		samplers[unit] = sampler;
 	}
 
+	public static void unbindAllSamplers() {
+		for (int i = 0; i < samplers.length; i++) {
+			if (samplers[i] != 0) {
+				GL33C.glBindSampler(i, 0);
+				samplers[i] = 0;
+			}
+		}
+	}
+
 
 	public static void samplerParameteri(int sampler, int pname, int param) {
 		GL33C.glSamplerParameteri(sampler, pname, param);
