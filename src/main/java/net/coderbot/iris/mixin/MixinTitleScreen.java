@@ -34,12 +34,6 @@ public class MixinTitleScreen extends Screen {
 
 	@Inject(method = "init", at = @At("RETURN"))
 	public void iris$showSodiumIncompatScreen(CallbackInfo ci) {
-		if (iris$hasFirstInit) {
-			return;
-		}
-
-		iris$hasFirstInit = true;
-
 		String reason;
 
 		if (!Iris.isSodiumInstalled() && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
@@ -61,7 +55,11 @@ public class MixinTitleScreen extends Screen {
 				new TranslatableComponent("menu.quit").withStyle(ChatFormatting.BOLD)));
 			return;
 		} else {
-			Iris.onLoadingComplete();
+			if (!iris$hasFirstInit) {
+				Iris.onLoadingComplete();
+			}
+
+			iris$hasFirstInit = true;
 
 			return;
 		}
@@ -73,6 +71,8 @@ public class MixinTitleScreen extends Screen {
 					new TranslatableComponent("iris.sodium.failure.reason"),
 					new TranslatableComponent("menu.quit")));
 		}
+
+		iris$hasFirstInit = true;
 
 		Minecraft.getInstance().setScreen(new ConfirmScreen(
 				(boolean accepted) -> {
