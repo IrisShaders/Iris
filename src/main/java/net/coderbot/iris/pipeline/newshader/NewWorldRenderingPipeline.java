@@ -1139,6 +1139,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// Without this code, there will be weird issues when reloading certain shaderpacks.
 		for (int i = 0; i < 16; i++) {
 			GlStateManager.glActiveTexture(GL20C.GL_TEXTURE0 + i);
+			IrisRenderSystem.unbindAllSamplers();
 			GlStateManager._bindTexture(0);
 		}
 
