@@ -10,7 +10,9 @@ import net.coderbot.iris.shaderpack.option.menu.OptionMenuStringOptionElement;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
 
 
@@ -22,6 +24,7 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 	protected String appliedValue;
 	protected int valueCount;
 	protected int valueIndex;
+	protected MutableComponent prefix, suffix;
 
 	public StringElementWidget(OptionMenuStringOptionElement element) {
 		super(element);
@@ -40,6 +43,9 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 		// The value currently in use by the shader pack
 		this.appliedValue = this.element.getAppliedOptionValues().getStringValueOrDefault(this.option.getName());
 
+		// Do not use I18n, it'll cause issues with packs trying to use % as prefixes/suffixes.
+		this.prefix = Component.literal(Language.getInstance().has("prefix." + this.option.getName()) ? Language.getInstance().getOrDefault("prefix." + this.option.getName()) : "");
+		this.suffix = Component.literal(Language.getInstance().has("suffix." + this.option.getName()) ? Language.getInstance().getOrDefault("suffix." + this.option.getName()) : "");
 		this.setLabel(GuiUtil.translateOrDefault(Component.literal(this.option.getName()), "option." + this.option.getName()));
 
 		List<String> values = this.option.getAllowedValues();
@@ -68,9 +74,9 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 
 	@Override
 	protected Component createValueLabel() {
-		return GuiUtil.translateOrDefault(
-				Component.literal(getValue()).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff))),
-				"value." + this.option.getName() + "." + getValue());
+		return prefix.copy().append(GuiUtil.translateOrDefault(
+			Component.literal(getValue()),
+				"value." + this.option.getName() + "." + getValue())).append(suffix).withStyle(style -> style.withColor(TextColor.fromRgb(0x6688ff)));
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.sampler.GlSampler;
 import net.coderbot.iris.gl.sampler.SamplerBinding;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
@@ -74,6 +75,8 @@ public class ProgramSamplers {
 		if (active != null) {
 			active.removeListeners();
 		}
+
+		IrisRenderSystem.unbindAllSamplers();
 	}
 
 	public static Builder builder(int program, Set<Integer> reservedTextureUnits) {
