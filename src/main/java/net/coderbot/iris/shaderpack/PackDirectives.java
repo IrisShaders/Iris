@@ -33,6 +33,7 @@ public class PackDirectives {
 	private boolean separateAo;
 	private boolean voxelizeLightBlocks;
 	private boolean separateEntityDraws;
+	private boolean frustumCulling;
 	private boolean oldLighting;
 	private boolean concurrentCompute;
 	private boolean oldHandLight;
@@ -70,6 +71,7 @@ public class PackDirectives {
 		separateAo = properties.getSeparateAo().orElse(false);
 		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
+		frustumCulling = properties.getFrustumCulling().orElse(true);
 		oldLighting = properties.getOldLighting().orElse(false);
 		concurrentCompute = properties.getConcurrentCompute().orElse(false);
 		oldHandLight = properties.getOldHandLight().orElse(true);
@@ -87,6 +89,7 @@ public class PackDirectives {
 		separateAo = directives.separateAo;
 		voxelizeLightBlocks = directives.voxelizeLightBlocks;
 		separateEntityDraws = directives.separateEntityDraws;
+		frustumCulling = directives.frustumCulling;
 		oldLighting = directives.oldLighting;
 		concurrentCompute = directives.concurrentCompute;
 		explicitFlips = directives.explicitFlips;
@@ -163,6 +166,10 @@ public class PackDirectives {
 
 	public boolean shouldUseSeparateEntityDraws() {
 		return separateEntityDraws;
+	}
+
+	public boolean shouldUseFrustumCulling() {
+		return frustumCulling;
 	}
 
 	public boolean isOldLighting() {

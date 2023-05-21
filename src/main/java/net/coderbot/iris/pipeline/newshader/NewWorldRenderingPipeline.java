@@ -161,6 +161,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private boolean destroyed = false;
 	private boolean isRenderingWorld;
 	private boolean isMainBound;
+	private boolean frustumCulling;
 	private final CloudSetting cloudSetting;
 	private final boolean shouldRenderSun;
 	private final boolean shouldRenderMoon;
@@ -195,6 +196,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
+		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
 
 		this.resolver = new ProgramFallbackResolver(programSet);
 		this.pack = programSet.getPack();
@@ -1102,6 +1104,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public boolean shouldDisableDirectionalShading() {
 		return !oldLighting;
+	}
+
+	@Override
+	public boolean shouldDisableFrustumCulling() {
+		return !frustumCulling;
 	}
 
 	@Override

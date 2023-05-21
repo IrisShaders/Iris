@@ -519,6 +519,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	@Override
+	public boolean shouldDisableFrustumCulling() {
+		return false;
+	}
+
+	@Override
 	public CloudSetting getCloudSetting() {
 		return cloudSetting;
 	}
