@@ -1133,7 +1133,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public void destroy() {
 		destroyed = true;
 
-		customImages.forEach(GlImage::destroy);
 
 		destroyShaders();
 
@@ -1181,6 +1180,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 
 		renderTargets.destroy();
+
+		customImages.forEach(GlImage::destroy);
 
 		if (shadowRenderer != null) {
 			shadowRenderer.destroy();
