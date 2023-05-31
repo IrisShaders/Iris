@@ -11,6 +11,10 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.colorspace.ColorSpace;
+import net.coderbot.iris.colorspace.ColorSpaceComputeConverter;
+import net.coderbot.iris.colorspace.ColorSpaceConverter;
+import net.coderbot.iris.colorspace.ColorSpaceFragmentConverter;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
@@ -30,6 +34,7 @@ import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -141,6 +146,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
+	private final ColorSpaceConverter colorSpaceConverter;
 
 	private final ImmutableSet<Integer> flippedBeforeShadow;
 	private final ImmutableSet<Integer> flippedAfterPrepare;
@@ -179,6 +185,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private GlImage[] clearImages;
 	private final ShaderPack pack;
 	private PackShadowDirectives shadowDirectives;
+	private ColorSpace currentColorSpace;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		ShaderPrinter.resetPrintState();
@@ -512,6 +519,28 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		if (hasRun) {
 			ComputeProgram.unbind();
 		}
+
+		if (programSet.getPackDirectives().supportsColorCorrection()) {
+			colorSpaceConverter = new ColorSpaceConverter() {
+				@Override
+				public void rebuildProgram(int width, int height, ColorSpace colorSpace) {
+
+				}
+
+				@Override
+				public void process(int target) {
+
+				}
+			};
+		} else {
+			if (IrisRenderSystem.supportsCompute()) {
+				colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
+			} else {
+				colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
+			}
+		}
+
+		currentColorSpace = IrisVideoSettings.colorSpace;
 	}
 
 	private ComputeProgram[] createShadowComputes(ComputeSource[] compute, ProgramSet programSet) {
@@ -918,6 +947,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				packDirectives.getRenderTargetDirectives());
 		}
 
+		if (changed || IrisVideoSettings.colorSpace != currentColorSpace) {
+			currentColorSpace = IrisVideoSettings.colorSpace;
+			colorSpaceConverter.rebuildProgram(main.width, main.height, currentColorSpace);
+		}
+
 		final ImmutableList<ClearPass> passes;
 
 		if (renderTargets.isFullClearRequired()) {
@@ -1053,6 +1087,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		centerDepthSampler.sampleCenterDepth();
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
+		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
 	}
 
 	@Override

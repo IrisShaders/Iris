@@ -8,6 +8,7 @@ import com.google.gson.stream.JsonReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.colorspace.ColorSpace;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gui.FeatureMissingErrorScreen;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
@@ -164,15 +165,24 @@ public class ShaderPack {
 			}
 			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(false);
 		}
+		List<StringPair> newEnvDefines = new ArrayList<>();
+		environmentDefines.forEach(newEnvDefines::add);
+
+		if (shaderProperties.supportsColorCorrection().orElse(false)) {
+			for (ColorSpace space : ColorSpace.values()) {
+				newEnvDefines.add(new StringPair("COLOR_SPACE_" + space.name(), String.valueOf(space.ordinal())));
+			}
+		}
 
 		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream().filter(flag -> !FeatureFlags.isInvalid(flag)).collect(Collectors.toList());
 
 		if (!optionalFeatureFlags.isEmpty()) {
-			List<StringPair> newEnvDefines = new ArrayList<>();
-			environmentDefines.forEach(newEnvDefines::add);
+
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
-			environmentDefines = ImmutableList.copyOf(newEnvDefines);
+
 		}
+
+		environmentDefines = ImmutableList.copyOf(newEnvDefines);
 
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());

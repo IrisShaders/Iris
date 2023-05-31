@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class PackDirectives {
+	private boolean supportsColorCorrection;
 	private int noiseTextureResolution;
 	private float sunPathRotation;
 	private float ambientOcclusionLevel;
@@ -50,6 +51,7 @@ public class PackDirectives {
 	private PackDirectives(Set<Integer> supportedRenderTargets, PackShadowDirectives packShadowDirectives) {
 		noiseTextureResolution = 256;
 		sunPathRotation = 0.0F;
+		supportsColorCorrection = false;
 		ambientOcclusionLevel = 1.0F;
 		wetnessHalfLife = 600.0f;
 		drynessHalfLife = 200.0f;
@@ -73,6 +75,7 @@ public class PackDirectives {
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
 		frustumCulling = properties.getFrustumCulling().orElse(true);
 		oldLighting = properties.getOldLighting().orElse(false);
+		supportsColorCorrection = properties.supportsColorCorrection().orElse(false);
 		concurrentCompute = properties.getConcurrentCompute().orElse(false);
 		oldHandLight = properties.getOldHandLight().orElse(true);
 		explicitFlips = properties.getExplicitFlips();
@@ -201,6 +204,10 @@ public class PackDirectives {
 
 	public Int2IntArrayMap getBufferObjects() {
 		return bufferObjects;
+	}
+
+	public boolean supportsColorCorrection() {
+		return supportsColorCorrection;
 	}
 
 	private static float clamp(float val, float lo, float hi) {
