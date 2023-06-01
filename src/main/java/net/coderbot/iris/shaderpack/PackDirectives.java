@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class PackDirectives {
+	private boolean supportsColorCorrection;
 	private int noiseTextureResolution;
 	private float sunPathRotation;
 	private float ambientOcclusionLevel;
@@ -33,6 +34,7 @@ public class PackDirectives {
 	private boolean separateAo;
 	private boolean voxelizeLightBlocks;
 	private boolean separateEntityDraws;
+	private boolean frustumCulling;
 	private boolean oldLighting;
 	private boolean concurrentCompute;
 	private boolean oldHandLight;
@@ -49,6 +51,7 @@ public class PackDirectives {
 	private PackDirectives(Set<Integer> supportedRenderTargets, PackShadowDirectives packShadowDirectives) {
 		noiseTextureResolution = 256;
 		sunPathRotation = 0.0F;
+		supportsColorCorrection = false;
 		ambientOcclusionLevel = 1.0F;
 		wetnessHalfLife = 600.0f;
 		drynessHalfLife = 200.0f;
@@ -70,7 +73,9 @@ public class PackDirectives {
 		separateAo = properties.getSeparateAo().orElse(false);
 		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
+		frustumCulling = properties.getFrustumCulling().orElse(true);
 		oldLighting = properties.getOldLighting().orElse(false);
+		supportsColorCorrection = properties.supportsColorCorrection().orElse(false);
 		concurrentCompute = properties.getConcurrentCompute().orElse(false);
 		oldHandLight = properties.getOldHandLight().orElse(true);
 		explicitFlips = properties.getExplicitFlips();
@@ -87,6 +92,7 @@ public class PackDirectives {
 		separateAo = directives.separateAo;
 		voxelizeLightBlocks = directives.voxelizeLightBlocks;
 		separateEntityDraws = directives.separateEntityDraws;
+		frustumCulling = directives.frustumCulling;
 		oldLighting = directives.oldLighting;
 		concurrentCompute = directives.concurrentCompute;
 		explicitFlips = directives.explicitFlips;
@@ -165,6 +171,10 @@ public class PackDirectives {
 		return separateEntityDraws;
 	}
 
+	public boolean shouldUseFrustumCulling() {
+		return frustumCulling;
+	}
+
 	public boolean isOldLighting() {
 		return oldLighting;
 	}
@@ -194,6 +204,10 @@ public class PackDirectives {
 
 	public Int2IntArrayMap getBufferObjects() {
 		return bufferObjects;
+	}
+
+	public boolean supportsColorCorrection() {
+		return supportsColorCorrection;
 	}
 
 	private static float clamp(float val, float lo, float hi) {

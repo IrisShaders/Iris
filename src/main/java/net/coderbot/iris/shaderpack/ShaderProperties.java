@@ -53,6 +53,7 @@ public class ShaderProperties {
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dynamicHandLight = OptionalBoolean.DEFAULT;
+	private OptionalBoolean supportsColorCorrection = OptionalBoolean.DEFAULT;
 	private OptionalBoolean oldLighting = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowTerrain = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowTranslucent = OptionalBoolean.DEFAULT;
@@ -172,6 +173,7 @@ public class ShaderProperties {
 				}
 			});
 			handleBooleanDirective(key, value, "prepareBeforeShadow", bool -> prepareBeforeShadow = bool);
+			handleBooleanDirective(key, value, "supportsColorCorrection", bool -> supportsColorCorrection = bool);
 
 			if (key.startsWith("particles.ordering")) {
 				Optional<ParticleRenderingSettings> settings = ParticleRenderingSettings.fromString(value.trim().toUpperCase(Locale.US));
@@ -399,8 +401,8 @@ public class ShaderProperties {
 				String[] parts = value.split(" ");
 				String key2 = key.substring(6);
 
-				if (irisCustomImages.size() > 7) {
-					Iris.logger.error("Only up to 8 images are allowed, but tried to add another image! " + key);
+				if (irisCustomImages.size() > 15) {
+					Iris.logger.error("Only up to 16 images are allowed, but tried to add another image! " + key);
 					return;
 				}
 
@@ -823,5 +825,9 @@ public class ShaderProperties {
 
 	public List<String> getOptionalFeatureFlags() {
 		return optionalFeatureFlags;
+	}
+
+	public OptionalBoolean supportsColorCorrection() {
+		return supportsColorCorrection;
 	}
 }

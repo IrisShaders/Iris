@@ -59,6 +59,8 @@
   "options.iris.shadowDistance.enabled": "Allows you to change the maximum distance for shadows. Terrain and entities beyond this distance will not cast shadows. Lowering the shadow distance can significantly increase performance.",
   "options.iris.shadowDistance.disabled": "Your current shader pack has already set a render distance for shadows; you cannot change it.",
   "options.iris.shadowDistance.sodium_tooltip": "The shadow render distance controls how far away terrain can potentially be rendered in the shadow pass. Lower distances mean that less terrain will be rendered, improving frame rates. This option cannot be changed on packs which explicitly specify a shadow render distance. The actual shadow render distance is capped by the View Distance setting.",
+  "options.iris.colorSpace": "Color Space",
+  "options.iris.colorSpace.sodium_tooltip": "The color space to transform the screen to. Works on top of shader packs.",
   "options.iris.gui.hide": "Hide GUI",
   "options.iris.gui.show": "Show GUI",
 

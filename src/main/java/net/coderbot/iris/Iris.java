@@ -326,7 +326,7 @@ public class Iris {
 
 		Path shaderPackPath;
 
-		if (shaderPackRoot.toString().endsWith(".zip")) {
+		if (!Files.isDirectory(shaderPackRoot) && shaderPackRoot.toString().endsWith(".zip")) {
 			Optional<Path> optionalPath;
 
 			try {
@@ -523,6 +523,7 @@ public class Iris {
 						.anyMatch(path -> path.endsWith("shaders"));
 			} catch (IOException ignored) {
 				// ignored, not a valid shader pack.
+				return false;
 			}
 		}
 

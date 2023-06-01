@@ -167,6 +167,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public boolean shouldDisableFrustumCulling() {
+		return false;
+	}
+
+	@Override
 	public CloudSetting getCloudSetting() {
 		return CloudSetting.DEFAULT;
 	}
