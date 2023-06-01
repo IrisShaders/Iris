@@ -51,6 +51,7 @@ public interface WorldRenderingPipeline {
 
 	boolean shouldDisableVanillaEntityShadows();
 	boolean shouldDisableDirectionalShading();
+	boolean shouldDisableFrustumCulling();
 	CloudSetting getCloudSetting();
 	boolean shouldRenderUnderwaterOverlay();
 	boolean shouldRenderVignette();
@@ -62,4 +63,5 @@ public interface WorldRenderingPipeline {
 	boolean hasFeature(FeatureFlags flags);
 
 	float getSunPathRotation();
+
 }
