@@ -43,10 +43,10 @@ public class IrisSodiumOptions {
 
 	public static OptionImpl<Options, ColorSpace> createColorSpaceButton(MinecraftOptionsStorage vanillaOpts) {
 		OptionImpl<Options, ColorSpace> colorSpace = OptionImpl.createBuilder(ColorSpace.class, vanillaOpts)
-			.setName(new TranslatableComponent("options.iris.colorSpace"))
-			.setTooltip(new TranslatableComponent("options.iris.colorSpace.sodium_tooltip"))
+			.setName(Component.translatable("options.iris.colorSpace"))
+			.setTooltip(Component.translatable("options.iris.colorSpace.sodium_tooltip"))
 			.setControl(option -> new CyclingControl<>(option, ColorSpace.class,
-				new Component[] { new TextComponent("SRGB"), new TextComponent("DCI_P3"), new TextComponent("Display P3"), new TextComponent("REC2020"), new TextComponent("Adobe RGB") }))
+				new Component[] { Component.literal("SRGB"), Component.literal("DCI_P3"), Component.literal("Display P3"), Component.literal("REC2020"), Component.literal("Adobe RGB") }))
 			.setBinding((options, value) -> {
 					IrisVideoSettings.colorSpace = value;
 					try {
