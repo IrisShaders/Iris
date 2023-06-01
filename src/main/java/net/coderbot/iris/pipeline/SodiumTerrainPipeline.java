@@ -145,6 +145,7 @@ public class SodiumTerrainPipeline {
 			});
 
 			Map<PatchShaderType, String> transformed = TransformPatcher.patchSodium(
+				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
@@ -175,6 +176,7 @@ public class SodiumTerrainPipeline {
 			terrainCutoutAlpha = sources.getDirectives().getAlphaTestOverride().or(terrainCutoutDefault);
 
 			Map<PatchShaderType, String> transformed = TransformPatcher.patchSodium(
+				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
@@ -207,6 +209,7 @@ public class SodiumTerrainPipeline {
 			translucentAlpha = sources.getDirectives().getAlphaTestOverride().or(translucentDefault);
 
 			Map<PatchShaderType, String> transformed = TransformPatcher.patchSodium(
+				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
@@ -238,12 +241,14 @@ public class SodiumTerrainPipeline {
 			shadowAlpha = sources.getDirectives().getAlphaTestOverride().or(shadowDefault);
 
 			Map<PatchShaderType, String> transformed = TransformPatcher.patchSodium(
+				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				AlphaTest.ALWAYS, inputs,
 				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
 			Map<PatchShaderType, String> transformedCutout = TransformPatcher.patchSodium(
+				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
