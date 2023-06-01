@@ -364,14 +364,6 @@ public class TransformPatcher {
 		return result;
 	}
 
-	public static Map<PatchShaderType, String> patchAttributes(
-			String vertex, String geometry, String fragment,
-			InputAvailability inputs,
-			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform("", vertex, geometry, fragment,
-				new AttributeParameters(Patch.ATTRIBUTES, textureMap, geometry != null, inputs));
-	}
-
 	public static Map<PatchShaderType, String> patchVanilla(
 			String name, String vertex, String geometry, String fragment,
 			AlphaTest alpha, boolean isLines,
