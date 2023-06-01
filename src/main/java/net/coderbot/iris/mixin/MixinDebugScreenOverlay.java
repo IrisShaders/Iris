@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;
@@ -50,6 +51,7 @@ public abstract class MixinDebugScreenOverlay {
 			Iris.getCurrentPack().ifPresent(pack -> {
 				messages.add("[" + Iris.MODNAME + "] " + pack.getProfileInfo());
 			});
+			messages.add("[" + Iris.MODNAME + "] Color space: " + IrisVideoSettings.colorSpace.name());
 		} else {
 			messages.add("[" + Iris.MODNAME + "] Shaders are disabled");
 		}

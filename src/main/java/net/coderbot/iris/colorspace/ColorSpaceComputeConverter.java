@@ -1,6 +1,7 @@
 package net.coderbot.iris.colorspace;
 
 import com.google.common.collect.ImmutableSet;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
@@ -13,6 +14,7 @@ import org.lwjgl.opengl.GL43C;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,7 +46,15 @@ public class ColorSpaceComputeConverter implements ColorSpaceConverter {
 			throw new RuntimeException(e);
 		}
 
-		source = JcppProcessor.glslPreprocessSource(source, List.of(new StringPair("COMPUTE", ""), new StringPair("CURRENT_COLOR_SPACE", String.valueOf(colorSpace.ordinal()))));
+		List<StringPair> defineList = new ArrayList<>();
+		defineList.add(new StringPair("COMPUTE", ""));
+		defineList.add(new StringPair("CURRENT_COLOR_SPACE", String.valueOf(colorSpace.ordinal())));
+
+		for (ColorSpace space : ColorSpace.values()) {
+			defineList.add(new StringPair(space.name(), String.valueOf(space.ordinal())));
+		}
+		source = JcppProcessor.glslPreprocessSource(source, defineList);
+
 		ProgramBuilder builder = ProgramBuilder.beginCompute("colorSpaceCompute", source, ImmutableSet.of());
 		builder.addTextureImage(() -> target, InternalTextureFormat.RGBA8, "readImage");
 		this.program = builder.buildCompute();

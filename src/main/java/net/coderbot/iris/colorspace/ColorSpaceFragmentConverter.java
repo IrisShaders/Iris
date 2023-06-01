@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL43C;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -59,7 +60,14 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 			throw new RuntimeException(e);
 		}
 
-		source = JcppProcessor.glslPreprocessSource(source, List.of(new StringPair("CURRENT_COLOR_SPACE", String.valueOf(colorSpace.ordinal()))));
+		List<StringPair> defineList = new ArrayList<>();
+		defineList.add(new StringPair("CURRENT_COLOR_SPACE", String.valueOf(colorSpace.ordinal())));
+
+		for (ColorSpace space : ColorSpace.values()) {
+			defineList.add(new StringPair(space.name(), String.valueOf(space.ordinal())));
+		}
+		source = JcppProcessor.glslPreprocessSource(source, defineList);
+
 		ProgramBuilder builder = ProgramBuilder.begin("colorSpaceFragment", vertexSource, null, source, ImmutableSet.of());
 
 		builder.uniformJomlMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0, 1));
