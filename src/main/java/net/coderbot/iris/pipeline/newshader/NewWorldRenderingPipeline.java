@@ -527,7 +527,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				ProgramBuilder builder;
 
 				try {
-					String transformed = TransformPatcher.patchCompute(source.getSource().orElse(null), TextureStage.GBUFFERS_AND_SHADOW, customTextureMap);
+					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), TextureStage.GBUFFERS_AND_SHADOW, customTextureMap);
 
 					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
 
@@ -591,7 +591,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				ProgramBuilder builder;
 
 				try {
-					String transformed = TransformPatcher.patchCompute(source.getSource().orElse(null), stage, customTextureMap);
+					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), stage, customTextureMap);
 
 					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
 

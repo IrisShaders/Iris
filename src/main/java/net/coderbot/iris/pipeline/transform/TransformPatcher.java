@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.coderbot.iris.gl.shader.ShaderCompileException;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.logging.log4j.LogManager;
@@ -288,18 +289,19 @@ public class TransformPatcher {
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
 
 	private static Map<PatchShaderType, String> transformInternal(
+			String name,
 			Map<PatchShaderType, String> inputs,
 			Parameters parameters) {
 		try {
 			return transformer.transform(inputs, parameters);
 		} catch (TransformationException | ParsingException | ParseCancellationException e) {
 			// print the offending programs and rethrow to stop the loading process
-			ShaderPrinter.printProgram("errored_program").addSources(inputs).print();
-			throw e;
+			ShaderPrinter.printProgram(name).addSources(inputs).print();
+			throw new ShaderCompileException(name, e);
 		}
 	}
 
-	private static Map<PatchShaderType, String> transform(String vertex, String geometry, String fragment,
+	private static Map<PatchShaderType, String> transform(String name, String vertex, String geometry, String fragment,
 			Parameters parameters) {
 		// stop if all are null
 		if (vertex == null && geometry == null && fragment == null) {
@@ -324,7 +326,7 @@ public class TransformPatcher {
 			inputs.put(PatchShaderType.GEOMETRY, geometry);
 			inputs.put(PatchShaderType.FRAGMENT, fragment);
 
-			result = transformInternal(inputs, parameters);
+			result = transformInternal(name, inputs, parameters);
 			if (useCache) {
 				cache.put(key, result);
 			}
@@ -332,7 +334,7 @@ public class TransformPatcher {
 		return result;
 	}
 
-	private static Map<PatchShaderType, String> transformCompute(String compute, Parameters parameters) {
+	private static Map<PatchShaderType, String> transformCompute(String name, String compute, Parameters parameters) {
 		// stop if all are null
 		if (compute == null) {
 			return null;
@@ -354,7 +356,7 @@ public class TransformPatcher {
 			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
 			inputs.put(PatchShaderType.COMPUTE, compute);
 
-			result = transformInternal(inputs, parameters);
+			result = transformInternal(name, inputs, parameters);
 			if (useCache) {
 				cache.put(key, result);
 			}
@@ -366,41 +368,41 @@ public class TransformPatcher {
 			String vertex, String geometry, String fragment,
 			InputAvailability inputs,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(vertex, geometry, fragment,
+		return transform("", vertex, geometry, fragment,
 				new AttributeParameters(Patch.ATTRIBUTES, textureMap, geometry != null, inputs));
 	}
 
 	public static Map<PatchShaderType, String> patchVanilla(
-			String vertex, String geometry, String fragment,
+			String name, String vertex, String geometry, String fragment,
 			AlphaTest alpha, boolean isLines,
 			boolean hasChunkOffset,
 			ShaderAttributeInputs inputs,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(vertex, geometry, fragment,
+		return transform(name, vertex, geometry, fragment,
 				new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null));
 	}
 
-	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
+	public static Map<PatchShaderType, String> patchSodium(String name, String vertex, String geometry, String fragment,
 			AlphaTest alpha, ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(vertex, geometry, fragment,
+		return transform(name, vertex, geometry, fragment,
 				new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs, positionScale, positionOffset,
 						textureScale));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(
-			String vertex, String geometry, String fragment,
+			String name, String vertex, String geometry, String fragment,
 			TextureStage stage,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(vertex, geometry, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap));
+		return transform(name, vertex, geometry, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap));
 	}
 
 	public static String patchCompute(
-			String compute,
+			String name, String compute,
 			TextureStage stage,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transformCompute(compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap))
+		return transformCompute(name, compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap))
 				.getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 }
