@@ -12,8 +12,8 @@ import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.postprocess.FullScreenQuadRenderer;
 import net.coderbot.iris.shaderpack.StringPair;
 import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
-import net.coderbot.iris.vendored.joml.Matrix4f;
 import org.apache.commons.io.IOUtils;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
@@ -70,7 +70,7 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 
 		ProgramBuilder builder = ProgramBuilder.begin("colorSpaceFragment", vertexSource, null, source, ImmutableSet.of());
 
-		builder.uniformJomlMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0, 1));
+		builder.uniformMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0, 1));
 		builder.addDynamicSampler(() -> target, "readImage");
 
 		swapTexture = GlStateManager._genTexture();
