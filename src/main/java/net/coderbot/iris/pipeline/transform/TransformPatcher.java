@@ -296,7 +296,7 @@ public class TransformPatcher {
 			return transformer.transform(inputs, parameters);
 		} catch (TransformationException | ParsingException | ParseCancellationException e) {
 			// print the offending programs and rethrow to stop the loading process
-			ShaderPrinter.printProgram(name).addSources(inputs).print();
+			ShaderPrinter.printProgram("errored_" + name).addSources(inputs).print();
 			throw new ShaderCompileException(name, e);
 		}
 	}
