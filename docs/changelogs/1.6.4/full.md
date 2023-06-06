@@ -14,3 +14,9 @@ This release was developed by IMS.
 - Add code to clear unused samplers, fixing a bug related to blurry textures
 - Fix conduit power night vision
 - Add support for prefixes and suffixes
+
+## Translations
+
+- Fix Traditional Chinese localization (notlin4)
+- Update russian localization (Felix14_v2)
+- Update Simplified Chinese localization (klkq)
