@@ -337,6 +337,7 @@ public class CompositeRenderer {
 														   Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
 		// TODO: Properly handle empty shaders
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
+			source.getName(),
 			source.getVertexSource().orElseThrow(NullPointerException::new),
 			source.getGeometrySource().orElse(null),
 			source.getFragmentSource().orElseThrow(NullPointerException::new), textureStage, pipeline.getTextureMap());
@@ -404,7 +405,7 @@ public class CompositeRenderer {
 				ProgramBuilder builder;
 
 				try {
-					String transformed =  TransformPatcher.patchCompute(source.getSource().orElse(null), textureStage, pipeline.getTextureMap());
+					String transformed =  TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), textureStage, pipeline.getTextureMap());
 
 					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
 

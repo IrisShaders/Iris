@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Pseudo
 public class MixinBaseQuadRenderer {
 	// One of these injections must pass, or else the game will crash.
-	@Group(name = "iris_separateIndiumAO", min = 2, max = 2)
-	@Redirect(method = {"tessellateSmooth", "tessellateSmoothEmissive"},
+	@Group(name = "iris_separateIndiumAO", min = 2, max = 4)
+	@Redirect(method = {"tessellateSmooth", "tessellateSmoothEmissive", "shadeFlatQuad"},
 		at = @At(value = "INVOKE",
 			target = "Llink/infra/indium/renderer/helper/ColorHelper;multiplyRGB(IF)I"), require = 0)
 	private int iris$separateAoColorMultiply(int color, float ao) {
@@ -29,7 +29,7 @@ public class MixinBaseQuadRenderer {
 		}
 	}
 
-	@Group(name = "iris_separateIndiumAO", min = 2, max = 2)
+	@Group(name = "iris_separateIndiumAO", min = 2, max = 4)
 	@Redirect(method = {"tesselateSmooth", "tesselateSmoothEmissive"},
 		at = @At(value = "INVOKE",
 			target = "Llink/infra/indium/renderer/helper/ColorHelper;multiplyRGB(IF)I"), require = 0)

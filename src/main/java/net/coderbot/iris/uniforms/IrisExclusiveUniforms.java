@@ -2,6 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
+import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import org.joml.Math;
 import org.joml.Vector3d;
@@ -19,6 +20,8 @@ import java.util.stream.StreamSupport;
 public class IrisExclusiveUniforms {
 	public static void addIrisExclusiveUniforms(UniformHolder uniforms) {
 		WorldInfoUniforms.addWorldInfoUniforms(uniforms);
+
+		uniforms.uniform1i(UniformUpdateFrequency.PER_TICK, "currentColorSpace", () -> IrisVideoSettings.colorSpace.ordinal());
 
 		//All Iris-exclusive uniforms (uniforms which do not exist in either OptiFine or ShadersMod) should be registered here.
 		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "thunderStrength", IrisExclusiveUniforms::getThunderStrength);

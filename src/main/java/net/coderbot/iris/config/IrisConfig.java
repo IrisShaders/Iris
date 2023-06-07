@@ -1,6 +1,7 @@
 package net.coderbot.iris.config;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.colorspace.ColorSpace;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 
 import java.io.IOException;
@@ -139,9 +140,11 @@ public class IrisConfig {
 		disableUpdateMessage = "true".equals(properties.getProperty("disableUpdateMessage"));
 		try {
 			IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("maxShadowRenderDistance", "32"));
-		} catch (NumberFormatException e) {
+			IrisVideoSettings.colorSpace = ColorSpace.valueOf(properties.getProperty("colorSpace", "SRGB"));
+		} catch (IllegalArgumentException e) {
 			Iris.logger.error("Shadow distance setting reset; value is invalid.");
 			IrisVideoSettings.shadowDistance = 32;
+			IrisVideoSettings.colorSpace = ColorSpace.SRGB;
 			save();
 		}
 
@@ -164,6 +167,7 @@ public class IrisConfig {
 		properties.setProperty("enableDebugOptions", enableDebugOptions ? "true" : "false");
 		properties.setProperty("disableUpdateMessage", disableUpdateMessage ? "true" : "false");
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
+		properties.setProperty("colorSpace", IrisVideoSettings.colorSpace.name());
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
 		try (OutputStream os = Files.newOutputStream(propertiesPath)) {
 			properties.store(os, COMMENT);

@@ -39,6 +39,7 @@ public class MixinSodiumGameOptionPages {
                                                                        Option<?> candidate) {
         builder.add(candidate);
         builder.add(IrisSodiumOptions.createMaxShadowDistanceSlider(vanillaOpts));
+		builder.add(IrisSodiumOptions.createColorSpaceButton(vanillaOpts));
 
         return builder;
     }

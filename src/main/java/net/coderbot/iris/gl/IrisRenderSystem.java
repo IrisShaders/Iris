@@ -376,12 +376,19 @@ public class IrisRenderSystem {
 		samplers[unit] = sampler;
 	}
 
+	private static int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
+
 	public static void unbindAllSamplers() {
+		boolean usedASampler = false;
 		for (int i = 0; i < samplers.length; i++) {
 			if (samplers[i] != 0) {
-				GL33C.glBindSampler(i, 0);
+				usedASampler = true;
+				if (!hasMultibind) GL33C.glBindSampler(i, 0);
 				samplers[i] = 0;
 			}
+		}
+		if (usedASampler && hasMultibind) {
+			GL45C.glBindSamplers(0, emptyArray);
 		}
 	}
 

@@ -11,6 +11,18 @@ public class ShaderCompileException extends RuntimeException {
 		this.error = error;
 	}
 
+	public ShaderCompileException(String filename, Exception error) {
+		super(error);
+
+		this.filename = filename;
+		this.error = error.getMessage();
+	}
+
+	@Override
+	public String getMessage() {
+		return filename + ": " + super.getMessage();
+	}
+
 	public String getError() {
 		return error;
 	}

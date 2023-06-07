@@ -13,6 +13,7 @@ import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import org.joml.Vector3d;
@@ -26,7 +27,9 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import net.minecraft.client.Options;
 
@@ -62,12 +65,15 @@ public class MixinLevelRenderer {
 	@Shadow
 	private int ticks;
 
+	@Shadow
+	private Frustum cullingFrustum;
+
 	// Begin shader rendering after buffers have been cleared.
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
 	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
 	// all pixels.
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER, remap = false))
-	private void iris$beginLevelRender(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
+	@Inject(method = "renderLevel", at = @At("HEAD"))
+	private void iris$setupPipeline(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
 									   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
 									   Matrix4f projection, CallbackInfo callback) {
 		if (Iris.isSodiumInvalid() && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
@@ -83,9 +89,24 @@ public class MixinLevelRenderer {
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
+
+		if (pipeline.shouldDisableFrustumCulling()) {
+			this.cullingFrustum = new NonCullingFrustum();
+		}
+	}
+
+	// Begin shader rendering after buffers have been cleared.
+	// At this point we've ensured that Minecraft's main framebuffer is cleared.
+	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
+	// all pixels.
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER, remap = false))
+	private void iris$beginLevelRender(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
+									   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
+									   Matrix4f projection, CallbackInfo callback) {
 		pipeline.beginLevelRendering();
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
+
 
 	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
 	// render their waypoint beams.

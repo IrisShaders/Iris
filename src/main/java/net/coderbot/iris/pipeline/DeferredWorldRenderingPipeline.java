@@ -519,6 +519,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	@Override
+	public boolean shouldDisableFrustumCulling() {
+		return false;
+	}
+
+	@Override
 	public CloudSetting getCloudSetting() {
 		return cloudSetting;
 	}
@@ -675,11 +680,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow, ProgramId id) {
 		// TODO: Properly handle empty shaders?
-		Map<PatchShaderType, String> transformed = TransformPatcher.patchAttributes(
-			source.getVertexSource().orElseThrow(NullPointerException::new),
-			source.getGeometrySource().orElse(null),
-			source.getFragmentSource().orElseThrow(NullPointerException::new),
-			availability, customTextureMap);
+		Map<PatchShaderType, String> transformed = null; // 1.16 is the zombie haunting us all
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
