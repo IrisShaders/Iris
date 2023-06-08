@@ -45,4 +45,9 @@ public abstract class MixinCompositeRenderType extends RenderType implements Ble
 	public TransparencyType getTransparencyType() {
 		return transparencyType;
 	}
+
+	@Override
+	public void setTransparencyType(TransparencyType type) {
+		transparencyType = type;
+	}
 }

@@ -9,8 +9,8 @@ import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
-import net.coderbot.iris.vendored.joml.Vector2i;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Vector2i;
+import org.joml.Vector4f;
 import org.lwjgl.opengl.GL21C;
 
 import java.util.ArrayList;

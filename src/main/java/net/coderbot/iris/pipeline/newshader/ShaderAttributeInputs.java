@@ -11,12 +11,17 @@ public class ShaderAttributeInputs {
 	private boolean light;
 	private boolean normal;
 	private boolean newLines;
+	private boolean glint;
+	private boolean text;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines) {
+	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines, boolean glint, boolean text) {
 		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL && !isLines) {
 			newLines = true;
 		}
+
+		this.text = text;
+		this.glint = glint;
 
 		format.getElementAttributeNames().forEach(name -> {
 			if ("Color".equals(name)) {
@@ -73,6 +78,10 @@ public class ShaderAttributeInputs {
 		return newLines;
 	}
 
+	public boolean isGlint() {
+		return glint;
+	}
+
 	public InputAvailability toAvailability() {
 		return new InputAvailability(tex, light, overlay);
 	}
@@ -87,6 +96,8 @@ public class ShaderAttributeInputs {
 		result = prime * result + (light ? 1231 : 1237);
 		result = prime * result + (normal ? 1231 : 1237);
 		result = prime * result + (newLines ? 1231 : 1237);
+		result = prime * result + (glint ? 1231 : 1237);
+		result = prime * result + (text ? 1231 : 1237);
 		return result;
 	}
 
@@ -111,6 +122,14 @@ public class ShaderAttributeInputs {
 			return false;
 		if (newLines != other.newLines)
 			return false;
+		if (glint != other.glint)
+			return false;
+		if (text != other.text)
+			return false;
 		return true;
+	}
+
+	public boolean isText() {
+		return text;
 	}
 }

@@ -33,6 +33,10 @@ public class IrisLogging {
 		this.logger.warn(warning);
 	}
 
+	public void warn(String warning, Object... object) {
+		this.logger.warn(warning, object);
+	}
+
 	public void warn(String warning, Throwable t) {
 		this.logger.warn(warning, t);
 	}

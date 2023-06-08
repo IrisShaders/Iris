@@ -3,6 +3,7 @@ package net.coderbot.iris.gl.shader;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.shaderpack.StringPair;
@@ -81,10 +82,7 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L696-L699">Optifine Doc</a>
 	 */
 	public static String getMcVersion() {
-		String version = SharedConstants.getCurrentVersion().getReleaseTarget();
-			// release target so snapshots are set to the higher version
-			//
-			// For example if we were running iris on 21w07a, getReleaseTarget() would return 1.17
+		String version = Iris.getReleaseTarget();
 
 		if (version == null) {
 			throw new IllegalStateException("Could not get the current minecraft version!");
@@ -93,7 +91,8 @@ public class StandardMacros {
 		String[] splitVersion = version.split("\\.");
 
 		if (splitVersion.length < 2) {
-			throw new IllegalStateException("Could not parse game version \"" + version +  "\"");
+			Iris.logger.error("Could not parse game version \"" + version +  "\"");
+			splitVersion = Iris.getBackupVersionNumber().split("\\.");
 		}
 
 		String major = splitVersion[0];

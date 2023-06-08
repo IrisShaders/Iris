@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.ZombieVillager;
@@ -51,7 +52,7 @@ public class MixinEntityRenderDispatcher {
 		if (entity instanceof ZombieVillager zombie && zombie.isConverting() && BlockRenderingSettings.INSTANCE.hasVillagerConversionId()) {
 			intId = entityIds.applyAsInt(new NamespacedId("minecraft", "zombie_villager_converting"));;
 		} else {
-			ResourceLocation entityId = Registry.ENTITY_TYPE.getKey(entity.getType());
+			ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
 			intId = entityIds.applyAsInt(new NamespacedId(entityId.getNamespace(), entityId.getPath()));
 		}
 
@@ -67,6 +68,6 @@ public class MixinEntityRenderDispatcher {
 	private void iris$endEntityRender(Entity entity, double x, double y, double z, float yaw, float tickDelta,
 									  PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									  CallbackInfo ci) {
-		CapturedRenderingState.INSTANCE.setCurrentEntity(-1);
+		CapturedRenderingState.INSTANCE.setCurrentEntity(0);
 	}
 }

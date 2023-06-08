@@ -3,7 +3,7 @@ package net.coderbot.iris.uniforms.custom.cached;
 import kroppeb.stareval.function.FunctionReturn;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.parsing.VectorType;
-import net.coderbot.iris.vendored.joml.Vector2i;
+import org.joml.Vector2i;
 import org.lwjgl.opengl.GL21;
 
 import java.util.function.Supplier;

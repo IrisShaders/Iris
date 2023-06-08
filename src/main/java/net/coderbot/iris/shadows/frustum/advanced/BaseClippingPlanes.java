@@ -1,7 +1,7 @@
 package net.coderbot.iris.shadows.frustum.advanced;
 
-import net.coderbot.iris.vendored.joml.Matrix4f;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 public class BaseClippingPlanes {
 	private final Vector4f[] planes = new Vector4f[6];

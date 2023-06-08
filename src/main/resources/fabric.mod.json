@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "iris",
-  "version": "1.6.0-development-environment",
+  "version": "1.6.2-development-environment",
 
   "name": "Iris",
   "description": "A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs",
@@ -32,19 +32,18 @@
     "iris-batched-entity-rendering.mixins.json",
     "mixins.iris.fantastic.json",
     "mixins.iris.vertexformat.json",
-    "mixins.iris.bettermipmaps.json",
-    "mixins.iris.optimized-stitching.json",
     "mixins.iris.compat.indigo.json",
     "mixins.iris.compat.sodium.json",
     "mixins.iris.compat.indium.json",
-    "mixins.iris.fixes.maxfpscrash.json"
+    "mixins.iris.fixes.maxfpscrash.json",
+    "mixins.iris.devenvironment.json"
   ],
 
   "accessWidener" : "iris.accesswidener",
 
   "depends": {
     "fabricloader": ">=0.12.3",
-    "minecraft": "1.18.x"
+    "minecraft": "1.19.4"
   },
 
   "breaks": {
@@ -61,7 +60,8 @@
 
   "custom": {
     "sodium:options": {
-      "mixin.features.sky": false
+      "mixin.features.sky": false,
+      "mixin.features.gui.font": false
     }
   }
 }

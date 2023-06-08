@@ -14,6 +14,12 @@ public interface TextureAtlasAccessor {
 	@Accessor("texturesByName")
 	Map<ResourceLocation, TextureAtlasSprite> getTexturesByName();
 
-	@Invoker("getResourceLocation")
-	ResourceLocation callGetResourceLocation(ResourceLocation location);
+	@Accessor("mipLevel")
+	int getMipLevel();
+
+	@Invoker("getWidth")
+	int callGetWidth();
+
+	@Invoker("getHeight")
+	int callGetHeight();
 }

@@ -10,6 +10,7 @@ import net.coderbot.iris.shaderpack.materialmap.BlockRenderType;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -40,7 +41,7 @@ public class BlockMaterialMapping {
 		blockPropertiesMap.forEach((id, blockType) -> {
 			ResourceLocation resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
 
-			Block block = Registry.BLOCK.get(resourceLocation);
+			Block block = BuiltInRegistries.BLOCK.get(resourceLocation);
 
 			blockTypeIds.put(block, convertBlockToRenderType(blockType));
 		});
@@ -66,7 +67,7 @@ public class BlockMaterialMapping {
 		NamespacedId id = entry.getId();
 		ResourceLocation resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
 
-		Block block = Registry.BLOCK.get(resourceLocation);
+		Block block = BuiltInRegistries.BLOCK.get(resourceLocation);
 
 		// If the block doesn't exist, by default the registry will return AIR. That probably isn't what we want.
 		// TODO: Assuming that Registry.BLOCK.getDefaultId() == "minecraft:air" here

@@ -3,7 +3,7 @@ package net.coderbot.iris.pipeline;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
-import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
@@ -149,12 +149,12 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				AlphaTest.ALWAYS, inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			terrainSolidVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			terrainSolidGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			terrainSolidFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium_solid", terrainSolidVertex.orElse(null), terrainSolidGeometry.orElse(null), terrainSolidFragment.orElse(null));
+			ShaderPrinter.printProgram(sources.getName() + "_sodium_solid").addSources(transformed).print();
 		}, () -> {
 			terrainSolidBlendOverride = null;
 			terrainSolidBufferOverrides = Collections.emptyList();
@@ -179,12 +179,12 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				terrainCutoutAlpha.orElse(AlphaTests.ONE_TENTH_ALPHA), inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			terrainCutoutVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			terrainCutoutGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			terrainCutoutFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium_cutout", terrainCutoutVertex.orElse(null), terrainCutoutGeometry.orElse(null), terrainCutoutFragment.orElse(null));
+			ShaderPrinter.printProgram(sources.getName() + "_sodium_cutout").addSources(transformed).print();
 		}, () -> {
 			terrainCutoutBlendOverride = null;
 			terrainCutoutBufferOverrides = Collections.emptyList();
@@ -211,12 +211,12 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				translucentAlpha.orElse(AlphaTest.ALWAYS), inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			translucentVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			translucentGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			translucentFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", translucentVertex.orElse(null), translucentGeometry.orElse(null), translucentFragment.orElse(null));
+			ShaderPrinter.printProgram(sources.getName() + "_sodium").addSources(transformed).print();
 		}, () -> {
 			translucentBlendOverride = null;
 			translucentBufferOverrides = Collections.emptyList();
@@ -242,20 +242,23 @@ public class SodiumTerrainPipeline {
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				AlphaTest.ALWAYS, inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			Map<PatchShaderType, String> transformedCutout = TransformPatcher.patchSodium(
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				shadowAlpha.get(), inputs,
-				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap());
+				vertexType.getPositionScale(), vertexType.getPositionOffset(), vertexType.getTextureScale(), parent.getTextureMap(), sources.getGeometrySource().isPresent());
 			shadowVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			shadowGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
 			shadowCutoutFragment = Optional.ofNullable(transformedCutout.get(PatchShaderType.FRAGMENT));
 			shadowFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium", shadowVertex.orElse(null), shadowGeometry.orElse(null), shadowFragment.orElse(null));
-			PatchedShaderPrinter.debugPatchedShaders(sources.getName() + "_sodium_cutout", null, null, shadowCutoutFragment.orElse(null));
+			ShaderPrinter.printProgram(sources.getName() + "_sodium")
+				.addSources(transformed)
+				.setName(sources.getName() + "_sodium_cutout")
+				.addSource(PatchShaderType.FRAGMENT, shadowCutoutFragment.orElse(null))
+				.print();
 		}, () -> {
 			shadowBlendOverride = null;
 			shadowBufferOverrides = Collections.emptyList();
@@ -444,6 +447,6 @@ public class SodiumTerrainPipeline {
 		String path = matcher.group("path");
 
 		ResourceLocation identifier = new ResourceLocation(namespace, path);
-		return ShaderLoader.getShaderSource(identifier);
+		return "";
 	}
 }

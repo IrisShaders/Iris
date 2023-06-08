@@ -40,8 +40,7 @@ public class MixinGameRenderer {
 	private boolean renderHand;
 
 	@Inject(method = "<init>", at = @At("TAIL"))
-	private void iris$logSystem(Minecraft client, ResourceManager resourceManager, RenderBuffers bufferBuilderStorage,
-								CallbackInfo ci) {
+	private void iris$logSystem(Minecraft arg, ItemInHandRenderer arg2, ResourceManager arg3, RenderBuffers arg4, CallbackInfo ci) {
 		Iris.logger.info("Hardware information:");
 		Iris.logger.info("CPU: " + GlUtil.getCpuInfo());
 		Iris.logger.info("GPU: " + GlUtil.getRenderer() + " (Supports OpenGL " + GlUtil.getOpenGLVersion() + ")");
@@ -330,6 +329,20 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
+		"getRendertypeEntityTranslucentEmissiveShader"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEntityTranslucentEmissiveShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			// TODO: Wrong program
+			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
+		} else if (isBlockEntities()) {
+			override(ShaderKey.BLOCK_ENTITY, cir);
+		} else if (shouldOverrideShaders()) {
+			override(ShaderKey.ENTITIES_EYES_TRANS, cir);
+		}
+	}
+
+	@Inject(method = {
 			"getRendertypeLeashShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideLeashShader(CallbackInfoReturnable<ShaderInstance> cir) {
@@ -374,6 +387,18 @@ public class MixinGameRenderer {
 			override(ShaderKey.TEXT_BE, cir);
 		} else if (shouldOverrideShaders()) {
 			override(ShaderKey.TEXT, cir);
+		}
+	}
+
+	@Inject(method = {
+		"getRendertypeTextBackgroundShader",
+		"getRendertypeTextBackgroundSeeThroughShader"
+	}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideTextBackgroundShader(CallbackInfoReturnable<ShaderInstance> cir) {
+		if (ShadowRenderer.ACTIVE) {
+			override(ShaderKey.SHADOW_TEXT_BG, cir);
+		} else {
+			override(ShaderKey.TEXT_BG, cir);
 		}
 	}
 

@@ -6,10 +6,19 @@ accessible  class   com/mojang/blaze3d/platform/GlStateManager$ColorMask
 accessible  class   com/mojang/blaze3d/platform/GlStateManager$DepthState
 accessible  class   net/minecraft/client/renderer/RenderStateShard$TransparencyStateShard
 accessible  class   net/minecraft/client/renderer/RenderType$CompositeState
+accessible  class   net/minecraft/client/renderer/FogRenderer$FogData
 accessible  class   net/minecraft/client/renderer/texture/Stitcher$Holder
+accessible  class   net/minecraft/world/level/biome/Biome$ClimateSettings
 accessible  class   net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo
 accessible  class   net/minecraft/client/Options$FieldAccess
-extendable class net/minecraft/client/renderer/texture/TextureAtlasSprite$Info
+accessible class net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture
+accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
+accessible class net/minecraft/client/renderer/texture/SpriteContents$Ticker
+accessible  class   net/minecraft/client/OptionInstance$ValueSet
+extendable  class   net/minecraft/client/OptionInstance
+accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask
+extendable  class   net/minecraft/core/RegistryAccess$RegistryEntry
+accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask$CompileResults
 accessible field com/mojang/blaze3d/platform/NativeImage pixels J
 mutable field net/minecraft/client/renderer/ShaderInstance PROJECTION_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
 mutable field net/minecraft/client/renderer/ShaderInstance MODEL_VIEW_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
@@ -18,3 +27,4 @@ mutable field net/minecraft/client/renderer/ShaderInstance CHUNK_OFFSET Lcom/moj
 mutable field net/minecraft/client/renderer/ShaderInstance COLOR_MODULATOR Lcom/mojang/blaze3d/shaders/Uniform;
 accessible field net/minecraft/client/renderer/ShaderInstance uniforms Ljava/util/List;
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
+accessible class net/minecraft/client/gui/components/AbstractSelectionList$Entry

@@ -22,7 +22,7 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 		validSodiumVersion = FabricLoader.getInstance().getModContainer("sodium").map(sodium -> {
 			String version = sodium.getMetadata().getVersion().getFriendlyString();
 
-			return SodiumVersionCheck.isAllowedVersion(version);
+			return FabricLoader.getInstance().isDevelopmentEnvironment() || SodiumVersionCheck.isAllowedVersion(version);
 		}).orElse(false);
 
 		if (!validSodiumVersion) {

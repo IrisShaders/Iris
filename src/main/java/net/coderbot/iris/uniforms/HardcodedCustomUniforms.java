@@ -4,10 +4,11 @@ import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import net.coderbot.iris.uniforms.transforms.SmoothedFloat;
-import net.coderbot.iris.vendored.joml.Math;
+import org.joml.Math;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -63,7 +64,8 @@ public class HardcodedCustomUniforms {
 			if (storedBiome == null) {
 				return 0;
 			} else {
-				return Biome.getBiomeCategory(storedBiome) == Biome.BiomeCategory.SWAMP ? 1 : 0;
+				// Easiest way to check for "swamp" on 1.19.
+				return storedBiome.is(BiomeTags.HAS_CLOSER_WATER_FOG) ? 1 : 0;
 			}
 		}, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "BiomeTemp", () -> {
@@ -124,7 +126,7 @@ public class HardcodedCustomUniforms {
 
 		Vec3 feet = client.cameraEntity.position();
 		Vec3 eyes = new Vec3(feet.x, client.cameraEntity.getEyeY(), feet.z);
-		BlockPos eyeBlockPos = new BlockPos(eyes);
+		BlockPos eyeBlockPos = BlockPos.containing(eyes);
 
 		int skyLight = client.level.getBrightness(LightLayer.SKY, eyeBlockPos);
 
@@ -157,7 +159,7 @@ public class HardcodedCustomUniforms {
 	private static int getWorldDayTime() {
 		Level level = Minecraft.getInstance().level;
 		long  timeOfDay = level.getDayTime();
-		long dayTime = ((DimensionTypeAccessor) level.dimensionType()).getFixedTime().orElse(timeOfDay % 24000L);
+		long dayTime = level.dimensionType().fixedTime().orElse(timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}
@@ -182,7 +184,7 @@ public class HardcodedCustomUniforms {
 		if (storedBiome == null) {
 			return 0;
 		}
-		Biome.Precipitation precipitation = storedBiome.value().getPrecipitation();
+		Biome.Precipitation precipitation = storedBiome.value().getPrecipitationAt(Minecraft.getInstance().cameraEntity.blockPosition());
 		switch (precipitation) {
 			case RAIN:
 				return 1;

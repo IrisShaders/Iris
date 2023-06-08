@@ -9,7 +9,7 @@ import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.uniforms.custom.cached.*;
-import net.coderbot.iris.vendored.joml.*;
+import org.joml.*;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.BufferUtils;
@@ -107,10 +107,6 @@ public class CustomUniformFixedInputUniformsHolder {
 			return this.put(name, new Float3VectorCachedUniform(name, updateFrequency, value));
 		}
 
-		@Override
-		public UniformHolder uniformVanilla3f(UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Vector3f> value) {
-			return this.put(name, new Float3VanillaVectorCachedUniform(name, updateFrequency, value));
-		}
 
 		@Override
 		public Builder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
@@ -154,19 +150,6 @@ public class CustomUniformFixedInputUniformsHolder {
 
 		@Override
 		public UniformHolder uniformMatrix(
-				UniformUpdateFrequency updateFrequency, String name, Supplier<com.mojang.math.Matrix4f> value) {
-			Matrix4f held = new Matrix4f();
-
-			FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-			return this.put(name, new Float4MatrixCachedUniform(name, updateFrequency, () -> {
-				value.get().store(buffer);
-				held.set(buffer);
-				return held;
-			}));
-		}
-
-		@Override
-		public UniformHolder uniformJomlMatrix(
 				UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value) {
 			return this.put(name, new Float4MatrixCachedUniform(name, updateFrequency, value));
 		}

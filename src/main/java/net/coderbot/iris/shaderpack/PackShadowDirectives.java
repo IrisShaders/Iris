@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.vendored.joml.Vector4f;
+import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -395,7 +395,7 @@ public class PackShadowDirectives {
 		}
 
 		public boolean getNearest() {
-			return this.nearest;
+			return this.nearest || this.format.getPixelFormat().isInteger();
 		}
 
 		public boolean getClear() {

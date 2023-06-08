@@ -1,6 +1,5 @@
 package net.coderbot.iris.texture.pbr;
 
-import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,16 +25,26 @@ public enum PBRType {
 		return defaultValue;
 	}
 
-	public ResourceLocation appendToFileLocation(ResourceLocation location) {
-		String path = location.getPath();
-		String newPath;
+	public String appendSuffix(String path) {
 		int extensionIndex = FilenameUtils.indexOfExtension(path);
 		if (extensionIndex != -1) {
-			newPath = path.substring(0, extensionIndex) + suffix + path.substring(extensionIndex);
+			return path.substring(0, extensionIndex) + suffix + path.substring(extensionIndex);
 		} else {
-			newPath = path + suffix;
+			return path + suffix;
 		}
-		return new ResourceLocation(location.getNamespace(), newPath);
+	}
+
+	@Nullable
+	public static String removeSuffix(String path) {
+		int extensionIndex = FilenameUtils.indexOfExtension(path);
+		String pathNoExtension = path.substring(0, extensionIndex);
+		PBRType type = fromFileLocation(pathNoExtension);
+		if (type != null) {
+			String suffix = type.getSuffix();
+			String basePathNoExtension = pathNoExtension.substring(0, pathNoExtension.length() - suffix.length());
+			return basePathNoExtension + path.substring(extensionIndex);
+		}
+		return null;
 	}
 
 	/**

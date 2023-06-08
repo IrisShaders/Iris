@@ -8,7 +8,7 @@ import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.pipeline.PatchedShaderPrinter;
+import net.coderbot.iris.pipeline.ShaderPrinter;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.fallback.FallbackShader;
 import net.coderbot.iris.pipeline.newshader.fallback.ShaderSynthesizer;
@@ -21,13 +21,17 @@ import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.VanillaUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
+import net.minecraft.server.packs.FilePackResources;
+import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import org.jetbrains.annotations.Nullable;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import org.apache.commons.io.IOUtils;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class NewShaderTests {
@@ -80,6 +85,7 @@ public class NewShaderTests {
 			"        { \"name\": \"iris_NormalMat\", \"type\": \"matrix3x3\", \"count\": 9, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 ] },\n" +
 			"        { \"name\": \"iris_ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
 			"        { \"name\": \"iris_ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_GlintAlpha\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 			"        { \"name\": \"iris_FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
 			"        { \"name\": \"iris_FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 			"        { \"name\": \"iris_FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
@@ -88,7 +94,7 @@ public class NewShaderTests {
 
 		String shaderJsonString = shaderJson.toString();
 
-		PatchedShaderPrinter.debugPatchedShaders(name, vertex, geometry, fragment, shaderJsonString);
+		ShaderPrinter.printProgram(name).addSources(transformed).addJson(shaderJsonString).print();
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, geometry, fragment);
 
@@ -116,8 +122,8 @@ public class NewShaderTests {
 												GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
 												VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
 												NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
-												boolean intensityTex, boolean isFullbright) throws IOException {
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, false);
+												boolean isGlint, boolean isText, boolean intensityTex, boolean isFullbright) throws IOException {
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, false, isGlint, isText);
 
 		// TODO: Is this check sound in newer versions?
 		boolean isLeash = vertexFormat == DefaultVertexFormat.POSITION_COLOR_LIGHTMAP;
@@ -147,6 +153,7 @@ public class NewShaderTests {
 			"        { \"name\": \"ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
 			"        { \"name\": \"ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
 			"        { \"name\": \"ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
+			"        { \"name\": \"GlintAlpha\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
 			"        { \"name\": \"Light0_Direction\", \"type\": \"float\", \"count\": 3, \"values\": [0.0, 0.0, 0.0] },\n" +
 			"        { \"name\": \"Light1_Direction\", \"type\": \"float\", \"count\": 3, \"values\": [0.0, 0.0, 0.0] },\n" +
 			"        { \"name\": \"FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
@@ -160,7 +167,11 @@ public class NewShaderTests {
 			"    ]\n" +
 			"}";
 
-		PatchedShaderPrinter.debugPatchedShaders(name, vertex, null, fragment, shaderJsonString);
+		ShaderPrinter.printProgram(name)
+			.addSource(PatchShaderType.VERTEX, vertex)
+			.addSource(PatchShaderType.FRAGMENT, fragment)
+			.addJson(shaderJsonString)
+			.print();
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, fragment);
 
@@ -182,63 +193,39 @@ public class NewShaderTests {
 		}
 
 		@Override
-		public Resource getResource(ResourceLocation id) throws IOException {
+		public Optional<Resource> getResource(ResourceLocation id) {
 			final String path = id.getPath();
 
 			if (path.endsWith("json")) {
-				return new StringResource(id, json);
+				return Optional.of(new StringResource(id, json));
 			} else if (path.endsWith("vsh")) {
-				return new StringResource(id, vertex);
+				return Optional.of(new StringResource(id, vertex));
 			} else if (path.endsWith("gsh")) {
 				if (geometry == null) {
-					return null;
+					return Optional.empty();
 				}
-				return new StringResource(id, geometry);
+				return Optional.of(new StringResource(id, geometry));
 			} else if (path.endsWith("fsh")) {
-				return new StringResource(id, fragment);
+				return Optional.of(new StringResource(id, fragment));
 			}
 
-			throw new IOException("Couldn't load " + id);
+			return Optional.empty();
 		}
 	}
 
-	private static class StringResource implements Resource {
+	private static class StringResource extends Resource {
 		private final ResourceLocation id;
 		private final String content;
 
 		private StringResource(ResourceLocation id, String content) {
+			super(new PathPackResources("<iris shaderpack shaders>", FabricLoader.getInstance().getConfigDir(), true), (IoSupplier<InputStream>) () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
 			this.id = id;
 			this.content = content;
 		}
 
 		@Override
-		public ResourceLocation getLocation() {
-			return id;
-		}
-
-		@Override
-		public InputStream getInputStream() {
-			return new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
-		}
-
-		@Override
-		public boolean hasMetadata() {
-			return false;
-		}
-
-		@Override
-		public <T> @Nullable T getMetadata(MetadataSectionSerializer<T> metaReader) {
-			return null;
-		}
-
-		@Override
-		public String getSourceName() {
-			return "<iris shaderpack shaders>";
-		}
-
-		@Override
-		public void close() throws IOException {
-			// No resources to release
+		public InputStream open() throws IOException {
+			return IOUtils.toInputStream(content, StandardCharsets.UTF_8);
 		}
 	}
 }

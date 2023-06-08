@@ -28,7 +28,7 @@ public class SimplePBRLoader implements PBRTextureLoader<SimpleTexture> {
 
 	@Nullable
 	protected AbstractTexture createPBRTexture(ResourceLocation imageLocation, ResourceManager resourceManager, PBRType pbrType) {
-		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(imageLocation);
+		ResourceLocation pbrImageLocation = imageLocation.withPath(pbrType::appendSuffix);
 
 		SimpleTexture pbrTexture = new SimpleTexture(pbrImageLocation);
 		try {

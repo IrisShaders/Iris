@@ -4,15 +4,15 @@
 
 ## Links
 
-* **Visit [our website](https://irisshaders.net) for downloads and pretty screenshots!**
+* **Visit [our website](https://irisshaders.net) for downloads and pretty screenshots!**\
+  * **Visit [Modrinth](https://modrinth.com/shaders) to find shader packs!**
 * Visit [our Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and get support! It's also a great place to get development updates right as they're happening.
-* Visit [my Patreon page](https://www.patreon.com/coderbot) to support the continued development of Iris!
 * Visit [the developer documentation](https://github.com/IrisShaders/Iris/tree/trunk/docs/development) for information on developing, building, and contributing to Iris!
 
 ## FAQ
 
 - Find answers to frequently asked questions on our [FAQ page](docs/faq.md).
-- A list of known-supported shaderpacks is available [here](docs/supportedshaders.md).
+- Iris supports almost all shaderpacks, but a list of unsupported shaderpacks is available [here](docs/unsupportedshaders.md).
 - A list of unfixable limitations in Iris is available [here](docs/usage/limitations.md).
 
 ## Why did you make Iris?
@@ -76,5 +76,7 @@ So, if you want to distribute a Forge port of Iris, we'd prefer if you let us kn
 All code in this (Iris) repository is completely free and open source, and you are free to read, distribute, and modify the code as long as you abide by the (fairly reasonable) terms of the [GNU LGPLv3 license](https://github.com/IrisShaders/Iris/blob/master/LICENSE).
 
 Dependencies may not be under an applicable license: See the [Incompatible Dependencies](https://github.com/IrisShaders/Iris/blob/master/LICENSE-DEPENDENCIES) page for more information.
+
+You are not allowed to redistribute Iris commerically or behind a paywall, unless you get a commercial license for GLSL Transformer. See above for more information.
 
 Though it's not legally required, I'd appreciate it if you could ask before hosting your own public downloads for compiled versions of Iris. Though if you want to add the mod to a site like MCBBS, that's fine, no need to ask me.

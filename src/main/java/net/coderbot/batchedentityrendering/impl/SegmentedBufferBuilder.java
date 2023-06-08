@@ -2,12 +2,10 @@ package net.coderbot.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.datafixers.util.Pair;
 import net.coderbot.batchedentityrendering.mixin.RenderTypeAccessor;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,14 +13,13 @@ import java.util.Objects;
 
 public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTrackingBuffer {
     private final BufferBuilder buffer;
-    private final List<RenderType> usedTypes;
     private RenderType currentType;
+	private final List<BufferSegment> buffers;
 
     public SegmentedBufferBuilder() {
         // 2 MB initial allocation
         this.buffer = new BufferBuilder(512 * 1024);
-        this.usedTypes = new ArrayList<>(256);
-
+		this.buffers = new ArrayList<>();
         this.currentType = null;
     }
 
@@ -34,8 +31,7 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
                     buffer.setQuadSortOrigin(0, 0, 0);
                 }
 
-                buffer.end();
-                usedTypes.add(currentType);
+                buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
             }
 
             buffer.begin(renderType.mode(), renderType.format());
@@ -59,29 +55,19 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
             return Collections.emptyList();
         }
 
-        usedTypes.add(currentType);
-
         if (shouldSortOnUpload(currentType)) {
             buffer.setQuadSortOrigin(0, 0, 0);
         }
 
-        buffer.end();
-        currentType = null;
+		buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
 
-        List<BufferSegment> segments = new ArrayList<>(usedTypes.size());
+		currentType = null;
 
-        for (RenderType type : usedTypes) {
-            Pair<BufferBuilder.DrawState, ByteBuffer> pair = buffer.popNextBuffer();
+		List<BufferSegment> finalSegments = new ArrayList<>(buffers);
 
-            BufferBuilder.DrawState parameters = pair.getFirst();
-            ByteBuffer slice = pair.getSecond();
+		buffers.clear();
 
-            segments.add(new BufferSegment(slice, parameters, type));
-        }
-
-        usedTypes.clear();
-
-        return segments;
+        return finalSegments;
     }
 
 	public List<BufferSegment> getSegmentsForType(TransparencyType transparencyType) {
@@ -90,38 +76,20 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
 		}
 
 		if (((BlendingStateHolder) currentType).getTransparencyType() == transparencyType) {
-			usedTypes.add(currentType);
-
 			if (shouldSortOnUpload(currentType)) {
 				buffer.setQuadSortOrigin(0, 0, 0);
 			}
 
-			buffer.end();
+			buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
+
 			currentType = null;
 		}
 
-		List<BufferSegment> segments = new ArrayList<>(usedTypes.size());
+		List<BufferSegment> finalSegments = buffers.stream().filter(segment -> ((BlendingStateHolder) segment.type()).getTransparencyType() == transparencyType).toList();
 
-		List<RenderType> types = new ArrayList<>();
+		buffers.removeAll(finalSegments);
 
-		for (RenderType type : usedTypes) {
-			if (((BlendingStateHolder) type).getTransparencyType() != transparencyType) {
-				continue;
-			}
-
-			types.add(type);
-
-			Pair<BufferBuilder.DrawState, ByteBuffer> pair = buffer.popNextBuffer();
-
-			BufferBuilder.DrawState parameters = pair.getFirst();
-			ByteBuffer slice = pair.getSecond();
-
-			segments.add(new BufferSegment(slice, parameters, type));
-		}
-
-		usedTypes.removeAll(types);
-
-		return segments;
+		return finalSegments;
 	}
 
     private static boolean shouldSortOnUpload(RenderType type) {

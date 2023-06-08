@@ -11,7 +11,7 @@ import net.coderbot.iris.gl.texture.TextureScaleOverride;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
-import net.coderbot.iris.vendored.joml.Vector2i;
+import org.joml.Vector2i;
 
 import java.util.Optional;
 import java.util.Set;

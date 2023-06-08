@@ -14,16 +14,16 @@ public class MixinVertexBuffer implements VertexBufferHelper {
 	private static VertexBuffer saved;
 
 	@Shadow
-	private void bindVertexArray() {
+	private void bind() {
 		throw new IllegalStateException("not shadowed");
 	}
 
-	@Inject(method = "bindVertexArray()V", at = @At("HEAD"))
+	@Inject(method = "bind()V", at = @At("HEAD"))
 	private void bindHelper(CallbackInfo ci) {
 		current = (VertexBuffer) (Object) this;
 	}
 
-	@Inject(method = "unbindVertexArray()V", at = @At("HEAD"))
+	@Inject(method = "unbind()V", at = @At("HEAD"))
 	private static void unbindHelper(CallbackInfo ci) {
 		current = null;
 	}
@@ -36,11 +36,9 @@ public class MixinVertexBuffer implements VertexBufferHelper {
 	@Override
 	public void restoreBinding() {
 		if (saved != null) {
-			bindVertexArray();
 			saved.bind();
 		} else {
 			VertexBuffer.unbind();
-			VertexBuffer.unbindVertexArray();
 		}
 	}
 }

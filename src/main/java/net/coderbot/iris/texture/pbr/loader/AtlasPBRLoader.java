@@ -1,15 +1,9 @@
 package net.coderbot.iris.texture.pbr.loader;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.datafixers.util.Pair;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.mixin.texture.AnimatedTextureAccessor;
 import net.coderbot.iris.mixin.texture.AnimationMetadataSectionAccessor;
-import net.coderbot.iris.mixin.texture.FrameInfoAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasAccessor;
-import net.coderbot.iris.mixin.texture.TextureAtlasSpriteAccessor;
-import net.coderbot.iris.texture.TextureInfoCache;
-import net.coderbot.iris.texture.TextureInfoCache.TextureInfo;
 import net.coderbot.iris.texture.format.TextureFormat;
 import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.coderbot.iris.texture.mipmap.ChannelMipmapGenerator;
@@ -18,21 +12,22 @@ import net.coderbot.iris.texture.mipmap.LinearBlendFunction;
 import net.coderbot.iris.texture.pbr.PBRAtlasTexture;
 import net.coderbot.iris.texture.pbr.PBRSpriteHolder;
 import net.coderbot.iris.texture.pbr.PBRType;
-import net.coderbot.iris.texture.pbr.TextureAtlasSpriteExtension;
+import net.coderbot.iris.texture.pbr.SpriteContentsExtension;
 import net.coderbot.iris.texture.util.ImageManipulationUtil;
-import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.Tickable;
 import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
+import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
+import java.io.InputStream;
+import java.util.Optional;
 
 public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	public static final ChannelMipmapGenerator LINEAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(
@@ -44,33 +39,31 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 
 	@Override
 	public void load(TextureAtlas atlas, ResourceManager resourceManager, PBRTextureConsumer pbrTextureConsumer) {
-		TextureInfo textureInfo = TextureInfoCache.INSTANCE.getInfo(atlas.getId());
-		int atlasWidth = textureInfo.getWidth();
-		int atlasHeight = textureInfo.getHeight();
-		int mipLevel = fetchAtlasMipLevel(atlas);
+		TextureAtlasAccessor atlasAccessor = (TextureAtlasAccessor) atlas;
+		int atlasWidth = atlasAccessor.callGetWidth();
+		int atlasHeight = atlasAccessor.callGetHeight();
+		int mipLevel = atlasAccessor.getMipLevel();
 
 		PBRAtlasTexture normalAtlas = null;
 		PBRAtlasTexture specularAtlas = null;
 		for (TextureAtlasSprite sprite : ((TextureAtlasAccessor) atlas).getTexturesByName().values()) {
-			if (!(sprite instanceof MissingTextureAtlasSprite)) {
-				TextureAtlasSprite normalSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, mipLevel, PBRType.NORMAL);
-				TextureAtlasSprite specularSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, mipLevel, PBRType.SPECULAR);
-				if (normalSprite != null) {
-					if (normalAtlas == null) {
-						normalAtlas = new PBRAtlasTexture(atlas, PBRType.NORMAL);
-					}
-					normalAtlas.addSprite(normalSprite);
-					PBRSpriteHolder pbrSpriteHolder = ((TextureAtlasSpriteExtension) sprite).getOrCreatePBRHolder();
-					pbrSpriteHolder.setNormalSprite(normalSprite);
+			PBRTextureAtlasSprite normalSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, mipLevel, PBRType.NORMAL);
+			PBRTextureAtlasSprite specularSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, mipLevel, PBRType.SPECULAR);
+			if (normalSprite != null) {
+				if (normalAtlas == null) {
+					normalAtlas = new PBRAtlasTexture(atlas, PBRType.NORMAL);
 				}
-				if (specularSprite != null) {
-					if (specularAtlas == null) {
-						specularAtlas = new PBRAtlasTexture(atlas, PBRType.SPECULAR);
-					}
-					specularAtlas.addSprite(specularSprite);
-					PBRSpriteHolder pbrSpriteHolder = ((TextureAtlasSpriteExtension) sprite).getOrCreatePBRHolder();
-					pbrSpriteHolder.setSpecularSprite(specularSprite);
+				normalAtlas.addSprite(normalSprite);
+				PBRSpriteHolder pbrSpriteHolder = ((SpriteContentsExtension) sprite.contents()).getOrCreatePBRHolder();
+				pbrSpriteHolder.setNormalSprite(normalSprite);
+			}
+			if (specularSprite != null) {
+				if (specularAtlas == null) {
+					specularAtlas = new PBRAtlasTexture(atlas, PBRType.SPECULAR);
 				}
+				specularAtlas.addSprite(specularSprite);
+				PBRSpriteHolder pbrSpriteHolder = ((SpriteContentsExtension) sprite.contents()).getOrCreatePBRHolder();
+				pbrSpriteHolder.setSpecularSprite(specularSprite);
 			}
 		}
 
@@ -86,148 +79,123 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		}
 	}
 
-	protected static int fetchAtlasMipLevel(TextureAtlas atlas) {
-		TextureAtlasSprite missingSprite = atlas.getSprite(MissingTextureAtlasSprite.getLocation());
-		return ((TextureAtlasSpriteAccessor) missingSprite).getMainImage().length - 1;
-	}
-
 	@Nullable
-	protected TextureAtlasSprite createPBRSprite(TextureAtlasSprite sprite, ResourceManager resourceManager, TextureAtlas atlas, int atlasWidth, int atlasHeight, int mipLevel, PBRType pbrType) {
-		ResourceLocation spriteName = sprite.getName();
-		ResourceLocation imageLocation = ((TextureAtlasAccessor) atlas).callGetResourceLocation(spriteName);
-		ResourceLocation pbrImageLocation = pbrType.appendToFileLocation(imageLocation);
+	protected PBRTextureAtlasSprite createPBRSprite(TextureAtlasSprite sprite, ResourceManager resourceManager, TextureAtlas atlas, int atlasWidth, int atlasHeight, int mipLevel, PBRType pbrType) {
+		ResourceLocation spriteName = sprite.contents().name();
+		ResourceLocation pbrImageLocation = getPBRImageLocation(spriteName, pbrType);
 
-		TextureAtlasSprite pbrSprite = null;
-		try (Resource resource = resourceManager.getResource(pbrImageLocation)) {
-			NativeImage nativeImage = NativeImage.read(resource.getInputStream());
-			AnimationMetadataSection animationMetadata = resource.getMetadata(AnimationMetadataSection.SERIALIZER);
-			if (animationMetadata == null) {
-				animationMetadata = AnimationMetadataSection.EMPTY;
-			}
+		Optional<Resource> optionalResource = resourceManager.getResource(pbrImageLocation);
+		if (!optionalResource.isPresent()) {
+			return null;
+		}
+		Resource resource = optionalResource.get();
 
-			Pair<Integer, Integer> frameSize = animationMetadata.getFrameSize(nativeImage.getWidth(), nativeImage.getHeight());
-			int frameWidth = frameSize.getFirst();
-			int frameHeight = frameSize.getSecond();
-			int targetFrameWidth = sprite.getWidth();
-			int targetFrameHeight = sprite.getHeight();
-			if (frameWidth != targetFrameWidth || frameHeight != targetFrameHeight) {
-				int imageWidth = nativeImage.getWidth();
-				int imageHeight = nativeImage.getHeight();
+		AnimationMetadataSection animationMetadata;
+		try {
+			animationMetadata = resource.metadata().getSection(AnimationMetadataSection.SERIALIZER).orElse(AnimationMetadataSection.EMPTY);
+		} catch (Exception e) {
+			Iris.logger.error("Unable to parse metadata from {}", pbrImageLocation, e);
+			return null;
+		}
 
-				// We can assume the following is always true as a result of getFrameSize's check:
-				// imageWidth % frameWidth == 0 && imageHeight % frameHeight == 0
-				int targetImageWidth = imageWidth / frameWidth * targetFrameWidth;
-				int targetImageHeight = imageHeight / frameHeight * targetFrameHeight;
-
-				NativeImage scaledImage;
-				if (targetImageWidth % imageWidth == 0 && targetImageHeight % imageHeight == 0) {
-					scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, targetImageWidth, targetImageHeight);
-				} else {
-					scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
-				}
-				nativeImage.close();
-				nativeImage = scaledImage;
-
-				frameWidth = targetFrameWidth;
-				frameHeight = targetFrameHeight;
-
-				if (animationMetadata != AnimationMetadataSection.EMPTY) {
-					AnimationMetadataSectionAccessor animationAccessor = (AnimationMetadataSectionAccessor) animationMetadata;
-					int internalFrameWidth = animationAccessor.getFrameWidth();
-					int internalFrameHeight = animationAccessor.getFrameHeight();
-					if (internalFrameWidth != -1) {
-						animationAccessor.setFrameWidth(frameWidth);
-					}
-					if (internalFrameHeight != -1) {
-						animationAccessor.setFrameHeight(frameHeight);
-					}
-				}
-			}
-
-			ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
-			TextureAtlasSprite.Info pbrSpriteInfo = new PBRTextureAtlasSpriteInfo(pbrSpriteName, frameWidth, frameHeight, animationMetadata, pbrType);
-
-			int x = ((TextureAtlasSpriteAccessor) sprite).getX();
-			int y = ((TextureAtlasSpriteAccessor) sprite).getY();
-			pbrSprite = new PBRTextureAtlasSprite(atlas, pbrSpriteInfo, mipLevel, atlasWidth, atlasHeight, x, y, nativeImage);
-			syncAnimation(sprite, pbrSprite);
-		} catch (FileNotFoundException e) {
-			//
-		} catch (RuntimeException e) {
-			Iris.logger.error("Unable to parse metadata from {} : {}", pbrImageLocation, e);
+		NativeImage nativeImage;
+		try (InputStream stream = resource.open()) {
+			nativeImage = NativeImage.read(stream);
 		} catch (IOException e) {
-			Iris.logger.error("Unable to load {} : {}", pbrImageLocation, e);
+			Iris.logger.error("Using missing texture, unable to load {}", pbrImageLocation, e);
+			return null;
 		}
 
-		return pbrSprite;
-	}
-
-	protected void syncAnimation(TextureAtlasSprite source, TextureAtlasSprite target) {
-		Tickable sourceTicker = source.getAnimationTicker();
-		Tickable targetTicker = target.getAnimationTicker();
-		if (!(sourceTicker instanceof AnimatedTextureAccessor) || !(targetTicker instanceof AnimatedTextureAccessor)) {
-			return;
+		int imageWidth = nativeImage.getWidth();
+		int imageHeight = nativeImage.getHeight();
+		FrameSize frameSize = animationMetadata.calculateFrameSize(imageWidth, imageHeight);
+		int frameWidth = frameSize.width();
+		int frameHeight = frameSize.height();
+		if (!Mth.isMultipleOf(imageWidth, frameWidth) || !Mth.isMultipleOf(imageHeight, frameHeight)) {
+			Iris.logger.error("Image {} size {},{} is not multiple of frame size {},{}", pbrImageLocation, imageWidth, imageHeight, frameWidth, frameHeight);
+			nativeImage.close();
+			return null;
 		}
 
-		AnimatedTextureAccessor sourceAccessor = (AnimatedTextureAccessor) sourceTicker;
+		int targetFrameWidth = sprite.contents().width();
+		int targetFrameHeight = sprite.contents().height();
+		if (frameWidth != targetFrameWidth || frameHeight != targetFrameHeight) {
+			// We can assume the following is always true:
+			// imageWidth % frameWidth == 0 && imageHeight % frameHeight == 0
+			int targetImageWidth = imageWidth / frameWidth * targetFrameWidth;
+			int targetImageHeight = imageHeight / frameHeight * targetFrameHeight;
 
-		int ticks = 0;
-		for (int f = 0; f < sourceAccessor.getFrame(); f++) {
-			ticks += ((FrameInfoAccessor) sourceAccessor.getFrames().get(f)).getTime();
-		}
-
-		AnimatedTextureAccessor targetAccessor = (AnimatedTextureAccessor) targetTicker;
-		List<Object> targetFrames = targetAccessor.getFrames();
-
-		int cycleTime = 0;
-		int frameCount = targetFrames.size();
-		for (int f = 0; f < frameCount; f++) {
-			cycleTime += ((FrameInfoAccessor) targetFrames.get(f)).getTime();
-		}
-		ticks %= cycleTime;
-
-		int targetFrame = 0;
-		while (true) {
-			int time = ((FrameInfoAccessor) targetFrames.get(targetFrame)).getTime();
-			if (ticks >= time) {
-				targetFrame++;
-				ticks -= time;
+			NativeImage scaledImage;
+			if (targetImageWidth % imageWidth == 0 && targetImageHeight % imageHeight == 0) {
+				scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, targetImageWidth, targetImageHeight);
 			} else {
-				break;
+				scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
+			}
+			nativeImage.close();
+			nativeImage = scaledImage;
+
+			frameWidth = targetFrameWidth;
+			frameHeight = targetFrameHeight;
+
+			if (animationMetadata != AnimationMetadataSection.EMPTY) {
+				AnimationMetadataSectionAccessor animationAccessor = (AnimationMetadataSectionAccessor) animationMetadata;
+				int internalFrameWidth = animationAccessor.getFrameWidth();
+				int internalFrameHeight = animationAccessor.getFrameHeight();
+				if (internalFrameWidth != -1) {
+					animationAccessor.setFrameWidth(frameWidth);
+				}
+				if (internalFrameHeight != -1) {
+					animationAccessor.setFrameHeight(frameHeight);
+				}
 			}
 		}
 
-		targetAccessor.setFrame(targetFrame);
-		targetAccessor.setSubFrame(ticks + sourceAccessor.getSubFrame());
+		ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
+		PBRSpriteContents pbrSpriteContents = new PBRSpriteContents(pbrSpriteName, new FrameSize(frameWidth, frameHeight), nativeImage, animationMetadata, pbrType);
+		pbrSpriteContents.increaseMipLevel(mipLevel);
+		return new PBRTextureAtlasSprite(pbrSpriteName, pbrSpriteContents, atlasWidth, atlasHeight, sprite.getX(), sprite.getY(), sprite);
 	}
 
-	protected static class PBRTextureAtlasSpriteInfo extends TextureAtlasSprite.Info {
+	protected ResourceLocation getPBRImageLocation(ResourceLocation spriteName, PBRType pbrType) {
+		String path = pbrType.appendSuffix(spriteName.getPath());
+		// Temporary fix for CIT Resewn. CIT Resewn has sprites that are not in the textures/ folder, so a custom check must be used here to avoid that assumption.
+		if (path.startsWith("optifine/cit/")) {
+			return new ResourceLocation(spriteName.getNamespace(), path + ".png");
+		}
+		return new ResourceLocation(spriteName.getNamespace(), "textures/" + path + ".png");
+	}
+
+	protected static class PBRSpriteContents extends SpriteContents implements CustomMipmapGenerator.Provider {
 		protected final PBRType pbrType;
 
-		public PBRTextureAtlasSpriteInfo(ResourceLocation name, int width, int height, AnimationMetadataSection metadata, PBRType pbrType) {
-			super(name, width, height, metadata);
+		public PBRSpriteContents(ResourceLocation name, FrameSize size, NativeImage image, AnimationMetadataSection metadata, PBRType pbrType) {
+			super(name, size, image, metadata);
 			this.pbrType = pbrType;
-		}
-	}
-
-	public static class PBRTextureAtlasSprite extends TextureAtlasSprite implements CustomMipmapGenerator.Provider {
-		protected PBRTextureAtlasSprite(TextureAtlas atlas, TextureAtlasSprite.Info info, int mipLevel, int atlasWidth, int atlasHeight, int x, int y, NativeImage nativeImage) {
-			super(atlas, info, mipLevel, atlasWidth, atlasHeight, x, y, nativeImage);
 		}
 
 		@Override
-		public CustomMipmapGenerator getMipmapGenerator(Info info, int atlasWidth, int atlasHeight) {
-			if (info instanceof PBRTextureAtlasSpriteInfo) {
-				PBRType pbrType = ((PBRTextureAtlasSpriteInfo) info).pbrType;
-				TextureFormat format = TextureFormatLoader.getFormat();
-				if (format != null) {
-					CustomMipmapGenerator generator = format.getMipmapGenerator(pbrType);
-					if (generator != null) {
-						return generator;
-					}
+		public CustomMipmapGenerator getMipmapGenerator() {
+			TextureFormat format = TextureFormatLoader.getFormat();
+			if (format != null) {
+				CustomMipmapGenerator generator = format.getMipmapGenerator(pbrType);
+				if (generator != null) {
+					return generator;
 				}
 			}
 			return LINEAR_MIPMAP_GENERATOR;
+		}
+	}
+
+	public static class PBRTextureAtlasSprite extends TextureAtlasSprite {
+		protected final TextureAtlasSprite baseSprite;
+
+		protected PBRTextureAtlasSprite(ResourceLocation location, PBRSpriteContents contents, int atlasWidth, int atlasHeight, int x, int y, TextureAtlasSprite baseSprite) {
+			super(location, contents, atlasWidth, atlasHeight, x, y);
+			this.baseSprite = baseSprite;
+		}
+
+		public TextureAtlasSprite getBaseSprite() {
+			return baseSprite;
 		}
 	}
 }

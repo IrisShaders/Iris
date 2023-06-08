@@ -1,21 +1,34 @@
 package net.coderbot.iris.mixin.bettermipmaps;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.texture.SpriteContents;
 import net.coderbot.iris.helpers.ColorSRGB;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import org.lwjgl.system.MemoryUtil;
+import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Locale;
 import java.util.Objects;
 
-@Mixin(TextureAtlasSprite.class)
+@Mixin(SpriteContents.class)
 public class MixinTextureAtlasSprite {
+	@Mutable
+	@Shadow
+	@Final
+	private NativeImage originalImage;
 	// Generate some color tables for gamma correction.
 	private static final float[] SRGB_TO_LINEAR = new float[256];
 
@@ -33,22 +46,20 @@ public class MixinTextureAtlasSprite {
 	// support Forge, since this works well on Fabric too, it's fine to ensure that the diff between Fabric and Forge
 	// can remain minimal. Being less dependent on specific details of Fabric is good, since it means we can be more
 	// cross-platform.
-	@ModifyVariable(method = "<init>", at = @At(value = "FIELD",
-		target = "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;animatedTexture:Lnet/minecraft/client/renderer/texture/TextureAtlasSprite$AnimatedTexture;"), argsOnly = true)
-	private NativeImage iris$beforeGenerateMipLevels(NativeImage nativeImage, TextureAtlas arg, TextureAtlasSprite.Info info) {
+	@Redirect(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/texture/SpriteContents;originalImage:Lcom/mojang/blaze3d/platform/NativeImage;", opcode = Opcodes.PUTFIELD))
+	private void iris$beforeGenerateMipLevels(SpriteContents instance, NativeImage nativeImage, ResourceLocation resourceLocation) {
 		// We're injecting after the "info" field has been set, so this is safe even though we're in a constructor.
-		ResourceLocation name = Objects.requireNonNull(info).name();
-
-		if (name.getPath().contains("leaves")) {
+		if (resourceLocation.getPath().contains("leaves")) {
 			// Don't ruin the textures of leaves on fast graphics, since they're supposed to have black pixels
 			// apparently.
-			return nativeImage;
+			this.originalImage = nativeImage;
+			return;
 		}
 
 
 		iris$fillInTransparentPixelColors(nativeImage);
 
-		return nativeImage;
+		this.originalImage = nativeImage;
 	}
 
 	/**
@@ -76,16 +87,16 @@ public class MixinTextureAtlasSprite {
 			long pPixel = ppPixel + (pixelIndex * 4);
 
 			int color = MemoryUtil.memGetInt(pPixel);
-			int alpha = NativeImage.getA(color);
+			int alpha = FastColor.ABGR32.alpha(color);
 
 			// Ignore all fully-transparent pixels for the purposes of computing an average color.
 			if (alpha != 0) {
 				float weight = (float) alpha;
 
 				// Make sure to convert to linear space so that we don't lose brightness.
-				r += ColorSRGB.srgbToLinear(NativeImage.getR(color)) * weight;
-				g += ColorSRGB.srgbToLinear(NativeImage.getG(color)) * weight;
-				b += ColorSRGB.srgbToLinear(NativeImage.getB(color)) * weight;
+				r += ColorSRGB.srgbToLinear(FastColor.ABGR32.red(color)) * weight;
+				g += ColorSRGB.srgbToLinear(FastColor.ABGR32.green(color)) * weight;
+				b += ColorSRGB.srgbToLinear(FastColor.ABGR32.blue(color)) * weight;
 
 				totalWeight += weight;
 			}
@@ -108,7 +119,7 @@ public class MixinTextureAtlasSprite {
 			long pPixel = ppPixel + (pixelIndex * 4);
 
 			int color = MemoryUtil.memGetInt(pPixel);
-			int alpha = NativeImage.getA(color);
+			int alpha = FastColor.ABGR32.alpha(color);
 
 			// Replace the color values of pixels which are fully transparent, since they have no color data.
 			if (alpha == 0) {

@@ -8,6 +8,7 @@ import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTyp
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
@@ -49,21 +50,22 @@ public class TextureTransformer {
 		switch (expectedType) {
 			case TEXTURE_1D:
 				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER1D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER1D;
+						extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER1D ||
+						extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER1D;
 			case TEXTURE_RECTANGLE:
 				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2DRECT ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2DRECT ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2DRECT;
+						extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2DRECT ||
+						extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2DRECT;
 			case TEXTURE_2D:
 				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2D;
+						extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2D ||
+						extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2D;
 			case TEXTURE_3D:
 				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER3D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER3D;
+						extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER3D ||
+						extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER3D;
 			default:
+				// not TransformationException because this should never happen
 				throw new IllegalStateException("Unexpected enum! " + expectedType);
 		}
 	}

@@ -1,8 +1,8 @@
 package net.coderbot.iris.shaderpack;
 
 import net.coderbot.iris.gl.blending.BlendModeOverride;
-import net.coderbot.iris.vendored.joml.Vector2f;
-import net.coderbot.iris.vendored.joml.Vector3i;
+import org.joml.Vector2f;
+import org.joml.Vector3i;
 
 import java.util.Optional;
 

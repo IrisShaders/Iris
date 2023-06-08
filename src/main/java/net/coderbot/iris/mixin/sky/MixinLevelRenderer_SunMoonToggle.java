@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Camera;
@@ -32,13 +32,12 @@ public class MixinLevelRenderer_SunMoonToggle {
 	private void iris$emptyBuilder() {
 		BufferBuilder builder = Tesselator.getInstance().getBuilder();
 
-		builder.discard();
+		builder.end().release();
 		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-		builder.end();
 	}
 
 	@Inject(method = "renderSky",
-		at = @At(value = "INVOKE", target = "com/mojang/blaze3d/vertex/BufferUploader.end (Lcom/mojang/blaze3d/vertex/BufferBuilder;)V"),
+		at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;end()Lcom/mojang/blaze3d/vertex/BufferBuilder$RenderedBuffer;"),
 		slice = @Slice(
 			from = @At(value = "FIELD", target = "net/minecraft/client/renderer/LevelRenderer.SUN_LOCATION : Lnet/minecraft/resources/ResourceLocation;"),
 			to = @At(value = "FIELD", target = "net/minecraft/client/renderer/LevelRenderer.MOON_LOCATION : Lnet/minecraft/resources/ResourceLocation;")),
@@ -50,7 +49,7 @@ public class MixinLevelRenderer_SunMoonToggle {
 	}
 
 	@Inject(method = "renderSky",
-		at = @At(value = "INVOKE", target = "com/mojang/blaze3d/vertex/BufferUploader.end (Lcom/mojang/blaze3d/vertex/BufferBuilder;)V"),
+		at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;end()Lcom/mojang/blaze3d/vertex/BufferBuilder$RenderedBuffer;"),
 		slice = @Slice(
 			from = @At(value = "FIELD", target = "net/minecraft/client/renderer/LevelRenderer.MOON_LOCATION : Lnet/minecraft/resources/ResourceLocation;"),
 			to = @At(value = "INVOKE", target = "net/minecraft/client/multiplayer/ClientLevel.getStarBrightness (F)F")),

@@ -1,7 +1,7 @@
 package net.coderbot.iris.gl.uniform;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix4f;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import org.lwjgl.BufferUtils;
 
@@ -40,9 +40,9 @@ public class MatrixUniform extends Uniform {
 		Matrix4f newValue = value.get();
 
 		if (!newValue.equals(cachedValue)) {
-			cachedValue = newValue.copy();
+			cachedValue = new Matrix4f(newValue);
 
-			cachedValue.store(buffer);
+			cachedValue.get(buffer);
 			buffer.rewind();
 
 			RenderSystem.glUniformMatrix4(location, false, buffer);

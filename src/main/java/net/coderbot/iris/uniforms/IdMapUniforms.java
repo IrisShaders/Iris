@@ -11,10 +11,12 @@ import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.joml.Vector3f;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -38,8 +40,8 @@ public final class IdMapUniforms {
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2", offHandSupplier::getIntID)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", mainHandSupplier::getLightValue)
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", offHandSupplier::getLightValue)
-			.uniformVanilla3f(PER_FRAME, "heldBlockLightColor", mainHandSupplier::getLightColor)
-			.uniformVanilla3f(PER_FRAME, "heldBlockLightColor2", offHandSupplier::getLightColor);
+			.uniform3f(PER_FRAME, "heldBlockLightColor", mainHandSupplier::getLightColor)
+			.uniform3f(PER_FRAME, "heldBlockLightColor2", offHandSupplier::getLightColor);
 	}
 
 	/**
@@ -52,7 +54,7 @@ public final class IdMapUniforms {
 		private final boolean applyOldHandLight;
 		private int intID;
 		private int lightValue;
-		private com.mojang.math.Vector3f lightColor;
+		private Vector3f lightColor;
 
 		HeldItemSupplier(InteractionHand hand, Object2IntFunction<NamespacedId> itemIdMap, boolean shouldApplyOldHandLight) {
 			this.hand = hand;
@@ -89,7 +91,7 @@ public final class IdMapUniforms {
 				return;
 			}
 
-			ResourceLocation heldItemId = Registry.ITEM.getKey(heldItem);
+			ResourceLocation heldItemId = BuiltInRegistries.ITEM.getKey(heldItem);
 			intID = itemIdMap.applyAsInt(new NamespacedId(heldItemId.getNamespace(), heldItemId.getPath()));
 
 			IrisItemLightProvider lightProvider = (IrisItemLightProvider) heldItem;
@@ -134,7 +136,7 @@ public final class IdMapUniforms {
 			return lightValue;
 		}
 
-		public com.mojang.math.Vector3f getLightColor() {
+		public Vector3f getLightColor() {
 			return lightColor;
 		}
 	}

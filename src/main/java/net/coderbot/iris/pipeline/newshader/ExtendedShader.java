@@ -29,8 +29,7 @@ import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
-import net.coderbot.iris.vendored.joml.FrustumRayBuilder;
-import net.coderbot.iris.vendored.joml.Vector3f;
+import org.joml.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
@@ -133,11 +132,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	Matrix4f tempMatrix4f = new Matrix4f();
 	Matrix3f tempMatrix3f = new Matrix3f();
-	private static final com.mojang.math.Matrix4f identity;
+	private static final Matrix4f identity;
 
 	static {
-		identity = new com.mojang.math.Matrix4f();
-		identity.setIdentity();
+		identity = new Matrix4f();
+		identity.identity();
 	}
 
 	float[] tempFloats = new float[16];
@@ -249,16 +248,19 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	@Override
 	public void iris$createGeometryShader(ResourceProvider factory, String name) throws IOException {
-		Resource geometry = factory.getResource(new ResourceLocation("minecraft", name + "_geometry.gsh"));
-		if (geometry != null) {
-			this.geometry = Program.compileShader(IrisProgramTypes.GEOMETRY, name, geometry.getInputStream(), geometry.getSourceName(), new GlslPreprocessor() {
-				@Nullable
-				@Override
-				public String applyImport(boolean bl, String string) {
-					return null;
-				}
-			});
-		}
+		 factory.getResource(new ResourceLocation("minecraft", name + "_geometry.gsh")).ifPresent(geometry -> {
+			 try {
+				 this.geometry = Program.compileShader(IrisProgramTypes.GEOMETRY, name, geometry.open(), geometry.sourcePackId(), new GlslPreprocessor() {
+					 @Nullable
+					 @Override
+					 public String applyImport(boolean bl, String string) {
+						 return null;
+					 }
+				 });
+			 } catch (IOException e) {
+				 e.printStackTrace();
+			 }
+		 });
 	}
 
 	public Program getGeometry() {

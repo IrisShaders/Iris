@@ -8,7 +8,7 @@ import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
-import net.coderbot.iris.vendored.joml.Vector2i;
+import org.joml.Vector2i;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 

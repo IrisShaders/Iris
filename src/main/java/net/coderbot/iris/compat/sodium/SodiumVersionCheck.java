@@ -1,6 +1,7 @@
 package net.coderbot.iris.compat.sodium;
 
 import com.google.common.collect.ImmutableList;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.Optional;
 
@@ -11,12 +12,9 @@ public class SodiumVersionCheck {
 	// If you forget to edit the download links you'll cause the support team a bunch
 	// of pain. So don't forget!
 	private static final ImmutableList<AllowedSodiumVersion> ALLOWED_SODIUM_VERSIONS = ImmutableList.of(
-			// Release version
-			AllowedSodiumVersion.exact("0.4.1+build.15",
-					"https://modrinth.com/mod/sodium/version/mc1.18.2-0.4.1"),
-
-			// For use by ReplayMod
-			AllowedSodiumVersion.prefix("0.4.1+replaymod")
+			// Dev version
+		AllowedSodiumVersion.exact("0.4.11+build.26",
+					"https://modrinth.com/mod/sodium/version/mc1.19.4-0.4.11")
 	);
 
 	public static String getDownloadLink() {

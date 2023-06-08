@@ -1,5 +1,6 @@
 package net.coderbot.iris.gui.element.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
@@ -7,17 +8,19 @@ import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.shaderpack.option.menu.OptionMenuLinkElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.navigation.ScreenAxis;
+import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+
+
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
 
 public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElement> {
-	private static final Component ARROW = new TextComponent(">");
+	private static final Component ARROW = Component.literal(">");
 
 	private final String targetScreenId;
 	private final MutableComponent label;
@@ -30,7 +33,7 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 		super(element);
 
 		this.targetScreenId = element.targetScreenId;
-		this.label = GuiUtil.translateOrDefault(new TextComponent(element.targetScreenId), "screen." + element.targetScreenId);
+		this.label = GuiUtil.translateOrDefault(Component.literal(element.targetScreenId), "screen." + element.targetScreenId);
 	}
 
 	@Override
@@ -39,13 +42,13 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 	}
 
 	@Override
-	public void render(PoseStack poseStack, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+	public void render(PoseStack poseStack, int mouseX, int mouseY, float tickDelta, boolean hovered) {
 		GuiUtil.bindIrisWidgetsTexture();
-		GuiUtil.drawButton(poseStack, x, y, width, height, hovered, false);
+		GuiUtil.drawButton(poseStack, bounds.position().x(), bounds.position().y(), bounds.width(), bounds.height(), hovered || isFocused(), false);
 
 		Font font = Minecraft.getInstance().font;
 
-		int maxLabelWidth = width - 9;
+		int maxLabelWidth = bounds.width() - 9;
 
 		if (font.width(this.label) > maxLabelWidth) {
 			this.isLabelTrimmed = true;
@@ -57,8 +60,8 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 
 		int labelWidth = font.width(this.trimmedLabel);
 
-		font.drawShadow(poseStack, this.trimmedLabel, x + (int)(width * 0.5) - (int)(labelWidth * 0.5) - (int)(0.5 * Math.max(labelWidth - (width - 18), 0)), y + 7, 0xFFFFFF);
-		font.draw(poseStack, ARROW, (x + width) - 9, y + 7, 0xFFFFFF);
+		font.drawShadow(poseStack, this.trimmedLabel, bounds.getCenterInAxis(ScreenAxis.HORIZONTAL) - (int)(labelWidth * 0.5) - (int)(0.5 * Math.max(labelWidth - (bounds.width() - 18), 0)), bounds.position().y() + 7, 0xFFFFFF);
+		font.draw(poseStack, ARROW, bounds.getBoundInDirection(ScreenDirection.RIGHT) - 9, bounds.position().y() + 7, 0xFFFFFF);
 
 		if (hovered && this.isLabelTrimmed) {
 			// To prevent other elements from being drawn on top of the tooltip
@@ -78,6 +81,18 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 	}
 
 	@Override
+	public boolean keyPressed(int keyCode, int pInt1, int pInt2) {
+		if (keyCode == InputConstants.KEY_RETURN) {
+			this.navigation.open(targetScreenId);
+			GuiUtil.playButtonClickSound();
+
+			return true;
+		}
+
+		return super.keyPressed(keyCode, pInt1, pInt2);
+	}
+
+	@Override
 	public Optional<Component> getCommentTitle() {
 		return Optional.of(this.label);
 	}
@@ -85,6 +100,6 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 	@Override
 	public Optional<Component> getCommentBody() {
 		String translation = "screen." + this.targetScreenId + ".comment";
-		return Optional.ofNullable(I18n.exists(translation) ? new TranslatableComponent(translation) : null);
+		return Optional.ofNullable(I18n.exists(translation) ? Component.translatable(translation) : null);
 	}
 }

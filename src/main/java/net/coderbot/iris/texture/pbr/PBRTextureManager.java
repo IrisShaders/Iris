@@ -1,7 +1,6 @@
 package net.coderbot.iris.texture.pbr;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
@@ -14,12 +13,16 @@ import net.coderbot.iris.texture.pbr.loader.PBRTextureLoader.PBRTextureConsumer;
 import net.coderbot.iris.texture.pbr.loader.PBRTextureLoaderRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.Dumpable;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class PBRTextureManager {
 	public static final PBRTextureManager INSTANCE = new PBRTextureManager();
 
-	public static final boolean DEBUG = System.getProperty("iris.pbr.debug") != null;
 
 	// TODO: Figure out how to merge these two.
 	private static Runnable normalTextureChangeListener;
@@ -80,7 +83,7 @@ public class PBRTextureManager {
 			Class<? extends AbstractTexture> clazz = texture.getClass();
 			PBRTextureLoader loader = PBRTextureLoaderRegistry.INSTANCE.getLoader(clazz);
 			if (loader != null) {
-				int previousTextureBinding = RenderSystem.getTextureId(GlStateManagerAccessor.getActiveTexture());
+				int previousTextureBinding = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 				consumer.clear();
 				try {
 					loader.load(texture, Minecraft.getInstance().getResourceManager(), consumer);
@@ -99,6 +102,33 @@ public class PBRTextureManager {
 		PBRTextureHolder holder = holders.remove(id);
 		if (holder != null) {
 			closeHolder(holder);
+		}
+	}
+
+	public void dumpTextures(Path path) {
+		for (PBRTextureHolder holder : holders.values()) {
+			if (holder != defaultHolder) {
+				dumpHolder(holder, path);
+			}
+		}
+	}
+
+	private void dumpHolder(PBRTextureHolder holder, Path path) {
+		AbstractTexture normalTexture = holder.getNormalTexture();
+		AbstractTexture specularTexture = holder.getSpecularTexture();
+		if (normalTexture != defaultNormalTexture && normalTexture instanceof PBRDumpable dumpable) {
+			dumpTexture(dumpable, dumpable.getDefaultDumpLocation(), path);
+		}
+		if (specularTexture != defaultSpecularTexture && specularTexture instanceof PBRDumpable dumpable) {
+			dumpTexture(dumpable, dumpable.getDefaultDumpLocation(), path);
+		}
+	}
+
+	private static void dumpTexture(Dumpable dumpable, ResourceLocation id, Path path) {
+		try {
+			dumpable.dumpContents(id, path);
+		} catch (IOException e) {
+			Iris.logger.error("Failed to dump texture {}", id, e);
 		}
 	}
 

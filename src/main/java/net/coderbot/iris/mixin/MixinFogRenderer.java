@@ -6,6 +6,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.Holder;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.FogType;
@@ -20,8 +21,7 @@ public class MixinFogRenderer {
 	@Shadow private static float fogRed, fogGreen, fogBlue;
 
 	@Inject(method = "setupFog", at = @At("HEAD"))
-	private static void iris$setupLegacyWaterFog(Camera camera, FogRenderer.FogMode fogMode, float f, boolean bl,
-												 CallbackInfo ci) {
+	private static void iris$setupLegacyWaterFog(Camera camera, FogRenderer.FogMode $$1, float $$2, boolean $$3, float $$4, CallbackInfo ci) {
 		if (camera.getFluidInCamera() == FogType.WATER) {
 			Entity entity = camera.getEntity();
 
@@ -32,7 +32,7 @@ public class MixinFogRenderer {
 				density -= localPlayer.getWaterVision() * localPlayer.getWaterVision() * 0.03F;
 				Holder<Biome> biome = localPlayer.level.getBiome(localPlayer.blockPosition());
 
-				if (Biome.getBiomeCategory(biome) == Biome.BiomeCategory.SWAMP) {
+				if (biome.is(BiomeTags.HAS_CLOSER_WATER_FOG)) {
 					density += 0.005F;
 				}
 			}

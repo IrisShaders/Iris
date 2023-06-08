@@ -17,7 +17,9 @@ public class VanillaTransformer {
 		// this happens before common to make sure the renaming of attributes is done on
 		// attribute inserted by this
 		if (parameters.inputs.hasOverlay()) {
-			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
+			if (!parameters.inputs.isText()) {
+				AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
+			}
 			AttributeTransformer.patchEntityId(t, tree, root, parameters);
 		}
 
@@ -73,6 +75,11 @@ public class VanillaTransformer {
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 						"in vec4 iris_Color;");
 			}
+		} else if (parameters.inputs.isGlint()) {
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+				"uniform float iris_GlintAlpha;");
+			// iris_ColorModulator should be applied regardless of the alpha test state.
+			root.replaceReferenceExpressions(t, "gl_Color", "vec4(iris_ColorModulator.rgb, iris_ColorModulator.a * iris_GlintAlpha)");
 		} else {
 			// iris_ColorModulator should be applied regardless of the alpha test state.
 			root.rename("gl_Color", "iris_ColorModulator");

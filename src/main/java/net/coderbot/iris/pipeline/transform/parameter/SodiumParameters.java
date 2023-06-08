@@ -6,10 +6,9 @@ import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
 import net.coderbot.iris.pipeline.transform.Patch;
-import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 
-public class SodiumParameters extends Parameters {
+public class SodiumParameters extends GeometryInfoParameters {
 	public final ShaderAttributeInputs inputs;
 	public final float positionScale;
 	public final float positionOffset;
@@ -24,8 +23,8 @@ public class SodiumParameters extends Parameters {
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
 			AlphaTest alpha,
 			ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale) {
-		super(patch, textureMap);
+			float positionScale, float positionOffset, float textureScale, boolean hasGeometry) {
+		super(patch, textureMap, hasGeometry);
 		this.inputs = inputs;
 		this.positionScale = positionScale;
 		this.positionOffset = positionOffset;

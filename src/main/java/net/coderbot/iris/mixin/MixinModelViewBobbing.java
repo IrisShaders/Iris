@@ -1,8 +1,8 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix3f;
-import com.mojang.math.Matrix4f;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,7 +42,7 @@ public class MixinModelViewBobbing {
 		if (!areShadersOn) return stack;
 
 		stack.pushPose();
-		stack.last().pose().setIdentity();
+		stack.last().pose().identity();
 
 		return stack;
 	}
@@ -51,11 +51,11 @@ public class MixinModelViewBobbing {
 			at = @At(value = "INVOKE",
 					target = "Lcom/mojang/blaze3d/vertex/PoseStack;last()Lcom/mojang/blaze3d/vertex/PoseStack$Pose;"),
 			slice = @Slice(from = @At(value = "INVOKE",
-					       target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lcom/mojang/math/Matrix4f;)V")))
+					       target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lorg/joml/Matrix4f;)V")))
 	private PoseStack.Pose iris$saveBobbing(PoseStack stack) {
 		if (!areShadersOn) return stack.last();
 
-		bobbingEffectsModel = stack.last().pose().copy();
+		bobbingEffectsModel = new Matrix4f(stack.last().pose());
 
 		stack.popPose();
 
@@ -64,11 +64,11 @@ public class MixinModelViewBobbing {
 
 	@Inject(method = "renderLevel",
 			at = @At(value = "INVOKE",
-					target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lcom/mojang/math/Matrix4f;)V"))
+					target = "Lnet/minecraft/client/renderer/GameRenderer;resetProjectionMatrix(Lorg/joml/Matrix4f;)V"))
 	private void iris$applyBobbingToModelView(float tickDelta, long limitTime, PoseStack matrix, CallbackInfo ci) {
 		if (!areShadersOn) return;
 
-		matrix.last().pose().multiply(bobbingEffectsModel);
+		matrix.last().pose().mul(bobbingEffectsModel);
 
 		bobbingEffectsModel = null;
 	}
