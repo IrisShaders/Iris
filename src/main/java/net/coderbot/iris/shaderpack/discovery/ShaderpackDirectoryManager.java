@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack.discovery;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.PackMeta;
 
 import java.io.IOException;
 import java.net.URI;
@@ -55,7 +56,7 @@ public class ShaderpackDirectoryManager {
 		}
 	}
 
-	public Collection<String> enumerate() throws IOException {
+	public Collection<PackMeta> enumerate() throws IOException {
 		// Make sure the list is sorted since not all OSes sort the list of files in the directory.
 		// Case-insensitive sorting is the most intuitive for the user, but we then sort naturally
 		// afterwards so that we don't alternate cases weirdly in the sorted list.
@@ -63,16 +64,16 @@ public class ShaderpackDirectoryManager {
 		// We also ignore chat formatting characters when sorting - some shader packs include chat
 		// formatting in the file name so that they have fancy text when displayed in the shaders list.
 		Comparator<String> baseComparator = String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder());
-		Comparator<String> comparator = (a, b) -> {
-			a = removeFormatting(a);
-			b = removeFormatting(b);
+		Comparator<PackMeta> comparator = (a, b) -> {
+			String aS = removeFormatting(a.readableName());
+			String bS = removeFormatting(b.readableName());
 
-			return baseComparator.compare(a, b);
+			return baseComparator.compare(aS, bS);
 		};
 
 		try (Stream<Path> list = Files.list(root)) {
 			return list.filter(Iris::isValidToShowPack)
-				.map(path -> path.getFileName().toString())
+				.map(Iris::getPackMeta)
 				.sorted(comparator).collect(Collectors.toList());
 		}
 	}

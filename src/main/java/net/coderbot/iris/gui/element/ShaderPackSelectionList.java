@@ -1,13 +1,17 @@
 package net.coderbot.iris.gui.element;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.coderbot.iris.shaderpack.PackMeta;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
@@ -46,7 +50,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	public void refresh() {
 		this.clearEntries();
 
-		Collection<String> names;
+		Collection<PackMeta> names;
 
 		try {
 			names = Iris.getShaderpacksDirectoryManager().enumerate();
@@ -80,7 +84,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		int index = 0;
 
-		for (String name : names) {
+		for (PackMeta name : names) {
 			index++;
 			addPackEntry(index, name);
 		}
@@ -88,11 +92,11 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		this.addLabelEntries(PACK_LIST_LABEL);
 	}
 
-	public void addPackEntry(int index, String name) {
-		ShaderPackEntry entry = new ShaderPackEntry(index, this, name);
+	public void addPackEntry(int index, PackMeta meta) {
+		ShaderPackEntry entry = new ShaderPackEntry(index, this, meta);
 
 		Iris.getIrisConfig().getShaderPackName().ifPresent(currentPackName -> {
-			if (name.equals(currentPackName)) {
+			if (meta.readableName().equals(currentPackName)) {
 				setSelected(entry);
 				setApplied(entry);
 			}
@@ -111,7 +115,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		for (int i = 0; i < getItemCount(); i++) {
 			BaseEntry entry = getEntry(i);
 
-			if (entry instanceof ShaderPackEntry && ((ShaderPackEntry)entry).packName.equals(name)) {
+			if (entry instanceof ShaderPackEntry && ((ShaderPackEntry)entry).packMeta.equals(name)) {
 				setSelected(entry);
 
 				return;
@@ -135,13 +139,13 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		protected BaseEntry() {}
 	}
 
-	public static class ShaderPackEntry extends BaseEntry {
-		private final String packName;
+	public class ShaderPackEntry extends BaseEntry {
+		private final PackMeta packMeta;
 		private final ShaderPackSelectionList list;
 		private final int index;
 
-		public ShaderPackEntry(int index, ShaderPackSelectionList list, String packName) {
-			this.packName = packName;
+		public ShaderPackEntry(int index, ShaderPackSelectionList list, PackMeta packMeta) {
+			this.packMeta = packMeta;
 			this.list = list;
 			this.index = index;
 		}
@@ -155,20 +159,21 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 
 		public String getPackName() {
-			return packName;
+			return packMeta.readableName() + (packMeta.version() != null ? packMeta.version().getFriendlyString() : "");
 		}
 
 		// Appears to be some accessibility thing
 		@Override
 		public Component getNarration() {
-			return new TranslatableComponent("narrator.select", packName);
+			return new TranslatableComponent("narrator.select", packMeta);
 		}
 
 		@Override
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			Font font = Minecraft.getInstance().font;
 			int color = 0xFFFFFF;
-			String name = packName;
+			String name = Screen.hasShiftDown() ? packMeta.pathFileName() : packMeta.readableName() + (packMeta.version() != null ? " " + packMeta.version().getFriendlyString() : "");
+			GuiUtil.bindIrisWidgetsTexture();
 
 			boolean shadersEnabled = list.getTopButtonRow().shadersEnabled;
 
@@ -218,6 +223,10 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			}
 
 			return didAnything;
+		}
+
+		public String getFileName() {
+			return packMeta.pathFileName();
 		}
 	}
 

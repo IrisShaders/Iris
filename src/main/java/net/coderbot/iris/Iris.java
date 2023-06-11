@@ -14,6 +14,7 @@ import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
+import net.coderbot.iris.shaderpack.PackMeta;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.discovery.ShaderpackDirectoryManager;
@@ -23,9 +24,7 @@ import net.coderbot.iris.shaderpack.option.values.MutableOptionValues;
 import net.coderbot.iris.shaderpack.option.values.OptionValues;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.api.Version;
+import net.fabricmc.loader.api.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -52,6 +51,7 @@ import java.util.Properties;
 import java.util.stream.Stream;
 import java.util.zip.ZipError;
 import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 public class Iris {
 	public static final String MODID = "iris";
@@ -499,7 +499,7 @@ public class Iris {
 	}
 
 	public static boolean isValidToShowPack(Path pack) {
-		return Files.isDirectory(pack) || pack.toString().endsWith(".zip");
+		return isValidShaderpack(pack);
 	}
 
 	public static boolean isValidShaderpack(Path pack) {
@@ -525,13 +525,8 @@ public class Iris {
 		}
 
 		if (pack.toString().endsWith(".zip")) {
-			try (FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader())) {
-				Path root = zipSystem.getRootDirectories().iterator().next();
-				try (Stream<Path> stream = Files.walk(root)) {
-					return stream
-							.filter(Files::isDirectory)
-							.anyMatch(path -> path.endsWith("shaders"));
-				}
+			try (ZipFile zipFile = new ZipFile(pack.toFile())) {
+				return zipFile.getEntry("shaders/") != null;
 			} catch (ZipError zipError) {
 				// Java 8 seems to throw a ZipError instead of a subclass of IOException
 				Iris.logger.warn("The ZIP at " + pack + " is corrupt");
@@ -542,6 +537,54 @@ public class Iris {
 
 		return false;
 	}
+
+	public static PackMeta getPackMeta(Path pack) {
+		String packName = pack.getFileName().toString();
+		Version packVersion = null;
+		if (Files.isDirectory(pack)) {
+			// Sometimes the shaderpack directory itself can be
+			// identified as a shader pack due to it containing
+			// folders which contain "shaders" folders, this is
+			// necessary to check against that
+			if (pack.equals(getShaderpacksDirectory())) {
+				return null;
+			}
+
+			if (Files.exists(pack.resolve("shaders").resolve("pack.meta"))) {
+				try (InputStream is = Files.newInputStream(pack.resolve("shaders").resolve("pack.meta"))) {
+					Properties properties = new Properties();
+					properties.load(is);
+					packName = properties.getProperty("name");
+					if (properties.containsKey("version")) {
+						packVersion = SemanticVersion.parse(properties.getProperty("version"));
+					}
+				} catch (IOException | VersionParsingException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+		} else {
+			try (ZipFile zipFile = new ZipFile(pack.toFile())) {
+				if (zipFile.getEntry("shaders/pack.meta") != null) {
+					try (InputStream is = zipFile.getInputStream(zipFile.getEntry("shaders/pack.meta"))) {
+						Properties properties = new Properties();
+						properties.load(is);
+						packName = properties.getProperty("name");
+						if (properties.containsKey("version")) {
+							packVersion = SemanticVersion.parse(properties.getProperty("version"));
+						}
+					} catch (IOException | VersionParsingException e) {
+						throw new RuntimeException(e);
+					}
+                }
+			} catch (ZipException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return new PackMeta(pack.getFileName().toString(), packName, packVersion);
+    }
 
 	public static Map<String, String> getShaderPackOptionQueue() {
 		return shaderPackOptionQueue;

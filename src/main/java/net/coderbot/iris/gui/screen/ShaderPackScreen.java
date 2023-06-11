@@ -537,7 +537,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		ShaderPackSelectionList.ShaderPackEntry entry = (ShaderPackSelectionList.ShaderPackEntry)base;
 		this.shaderPackList.setApplied(entry);
 
-		String name = entry.getPackName();
+		String name = entry.getFileName();
 
 		// If the pack is being changed, clear pending options from the previous pack to
 		// avoid possible undefined behavior from applying one pack's options to another pack
