@@ -13,6 +13,6 @@ Known potential issues:
 
 ❌ SEUS PTGI HRR Test 3 currently has major graphical issues (SEUS PTGI HRR 2.1 is compatible).
 
-⬇️ Download the release here: https://irisshaders.net/download.html
+⬇️ Download the release here: https://irisshaders.dev/download.html
 
 A more detailed changelog is available for those interested: https://github.com/IrisShaders/Iris/blob/trunk/docs/changelogs/1.2.3/full.md

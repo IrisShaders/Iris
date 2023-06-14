@@ -24,7 +24,7 @@ Iris Shaders is a brand new work-in-progress shaders mod for the Fabric mod load
 
 This method is recommended for users who want to play with **Iris shaders only, without any other mods**.
 
-1. Go to the [Iris shaders download page](https://irisshaders.net/download).
+1. Go to the [Iris shaders download page](https://irisshaders.dev/download).
 
 2. Click on "Download universal JAR".
 3. Save the file anywhere on your computer and run it.
@@ -210,6 +210,6 @@ If you have any suggestions in regards to this specific guide, contact me on Dis
 
 ### Useful Links
 
-- [Iris Shaders official website](https://irisshaders.net/)
+- [Iris Shaders official website](https://irisshaders.dev/)
 - [Iris Shaders Github repository]( https://github.com/IrisShaders/Iris/)
 - [Website for Sodium and other projects by JellySquid](https://jellysquid.me/projects)

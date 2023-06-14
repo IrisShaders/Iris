@@ -9,7 +9,7 @@ This includes, but is not limited to:
 All versions of Kappa, Nostalgia, and Chocapic,
 as well as Simpliccimus, Vanilla+, SEUS PTGI GFME, and Photon!
 
-**⬇ Download the release here: https://irisshaders.net/download.html**
+**⬇ Download the release here: https://irisshaders.dev/download.html**
 
 A more detailed changelog is available for those interested: <https://github.com/IrisShaders/Iris/blob/trunk/docs/changelogs/1.5.0/full.md>
 
