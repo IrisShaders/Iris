@@ -30,18 +30,25 @@ This method is recommended for users who want to play with **Iris shaders only, 
 3. Save the file anywhere on your computer and run it.
    Java is required to run the installer. If your system doesn't have Java installed, download and install Java from [Adoptium Java downloads](https://adoptium.net/).
    If you are using Windows and are still unable to run the installer, try using [Jarfix](https://johann.loefflmann.net/en/software/jarfix/index.html).
+
 4. The following window should open:
+ 
    ![installer](guide-resources/installer.png)
 5. Under the "Select game version" dropdown, select your preferred Minecraft version.
 6. Click Install.
-7. If you get the following prompt:
+7. If you get the following prompt, select **Microsoft Store / Xbox** if you have updated to the new launcher. Otherwise, select **Standalone (Win32)**:
+   
    ![launcherprompt](guide-resources/launcherprompt.png)
-   Select **Microsoft Store / Xbox** if you have updated to the new launcher. Otherwise, select **Standalone (Win32)**.
-8. You should see the button say "Completed!" below the full progress bar:
+   
+9. You should see the button say "Completed!" below the full progress bar:
+    
    ![success](guide-resources/success.png)
-9. Close the installer.
-10. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):
+   
+11. Close the installer.
+12. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):
+    
     ![profile](guide-resources/profile.png)
+    
     Play the game with this profile selected to run Iris Shaders!
 
 ### For use with other Fabric mods
@@ -52,14 +59,18 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
 1. Follow steps 1 to 5 under the [For standalone use](#for-standalone-use) section.
 
 2. Under "Installation type", select **"Fabric install"**:
+   
    ![check](guide-resources/check.png)
+   
 3. Follow steps 6 to 9 under the [For standalone use](#for-standalone-use) section.
 4. Place your other Fabric mods in the mods folder. The location of the mods folder depends on your operating system:
     - Windows: `%APPDATA%\.minecraft\mods`
     - Linux: `~/.minecraft/mods`
     - MacOS: `~/Library/Application Support/minecraft/mods`
 5. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):
+   
    ![fabricprofile](guide-resources/fabricprofile.png)
+   
    Play the game with this profile selected to run the game with Iris Shaders and the rest of your Fabric mods!
 
 ### Manual installation
@@ -74,13 +85,17 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    Java is required to run the installer. If your system doesn't have Java installed, download and install Java from [Adoptium Java downloads](https://adoptium.net/).
    If you are using Windows and are still unable to run the installer, try using [Jarfix](https://johann.loefflmann.net/en/software/jarfix/index.html).
 4. The following window should open:
+   
    ![fabricinstaller](guide-resources/fabricinstaller.png)
-5. Under the "Minecraft Version" dropdown, select your preferred Minecraft version.
-6. Click Install.
-7. You should get the following prompt:
+   
+6. Under the "Minecraft Version" dropdown, select your preferred Minecraft version.
+7. Click Install.
+8. You should get the following prompt:
+   
    ![fabricsuccess](guide-resources/fabricsuccess.png)
+
    Click OK and close the installer.
-8. Download Iris and Sodium from the following website:
+9. Download Iris and Sodium from the following website:
     - Iris Shaders: [Modrinth](https://modrinth.com/mod/iris)
     - Sodium: [Modrinth](https://modrinth.com/mod/sodium)
 
@@ -93,12 +108,14 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
    | 1.19.2       | 1.19.2-0.4.4 |
    | 1.19.3       | 1.19.3-0.4.9 |
    | 1.19.4       | 1.19.4-0.4.10 |
-9. Place the downloaded files (and optionally your other Fabric mods) into the mods folder. The location of the mods folder depends on  your operating system:
+10. Place the downloaded files (and optionally your other Fabric mods) into the mods folder. The location of the mods folder depends on  your operating system:
     - Windows: `%APPDATA%\.minecraft\mods`
     - Linux: `~/.minecraft/mods`
     - MacOS: `~/Library/Application Support/minecraft/mods`
-10. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):
+11. Next time when you open the Minecraft launcher, you should have the following profile (the version numbers may be different):
+    
     ![fabricprofile](guide-resources/fabricprofile.png)
+    
     Play the game with this profile selected to run the game with Iris Shaders and the rest of your Fabric mods!
 
 ## Using Iris
