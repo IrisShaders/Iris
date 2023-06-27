@@ -6,6 +6,8 @@
   "iris.shaders.debug.disabled": "调试已禁用。",
   "iris.shaders.debug.failure": "无法启用调试，你的电脑不支持调试功能。",
   "iris.shaders.debug.restart": "没有调试环境，请重启以启用调试。",
+  "iris.load.failure.shader": "光影加载失败！请将错误报告给光影开发人员。",
+  "iris.load.failure.generic": "Iris在尝试加载光影时遇到了一个问题；请向Iris开发者报告。",
   "iris.shaders.ssbofailure": "光影请求了你的 GPU 所不支持的特定功能（SSBO），可能无法正常工作。",
   "iris.keybind.reload": "重新加载光影包",
   "iris.keybind.shaderPackSelection": "光影包选择界面",
@@ -59,6 +61,8 @@
   "options.iris.shadowDistance.enabled": "允许更改阴影的最远距离。超出此距离的地形和实体不会投射阴影。降低阴影距离可以显著提高性能。",
   "options.iris.shadowDistance.disabled": "你不能改变当前的光影包已经为阴影设置的渲染距离。",
   "options.iris.shadowDistance.sodium_tooltip": "阴影渲染距离控制在阴影通道中可以渲染到多远的地形。更短的距离意味着将渲染更少的地形，从而提高帧率。在明确指定了阴影渲染距离的光影包上无法更改此选项。实际阴影渲染的距离受“渲染距离”设置的限制。",
+  "options.iris.colorSpace": "色彩空间",
+  "options.iris.colorSpace.sodium_tooltip": "将屏幕转换成的色彩空间。在光影之上工作。如果不确定，请使用 SRGB。",
   "options.iris.gui.hide": "隐藏 GUI",
   "options.iris.gui.show": "显示 GUI",
 
