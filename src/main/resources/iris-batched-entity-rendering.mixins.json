@@ -10,6 +10,7 @@
     "MixinBufferBuilder_SegmentRendering",
     "MixinRenderBuffers",
     "MixinRenderType",
+    "MixinRenderType_ArmorTrims",
     "MixinSheets",
     "MixinDebugScreenOverlay",
     "MixinFishingHookRenderer",

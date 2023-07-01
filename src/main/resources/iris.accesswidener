@@ -5,6 +5,7 @@ accessible  class   com/mojang/blaze3d/platform/GlStateManager$TextureState
 accessible  class   com/mojang/blaze3d/platform/GlStateManager$ColorMask
 accessible  class   com/mojang/blaze3d/platform/GlStateManager$DepthState
 accessible  class   net/minecraft/client/renderer/RenderStateShard$TransparencyStateShard
+accessible  class   net/minecraft/client/renderer/RenderType$CompositeRenderType
 accessible  class   net/minecraft/client/renderer/RenderType$CompositeState
 accessible  class   net/minecraft/client/renderer/FogRenderer$FogData
 accessible  class   net/minecraft/client/renderer/texture/Stitcher$Holder
