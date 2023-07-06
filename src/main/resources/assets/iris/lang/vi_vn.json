@@ -17,7 +17,7 @@
   "iris.sodium.failure.download": "Tải Sodium",
   "iris.sodium.failure.reason.notFound": "Iris yêu cầu Sodium để có hiệu suất tốt, nhưng Sodium chưa được cài đặt. Vui lòng tải xuống Sodium, đặt nó vào thư mục mod của bạn và khởi chạy lại trò chơi.",
   "iris.sodium.failure.reason.incompatible": "Iris yêu cầu Sodium để có hiệu suất tốt, nhưng một phiên bản không tương thích đã được tìm thấy. Vui lòng tải xuống phiên bản đúng của Sodium, đặt nó vào thư mục mod của bạn, xóa phiên bản không chính xác và khởi chạy lại trò chơi.",
-  "iris.nec.failure.title": "[%s] Not Enough Crashes bị phát hiện!",
+  "iris.nec.failure.title": "[%s] đã phát hiện Not Enough Crashes!",
   "iris.nec.failure.description": "Not Enough Crashes có thể làm trò chơi bị hỏng nghiêm trọng trong khi xử lý sự cố và không cung cấp kết quả chính xác.\nCác lựa chọn thay thế tốt là MixinTrace và Crafty Crashes, có thể xác định nguyên nhân gây ra sự cố một cách đáng tin cậy hơn và không đặt trò chơi ở trạng thái không hợp lệ.",
   "iris.unsupported.irisorpc": "Iris hoặc PC của bạn",
   "iris.unsupported.iris": "Iris",
