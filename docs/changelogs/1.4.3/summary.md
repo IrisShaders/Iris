@@ -5,7 +5,7 @@ This release also adds some debug features.
 
 **This will be the last 1.16.5 release.**
 
-**⬇ Download the release here: https://irisshaders.net/download.html**
+**⬇ Download the release here: https://irisshaders.dev/download.html**
 
 A more detailed changelog is available for those interested: <https://github.com/IrisShaders/Iris/blob/trunk/docs/changelogs/1.4.3/full.md>
 

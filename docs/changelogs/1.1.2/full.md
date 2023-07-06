@@ -1,6 +1,6 @@
 # Iris 1.1.2 Changelog (Full)
 
-Iris 1.1.2 has been released for Minecraft 1.16.5 and Minecraft 1.17.1! You can download the update at https://irisshaders.net/download.html, or read the changelog below. A shorter and less detailed changelog [is also available](https://github.com/IrisShaders/Iris/blob/trunk/docs/changelogs/1.1.2/trimmed.md).
+Iris 1.1.2 has been released for Minecraft 1.16.5 and Minecraft 1.17.1! You can download the update at https://irisshaders.dev/download.html, or read the changelog below. A shorter and less detailed changelog [is also available](https://github.com/IrisShaders/Iris/blob/trunk/docs/changelogs/1.1.2/trimmed.md).
 
 This update includes six weeks of bug fixes and other improvements, including some nice performance improvements! It's a fairly large update, and we recommend that everyone using previous versions of Iris update to this new version.
 
