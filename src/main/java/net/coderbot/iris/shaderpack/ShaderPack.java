@@ -283,7 +283,7 @@ public class ShaderPack {
 			return source;
 		};
 
-		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + dimensionMap.getOrDefault(new NamespacedId("iris", "base"), "")), sourceProvider, shaderProperties, this);
+		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + dimensionMap.getOrDefault(new NamespacedId("*", "*"), "")), sourceProvider, shaderProperties, this);
 
 		this.overrides = new HashMap<>();
 
@@ -388,6 +388,9 @@ public class ShaderPack {
 			key = key.substring(keyPrefix.length());
 
 			for (String part : value.split("\\s+")) {
+				if (part.equals("*")) {
+					overrides.put(new NamespacedId("*", "*"), key);
+				}
 				overrides.put(new NamespacedId(part), key);
 			}
 		});
