@@ -1,6 +1,9 @@
 package net.coderbot.batchedentityrendering.impl.ordering;
 
+import net.coderbot.batchedentityrendering.impl.TransparencyType;
 import net.minecraft.client.renderer.RenderType;
+
+import java.util.List;
 
 public interface RenderOrderManager {
     void begin(RenderType type);
@@ -8,5 +11,8 @@ public interface RenderOrderManager {
     boolean maybeStartGroup();
     void endGroup();
     void reset();
-    Iterable<RenderType> getRenderOrder();
+
+	void resetType(TransparencyType type);
+
+	List<RenderType> getRenderOrder();
 }

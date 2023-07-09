@@ -34,13 +34,13 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		MemoryUtil.memCopy(this.writePointer - STRIDE * 4, this.writePointer, STRIDE * 4);
 
 		// Now flip vertex normals
-		int packedNormal = MemoryUtil.memGetInt(this.writePointer + 32);
+		int packedNormal = MemoryUtil.memGetInt(this.writePointer + 28);
 		int inverted = NormalHelper.invertPackedNormal(packedNormal);
 
-		MemoryUtil.memPutInt(this.writePointer + 32, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE * 2, inverted);
-		MemoryUtil.memPutInt(this.writePointer + 32 + STRIDE * 3, inverted);
+		MemoryUtil.memPutInt(this.writePointer + 28, inverted);
+		MemoryUtil.memPutInt(this.writePointer + 28 + STRIDE, inverted);
+		MemoryUtil.memPutInt(this.writePointer + 28 + STRIDE * 2, inverted);
+		MemoryUtil.memPutInt(this.writePointer + 28 + STRIDE * 3, inverted);
 
 		// We just wrote 4 vertices, advance by 4
 		for (int i = 0; i < 4; i++) {
@@ -56,7 +56,7 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		uSum += u;
 		vSum += v;
 
-		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, contextHolder.blockId, contextHolder.renderType, chunkId, ExtendedDataHelper.computeMidBlock(posX, posY, posZ, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
+		this.writeQuadInternal(posX, posY, posZ, color, u, v, light, contextHolder.blockId, contextHolder.renderType, chunkId, contextHolder.ignoreMidBlock ? 0 : ExtendedDataHelper.computeMidBlock(posX, posY, posZ, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 	}
 
 	private void writeQuadInternal(float posX, float posY, float posZ, int color,
@@ -83,9 +83,9 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 		// block ID: We only set the first 2 values, any legacy shaders using z or w will get filled in based on the GLSL spec
 		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Vertex_format
 		// TODO: can we pack this into one short?
-		MemoryUtil.memPutShort(i + 36, materialId);
-		MemoryUtil.memPutShort(i + 38, renderType);
-		MemoryUtil.memPutInt(i + 40, packedMidBlock);
+		MemoryUtil.memPutShort(i + 32, materialId);
+		MemoryUtil.memPutShort(i + 34, renderType);
+		MemoryUtil.memPutInt(i + 36, packedMidBlock);
 
 		if (vertexCount == 4) {
 			vertexCount = 0;
@@ -120,15 +120,18 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 			uSum *= 0.25f;
 			vSum *= 0.25f;
 
-			MemoryUtil.memPutFloat(i + 20, uSum);
-			MemoryUtil.memPutFloat(i + 20 - STRIDE, uSum);
-			MemoryUtil.memPutFloat(i + 20 - STRIDE * 2, uSum);
-			MemoryUtil.memPutFloat(i + 20 - STRIDE * 3, uSum);
+			short midU = XHFPModelVertexType.encodeBlockTexture(uSum);
+			short midV = XHFPModelVertexType.encodeBlockTexture(vSum);
 
-			MemoryUtil.memPutFloat(i + 24, vSum);
-			MemoryUtil.memPutFloat(i + 24 - STRIDE, vSum);
-			MemoryUtil.memPutFloat(i + 24 - STRIDE * 2, vSum);
-			MemoryUtil.memPutFloat(i + 24 - STRIDE * 3, vSum);
+			MemoryUtil.memPutShort(i + 20, midU);
+			MemoryUtil.memPutShort(i + 20 - STRIDE, midU);
+			MemoryUtil.memPutShort(i + 20 - STRIDE * 2, midU);
+			MemoryUtil.memPutShort(i + 20 - STRIDE * 3, midU);
+
+			MemoryUtil.memPutShort(i + 22, midV);
+			MemoryUtil.memPutShort(i + 22 - STRIDE, midV);
+			MemoryUtil.memPutShort(i + 22 - STRIDE * 2, midV);
+			MemoryUtil.memPutShort(i + 22 - STRIDE * 3, midV);
 
 			uSum = 0;
 			vSum = 0;
@@ -141,17 +144,17 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
 			NormalHelper.computeFaceNormal(normal, quad);
 			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
-			MemoryUtil.memPutInt(i + 32, packedNormal);
-			MemoryUtil.memPutInt(i + 32 - STRIDE, packedNormal);
-			MemoryUtil.memPutInt(i + 32 - STRIDE * 2, packedNormal);
-			MemoryUtil.memPutInt(i + 32 - STRIDE * 3, packedNormal);
+			MemoryUtil.memPutInt(i + 28, packedNormal);
+			MemoryUtil.memPutInt(i + 28 - STRIDE, packedNormal);
+			MemoryUtil.memPutInt(i + 28 - STRIDE * 2, packedNormal);
+			MemoryUtil.memPutInt(i + 28 - STRIDE * 3, packedNormal);
 
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, quad);
 
-			MemoryUtil.memPutInt(i + 28, tangent);
-			MemoryUtil.memPutInt(i + 28 - STRIDE, tangent);
-			MemoryUtil.memPutInt(i + 28 - STRIDE * 2, tangent);
-			MemoryUtil.memPutInt(i + 28 - STRIDE * 3, tangent);
+			MemoryUtil.memPutInt(i + 24, tangent);
+			MemoryUtil.memPutInt(i + 24 - STRIDE, tangent);
+			MemoryUtil.memPutInt(i + 24 - STRIDE * 2, tangent);
+			MemoryUtil.memPutInt(i + 24 - STRIDE * 3, tangent);
 		}
 
 		this.advance();

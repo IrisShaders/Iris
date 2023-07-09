@@ -8,14 +8,16 @@ import io.github.douira.glsl_transformer.ast.node.abstract_node.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
-import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.ast.transform.TransformationException;
+import io.github.douira.glsl_transformer.parser.ParseShape;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.AttributeParameters;
-import net.coderbot.iris.pipeline.transform.parameter.OverlayParameters;
+import net.coderbot.iris.pipeline.transform.parameter.GeometryInfoParameters;
 import net.coderbot.iris.pipeline.transform.parameter.Parameters;
+import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
 
 /**
  * Implements AttributeShaderTransformer
@@ -28,7 +30,7 @@ public class AttributeTransformer {
 			AttributeParameters parameters) {
 		if (tree.getVersionStatement().getNormalizedProfile().isCore()) {
 			if (parameters.type == PatchShaderType.VERTEX) {
-				throw new IllegalStateException("Vertex shaders must be in the compatibility profile to run properly!");
+				throw new TransformationException("Vertex shaders must be in the compatibility profile to run properly!");
 			}
 			return;
 		}
@@ -123,14 +125,23 @@ public class AttributeTransformer {
 	}
 
 	private static final AutoHintedMatcher<ExternalDeclaration> uniformVec4EntityColor = new AutoHintedMatcher<>(
-			"uniform vec4 entityColor;", Matcher.externalDeclarationPattern);
+			"uniform vec4 entityColor;", ParseShape.EXTERNAL_DECLARATION);
+
+	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntEntityId = new AutoHintedMatcher<>(
+			"uniform int entityId;", ParseShape.EXTERNAL_DECLARATION);
+
+	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntBlockEntityId = new AutoHintedMatcher<>(
+			"uniform int blockEntityId;", ParseShape.EXTERNAL_DECLARATION);
+
+	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntCurrentRenderedItemId = new AutoHintedMatcher<>(
+			"uniform int currentRenderedItemId;", ParseShape.EXTERNAL_DECLARATION);
 
 	// Add entity color -> overlay color attribute support.
 	public static void patchOverlayColor(
 			ASTParser t,
 			TranslationUnit tree,
 			Root root,
-			OverlayParameters parameters) {
+			GeometryInfoParameters parameters) {
 		// delete original declaration
 		root.processMatches(t, uniformVec4EntityColor, ASTNode::detachAndDelete);
 
@@ -173,10 +184,74 @@ public class AttributeTransformer {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in vec4 entityColor;", "in vec4 iris_vertexColor;");
 
+			tree.prependMainFunctionBody(t, "float iris_vertexColorAlpha = iris_vertexColor.a;");
+
 			// Different output name to avoid a name collision in the geometry shader.
 			if (parameters.hasGeometry) {
 				root.rename("entityColor", "entityColorGS");
 				root.rename("iris_vertexColor", "iris_vertexColorGS");
+			}
+		}
+	}
+
+	public static void patchEntityId(
+			ASTParser t,
+			TranslationUnit tree,
+			Root root,
+			VanillaParameters parameters) {
+		// delete original declaration
+		root.processMatches(t, uniformIntEntityId, ASTNode::detachAndDelete);
+		root.processMatches(t, uniformIntBlockEntityId, ASTNode::detachAndDelete);
+		root.processMatches(t, uniformIntCurrentRenderedItemId, ASTNode::detachAndDelete);
+
+
+		if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
+			root.replaceReferenceExpressions(t, "entityId",
+				"iris_entityInfo[0].x");
+
+			root.replaceReferenceExpressions(t, "blockEntityId",
+				"iris_entityInfo[0].y");
+
+			root.replaceReferenceExpressions(t, "currentRenderedItemId",
+				"iris_entityInfo[0].z");
+		} else {
+			root.replaceReferenceExpressions(t, "entityId",
+				"iris_entityInfo.x");
+
+			root.replaceReferenceExpressions(t, "blockEntityId",
+				"iris_entityInfo.y");
+
+			root.replaceReferenceExpressions(t, "currentRenderedItemId",
+				"iris_entityInfo.z");
+		}
+
+		if (parameters.type.glShaderType == ShaderType.VERTEX) {
+			// add our own declarations
+			// TODO: We're exposing entityColor to this stage even if it isn't declared in
+			// this stage. But this is needed for the pass-through behavior.
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"flat out ivec3 iris_entityInfo;",
+					"in ivec3 iris_Entity;");
+
+			// Create our own main function to wrap the existing main function, so that we
+			// can pass through the overlay color at the end to the geometry or fragment
+			// stage.
+			tree.prependMainFunctionBody(t,
+					"iris_entityInfo = iris_Entity;");
+		} else if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
+			// TODO: this is passthrough behavior
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"flat out ivec3 iris_entityInfoGS;",
+					"flat in ivec3 iris_entityInfo[];");
+			tree.prependMainFunctionBody(t,
+					"iris_entityInfoGS = iris_entityInfo[0];");
+		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"flat in ivec3 iris_entityInfo;");
+
+			// Different output name to avoid a name collision in the geometry shader.
+			if (parameters.hasGeometry) {
+				root.rename("iris_entityInfo", "iris_EntityInfoGS");
 			}
 		}
 	}

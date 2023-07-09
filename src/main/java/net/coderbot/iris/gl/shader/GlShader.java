@@ -43,7 +43,7 @@ public class GlShader extends GlResource {
 		int result = GlStateManager.glGetShaderi(handle, GL20C.GL_COMPILE_STATUS);
 
 		if (result != GL20C.GL_TRUE) {
-			throw new RuntimeException("Shader compilation failed, see log for details");
+			throw new RuntimeException("Shader compilation failed for " + name + ", see log for details");
 		}
 
 		return handle;

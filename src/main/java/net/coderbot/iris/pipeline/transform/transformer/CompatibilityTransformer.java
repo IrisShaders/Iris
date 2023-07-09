@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline.transform.transformer;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,24 +30,29 @@ import io.github.douira.glsl_transformer.ast.node.external_declaration.EmptyDecl
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
 import io.github.douira.glsl_transformer.ast.node.statement.Statement;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructDeclarator;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructMember;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.index.PrefixIdentifierIndex;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
+import io.github.douira.glsl_transformer.ast.transform.TransformationException;
+import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.PatchedShaderPrinter;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
@@ -53,7 +60,7 @@ public class CompatibilityTransformer {
 	static Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
 	private static final AutoHintedMatcher<Expression> sildursWaterFract = new AutoHintedMatcher<>(
-			"fract(worldpos.y + 0.001)", Matcher.expressionPattern);
+			"fract(worldpos.y + 0.001)", ParseShape.EXPRESSION);
 
 	private static StorageQualifier getConstQualifier(TypeQualifier qualifier) {
 		if (qualifier == null) {
@@ -104,13 +111,15 @@ public class CompatibilityTransformer {
 				// TODO: integrate into debug mode (allow user to disable this behavior for
 				// debugging purposes)
 				unusedFunctions.add(definition);
-				if (PatchedShaderPrinter.prettyPrintShaders) {
-					LOGGER.warn("Removing unused function " + functionName);
-				}/* else if (unusedFunctions.size() == 1) {
-					LOGGER.warn(
-							"Removing unused function " + functionName
-									+ " and omitting further such messages outside of debug mode. See debugging.md for more information.");
-				}*/
+				 /*
+					 * else if (unusedFunctions.size() == 1) {
+					 * LOGGER.warn(
+					 * "Removing unused function " + functionName
+					 * +
+					 * " and omitting further such messages outside of debug mode. See debugging.md for more information."
+					 * );
+					 * }
+					 */
 				continue;
 			}
 
@@ -134,8 +143,10 @@ public class CompatibilityTransformer {
 		}
 
 		// remove collected unused functions
-		for (FunctionDefinition definition : unusedFunctions) {
-			definition.detachAndDelete();
+		if (!Iris.getIrisConfig().areDebugOptionsEnabled()) {
+			for (FunctionDefinition definition : unusedFunctions) {
+				definition.detachAndDelete();
+			}
 		}
 
 		// find the reference expressions for the const parameters
@@ -183,7 +194,7 @@ public class CompatibilityTransformer {
 
 						// the name may not be the same as the parameter name
 						if (constIdsInFunction.contains(memberName)) {
-							throw new IllegalStateException("Illegal redefinition of const parameter " + name);
+							throw new TransformationException("Illegal redefinition of const parameter " + name);
 						}
 
 						constIdsInFunction.add(memberName);
@@ -222,13 +233,51 @@ public class CompatibilityTransformer {
 				LOGGER.warn("Renamed reserved word \"" + reservedWord + "\" to \"" + newName + "\".");
 			}
 		}
+
+		// transform that moves unsized array specifiers on struct members from the type
+		// to the identifier of a type and init declaration. Some drivers appear to not
+		// be able to detect the unsized array if it's on the type.
+		for (StructMember structMember : root.nodeIndex.get(StructMember.class)) {
+			// check if the type specifier has an array specifier
+			TypeSpecifier typeSpecifier = structMember.getType().getTypeSpecifier();
+			ArraySpecifier arraySpecifier = typeSpecifier.getArraySpecifier();
+			if (arraySpecifier == null) {
+				continue;
+			}
+
+			// check if the array specifier is unsized
+			if (!arraySpecifier.getChildren().isNullEmpty()) {
+				continue;
+			}
+
+			// remove itself from the parent (makes it null)
+			arraySpecifier.detach();
+
+			// move the empty array specifier to all members
+			boolean reusedOriginal = false;
+			for (StructDeclarator declarator : structMember.getDeclarators()) {
+				if (declarator.getArraySpecifier() != null) {
+					throw new TransformationException("Member already has an array specifier");
+				}
+
+				// clone the array specifier into this member, re-use if possible
+				declarator.setArraySpecifier(reusedOriginal ? arraySpecifier.cloneInto(root) : arraySpecifier);
+				reusedOriginal = true;
+			}
+
+			LOGGER.warn(
+					"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) "
+							+ structMember.getDeclarators().stream().map(StructDeclarator::getName).map(Identifier::getName)
+									.collect(Collectors.joining(", "))
+							+ ". See debugging.md for more information.");
+		}
 	}
 
 	private static class DeclarationMatcher extends Matcher<ExternalDeclaration> {
 		private final StorageType storageType;
 
 		public DeclarationMatcher(StorageType storageType) {
-			super("out float name;", Matcher.externalDeclarationPattern);
+			super("out float name;", ParseShape.EXTERNAL_DECLARATION);
 			this.storageType = storageType;
 		}
 
@@ -301,7 +350,7 @@ public class CompatibilityTransformer {
 				new Identifier(name),
 				type.isScalar()
 						? LiteralExpression.getDefaultValue(type)
-						: Root.indexNodes(root, () -> new FunctionCallExpression(
+						: root.indexNodes(() -> new FunctionCallExpression(
 								new Identifier(type.getMostCompactName()),
 								Stream.of(LiteralExpression.getDefaultValue(type)))));
 	}
@@ -366,7 +415,7 @@ public class CompatibilityTransformer {
 			Root prevRoot = prevTree.getRoot();
 
 			// test if the prefix tag is used for some reason
-			if (((PrefixIdentifierIndex<?, ?>) prevRoot.identifierIndex).prefixQueryFlat(tagPrefix).findAny().isPresent()) {
+			if (prevRoot.getPrefixIdentifierIndex().prefixQueryFlat(tagPrefix).findAny().isPresent()) {
 				LOGGER.warn("The prefix tag " + tagPrefix + " is used in the shader, bailing compatibility transformation.");
 				return;
 			}
@@ -466,6 +515,20 @@ public class CompatibilityTransformer {
 							Type inType = inTypeSpecifier.type;
 							Type outType = outTypeSpecifier.type;
 
+							// check if the out declaration is an array-type, if so, skip it.
+							// this only checks the out declaration because it's the one that when it's an
+							// array type means that both declarations are arrays and we're not just in the
+							// case of a geometry shader where the in declaration is an array and the out
+							// declaration is not
+							if (outTypeSpecifier.getArraySpecifier() != null) {
+								LOGGER.warn(
+										"The out declaration '" + name + "' in the " + prevPatchTypes.glShaderType.name()
+												+ " shader that has a missing corresponding in declaration in the next stage "
+												+ type.name()
+												+ " has an array type and could not be compatibility-patched. See debugging.md for more information.");
+								continue;
+							}
+
 							// skip if the type matches, nothing has to be done
 							if (inType == outType) {
 								// if the types match but it's never assigned a value,
@@ -477,6 +540,12 @@ public class CompatibilityTransformer {
 								// add an initialization statement for this declaration
 								prevTree.prependMainFunctionBody(getInitializer(prevRoot, name, inType));
 								outDeclarations.put(name, null);
+
+								LOGGER.warn(
+										"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
+												+ " shader that is never assigned to in the previous stage "
+												+ prevType.name()
+												+ " has been compatibility-patched by adding an initialization for it. See debugging.md for more information.");
 								continue;
 							}
 
@@ -510,7 +579,7 @@ public class CompatibilityTransformer {
 								}
 							}
 							if (outMember == null) {
-								throw new IllegalStateException("The targeted out declaration member is missing!");
+								throw new TransformationException("The targeted out declaration member is missing!");
 							}
 							outMember.getName().replaceByAndDelete(new Identifier(name));
 
@@ -561,5 +630,134 @@ public class CompatibilityTransformer {
 
 			prevType = type;
 		}
+	}
+
+	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<ExternalDeclaration>(
+			"out float name;",
+			ParseShape.EXTERNAL_DECLARATION) {
+		{
+			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
+			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
+			markClassWildcard("name*",
+					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+		}
+
+		@Override
+		public boolean matchesExtract(ExternalDeclaration tree) {
+			boolean result = super.matchesExtract(tree);
+			if (!result) {
+				return false;
+			}
+
+			// look for an out qualifier but no layout qualifier
+			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
+			var hasOutQualifier = false;
+			for (TypeQualifierPart part : qualifier.getParts()) {
+				if (part instanceof StorageQualifier) {
+					StorageQualifier storageQualifier = (StorageQualifier) part;
+					if (storageQualifier.storageType == StorageType.OUT) {
+						hasOutQualifier = true;
+					}
+				} else if (part instanceof LayoutQualifier) {
+					return false;
+				}
+			}
+			return hasOutQualifier;
+		}
+	};
+
+	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
+			.withExternalDeclaration("out __type __name;");
+
+	static {
+		layoutedOutDeclarationTemplate.markLocalReplacement(
+				layoutedOutDeclarationTemplate.getSourceRoot().nodeIndex.getOne(TypeQualifier.class));
+		layoutedOutDeclarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
+		layoutedOutDeclarationTemplate.markLocalReplacement("__name", DeclarationMember.class);
+	}
+
+	record NewDeclarationData(TypeQualifier qualifier, TypeSpecifier type, DeclarationMember member, int number) {
+	}
+
+	private static final String attachTargetPrefix = "outColor";
+
+	public static void transformFragmentCore(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
+		// do layout attachment (attaches a location(layout = 4) to the out declaration
+		// outColor4 for example)
+
+		// iterate the declarations
+		ArrayList<NewDeclarationData> newDeclarationData = new ArrayList<NewDeclarationData>();
+		ArrayList<ExternalDeclaration> declarationsToRemove = new ArrayList<ExternalDeclaration>();
+		for (DeclarationExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
+			if (!nonLayoutOutDeclarationMatcher.matchesExtract(declaration)) {
+				continue;
+			}
+
+			// find the matching outColor members
+			List<DeclarationMember> members = nonLayoutOutDeclarationMatcher
+					.getNodeMatch("name*", DeclarationMember.class)
+					.getAncestor(TypeAndInitDeclaration.class)
+					.getMembers();
+			TypeQualifier typeQualifier = nonLayoutOutDeclarationMatcher.getNodeMatch("qualifier", TypeQualifier.class);
+			BuiltinNumericTypeSpecifier typeSpecifier = nonLayoutOutDeclarationMatcher.getNodeMatch("type",
+					BuiltinNumericTypeSpecifier.class);
+			int addedDeclarations = 0;
+			for (DeclarationMember member : members) {
+				String name = member.getName().getName();
+				if (!name.startsWith(attachTargetPrefix)) {
+					continue;
+				}
+
+				// get the number suffix after the prefix
+				String numberSuffix = name.substring(attachTargetPrefix.length());
+				if (numberSuffix.isEmpty()) {
+					continue;
+				}
+
+				// make sure it's a number and is between 0 and 7
+				int number;
+				try {
+					number = Integer.parseInt(numberSuffix);
+				} catch (NumberFormatException e) {
+					continue;
+				}
+				if (number < 0 || 7 < number) {
+					continue;
+				}
+
+				newDeclarationData.add(new NewDeclarationData(typeQualifier, typeSpecifier, member, number));
+				addedDeclarations++;
+			}
+
+			// if the member list is now empty, remove the declaration
+			if (addedDeclarations == members.size()) {
+				declarationsToRemove.add(declaration);
+			}
+		}
+		tree.getChildren().removeAll(declarationsToRemove);
+		for (ExternalDeclaration declaration : declarationsToRemove) {
+			declaration.detachParent();
+		}
+
+		// generate new declarations with layout qualifiers for each outColor member
+		ArrayList<ExternalDeclaration> newDeclarations = new ArrayList<ExternalDeclaration>();
+
+		// Note: since everything is wrapped in a big Root.indexBuildSession, we don't
+		// need to do it manually here
+		for (NewDeclarationData data : newDeclarationData) {
+			DeclarationMember member = data.member;
+			member.detach();
+			TypeQualifier newQualifier = data.qualifier.cloneInto(root);
+			newQualifier.getChildren()
+					.add(new LayoutQualifier(Stream.of(new NamedLayoutQualifierPart(
+							new Identifier("location"),
+							new LiteralExpression(Type.INT32, data.number)))));
+			ExternalDeclaration newDeclaration = layoutedOutDeclarationTemplate.getInstanceFor(root,
+					newQualifier,
+					data.type.cloneInto(root),
+					member);
+			newDeclarations.add(newDeclaration);
+		}
+		tree.injectNodes(ASTInjectionPoint.BEFORE_DECLARATIONS, newDeclarations);
 	}
 }

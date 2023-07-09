@@ -102,7 +102,13 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
         }
     }
 
-    public Iterable<RenderType> getRenderOrder() {
+	@Override
+    public void resetType(TransparencyType type) {
+        // TODO: Is reallocation efficient?
+		types.put(type, new MapDigraph<>());
+	}
+
+    public List<RenderType> getRenderOrder() {
         int layerCount = 0;
 
         for (Digraph<RenderType> graph : types.values()) {

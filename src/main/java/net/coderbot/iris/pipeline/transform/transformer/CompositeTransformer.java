@@ -6,15 +6,15 @@ import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
-import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.parser.ParseShape;
 import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 
 public class CompositeTransformer {
 	private static final AutoHintedMatcher<Expression> glTextureMatrix0To7 = new AutoHintedMatcher<Expression>(
-			"gl_TextureMatrix[index]", Matcher.expressionPattern) {
+			"gl_TextureMatrix[index]", ParseShape.EXPRESSION) {
 		{
 			markClassedPredicateWildcard("index",
 					pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
@@ -34,7 +34,7 @@ public class CompositeTransformer {
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
-		CommonTransformer.transform(t, tree, root, parameters);
+		CommonTransformer.transform(t, tree, root, parameters, true);
 		CompositeDepthTransformer.transform(t, tree, root);
 
 		// TODO: More solid way to handle texture matrices

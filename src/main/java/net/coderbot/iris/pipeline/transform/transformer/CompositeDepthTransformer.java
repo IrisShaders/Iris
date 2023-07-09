@@ -7,13 +7,13 @@ import io.github.douira.glsl_transformer.ast.node.external_declaration.Declarati
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.HintedMatcher;
-import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.parser.ParseShape;
 
 class CompositeDepthTransformer {
 	private static final HintedMatcher<ExternalDeclaration> uniformFloatCenterDepthSmooth = new HintedMatcher<>(
-			"uniform float name;", Matcher.externalDeclarationPattern, "centerDepthSmooth") {
+			"uniform float name;", ParseShape.EXTERNAL_DECLARATION, "centerDepthSmooth") {
 		{
 			markClassWildcard("name*",
 					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));

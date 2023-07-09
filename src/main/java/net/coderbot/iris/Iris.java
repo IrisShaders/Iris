@@ -198,12 +198,14 @@ public class Iris {
 			return;
 		}
 
-		setDebug(irisConfig.areDebugOptionsEnabled());
-
 		PBRTextureManager.INSTANCE.init();
 
 		// Only load the shader pack when we can access OpenGL
 		loadShaderpack();
+	}
+
+	public static void duringRenderSystemInit() {
+		setDebug(irisConfig.areDebugOptionsEnabled());
 	}
 
 	/**
@@ -287,7 +289,7 @@ public class Iris {
 		// Attempt to load an external shaderpack if it is available
 		Optional<String> externalName = irisConfig.getShaderPackName();
 
-		if (!externalName.isPresent()) {
+		if (externalName.isEmpty()) {
 			logger.info("Shaders are disabled because no valid shaderpack is selected");
 
 			setShadersDisabled();
@@ -315,9 +317,14 @@ public class Iris {
 			return false;
 		}
 
+		if (!isValidShaderpack(shaderPackRoot)) {
+			logger.error("Pack \"{}\" is not valid! Can't load it.", name);
+			return false;
+		}
+
 		Path shaderPackPath;
 
-		if (shaderPackRoot.toString().endsWith(".zip")) {
+		if (!Files.isDirectory(shaderPackRoot) && shaderPackRoot.toString().endsWith(".zip")) {
 			Optional<Path> optionalPath;
 
 			try {
@@ -431,7 +438,7 @@ public class Iris {
 		logger.info("Shaders are disabled");
 	}
 
-	private static void setDebug(boolean enable) {
+	public static void setDebug(boolean enable) {
 		int success;
 		if (enable) {
 			success = GLDebug.setupDebugMessageCallback();
@@ -492,6 +499,10 @@ public class Iris {
 		}
 	}
 
+	public static boolean isValidToShowPack(Path pack) {
+		return Files.isDirectory(pack) || pack.toString().endsWith(".zip");
+	}
+
 	public static boolean isValidShaderpack(Path pack) {
 		if (Files.isDirectory(pack)) {
 			// Sometimes the shaderpack directory itself can be
@@ -510,6 +521,7 @@ public class Iris {
 						.anyMatch(path -> path.endsWith("shaders"));
 			} catch (IOException ignored) {
 				// ignored, not a valid shader pack.
+				return false;
 			}
 		}
 

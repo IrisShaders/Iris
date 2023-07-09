@@ -11,11 +11,17 @@ public class ShaderAttributeInputs {
 	private boolean light;
 	private boolean normal;
 	private boolean newLines;
+	private boolean glint;
+	private boolean text;
+	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright) {
-		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL) {
+	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines, boolean glint, boolean text) {
+		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL && !isLines) {
 			newLines = true;
 		}
+
+		this.text = text;
+		this.glint = glint;
 
 		format.getElementAttributeNames().forEach(name -> {
 			if ("Color".equals(name)) {
@@ -81,11 +87,13 @@ public class ShaderAttributeInputs {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (color ? 1231 : 1237);
-		result = prime * result + (light ? 1231 : 1237);
-		result = prime * result + (newLines ? 1231 : 1237);
-		result = prime * result + (normal ? 1231 : 1237);
-		result = prime * result + (overlay ? 1231 : 1237);
 		result = prime * result + (tex ? 1231 : 1237);
+		result = prime * result + (overlay ? 1231 : 1237);
+		result = prime * result + (light ? 1231 : 1237);
+		result = prime * result + (normal ? 1231 : 1237);
+		result = prime * result + (newLines ? 1231 : 1237);
+		result = prime * result + (glint ? 1231 : 1237);
+		result = prime * result + (text ? 1231 : 1237);
 		return result;
 	}
 
@@ -100,16 +108,22 @@ public class ShaderAttributeInputs {
 		ShaderAttributeInputs other = (ShaderAttributeInputs) obj;
 		if (color != other.color)
 			return false;
-		if (light != other.light)
-			return false;
-		if (newLines != other.newLines)
-			return false;
-		if (normal != other.normal)
+		if (tex != other.tex)
 			return false;
 		if (overlay != other.overlay)
 			return false;
-		if (tex != other.tex)
+		if (light != other.light)
+			return false;
+		if (normal != other.normal)
+			return false;
+		if (newLines != other.newLines)
+			return false;
+		if (text != other.text)
 			return false;
 		return true;
+	}
+
+	public boolean isText() {
+		return text;
 	}
 }

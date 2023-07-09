@@ -11,7 +11,7 @@ public class ExternallyManagedUniforms {
 	public static void addExternallyManagedUniforms(UniformHolder uniformHolder) {
 		addMat4(uniformHolder, "iris_ModelViewMatrix");
 		addMat4(uniformHolder, "u_ModelViewProjectionMatrix");
-		addMat4(uniformHolder, "iris_NormalMatrix");
+		addMat3(uniformHolder, "iris_NormalMatrix");
 		// Exclusive to pre-1.19
 		addFloat(uniformHolder, "darknessFactor");
 		addFloat(uniformHolder, "darknessLightFactor");
@@ -33,8 +33,9 @@ public class ExternallyManagedUniforms {
 		addVec4(uniformHolder, "iris_FogColor");
 		addMat4(uniformHolder, "iris_ProjectionMatrix");
 		addMat4(uniformHolder, "iris_ModelViewMatrix");
-		addMat4(uniformHolder, "iris_NormalMatrix");
+		addMat3(uniformHolder, "iris_NormalMatrix");
 		addFloat(uniformHolder, "iris_TextureScale");
+		addFloat(uniformHolder, "iris_GlintAlpha");
 		addFloat(uniformHolder, "iris_ModelScale");
 		addFloat(uniformHolder, "iris_ModelOffset");
 		addVec3(uniformHolder, "iris_CameraTranslation");
@@ -54,6 +55,11 @@ public class ExternallyManagedUniforms {
 		uniformHolder.externallyManagedUniform("iris_ScreenSize", UniformType.VEC2);
 		uniformHolder.externallyManagedUniform("iris_FogColor", UniformType.VEC4);
 	}
+
+	private static void addMat3(UniformHolder uniformHolder, String name) {
+		uniformHolder.externallyManagedUniform(name, UniformType.MAT3);
+	}
+
 
 	private static void addMat4(UniformHolder uniformHolder, String name) {
 		uniformHolder.externallyManagedUniform(name, UniformType.MAT4);

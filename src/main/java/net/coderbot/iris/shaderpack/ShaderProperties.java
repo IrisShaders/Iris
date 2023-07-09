@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -52,6 +53,7 @@ public class ShaderProperties {
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dynamicHandLight = OptionalBoolean.DEFAULT;
+	private OptionalBoolean supportsColorCorrection = OptionalBoolean.DEFAULT;
 	private OptionalBoolean oldLighting = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowTerrain = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowTranslucent = OptionalBoolean.DEFAULT;
@@ -70,6 +72,8 @@ public class ShaderProperties {
 	private OptionalBoolean concurrentCompute = OptionalBoolean.DEFAULT;
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
+	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
+	private OptionalBoolean separateEntityDraws = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
@@ -91,6 +95,8 @@ public class ShaderProperties {
 	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureDefinition> irisCustomTextures = new Object2ObjectOpenHashMap<>();
+	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
+	private final Int2IntArrayMap bufferObjects = new Int2IntArrayMap();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
@@ -156,6 +162,8 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "allowConcurrentCompute", bool -> concurrentCompute = bool);
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
+			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
+			handleBooleanDirective(key, value, "separateEntityDraws", bool -> separateEntityDraws = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
 			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
@@ -165,6 +173,7 @@ public class ShaderProperties {
 				}
 			});
 			handleBooleanDirective(key, value, "prepareBeforeShadow", bool -> prepareBeforeShadow = bool);
+			handleBooleanDirective(key, value, "supportsColorCorrection", bool -> supportsColorCorrection = bool);
 
 			if (key.startsWith("particles.ordering")) {
 				Optional<ParticleRenderingSettings> settings = ParticleRenderingSettings.fromString(value.trim().toUpperCase(Locale.US));
@@ -300,6 +309,25 @@ public class ShaderProperties {
 				conditionallyEnabledPrograms.put(program, value);
 			});
 
+			handlePassDirective("bufferObject.", key, value, index -> {
+				int trueIndex;
+				int trueSize;
+				try {
+					trueIndex = Integer.parseInt(index);
+					trueSize = Integer.parseInt(value);
+				} catch (NumberFormatException e) {
+					Iris.logger.error("Number format exception parsing SSBO index/size!", e);
+					return;
+				}
+
+				if (trueIndex > 8) {
+					Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
+					return;
+				}
+
+				bufferObjects.put(trueIndex, trueSize);
+			});
+
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
 				String[] parts = value.split(" ");
 				// TODO: Is there a better way to achieve this?
@@ -325,7 +353,7 @@ public class ShaderProperties {
 						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
 					} else if (parts.length == 7) {
 						// 2D texture handling
-						type = TextureType.TEXTURE_2D;
+						type = TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT));
 						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
 					} else if (parts.length == 8) {
 						// 3D texture handling
@@ -367,6 +395,65 @@ public class ShaderProperties {
 				}
 
 				irisCustomTextures.put(samplerName, new TextureDefinition.PNGDefinition(value));
+			});
+
+			handlePassDirective("image.", key, value, (imageName) -> {
+				String[] parts = value.split(" ");
+				String key2 = key.substring(6);
+
+				if (irisCustomImages.size() > 15) {
+					Iris.logger.error("Only up to 16 images are allowed, but tried to add another image! " + key);
+					return;
+				}
+
+				ImageInformation image;
+
+				String samplerName = parts[0];
+				if (samplerName.equals("none")) {
+					samplerName = null;
+				}
+				PixelFormat format = PixelFormat.fromString(parts[1]).orElse(null);
+				InternalTextureFormat internalFormat = InternalTextureFormat.fromString(parts[2]).orElse(null);
+				PixelType pixelType = PixelType.fromString(parts[3]).orElse(null);
+
+				if (format == null || internalFormat == null || pixelType == null) {
+					Iris.logger.error("Image " + key2 + " is invalid! Format: " + format + " Internal format: " + internalFormat + " Pixel type: " + pixelType);
+				}
+
+				boolean clear = Boolean.parseBoolean(parts[4]);
+
+				boolean relative = Boolean.parseBoolean(parts[5]);
+
+				if (relative) { // Is relative?
+					float relativeWidth = Float.parseFloat(parts[6]);
+					float relativeHeight = Float.parseFloat(parts[7]);
+					image = new ImageInformation(key2, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, 0, 0, 0, clear, true, relativeWidth, relativeHeight);
+				} else {
+					TextureType type;
+					int width, height, depth;
+					if (parts.length == 7) {
+						type = TextureType.TEXTURE_1D;
+						width = Integer.parseInt(parts[6]);
+						height = 0;
+						depth = 0;
+					} else if (parts.length == 8) {
+						type = TextureType.TEXTURE_2D;
+						width = Integer.parseInt(parts[6]);
+						height = Integer.parseInt(parts[7]);
+						depth = 0;
+					} else if (parts.length == 9) {
+						type = TextureType.TEXTURE_3D;
+						width = Integer.parseInt(parts[6]);
+						height = Integer.parseInt(parts[7]);
+						depth = Integer.parseInt(parts[8]);
+					} else {
+						Iris.logger.error("Unknown image type! " + key2 + " = " + value);
+						return;
+					}
+					image = new ImageInformation(key2, samplerName, type, format, internalFormat, pixelType, width, height, depth, clear, false, 0, 0);
+				}
+
+				irisCustomImages.add(image);
 			});
 
 			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
@@ -621,6 +708,14 @@ public class ShaderProperties {
 		return separateAo;
 	}
 
+	public OptionalBoolean getVoxelizeLightBlocks() {
+		return voxelizeLightBlocks;
+	}
+
+	public OptionalBoolean getSeparateEntityDraws() {
+		return separateEntityDraws;
+	}
+
 	public OptionalBoolean getFrustumCulling() {
 		return frustumCulling;
 	}
@@ -638,6 +733,8 @@ public class ShaderProperties {
 	}
 
 	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
+		// Before is implied if separateEntityDraws is true.
+		if (separateEntityDraws == OptionalBoolean.TRUE) return Optional.of(ParticleRenderingSettings.MIXED);
 		return particleRenderingSettings;
 	}
 
@@ -665,6 +762,10 @@ public class ShaderProperties {
 		return bufferBlendOverrides;
 	}
 
+	public Int2IntArrayMap getBufferObjects() {
+		return bufferObjects;
+	}
+
 	public EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> getCustomTextures() {
 		return customTextures;
 	}
@@ -676,6 +777,10 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<String, TextureDefinition> getIrisCustomTextures() {
 		return irisCustomTextures;
+	}
+
+	public List<ImageInformation> getIrisCustomImages() {
+		return irisCustomImages;
 	}
 
 	public Optional<String> getNoiseTexturePath() {
@@ -720,5 +825,9 @@ public class ShaderProperties {
 
 	public List<String> getOptionalFeatureFlags() {
 		return optionalFeatureFlags;
+	}
+
+	public OptionalBoolean supportsColorCorrection() {
+		return supportsColorCorrection;
 	}
 }

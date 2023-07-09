@@ -4,21 +4,26 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
+import net.coderbot.iris.Iris;
 
 public class IrisVertexFormats {
 	public static final VertexFormatElement ENTITY_ELEMENT;
+	public static final VertexFormatElement ENTITY_ID_ELEMENT;
 	public static final VertexFormatElement MID_TEXTURE_ELEMENT;
 	public static final VertexFormatElement TANGENT_ELEMENT;
 	public static final VertexFormatElement MID_BLOCK_ELEMENT;
+	public static final VertexFormatElement PADDING_SHORT;
 
 	public static final VertexFormat TERRAIN;
 	public static final VertexFormat ENTITY;
 
 	static {
 		ENTITY_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
+		ENTITY_ID_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Type.USHORT, VertexFormatElement.Usage.UV, 3);
 		MID_TEXTURE_ELEMENT = new VertexFormatElement(12, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
 		TANGENT_ELEMENT = new VertexFormatElement(13, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
 		MID_BLOCK_ELEMENT = new VertexFormatElement(14, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
+		PADDING_SHORT = new VertexFormatElement(1, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.PADDING, 1);
 
 		ImmutableMap.Builder<String, VertexFormatElement> terrainElements = ImmutableMap.builder();
 		ImmutableMap.Builder<String, VertexFormatElement> entityElements = ImmutableMap.builder();
@@ -42,10 +47,21 @@ public class IrisVertexFormats {
 		entityElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2); // 32
 		entityElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL); // 35
 		entityElements.put("Padding", DefaultVertexFormat.ELEMENT_PADDING); // 36
-		entityElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT); // 44
-		entityElements.put("at_tangent", TANGENT_ELEMENT); // 48
+		entityElements.put("iris_Entity", ENTITY_ID_ELEMENT); // 40
+		entityElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT); // 48
+		entityElements.put("at_tangent", TANGENT_ELEMENT); // 52
+		entityElements.put("Padding2", PADDING_SHORT); // 52
 
 		TERRAIN = new VertexFormat(terrainElements.build());
 		ENTITY = new VertexFormat(entityElements.build());
+	}
+
+	private static void debug(VertexFormat format) {
+		Iris.logger.info("Vertex format: " + format);
+		int byteIndex = 0;
+		for (VertexFormatElement element : format.getElements()) {
+			Iris.logger.info(element + " @ " + byteIndex + " is " + element.getType() + " " + element.getUsage());
+			byteIndex += element.getByteSize();
+		}
 	}
 }

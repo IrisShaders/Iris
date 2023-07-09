@@ -8,4 +8,6 @@ public interface ChunkBuildBuffersExt {
 	void iris$setMaterialId(BlockState state, short renderType);
 
 	void iris$resetBlockContext();
+
+	void iris$ignoreMidBlock(boolean state);
 }

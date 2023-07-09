@@ -98,48 +98,21 @@ public class ParsedString {
 		}
 
 		int position = 0;
-		int digitsBefore = 0;
 
-		if (text.charAt(0) == '-') {
-			position += 1;
-		}
-
-		while (position < text.length() && Character.isDigit(text.charAt(position))) {
-			position += 1;
-			digitsBefore += 1;
-		}
-
-		if (digitsBefore == 0) {
-			return null;
-		}
-
-		if (position < text.length()) {
-			char next = text.charAt(position);
-
-			if (next == '.') {
-				position += 1;
-
-				int digitsAfter = 0;
-
-				while (position < text.length() && Character.isDigit(text.charAt(position))) {
-					position += 1;
-					digitsAfter += 1;
+		while (position < text.length()) {
+			if(position + 1 < text.length()) {
+				if(!Character.isDigit(text.charAt(position)) && !Character.isDigit(text.charAt(position + 1))) {
+					break;
 				}
-
-				if (digitsAfter == 0) {
-					return null;
-				}
-
-				if (position < text.length()) {
-					next = text.charAt(position);
-
-					if (next == 'f' || next == 'F') {
-						position += 1;
-					}
-				}
-			} else if (next == 'f' || next == 'F') {
-				position += 1;
 			}
+
+			position++;
+		}
+
+		try {
+			Float.parseFloat(text.substring(0, position));
+		} catch (Exception e) {
+			return null;
 		}
 
 		return takeCharacters(position);

@@ -20,7 +20,7 @@ public class IrisApiV0Impl implements IrisApi {
 
 	@Override
 	public int getMinorApiRevision() {
-		return 1;
+		return 2;
 	}
 
 	@Override
@@ -57,5 +57,16 @@ public class IrisApiV0Impl implements IrisApi {
 	@Override
 	public IrisTextVertexSink createTextVertexSink(int maxQuadCount, IntFunction<ByteBuffer> bufferProvider) {
 		return new IrisTextVertexSinkImpl(maxQuadCount, bufferProvider);
+	}
+
+	@Override
+	public float getSunPathRotation() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline == null) {
+			return 0;
+		}
+
+		return pipeline.getSunPathRotation();
 	}
 }

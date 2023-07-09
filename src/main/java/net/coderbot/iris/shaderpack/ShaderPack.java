@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.colorspace.ColorSpace;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gui.FeatureMissingErrorScreen;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
@@ -30,8 +31,11 @@ import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
@@ -47,11 +51,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,6 +78,8 @@ public class ShaderPack {
 
 	private final ProfileSet.ProfileResult profile;
 	private final String profileInfo;
+	private final List<ImageInformation> irisCustomImages;
+	private final Set<FeatureFlags> activeFeatures;
 	private final Function<AbsolutePackPath, String> sourceProvider;
 	private final ShaderProperties shaderProperties;
 	private List<String> dimensionIds;
@@ -156,25 +164,54 @@ public class ShaderPack {
 				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
 				.orElseGet(ShaderProperties::empty);
 
+		activeFeatures = new HashSet<>();
+		for (int i = 0; i < shaderProperties.getRequiredFeatureFlags().size(); i++) {
+			activeFeatures.add(FeatureFlags.getValue(shaderProperties.getRequiredFeatureFlags().get(i)));
+		}
+		for (int i = 0; i < shaderProperties.getOptionalFeatureFlags().size(); i++) {
+			activeFeatures.add(FeatureFlags.getValue(shaderProperties.getOptionalFeatureFlags().get(i)));
+		}
+
+		if (!activeFeatures.contains(FeatureFlags.SSBO) && !shaderProperties.getBufferObjects().isEmpty()) {
+			throw new IllegalStateException("An SSBO is being used, but the feature flag for SSBO's hasn't been set! Please set either a requirement or check for the SSBO feature using \"iris.features.required/optional = ssbo\".");
+		}
+
+		if (!activeFeatures.contains(FeatureFlags.CUSTOM_IMAGES) && !shaderProperties.getIrisCustomImages().isEmpty()) {
+			throw new IllegalStateException("Custom images are being used, but the feature flag for custom images hasn't been set! Please set either a requirement or check for custom images' feature flag using \"iris.features.required/optional = CUSTOM_IMAGES\".");
+		}
+
 		List<FeatureFlags> invalidFlagList = shaderProperties.getRequiredFeatureFlags().stream().filter(FeatureFlags::isInvalid).map(FeatureFlags::getValue).collect(Collectors.toList());
 		List<String> invalidFeatureFlags = invalidFlagList.stream().map(FeatureFlags::getHumanReadableName).collect(Collectors.toList());
 
 		if (!invalidFeatureFlags.isEmpty()) {
 			if (Minecraft.getInstance().screen instanceof ShaderPackScreen) {
-				Minecraft.getInstance().setScreen(new FeatureMissingErrorScreen(Minecraft.getInstance().screen, new TranslatableComponent("iris.unsupported.pack"), new TranslatableComponent("iris.unsupported.pack.description", FeatureFlags.getInvalidStatus(invalidFlagList), invalidFeatureFlags.stream()
-					.collect(Collectors.joining(", ", ": ", ".")))));
+				MutableComponent component = new TranslatableComponent("iris.unsupported.pack.description", FeatureFlags.getInvalidStatus(invalidFlagList), invalidFeatureFlags.stream()
+					.collect(Collectors.joining(", ", ": ", ".")));
+				if (SystemUtils.IS_OS_MAC) {
+					component = component.append(new TranslatableComponent("iris.unsupported.pack.macos"));
+				}
+				Minecraft.getInstance().setScreen(new FeatureMissingErrorScreen(Minecraft.getInstance().screen, new TranslatableComponent("iris.unsupported.pack"), component));
 			}
 			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(false);
+		}
+		List<StringPair> newEnvDefines = new ArrayList<>();
+		environmentDefines.forEach(newEnvDefines::add);
+
+		if (shaderProperties.supportsColorCorrection().orElse(false)) {
+			for (ColorSpace space : ColorSpace.values()) {
+				newEnvDefines.add(new StringPair("COLOR_SPACE_" + space.name(), String.valueOf(space.ordinal())));
+			}
 		}
 
 		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream().filter(flag -> !FeatureFlags.isInvalid(flag)).collect(Collectors.toList());
 
 		if (!optionalFeatureFlags.isEmpty()) {
-			List<StringPair> newEnvDefines = new ArrayList<>();
-			environmentDefines.forEach(newEnvDefines::add);
+
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
-			environmentDefines = ImmutableList.copyOf(newEnvDefines);
+
 		}
+
+		environmentDefines = ImmutableList.copyOf(newEnvDefines);
 
 		ProfileSet profiles = ProfileSet.fromTree(shaderProperties.getProfiles(), this.shaderPackOptions.getOptionSet());
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
@@ -274,6 +311,8 @@ public class ShaderPack {
 
 			customTextureDataMap.put(textureStage, innerCustomTextureDataMap);
 		});
+
+		this.irisCustomImages = shaderProperties.getIrisCustomImages();
 
 		this.customUniforms = shaderProperties.customUniforms;
 
@@ -446,6 +485,9 @@ public class ShaderPack {
 					case TEXTURE_3D:
 						customTextureData = new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
 						break;
+					case TEXTURE_RECTANGLE:
+						customTextureData = new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+						break;
 					default:
 						throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
 				}
@@ -518,6 +560,10 @@ public class ShaderPack {
 		return customTextureDataMap;
 	}
 
+	public List<ImageInformation> getIrisCustomImages() {
+		return irisCustomImages;
+	}
+
 	public Object2ObjectMap<String, CustomTextureData> getIrisCustomTextureDataMap() {
 		return irisCustomTextureDataMap;
 	}
@@ -537,4 +583,8 @@ public class ShaderPack {
 	public OptionMenuContainer getMenuContainer() {
 		return menuContainer;
 	}
+
+    public boolean hasFeature(FeatureFlags feature) {
+		return activeFeatures.contains(feature);
+    }
 }

@@ -17,10 +17,13 @@ public class VanillaTransformer {
 		// this happens before common to make sure the renaming of attributes is done on
 		// attribute inserted by this
 		if (parameters.inputs.hasOverlay()) {
-			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
+			if (!parameters.inputs.isText()) {
+				AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
+			}
+			AttributeTransformer.patchEntityId(t, tree, root, parameters);
 		}
 
-		CommonTransformer.transform(t, tree, root, parameters);
+		CommonTransformer.transform(t, tree, root, parameters, false);
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine

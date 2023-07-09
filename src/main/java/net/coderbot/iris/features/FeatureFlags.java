@@ -5,13 +5,17 @@ import net.minecraft.client.resources.language.I18n;
 import org.apache.commons.lang3.text.WordUtils;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BooleanSupplier;
 
 public enum FeatureFlags {
 	SEPARATE_HARDWARE_SAMPLERS(() -> true, () -> true),
+	HIGHER_SHADOWCOLOR(() -> true, () -> true),
+	CUSTOM_IMAGES(() -> true, IrisRenderSystem::supportsImageLoadStore),
 	PER_BUFFER_BLENDING(() -> true, IrisRenderSystem::supportsBufferBlending),
 	COMPUTE_SHADERS(() -> true, IrisRenderSystem::supportsCompute),
 	ENTITY_TRANSLUCENT(() -> true, () -> true),
+	SSBO(() -> true, IrisRenderSystem::supportsSSBO),
 	UNKNOWN(() -> false, () -> false);
 
 	private final BooleanSupplier irisRequirement;
@@ -53,7 +57,7 @@ public enum FeatureFlags {
 
 	public static boolean isInvalid(String name) {
 		try {
-			return !FeatureFlags.valueOf(name).isUsable();
+			return !FeatureFlags.valueOf(name.toUpperCase(Locale.US)).isUsable();
 		} catch (IllegalArgumentException e) {
 			return true;
 		}
@@ -61,7 +65,7 @@ public enum FeatureFlags {
 
 	public static FeatureFlags getValue(String value) {
 		try {
-			return FeatureFlags.valueOf(value);
+			return FeatureFlags.valueOf(value.toUpperCase(Locale.US));
 		} catch (IllegalArgumentException e) {
 			return FeatureFlags.UNKNOWN;
 		}
