@@ -34,6 +34,8 @@ public class MixinTitleScreen extends Screen {
 
 	@Inject(method = "init", at = @At("RETURN"))
 	public void iris$showSodiumIncompatScreen(CallbackInfo ci) {
+		if (iris$hasFirstInit) return;
+
 		String reason;
 
 		if (!Iris.isSodiumInstalled() && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
@@ -44,6 +46,12 @@ public class MixinTitleScreen extends Screen {
 			Minecraft.getInstance().setScreen(new ConfirmScreen(
 				bool -> {
 					if (bool) {
+						if (!iris$hasFirstInit) {
+							Iris.onLoadingComplete();
+						}
+
+						iris$hasFirstInit = true;
+
 						Minecraft.getInstance().setScreen(this);
 					} else {
 						Minecraft.getInstance().stop();
