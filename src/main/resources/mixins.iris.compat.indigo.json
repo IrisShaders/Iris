@@ -5,7 +5,7 @@
   "package": "net.coderbot.iris.compat.indigo.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinAbstractQuadRenderer"
+    "MixinAbstractBlockRenderContext"
   ],
   "injectors": {
     "defaultRequire": 1
