@@ -46,7 +46,7 @@ public class IrisSodiumOptions {
 			.setName(new TranslatableComponent("options.iris.colorSpace"))
 			.setTooltip(new TranslatableComponent("options.iris.colorSpace.sodium_tooltip"))
 			.setControl(option -> new CyclingControl<>(option, ColorSpace.class,
-				new Component[] { new TextComponent("SRGB"), new TextComponent("DCI_P3"), new TextComponent("Display P3"), new TextComponent("REC2020"), new TextComponent("Adobe RGB") }))
+				new Component[] { new TextComponent("sRGB"), new TextComponent("DCI_P3"), new TextComponent("Display P3"), new TextComponent("REC2020"), new TextComponent("Adobe RGB") }))
 			.setBinding((options, value) -> {
 					IrisVideoSettings.colorSpace = value;
 					try {
