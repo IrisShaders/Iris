@@ -112,13 +112,16 @@ public class ShaderPack {
 
 		dimensionIds = new ArrayList<>();
 
+		final boolean[] hasDimensionIds = {false}; // Thanks Java
+
 		// This cannot be done in IDMap, as we do not have the include graph, and subsequently the shader settings.
 		List<String> dimensionIdCreator = loadProperties(root, "dimension.properties", environmentDefines).map(dimensionProperties -> {
+			hasDimensionIds[0] = dimensionProperties.size() > 0;
 			dimensionMap = parseDimensionMap(dimensionProperties, "dimension.", "dimension.properties");
 			return parseDimensionIds(dimensionProperties, "dimension.");
 		}).orElse(new ArrayList<>());
 
-		if (dimensionMap == null) {
+		if (!hasDimensionIds[0]) {
 			dimensionMap = new Object2ObjectArrayMap<>();
 
 			if (Files.exists(root.resolve("world0"))) {
