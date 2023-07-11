@@ -56,18 +56,25 @@ public class VanillaCoreTransformer {
 			root.rename("vaPosition", "iris_Position");
 			if (parameters.inputs.hasColor()) {
 				root.replaceReferenceExpressions(t, "vaColor", "iris_Color * iris_ColorModulator");
+				root.replaceReferenceExpressions(t, "gl_Color", "iris_Color * iris_ColorModulator");
 			} else {
 				root.replaceReferenceExpressions(t, "vaColor", "iris_ColorModulator");
+				root.replaceReferenceExpressions(t, "gl_Color", "iris_ColorModulator");
 			}
-			root.rename("gl_Color", "iris_Color");
 			root.rename("vaNormal", "iris_Normal");
 			root.rename("gl_Normal", "iris_Normal");
 			root.rename("vaUV0", "iris_UV0");
 			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0", "vec4(iris_UV0, 0.0, 1.0)");
-			root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4(iris_UV2, 0.0, 1.0)");
-			root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4(iris_UV2, 0.0, 1.0)");
+			if (parameters.inputs.hasLight()) {
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4(iris_UV2, 0.0, 1.0)");
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4(iris_UV2, 0.0, 1.0)");
+				root.rename("vaUV2", "iris_UV2");
+			} else {
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1", "vec4(240.0, 240.0, 0.0, 1.0)");
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord2", "vec4(240.0, 240.0, 0.0, 1.0)");
+				root.rename("vaUV2", "iris_UV2");
+			}
 			root.rename("vaUV1", "iris_UV1");
-			root.rename("vaUV2", "iris_UV2");
 
 			addIfNotExists(root, t, tree, "iris_Color", Type.F32VEC4, StorageType.IN);
 			addIfNotExists(root, t, tree, "iris_ColorModulator", Type.F32VEC4, StorageType.UNIFORM);
