@@ -148,6 +148,16 @@ public class CommonTransformer {
 				root.replaceReferenceExpressions(t, "gl_FragColor", "gl_FragData[0]");
 			}
 
+			if (root.identifierIndex.has("gl_TexCoord")) {
+				root.rename("gl_TexCoord", "irs_texCoords");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec4 irs_texCoords[3];");
+			}
+
+			if (root.identifierIndex.has("gl_Color")) {
+				root.rename("gl_Color", "irs_Color");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec4 irs_Color;");
+			}
+
 			// change gl_FragData[i] to iris_FragDatai
 			replaceExpressions.clear();
 			replaceIndexes.clear();
