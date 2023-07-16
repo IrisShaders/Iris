@@ -292,7 +292,7 @@ public class TransformPatcher {
 			Parameters parameters) {
 		try {
 			return transformer.transform(inputs, parameters);
-		} catch (TransformationException | ParsingException | ParseCancellationException e) {
+		} catch (TransformationException | ParsingException | IllegalStateException | IllegalArgumentException e) {
 			// print the offending programs and rethrow to stop the loading process
 			ShaderPrinter.printProgram("errored_program").addSources(inputs).print();
 			throw e;
