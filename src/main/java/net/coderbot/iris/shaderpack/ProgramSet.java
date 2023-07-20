@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class ProgramSet {
+public class ProgramSet implements ProgramSetInterface {
 	private final PackDirectives packDirectives;
 
 	private final ProgramSource shadow;

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.DimensionId;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
@@ -16,16 +17,16 @@ import java.util.function.Function;
 
 public class PipelineManager {
 	private static PipelineManager instance;
-	private final Function<DimensionId, WorldRenderingPipeline> pipelineFactory;
-	private final Map<DimensionId, WorldRenderingPipeline> pipelinesPerDimension = new HashMap<>();
+	private final Function<NamespacedId, WorldRenderingPipeline> pipelineFactory;
+	private final Map<NamespacedId, WorldRenderingPipeline> pipelinesPerDimension = new HashMap<>();
 	private WorldRenderingPipeline pipeline = new FixedFunctionWorldRenderingPipeline();
 	private int versionCounterForSodiumShaderReload = 0;
 
-	public PipelineManager(Function<DimensionId, WorldRenderingPipeline> pipelineFactory) {
+	public PipelineManager(Function<NamespacedId, WorldRenderingPipeline> pipelineFactory) {
 		this.pipelineFactory = pipelineFactory;
 	}
 
-	public WorldRenderingPipeline preparePipeline(DimensionId currentDimension) {
+	public WorldRenderingPipeline preparePipeline(NamespacedId currentDimension) {
 		if (!pipelinesPerDimension.containsKey(currentDimension)) {
 			SystemTimeUniforms.COUNTER.reset();
 			SystemTimeUniforms.TIMER.reset();
