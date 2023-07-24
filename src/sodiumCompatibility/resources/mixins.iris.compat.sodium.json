@@ -12,6 +12,7 @@
   "client": [
     "block_id.MixinChunkBuildBuffers",
     "block_id.MixinChunkVertexBufferBuilder",
+    "block_id.MixinBakedChunkModelBuilder",
     "block_id.MixinChunkRenderRebuildTask",
     "directional_shading.MixinFlatLightPipeline",
     "directional_shading.MixinSmoothLightPipeline",
@@ -49,8 +50,8 @@
     "vertex_format.MixinRegionChunkRenderer",
     "vertex_format.MixinRenderRegionArenas",
     "vertex_format.MixinRenderSectionManager",
-    "vertex_format.MixinCommonVertexElements",
-    "vertex_format.CommonVertexElementAccessor",
+    "vertex_format.MixinCommonVertexAttributes",
+    "vertex_format.CommonVertexAttributeAccessor",
     "vertex_format.MixinVertexSerializerCache",
     "vertex_format.MixinVertexTransform",
     "separate_ao.MixinBlockRenderer",

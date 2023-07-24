@@ -3,6 +3,7 @@ package net.coderbot.iris.compat.sodium.mixin.shadow_map;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
+import me.jellysquid.mods.sodium.client.render.viewport.Viewport;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
 import net.minecraft.client.Camera;
@@ -97,7 +98,7 @@ public class MixinSodiumWorldRenderer {
                      target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
                      ordinal = 0,
                      remap = false))
-    private void iris$ensureStateSwappedInUpdateChunks(Camera camera, me.jellysquid.mods.sodium.client.util.frustum.Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
+    private void iris$ensureStateSwappedInUpdateChunks(Camera camera, Viewport viewport, int frame, boolean spectator, CallbackInfo ci) {
         iris$ensureStateSwapped();
     }
 

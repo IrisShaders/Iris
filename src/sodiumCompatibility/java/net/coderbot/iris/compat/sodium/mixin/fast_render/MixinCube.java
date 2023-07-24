@@ -22,7 +22,7 @@ public class MixinCube implements ModelCuboidAccessor {
     }
 
     @Override
-    public ModelCuboid copy() {
+    public ModelCuboid sodium$copy() {
         return this.sodium$cuboid;
     }
 }

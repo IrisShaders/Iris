@@ -63,9 +63,9 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	private int planeCount = 0;
 
 	// The center coordinates of this frustum.
-	private double x;
-	private double y;
-	private double z;
+    public double x;
+	public double y;
+	public double z;
 
 	private final Vector3f shadowLightVectorFromOrigin;
 	private final BoxCuller boxCuller;
@@ -359,5 +359,53 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		}
 
 		return 2;
+	}
+
+
+	/**
+	 * Checks corner visibility.
+	 * @param minX Minimum X value of the AABB.
+	 * @param minY Minimum Y value of the AABB.
+	 * @param minZ Minimum Z value of the AABB.
+	 * @param maxX Maximum X value of the AABB.
+	 * @param maxY Maximum Y value of the AABB.
+	 * @param maxZ Maximum Z value of the AABB.
+	 * @return true if visible, false if not.
+	 */
+	public boolean checkCornerVisibilityBool(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		float outsideBoundX;
+		float outsideBoundY;
+		float outsideBoundZ;
+
+		for (int i = 0; i < planeCount; ++i) {
+			Vector4f plane = this.planes[i];
+
+			// Check if plane is inside or intersecting.
+			// This is ported from JOML's FrustumIntersection.
+
+			if (plane.x() < 0) {
+				outsideBoundX = minX;
+			} else {
+				outsideBoundX = maxX;
+			}
+
+			if (plane.y() < 0) {
+				outsideBoundY = minY;
+			} else {
+				outsideBoundY = maxY;
+			}
+
+			if (plane.z() < 0) {
+				outsideBoundZ = minZ;
+			} else {
+				outsideBoundZ = maxZ;
+			}
+
+			if (Math.fma(plane.x(), outsideBoundX, Math.fma(plane.y(), outsideBoundY, plane.z() * outsideBoundZ)) < -plane.w()) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

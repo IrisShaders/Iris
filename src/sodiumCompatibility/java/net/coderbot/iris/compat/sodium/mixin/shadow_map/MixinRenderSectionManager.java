@@ -5,11 +5,9 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import me.jellysquid.mods.sodium.client.gl.device.CommandList;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
-import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderList;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
-import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
-import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
+import me.jellysquid.mods.sodium.client.render.viewport.Viewport;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
@@ -36,26 +34,9 @@ import java.util.Iterator;
  */
 @Mixin(RenderSectionManager.class)
 public class MixinRenderSectionManager implements SwappableRenderSectionManager {
-    @Shadow(remap = false)
-    @Final
-    @Mutable
-    private ChunkRenderList chunkRenderList;
-
-    @Shadow(remap = false)
-    @Final
-    @Mutable
-    private ObjectList<RenderSection> tickableChunks;
-
-    @Shadow(remap = false)
-    @Final
-    @Mutable
-    private ObjectList<BlockEntity> visibleBlockEntities;
 
 	@Shadow(remap = false)
 	private boolean needsUpdate;
-
-    @Unique
-    private ChunkRenderList chunkRenderListSwap;
 
     @Unique
     private ObjectList<RenderSection> tickableChunksSwap;
@@ -70,9 +51,8 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
     private static final ObjectArrayFIFOQueue<?> EMPTY_QUEUE = new ObjectArrayFIFOQueue<>();
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void iris$onInit(SodiumWorldRenderer worldRenderer, BlockRenderPassManager renderPassManager,
-							 ClientLevel world, int renderDistance, CommandList commandList, CallbackInfo ci) {
-        this.chunkRenderListSwap = new ChunkRenderList();
+    private void iris$onInit(SodiumWorldRenderer worldRenderer, ClientLevel world, int renderDistance, CommandList commandList, CallbackInfo ci) {
+        //this.chunkRenderListSwap = new ChunkRenderList();
         this.tickableChunksSwap = new ObjectArrayList<>();
         this.visibleBlockEntitiesSwap = new ObjectArrayList<>();
         this.needsUpdateSwap = true;
@@ -80,7 +60,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 
     @Override
     public void iris$swapVisibilityState() {
-        ChunkRenderList chunkRenderListTmp = chunkRenderList;
+        /*ChunkRenderList chunkRenderListTmp = chunkRenderList;
         chunkRenderList = chunkRenderListSwap;
         chunkRenderListSwap = chunkRenderListTmp;
 
@@ -90,7 +70,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 
         ObjectList<BlockEntity> visibleBlockEntitiesTmp = visibleBlockEntities;
         visibleBlockEntities = visibleBlockEntitiesSwap;
-        visibleBlockEntitiesSwap = visibleBlockEntitiesTmp;
+        visibleBlockEntitiesSwap = visibleBlockEntitiesTmp;*/
 
         boolean needsUpdateTmp = needsUpdate;
         needsUpdate = needsUpdateSwap;
@@ -98,9 +78,9 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
     }
 
     @Inject(method = "update", at = @At("RETURN"))
-	private void iris$captureVisibleBlockEntities(Camera camera, Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
+	private void iris$captureVisibleBlockEntities(Camera camera, Viewport viewport, int frame, boolean spectator, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
+			//ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
 		}
 	}
 

@@ -65,7 +65,7 @@ public class IrisVertexFormats {
 	}
 
 	private static void debug(VertexFormat format) {
-		Iris.logger.info("Vertex format: " + format);
+		Iris.logger.info("Vertex format: " + format + " with byte size " + format.getVertexSize());
 		int byteIndex = 0;
 		for (VertexFormatElement element : format.getElements()) {
 			Iris.logger.info(element + " @ " + byteIndex + " is " + element.getType() + " " + element.getUsage());

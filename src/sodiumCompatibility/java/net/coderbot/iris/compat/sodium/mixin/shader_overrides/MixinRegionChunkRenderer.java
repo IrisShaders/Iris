@@ -47,17 +47,6 @@ public abstract class MixinRegionChunkRenderer implements ShaderChunkRendererExt
 		}
 	}
 
-	@Redirect(method = "render", remap = false,
-			at = @At(value = "INVOKE",
-					target = "me/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface.setDrawUniforms (Lme/jellysquid/mods/sodium/client/gl/buffer/GlMutableBuffer;)V"))
-	private void iris$setDrawUniforms(ChunkShaderInterface itf, GlMutableBuffer buffer) {
-		if (itf != null) {
-			itf.setDrawUniforms(buffer);
-		} else {
-			iris$getOverride().getInterface().setDrawUniforms(buffer);
-		}
-	}
-
 	@Redirect(method = "setModelMatrixUniforms",
 			at = @At(value = "INVOKE",
 					target = "Lme/jellysquid/mods/sodium/client/render/chunk/shader/ChunkShaderInterface;setRegionOffset(FFF)V"), remap = false)

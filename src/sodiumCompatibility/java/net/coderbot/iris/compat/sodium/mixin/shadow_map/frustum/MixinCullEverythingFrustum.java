@@ -1,19 +1,21 @@
 package net.coderbot.iris.compat.sodium.mixin.shadow_map.frustum;
 
-import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
-import me.jellysquid.mods.sodium.client.util.frustum.FrustumAdapter;
+import me.jellysquid.mods.sodium.client.render.viewport.Viewport;
+import me.jellysquid.mods.sodium.client.render.viewport.ViewportProvider;
+import net.coderbot.iris.compat.sodium.impl.shadow_map.ExtendedViewport;
+import net.coderbot.iris.compat.sodium.impl.shadow_map.IrisFrustum;
 import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(CullEverythingFrustum.class)
-public class MixinCullEverythingFrustum implements Frustum, FrustumAdapter {
+public class MixinCullEverythingFrustum implements IrisFrustum, ViewportProvider {
 	@Override
-	public Visibility testBox(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return Visibility.OUTSIDE;
+	public Viewport sodium$createViewport() {
+		return new ExtendedViewport(this);
 	}
 
 	@Override
-	public Frustum sodium$createFrustum() {
-		return this;
+	public boolean apply(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		return false;
 	}
 }
