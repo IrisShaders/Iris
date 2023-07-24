@@ -51,33 +51,4 @@ public class MixinCommonVertexAttributes {
 
 		COUNT = $VALUES.length;
 	}
-
-	/**
-	 * @author IMS
-	 * @reason Add more elements
-	 */
-	@Overwrite(remap = false)
-	public static CommonVertexAttribute getCommonType(VertexFormatElement element) {
-		if (element == DefaultVertexFormat.ELEMENT_POSITION) {
-			return CommonVertexAttribute.POSITION;
-		} else if (element == DefaultVertexFormat.ELEMENT_COLOR) {
-			return CommonVertexAttribute.COLOR;
-		} else if (element == DefaultVertexFormat.ELEMENT_UV0) {
-			return CommonVertexAttribute.TEXTURE;
-		} else if (element == DefaultVertexFormat.ELEMENT_UV1) {
-			return CommonVertexAttribute.OVERLAY;
-		} else if (element == DefaultVertexFormat.ELEMENT_UV2) {
-			return CommonVertexAttribute.LIGHT;
-		} else if (element == IrisVertexFormats.ENTITY_ELEMENT || element == IrisVertexFormats.ENTITY_ID_ELEMENT) {
-			return IrisCommonVertexAttributes.BLOCK_ID;
-		} else if (element == IrisVertexFormats.MID_BLOCK_ELEMENT) {
-			return IrisCommonVertexAttributes.MID_BLOCK;
-		} else if (element == IrisVertexFormats.TANGENT_ELEMENT) {
-			return IrisCommonVertexAttributes.TANGENT;
-		} else if (element == IrisVertexFormats.MID_TEXTURE_ELEMENT) {
-			return IrisCommonVertexAttributes.MID_TEX_COORD;
-		} else {
-			return element == DefaultVertexFormat.ELEMENT_NORMAL ? CommonVertexAttribute.NORMAL : null;
-		}
-	}
 }

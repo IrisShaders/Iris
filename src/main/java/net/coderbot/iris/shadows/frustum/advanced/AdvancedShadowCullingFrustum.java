@@ -373,35 +373,8 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	 * @return true if visible, false if not.
 	 */
 	public boolean checkCornerVisibilityBool(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		float outsideBoundX;
-		float outsideBoundY;
-		float outsideBoundZ;
-
 		for (int i = 0; i < planeCount; ++i) {
-			Vector4f plane = this.planes[i];
-
-			// Check if plane is inside or intersecting.
-			// This is ported from JOML's FrustumIntersection.
-
-			if (plane.x() < 0) {
-				outsideBoundX = minX;
-			} else {
-				outsideBoundX = maxX;
-			}
-
-			if (plane.y() < 0) {
-				outsideBoundY = minY;
-			} else {
-				outsideBoundY = maxY;
-			}
-
-			if (plane.z() < 0) {
-				outsideBoundZ = minZ;
-			} else {
-				outsideBoundZ = maxZ;
-			}
-
-			if (Math.fma(plane.x(), outsideBoundX, Math.fma(plane.y(), outsideBoundY, plane.z() * outsideBoundZ)) < -plane.w()) {
+			if (planes[i].x * (planes[i].x < 0 ? minX : maxX) + planes[i].y * (planes[i].y < 0 ? minY : maxY) + planes[i].z * (planes[i].z < 0 ? minZ : maxZ) < -planes[i].w) {
 				return false;
 			}
 		}

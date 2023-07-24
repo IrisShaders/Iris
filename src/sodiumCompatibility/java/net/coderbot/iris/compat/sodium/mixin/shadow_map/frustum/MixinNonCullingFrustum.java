@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 public class MixinNonCullingFrustum implements IrisFrustum, ViewportProvider {
 	@Override
 	public Viewport sodium$createViewport() {
-		return new ExtendedViewport(this);
+		return new ExtendedViewport(this, 0 ,0 ,0);
 	}
 
 	@Override

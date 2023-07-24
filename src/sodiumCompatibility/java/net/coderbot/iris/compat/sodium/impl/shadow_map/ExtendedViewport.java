@@ -7,8 +7,8 @@ import org.joml.FrustumIntersection;
 public class ExtendedViewport extends Viewport {
 	private IrisFrustum frustum;
 
-	public ExtendedViewport(IrisFrustum frustum) {
-		super(new FrustumIntersection[]{}, 0,0,0);
+	public ExtendedViewport(IrisFrustum frustum, float x, float y, float z) {
+		super(new FrustumIntersection[]{}, x,y,z);
 		this.frustum = frustum;
 	}
 

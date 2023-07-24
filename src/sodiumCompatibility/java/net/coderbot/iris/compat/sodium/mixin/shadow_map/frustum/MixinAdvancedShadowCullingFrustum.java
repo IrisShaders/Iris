@@ -14,13 +14,22 @@ public abstract class MixinAdvancedShadowCullingFrustum implements ViewportProvi
 	@Shadow(remap = false)
 	public abstract int fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
 
+	@Shadow
+	public double x;
+
+	@Shadow
+	public double y;
+
+	@Shadow
+	public double z;
+
 	@Override
 	public boolean apply(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return ((AdvancedShadowCullingFrustum) (Object) this).checkCornerVisibilityBool(minX, minY, minZ, maxX, maxY, maxZ);
+		return ((AdvancedShadowCullingFrustum) (Object) this).fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ) > 0;
 	}
 
 	@Override
 	public Viewport sodium$createViewport() {
-		return new ExtendedViewport(this);
+		return new ExtendedViewport(this, (float) x,  (float) y,  (float) z);
 	}
 }

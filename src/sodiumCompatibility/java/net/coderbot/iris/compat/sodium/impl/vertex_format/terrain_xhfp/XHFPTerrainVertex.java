@@ -68,8 +68,8 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 		MemoryUtil.memPutShort(ptr + 0L, XHFPModelVertexType.encodePosition(vertex.x));
 		MemoryUtil.memPutShort(ptr + 2L, XHFPModelVertexType.encodePosition(vertex.y));
 		MemoryUtil.memPutShort(ptr + 4L, XHFPModelVertexType.encodePosition(vertex.z));
-		MemoryUtil.memPutShort(ptr + 6L, material.bits());
-		MemoryUtil.memPutShort(ptr + 7L, (byte) chunkId);
+		MemoryUtil.memPutByte(ptr + 6L, material.bits());
+		MemoryUtil.memPutByte(ptr + 7L, (byte) chunkId);
 
 		MemoryUtil.memPutInt(ptr + 8, vertex.color);
 

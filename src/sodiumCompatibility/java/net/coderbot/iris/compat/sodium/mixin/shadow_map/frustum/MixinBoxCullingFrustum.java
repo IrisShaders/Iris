@@ -16,9 +16,12 @@ public class MixinBoxCullingFrustum implements IrisFrustum, ViewportProvider {
 	@Final
 	private BoxCuller boxCuller;
 
+	@Shadow
+	private double x, y, z;
+
 	@Override
 	public Viewport sodium$createViewport() {
-		return new ExtendedViewport(this);
+		return new ExtendedViewport(this, (float) x,  (float) y,  (float) z);
 	}
 
 	@Override
