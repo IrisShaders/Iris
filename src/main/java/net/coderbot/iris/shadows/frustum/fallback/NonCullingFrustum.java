@@ -9,11 +9,6 @@ public class NonCullingFrustum extends Frustum {
 		super(new Matrix4f(), new Matrix4f());
 	}
 
-	// for Sodium
-	public int fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return 1;
-	}
-
 	// For Immersive Portals
 	// NB: The shadow culling in Immersive Portals must be disabled, because when Advanced Shadow Frustum Culling
 	//     is not active, we are at a point where we can make no assumptions how the shader pack uses the shadow

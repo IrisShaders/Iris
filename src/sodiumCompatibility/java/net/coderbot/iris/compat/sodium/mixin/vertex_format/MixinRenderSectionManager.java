@@ -18,9 +18,9 @@ public class MixinRenderSectionManager {
 		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
 	}
 
-	@ModifyArg(method = "<init>", remap = false,
+	@ModifyArg(method = "<init>",
 			at = @At(value = "INVOKE",
-					target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuilder;<init>(Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;)V"))
+					target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/executor/ChunkBuilder;<init>(Lnet/minecraft/client/multiplayer/ClientLevel;Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;)V"))
 	private ChunkVertexType iris$useExtendedVertexFormat$2(ChunkVertexType vertexType) {
 		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
 	}

@@ -289,7 +289,7 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 
 	// For Sodium
 	// TODO: change this to respect intersections on 1.18+!
-	public int fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+	public int fastAabbTest(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		if (boxCuller != null && boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ)) {
 			return 0;
 		}

@@ -15,7 +15,7 @@ public class MixinNonCullingFrustum implements IrisFrustum, ViewportProvider {
 	}
 
 	@Override
-	public boolean apply(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+	public boolean apply(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		return true;
 	}
 }

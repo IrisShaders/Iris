@@ -3,16 +3,16 @@ package net.coderbot.iris.compat.sodium.mixin.block_id;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderCache;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderContext;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.FluidRenderer;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderMeshingTask;
 import me.jellysquid.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
-import me.jellysquid.mods.sodium.client.render.chunk.tasks.ChunkRenderRebuildTask;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
-import me.jellysquid.mods.sodium.client.util.task.CancellationSource;
+import me.jellysquid.mods.sodium.client.util.task.CancellationToken;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
@@ -35,16 +35,16 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 /**
  * Passes additional information indirectly to the vertex writer to support the mc_Entity and at_midBlock parts of the vertex format.
  */
-@Mixin(ChunkRenderRebuildTask.class)
+@Mixin(ChunkBuilderMeshingTask.class)
 public class MixinChunkRenderRebuildTask {
 	private ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
 
-	@Inject(method = "performBuild", at = @At(value = "INVOKE",
+	@Inject(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
 		target = "net/minecraft/world/level/block/state/BlockState.getRenderShape()" +
 			"Lnet/minecraft/world/level/block/RenderShape;"),
 		locals = LocalCapture.CAPTURE_FAILHARD)
 	private void iris$setLocalPos(ChunkBuildContext context,
-								  CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult> cir,
+								  CancellationToken cancellationSource, CallbackInfoReturnable<ChunkBuildOutput> cir,
 								  BuiltSectionInfo.Builder renderData, VisGraph occluder, ChunkBuildBuffers buffers,
 								  BlockRenderCache cacheLocal,
 								  WorldSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
@@ -74,7 +74,7 @@ public class MixinChunkRenderRebuildTask {
 		}
 	}
 
-	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
+	@Redirect(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/client/renderer/block/BlockModelShaper;getBlockModel(Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/client/resources/model/BakedModel;"))
 	private BakedModel iris$wrapGetBlockLayer(BlockModelShaper instance, BlockState blockState, ChunkBuildContext context) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
@@ -84,7 +84,7 @@ public class MixinChunkRenderRebuildTask {
 		return instance.getBlockModel(blockState);
 	}
 
-	@Redirect(method = "performBuild", at = @At(value = "INVOKE",
+	@Redirect(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
 			target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/pipeline/FluidRenderer;render(Lme/jellysquid/mods/sodium/client/world/WorldSlice;Lnet/minecraft/world/level/material/FluidState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildBuffers;)V"))
 	private void iris$wrapGetFluidLayer(FluidRenderer instance, WorldSlice h2, FluidState fluidState, BlockPos h4, BlockPos north1, ChunkBuildBuffers buffers) {
 		if (buffers instanceof ChunkBuildBuffersExt) {
@@ -94,9 +94,9 @@ public class MixinChunkRenderRebuildTask {
 		instance.render(h2, fluidState, h4, north1, buffers);
 	}
 
-	@Inject(method = "performBuild",
+	@Inject(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;hasBlockEntity()Z"))
-	private void iris$resetContext(ChunkBuildContext buildContext, CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult> cir) {
+	private void iris$resetContext(ChunkBuildContext buildContext, CancellationToken cancellationSource, CallbackInfoReturnable<ChunkBuildOutput> cir) {
 		if (buildContext.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) buildContext.buffers).iris$resetBlockContext();
 		}

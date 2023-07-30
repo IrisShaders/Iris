@@ -50,6 +50,8 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 	@Shadow
 	@Final
 	private ArrayDeque<RenderSection> iterationQueue;
+	@Mutable
+	@Shadow @Final private int renderDistance;
 	@Unique
 	private Map<ChunkUpdateType, PriorityQueue<RenderSection>> rebuildQueuesSwap = new HashMap<>();
 
@@ -77,23 +79,35 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 		}
 	}
 
+	@Inject(method = "updateRenderLists", at = @At("TAIL"))
+	private void overrideNeedsUpdate(Camera camera, Viewport viewport, int frame, boolean spectator, CallbackInfo ci) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) needsUpdate = true;
+	}
+
     @Override
     public void iris$swapVisibilityState() {
-
-        boolean needsUpdateTmp = needsUpdate;
-        needsUpdate = needsUpdateSwap;
-        needsUpdateSwap = needsUpdateTmp;
     }
+
+	@Unique
+	private int originalRenderDistance = 0;
+
+	@Inject(method = "updateRenderLists", at = @At("HEAD"))
+	private void iris$updateRenderDistance(Camera camera, Viewport viewport, int frame, boolean spectator, CallbackInfo ci) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			originalRenderDistance = renderDistance;
+			renderDistance = ShadowRenderingState.getRenderDistance();
+		}
+	}
 
     @Inject(method = "updateRenderLists", at = @At("RETURN"))
 	private void iris$captureVisibleBlockEntities(Camera camera, Viewport viewport, int frame, boolean spectator, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			//ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
+			renderDistance = originalRenderDistance;
 		}
 	}
 
-	//@Inject(method = "schedulePendingUpdates", at = @At("HEAD"), cancellable = true, remap = false)
-	private void iris$noRebuildEnqueueingInShadowPass(RenderSection section, CallbackInfo ci) {
+	@Inject(method = "uploadChunks", at = @At("HEAD"), cancellable = true, remap = false)
+	private void iris$noRebuildEnqueueingInShadowPass(CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ci.cancel();
 		}
@@ -126,7 +140,7 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 		instance.setIncomingDirections(frame);
 	}
 
-	@Redirect(method = "resetLists", remap = false,
+	@Redirect(method = "resetRenderLists", remap = false,
 			at = @At(value = "INVOKE", target = "java/util/Collection.iterator ()Ljava/util/Iterator;"))
 	private Iterator<?> iris$noQueueClearingInShadowPass(Collection<?> collection) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {

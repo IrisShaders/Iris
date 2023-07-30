@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(Biome.class)
+@Mixin(value = Biome.class, priority = 990)
 public class MixinBiome implements ExtendedBiome {
 	@Shadow
 	@Final

@@ -65,8 +65,9 @@ import java.util.Objects;
 public class ShadowRenderer {
 	public static boolean ACTIVE = false;
 	public static List<BlockEntity> visibleBlockEntities;
+	public static int renderDistance;
 
-	private final float halfPlaneLength;
+    private final float halfPlaneLength;
 	private final float renderDistanceMultiplier;
 	private final float entityShadowDistanceMultiplier;
 	private final int resolution;
@@ -352,6 +353,15 @@ public class ShadowRenderer {
 
 		levelRenderer.getLevel().getProfiler().popPush("shadows");
 		ACTIVE = true;
+
+		renderDistance = (int) ((halfPlaneLength * renderDistanceMultiplier) / 16);
+
+		if (renderDistanceMultiplier < 0) {
+			renderDistance = IrisVideoSettings.shadowDistance;
+		}
+
+
+
 		visibleBlockEntities = new ArrayList<>();
 
 		// NB: We store the previous player buffers in order to be able to allow mods rendering entities in the shadow pass (Flywheel) to use the shadow buffers instead.

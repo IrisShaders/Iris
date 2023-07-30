@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(AdvancedShadowCullingFrustum.class)
 public abstract class MixinAdvancedShadowCullingFrustum implements ViewportProvider, IrisFrustum {
 	@Shadow(remap = false)
-	public abstract int fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
+	public abstract int fastAabbTest(double minX, double minY, double minZ, double maxX, double maxY, double maxZ);
 
 	@Shadow
 	public double x;
@@ -24,12 +24,12 @@ public abstract class MixinAdvancedShadowCullingFrustum implements ViewportProvi
 	public double z;
 
 	@Override
-	public boolean apply(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+	public boolean apply(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		return ((AdvancedShadowCullingFrustum) (Object) this).fastAabbTest(minX, minY, minZ, maxX, maxY, maxZ) > 0;
 	}
 
 	@Override
 	public Viewport sodium$createViewport() {
-		return new ExtendedViewport(this, (float) x,  (float) y,  (float) z);
+		return new ExtendedViewport(this, x,  y, z);
 	}
 }

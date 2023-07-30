@@ -7,13 +7,13 @@ import org.joml.FrustumIntersection;
 public class ExtendedViewport extends Viewport {
 	private IrisFrustum frustum;
 
-	public ExtendedViewport(IrisFrustum frustum, float x, float y, float z) {
+	public ExtendedViewport(IrisFrustum frustum, double x, double y, double z) {
 		super(new FrustumIntersection[]{}, x,y,z);
 		this.frustum = frustum;
 	}
 
 	@Override
-	public boolean isBoxVisible(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+	public boolean isBoxVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		return frustum.apply(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 }

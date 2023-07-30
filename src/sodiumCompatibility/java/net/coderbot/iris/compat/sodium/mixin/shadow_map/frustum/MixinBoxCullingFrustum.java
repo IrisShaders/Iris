@@ -21,11 +21,11 @@ public class MixinBoxCullingFrustum implements IrisFrustum, ViewportProvider {
 
 	@Override
 	public Viewport sodium$createViewport() {
-		return new ExtendedViewport(this, (float) x,  (float) y,  (float) z);
+		return new ExtendedViewport(this, x,  y,  z);
 	}
 
 	@Override
-	public boolean apply(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+	public boolean apply(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		return boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 }

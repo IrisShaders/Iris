@@ -20,7 +20,11 @@ public class ShadowRenderingState {
 		return function.renderBlockEntities(shadowRenderer, bufferSource, modelView, camera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum);
 	}
 
-	public interface BlockEntityRenderFunction {
+    public static int getRenderDistance() {
+		return ShadowRenderer.renderDistance;
+    }
+
+    public interface BlockEntityRenderFunction {
 		int renderBlockEntities(ShadowRenderer shadowRenderer, MultiBufferSource.BufferSource bufferSource, PoseStack modelView, Camera camera, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum);
 	}
 }
