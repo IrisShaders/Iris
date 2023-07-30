@@ -10,18 +10,4 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(RegionChunkRenderer.class)
 public class MixinRegionChunkRenderer {
-	@Shadow(remap = false)
-	@Final
-	private boolean isBlockFaceCullingEnabled;
-
-	@Redirect(method = "collectDrawCommands", remap = false,
-			at = @At(value = "FIELD",
-					target = "me/jellysquid/mods/sodium/client/render/chunk/RegionChunkRenderer.isBlockFaceCullingEnabled : Z"))
-	private boolean iris$disableBlockFaceCullingInShadowPass(RegionChunkRenderer renderer) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			return false;
-		} else {
-			return isBlockFaceCullingEnabled;
-		}
-	}
 }

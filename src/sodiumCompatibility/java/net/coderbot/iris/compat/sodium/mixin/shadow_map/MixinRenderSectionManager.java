@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import me.jellysquid.mods.sodium.client.gl.device.CommandList;
+import me.jellysquid.mods.sodium.client.gui.SodiumGameOptions;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.ChunkUpdateType;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
@@ -48,37 +49,9 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
 	@Mutable
 	@Shadow
 	@Final
-	private SortedRenderListBuilder renderListBuilder;
-	@Shadow
-	private SortedRenderLists renderLists;
-
-	@Shadow
-	private Viewport viewport;
-
-	@Unique
-	private Viewport viewportSwap;
-
-	@Mutable
-	@Shadow
-	@Final
 	private ArrayDeque<RenderSection> iterationQueue;
-	@Mutable
-	@Shadow
-	@Final
-	private Map<ChunkUpdateType, PriorityQueue<RenderSection>> rebuildQueues;
 	@Unique
 	private Map<ChunkUpdateType, PriorityQueue<RenderSection>> rebuildQueuesSwap = new HashMap<>();
-	@Unique
-	private SortedRenderListBuilder renderListBuilderSwap;
-	@Unique
-	private SortedRenderLists renderListsSwap;
-	@Unique
-	private ArrayDeque<RenderSection> iterationQueueSwap;
-	@Unique
-    private ObjectList<RenderSection> tickableChunksSwap;
-
-    @Unique
-    private ObjectList<BlockEntity> visibleBlockEntitiesSwap;
 
     @Unique
 	private boolean needsUpdateSwap;
@@ -87,17 +60,22 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
     private static final ObjectArrayFIFOQueue<?> EMPTY_QUEUE = new ObjectArrayFIFOQueue<>();
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void iris$onInit(SodiumWorldRenderer worldRenderer, ClientLevel world, int renderDistance, CommandList commandList, CallbackInfo ci) {
-        this.renderListBuilderSwap = new SortedRenderListBuilder();
-        this.iterationQueueSwap = new ArrayDeque<>();
-        this.tickableChunksSwap = new ObjectArrayList<>();
-        this.visibleBlockEntitiesSwap = new ObjectArrayList<>();
+    private void iris$onInit(ClientLevel world, int renderDistance, CommandList commandList, CallbackInfo ci) {
         this.needsUpdateSwap = true;
 
 		for (ChunkUpdateType type : ChunkUpdateType.values()) {
 			this.rebuildQueuesSwap.put(type, new ObjectArrayFIFOQueue<>());
 		}
     }
+
+	@Redirect(method = "initSearch", at = @At(value = "FIELD", target = "Lme/jellysquid/mods/sodium/client/gui/SodiumGameOptions$PerformanceSettings;useBlockFaceCulling:Z"))
+	private boolean iris$disableBlockFaceCullingInShadowPass(SodiumGameOptions.PerformanceSettings instance) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			return false;
+		} else {
+			return instance.useBlockFaceCulling;
+		}
+	}
 
     @Override
     public void iris$swapVisibilityState() {
@@ -107,14 +85,14 @@ public class MixinRenderSectionManager implements SwappableRenderSectionManager 
         needsUpdateSwap = needsUpdateTmp;
     }
 
-    @Inject(method = "update", at = @At("RETURN"))
+    @Inject(method = "updateRenderLists", at = @At("RETURN"))
 	private void iris$captureVisibleBlockEntities(Camera camera, Viewport viewport, int frame, boolean spectator, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			//ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
 		}
 	}
 
-	@Inject(method = "schedulePendingUpdates", at = @At("HEAD"), cancellable = true, remap = false)
+	//@Inject(method = "schedulePendingUpdates", at = @At("HEAD"), cancellable = true, remap = false)
 	private void iris$noRebuildEnqueueingInShadowPass(RenderSection section, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ci.cancel();

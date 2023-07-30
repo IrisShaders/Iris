@@ -82,7 +82,7 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 		pass.startDrawing();
 
 		override.bind();
-		override.getInterface().setup();
+		override.getInterface().setupState();
 	}
 
     @Inject(method = "end", at = @At("HEAD"), remap = false, cancellable = true)

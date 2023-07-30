@@ -1,5 +1,8 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
+import me.jellysquid.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
+import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
+
 public enum IrisTerrainPass {
     SHADOW("shadow"),
 	SHADOW_CUTOUT("shadow"),
@@ -19,5 +22,14 @@ public enum IrisTerrainPass {
 
 	public boolean isShadow() {
 		return this == SHADOW || this == SHADOW_CUTOUT;
+	}
+
+	public TerrainRenderPass toTerrainPass() {
+		switch (this) {
+			case SHADOW, GBUFFER_SOLID: return DefaultTerrainRenderPasses.SOLID;
+			case SHADOW_CUTOUT, GBUFFER_CUTOUT: return DefaultTerrainRenderPasses.CUTOUT;
+			case GBUFFER_TRANSLUCENT: return DefaultTerrainRenderPasses.TRANSLUCENT;
+			default: return null;
+		}
 	}
 }

@@ -38,6 +38,7 @@
     "shadow_map.MixinRenderSection",
     "shadow_map.MixinRenderSectionManager",
     "shadow_map.MixinSodiumWorldRenderer",
+    "shadow_map.SodiumWorldRendererAccessor",
     "shadow_map.frustum.MixinAdvancedShadowCullingFrustum",
     "shadow_map.frustum.MixinBoxCullingFrustum",
     "shadow_map.frustum.MixinCullEverythingFrustum",

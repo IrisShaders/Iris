@@ -2,7 +2,9 @@ package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
 import me.jellysquid.mods.sodium.client.gl.GlObject;
 import me.jellysquid.mods.sodium.client.gl.shader.*;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkFogMode;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
@@ -137,7 +139,7 @@ public class IrisChunkProgramOverrides {
 	}
 
     @Nullable
-    private GlProgram<IrisChunkShaderInterface> createShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+    private GlProgram<IrisChunkShaderInterface> createShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline, ChunkVertexType vertexType) {
         GlShader vertShader = createVertexShader(pass, pipeline);
         GlShader geomShader = createGeometryShader(pass, pipeline);
         GlShader fragShader = createFragmentShader(pass, pipeline);
@@ -187,7 +189,7 @@ public class IrisChunkProgramOverrides {
 						int handle = ((GlObject) shader).handle();
 						ShaderBindingContextExt contextExt = (ShaderBindingContextExt) shader;
 
-						return new IrisChunkShaderInterface(handle, contextExt, pipeline,
+						return new IrisChunkShaderInterface(handle, contextExt, pipeline, new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass.toTerrainPass(), vertexType),
 								pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, blendOverride, bufferOverrides, alpha, pipeline.getCustomUniforms());
 					});
         } finally {
@@ -232,7 +234,7 @@ public class IrisChunkProgramOverrides {
 					continue;
 				}
 
-                this.programs.put(pass, createShader(pass, pipeline));
+                this.programs.put(pass, createShader(pass, pipeline, vertexType));
             }
         } else {
 			for (GlProgram<?> program : this.programs.values()) {
