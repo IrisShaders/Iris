@@ -6,16 +6,15 @@ import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import org.lwjgl.opengl.GL43C;
 
-import java.util.Collections;
-
 public class ShaderStorageBufferHolder {
 	private ShaderStorageBuffer[] buffers;
 	private boolean destroyed;
 
 	public ShaderStorageBufferHolder(Int2IntArrayMap overrides) {
 		destroyed = false;
-		buffers = new ShaderStorageBuffer[Collections.max(overrides.keySet()) + 1];
-		overrides.forEach((index, size) -> {
+		buffers = overrides.int2IntEntrySet().stream().map(entry -> {
+			int index = entry.getIntKey();
+			int size = entry.getIntValue();
 			if (size > IrisRenderSystem.getVRAM()) {
 				throw new OutOfVideoMemoryError("We only have " + toMib(IrisRenderSystem.getVRAM()) + "MiB of RAM to work with, but the pack is requesting " + size + "! Can't continue.");
 			}
@@ -28,8 +27,8 @@ public class ShaderStorageBufferHolder {
 				throw new IllegalStateException("We don't have enough SSBO units??? (index: " + index + ", max: " + SamplerLimits.get().getMaxShaderStorageUnits());
 			}
 			IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, index, buffer);
-			buffers[index] = new ShaderStorageBuffer(buffer, index, size);
-		});
+			return new ShaderStorageBuffer(buffer, index, size);
+		}).toArray(ShaderStorageBuffer[]::new);
 		GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
