@@ -246,7 +246,8 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		midV /= vertexAmount;
 
 		if (vertexAmount == 3) {
-			NormalHelper.computeFaceNormalTri(normal, polygon);
+      			// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
+			// NormalHelper.computeFaceNormalTri(normal, polygon);
 		} else {
 			NormalHelper.computeFaceNormal(normal, polygon);
 		}
