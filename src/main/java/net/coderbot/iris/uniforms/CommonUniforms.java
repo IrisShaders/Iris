@@ -63,6 +63,9 @@ public final class CommonUniforms {
 		FogUniforms.addFogUniforms(uniforms, fogMode);
 		IrisInternalUniforms.addFogUniforms(uniforms, fogMode);
 
+		// This is a fallback for when entityId via attributes cannot be used. (lightning)
+		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity, StateUpdateNotifiers.fallbackEntityNotifier);
+
 		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
 		//       but we do. How will custom uniforms depending on atlasSize work?
 		//
@@ -141,7 +144,6 @@ public final class CommonUniforms {
 			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
 			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
 			.uniform4f(ONCE, "entityColor", () -> new Vector4f(0, 0, 0, 0))
-			.uniform1i(ONCE, "entityId", () -> -1)
 			.uniform1i(ONCE, "blockEntityId", () -> -1)
 			.uniform1i(ONCE, "currentRenderedItemId", () -> -1)
 			.uniform1f(ONCE, "pi", () -> Math.PI)

@@ -32,6 +32,7 @@
     "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
+    "MixinLightningBoltRenderer",
     "MixinMinecraft_Keybinds",
     "MixinMinecraft_Images",
     "MixinMinecraft_NoAuthInDev",
