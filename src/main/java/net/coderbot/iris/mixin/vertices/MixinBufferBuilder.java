@@ -259,27 +259,30 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			tangentOffset = 6;
 		}
 
-		int packedNormal = -1;
-		int tangent = -1;
 		if (vertexAmount == 3) {
-			// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
-			// NormalHelper.computeFaceNormalTri(normal, polygon);
-			packedNormal = buffer.getInt(nextElementByte - normalOffset - stride * vertex);
-			normal.set(unpackX(packedNormal), unpackY(packedNormal), unpackZ(packedNormal));
-			tangent = NormalHelper.computeTangentSmooth(normal.x, normal.y, normal.z, polygon);
+			// NormalHelper.computeFaceNormalTri(normal, polygon);	// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
+
+			for (int vertex = 0; vertex < vertexAmount; vertex++) {
+				int packedNormal = buffer.getInt(nextElementByte - normalOffset - stride * vertex); // retrieve per-vertex normal
+				normal.set(unpackX(packedNormal), unpackY(packedNormal), unpackZ(packedNormal));
+
+				int tangent = NormalHelper.computeTangentSmooth(normal.x, normal.y, normal.z, polygon);
+
+				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
+				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
+				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+			}
 		} else {
 			NormalHelper.computeFaceNormal(normal, polygon);
-		  packedNormal = NormalHelper.packNormal(normal, 0.0f);
-      tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
-		}
+			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
+			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 
-		int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
-
-		for (int vertex = 0; vertex < vertexAmount; vertex++) {
-			buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
-			buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
-			buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
-			buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+			for (int vertex = 0; vertex < vertexAmount; vertex++) {
+				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
+				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
+				buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
+				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+			}
 		}
 	}
 
