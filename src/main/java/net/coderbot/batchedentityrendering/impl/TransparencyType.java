@@ -6,6 +6,10 @@ public enum TransparencyType {
 	 */
 	OPAQUE,
 	/**
+	 * Opaque, non transparent content that must be rendered after other opaque content, but before translucents.
+	 */
+	OPAQUE_DECAL,
+	/**
 	 * Generally transparent / translucent content.
 	 */
 	GENERAL_TRANSPARENT,

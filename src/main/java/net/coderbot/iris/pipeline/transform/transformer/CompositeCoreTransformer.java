@@ -12,6 +12,8 @@ public class CompositeCoreTransformer {
 			TranslationUnit tree,
 			Root root,
 			Parameters parameters) {
+		CompositeDepthTransformer.transform(t, tree, root);
+
 		if (parameters.type == PatchShaderType.VERTEX) {
 			root.rename("vaPosition", "Position");
 			root.rename("vaUV0", "UV0");

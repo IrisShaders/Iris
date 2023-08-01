@@ -11,6 +11,7 @@ public class GbufferPrograms {
 	private static boolean blockEntities;
 	private static boolean outline;
 	private static Runnable phaseChangeListener;
+	private static Runnable fallbackEntityListener;
 
 	private static void checkReentrancy() {
 		if (entities || blockEntities || outline) {
@@ -96,6 +97,12 @@ public class GbufferPrograms {
 		}
 	}
 
+	public static void runFallbackEntityListener() {
+		if (fallbackEntityListener != null) {
+			fallbackEntityListener.run();
+		}
+	}
+
 	public static void setupSpecialRenderCondition(SpecialCondition override) {
 		Iris.getPipelineManager().getPipeline().ifPresent(p -> p.setSpecialCondition(override));
 	}
@@ -106,6 +113,7 @@ public class GbufferPrograms {
 
 	static {
 		StateUpdateNotifiers.phaseChangeNotifier = listener -> phaseChangeListener = listener;
+		StateUpdateNotifiers.fallbackEntityNotifier = listener -> fallbackEntityListener = listener;
 	}
 
 	public static void init() {
