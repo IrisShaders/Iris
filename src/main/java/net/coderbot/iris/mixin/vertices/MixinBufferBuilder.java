@@ -259,14 +259,18 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			tangentOffset = 6;
 		}
 
-		int packedNormal = 0;
+		int packedNormal = -1;
+		int tangent = -1;
 		if (vertexAmount == 3) {
 			// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
 			// NormalHelper.computeFaceNormalTri(normal, polygon);
-			packedNormal = buffer.getInt(nextElementByte - normalOffset);
+			packedNormal = buffer.getInt(nextElementByte - normalOffset - stride * vertex);
+			normal.set(unpackX(packedNormal), unpackY(packedNormal), unpackZ(packedNormal));
+			tangent = NormalHelper.computeTangentSmooth(normal.x, normal.y, normal.z, polygon);
 		} else {
 			NormalHelper.computeFaceNormal(normal, polygon);
-			packedNormal = NormalHelper.packNormal(normal, 0.0f);
+		  packedNormal = NormalHelper.packNormal(normal, 0.0f);
+      tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 		}
 
 		int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
