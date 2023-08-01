@@ -77,6 +77,7 @@ public class MixinLevelRenderer {
 			Minecraft.getInstance().getProfiler().popPush("entity_draws_opaque");
 			if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource source) {
 				source.endBatchWithType(TransparencyType.OPAQUE);
+				source.endBatchWithType(TransparencyType.OPAQUE_DECAL);
 			} else {
 				this.renderBuffers.bufferSource().endBatch();
 			}

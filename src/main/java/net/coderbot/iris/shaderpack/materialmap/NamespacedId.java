@@ -48,7 +48,11 @@ public class NamespacedId {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(namespace, name);
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((namespace == null) ? 0 : namespace.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
 	}
 
 	@Override

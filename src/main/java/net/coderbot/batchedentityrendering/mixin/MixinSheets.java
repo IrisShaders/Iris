@@ -19,7 +19,7 @@ public class MixinSheets {
 
 	@Inject(method = "<clinit>", at = @At("TAIL"))
 	private static void setSheet(CallbackInfo ci) {
-		((BlendingStateHolder) ARMOR_TRIMS_SHEET_TYPE).setTransparencyType(TransparencyType.GENERAL_TRANSPARENT);
+		((BlendingStateHolder) ARMOR_TRIMS_SHEET_TYPE).setTransparencyType(TransparencyType.OPAQUE_DECAL);
 		((BlendingStateHolder) RenderType.textBackground()).setTransparencyType(TransparencyType.OPAQUE);
 		((BlendingStateHolder) RenderType.textBackgroundSeeThrough()).setTransparencyType(TransparencyType.OPAQUE);
 	}
