@@ -622,6 +622,7 @@ public class ShadowRenderer {
 		int shadowEntities = 0;
 
 		if (!dispatcher.shouldRender(player, frustum, cameraX, cameraY, cameraZ) || player.isSpectator()) {
+			levelRenderer.getLevel().getProfiler().pop();
 			return 0;
 		}
 

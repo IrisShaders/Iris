@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class ProgramSet {
+public class ProgramSet implements ProgramSetInterface {
 	private final PackDirectives packDirectives;
 
 	private final ProgramSource shadow;
@@ -518,6 +518,25 @@ public class ProgramSet {
 
 		AbsolutePackPath fragmentPath = directory.resolve(program + ".fsh");
 		String fragmentSource = sourceProvider.apply(fragmentPath);
+
+		if (vertexSource == null && fragmentSource != null) {
+			// This is for really old packs that do not use a vertex shader.
+			Iris.logger.warn("Found a program (" + program + ") that has a fragment shader but no vertex shader? This is very legacy behavior and might not work right.");
+			vertexSource = """
+				#version 120
+
+				varying vec4 irs_texCoords[3];
+				varying vec4 irs_Color;
+
+				void main() {
+					gl_Position = ftransform();
+					irs_texCoords[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+					irs_texCoords[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;
+					irs_texCoords[2] = gl_TextureMatrix[1] * gl_MultiTexCoord2;
+					irs_Color = gl_Color;
+				}
+				""";
+		}
 
 		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties,
 				defaultBlendModeOverride);

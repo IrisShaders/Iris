@@ -234,9 +234,10 @@ public class MixinGameRenderer {
 	}
 
 		@Inject(method = {
-			"getRendertypeEnergySwirlShader"
-	}, at = @At("HEAD"), cancellable = true)
-	private static void iris$overrideEnergySwirlShader(CallbackInfoReturnable<ShaderInstance> cir) {
+			"getRendertypeEnergySwirlShader",
+			"getRendertypeEntityShadowShader"
+		}, at = @At("HEAD"), cancellable = true)
+	private static void iris$overrideEnergySwirlShadowShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
@@ -281,8 +282,7 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = {
-			"getRendertypeWaterMaskShader",
-			"getRendertypeEntityShadowShader"
+			"getRendertypeWaterMaskShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntitySolidShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
