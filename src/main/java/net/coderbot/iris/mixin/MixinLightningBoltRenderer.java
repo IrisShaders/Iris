@@ -1,7 +1,6 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix4f;
 import net.coderbot.iris.pipeline.LightningHandler;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
