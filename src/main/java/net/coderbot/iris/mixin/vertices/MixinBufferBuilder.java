@@ -274,9 +274,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		for (int vertex = 0; vertex < vertexAmount; vertex++) {
 			buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
 			buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
-			if (vertexAmount != 3) {
-				buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
-			}
+			buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
 			buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
 		}
 	}
