@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vertices.NormI8;
 import org.jetbrains.annotations.NotNull;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
@@ -259,23 +260,29 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			tangentOffset = 6;
 		}
 
-		int packedNormal = 0;
 		if (vertexAmount == 3) {
-			// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
-			// NormalHelper.computeFaceNormalTri(normal, polygon);
-			packedNormal = buffer.getInt(nextElementByte - normalOffset);
+			// NormalHelper.computeFaceNormalTri(normal, polygon);	// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
+
+			for (int vertex = 0; vertex < vertexAmount; vertex++) {
+				int packedNormal = buffer.getInt(nextElementByte - normalOffset - stride * vertex); // retrieve per-vertex normal
+
+				int tangent = NormalHelper.computeTangentSmooth(NormI8.unpackX(packedNormal), NormI8.unpackY(packedNormal), NormI8.unpackZ(packedNormal), polygon);
+
+				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
+				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
+				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+			}
 		} else {
 			NormalHelper.computeFaceNormal(normal, polygon);
-			packedNormal = NormalHelper.packNormal(normal, 0.0f);
-		}
+			int packedNormal = NormI8.pack(normal.x, normal.y, normal.z, 0.0f);
+			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 
-		int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
-
-		for (int vertex = 0; vertex < vertexAmount; vertex++) {
-			buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
-			buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
-			buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
-			buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+			for (int vertex = 0; vertex < vertexAmount; vertex++) {
+				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
+				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
+				buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
+				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+			}
 		}
 	}
 
