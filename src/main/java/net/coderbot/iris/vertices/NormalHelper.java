@@ -56,6 +56,18 @@ public abstract class NormalHelper {
 		return packNormal(normal.x, normal.y, normal.z, w);
 	}
 
+  public static float unpackX(int norm) {
+        return (float)((byte)(norm & 255)) * 0.007874016F;
+    }
+
+    public static float unpackY(int norm) {
+        return (float)((byte)(norm >> 8 & 255)) * 0.007874016F;
+    }
+
+    public static float unpackZ(int norm) {
+        return (float)((byte)(norm >> 16 & 255)) * 0.007874016F;
+    }
+
 	/**
 	 * Retrieves values packed by {@link #packNormal(float, float, float, float)}.
 	 *

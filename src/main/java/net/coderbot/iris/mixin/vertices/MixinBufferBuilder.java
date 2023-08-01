@@ -264,7 +264,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
 				int packedNormal = buffer.getInt(nextElementByte - normalOffset - stride * vertex); // retrieve per-vertex normal
-				normal.set(unpackX(packedNormal), unpackY(packedNormal), unpackZ(packedNormal));
+				normal.set(NormalHelper.unpackX(packedNormal), NormalHelper.unpackY(packedNormal), NormalHelper.unpackZ(packedNormal));
 
 				int tangent = NormalHelper.computeTangentSmooth(normal.x, normal.y, normal.z, polygon);
 
