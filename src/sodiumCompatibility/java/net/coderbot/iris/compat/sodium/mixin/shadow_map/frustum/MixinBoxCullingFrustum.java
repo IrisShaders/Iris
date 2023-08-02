@@ -26,6 +26,6 @@ public class MixinBoxCullingFrustum implements IrisFrustum, ViewportProvider {
 
 	@Override
 	public boolean apply(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		return boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ);
+		return !boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 }
