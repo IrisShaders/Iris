@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.jellysquid.mods.sodium.client.model.ModelCuboidAccessor;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexConsumerUtils;
-import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
 import me.jellysquid.mods.sodium.client.render.immediate.model.ModelCuboid;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
@@ -79,7 +78,7 @@ public class ModelPartMixin {
         for (ModelCuboid cuboid : this.sodium$cuboids) {
             cuboid.updateVertices(matrices.pose());
 
-            try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
+            try (MemoryStack stack = MemoryStack.stackPush()) {
                 long buffer = stack.nmalloc(4 * 6 * stride);
                 long ptr = buffer;
 

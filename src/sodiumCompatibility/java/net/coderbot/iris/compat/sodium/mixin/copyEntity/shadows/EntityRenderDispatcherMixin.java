@@ -2,7 +2,6 @@ package net.coderbot.iris.compat.sodium.mixin.copyEntity.shadows;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
@@ -112,7 +111,7 @@ public class EntityRenderDispatcherMixin {
 
 		int stride = extended ? EntityVertex.STRIDE : ModelVertex.STRIDE;
 
-        try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
             long buffer = stack.nmalloc(4 * stride);
             long ptr = buffer;
 

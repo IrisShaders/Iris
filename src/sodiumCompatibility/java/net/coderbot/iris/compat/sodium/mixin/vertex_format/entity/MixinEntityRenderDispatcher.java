@@ -3,7 +3,6 @@ package net.coderbot.iris.compat.sodium.mixin.vertex_format.entity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
-import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
@@ -63,7 +62,7 @@ public class MixinEntityRenderDispatcher {
 		float midV = (v1 + v2) / 2;
 
 		int stride = extended ? EntityVertex.STRIDE : ModelVertex.STRIDE;
-		try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
+		try (MemoryStack stack = MemoryStack.stackPush()) {
 			long buffer = stack.nmalloc(4 * stride);
 			long ptr = buffer;
 

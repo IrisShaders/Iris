@@ -1,7 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.font;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.GlyphVertex;
@@ -72,7 +71,7 @@ public class MixinGlyphRenderer {
 
 		boolean ext = extend();
 		int stride = ext ? GlyphVertexExt.STRIDE : GlyphVertex.STRIDE;
-		try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
+		try (MemoryStack stack = MemoryStack.stackPush()) {
 			long buffer = stack.nmalloc(4 * stride);
 			long ptr = buffer;
 

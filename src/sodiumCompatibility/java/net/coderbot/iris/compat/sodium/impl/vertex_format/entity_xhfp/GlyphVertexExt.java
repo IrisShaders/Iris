@@ -2,7 +2,6 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
-import net.caffeinemc.mods.sodium.api.render.immediate.RenderImmediate;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
@@ -101,7 +100,7 @@ public final class GlyphVertexExt {
 		Matrix3f matNormal = matrices.normal();
 		Matrix4f matPosition = matrices.pose();
 
-		try (MemoryStack stack = RenderImmediate.VERTEX_DATA.push()) {
+		try (MemoryStack stack = MemoryStack.stackPush()) {
 			long buffer = stack.nmalloc(4 * STRIDE);
 			long ptr = buffer;
 
