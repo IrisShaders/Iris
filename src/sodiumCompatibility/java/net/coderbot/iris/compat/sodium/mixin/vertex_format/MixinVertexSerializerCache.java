@@ -8,6 +8,7 @@ import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.EntityToTerrainVertexSerializer;
+import net.coderbot.iris.compat.sodium.impl.vertex_format.GlyphToTerrainVertexSerializer;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisEntityToTerrainVertexSerializer;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.ModelToEntityVertexSerializer;
 import net.coderbot.iris.vertices.IrisVertexFormats;
@@ -38,5 +39,6 @@ public abstract class MixinVertexSerializerCache {
 		cache.put(createKey(VertexFormatRegistry.instance().get(DefaultVertexFormat.NEW_ENTITY), VertexFormatRegistry.instance().get(IrisVertexFormats.ENTITY)), new ModelToEntityVertexSerializer());
 		cache.put(createKey(VertexFormatRegistry.instance().get(IrisVertexFormats.ENTITY), VertexFormatRegistry.instance().get(IrisVertexFormats.TERRAIN)), new IrisEntityToTerrainVertexSerializer());
 		cache.put(createKey(VertexFormatRegistry.instance().get(DefaultVertexFormat.NEW_ENTITY), VertexFormatRegistry.instance().get(IrisVertexFormats.TERRAIN)), new EntityToTerrainVertexSerializer());
+		cache.put(createKey(VertexFormatRegistry.instance().get(DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP), VertexFormatRegistry.instance().get(IrisVertexFormats.ENTITY)), new GlyphToTerrainVertexSerializer());
 	}
 }
