@@ -9,6 +9,7 @@ import me.jellysquid.mods.sodium.client.util.Norm3b;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
+import net.coderbot.iris.vertices.NormI8;
 import net.coderbot.iris.vertices.NormalHelper;
 
 import java.nio.ByteBuffer;
@@ -157,7 +158,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 
 			quad.setup(buffer, i, STRIDE);
 			NormalHelper.computeFaceNormal(normal, quad);
-			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
+			int packedNormal = NormI8.pack(normal.x, normal.y, normal.z, 0.0f);
 
 			buffer.putInt(i + 28, packedNormal);
 			buffer.putInt(i + 28 - STRIDE, packedNormal);

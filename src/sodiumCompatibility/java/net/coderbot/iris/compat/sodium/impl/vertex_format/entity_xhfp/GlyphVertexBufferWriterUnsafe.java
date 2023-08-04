@@ -7,6 +7,7 @@ import me.jellysquid.mods.sodium.client.model.vertex.formats.quad.QuadVertexSink
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import net.coderbot.iris.vendored.joml.Vector3f;
 import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.coderbot.iris.vertices.NormI8;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import org.lwjgl.system.MemoryUtil;
@@ -70,7 +71,7 @@ public class GlyphVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe impl
 			normalX = saveNormal.x;
 			normalY = saveNormal.y;
 			normalZ = saveNormal.z;
-			normal = NormalHelper.packNormal(saveNormal, 0.0F);
+			normal = NormI8.pack(normalX, normalY, normalZ, 0.0F);
 		} else {
 			normalX = Norm3b.unpackX(normal);
 			normalY = Norm3b.unpackY(normal);
