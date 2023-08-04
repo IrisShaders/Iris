@@ -82,7 +82,7 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 			float normalX = saveNormal.x;
 			float normalY = saveNormal.y;
 			float normalZ = saveNormal.z;
-			int normal = NormalHelper.packNormal(saveNormal, 0.0F);
+			int normal = NormI8.pack(normalX, normalY, normalZ, 0.0F);
 
 			int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
