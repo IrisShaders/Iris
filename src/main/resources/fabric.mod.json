@@ -61,9 +61,9 @@
 
   "custom": {
     "sodium:options": {
-      "mixin.render.world.sky": false,
-      "mixin.render.entity": false,
-      "mixin.render.gui.font": false
+      "mixin.features.render.world.sky": false,
+      "mixin.features.render.entity": false,
+      "mixin.features.render.gui.font": false
     }
   }
 }
