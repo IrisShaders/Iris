@@ -23,20 +23,6 @@ import org.jetbrains.annotations.NotNull;
 public abstract class NormalHelper {
 	private NormalHelper() { }
 
-	/**
-	 * Stores a normal plus an extra value as a quartet of signed bytes.
-	 * This is the same normal format that vanilla item rendering expects.
-	 * The extra value is for use by shaders.
-	 */
-	public static int packNormal(float x, float y, float z, float w) {
-		x = Mth.clamp(x, -1, 1);
-		y = Mth.clamp(y, -1, 1);
-		z = Mth.clamp(z, -1, 1);
-		w = Mth.clamp(w, -1, 1);
-
-		return ((int) (x * 127) & 0xFF) | (((int) (y * 127) & 0xFF) << 8) | (((int) (z * 127) & 0xFF) << 16) | (((int) (w * 127) & 0xFF) << 24);
-	}
-
 	public static int invertPackedNormal(int packed) {
 		int ix = -(packed & 255);
 		int iy = -((packed >> 8) & 255);
@@ -47,22 +33,6 @@ public abstract class NormalHelper {
 		iz &= 255;
 
 		return (packed & 0xFF000000) | (iz << 16) | (iy << 8) | ix;
-	}
-
-	/**
-	 * Version of {@link #packNormal(float, float, float, float)} that accepts a vector type.
-	 */
-	public static int packNormal(Vector3f normal, float w) {
-		return packNormal(normal.x, normal.y, normal.z, w);
-	}
-
-	/**
-	 * Retrieves values packed by {@link #packNormal(float, float, float, float)}.
-	 *
-	 * <p>Components are x, y, z, w - zero based.
-	 */
-	public static float getPackedNormalComponent(int packedNormal, int component) {
-		return ((byte) (packedNormal >> (8 * component))) / 127f;
 	}
 
 	/**
@@ -214,6 +184,116 @@ public abstract class NormalHelper {
 		saveTo.set(normX, normY, normZ);
 	}
 
+	public static int computeTangentSmooth(float normalX, float normalY, float normalZ, TriView t) {
+		// Capture all of the relevant vertex positions
+		float x0 = t.x(0);
+		float y0 = t.y(0);
+		float z0 = t.z(0);
+
+		float x1 = t.x(1);
+		float y1 = t.y(1);
+		float z1 = t.z(1);
+
+		float x2 = t.x(2);
+		float y2 = t.y(2);
+		float z2 = t.z(2);
+
+		// Project all vertices onto normal plane (for smooth normal support). Optionally skip this step for flat shading.
+		// Procedure:
+		// project v onto normal
+		// offset v by the projection to get the point on the plane
+		// project x0, y0, z0 onto normal
+		float d0 = x0 * normalX + y0 * normalY + z0 * normalZ;
+		float d1 = x1 * normalX + y1 * normalY + z1 * normalZ;
+		float d2 = x2 * normalX + y2 * normalY + z2 * normalZ;
+
+		// offset x, y, z by the projection to get the projected point on the normal plane
+		x0 -= d0 * normalX;
+		y0 -= d0 * normalY;
+		z0 -= d0 * normalZ;
+
+		x1 -= d1 * normalX;
+		y1 -= d1 * normalY;
+		z1 -= d1 * normalZ;
+
+		x2 -= d2 * normalX;
+		y2 -= d2 * normalY;
+		z2 -= d2 * normalZ;
+
+
+		float edge1x = x1 - x0;
+		float edge1y = y1 - y0;
+		float edge1z = z1 - z0;
+
+		float edge2x = x2 - x0;
+		float edge2y = y2 - y0;
+		float edge2z = z2 - z0;
+
+		float u0 = t.u(0);
+		float v0 = t.v(0);
+
+		float u1 = t.u(1);
+		float v1 = t.v(1);
+
+		float u2 = t.u(2);
+		float v2 = t.v(2);
+
+		float deltaU1 = u1 - u0;
+		float deltaV1 = v1 - v0;
+		float deltaU2 = u2 - u0;
+		float deltaV2 = v2 - v0;
+
+		float fdenom = deltaU1 * deltaV2 - deltaU2 * deltaV1;
+		float f;
+
+		if (fdenom == 0.0) {
+			f = 1.0f;
+		} else {
+			f = 1.0f / fdenom;
+		}
+
+		float tangentx = f * (deltaV2 * edge1x - deltaV1 * edge2x);
+		float tangenty = f * (deltaV2 * edge1y - deltaV1 * edge2y);
+		float tangentz = f * (deltaV2 * edge1z - deltaV1 * edge2z);
+		float tcoeff = rsqrt(tangentx * tangentx + tangenty * tangenty + tangentz * tangentz);
+		tangentx *= tcoeff;
+		tangenty *= tcoeff;
+		tangentz *= tcoeff;
+
+		float bitangentx = f * (-deltaU2 * edge1x + deltaU1 * edge2x);
+		float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
+		float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
+		float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
+		bitangentx *= bitcoeff;
+		bitangenty *= bitcoeff;
+		bitangentz *= bitcoeff;
+
+		// predicted bitangent = tangent × normal
+		// Compute the determinant of the following matrix to get the cross product
+		//  i  j  k
+		// tx ty tz
+		// nx ny nz
+
+		// Be very careful when writing out complex multi-step calculations
+		// such as vector cross products! The calculation for pbitangentz
+		// used to be broken because it multiplied values in the wrong order.
+
+		float pbitangentx = tangenty * normalZ - tangentz * normalY;
+		float pbitangenty = tangentz * normalX - tangentx * normalZ;
+		float pbitangentz = tangentx * normalY - tangenty * normalX;
+
+		float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
+		float tangentW;
+
+		if (dot < 0) {
+			tangentW = -1.0F;
+		} else {
+			tangentW = 1.0F;
+		}
+
+		return NormI8.pack(tangentx, tangenty, tangentz, tangentW);
+	}
+
 	public static int computeTangent(float normalX, float normalY, float normalZ, TriView t) {
 		// Capture all of the relevant vertex positions
 		float x0 = t.x(0);
@@ -298,7 +378,7 @@ public abstract class NormalHelper {
 			tangentW = 1.0F;
 		}
 
-		return packNormal(tangentx, tangenty, tangentz, tangentW);
+		return NormI8.pack(tangentx, tangenty, tangentz, tangentW);
 	}
 
 	private static float rsqrt(float value) {
