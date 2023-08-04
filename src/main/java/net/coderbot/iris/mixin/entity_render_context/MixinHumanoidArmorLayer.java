@@ -45,15 +45,15 @@ public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends 
 	private int backupValue = 0;
 
 	@Inject(method = "renderTrim", at = @At(value = "HEAD"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void changeTrimTemp(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, boolean pBoolean5, A pHumanoidModel6, boolean pBoolean7, float pFloat8, float pFloat9, float pFloat10, CallbackInfo ci) {
+	private void changeTrimTemp(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, A pHumanoidModel5, boolean pBoolean6, CallbackInfo ci) {
 		if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		backupValue = CapturedRenderingState.INSTANCE.getCurrentRenderedItem();
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId("minecraft", "trim_" + pArmorTrim4.material().value().assetName())));
 	}
 
-	@Inject(method = "renderTrim", at = @At(value = "TAIL"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void changeTrimTemp2(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, boolean pBoolean5, A pHumanoidModel6, boolean pBoolean7, float pFloat8, float pFloat9, float pFloat10, CallbackInfo ci, TextureAtlasSprite lvTextureAtlasSprite12, VertexConsumer lvVertexConsumer13) {
+	@Inject(method = "renderTrim", at = @At(value = "TAIL"))
+	private void changeTrimTemp2(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, A pHumanoidModel5, boolean pBoolean6, CallbackInfo ci) {
 		if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(backupValue);
 		backupValue = 0;

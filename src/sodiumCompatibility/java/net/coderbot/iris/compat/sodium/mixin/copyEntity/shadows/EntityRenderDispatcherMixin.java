@@ -2,13 +2,13 @@ package net.coderbot.iris.compat.sodium.mixin.copyEntity.shadows;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.coderbot.iris.vertices.ImmediateState;
+import net.coderbot.iris.vertices.NormI8;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.renderer.LightTexture;
@@ -238,7 +238,7 @@ public class EntityRenderDispatcherMixin {
 			tangentW = 1.0F;
 		}
 
-		return NormalHelper.packNormal(tangentx, tangenty, tangentz, tangentW);
+		return NormI8.pack(tangentx, tangenty, tangentz, tangentW);
 	}
 
 	private static float rsqrt(float value) {

@@ -381,6 +381,73 @@ public abstract class NormalHelper {
 		return NormI8.pack(tangentx, tangenty, tangentz, tangentW);
 	}
 
+	public static int computeTangent(float normalX, float normalY, float normalZ, float x0, float y0, float z0, float u0, float v0,
+									 float x1, float y1, float z1, float u1, float v1,
+									 float x2, float y2, float z2, float u2, float v2) {
+		float edge1x = x1 - x0;
+		float edge1y = y1 - y0;
+		float edge1z = z1 - z0;
+
+		float edge2x = x2 - x0;
+		float edge2y = y2 - y0;
+		float edge2z = z2 - z0;
+
+		float deltaU1 = u1 - u0;
+		float deltaV1 = v1 - v0;
+		float deltaU2 = u2 - u0;
+		float deltaV2 = v2 - v0;
+
+		float fdenom = deltaU1 * deltaV2 - deltaU2 * deltaV1;
+		float f;
+
+		if (fdenom == 0.0) {
+			f = 1.0f;
+		} else {
+			f = 1.0f / fdenom;
+		}
+
+		float tangentx = f * (deltaV2 * edge1x - deltaV1 * edge2x);
+		float tangenty = f * (deltaV2 * edge1y - deltaV1 * edge2y);
+		float tangentz = f * (deltaV2 * edge1z - deltaV1 * edge2z);
+		float tcoeff = rsqrt(tangentx * tangentx + tangenty * tangenty + tangentz * tangentz);
+		tangentx *= tcoeff;
+		tangenty *= tcoeff;
+		tangentz *= tcoeff;
+
+		float bitangentx = f * (-deltaU2 * edge1x + deltaU1 * edge2x);
+		float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
+		float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
+		float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
+		bitangentx *= bitcoeff;
+		bitangenty *= bitcoeff;
+		bitangentz *= bitcoeff;
+
+		// predicted bitangent = tangent × normal
+		// Compute the determinant of the following matrix to get the cross product
+		//  i  j  k
+		// tx ty tz
+		// nx ny nz
+
+		// Be very careful when writing out complex multi-step calculations
+		// such as vector cross products! The calculation for pbitangentz
+		// used to be broken because it multiplied values in the wrong order.
+
+		float pbitangentx = tangenty * normalZ - tangentz * normalY;
+		float pbitangenty = tangentz * normalX - tangentx * normalZ;
+		float pbitangentz = tangentx * normalY - tangenty * normalX;
+
+		float dot = (bitangentx * pbitangentx) + (bitangenty * pbitangenty) + (bitangentz * pbitangentz);
+		float tangentW;
+
+		if (dot < 0) {
+			tangentW = -1.0F;
+		} else {
+			tangentW = 1.0F;
+		}
+
+		return NormI8.pack(tangentx, tangenty, tangentz, tangentW);
+	}
+
 	private static float rsqrt(float value) {
 		if (value == 0.0f) {
 			// You heard it here first, folks: 1 divided by 0 equals 1

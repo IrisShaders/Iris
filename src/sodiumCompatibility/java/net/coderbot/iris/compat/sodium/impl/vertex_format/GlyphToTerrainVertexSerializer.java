@@ -5,6 +5,7 @@ import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.QuadViewEntity;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.coderbot.iris.vertices.NormI8;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import org.joml.Vector3f;
@@ -71,7 +72,7 @@ public class GlyphToTerrainVertexSerializer implements VertexSerializer {
 		normalX = saveNormal.x;
 		normalY = saveNormal.y;
 		normalZ = saveNormal.z;
-		int normal = NormalHelper.packNormal(saveNormal, 0.0F);
+		int normal = NormI8.pack(saveNormal);
 
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
