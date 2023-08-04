@@ -3,6 +3,7 @@ package net.coderbot.iris.compat.sodium.impl.vertex_format.terrain_xhfp;
 import me.jellysquid.mods.sodium.client.render.vertex.type.ChunkVertexEncoder;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
+import net.coderbot.iris.vertices.NormI8;
 import org.joml.Vector3f;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
 import net.coderbot.iris.vertices.NormalHelper;
@@ -140,7 +141,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 			} else {
 				NormalHelper.computeFaceNormal(normal, quad);
 			}
-			int packedNormal = NormalHelper.packNormal(normal, 0.0f);
+			int packedNormal = NormI8.pack(normal);
 
 
 

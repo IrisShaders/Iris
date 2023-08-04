@@ -4,6 +4,7 @@ import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatRegistry;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescription;
 import me.jellysquid.mods.sodium.common.util.MatrixHelper;
 import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.coderbot.iris.vertices.NormI8;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -35,7 +36,7 @@ public final class CloudVertex {
 			quad.setup(ptr, STRIDE);
 
 			NormalHelper.computeFaceNormal(saveNormal, quad);
-			int normal = NormalHelper.packNormal(saveNormal, 0.0F);
+			int normal = NormI8.pack(saveNormal);
 
 			for (long vertex = 0; vertex < 4; vertex++) {
 				MemoryUtil.memPutInt(ptr + 16L - STRIDE * vertex, normal);
@@ -56,7 +57,7 @@ public final class CloudVertex {
 			quad.setup(ptr, STRIDE);
 
 			NormalHelper.computeFaceNormal(saveNormal, quad);
-			int normal = NormalHelper.packNormal(saveNormal, 0.0F);
+			int normal = NormI8.pack(saveNormal);
 
 			for (long vertex = 0; vertex < 4; vertex++) {
 				MemoryUtil.memPutInt(ptr + 16L - STRIDE * vertex, normal);

@@ -1,6 +1,7 @@
 package net.coderbot.iris.mixin.entity_render_context;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -9,6 +10,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -43,7 +45,7 @@ public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends 
 	private int backupValue = 0;
 
 	@Inject(method = "renderTrim", at = @At(value = "HEAD"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void changeTrimTemp(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, A pHumanoidModel5, boolean pBoolean6, CallbackInfo ci) {
+	private void changeTrimTemp(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, boolean pBoolean5, A pHumanoidModel6, boolean pBoolean7, float pFloat8, float pFloat9, float pFloat10, CallbackInfo ci) {
 		if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		backupValue = CapturedRenderingState.INSTANCE.getCurrentRenderedItem();
@@ -51,7 +53,7 @@ public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends 
 	}
 
 	@Inject(method = "renderTrim", at = @At(value = "TAIL"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void changeTrimTemp2(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, A pHumanoidModel5, boolean pBoolean6, CallbackInfo ci) {
+	private void changeTrimTemp2(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, boolean pBoolean5, A pHumanoidModel6, boolean pBoolean7, float pFloat8, float pFloat9, float pFloat10, CallbackInfo ci, TextureAtlasSprite lvTextureAtlasSprite12, VertexConsumer lvVertexConsumer13) {
 		if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(backupValue);
 		backupValue = 0;
