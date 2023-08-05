@@ -157,7 +157,7 @@ public final class CommonUniforms {
 	}
 
 	private static boolean isOnGround() {
-		return client.player != null && client.player.isOnGround();
+		return client.player != null && client.player.onGround();
 	}
 
 	private static boolean isHurt() {
