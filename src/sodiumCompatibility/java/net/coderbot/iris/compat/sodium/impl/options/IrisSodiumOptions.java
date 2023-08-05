@@ -21,7 +21,7 @@ public class IrisSodiumOptions {
         OptionImpl<Options, Integer> maxShadowDistanceSlider = OptionImpl.createBuilder(int.class, vanillaOpts)
                 .setName(Component.translatable("options.iris.shadowDistance"))
                 .setTooltip(Component.translatable("options.iris.shadowDistance.sodium_tooltip"))
-                .setControl(option -> new SliderControl(option, 0, 32, 1, ControlValueFormatter.quantityOrDisabled(Text.translatable("options.chunks").getString(), Text.translatable("options.off").getString())))
+                .setControl(option -> new SliderControl(option, 0, 32, 1, ControlValueFormatter.quantityOrDisabled(Text.translatable("options.chunks", "placeholder").getString().replace("placeholder ", ""), Text.translatable("options.off").getString())))
 				.setBinding((options, value) -> {
 						IrisVideoSettings.shadowDistance = value;
 						try {
