@@ -179,13 +179,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 				normalMatrix.set(tempMatrix3f.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer())).invert().transpose().get(tempFloats2));
 			}
 		} else {
-			if (modelViewInverse != null) {
-				modelViewInverse.set(identity);
-			}
-
-			if (normalMatrix != null) {
-				normalMatrix.set(identity);
-			}
 		}
 
 		uploadIfNotNull(projectionInverse);
