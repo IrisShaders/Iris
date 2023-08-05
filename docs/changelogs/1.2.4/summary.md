@@ -3,4 +3,4 @@ Iris 1.2.4 has released as a hotfix to fix multiple issues relating to log spam,
 tl;dr: fixed a ton of really bad bugs caused by 1.2.3
 
 
-⬇️ Download the release here: https://irisshaders.net/download.html
+⬇️ Download the release here: https://irisshaders.dev/download.html

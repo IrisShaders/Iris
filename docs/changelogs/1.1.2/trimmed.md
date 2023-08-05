@@ -2,7 +2,7 @@
 
 Iris version 1.1.2 for Minecraft 1.16.5, Minecraft 1.17.1, and 1.18 snapshots (see below) has been released!
 
-You can download the release here: https://irisshaders.net/download.html
+You can download the release here: https://irisshaders.dev/download.html
 
 A trimmed changelog is available below. A more detailed changelog is available [on GitHub](https://github.com/IrisShaders/Iris/blob/trunk/docs/changelogs/1.1.2/full.md) for those who are interested.
 

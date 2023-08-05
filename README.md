@@ -4,7 +4,7 @@
 
 ## Links
 
-* **Visit [our website](https://irisshaders.net) for downloads and pretty screenshots!**\
+* **Visit [our website](https://irisshaders.dev) for downloads and pretty screenshots!**\
   * **Visit [Modrinth](https://modrinth.com/shaders) to find shader packs!**
 * Visit [our Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and get support! It's also a great place to get development updates right as they're happening.
 * Visit [the developer documentation](https://github.com/IrisShaders/Iris/tree/trunk/docs/development) for information on developing, building, and contributing to Iris!
