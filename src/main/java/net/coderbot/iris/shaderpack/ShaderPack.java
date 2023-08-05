@@ -127,6 +127,7 @@ public class ShaderPack {
 			if (Files.exists(root.resolve("world0"))) {
 				dimensionIdCreator.add("world0");
 				dimensionMap.putIfAbsent(DimensionId.OVERWORLD, "world0");
+				dimensionMap.putIfAbsent(new NamespacedId("*", "*"), "world0");
 			}
 			if (Files.exists(root.resolve("world-1"))) {
 				dimensionIdCreator.add("world-1");
