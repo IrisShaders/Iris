@@ -2,6 +2,7 @@ package net.coderbot.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
@@ -15,6 +16,7 @@ import net.coderbot.iris.gl.blending.AlphaTestFunction;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.buffer.ShaderStorageInfo;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
@@ -96,7 +98,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureDefinition> irisCustomTextures = new Object2ObjectOpenHashMap<>();
 	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
-	private final Int2IntArrayMap bufferObjects = new Int2IntArrayMap();
+	private final Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects = new Int2ObjectArrayMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
@@ -312,20 +314,44 @@ public class ShaderProperties {
 			handlePassDirective("bufferObject.", key, value, index -> {
 				int trueIndex;
 				int trueSize;
-				try {
-					trueIndex = Integer.parseInt(index);
-					trueSize = Integer.parseInt(value);
-				} catch (NumberFormatException e) {
-					Iris.logger.error("Number format exception parsing SSBO index/size!", e);
-					return;
-				}
+				boolean isRelative;
+				float scaleX, scaleY;
+				String[] parts = value.split(" ");
+				if (parts.length == 1) {
+					try {
+						trueIndex = Integer.parseInt(index);
+						trueSize = Integer.parseInt(value);
+					} catch (NumberFormatException e) {
+						Iris.logger.error("Number format exception parsing SSBO index/size!", e);
+						return;
+					}
 
-				if (trueIndex > 8) {
-					Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
-					return;
-				}
+					if (trueIndex > 8) {
+						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
+						return;
+					}
 
-				bufferObjects.put(trueIndex, trueSize);
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0));
+				} else {
+					// Assume it's a long one
+					try {
+						trueIndex = Integer.parseInt(index);
+						trueSize = Integer.parseInt(parts[0]);
+						isRelative = Boolean.parseBoolean(parts[1]);
+						scaleX = Float.parseFloat(parts[2]);
+						scaleY = Float.parseFloat(parts[3]);
+					} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+						Iris.logger.error("Number format exception parsing SSBO index/size, or not correct format!", e);
+						return;
+					}
+
+					if (trueIndex > 8) {
+						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
+						return;
+					}
+
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, isRelative, scaleX, scaleY));
+				}
 			});
 
 			handleTwoArgDirective("texture.", key, value, (stageName, samplerName) -> {
@@ -762,7 +788,7 @@ public class ShaderProperties {
 		return bufferBlendOverrides;
 	}
 
-	public Int2IntArrayMap getBufferObjects() {
+	public Int2ObjectArrayMap<ShaderStorageInfo> getBufferObjects() {
 		return bufferObjects;
 	}
 
