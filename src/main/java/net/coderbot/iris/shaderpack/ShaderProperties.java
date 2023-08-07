@@ -77,7 +77,7 @@ public class ShaderProperties {
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateEntityDraws = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
-	private OptionalBoolean shadowCulling = OptionalBoolean.DEFAULT;
+	private ShadowCullState shadowCulling = ShadowCullState.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
 	private Optional<ParticleRenderingSettings> particleRenderingSettings = Optional.empty();
 	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
@@ -144,6 +144,18 @@ public class ShaderProperties {
 				}
 			}
 
+			if ("shadow.culling".equals(key)) {
+				if ("false".equals(value)) {
+					shadowCulling = ShadowCullState.DISTANCE;
+				} else if ("true".equals(value)) {
+					shadowCulling = ShadowCullState.ADVANCED;
+				} else if ("reversed".equals(value)) {
+					shadowCulling = ShadowCullState.REVERSED;
+				} else {
+					Iris.logger.error("Unrecognized shadow culling setting: " + value);
+				}
+			}
+
 			handleBooleanDirective(key, value, "oldHandLight", bool -> oldHandLight = bool);
 			handleBooleanDirective(key, value, "dynamicHandLight", bool -> dynamicHandLight = bool);
 			handleBooleanDirective(key, value, "oldLighting", bool -> oldLighting = bool);
@@ -167,7 +179,6 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
 			handleBooleanDirective(key, value, "separateEntityDraws", bool -> separateEntityDraws = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
-			handleBooleanDirective(key, value, "shadow.culling", bool -> shadowCulling = bool);
 			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
 			handleBooleanDirective(key, value, "particles.before.deferred", bool -> {
 				if (bool.orElse(false) && particleRenderingSettings.isEmpty()) {
@@ -746,7 +757,7 @@ public class ShaderProperties {
 		return frustumCulling;
 	}
 
-	public OptionalBoolean getShadowCulling() {
+	public ShadowCullState getShadowCulling() {
 		return shadowCulling;
 	}
 
