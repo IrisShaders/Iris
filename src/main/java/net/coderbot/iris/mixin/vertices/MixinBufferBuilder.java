@@ -103,6 +103,8 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	@Shadow
 	public abstract void nextElement();
 
+	@Shadow public abstract void putFloat(int pBufferBuilder0, float pFloat1);
+
 	@Override
 	public void iris$beginWithoutExtending(VertexFormat.Mode drawMode, VertexFormat vertexFormat) {
 		iris$shouldNotExtend = true;
@@ -204,19 +206,25 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		this.nextElement();
 
 		// MID_TEXTURE_ELEMENT
-		this.putFloat(0, 0);
-		this.putFloat(4, 0);
+		this.putShort(0, (short) 0);
+		this.putShort(2, (short) 0);
 		this.nextElement();
 		// TANGENT_ELEMENT
 		this.putInt(0, 0);
 		this.nextElement();
 		if (iris$isTerrain) {
 			// MID_BLOCK_ELEMENT
-			int posIndex = this.nextElementByte - 48;
+			int posIndex = this.nextElementByte - 44;
 			float x = buffer.getFloat(posIndex);
 			float y = buffer.getFloat(posIndex + 4);
 			float z = buffer.getFloat(posIndex + 8);
 			this.putInt(0, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
+			this.nextElement();
+		} else {
+			// VELOCITY_ELEMENT
+			this.putFloat(0, 0);
+			this.putFloat(4, 0);
+			this.putFloat(8, 0);
 			this.nextElement();
 		}
 
@@ -225,6 +233,11 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		if (mode == VertexFormat.Mode.QUADS && vertexCount == 4 || mode == VertexFormat.Mode.TRIANGLES && vertexCount == 3) {
 			fillExtendedData(vertexCount);
 		}
+	}
+
+	@Unique
+	private static short encodeTexture(float value) {
+		return (short) (Math.min(0.99999997F, value) * 65536);
 	}
 
 	@Unique
@@ -251,16 +264,19 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		int normalOffset;
 		int tangentOffset;
 		if (iris$isTerrain) {
-			midUOffset = 16;
-			midVOffset = 12;
-			normalOffset = 24;
+			midUOffset = 12;
+			midVOffset = 10;
+			normalOffset = 20;
 			tangentOffset = 8;
 		} else {
-			midUOffset = 14;
-			midVOffset = 10;
-			normalOffset = 24;
-			tangentOffset = 6;
+			midUOffset = 20;
+			midVOffset = 18;
+			normalOffset = 28;
+			tangentOffset = 16;
 		}
+
+		short midUFinal = encodeTexture(midU);
+		short midVFinal = encodeTexture(midV);
 
 		if (vertexAmount == 3) {
 			// NormalHelper.computeFaceNormalTri(normal, polygon);	// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
@@ -270,8 +286,8 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 
 				int tangent = NormalHelper.computeTangentSmooth(NormI8.unpackX(packedNormal), NormI8.unpackY(packedNormal), NormI8.unpackZ(packedNormal), polygon);
 
-				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
-				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
+				buffer.putShort(nextElementByte - midUOffset - stride * vertex, midUFinal);
+				buffer.putShort(nextElementByte - midVOffset - stride * vertex, midVFinal);
 				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
 			}
 		} else {
@@ -280,8 +296,8 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
-				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
-				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
+				buffer.putShort(nextElementByte - midUOffset - stride * vertex, midUFinal);
+				buffer.putShort(nextElementByte - midVOffset - stride * vertex, midVFinal);
 				buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
 				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
 			}

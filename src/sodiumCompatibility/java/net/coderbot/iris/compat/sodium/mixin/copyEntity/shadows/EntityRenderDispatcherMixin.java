@@ -106,8 +106,8 @@ public class EntityRenderDispatcherMixin {
 			);
 		}
 
-		float midU = (u1 + u2) / 2;
-		float midV = (v1 + v2) / 2;
+		short midU = encodeTexture((u1 + u2) / 2);
+		short midV = encodeTexture((v1 + v2) / 2);
 
 		int stride = extended ? EntityVertex.STRIDE : ModelVertex.STRIDE;
 
@@ -146,7 +146,11 @@ public class EntityRenderDispatcherMixin {
         }
     }
 
-    @Unique
+	private static short encodeTexture(float value) {
+		return (short) (Math.min(0.99999997F, value) * 65536);
+	}
+
+	@Unique
     private static void writeShadowVertex(long ptr, Matrix4f matPosition, float x, float y, float z, float u, float v, int color, int normal) {
         // The transformed position vector
         float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
@@ -157,7 +161,7 @@ public class EntityRenderDispatcherMixin {
     }
 
 	@Unique
-	private static void writeShadowVertexIris(long ptr, Matrix4f matPosition, float x, float y, float z, float u, float v, int color, float midU, float midV, int normal, int tangent) {
+	private static void writeShadowVertexIris(long ptr, Matrix4f matPosition, float x, float y, float z, float u, float v, int color, short midU, short midV, int normal, int tangent) {
 		// The transformed position vector
 		float xt = MatrixHelper.transformPositionX(matPosition, x, y, z);
 		float yt = MatrixHelper.transformPositionY(matPosition, x, y, z);

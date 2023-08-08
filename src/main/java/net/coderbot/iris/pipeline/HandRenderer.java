@@ -87,6 +87,8 @@ public class HandRenderer {
 
 		renderingSolid = true;
 
+		CapturedRenderingState.INSTANCE.setUniqueEntityId(Minecraft.getInstance().player.getId());
+
 		gameRenderer.itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource.getUnflushableWrapper(), Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
 		Minecraft.getInstance().getProfiler().pop();
@@ -101,6 +103,8 @@ public class HandRenderer {
 		renderingSolid = false;
 
 		pipeline.setPhase(WorldRenderingPhase.NONE);
+
+		CapturedRenderingState.INSTANCE.setUniqueEntityId(0);
 
 		ACTIVE = false;
 	}
@@ -120,6 +124,8 @@ public class HandRenderer {
 
 		setupGlState(gameRenderer, camera, poseStack, tickDelta);
 
+		CapturedRenderingState.INSTANCE.setUniqueEntityId(Minecraft.getInstance().player.getId());
+
 		gameRenderer.itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
 		poseStack.popPose();
@@ -131,6 +137,8 @@ public class HandRenderer {
 		bufferSource.endBatch();
 
 		pipeline.setPhase(WorldRenderingPhase.NONE);
+
+		CapturedRenderingState.INSTANCE.setUniqueEntityId(0);
 
 		ACTIVE = false;
 	}

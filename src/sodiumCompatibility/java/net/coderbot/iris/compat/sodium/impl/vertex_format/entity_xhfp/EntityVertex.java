@@ -29,12 +29,12 @@ public final class EntityVertex {
 	private static final int OFFSET_OVERLAY = 24;
 	private static final int OFFSET_LIGHT = 28;
 	private static final int OFFSET_NORMAL = 32;
-	private static final int OFFSET_TANGENT = 50;
+	private static final int OFFSET_TANGENT = 46;
 
 	private static Vector3f lastNormal = new Vector3f();
 
 	public static void write(long ptr,
-							 float x, float y, float z, int color, float u, float v, float midU, float midV, int light, int overlay, int normal, int tangent) {
+							 float x, float y, float z, int color, float u, float v, short midU, short midV, int light, int overlay, int normal, int tangent) {
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 0, x);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 4, y);
 		MemoryUtil.memPutFloat(ptr + OFFSET_POSITION + 8, z);
@@ -51,13 +51,25 @@ public final class EntityVertex {
 		MemoryUtil.memPutInt(ptr + OFFSET_NORMAL, normal);
 		MemoryUtil.memPutInt(ptr + OFFSET_TANGENT, tangent);
 
-		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE, midU);
-		MemoryUtil.memPutFloat(ptr + OFFSET_MID_TEXTURE + 4, midV);
+		MemoryUtil.memPutShort(ptr + OFFSET_MID_TEXTURE, midU);
+		MemoryUtil.memPutShort(ptr + OFFSET_MID_TEXTURE + 2, midV);
 
 		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 		MemoryUtil.memPutShort(ptr + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
 		MemoryUtil.memPutShort(ptr + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+	}
 
+	public static void writeWithVelocity(long ptr,
+							 float x, float y, float z, float prevX, float prevY, float prevZ, int color, float u, float v, short midU, short midV, int light, int overlay, int normal, int tangent) {
+		write(ptr, x, y, z, color, u, v, midU, midV, light, overlay, normal, tangent);
+
+		MemoryUtil.memPutFloat(ptr + 50, x - prevX);
+		MemoryUtil.memPutFloat(ptr + 54, y - prevY);
+		MemoryUtil.memPutFloat(ptr + 58, z - prevZ);
+	}
+
+	private static short encodeTexture(float value) {
+		return (short) (Math.min(0.99999997F, value) * 65536);
 	}
 
 	public static void write2(long ptr,

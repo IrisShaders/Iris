@@ -19,6 +19,7 @@ public class CapturedRenderingState {
 	private int currentRenderedBlockEntity;
 
 	private int currentRenderedEntity = -1;
+	private int uniqueEntityId = -1;
 	private int currentRenderedItem = -1;
 
 	private float currentAlphaTest;
@@ -117,5 +118,13 @@ public class CapturedRenderingState {
 
 	public void setCloudTime(float cloudTime) {
 		this.cloudTime = cloudTime;
+	}
+
+    public int getUniqueEntityId() {
+		return uniqueEntityId;
+    }
+
+	public void setUniqueEntityId(int id) {
+		uniqueEntityId = id;
 	}
 }

@@ -26,6 +26,8 @@ public class VanillaTransformer {
 
 		CommonTransformer.transform(t, tree, root, parameters, false);
 
+		SodiumTransformer.replaceMidTexCoord(t, tree, root, (1.0f / 65536));
+
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
 			// See https://github.com/IrisShaders/Iris/issues/1149

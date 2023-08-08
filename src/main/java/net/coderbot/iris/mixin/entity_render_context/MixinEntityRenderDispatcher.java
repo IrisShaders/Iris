@@ -57,6 +57,7 @@ public class MixinEntityRenderDispatcher {
 		}
 
 		CapturedRenderingState.INSTANCE.setCurrentEntity(intId);
+		CapturedRenderingState.INSTANCE.setUniqueEntityId(entity.getId());
 
 		return type ->
 			bufferSource.getBuffer(OuterWrappedRenderType.wrapExactlyOnce("iris:is_entity", type, EntityRenderStateShard.INSTANCE));
@@ -69,5 +70,6 @@ public class MixinEntityRenderDispatcher {
 									  PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									  CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentEntity(0);
+		CapturedRenderingState.INSTANCE.setUniqueEntityId(0);
 	}
 }
