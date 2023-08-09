@@ -51,7 +51,7 @@ public class IrisSamplers {
 		NEAREST_MIPMAP = new GlSampler(false, true, false, false);
 	}
 
-	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped,
+	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped, ImmutableSet<Integer> mipmapped,
 											   RenderTargets renderTargets, boolean isFullscreenPass) {
 		// colortex0,1,2,3 are only able to be sampled from fullscreen passes.
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.

@@ -294,6 +294,8 @@ public class FinalPassRenderer {
 	}
 
 	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
+		target.setMipmapping(true);
+
 		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
@@ -314,7 +316,6 @@ public class FinalPassRenderer {
 			filter = GL20C.GL_NEAREST_MIPMAP_NEAREST;
 		}
 
-		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_MIN_FILTER, filter);
 	}
 
 	private static void resetRenderTarget(RenderTarget target) {
@@ -325,8 +326,8 @@ public class FinalPassRenderer {
 			filter = GL20C.GL_NEAREST;
 		}
 
-		IrisRenderSystem.texParameteri(target.getMainTexture(), GL20C.GL_TEXTURE_MIN_FILTER, filter);
-		IrisRenderSystem.texParameteri(target.getAltTexture(), GL20C.GL_TEXTURE_MIN_FILTER, filter);
+		target.setMipmapping(false);
+
 
 		RenderSystem.bindTexture(0);
 	}
@@ -365,7 +366,7 @@ public class FinalPassRenderer {
 
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
-		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, source.getDirectives().getMipmappedBuffers(), renderTargets, true);
 		IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 		IrisImages.addCustomImages(builder, customImages);
@@ -420,7 +421,7 @@ public class FinalPassRenderer {
 				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
 				customUniforms.assignTo(builder);
 
-				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, ImmutableSet.of(), renderTargets, true);
 				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
 				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 

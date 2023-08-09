@@ -1,7 +1,9 @@
 package net.coderbot.iris.gl;
 
+import org.jetbrains.annotations.ApiStatus;
+
 public abstract class GlResource {
-	private final int id;
+	private int id;
 	private boolean isValid;
 
 	protected GlResource(int id) {
@@ -26,5 +28,11 @@ public abstract class GlResource {
 		assertValid();
 
 		return id;
+	}
+
+	@ApiStatus.Internal
+	protected void setNewId(int id) {
+		this.id = id;
+		this.isValid = true;
 	}
 }

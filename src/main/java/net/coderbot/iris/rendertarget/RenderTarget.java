@@ -13,56 +13,85 @@ import org.lwjgl.opengl.GL46C;
 import java.nio.ByteBuffer;
 
 public class RenderTarget {
-	private final InternalTextureFormat internalFormat;
+	private InternalTextureFormat internalFormat;
 	private final PixelFormat format;
 	private final PixelType type;
 	private int width;
 	private int height;
 
 	private boolean isValid;
-	private final int mainTexture;
-	private final int altTexture;
+	private int mainTexture;
+	private int altTexture;
+	private int mainTextureMipView;
+	private int altTextureMipView;
 
 	private static final ByteBuffer NULL_BUFFER = null;
+	private boolean mipmapping;
 
 	public RenderTarget(Builder builder) {
 		this.isValid = true;
 
 		this.internalFormat = builder.internalFormat;
+
+		if (internalFormat == InternalTextureFormat.RGBA) internalFormat = InternalTextureFormat.RGBA8;
+
 		this.format = builder.format;
 		this.type = builder.type;
 
 		this.width = builder.width;
 		this.height = builder.height;
 
-		int[] textures = new int[2];
-		GlStateManager._genTextures(textures);
-
-		this.mainTexture = textures[0];
-		this.altTexture = textures[1];
-
 		boolean isPixelFormatInteger = builder.internalFormat.getPixelFormat().isInteger();
-		setupTexture(mainTexture, builder.width, builder.height, !isPixelFormatInteger);
-		setupTexture(altTexture, builder.width, builder.height, !isPixelFormatInteger);
+		setupTexture(false, builder.width, builder.height, !isPixelFormatInteger);
+		setupTexture(true, builder.width, builder.height, !isPixelFormatInteger);
 
 		// Clean up after ourselves
 		// This is strictly defensive to ensure that other buggy code doesn't tamper with our textures
 		GlStateManager._bindTexture(0);
 	}
 
-	private void setupTexture(int texture, int width, int height, boolean allowsLinear) {
-		resizeTexture(texture, width, height);
+	private void setupTexture(boolean alt, int width, int height, boolean allowsLinear) {
+		resizeTexture(alt, width, height);
+
+		int texture = (alt ? altTexture : mainTexture);
 
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_MIN_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_MAG_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+
+		if (alt) {
+			altTextureMipView = GL46C.glGenTextures();
+			GL46C.glTextureView(altTextureMipView, GL46C.GL_TEXTURE_2D, texture, internalFormat.getGlFormat(), 0, 4, 0, 1);
+			IrisRenderSystem.texParameteri(altTextureMipView, GL11C.GL_TEXTURE_MIN_FILTER, allowsLinear ? GL11C.GL_LINEAR_MIPMAP_LINEAR : GL11C.GL_NEAREST_MIPMAP_NEAREST);
+			IrisRenderSystem.texParameteri(altTextureMipView, GL11C.GL_TEXTURE_MAG_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
+			IrisRenderSystem.texParameteri(altTextureMipView, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(altTextureMipView, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+		} else {
+			mainTextureMipView = GL46C.glGenTextures();
+			GL46C.glTextureView(mainTextureMipView, GL46C.GL_TEXTURE_2D, texture, internalFormat.getGlFormat(), 0, 4, 0, 1);
+			IrisRenderSystem.texParameteri(mainTextureMipView, GL11C.GL_TEXTURE_MIN_FILTER, allowsLinear ? GL11C.GL_LINEAR_MIPMAP_LINEAR : GL11C.GL_NEAREST_MIPMAP_NEAREST);
+			IrisRenderSystem.texParameteri(mainTextureMipView, GL11C.GL_TEXTURE_MAG_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
+			IrisRenderSystem.texParameteri(mainTextureMipView, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(mainTextureMipView, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+		}
 	}
 
-	private void resizeTexture(int texture, int width, int height) {
-		// TODO render target immutability! This requires us to be able to either change or destroy *all framebuffers* in real time.
-		GlStateManager._bindTexture(texture);
-		GL46C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, internalFormat.getGlFormat(), width, height, 0, format.getGlFormat(), type.getGlFormat(), NULL_BUFFER);
+	public void setMipmapping(boolean enabled) {
+		this.mipmapping = enabled;
+	}
+
+	private void resizeTexture(boolean alt, int width, int height) {
+		if (this.mainTexture != 0) GlStateManager._deleteTexture(mainTexture);
+		if (this.altTexture != 0) GlStateManager._deleteTexture(altTexture);
+
+		if (alt) {
+			this.altTexture = IrisRenderSystem.createTexture(GL46C.GL_TEXTURE_2D);
+		} else {
+			this.mainTexture = IrisRenderSystem.createTexture(GL46C.GL_TEXTURE_2D);
+		}
+
+		GL46C.glTextureStorage2D(alt ? altTexture : mainTexture, 4, internalFormat.getGlFormat(), width, height);
 	}
 
 	void resize(Vector2i textureScaleOverride) {
@@ -76,9 +105,9 @@ public class RenderTarget {
 		this.width = width;
 		this.height = height;
 
-		resizeTexture(mainTexture, width, height);
+		setupTexture(false, width, height, !internalFormat.getPixelFormat().isInteger());
 
-		resizeTexture(altTexture, width, height);
+		setupTexture(true, width, height, !internalFormat.getPixelFormat().isInteger());
 	}
 
 	public InternalTextureFormat getInternalFormat() {
@@ -88,13 +117,13 @@ public class RenderTarget {
 	public int getMainTexture() {
 		requireValid();
 
-		return mainTexture;
+		return mipmapping ? mainTextureMipView : mainTexture;
 	}
 
 	public int getAltTexture() {
 		requireValid();
 
-		return altTexture;
+		return mipmapping ? altTextureMipView : altTexture;
 	}
 
 	public int getWidth() {

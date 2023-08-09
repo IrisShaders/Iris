@@ -302,6 +302,8 @@ public class CompositeRenderer {
 	}
 
 	private static void setupMipmapping(net.coderbot.iris.rendertarget.RenderTarget target, boolean readFromAlt) {
+		target.setMipmapping(true);
+
 		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
@@ -317,12 +319,6 @@ public class CompositeRenderer {
 		// unlikely that this issue occurs in practice with most shader packs.
 		IrisRenderSystem.generateMipmaps(texture);
 
-		int filter = GL20C.GL_LINEAR_MIPMAP_LINEAR;
-		if (target.getInternalFormat().getPixelFormat().isInteger()) {
-			filter = GL20C.GL_NEAREST_MIPMAP_NEAREST;
-		}
-
-		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_MIN_FILTER, filter);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
@@ -359,7 +355,7 @@ public class CompositeRenderer {
 
 		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 
-		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, source.getDirectives().getMipmappedBuffers(), renderTargets, true);
 		IrisSamplers.addCustomTextures(builder, irisCustomTextures);
 		IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 
@@ -416,7 +412,7 @@ public class CompositeRenderer {
 
 				customUniforms.assignTo(builder);
 
-				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true);
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, ImmutableSet.of(), renderTargets, true);
 				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
 				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 
