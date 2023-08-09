@@ -7,6 +7,7 @@ import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
@@ -25,11 +26,11 @@ public final class EntityVertex {
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;
 	private static final int OFFSET_TEXTURE = 16;
-	private static final int OFFSET_MID_TEXTURE = 42;
+	private static final int OFFSET_MID_TEXTURE = 44;
 	private static final int OFFSET_OVERLAY = 24;
 	private static final int OFFSET_LIGHT = 28;
 	private static final int OFFSET_NORMAL = 32;
-	private static final int OFFSET_TANGENT = 46;
+	private static final int OFFSET_TANGENT = 48;
 
 	private static Vector3f lastNormal = new Vector3f();
 
@@ -63,9 +64,19 @@ public final class EntityVertex {
 							 float x, float y, float z, float prevX, float prevY, float prevZ, int color, float u, float v, short midU, short midV, int light, int overlay, int normal, int tangent) {
 		write(ptr, x, y, z, color, u, v, midU, midV, light, overlay, normal, tangent);
 
-		MemoryUtil.memPutFloat(ptr + 50, x - prevX);
-		MemoryUtil.memPutFloat(ptr + 54, y - prevY);
-		MemoryUtil.memPutFloat(ptr + 58, z - prevZ);
+		MemoryUtil.memPutFloat(ptr + 52, x - prevX);
+		MemoryUtil.memPutFloat(ptr + 56, y - prevY);
+		MemoryUtil.memPutFloat(ptr + 60, z - prevZ);
+	}
+
+	public static void writeUnknownTangentWithVelocity(long ptr,
+							 float x, float y, float z, float prevX, float prevY, float prevZ, int color, float u, float v, short midU, short midV, int light, int overlay, int normal) {
+		write(ptr, x, y, z, color, u, v, midU, midV, light, overlay, normal, 0);
+		MemoryUtil.memPutFloat(ptr + 52, x - prevX);
+		MemoryUtil.memPutFloat(ptr + 56, y - prevY);
+		MemoryUtil.memPutFloat(ptr + 60, z - prevZ);
+
+		endQuad(ptr, NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal));
 	}
 
 	private static short encodeTexture(float value) {

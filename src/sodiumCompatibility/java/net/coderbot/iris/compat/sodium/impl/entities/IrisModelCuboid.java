@@ -100,7 +100,7 @@ public class IrisModelCuboid {
     }
 
     public void updateVertices(Matrix4f mat) {
-        VertexHistory history = idToHistory.computeIfAbsent(CapturedRenderingState.INSTANCE.getUniqueEntityId(), VertexHistory::new);
+        VertexHistory history = idToHistory.computeIfAbsent(CapturedRenderingState.INSTANCE.getUniqueEntityId(), id -> new VertexHistory(id, 8));
         for (int i = 0; i < 8; i++) {
             var src = this.vertices[i];
             var dst = this.shared[i];

@@ -27,6 +27,8 @@
     "copyEntity.cull.EntityRendererMixin",
     "copyEntity.shadows.EntityRenderDispatcherMixin",
     "font.MixinGlyphRenderer",
+    "item.MixinBakedQuad",
+    "item.MixinItemRenderer",
     "pbr_animation.MixinSpriteContents",
     "shader_overrides.MixinGlProgram",
     "shader_overrides.MixinRegionChunkRenderer",
