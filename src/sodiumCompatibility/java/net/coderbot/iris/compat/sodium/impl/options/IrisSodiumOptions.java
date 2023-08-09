@@ -12,7 +12,7 @@ import net.coderbot.iris.colorspace.ColorSpace;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
-
+import net.minecraft.text.Text;
 
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ public class IrisSodiumOptions {
         OptionImpl<Options, Integer> maxShadowDistanceSlider = OptionImpl.createBuilder(int.class, vanillaOpts)
                 .setName(Component.translatable("options.iris.shadowDistance"))
                 .setTooltip(Component.translatable("options.iris.shadowDistance.sodium_tooltip"))
-                .setControl(option -> new SliderControl(option, 0, 32, 1, ControlValueFormatter.quantityOrDisabled("Chunks", "Disabled")))
+                .setControl(option -> new SliderControl(option, 0, 32, 1, ControlValueFormatter.quantityOrDisabled(Text.translatable("options.chunks", "placeholder").getString().replace("placeholder ", ""), Text.translatable("options.off").getString())))
 				.setBinding((options, value) -> {
 						IrisVideoSettings.shadowDistance = value;
 						try {
@@ -70,7 +70,7 @@ public class IrisSodiumOptions {
 				// TODO: State that Fabulous Graphics is incompatible with Shader Packs in the tooltip
                 .setTooltip(Component.translatable("sodium.options.graphics_quality.tooltip"))
                 .setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class,
-						new Component[] { Component.literal("Fast"), Component.literal("Fancy") }))
+						new Component[] { Component.literal(Text.translatable("options.graphics.fast").getString()), Component.literal(Text.translatable("options.graphics.fancy").getString()) }))
                 .setBinding(
                         (opts, value) -> opts.graphicsMode().set(value.toVanilla()),
                         opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode().get()))
