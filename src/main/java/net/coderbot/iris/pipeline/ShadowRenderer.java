@@ -11,18 +11,14 @@ import net.coderbot.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
-import net.coderbot.iris.gl.program.ComputeProgram;
-import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
-import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.shadows.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
-import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.shadows.ShadowCompositeRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.ShadowRenderingState;
@@ -55,7 +51,6 @@ import org.joml.Vector4f;
 import org.lwjgl.opengl.ARBTextureSwizzle;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -225,13 +220,13 @@ public class ShadowRenderer {
 	private void configureDepthSampler(int glTextureId, PackShadowDirectives.DepthSamplingSettings settings) {
 		if (settings.getHardwareFiltering() && !separateHardwareSamplers) {
 			// We have to do this or else shadow hardware filtering breaks entirely!
-			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
 		}
 
 		// Workaround for issues with old shader packs like Chocapic v4.
 		// They expected the driver to put the depth value in z, but it's supposed to only
 		// be available in r. So we set up the swizzle to fix that.
-		IrisRenderSystem.texParameteriv(glTextureId, GL20C.GL_TEXTURE_2D, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+		IrisRenderSystem.texParameteriv(glTextureId, ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
 			new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_ONE });
 
 		configureSampler(glTextureId, settings);
@@ -245,11 +240,11 @@ public class ShadowRenderer {
 
 		if (!settings.getNearest()) {
 			// Make sure that things are smoothed
-			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
-			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_LINEAR);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_LINEAR);
 		} else {
-			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_NEAREST);
-			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_NEAREST);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_MIN_FILTER, GL20C.GL_NEAREST);
+			IrisRenderSystem.texParameteri(glTextureId, GL20C.GL_TEXTURE_MAG_FILTER, GL20C.GL_NEAREST);
 		}
 	}
 
@@ -264,8 +259,8 @@ public class ShadowRenderer {
 	}
 
 	private void setupMipmappingForTexture(int texture, int filteringMode) {
-		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
-		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
+		IrisRenderSystem.generateMipmaps(texture);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_MIN_FILTER, filteringMode);
 	}
 
 	private FrustumHolder createShadowFrustum(float renderMultiplier, FrustumHolder holder) {

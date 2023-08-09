@@ -3,33 +3,21 @@ package net.coderbot.iris.gl;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.sampler.GlSampler;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
-import net.coderbot.iris.mixin.GlStateManagerAccessor;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3i;
-import org.lwjgl.opengl.ARBDirectStateAccess;
 import org.lwjgl.opengl.ARBDrawBuffersBlend;
 import org.lwjgl.opengl.EXTShaderImageLoadStore;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL32C;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL33C;
-import org.lwjgl.opengl.GL40C;
 import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL45C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.NVXGPUMemoryInfo;
-import org.lwjgl.opengl.GL45C;
-import org.lwjgl.system.MemoryUtil;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
@@ -38,28 +26,9 @@ import java.nio.IntBuffer;
  */
 public class IrisRenderSystem {
 	private static Matrix4f backupProjection;
-
-	private static DSAAccess dsaState;
-	private static boolean hasMultibind;
-	private static boolean supportsCompute;
 	private static int[] samplers;
 
 	public static void initRenderer() {
-		if (GL.getCapabilities().OpenGL45) {
-			dsaState = new DSACore();
-			Iris.logger.info("OpenGL 4.5 detected, enabling DSA.");
-		} else if (GL.getCapabilities().GL_ARB_direct_state_access) {
-			dsaState = new DSAARB();
-			Iris.logger.info("ARB_direct_state_access detected, enabling DSA.");
-		} else {
-			dsaState = new DSAUnsupported();
-			Iris.logger.info("DSA support not detected.");
-		}
-
-		hasMultibind = GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind;
-
-		supportsCompute = GL.getCapabilities().glDispatchCompute != MemoryUtil.NULL;
-
 		samplers = new int[SamplerLimits.get().getMaxTextureUnits()];
 	}
 
@@ -73,42 +42,18 @@ public class IrisRenderSystem {
 		GL32C.glGetFloatv(pname, params);
 	}
 
-	public static void generateMipmaps(int texture, int mipmapTarget) {
+	public static void generateMipmaps(int texture) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		dsaState.generateMipmaps(texture, mipmapTarget);
+		GL46C.glGenerateTextureMipmap(texture);
 	}
 
 	public static void bindAttributeLocation(int program, int index, CharSequence name) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glBindAttribLocation(program, index, name);
 	}
-
-	public static void texImage1D(int texture, int target, int level, int internalformat, int width, int border, int format, int type, @Nullable ByteBuffer pixels) {
-		RenderSystem.assertOnRenderThreadOrInit();
-		IrisRenderSystem.bindTextureForSetup(target, texture);
-		GL30C.glTexImage1D(target, level, internalformat, width, border, format, type, pixels);
-	}
-
-	public static void texImage2D(int texture, int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
-		RenderSystem.assertOnRenderThreadOrInit();
-		IrisRenderSystem.bindTextureForSetup(target, texture);
-		GL32C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
-	}
-
-	public static void texImage3D(int texture, int target, int level, int internalformat, int width, int height, int depth, int border, int format, int type, @Nullable ByteBuffer pixels) {
-		RenderSystem.assertOnRenderThreadOrInit();
-		IrisRenderSystem.bindTextureForSetup(target, texture);
-		GL30C.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
-	}
-
 	public static void uniformMatrix4fv(int location, boolean transpose, FloatBuffer matrix) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniformMatrix4fv(location, transpose, matrix);
-	}
-
-	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
-		RenderSystem.assertOnRenderThreadOrInit();
-		GL32C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
 	}
 
 	public static void uniform1f(int location, float v0) {
@@ -141,31 +86,19 @@ public class IrisRenderSystem {
 		GL32C.glUniform4i(location, v0, v1, v2, v3);
 	}
 
-	public static void texParameteriv(int texture, int target, int pname, int[] params) {
+	public static void texParameteriv(int texture, int pname, int[] params) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		dsaState.texParameteriv(texture, target, pname, params);
+		GL46C.glTextureParameteriv(texture, pname, params);
 	}
 
-	/**
-	 * Internal API for use when you don't know the target texture. Should use {@link IrisRenderSystem#texParameteriv(int, int, int, int[])} instead unless you know what you're doing!
-	 */
-	public static void texParameterivDirect(int target, int pname, int[] params) {
+	public static void texParameteri(int texture, int pname, int param) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		GL32C.glTexParameteriv(target, pname, params);
+		GL46C.glTextureParameteri(texture, pname, param);
 	}
 
-	public static void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
-		dsaState.copyTexSubImage2D(destTexture, target, i, i1, i2, i3, i4, width, height);
-	}
-
-	public static void texParameteri(int texture, int target, int pname, int param) {
+	public static void texParameterf(int texture, int pname, float param) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		dsaState.texParameteri(texture, target, pname, param);
-	}
-
-	public static void texParameterf(int texture, int target, int pname, float param) {
-		RenderSystem.assertOnRenderThreadOrInit();
-		dsaState.texParameterf(texture, target, pname, param);
+		GL46C.glTextureParameterf(texture, pname, param);
 	}
 
 	public static String getProgramInfoLog(int program) {
@@ -180,12 +113,12 @@ public class IrisRenderSystem {
 
 	public static void drawBuffers(int framebuffer, int[] buffers) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		dsaState.drawBuffers(framebuffer, buffers);
+		GL46C.glNamedFramebufferDrawBuffers(framebuffer, buffers);
 	}
 
 	public static void readBuffer(int framebuffer, int buffer) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		dsaState.readBuffer(framebuffer, buffer);
+		GL46C.glNamedFramebufferReadBuffer(framebuffer, buffer);
 	}
 
 	public static String getActiveUniform(int program, int index, int size, IntBuffer type, IntBuffer name) {
@@ -202,16 +135,10 @@ public class IrisRenderSystem {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glBufferData(target, data, usage);
 	}
-
-	public static int bufferStorage(int target, float[] data, int usage) {
-		RenderSystem.assertOnRenderThreadOrInit();
-		return dsaState.bufferStorage(target, data, usage);
-	}
-
-	public static void bufferStorage(int target, long size, int flags) {
+	public static void bufferStorage(int texture, long size, int flags) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		// The ARB version is identical to GL44 and redirects, so this should work on ARB as well.
-		GL45C.glBufferStorage(target, size, flags);
+		GL45C.glNamedBufferStorage(texture, size, flags);
 	}
 
 	public static void bindBufferBase(int target, Integer index, int buffer) {
@@ -229,13 +156,13 @@ public class IrisRenderSystem {
 		GL32C.glDetachShader(program, shader);
 	}
 
-	public static void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
-		dsaState.framebufferTexture2D(fb, fbtarget, attachment, target, texture, levels);
+	public static void framebufferTexture2D(int fb, int attachment, int texture, int levels) {
+		GL46C.glNamedFramebufferTexture(fb, attachment, texture, levels);
 	}
 
-	public static int getTexParameteri(int texture, int target, int pname) {
+	public static int getTexParameteri(int texture, int pname) {
 		RenderSystem.assertOnRenderThreadOrInit();
-		return dsaState.getTexParameteri(texture, target, pname);
+		return GL46C.glGetTextureParameteri(texture, pname);
 	}
 
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
@@ -269,8 +196,8 @@ public class IrisRenderSystem {
 		GL43C.glGenBuffers(buffers);
 	}
 
-	public static void clearBufferSubData(int glShaderStorageBuffer, int glR8, long offset, long size, int glRed, int glByte, int[] ints) {
-		GL43C.glClearBufferSubData(glShaderStorageBuffer, glR8, offset, size, glRed, glByte, ints);
+	public static void clearBufferSubData(int buffer, int glR8, long offset, long size, int glRed, int glByte, int[] ints) {
+		GL46C.glClearNamedBufferSubData(buffer, glR8, offset, size, glRed, glByte, ints);
 	}
 
 	public static void getProgramiv(int program, int value, int[] storage) {
@@ -288,9 +215,7 @@ public class IrisRenderSystem {
 	public static void memoryBarrier(int barriers) {
 		RenderSystem.assertOnRenderThreadOrInit();
 
-		if (supportsCompute) {
-			GL45C.glMemoryBarrier(barriers);
-		}
+		GL45C.glMemoryBarrier(barriers);
 	}
 
 	public static boolean supportsBufferBlending() {
@@ -312,8 +237,8 @@ public class IrisRenderSystem {
 		ARBDrawBuffersBlend.glBlendFuncSeparateiARB(buffer, srcRGB, dstRGB, srcAlpha, dstAlpha);
   }
 
-	public static void bindTextureToUnit(int target, int unit, int texture) {
-		dsaState.bindTextureToUnit(target, unit, texture);
+	public static void bindTextureToUnit(int unit, int texture) {
+		GL46C.glBindTextureUnit(unit, texture);
 	}
 
 	// These functions are deprecated and unavailable in the core profile.
@@ -339,15 +264,15 @@ public class IrisRenderSystem {
 	}
 
 	public static void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
-		dsaState.blitFramebuffer(source, dest, offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
+		GL46C.glBlitNamedFramebuffer(source, dest, offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
 	}
 
 	public static int createFramebuffer() {
-		return dsaState.createFramebuffer();
+		return GL46C.glCreateFramebuffers();
 	}
 
 	public static int createTexture(int target) {
-		return dsaState.createTexture(target);
+		return GL46C.glCreateTextures(target);
 	}
 
 	public static void bindTextureForSetup(int glType, int glId) {
@@ -355,7 +280,7 @@ public class IrisRenderSystem {
 	}
 
 	public static boolean supportsCompute() {
-		return supportsCompute;
+		return true;
 	}
 
     public static int genSampler() {
@@ -376,18 +301,17 @@ public class IrisRenderSystem {
 		samplers[unit] = sampler;
 	}
 
-	private static int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
+	private static final int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
 
 	public static void unbindAllSamplers() {
 		boolean usedASampler = false;
 		for (int i = 0; i < samplers.length; i++) {
 			if (samplers[i] != 0) {
 				usedASampler = true;
-				if (!hasMultibind) GL33C.glBindSampler(i, 0);
 				samplers[i] = 0;
 			}
 		}
-		if (usedASampler && hasMultibind) {
+		if (usedASampler) {
 			GL45C.glBindSamplers(0, emptyArray);
 		}
 	}
@@ -417,233 +341,4 @@ public class IrisRenderSystem {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL43C.glDeleteBuffers(glId);
     }
-
-    public interface DSAAccess {
-		void generateMipmaps(int texture, int target);
-
-		void texParameteri(int texture, int target, int pname, int param);
-		void texParameterf(int texture, int target, int pname, float param);
-		void texParameteriv(int texture, int target, int pname, int[] params);
-
-		void readBuffer(int framebuffer, int buffer);
-
-		void drawBuffers(int framebuffer, int[] buffers);
-
-		int getTexParameteri(int texture, int target, int pname);
-
-		void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height);
-
-		void bindTextureToUnit(int target, int unit, int texture);
-
-		int bufferStorage(int target, float[] data, int usage);
-
-		void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter);
-
-		void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels);
-
-		int createFramebuffer();
-		int createTexture(int target);
-	}
-
-	public static class DSACore extends DSAARB {
-
-	}
-
-	public static class DSAARB extends DSAUnsupported {
-
-		@Override
-		public void generateMipmaps(int texture, int target) {
-			ARBDirectStateAccess.glGenerateTextureMipmap(texture);
-		}
-
-		@Override
-		public void texParameteri(int texture, int target, int pname, int param) {
-			ARBDirectStateAccess.glTextureParameteri(texture, pname, param);
-		}
-
-		@Override
-		public void texParameterf(int texture, int target, int pname, float param) {
-			ARBDirectStateAccess.glTextureParameterf(texture, pname, param);
-		}
-
-		@Override
-		public void texParameteriv(int texture, int target, int pname, int[] params) {
-			ARBDirectStateAccess.glTextureParameteriv(texture, pname, params);
-		}
-
-		@Override
-		public void readBuffer(int framebuffer, int buffer) {
-			ARBDirectStateAccess.glNamedFramebufferReadBuffer(framebuffer, buffer);
-		}
-
-		@Override
-		public void drawBuffers(int framebuffer, int[] buffers) {
-			ARBDirectStateAccess.glNamedFramebufferDrawBuffers(framebuffer, buffers);
-		}
-
-		@Override
-		public int getTexParameteri(int texture, int target, int pname) {
-			return ARBDirectStateAccess.glGetTextureParameteri(texture, pname);
-		}
-
-		@Override
-		public void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
-			ARBDirectStateAccess.glCopyTextureSubImage2D(destTexture, i, i1, i2, i3, i4, width, height);
-		}
-
-		@Override
-		public void bindTextureToUnit(int target, int unit, int texture) {
-			if (GlStateManagerAccessor.getTEXTURES()[unit].binding == texture) {
-				return;
-			}
-
-			ARBDirectStateAccess.glBindTextureUnit(unit, texture);
-
-			// Manually fix GLStateManager bindings...
-			GlStateManagerAccessor.getTEXTURES()[unit].binding = texture;
-		}
-
-		@Override
-		public int bufferStorage(int target, float[] data, int usage) {
-			int buffer = GL45C.glCreateBuffers();
-			GL45C.glNamedBufferData(buffer, data, usage);
-			return buffer;
-		}
-
-		@Override
-		public void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
-			ARBDirectStateAccess.glBlitNamedFramebuffer(source, dest, offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
-		}
-
-		@Override
-		public void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
-			ARBDirectStateAccess.glNamedFramebufferTexture(fb, attachment, texture, levels);
-		}
-
-		@Override
-		public int createFramebuffer() {
-			return ARBDirectStateAccess.glCreateFramebuffers();
-		}
-
-		@Override
-		public int createTexture(int target) {
-			return ARBDirectStateAccess.glCreateTextures(target);
-		}
-	}
-
-	public static class DSAUnsupported implements DSAAccess {
-		@Override
-		public void generateMipmaps(int texture, int target) {
-			GlStateManager._bindTexture(texture);
-			GL32C.glGenerateMipmap(target);
-		}
-
-		@Override
-		public void texParameteri(int texture, int target, int pname, int param) {
-			bindTextureForSetup(target, texture);
-			GL32C.glTexParameteri(target, pname, param);
-		}
-
-		@Override
-		public void texParameterf(int texture, int target, int pname, float param) {
-			bindTextureForSetup(target, texture);
-			GL32C.glTexParameterf(target, pname, param);
-		}
-
-		@Override
-		public void texParameteriv(int texture, int target, int pname, int[] params) {
-			bindTextureForSetup(target, texture);
-			GL32C.glTexParameteriv(target, pname, params);
-		}
-
-		@Override
-		public void readBuffer(int framebuffer, int buffer) {
-			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
-			GL32C.glReadBuffer(buffer);
-		}
-
-		@Override
-		public void drawBuffers(int framebuffer, int[] buffers) {
-			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
-			GL32C.glDrawBuffers(buffers);
-		}
-
-		@Override
-		public int getTexParameteri(int texture, int target, int pname) {
-			bindTextureForSetup(target, texture);
-			return GL32C.glGetTexParameteri(target, pname);
-		}
-
-		@Override
-		public void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height) {
-			int previous = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
-			GlStateManager._bindTexture(destTexture);
-			GL32C.glCopyTexSubImage2D(target, i, i1, i2, i3, i4, width, height);
-			GlStateManager._bindTexture(previous);
-		}
-
-		@Override
-		public void bindTextureToUnit(int target, int unit, int texture) {
-			int activeTexture = GlStateManager._getActiveTexture();
-			GlStateManager._activeTexture(GL30C.GL_TEXTURE0 + unit);
-			bindTextureForSetup(target, texture);
-			GlStateManager._activeTexture(activeTexture);
-		}
-
-		@Override
-		public int bufferStorage(int target, float[] data, int usage) {
-			int buffer = GlStateManager._glGenBuffers();
-			GlStateManager._glBindBuffer(target, buffer);
-			bufferData(target, data, usage);
-			GlStateManager._glBindBuffer(target, 0);
-
-			return buffer;
-		}
-
-		@Override
-		public void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
-			GlStateManager._glBindFramebuffer(GL32C.GL_READ_FRAMEBUFFER, source);
-			GlStateManager._glBindFramebuffer(GL32C.GL_DRAW_FRAMEBUFFER, dest);
-			GL32C.glBlitFramebuffer(offsetX, offsetY, width, height, offsetX2, offsetY2, width2, height2, bufferChoice, filter);
-		}
-
-		@Override
-		public void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
-			GlStateManager._glBindFramebuffer(fbtarget, fb);
-			GL32C.glFramebufferTexture2D(fbtarget, attachment, target, texture, levels);
-		}
-
-		@Override
-		public int createFramebuffer() {
-			int framebuffer = GlStateManager.glGenFramebuffers();
-			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
-			return framebuffer;
-		}
-
-		@Override
-		public int createTexture(int target) {
-			int texture = GlStateManager._genTexture();
-			GlStateManager._bindTexture(texture);
-			return texture;
-		}
-	}
-
-	/*
-	public static void bindTextures(int startingTexture, int[] bindings) {
-		if (hasMultibind) {
-			ARBMultiBind.glBindTextures(startingTexture, bindings);
-		} else if (dsaState != DSAState.NONE) {
-			for (int binding : bindings) {
-				ARBDirectStateAccess.glBindTextureUnit(startingTexture, binding);
-				startingTexture++;
-			}
-		} else {
-			for (int binding : bindings) {
-				GlStateManager._activeTexture(startingTexture);
-				GlStateManager._bindTexture(binding);
-				startingTexture++;
-			}
-		}
-	}
-	 */
 }

@@ -13,12 +13,12 @@ import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelType;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.rendertarget.RenderTargets;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.io.IOUtils;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL21C;
+import org.lwjgl.opengl.GL46C;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,8 +36,8 @@ public class CenterDepthSampler {
 	private boolean destroyed;
 
 	public CenterDepthSampler(IntSupplier depthSupplier, float halfLife) {
-		this.texture = GlStateManager._genTexture();
-		this.altTexture = GlStateManager._genTexture();
+		this.texture = IrisRenderSystem.createTexture(GL46C.GL_TEXTURE_2D);
+		this.altTexture = IrisRenderSystem.createTexture(GL46C.GL_TEXTURE_2D);
 		this.framebuffer = new GlFramebuffer();
 
 		InternalTextureFormat format = InternalTextureFormat.R32F;
@@ -93,12 +93,12 @@ public class CenterDepthSampler {
 	}
 
 	public void setupColorTexture(int texture, InternalTextureFormat format) {
-		IrisRenderSystem.texImage2D(texture, GL21C.GL_TEXTURE_2D, 0, format.getGlFormat(), 1, 1, 0, format.getPixelFormat().getGlFormat(), PixelType.FLOAT.getGlFormat(), null);
+		GL46C.glTextureStorage2D(texture, 1, format.getGlFormat(), 1, 1);
 
-		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_MIN_FILTER, GL21C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_MAG_FILTER, GL21C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_S, GL21C.GL_CLAMP_TO_EDGE);
-		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_T, GL21C.GL_CLAMP_TO_EDGE);
+		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_MIN_FILTER, GL21C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_MAG_FILTER, GL21C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_WRAP_S, GL21C.GL_CLAMP_TO_EDGE);
+		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_WRAP_T, GL21C.GL_CLAMP_TO_EDGE);
 	}
 
 	public int getCenterDepthTexture() {

@@ -1,7 +1,6 @@
 package net.coderbot.iris.compat.sodium.impl.shader_overrides;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
@@ -11,14 +10,12 @@ import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
 import me.jellysquid.mods.sodium.client.util.TextureUtil;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
-import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
@@ -97,8 +94,8 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	@Override
 	public void setupState() {
 		// See IrisSamplers#addLevelSamplers
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.ALBEDO_TEXTURE_UNIT, TextureUtil.getBlockTextureId());
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, TextureUtil.getLightTextureId());
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.ALBEDO_TEXTURE_UNIT, TextureUtil.getBlockTextureId());
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, TextureUtil.getLightTextureId());
 		// This is what is expected by the rest of rendering state, failure to do this will cause blurry textures on particles.
 		GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
 		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alpha);

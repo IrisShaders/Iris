@@ -13,7 +13,8 @@ import org.lwjgl.opengl.GL13C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
-public class GlImage extends GlResource {
+public class GlImage {
+	protected int id;
 	protected final String name;
 	protected final String samplerName;
 	protected final TextureType target;
@@ -23,7 +24,7 @@ public class GlImage extends GlResource {
 	private final boolean clear;
 
 	public GlImage(String name, String samplerName, TextureType target, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType, boolean clear, int width, int height, int depth) {
-		super(IrisRenderSystem.createTexture(target.getGlType()));
+		this.id = IrisRenderSystem.createTexture(target.getGlType());
 
 		this.name = name;
 		this.samplerName = samplerName;
@@ -33,10 +34,10 @@ public class GlImage extends GlResource {
 		this.pixelType = pixelType;
 		this.clear = clear;
 
-		IrisRenderSystem.bindTextureForSetup(target.getGlType(), getGlId());
-		target.apply(getGlId(), width, height, depth, internalFormat.getGlFormat(), format.getGlFormat(), pixelType.getGlFormat(), null);
+		IrisRenderSystem.bindTextureForSetup(target.getGlType(), id);
+		target.apply(id, width, height, depth, internalFormat.getGlFormat(), format.getGlFormat(), pixelType.getGlFormat(), 0L);
 
-		int texture = getGlId();
+		int texture = id;
 
 		setup(texture, width, height, depth);
 
@@ -45,22 +46,22 @@ public class GlImage extends GlResource {
 
 	protected void setup(int texture, int width, int height, int depth) {
 		boolean isInteger = internalTextureFormat.getPixelFormat().isInteger();
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_MIN_FILTER, isInteger ? GL11C.GL_NEAREST : GL11C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_MAG_FILTER, isInteger ? GL11C.GL_NEAREST : GL11C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_MIN_FILTER, isInteger ? GL11C.GL_NEAREST : GL11C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_MAG_FILTER, isInteger ? GL11C.GL_NEAREST : GL11C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
 
 		if (height > 0) {
-			IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
 		}
 
 		if (depth > 0) {
-			IrisRenderSystem.texParameteri(texture, target.getGlType(), GL30C.GL_TEXTURE_WRAP_R, GL13C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(texture, GL30C.GL_TEXTURE_WRAP_R, GL13C.GL_CLAMP_TO_EDGE);
 		}
 
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL20C.GL_TEXTURE_MAX_LEVEL, 0);
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL20C.GL_TEXTURE_MIN_LOD, 0);
-		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL20C.GL_TEXTURE_MAX_LOD,0);
-		IrisRenderSystem.texParameterf(texture, target.getGlType(), GL20C.GL_TEXTURE_LOD_BIAS, 0.0F);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_MAX_LEVEL, 0);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_MIN_LOD, 0);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_MAX_LOD,0);
+		IrisRenderSystem.texParameterf(texture, GL20C.GL_TEXTURE_LOD_BIAS, 0.0F);
 
 		ARBClearTexture.glClearTexImage(texture, 0, format.getGlFormat(), pixelType.getGlFormat(), (int[]) null);
 	}
@@ -82,7 +83,7 @@ public class GlImage extends GlResource {
 	}
 
 	public int getId() {
-		return getGlId();
+		return id;
 	}
 
 	/**
@@ -94,9 +95,8 @@ public class GlImage extends GlResource {
 
 	}
 
-	@Override
-	protected void destroyInternal() {
-		GlStateManager._deleteTexture(getGlId());
+	public void destroy() {
+		GlStateManager._deleteTexture(id);
 	}
 
 	public InternalTextureFormat getInternalFormat() {
@@ -130,10 +130,13 @@ public class GlImage extends GlResource {
 
 		@Override
 		public void updateNewSize(int width, int height) {
-			IrisRenderSystem.bindTextureForSetup(target.getGlType(), getGlId());
-			target.apply(getGlId(), (int) (width * relativeWidth), (int) (height * relativeHeight), 0, internalTextureFormat.getGlFormat(), format.getGlFormat(), pixelType.getGlFormat(), null);
+			GlStateManager._deleteTexture(id);
+			this.id = IrisRenderSystem.createTexture(target.getGlType());
 
-			int texture = getGlId();
+			IrisRenderSystem.bindTextureForSetup(target.getGlType(), id);
+			target.apply(id, (int) (width * relativeWidth), (int) (height * relativeHeight), 0, internalTextureFormat.getGlFormat(), format.getGlFormat(), pixelType.getGlFormat(), 0L);
+
+			int texture = id;
 
 			setup(texture, width, height, 0);
 

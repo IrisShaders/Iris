@@ -1,7 +1,6 @@
 package net.coderbot.iris.rendertarget;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.texture.TextureAccess;
 import net.coderbot.iris.gl.texture.TextureType;
@@ -22,13 +21,13 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 		// By default, images are unblurred and not clamped.
 
 		if (textureData.getFilteringData().shouldBlur()) {
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
+			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
+			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
 		}
 
 		if (textureData.getFilteringData().shouldClamp()) {
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
 		}
 	}
 

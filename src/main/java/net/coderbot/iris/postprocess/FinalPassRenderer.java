@@ -15,11 +15,9 @@ import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
-import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.texture.TextureAccess;
-import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.ShaderPrinter;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
@@ -47,6 +45,7 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.Map;
 import java.util.Objects;
@@ -241,7 +240,7 @@ public class FinalPassRenderer {
 			// https://stackoverflow.com/a/23994979/18166885
 			this.baseline.bindAsReadBuffer();
 
-			IrisRenderSystem.copyTexSubImage2D(main.getColorTextureId(), GL11C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
+			GL46C.glCopyImageSubData(this.baseline.getColorAttachment(0), GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, main.getColorTextureId(), GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, baseWidth, baseHeight, 1);
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
@@ -308,14 +307,14 @@ public class FinalPassRenderer {
 		//
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
-		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
+		IrisRenderSystem.generateMipmaps(texture);
 
 		int filter = GL20C.GL_LINEAR_MIPMAP_LINEAR;
 		if (target.getInternalFormat().getPixelFormat().isInteger()) {
 			filter = GL20C.GL_NEAREST_MIPMAP_NEAREST;
 		}
 
-		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_MIN_FILTER, filter);
 	}
 
 	private static void resetRenderTarget(RenderTarget target) {
@@ -326,8 +325,8 @@ public class FinalPassRenderer {
 			filter = GL20C.GL_NEAREST;
 		}
 
-		IrisRenderSystem.texParameteri(target.getMainTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
-		IrisRenderSystem.texParameteri(target.getAltTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
+		IrisRenderSystem.texParameteri(target.getMainTexture(), GL20C.GL_TEXTURE_MIN_FILTER, filter);
+		IrisRenderSystem.texParameteri(target.getAltTexture(), GL20C.GL_TEXTURE_MIN_FILTER, filter);
 
 		RenderSystem.bindTexture(0);
 	}

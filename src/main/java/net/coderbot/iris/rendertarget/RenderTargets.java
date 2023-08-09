@@ -11,6 +11,8 @@ import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import org.joml.Vector2i;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -184,27 +186,11 @@ public class RenderTargets {
 	}
 
 	public void copyPreTranslucentDepth() {
-		if (translucentDepthDirty) {
-			translucentDepthDirty = false;
-			RenderSystem.bindTexture(noTranslucents.getTextureId());
-			depthSourceFb.bindAsReadBuffer();
-			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, currentDepthFormat.getGlInternalFormat(), 0, 0, cachedWidth, cachedHeight, 0);
-		} else {
-			copyStrategy.copy(depthSourceFb, getDepthTexture(), noTranslucentsDestFb, noTranslucents.getTextureId(),
-				getCurrentWidth(), getCurrentHeight());
-		}
+		GL46C.glCopyImageSubData(currentDepthTexture, GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, noTranslucents.getTextureId(), GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, cachedWidth, cachedHeight, 1);
 	}
 
 	public void copyPreHandDepth() {
-		if (handDepthDirty) {
-			handDepthDirty = false;
-			RenderSystem.bindTexture(noHand.getTextureId());
-			depthSourceFb.bindAsReadBuffer();
-			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, currentDepthFormat.getGlInternalFormat(), 0, 0, cachedWidth, cachedHeight, 0);
-		} else {
-			copyStrategy.copy(depthSourceFb, getDepthTexture(), noHandDestFb, noHand.getTextureId(),
-				getCurrentWidth(), getCurrentHeight());
-		}
+		GL46C.glCopyImageSubData(currentDepthTexture, GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, noHand.getTextureId(), GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, cachedWidth, cachedHeight, 1);
 	}
 
 	public boolean isFullClearRequired() {

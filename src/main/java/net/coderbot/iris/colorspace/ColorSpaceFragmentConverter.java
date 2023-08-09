@@ -17,6 +17,7 @@ import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -74,7 +75,7 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		builder.addDynamicSampler(() -> target, "readImage");
 
 		swapTexture = GlStateManager._genTexture();
-		IrisRenderSystem.texImage2D(swapTexture, GL30C.GL_TEXTURE_2D, 0, GL30C.GL_RGBA8, width, height, 0, GL30C.GL_RGBA, GL30C.GL_UNSIGNED_BYTE, null);
+		GL46C.glTextureStorage2D(swapTexture, 1, GL30C.GL_RGBA8, width, height);
 
 		this.framebuffer = new GlFramebuffer();
 		framebuffer.addColorAttachment(0, swapTexture);
@@ -89,7 +90,6 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		framebuffer.bind();
 		FullScreenQuadRenderer.INSTANCE.render();
 		Program.unbind();
-		framebuffer.bindAsReadBuffer();
-		IrisRenderSystem.copyTexSubImage2D(targetImage, GL11C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
+		GL46C.glCopyImageSubData(this.swapTexture, GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, targetImage, GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, width, height, 1);
 	}
 }

@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.system.MemoryUtil;
 
 public interface DepthCopyStrategy {
@@ -29,8 +30,7 @@ public interface DepthCopyStrategy {
 
 			int previousTexture = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 
-			IrisRenderSystem.copyTexSubImage2D(
-				destTexture,
+			GL46C.glCopyTexSubImage2D(
 				// target
 				GL20C.GL_TEXTURE_2D,
 				// level

@@ -1,6 +1,5 @@
 package net.coderbot.iris.texture.format;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.texture.mipmap.CustomMipmapGenerator;
 import net.coderbot.iris.texture.pbr.PBRType;
@@ -47,12 +46,12 @@ public interface TextureFormat {
 
 	default void setupTextureParameters(PBRType pbrType, AbstractTexture texture) {
 		if (!canInterpolateValues(pbrType)) {
-			int minFilter = IrisRenderSystem.getTexParameteri(texture.getId(), GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER);
+			int minFilter = IrisRenderSystem.getTexParameteri(texture.getId(), GL11.GL_TEXTURE_MIN_FILTER);
 			// Non-mipped filters begin at 0x2600 whereas mipped filters begin at 0x2700,
 			// so this bit mask can be used to check if the filter is mipped or not
 			boolean mipmap = (minFilter & 1 << 8) == 1;
-			IrisRenderSystem.texParameteri(texture.getId(), GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, mipmap ? GL11.GL_NEAREST_MIPMAP_NEAREST : GL11.GL_NEAREST);
-			IrisRenderSystem.texParameteri(texture.getId(), GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+			IrisRenderSystem.texParameteri(texture.getId(), GL11.GL_TEXTURE_MIN_FILTER, mipmap ? GL11.GL_NEAREST_MIPMAP_NEAREST : GL11.GL_NEAREST);
+			IrisRenderSystem.texParameteri(texture.getId(), GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		}
 	}
 

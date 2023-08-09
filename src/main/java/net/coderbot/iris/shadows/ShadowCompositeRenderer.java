@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
@@ -41,7 +40,6 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -255,8 +253,8 @@ public class ShadowCompositeRenderer {
 		//
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
-		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
-		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, target.getInternalFormat().getPixelFormat().isInteger() ? GL20C.GL_NEAREST_MIPMAP_NEAREST : GL20C.GL_LINEAR_MIPMAP_LINEAR);
+		IrisRenderSystem.generateMipmaps(texture);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_MIN_FILTER, target.getInternalFormat().getPixelFormat().isInteger() ? GL20C.GL_NEAREST_MIPMAP_NEAREST : GL20C.GL_LINEAR_MIPMAP_LINEAR);
 	}
 
 	private static void resetRenderTarget(RenderTarget target) {
@@ -268,8 +266,8 @@ public class ShadowCompositeRenderer {
 			filter = GL20C.GL_NEAREST;
 		}
 
-		IrisRenderSystem.texParameteri(target.getMainTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
-		IrisRenderSystem.texParameteri(target.getAltTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
+		IrisRenderSystem.texParameteri(target.getMainTexture(), GL20C.GL_TEXTURE_MIN_FILTER, filter);
+		IrisRenderSystem.texParameteri(target.getAltTexture(), GL20C.GL_TEXTURE_MIN_FILTER, filter);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline

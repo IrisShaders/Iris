@@ -1,18 +1,13 @@
 package net.coderbot.iris.pipeline.newshader;
 
-import com.ibm.icu.impl.ICUNotifier;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
 import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
-import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -21,11 +16,7 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
-import net.coderbot.iris.gl.state.ValueUpdateNotifier;
-import net.coderbot.iris.gl.texture.InternalTextureFormat;
-import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.gl.uniform.DynamicLocationalUniformHolder;
-import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
@@ -33,25 +24,17 @@ import org.joml.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import org.apache.logging.log4j.util.TriConsumer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.ARBTextureSwizzle;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL32C;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
 public class ExtendedShader extends ShaderInstance implements ShaderInstanceInterface {
 	private final boolean intensitySwizzle;
@@ -152,13 +135,13 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		}
 
 		if (intensitySwizzle) {
-			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), TextureType.TEXTURE_2D.getGlType(), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
 				new int[] { GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED });
 		}
 
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
+		IrisRenderSystem.bindTextureToUnit(IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
 
 		if (PROJECTION_MATRIX != null) {
 			if (projectionInverse != null) {

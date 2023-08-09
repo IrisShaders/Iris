@@ -2,6 +2,7 @@ package net.coderbot.iris.gl.texture;
 
 import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL46C;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -22,16 +23,25 @@ public enum TextureType {
 		return glType;
 	}
 
-	public void apply(int texture, int sizeX, int sizeY, int sizeZ, int internalFormat, int format, int pixelType, ByteBuffer pixels) {
+	public void apply(int texture, int sizeX, int sizeY, int sizeZ, int internalFormat, int format, int pixelType, long pixels) {
 		switch (this) {
 			case TEXTURE_1D:
-				IrisRenderSystem.texImage1D(texture, getGlType(), 0, internalFormat, sizeX, 0, format, pixelType, pixels);
+				GL46C.glTextureStorage1D(texture, 1, internalFormat, sizeX);
+				if (pixels != 0L) {
+					GL46C.glTextureSubImage1D(texture, 0, 0, sizeX, format, pixelType, pixels);
+				}
 				break;
 			case TEXTURE_2D, TEXTURE_RECTANGLE:
-				IrisRenderSystem.texImage2D(texture, getGlType(), 0, internalFormat, sizeX, sizeY, 0, format, pixelType, pixels);
+				GL46C.glTextureStorage2D(texture, 1, internalFormat, sizeX, sizeY);
+				if (pixels != 0L) {
+					GL46C.glTextureSubImage2D(texture, 0, 0, 0, sizeX, sizeY, format, pixelType, pixels);
+				}
 				break;
 			case TEXTURE_3D:
-				IrisRenderSystem.texImage3D(texture, getGlType(), 0, internalFormat, sizeX, sizeY, sizeZ, 0, format, pixelType, pixels);
+				GL46C.glTextureStorage3D(texture, 1, internalFormat, sizeX, sizeY, sizeZ);
+				if (pixels != 0L) {
+					GL46C.glTextureSubImage3D(texture, 0, 0, 0, 0, sizeX, sizeY, sizeZ, format, pixelType, pixels);
+				}
 				break;
 		}
 	}

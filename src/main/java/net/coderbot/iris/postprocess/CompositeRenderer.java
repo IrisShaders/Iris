@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
@@ -13,7 +12,6 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -27,7 +25,6 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.texture.TextureAccess;
-import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.pipeline.ShaderPrinter;
@@ -52,10 +49,6 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
-
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Supplier;
 
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
@@ -322,14 +315,14 @@ public class CompositeRenderer {
 		//
 		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
 		// unlikely that this issue occurs in practice with most shader packs.
-		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
+		IrisRenderSystem.generateMipmaps(texture);
 
 		int filter = GL20C.GL_LINEAR_MIPMAP_LINEAR;
 		if (target.getInternalFormat().getPixelFormat().isInteger()) {
 			filter = GL20C.GL_NEAREST_MIPMAP_NEAREST;
 		}
 
-		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
+		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_MIN_FILTER, filter);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline

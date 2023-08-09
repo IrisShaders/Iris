@@ -1,7 +1,6 @@
 package net.coderbot.iris.rendertarget;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.texture.TextureUploadHelper;
@@ -23,13 +22,12 @@ public class SingleColorTexture extends GlResource {
 
 		int texture = getGlId();
 
-		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_REPEAT);
-		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_REPEAT);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_REPEAT);
+		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_REPEAT);
 
 		TextureUploadHelper.resetTextureUploadState();
-		IrisRenderSystem.texImage2D(texture, GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGBA, 1, 1, 0, GL11C.GL_RGBA, GL11C.GL_UNSIGNED_BYTE, pixel);
 	}
 
 	public int getTextureId() {
