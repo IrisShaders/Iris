@@ -50,6 +50,7 @@ import org.lwjgl.opengl.GL46C;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class FinalPassRenderer {
@@ -134,10 +135,10 @@ public class FinalPassRenderer {
 			swap.target = target;
 			swap.width = target1.getWidth();
 			swap.height = target1.getHeight();
-			swap.from = renderTargets.createColorFramebuffer(ImmutableSet.of(), new int[] {target});
 			// NB: This is handled in RenderTargets now.
 			//swap.from.readBuffer(target);
-			swap.targetTexture = renderTargets.get(target).getMainTexture();
+			swap.sourceTexture = renderTargets.get(target)::getAltTexture;
+			swap.targetTexture = renderTargets.get(target)::getMainTexture;
 
 			swapPasses.add(swap);
 		});
@@ -162,8 +163,8 @@ public class FinalPassRenderer {
 		public int target;
 		public int width;
 		public int height;
-		GlFramebuffer from;
-		int targetTexture;
+		IntSupplier sourceTexture;
+		IntSupplier targetTexture;
 	}
 
 	public void renderFinalPass() {
@@ -251,18 +252,7 @@ public class FinalPassRenderer {
 		}
 
 		for (SwapPass swapPass : swapPasses) {
-			// NB: We need to use bind(), not bindAsReadBuffer()... Previously we used bindAsReadBuffer() here which
-			//     broke TAA on many packs and on many drivers.
-			//
-			// Note that glCopyTexSubImage2D reads from the current GL_READ_BUFFER (given by glReadBuffer()) for the
-			// current framebuffer bound to GL_FRAMEBUFFER, but that is distinct from the current GL_READ_FRAMEBUFFER,
-			// which is what bindAsReadBuffer() binds.
-			//
-			// Also note that RenderTargets already calls readBuffer(0) for us.
-			swapPass.from.bind();
-
-			RenderSystem.bindTexture(swapPass.targetTexture);
-			GlStateManager._glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, swapPass.width, swapPass.height);
+			GL46C.glCopyImageSubData(swapPass.sourceTexture.getAsInt(), GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, swapPass.targetTexture.getAsInt(), GL43C.GL_TEXTURE_2D, 0, 0, 0, 0, swapPass.width, swapPass.height, 1);
 		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
@@ -285,11 +275,11 @@ public class FinalPassRenderer {
 	public void recalculateSwapPassSize() {
 		for (SwapPass swapPass : swapPasses) {
 			RenderTarget target = renderTargets.get(swapPass.target);
-			renderTargets.destroyFramebuffer(swapPass.from);
-			swapPass.from = renderTargets.createColorFramebuffer(ImmutableSet.of(), new int[] {swapPass.target});
+
 			swapPass.width = target.getWidth();
 			swapPass.height = target.getHeight();
-			swapPass.targetTexture = target.getMainTexture();
+			swapPass.sourceTexture = target::getAltTexture;
+			swapPass.targetTexture = target::getMainTexture;
 		}
 	}
 

@@ -106,7 +106,7 @@ public class ShadowRenderTargets {
 		return targets.length;
 	}
 
-	public  derTarget get(int index) {
+	public RenderTarget get(int index) {
 		return targets[index];
 	}
 
