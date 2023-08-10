@@ -12,10 +12,10 @@ import java.nio.ByteBuffer;
 
 public class DepthTexture extends GlResource {
 	public DepthTexture(int width, int height, DepthBufferFormat format) {
-		super(IrisRenderSystem.createTexture(GL11C.GL_TEXTURE_2D));
-		int texture = getGlId();
-
+		super(0);
 		resize(width, height, format);
+
+		int texture = getGlId();
 
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_NEAREST);
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_NEAREST);
@@ -26,10 +26,11 @@ public class DepthTexture extends GlResource {
 	}
 
 	void resize(int width, int height, DepthBufferFormat format) {
-		// TODO IMMUTABILITY
-		GlStateManager._bindTexture(getTextureId());
-		GL46C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, format.getGlInternalFormat(), width, height, 0,
-			format.getGlType(), format.getGlFormat(), (ByteBuffer) null);
+		if (getGlId() != 0) {
+			GlStateManager._deleteTexture(getGlId());
+		}
+		setNewId(IrisRenderSystem.createTexture(GL46C.GL_TEXTURE_2D));
+		GL46C.glTextureStorage2D(getTextureId(), 1, format.getGlInternalFormat(), width, height);
 	}
 
 	public int getTextureId() {
