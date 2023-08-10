@@ -14,6 +14,7 @@ import org.lwjgl.opengl.GL46C;
 import java.nio.ByteBuffer;
 
 public class RenderTarget {
+	private static final double LOG2 = Math.log(2);
 	private InternalTextureFormat internalFormat;
 	private final PixelFormat format;
 	private final PixelType type;
@@ -67,19 +68,18 @@ public class RenderTarget {
 	}
 
 	private void resizeTexture(boolean alt, int width, int height) {
-		if (this.mainTexture != 0) GlStateManager._deleteTexture(mainTexture);
-		if (this.altTexture != 0) GlStateManager._deleteTexture(altTexture);
-
 		if (alt) {
 			this.altTexture = IrisRenderSystem.createTexture(GL46C.GL_TEXTURE_2D);
 		} else {
 			this.mainTexture = IrisRenderSystem.createTexture(GL46C.GL_TEXTURE_2D);
 		}
 
-		GL46C.glTextureStorage2D(alt ? altTexture : mainTexture, 4, internalFormat.getGlFormat(), width, height);
+		GL46C.glTextureStorage2D(alt ? altTexture : mainTexture, (int) (1 + Math.floor(Math.log(Math.max(width, height)) / LOG2)), internalFormat.getGlFormat(), width, height);
 	}
 
 	void resize(Vector2i textureScaleOverride) {
+		if (this.mainTexture != 0) GlStateManager._deleteTexture(mainTexture);
+		if (this.altTexture != 0) GlStateManager._deleteTexture(altTexture);
 		this.resize(textureScaleOverride.x, textureScaleOverride.y);
 	}
 

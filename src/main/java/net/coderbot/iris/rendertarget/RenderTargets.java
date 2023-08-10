@@ -233,7 +233,7 @@ public class RenderTargets {
 	}
 
 	private GlFramebufferFromTargets createEmptyFramebuffer() {
-		GlFramebufferFromTargets framebuffer = new GlFramebufferFromTargets(new int[0], ImmutableSet.of());
+		GlFramebufferFromTargets framebuffer = new GlFramebufferFromTargets(new int[] { 0 }, ImmutableSet.of());
 		ownedFramebuffers.add(framebuffer);
 
 		framebuffer.addDepthAttachment(currentDepthTexture);
