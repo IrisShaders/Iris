@@ -316,6 +316,7 @@ public class FinalPassRenderer {
 			filter = GL20C.GL_NEAREST_MIPMAP_NEAREST;
 		}
 
+		IrisRenderSystem.texParameteri(texture, GL30C.GL_TEXTURE_MIN_FILTER, filter);
 	}
 
 	private static void resetRenderTarget(RenderTarget target) {
@@ -328,7 +329,8 @@ public class FinalPassRenderer {
 
 		target.setMipmapping(false);
 
-
+		IrisRenderSystem.texParameteri(target.getAltTexture(), GL30C.GL_TEXTURE_MIN_FILTER, filter);
+		IrisRenderSystem.texParameteri(target.getMainTexture(), GL30C.GL_TEXTURE_MIN_FILTER, filter);
 		RenderSystem.bindTexture(0);
 	}
 

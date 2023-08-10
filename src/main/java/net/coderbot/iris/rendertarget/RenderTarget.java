@@ -8,6 +8,7 @@ import net.coderbot.iris.gl.texture.PixelType;
 import org.joml.Vector2i;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
+import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL46C;
 
 import java.nio.ByteBuffer;
@@ -59,22 +60,6 @@ public class RenderTarget {
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_MAG_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
-
-		if (alt) {
-			altTextureMipView = GL46C.glGenTextures();
-			GL46C.glTextureView(altTextureMipView, GL46C.GL_TEXTURE_2D, texture, internalFormat.getGlFormat(), 0, 4, 0, 1);
-			IrisRenderSystem.texParameteri(altTextureMipView, GL11C.GL_TEXTURE_MIN_FILTER, allowsLinear ? GL11C.GL_LINEAR_MIPMAP_LINEAR : GL11C.GL_NEAREST_MIPMAP_NEAREST);
-			IrisRenderSystem.texParameteri(altTextureMipView, GL11C.GL_TEXTURE_MAG_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
-			IrisRenderSystem.texParameteri(altTextureMipView, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-			IrisRenderSystem.texParameteri(altTextureMipView, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
-		} else {
-			mainTextureMipView = GL46C.glGenTextures();
-			GL46C.glTextureView(mainTextureMipView, GL46C.GL_TEXTURE_2D, texture, internalFormat.getGlFormat(), 0, 4, 0, 1);
-			IrisRenderSystem.texParameteri(mainTextureMipView, GL11C.GL_TEXTURE_MIN_FILTER, allowsLinear ? GL11C.GL_LINEAR_MIPMAP_LINEAR : GL11C.GL_NEAREST_MIPMAP_NEAREST);
-			IrisRenderSystem.texParameteri(mainTextureMipView, GL11C.GL_TEXTURE_MAG_FILTER, allowsLinear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
-			IrisRenderSystem.texParameteri(mainTextureMipView, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-			IrisRenderSystem.texParameteri(mainTextureMipView, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
-		}
 	}
 
 	public void setMipmapping(boolean enabled) {
@@ -117,13 +102,13 @@ public class RenderTarget {
 	public int getMainTexture() {
 		requireValid();
 
-		return mipmapping ? mainTextureMipView : mainTexture;
+		return mainTexture;
 	}
 
 	public int getAltTexture() {
 		requireValid();
 
-		return mipmapping ? altTextureMipView : altTexture;
+		return altTexture;
 	}
 
 	public int getWidth() {

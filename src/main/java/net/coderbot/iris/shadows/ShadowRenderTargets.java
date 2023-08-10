@@ -7,6 +7,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.GlFramebufferFromTargets;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
@@ -30,7 +31,7 @@ public class ShadowRenderTargets {
 	private final GlFramebuffer noTranslucentsDestFb;
 	private final boolean[] flipped;
 
-	private final List<GlFramebuffer> ownedFramebuffers;
+	private final List<GlFramebufferFromTargets> ownedFramebuffers;
 	private final int resolution;
 	private final WorldRenderingPipeline pipeline;
 
@@ -105,7 +106,7 @@ public class ShadowRenderTargets {
 		return targets.length;
 	}
 
-	public RenderTarget get(int index) {
+	public  derTarget get(int index) {
 		return targets[index];
 	}
 
@@ -190,11 +191,11 @@ public class ShadowRenderTargets {
 		fullClearRequired = false;
 	}
 
-	public GlFramebuffer createFramebufferWritingToMain(int[] drawBuffers) {
+	public GlFramebufferFromTargets createFramebufferWritingToMain(int[] drawBuffers) {
 		return createFullFramebuffer(false, drawBuffers);
 	}
 
-	public GlFramebuffer createFramebufferWritingToAlt(int[] drawBuffers) {
+	public GlFramebufferFromTargets createFramebufferWritingToAlt(int[] drawBuffers) {
 		return createFullFramebuffer(true, drawBuffers);
 	}
 
@@ -210,8 +211,8 @@ public class ShadowRenderTargets {
 		return inverted.build();
 	}
 
-	private GlFramebuffer createEmptyFramebuffer() {
-		GlFramebuffer framebuffer = new GlFramebuffer();
+	private GlFramebufferFromTargets createEmptyFramebuffer() {
+		GlFramebufferFromTargets framebuffer = new GlFramebufferFromTargets(new int[0], ImmutableSet.of());
 		ownedFramebuffers.add(framebuffer);
 
 		framebuffer.addDepthAttachment(mainDepth.getTextureId());
@@ -238,7 +239,7 @@ public class ShadowRenderTargets {
 		return framebuffer;
 	}
 
-	private GlFramebuffer createFullFramebuffer(boolean clearsAlt, int[] drawBuffers) {
+	private GlFramebufferFromTargets createFullFramebuffer(boolean clearsAlt, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
 			return createEmptyFramebuffer();
 		}
@@ -252,20 +253,20 @@ public class ShadowRenderTargets {
 		return createColorFramebufferWithDepth(stageWritesToMain, drawBuffers);
 	}
 
-	public GlFramebuffer createColorFramebufferWithDepth(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
-		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
+	public GlFramebufferFromTargets createColorFramebufferWithDepth(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
+		GlFramebufferFromTargets framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
 
 		framebuffer.addDepthAttachment(mainDepth.getTextureId());
 
 		return framebuffer;
 	}
 
-	public GlFramebuffer createColorFramebuffer(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
+	public GlFramebufferFromTargets createColorFramebuffer(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
 			throw new IllegalArgumentException("Framebuffer must have at least one color buffer");
 		}
 
-		GlFramebuffer framebuffer = new GlFramebuffer();
+		GlFramebufferFromTargets framebuffer = new GlFramebufferFromTargets(drawBuffers, stageWritesToMain);
 		ownedFramebuffers.add(framebuffer);
 
 		int[] actualDrawBuffers = new int[drawBuffers.length];

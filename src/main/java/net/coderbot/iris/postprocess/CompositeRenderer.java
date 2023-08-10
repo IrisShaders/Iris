@@ -302,9 +302,8 @@ public class CompositeRenderer {
 	}
 
 	private static void setupMipmapping(net.coderbot.iris.rendertarget.RenderTarget target, boolean readFromAlt) {
-		target.setMipmapping(true);
-
 		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
+		target.setMipmapping(true);
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
 		// (since the last mipmap was generated)
@@ -319,6 +318,12 @@ public class CompositeRenderer {
 		// unlikely that this issue occurs in practice with most shader packs.
 		IrisRenderSystem.generateMipmaps(texture);
 
+		int filter = GL20C.GL_LINEAR_MIPMAP_LINEAR;
+		if (target.getInternalFormat().getPixelFormat().isInteger()) {
+			filter = GL20C.GL_NEAREST_MIPMAP_NEAREST;
+		}
+
+		IrisRenderSystem.texParameteri(texture, GL30C.GL_TEXTURE_MIN_FILTER, filter);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
