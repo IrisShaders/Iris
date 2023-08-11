@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChunkShaderInterface.class)
 public class MixinChunkShaderInterface {
-	@Inject(method = "setupState", at = @At("TAIL"))
+	@Inject(method = "setupState", at = @At("TAIL"), remap = false)
 	private void iris$reloadMultibind(CallbackInfo ci) {
 		GlStateManager._logicOp(91384);
 	}
