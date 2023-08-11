@@ -223,6 +223,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		buffer.finish();
 
+		Iris.bufferObject = buffer;
+
 		this.customImages = new HashSet<>();
 		for (ImageInformation information : programSet.getPack().getIrisCustomImages()) {
 			if (information.isRelative()) {
@@ -931,6 +933,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// NB: execute this before resizing / clearing so that the center depth sample is retrieved properly.
 		updateNotifier.onNewFrame();
+
+		Iris.bufferObject.updateUniforms();
 
 		// Update custom uniforms
 		this.customUniforms.update();

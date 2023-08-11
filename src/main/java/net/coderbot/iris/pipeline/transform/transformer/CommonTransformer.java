@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
@@ -52,6 +53,17 @@ public class CommonTransformer {
 					specifier -> specifier.type.kind == TypeKind.SAMPLER);
 			markClassWildcard("name*",
 					pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+		}
+	};
+
+	public static final AutoHintedMatcher<ExternalDeclaration> uniform = new AutoHintedMatcher<>(
+			"uniform Type name;", ParseShape.EXTERNAL_DECLARATION, "__") {
+		{
+			markClassedPredicateWildcard("type",
+					pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
+					BuiltinNumericTypeSpecifier.class,
+					specifier -> specifier.type != null);
+			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
 		}
 	};
 
@@ -116,6 +128,35 @@ public class CommonTransformer {
 			Parameters parameters,
 			boolean core) {
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
+
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_ALL, "#extension GL_ARB_shading_language_420pack : enable\n");
+		for (String name : Iris.bufferObject.uniformNameList) {
+			List<Identifier> uniformNames = new ArrayList<>();
+			AtomicBoolean hadName = new AtomicBoolean(false);
+			root.process(name, id -> {
+				DeclarationExternalDeclaration declaration = (DeclarationExternalDeclaration) id.getAncestor(
+						3, 0, DeclarationExternalDeclaration.class::isInstance);
+				if (uniform.matchesExtract(declaration)) {
+					DeclarationMember secondDeclarationMember = id.getAncestor(DeclarationMember.class);
+					if (((TypeAndInitDeclaration) secondDeclarationMember.getParent()).getMembers().size() == 1) {
+						declaration.detachAndDelete();
+					} else {
+						secondDeclarationMember.detachAndDelete();
+					}
+					hadName.set(true);
+				} else {
+					uniformNames.add(id);
+				}
+			});
+
+			uniformNames.forEach(name2 -> {
+				if (!hadName.get()) {
+					name2.setName("nonUniform_" + name);
+				}
+			});
+		}
+
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, Iris.bufferObject.getLayout());
 
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
 

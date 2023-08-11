@@ -73,7 +73,7 @@ public class Vector3Uniform extends Uniform {
 
 	@Override
 	public UniformType getType() {
-		return UniformType.VEC2;
+		return UniformType.VEC3;
 	}
 
 	@Override

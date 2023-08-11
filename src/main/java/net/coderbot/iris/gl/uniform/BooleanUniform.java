@@ -7,8 +7,4 @@ public class BooleanUniform extends IntUniform {
 		super(name, location, () -> value.getAsBoolean() ? 1 : 0);
 	}
 
-	@Override
-	public UniformType getType() {
-		return UniformType.BOOL;
-	}
 }

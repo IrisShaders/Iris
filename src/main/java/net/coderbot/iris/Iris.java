@@ -6,6 +6,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
+import net.coderbot.iris.gl.buffer.IrisUniformBuffer;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import net.coderbot.iris.gui.debug.DebugLoadFailedGridScreen;
@@ -72,8 +73,9 @@ public class Iris {
 	public static final String MODNAME = "Iris";
 
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
+    public static IrisUniformBuffer bufferObject;
 
-	private static Path shaderpacksDirectory;
+    private static Path shaderpacksDirectory;
 	private static ShaderpackDirectoryManager shaderpacksDirectoryManager;
 
 	private static ShaderPack currentPack;

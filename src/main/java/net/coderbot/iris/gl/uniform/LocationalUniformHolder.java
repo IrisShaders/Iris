@@ -48,7 +48,7 @@ public interface LocationalUniformHolder extends UniformHolder {
 
 	@Override
 	default LocationalUniformHolder uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value) {
-		location(name, UniformType.BOOL).ifPresent(id -> addUniform(updateFrequency, new BooleanUniform(name, id, value)));
+		location(name, UniformType.INT).ifPresent(id -> addUniform(updateFrequency, new BooleanUniform(name, id, value)));
 
 		return this;
 	}

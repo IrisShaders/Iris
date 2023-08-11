@@ -20,6 +20,7 @@ import java.util.OptionalInt;
 
 public class IrisUniformBuffer implements LocationalUniformHolder {
 	private Map<UniformUpdateFrequency, List<Uniform>> uniformList = new HashMap<>();
+	public List<String> uniformNameList = new ArrayList<>();
 	private int size;
 	private ArrayList<Pair<UniformUpdateFrequency, Uniform>> uniformOrder;
 	private long lastTick;
@@ -44,7 +45,10 @@ public class IrisUniformBuffer implements LocationalUniformHolder {
 			uniform.second().setBufferIndex(size);
 			Iris.logger.warn("Uniform " + uniform.second().getType().name() + " added at " + size);
 			size += uniform.second().getByteSize();
+			uniformNameList.add(uniform.second().getName());
 		}
+
+		size = align(size, 256);
 
 		Iris.logger.warn("Final size: " + size);
 
@@ -56,7 +60,7 @@ public class IrisUniformBuffer implements LocationalUniformHolder {
 	public String getLayout() {
 		StringBuilder builder = new StringBuilder();
 
-		builder.append("layout (std140, binding = 1) uniform CommonUniforms {\n");
+		builder.append("layout (std140, binding = 2) uniform CommonUniforms {\n");
 		uniformOrder.forEach(uniformInformation -> builder.append(uniformInformation.second().getType().name().toLowerCase()).append(" ").append(uniformInformation.second().getName()).append(";").append("\n"));
 
 
