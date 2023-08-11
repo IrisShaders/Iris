@@ -35,7 +35,7 @@ public class MixinRenderTarget implements Blaze3dRenderTargetExt {
 			ordinal = 0))
 	public void init(Args args) {
 		// Never allow depth format to be unsized. This *will* cause problems otherwise!
-		args.set(2, GL30.GL_DEPTH_COMPONENT16);
+		args.set(2, GL30.GL_DEPTH_COMPONENT32F);
 	}
 
 	@Override
