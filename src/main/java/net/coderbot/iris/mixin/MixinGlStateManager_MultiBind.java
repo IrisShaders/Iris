@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL46C;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,12 +21,54 @@ import java.util.Arrays;
 public class MixinGlStateManager_MultiBind {
 	@Shadow
 	private static int activeTexture;
+	@Shadow
+	@Final
+	private static GlStateManager.TextureState[] TEXTURES;
 	private static boolean hasChangedTextures = false;
 	private static int[] streamlinedTextures = new int[64];
 	private static int realActiveTexture = 0;
 
 	static {
 		Arrays.fill(streamlinedTextures, 0);
+	}
+
+	/**
+	 * @author IMS
+	 * @reason Rewrite to close
+	 */
+	@Overwrite
+	public static void _deleteTexture(int pInt0) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL11.glDeleteTextures(pInt0);
+
+        for (int i = 0, texturesLength = TEXTURES.length; i < texturesLength; i++) {
+            GlStateManager.TextureState lvGlStateManager$TextureState4 = TEXTURES[i];
+            if (lvGlStateManager$TextureState4.binding == pInt0) {
+                lvGlStateManager$TextureState4.binding = 0;
+				streamlinedTextures[i] = 0;
+            }
+        }
+	}
+
+	/**
+	 * @author IMS
+	 * @reason Rewrite to close
+	 */
+	@Overwrite
+	public static void _deleteTextures(int[] pIntArray0) {
+		RenderSystem.assertOnRenderThreadOrInit();
+
+        for (int i = 0, texturesLength = TEXTURES.length; i < texturesLength; i++) {
+            GlStateManager.TextureState lvGlStateManager$TextureState4 = TEXTURES[i];
+            for (int lvInt8 : pIntArray0) {
+                if (lvGlStateManager$TextureState4.binding == lvInt8) {
+                    lvGlStateManager$TextureState4.binding = 0;
+					streamlinedTextures[i] = 0;
+                }
+            }
+        }
+
+		GL11.glDeleteTextures(pIntArray0);
 	}
 
 	@Inject(method = "_bindTexture", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glBindTexture(II)V"), cancellable = true, remap = false)
@@ -57,10 +100,10 @@ public class MixinGlStateManager_MultiBind {
 		"_texImage2D", "_texParameter(III)V", "_texParameter(IIF)V", "_getTexLevelParameter", "_drawElements", "_glDrawPixels", "_glCopyTexSubImage2D", "_getTexImage", "_texSubImage2D", "_glFramebufferTexture2D", "_glBindFramebuffer"
 	}, at = @At("HEAD"), remap = false)
 	private static void iris$bindAllAtOnce(CallbackInfo ci) {
-		bindAllAtOnce();
+		iris2$bindAllAtOnce();
 	}
 
-	private static void bindAllAtOnce() {
+	private static void iris2$bindAllAtOnce() {
 		if (hasChangedTextures) {
 			hasChangedTextures = false;
 			GL46C.glBindTextures(0, streamlinedTextures);
@@ -76,7 +119,7 @@ public class MixinGlStateManager_MultiBind {
 	private static void iris$redirectLogicOp(int pInt0, CallbackInfo ci) {
 		if (pInt0 == 91384) {
 			// Magic number!
-			bindAllAtOnce();
+			iris2$bindAllAtOnce();
 
 			ci.cancel();
 		}
