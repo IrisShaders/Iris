@@ -34,6 +34,21 @@ public class Vector2Uniform extends Uniform {
 		}
 	}
 
+	@Override
+	public int getByteSize() {
+		return 8;
+	}
+
+	@Override
+	public int getAlignment() {
+		return 8;
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC3;
+	}
+
 	private void updateValue() {
 		Vector2f newValue = value.get();
 

@@ -27,6 +27,21 @@ public class FloatUniform extends Uniform {
 		}
 	}
 
+	@Override
+	public int getByteSize() {
+		return 4;
+	}
+
+	@Override
+	public int getAlignment() {
+		return 4;
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.FLOAT;
+	}
+
 	private void updateValue() {
 		float newValue = value.getAsFloat();
 

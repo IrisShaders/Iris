@@ -30,6 +30,21 @@ public class Vector2IntegerJomlUniform extends Uniform {
 		}
 	}
 
+	@Override
+	public int getByteSize() {
+		return 8;
+	}
+
+	@Override
+	public int getAlignment() {
+		return 8;
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC2I;
+	}
+
 	private void updateValue() {
 		Vector2i newValue = value.get();
 

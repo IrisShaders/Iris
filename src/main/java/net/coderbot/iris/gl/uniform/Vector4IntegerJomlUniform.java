@@ -30,6 +30,21 @@ public class Vector4IntegerJomlUniform extends Uniform {
 		}
 	}
 
+	@Override
+	public int getByteSize() {
+		return 16;
+	}
+
+	@Override
+	public int getAlignment() {
+		return 16;
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC4I;
+	}
+
 	private void updateValue() {
 		Vector4i newValue = value.get();
 

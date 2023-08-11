@@ -31,6 +31,21 @@ public class Vector4ArrayUniform extends Uniform {
 		}
 	}
 
+	@Override
+	public int getByteSize() {
+		return 16;
+	}
+
+	@Override
+	public int getAlignment() {
+		return 16;
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC4;
+	}
+
 	private void updateValue() {
 		float[] newValue = value.get();
 

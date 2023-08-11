@@ -51,6 +51,21 @@ public class Vector3Uniform extends Uniform {
 	}
 
 	@Override
+	public int getByteSize() {
+		return 12;
+	}
+
+	@Override
+	public int getAlignment() {
+		return 16;
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC2;
+	}
+
+	@Override
 	public void update() {
 		updateValue();
 

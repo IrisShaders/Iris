@@ -24,4 +24,10 @@ public abstract class Uniform {
 	public final ValueUpdateNotifier getNotifier() {
 		return notifier;
 	}
+
+    public abstract int getByteSize();
+
+	public abstract int getAlignment();
+
+	public abstract UniformType getType();
 }

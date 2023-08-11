@@ -36,6 +36,7 @@ import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.gl.uniform.StaticUniformBuffer;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
@@ -214,6 +215,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		int depthTextureId = main.getDepthTextureId();
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
+
+		StaticUniformBuffer buffer = new StaticUniformBuffer();
+
+		//CommonUniforms.addNonDynamicUniforms(buffer, pack.getIdMap(), packDirectives, updateNotifier);
+
+		//buffer.finish();
 
 		this.customImages = new HashSet<>();
 		for (ImageInformation information : programSet.getPack().getIrisCustomImages()) {

@@ -36,6 +36,21 @@ public class MatrixUniform extends Uniform {
 		}
 	}
 
+	@Override
+	public int getByteSize() {
+		return 64;
+	}
+
+	@Override
+	public int getAlignment() {
+		return 16;
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.MAT4;
+	}
+
 	public void updateValue() {
 		Matrix4f newValue = value.get();
 

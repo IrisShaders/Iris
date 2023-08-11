@@ -20,6 +20,21 @@ public class MatrixFromFloatArrayUniform extends Uniform {
 	}
 
 	@Override
+	public int getByteSize() {
+		return 64;
+	}
+
+	@Override
+	public int getAlignment() {
+		return 16;
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.MAT4;
+	}
+
+	@Override
 	public void update() {
 		float[] newValue = value.get();
 

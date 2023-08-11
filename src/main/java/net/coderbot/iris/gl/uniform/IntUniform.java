@@ -29,6 +29,21 @@ public class IntUniform extends Uniform {
 		}
 	}
 
+	@Override
+	public int getByteSize() {
+		return 4;
+	}
+
+	@Override
+	public int getAlignment() {
+		return 4;
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.INT;
+	}
+
 	private void updateValue() {
 		int newValue = value.getAsInt();
 
