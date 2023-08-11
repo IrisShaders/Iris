@@ -2,6 +2,7 @@ package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.coderbot.iris.gl.sampler.SamplerLimits;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL46C;
 import org.spongepowered.asm.mixin.Final;
@@ -25,7 +26,7 @@ public class MixinGlStateManager_MultiBind {
 	@Final
 	private static GlStateManager.TextureState[] TEXTURES;
 	private static boolean hasChangedTextures = false;
-	private static int[] streamlinedTextures = new int[64];
+	private static int[] streamlinedTextures = new int[SamplerLimits.get().getMaxTextureUnits()];
 	private static int realActiveTexture = 0;
 
 	static {
