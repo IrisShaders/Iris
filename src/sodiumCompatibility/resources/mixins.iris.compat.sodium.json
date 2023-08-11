@@ -32,6 +32,7 @@
     "shader_overrides.MixinRegionChunkRenderer",
     "shader_overrides.MixinShaderChunkRenderer",
     "shader_overrides.MixinBlockRenderPass",
+    "shader_overrides.MixinChunkShaderInterface",
     "shader_overrides.MixinShaderType",
     "shader_overrides.ShaderTypeAccessor",
     "shadow_map.MixinRegionChunkRenderer",

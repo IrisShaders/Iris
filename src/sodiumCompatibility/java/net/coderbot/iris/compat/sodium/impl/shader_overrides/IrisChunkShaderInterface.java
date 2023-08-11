@@ -114,6 +114,8 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 		irisProgramImages.update();
 
 		customUniforms.push(this);
+
+		GlStateManager._logicOp(91384);
 	}
 
 	public void restore() {
