@@ -3,6 +3,7 @@ package net.coderbot.iris.gl.uniform;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import org.joml.Vector2i;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.function.Supplier;
 
@@ -10,12 +11,12 @@ public class Vector2IntegerJomlUniform extends Uniform {
 	private Vector2i cachedValue;
 	private final Supplier<Vector2i> value;
 
-	Vector2IntegerJomlUniform(int location, Supplier<Vector2i> value) {
-		this(location, value, null);
+	Vector2IntegerJomlUniform(String name, int location, Supplier<Vector2i> value) {
+		this(name, location, value, null);
 	}
 
-	Vector2IntegerJomlUniform(int location, Supplier<Vector2i> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	Vector2IntegerJomlUniform(String name, int location, Supplier<Vector2i> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = null;
 		this.value = value;
@@ -41,8 +42,19 @@ public class Vector2IntegerJomlUniform extends Uniform {
 	}
 
 	@Override
+	public void updateBuffer(long address) {
+		Vector2i newValue = value.get();
+
+		if (!newValue.equals(cachedValue)) {
+			cachedValue = newValue;
+			MemoryUtil.memPutInt(address + bufferIndex, newValue.x);
+			MemoryUtil.memPutInt(address + bufferIndex + 4, newValue.y);
+		}
+	}
+
+	@Override
 	public UniformType getType() {
-		return UniformType.VEC2I;
+		return UniformType.IVEC2;
 	}
 
 	private void updateValue() {

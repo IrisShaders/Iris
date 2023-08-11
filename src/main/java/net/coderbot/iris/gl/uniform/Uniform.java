@@ -4,13 +4,16 @@ import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 
 public abstract class Uniform {
 	protected final int location;
+	protected int bufferIndex;
 	protected final ValueUpdateNotifier notifier;
+	protected final String name;
 
-	Uniform(int location) {
-		this(location, null);
+	Uniform(String name, int location) {
+		this(name, location, null);
 	}
 
-	Uniform(int location, ValueUpdateNotifier notifier) {
+	Uniform(String name, int location, ValueUpdateNotifier notifier) {
+		this.name = name;
 		this.location = location;
 		this.notifier = notifier;
 	}
@@ -25,9 +28,19 @@ public abstract class Uniform {
 		return notifier;
 	}
 
+	public String getName() {
+		return this.name;
+	}
+
     public abstract int getByteSize();
 
 	public abstract int getAlignment();
+
+	public abstract void updateBuffer(long address);
+
+	public void setBufferIndex(int bufferIndex) {
+		this.bufferIndex = bufferIndex;
+	}
 
 	public abstract UniformType getType();
 }

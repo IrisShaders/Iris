@@ -155,17 +155,6 @@ public class CustomUniformFixedInputUniformsHolder {
 		}
 
 		@Override
-		public UniformHolder uniformMatrixFromArray(
-				UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
-			Matrix4f held = new Matrix4f();
-
-			return this.put(name, new Float4MatrixCachedUniform(name, updateFrequency, () -> {
-				held.set(value.get());
-				return held;
-			}));
-		}
-
-		@Override
 		public UniformHolder externallyManagedUniform(String name, UniformType type) {
 			// TODO: what is this function for?
 			return this;

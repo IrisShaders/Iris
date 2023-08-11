@@ -12,24 +12,24 @@ public class Vector3Uniform extends Uniform {
 	private final Vector3f cachedValue;
 	private final Supplier<Vector3f> value;
 
-	Vector3Uniform(int location, Supplier<Vector3f> value) {
-		super(location);
+	Vector3Uniform(String name, int location, Supplier<Vector3f> value) {
+		super(name, location);
 
 		this.cachedValue = new Vector3f();
 		this.value = value;
 	}
 
-	Vector3Uniform(int location, Supplier<Vector3f> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	Vector3Uniform(String name, int location, Supplier<Vector3f> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = new Vector3f();
 		this.value = value;
 	}
 
-	static Vector3Uniform converted(int location, Supplier<Vector3d> value) {
+	static Vector3Uniform converted(String name, int location, Supplier<Vector3d> value) {
 		Vector3f held = new Vector3f();
 
-		return new Vector3Uniform(location, () -> {
+		return new Vector3Uniform(name, location, () -> {
 			Vector3d updated = value.get();
 
 			held.set((float) updated.x, (float) updated.y, (float) updated.z);
@@ -38,10 +38,10 @@ public class Vector3Uniform extends Uniform {
 		});
 	}
 
-	static Vector3Uniform truncated(int location, Supplier<Vector4f> value) {
+	static Vector3Uniform truncated(String name, int location, Supplier<Vector4f> value) {
 		Vector3f held = new Vector3f();
 
-		return new Vector3Uniform(location, () -> {
+		return new Vector3Uniform(name, location, () -> {
 			Vector4f updated = value.get();
 
 			held.set(updated.x(), updated.y(), updated.z());
@@ -58,6 +58,17 @@ public class Vector3Uniform extends Uniform {
 	@Override
 	public int getAlignment() {
 		return 16;
+	}
+
+	@Override
+	public void updateBuffer(long address) {
+		Vector3f newValue = value.get();
+
+		if (cachedValue != newValue) {
+			cachedValue.set(newValue);
+
+			newValue.getToAddress(address + bufferIndex);
+		}
 	}
 
 	@Override

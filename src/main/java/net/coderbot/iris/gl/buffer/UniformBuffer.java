@@ -32,5 +32,12 @@ public class UniformBuffer {
 		if (frameId == 3) {
 			frameId = 0;
 		}
+
+		GL46C.glBindBufferRange(GL46C.GL_UNIFORM_BUFFER, 2, buffer, (size * lastFrameId), size);
+	}
+
+	public void destroy() {
+		GL46C.glUnmapNamedBuffer(buffer);
+		GL46C.glDeleteBuffers(buffer);
 	}
 }

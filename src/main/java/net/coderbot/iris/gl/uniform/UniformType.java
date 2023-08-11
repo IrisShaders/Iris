@@ -7,8 +7,8 @@ public enum UniformType {
 	MAT3,
 	MAT4,
 	VEC2,
-	VEC2I,
+	IVEC2,
 	VEC3,
 	VEC4,
-	VEC4I
+	IVEC4
 }

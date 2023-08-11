@@ -22,6 +22,7 @@ import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.buffer.IrisUniformBuffer;
 import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.GlImage;
@@ -216,11 +217,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
-		StaticUniformBuffer buffer = new StaticUniformBuffer();
+		IrisUniformBuffer buffer = new IrisUniformBuffer();
 
-		//CommonUniforms.addNonDynamicUniforms(buffer, pack.getIdMap(), packDirectives, updateNotifier);
+		CommonUniforms.addNonDynamicUniforms(buffer, pack.getIdMap(), packDirectives, updateNotifier);
 
-		//buffer.finish();
+		buffer.finish();
 
 		this.customImages = new HashSet<>();
 		for (ImageInformation information : programSet.getPack().getIrisCustomImages()) {

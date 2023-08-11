@@ -2,17 +2,18 @@ package net.coderbot.iris.gl.uniform;
 
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
+import org.lwjgl.system.MemoryUtil;
 
 public class FloatUniform extends Uniform {
 	private float cachedValue;
 	private final FloatSupplier value;
 
-	FloatUniform(int location, FloatSupplier value) {
-		this(location, value, null);
+	FloatUniform(String name, int location, FloatSupplier value) {
+		this(name, location, value, null);
 	}
 
-	FloatUniform(int location, FloatSupplier value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	FloatUniform(String name, int location, FloatSupplier value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = 0;
 		this.value = value;
@@ -40,6 +41,16 @@ public class FloatUniform extends Uniform {
 	@Override
 	public UniformType getType() {
 		return UniformType.FLOAT;
+	}
+
+	@Override
+	public void updateBuffer(long address) {
+		float newValue = value.getAsFloat();
+
+		if (cachedValue != newValue) {
+			cachedValue = newValue;
+			MemoryUtil.memPutFloat(address + bufferIndex, newValue);
+		}
 	}
 
 	private void updateValue() {

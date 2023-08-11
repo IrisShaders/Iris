@@ -308,10 +308,6 @@ public class TransformPatcher {
 			return null;
 		}
 
-		// I don't know how this can happen, but it can.
-		vertex = vertex.replace("#version  ", "#version ");
-		fragment = vertex.replace("#version  ", "#version ");
-
 		// check if this has been cached
 		CacheKey key;
 		Map<PatchShaderType, String> result = null;

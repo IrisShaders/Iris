@@ -3,6 +3,8 @@ package net.coderbot.iris.gl.uniform;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import org.joml.Vector2f;
+import org.joml.Vector2i;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.function.Supplier;
 
@@ -10,19 +12,30 @@ public class Vector2Uniform extends Uniform {
 	private Vector2f cachedValue;
 	private final Supplier<Vector2f> value;
 
-	Vector2Uniform(int location, Supplier<Vector2f> value) {
-		super(location);
+	Vector2Uniform(String name, int location, Supplier<Vector2f> value) {
+		super(name, location);
 
 		this.cachedValue = null;
 		this.value = value;
 	}
 
-	Vector2Uniform(int location, Supplier<Vector2f> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	Vector2Uniform(String name, int location, Supplier<Vector2f> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = null;
 		this.value = value;
 
+	}
+
+	@Override
+	public void updateBuffer(long address) {
+		Vector2f newValue = value.get();
+
+		if (!newValue.equals(cachedValue)) {
+			cachedValue = newValue;
+			MemoryUtil.memPutFloat(address + bufferIndex, newValue.x);
+			MemoryUtil.memPutFloat(address + bufferIndex + 4, newValue.y);
+		}
 	}
 
 	@Override

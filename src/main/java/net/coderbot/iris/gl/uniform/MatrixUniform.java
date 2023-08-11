@@ -13,15 +13,15 @@ public class MatrixUniform extends Uniform {
 	private Matrix4f cachedValue;
 	private final Supplier<Matrix4f> value;
 
-	MatrixUniform(int location, Supplier<Matrix4f> value) {
-		super(location);
+	MatrixUniform(String name, int location, Supplier<Matrix4f> value) {
+		super(name, location);
 
 		this.cachedValue = null;
 		this.value = value;
 	}
 
-	MatrixUniform(int location, Supplier<Matrix4f> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	MatrixUniform(String name, int location, Supplier<Matrix4f> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = null;
 		this.value = value;
@@ -44,6 +44,17 @@ public class MatrixUniform extends Uniform {
 	@Override
 	public int getAlignment() {
 		return 16;
+	}
+
+	@Override
+	public void updateBuffer(long address) {
+		Matrix4f newValue = value.get();
+
+		if (!newValue.equals(cachedValue)) {
+			cachedValue = new Matrix4f(newValue);
+
+			newValue.getToAddress(address + bufferIndex);
+		}
 	}
 
 	@Override
