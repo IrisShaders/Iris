@@ -216,7 +216,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			float x = buffer.getFloat(posIndex);
 			float y = buffer.getFloat(posIndex + 4);
 			float z = buffer.getFloat(posIndex + 8);
-			this.putInt(0, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
+			this.putInt(0, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ, 1));
 			this.nextElement();
 		}
 

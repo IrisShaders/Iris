@@ -10,9 +10,6 @@ import net.coderbot.iris.shaderpack.texture.TextureStage;
 
 public class SodiumParameters extends Parameters {
 	public final ShaderAttributeInputs inputs;
-	public final float positionScale;
-	public final float positionOffset;
-	public final float textureScale;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	// DO NOT include this field in hashCode or equals, it's mutable!
@@ -22,13 +19,9 @@ public class SodiumParameters extends Parameters {
 	public SodiumParameters(Patch patch,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
 			AlphaTest alpha,
-			ShaderAttributeInputs inputs,
-			float positionScale, float positionOffset, float textureScale) {
+			ShaderAttributeInputs inputs) {
 		super(patch, textureMap);
 		this.inputs = inputs;
-		this.positionScale = positionScale;
-		this.positionOffset = positionOffset;
-		this.textureScale = textureScale;
 
 		this.alpha = alpha;
 	}
@@ -47,9 +40,6 @@ public class SodiumParameters extends Parameters {
 		final int prime = 31;
 		int result = super.hashCode();
 		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
-		result = prime * result + Float.floatToIntBits(positionScale);
-		result = prime * result + Float.floatToIntBits(positionOffset);
-		result = prime * result + Float.floatToIntBits(textureScale);
 		result = prime * result + ((alpha == null) ? 0 : alpha.hashCode());
 		return result;
 	}
@@ -67,12 +57,6 @@ public class SodiumParameters extends Parameters {
 			if (other.inputs != null)
 				return false;
 		} else if (!inputs.equals(other.inputs))
-			return false;
-		if (Float.floatToIntBits(positionScale) != Float.floatToIntBits(other.positionScale))
-			return false;
-		if (Float.floatToIntBits(positionOffset) != Float.floatToIntBits(other.positionOffset))
-			return false;
-		if (Float.floatToIntBits(textureScale) != Float.floatToIntBits(other.textureScale))
 			return false;
 		if (alpha == null) {
 			if (other.alpha != null)

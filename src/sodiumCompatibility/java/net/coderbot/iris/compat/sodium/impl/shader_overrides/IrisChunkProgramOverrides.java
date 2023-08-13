@@ -175,21 +175,18 @@ public class IrisChunkProgramOverrides {
             return builder.attachShader(vertShader)
                     .attachShader(fragShader)
 				// The following 4 attributes are part of Sodium
-					.bindAttribute("a_PosId", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID)
-					.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
-					.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE)
-					.bindAttribute("a_LightCoord", ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE)
+					.bindAttribute("in_VertexData", ChunkShaderBindingPoints.ATTRIBUTE_PACKED_DATA)
                     .bindAttribute("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
                     .bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
                     .bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
                     .bindAttribute("iris_Normal", IrisChunkShaderBindingPoints.NORMAL)
-					.bindAttribute("at_midBlock", IrisChunkShaderBindingPoints.MID_BLOCK)
+					.bindAttribute("iris_midBlock", IrisChunkShaderBindingPoints.MID_BLOCK)
 					.link((shader) -> {
 						// TODO: Better way for this? It's a bit too much casting for me.
 						int handle = ((GlObject) shader).handle();
 						ShaderBindingContextExt contextExt = (ShaderBindingContextExt) shader;
 
-						return new IrisChunkShaderInterface(handle, contextExt, pipeline, new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass.toTerrainPass(), vertexType),
+						return new IrisChunkShaderInterface(handle, contextExt, pipeline, new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass.toTerrainPass()),
 								pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, blendOverride, bufferOverrides, alpha, pipeline.getCustomUniforms());
 					});
         } finally {

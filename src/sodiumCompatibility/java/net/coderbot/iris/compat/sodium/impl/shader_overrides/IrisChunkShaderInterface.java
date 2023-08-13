@@ -26,6 +26,7 @@ import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.lwjgl.opengl.GL32C;
 
 import java.util.List;
@@ -127,7 +128,7 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 
 
 	@Override
-	public void setProjectionMatrix(Matrix4f matrix) {
+	public void setProjectionMatrix(Matrix4fc matrix) {
 		if (this.uniformProjectionMatrix != null) {
 			this.uniformProjectionMatrix.set(matrix);
 		}
@@ -140,7 +141,7 @@ public class IrisChunkShaderInterface extends ChunkShaderInterface {
 	}
 
 	@Override
-	public void setModelViewMatrix(Matrix4f modelView) {
+	public void setModelViewMatrix(Matrix4fc modelView) {
 		if (this.uniformModelViewMatrix != null) {
 			this.uniformModelViewMatrix.set(modelView);
 		}
