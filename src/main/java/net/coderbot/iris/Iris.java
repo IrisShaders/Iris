@@ -725,7 +725,7 @@ public class Iris {
 
 	public static boolean isSodiumInvalid() {
 		return sodiumInvalid;
-  }
+ 	}
 
 	public static boolean isSodiumInstalled() {
 		return sodiumInstalled;
