@@ -36,6 +36,7 @@ public class MixinRenderSectionManager {
 
     @Redirect(method = {
             "getRenderLists",
+            "getVisibleChunkCount",
             "renderLayer"
     }, at = @At(value = "FIELD", target = "Lme/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager;renderLists:Lme/jellysquid/mods/sodium/client/render/chunk/lists/SortedRenderLists;"))
     private SortedRenderLists useShadowRenderList2(RenderSectionManager instance) {

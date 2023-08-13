@@ -68,7 +68,9 @@ public class SodiumTransformer {
 		if (parameters.inputs.hasColor()) {
 			// TODO: Handle the fragment shader here
 			root.replaceReferenceExpressions(t, "gl_Color", "vec4(_vert_color, " + (BlockRenderingSettings.INSTANCE.shouldUseSeparateAo() ? "iris_midBlock.w" : "1.0") + ")");
-			addIfNotExists(root, t, tree, "iris_midBlock", Type.F32VEC4, StorageQualifier.StorageType.IN);
+			if (parameters.type.glShaderType == ShaderType.VERTEX) {
+				addIfNotExists(root, t, tree, "iris_midBlock", Type.F32VEC4, StorageQualifier.StorageType.IN);
+			}
 
 		} else {
 			root.replaceReferenceExpressions(t, "gl_Color", "vec4(1.0)");

@@ -30,6 +30,6 @@ public class MixinBoxCullingFrustum implements Frustum, ViewportProvider {
 
 	@Override
 	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return !boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ);
+		return !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 }
