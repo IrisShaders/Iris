@@ -68,7 +68,7 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	private double z;
 
 	private final Vector3f shadowLightVectorFromOrigin;
-	private final BoxCuller boxCuller;
+	protected final BoxCuller boxCuller;
 
 	public AdvancedShadowCullingFrustum(Matrix4f playerView, Matrix4f playerProjection, Vector3f shadowLightVectorFromOrigin,
 										BoxCuller boxCuller) {
@@ -303,7 +303,7 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		return false;
 	}
 
-	private int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+	protected int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		float f = (float)(minX - this.x);
 		float g = (float)(minY - this.y);
 		float h = (float)(minZ - this.z);
@@ -324,7 +324,7 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	 * @param maxZ Maximum Z value of the AABB.
 	 * @return 0 if nothing is visible, 1 if everything is visible, 2 if only some corners are visible.
 	 */
-	private int checkCornerVisibility(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+	protected int checkCornerVisibility(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		float outsideBoundX;
 		float outsideBoundY;
 		float outsideBoundZ;
