@@ -21,6 +21,7 @@ import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.shaderpack.ShadowCullState;
 import net.coderbot.iris.shadows.ShadowMatrices;
 import net.coderbot.iris.shadows.CullingDataCache;
 import net.coderbot.iris.shadows.Matrix4fAccess;
@@ -30,6 +31,7 @@ import net.coderbot.iris.shadows.frustum.BoxCuller;
 import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
 import net.coderbot.iris.shadows.frustum.FrustumHolder;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
+import net.coderbot.iris.shadows.frustum.advanced.ReversedAdvancedShadowCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
@@ -66,6 +68,7 @@ public class ShadowRenderer {
 	public static List<BlockEntity> visibleBlockEntities;
 
 	private final float halfPlaneLength;
+	private final float voxelDistance;
 	private final float renderDistanceMultiplier;
 	private final float entityShadowDistanceMultiplier;
 	private final int resolution;
@@ -74,7 +77,7 @@ public class ShadowRenderer {
 	public static Matrix4f MODELVIEW;
 
 	private final ShadowRenderTargets targets;
-	private final OptionalBoolean packCullingState;
+	private final ShadowCullState packCullingState;
 	private final ShadowCompositeRenderer compositeRenderer;
 	private boolean packHasVoxelization;
 	private final boolean shouldRenderTerrain;
@@ -106,6 +109,7 @@ public class ShadowRenderer {
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
 
 		this.halfPlaneLength = shadowDirectives.getDistance();
+		this.voxelDistance = shadowDirectives.getVoxelDistance();
 		this.renderDistanceMultiplier = shadowDirectives.getDistanceRenderMul();
 		this.entityShadowDistanceMultiplier = shadowDirectives.getEntityShadowDistanceMul();
 		this.resolution = shadowDirectives.getResolution();
@@ -133,7 +137,7 @@ public class ShadowRenderer {
 			this.packCullingState = shadowDirectives.getCullingState();
 		} else {
 			this.packHasVoxelization = false;
-			this.packCullingState = OptionalBoolean.DEFAULT;
+			this.packCullingState = ShadowCullState.DEFAULT;
 		}
 
 		this.sunPathRotation = directives.getSunPathRotation();
@@ -270,12 +274,12 @@ public class ShadowRenderer {
 		// TODO: Cull entities / block entities with Advanced Frustum Culling even if voxelization is detected.
 		String distanceInfo;
 		String cullingInfo;
-		if ((packCullingState == OptionalBoolean.FALSE || packHasVoxelization) && packCullingState != OptionalBoolean.TRUE) {
+		if ((packCullingState == ShadowCullState.DEFAULT && packHasVoxelization) || packCullingState == ShadowCullState.DISTANCE) {
 			double distance = halfPlaneLength * renderMultiplier;
 
 			String reason;
 
-			if (packCullingState == OptionalBoolean.FALSE) {
+			if (packCullingState == ShadowCullState.DISTANCE) {
 				reason = "(set by shader pack)";
 			} else /*if (packHasVoxelization)*/ {
 				reason = "(voxelization detected)";
@@ -296,7 +300,12 @@ public class ShadowRenderer {
 		} else {
 			BoxCuller boxCuller;
 
-			double distance = halfPlaneLength * renderMultiplier;
+			boolean isReversed = packCullingState == ShadowCullState.REVERSED;
+
+			// Assume render multiplier is meant to be 1 if reversed culling is on
+			if (isReversed && renderMultiplier < 0) renderMultiplier = 1.0f;
+
+			double distance = (isReversed ? voxelDistance : halfPlaneLength) * renderMultiplier;
 			String setter = "(set by shader pack)";
 
 			if (renderMultiplier < 0) {
@@ -304,7 +313,7 @@ public class ShadowRenderer {
 				setter = "(set by user)";
 			}
 
-			if (distance >= Minecraft.getInstance().options.getEffectiveRenderDistance() * 16) {
+			if (distance >= Minecraft.getInstance().options.getEffectiveRenderDistance() * 16 && !isReversed) {
 				distanceInfo = "render distance = " + Minecraft.getInstance().options.getEffectiveRenderDistance() * 16
 					+ " blocks ";
 				distanceInfo += Minecraft.getInstance().isLocalServer() ? "(capped by normal render distance)" : "(capped by normal/server render distance)";
@@ -312,7 +321,7 @@ public class ShadowRenderer {
 			} else {
 				distanceInfo = distance + " blocks " + setter;
 
-				if (distance == 0.0) {
+				if (distance == 0.0 && !isReversed) {
 					cullingInfo = "no shadows rendered";
 					holder.setInfo(new CullEverythingFrustum(), distanceInfo, cullingInfo);
 				}
@@ -320,7 +329,7 @@ public class ShadowRenderer {
 				boxCuller = new BoxCuller(distance);
 			}
 
-			cullingInfo = "Advanced Frustum Culling enabled";
+			cullingInfo = (isReversed ? "Reversed" : "Advanced") + " Frustum Culling enabled";
 
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
@@ -329,9 +338,13 @@ public class ShadowRenderer {
 
 			shadowLightVectorFromOrigin.normalize();
 
-			return holder.setInfo(new AdvancedShadowCullingFrustum(((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferModelView()).convertToJOML(),
-				((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferProjection()).convertToJOML(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
-
+			if (isReversed) {
+				return holder.setInfo(new ReversedAdvancedShadowCullingFrustum(((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferModelView()).convertToJOML(),
+					((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferProjection()).convertToJOML(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
+			} else {
+				return holder.setInfo(new AdvancedShadowCullingFrustum(((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferModelView()).convertToJOML(),
+					((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferProjection()).convertToJOML(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
+			}
 		}
 
 		return holder;

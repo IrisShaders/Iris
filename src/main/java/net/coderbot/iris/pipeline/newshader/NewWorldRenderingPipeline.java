@@ -279,7 +279,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		if (!programSet.getPackDirectives().getBufferObjects().isEmpty()) {
 			if (IrisRenderSystem.supportsSSBO()) {
-				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programSet.getPackDirectives().getBufferObjects());
+				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programSet.getPackDirectives().getBufferObjects(), main.width, main.height);
 
 				this.shaderStorageBufferHolder.setupBuffers();
 			} else {
@@ -935,6 +935,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			deferredRenderer.recalculateSizes();
 			compositeRenderer.recalculateSizes();
 			finalPassRenderer.recalculateSwapPassSize();
+			if (shaderStorageBufferHolder != null) {
+				shaderStorageBufferHolder.hasResizedScreen(main.width, main.height);
+			}
 
 			customImages.forEach(image -> image.updateNewSize(main.width, main.height));
 
