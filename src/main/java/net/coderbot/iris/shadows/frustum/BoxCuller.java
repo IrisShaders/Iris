@@ -61,4 +61,9 @@ public class BoxCuller {
 
 		return false;
 	}
+
+	@Override
+	public String toString() {
+		return "Box Culling active; max distance " + maxDistance;
+	}
 }

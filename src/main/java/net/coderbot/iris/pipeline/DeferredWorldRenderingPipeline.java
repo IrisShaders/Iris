@@ -206,7 +206,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		if (!programs.getPackDirectives().getBufferObjects().isEmpty()) {
 			if (IrisRenderSystem.supportsSSBO()) {
-				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programs.getPackDirectives().getBufferObjects());
+				//this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programs.getPackDirectives().getBufferObjects());
 
 				this.shaderStorageBufferHolder.setupBuffers();
 			} else {
