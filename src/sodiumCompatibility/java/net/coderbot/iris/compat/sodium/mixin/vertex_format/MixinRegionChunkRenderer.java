@@ -19,6 +19,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Mixin(DefaultChunkRenderer.class)
 public abstract class MixinRegionChunkRenderer extends ShaderChunkRenderer {
 	public MixinRegionChunkRenderer(RenderDevice device, ChunkVertexType vertexType) {
@@ -31,20 +34,26 @@ public abstract class MixinRegionChunkRenderer extends ShaderChunkRenderer {
 			return TessellationBinding.forVertexBuffer(buffer, attributes);
 		}
 
-		attributes = ArrayUtils.addAll(attributes,
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_BLOCK,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_BLOCK)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.AO,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.AO)),
-				new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
-						vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))
-		);
+		attributes = new GlVertexAttributeBinding[]{
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.POSITION_MATERIAL_MESH)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.ATTRIBUTE_COLOR,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.COLOR_SHADE)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_TEXTURE)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.LIGHT_TEXTURE)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_BLOCK,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_BLOCK)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.BLOCK_ID,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.BLOCK_ID)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.MID_TEX_COORD,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.MID_TEX_COORD)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.TANGENT,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.TANGENT)),
+			new GlVertexAttributeBinding(IrisChunkShaderBindingPoints.NORMAL,
+				vertexFormat.getAttribute(IrisChunkMeshAttributes.NORMAL))
+		};
 
 		return TessellationBinding.forVertexBuffer(buffer, attributes);
 	}
