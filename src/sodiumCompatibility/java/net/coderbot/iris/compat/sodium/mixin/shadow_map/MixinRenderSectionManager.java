@@ -38,14 +38,14 @@ public class MixinRenderSectionManager {
             "getRenderLists",
             "getVisibleChunkCount",
             "renderLayer"
-    }, at = @At(value = "FIELD", target = "Lme/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager;renderLists:Lme/jellysquid/mods/sodium/client/render/chunk/lists/SortedRenderLists;"))
+    }, at = @At(value = "FIELD", target = "Lme/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager;renderLists:Lme/jellysquid/mods/sodium/client/render/chunk/lists/SortedRenderLists;"), remap = false)
     private SortedRenderLists useShadowRenderList2(RenderSectionManager instance) {
         return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? shadowRenderLists : renderLists;
     }
 
     @Redirect(method = {
             "resetRenderLists"
-    }, at = @At(value = "FIELD", target = "Lme/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager;renderLists:Lme/jellysquid/mods/sodium/client/render/chunk/lists/SortedRenderLists;"))
+    }, at = @At(value = "FIELD", target = "Lme/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager;renderLists:Lme/jellysquid/mods/sodium/client/render/chunk/lists/SortedRenderLists;"), remap = false)
     private void useShadowRenderList3(RenderSectionManager instance, SortedRenderLists value) {
         if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) shadowRenderLists = value;
          else renderLists = value;
