@@ -180,6 +180,7 @@ public class IrisChunkProgramOverrides {
                     .bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
                     .bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)
                     .bindAttribute("iris_Normal", IrisChunkShaderBindingPoints.NORMAL)
+                    .bindAttribute("iris_AOHolder", IrisChunkShaderBindingPoints.AO)
 					.bindAttribute("iris_midBlock", IrisChunkShaderBindingPoints.MID_BLOCK)
 					.link((shader) -> {
 						// TODO: Better way for this? It's a bit too much casting for me.

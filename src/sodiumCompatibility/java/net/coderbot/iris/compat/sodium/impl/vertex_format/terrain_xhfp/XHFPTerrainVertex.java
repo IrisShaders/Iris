@@ -90,7 +90,6 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 		posHolder[vertexCount].set(vertex.x, vertex.y, vertex.z);
 		uvHolder[vertexCount].set(vertex.u, vertex.v);
 
-
 		vertexCount++;
 
 		MemoryUtil.memPutInt(ptr + 0, (encodePosition(vertex.x) << 0) | (encodePosition(vertex.y) << 16));
@@ -100,7 +99,8 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 
 		MemoryUtil.memPutShort(ptr + 28, contextHolder.blockId);
 		MemoryUtil.memPutShort(ptr + 30, contextHolder.renderType);
-		MemoryUtil.memPutInt(ptr + 32, contextHolder.ignoreMidBlock ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ, ColorU8.byteToNormalizedFloat(ColorABGR.unpackAlpha(vertex.color))));
+		MemoryUtil.memPutInt(ptr + 32, contextHolder.ignoreMidBlock ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
+		MemoryUtil.memPutInt(ptr + 36, vertex.color);
 
 		if (vertexCount == 4) {
 			vertexCount = 0;

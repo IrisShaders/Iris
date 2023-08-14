@@ -16,7 +16,7 @@ import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisGlVertexAttributeF
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
  */
 public class XHFPModelVertexType implements ChunkVertexType {
-	public static final int STRIDE = 36;
+	public static final int STRIDE = 40;
 
 	public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, STRIDE)
 		.addElement(ChunkMeshAttribute.VERTEX_DATA, 0, GlVertexAttributeFormat.UNSIGNED_INT, 4, false, true)
@@ -24,7 +24,8 @@ public class XHFPModelVertexType implements ChunkVertexType {
 		.addElement(IrisChunkMeshAttributes.TANGENT, 20, IrisGlVertexAttributeFormat.BYTE, 4, true, false)
 		.addElement(IrisChunkMeshAttributes.NORMAL, 24, IrisGlVertexAttributeFormat.BYTE, 3, true, false)
 		.addElement(IrisChunkMeshAttributes.BLOCK_ID, 28, IrisGlVertexAttributeFormat.SHORT, 2, false, false)
-		.addElement(IrisChunkMeshAttributes.MID_BLOCK, 32, IrisGlVertexAttributeFormat.BYTE, 4, false, false)
+		.addElement(IrisChunkMeshAttributes.MID_BLOCK, 32, IrisGlVertexAttributeFormat.BYTE, 3, false, false)
+		.addElement(IrisChunkMeshAttributes.AO, 36, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, true, false)
 		.build();
 
 	private static final int POSITION_MAX_VALUE = 65536;
@@ -57,11 +58,16 @@ public class XHFPModelVertexType implements ChunkVertexType {
 	}
 
 	protected static int encodeColor(int color) {
-		var brightness = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo() ? 1 : ColorU8.byteToNormalizedFloat(ColorABGR.unpackAlpha(color));
+		if (BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
+			return ColorABGR.withAlpha(color, 0x00);
+		}
+
+		var brightness = ColorU8.byteToNormalizedFloat(ColorABGR.unpackAlpha(color));
 
 		int r = ColorU8.normalizedFloatToByte(ColorU8.byteToNormalizedFloat(ColorABGR.unpackRed(color)) * brightness);
 		int g = ColorU8.normalizedFloatToByte(ColorU8.byteToNormalizedFloat(ColorABGR.unpackGreen(color)) * brightness);
 		int b = ColorU8.normalizedFloatToByte(ColorU8.byteToNormalizedFloat(ColorABGR.unpackBlue(color)) * brightness);
+
 
 		return ColorABGR.pack(r, g, b, 0x00);
 	}

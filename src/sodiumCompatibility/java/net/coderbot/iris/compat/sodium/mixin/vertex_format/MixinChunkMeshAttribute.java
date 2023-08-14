@@ -27,17 +27,20 @@ public class MixinChunkMeshAttribute {
 
 		IrisChunkMeshAttributes.NORMAL
 				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("NORMAL", baseOrdinal);
+		IrisChunkMeshAttributes.AO
+				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("AO", baseOrdinal + 1);
 		IrisChunkMeshAttributes.TANGENT
-				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("TANGENT", baseOrdinal + 1);
+				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("TANGENT", baseOrdinal + 2);
 		IrisChunkMeshAttributes.MID_TEX_COORD
-				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("MID_TEX_COORD", baseOrdinal + 2);
+				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("MID_TEX_COORD", baseOrdinal + 3);
 		IrisChunkMeshAttributes.BLOCK_ID
-				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("BLOCK_ID", baseOrdinal + 3);
+				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("BLOCK_ID", baseOrdinal + 4);
 		IrisChunkMeshAttributes.MID_BLOCK
-				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("MID_BLOCK", baseOrdinal + 4);
+				= ChunkMeshAttributeAccessor.createChunkMeshAttribute("MID_BLOCK", baseOrdinal + 5);
 
 		$VALUES = ArrayUtils.addAll($VALUES,
 				IrisChunkMeshAttributes.NORMAL,
+				IrisChunkMeshAttributes.AO,
 				IrisChunkMeshAttributes.TANGENT,
 				IrisChunkMeshAttributes.MID_TEX_COORD,
 				IrisChunkMeshAttributes.BLOCK_ID,

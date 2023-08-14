@@ -7,6 +7,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkMeshAttr
  */
 public class IrisChunkMeshAttributes {
 	public static ChunkMeshAttribute NORMAL;
+	public static ChunkMeshAttribute AO;
 	public static ChunkMeshAttribute TANGENT;
 	public static ChunkMeshAttribute MID_TEX_COORD;
 	public static ChunkMeshAttribute BLOCK_ID;

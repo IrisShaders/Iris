@@ -23,7 +23,7 @@ public class MixinGlVertexFormatBuilder {
 		Object value = map.get(key);
 
 		if (value == null) {
-			if (key == IrisChunkMeshAttributes.NORMAL || key == IrisChunkMeshAttributes.TANGENT
+			if (key == IrisChunkMeshAttributes.NORMAL || key == IrisChunkMeshAttributes.AO || key == IrisChunkMeshAttributes.TANGENT
 					|| key == IrisChunkMeshAttributes.MID_TEX_COORD || key == IrisChunkMeshAttributes.BLOCK_ID
 					|| key == IrisChunkMeshAttributes.MID_BLOCK) {
 				// Missing these attributes is acceptable and will be handled properly.
