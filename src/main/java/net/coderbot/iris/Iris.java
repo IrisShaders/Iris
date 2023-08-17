@@ -3,7 +3,6 @@ package net.coderbot.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
@@ -115,16 +114,7 @@ public class Iris {
 	 */
 	public void onEarlyInitialize() {
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
-				modContainer -> {
-					sodiumInstalled = true;
-					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
-
-					// This makes it so that if we don't have the right version of Sodium, it will show the user a
-					// nice warning, and prevent them from playing the game with a wrong version of Sodium.
-					if (!SodiumVersionCheck.isAllowedVersion(versionString)) {
-						sodiumInvalid = true;
-					}
-				}
+				modContainer -> sodiumInstalled = true
 		);
 
 		hasNEC = FabricLoader.getInstance().isModLoaded("notenoughcrashes");
