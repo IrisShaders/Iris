@@ -95,6 +95,7 @@ public final class OptionAnnotatedSource {
 		ImmutableSet.Builder<String> values = ImmutableSet.<String>builder().add(
 			"shadowMapResolution",
 			"shadowDistance",
+			"voxelDistance",
 			"shadowDistanceRenderMul",
 			"entityShadowDistanceMul",
 			"shadowIntervalSize",

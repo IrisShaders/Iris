@@ -4,7 +4,7 @@ Iris 1.2.6 is now available for download, fixing minor bugs and adding support f
 
 This release was developed by coderbot, IMS, Pepper, and Justsnoopy30.
 
-**⬇ Download the release here: https://irisshaders.net/download.html**
+**⬇ Download the release here: https://irisshaders.dev/download.html**
 
 Here's what's changed since 1.2.5:
 

@@ -7,7 +7,7 @@ These features allow for things never done before with shaders.
 
 We have been working with many shader developers on exclusive features for this version, and they will be announced as they release. Packs such as Shrimple (https://modrinth.com/shader/shrimple) are already taking full advantage of what Iris 1.6 offers.
 
-**⬇ Download the release here: https://irisshaders.net/download.html**
+**⬇ Download the release here: https://irisshaders.dev/download.html**
 
 A more detailed changelog is available for those interested: <https://github.com/IrisShaders/Iris/blob/1.18.2/docs/changelogs/1.6.0/full.md>
 

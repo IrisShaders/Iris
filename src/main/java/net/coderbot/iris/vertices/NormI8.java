@@ -43,6 +43,16 @@ public class NormI8 {
 	public static int pack(float x, float y, float z, float w) {
 		return ((int) (x * 127) & 0xFF) | (((int) (y * 127) & 0xFF) << 8) | (((int) (z * 127) & 0xFF) << 16) | (((int) (w * 127) & 0xFF) << 24);
 	}
+	/**
+	 * Packs the specified vector components into a 32-bit integer in XYZ ordering with the 8 bits of padding at the
+	 * end.
+	 * @param x The x component of the normal's vector
+	 * @param y The y component of the normal's vector
+	 * @param z The z component of the normal's vector
+	 */
+	public static int packColor(float x, float y, float z, float w) {
+		return ((int) (x * 127) & 0xFF) | (((int) (y * 127) & 0xFF) << 8) | (((int) (z * 127) & 0xFF) << 16) | (((int) w & 0xFF) << 24);
+	}
 
 	/**
 	 * Encodes a float in the range of -1.0..1.0 to a normalized unsigned integer in the range of 0..255 which can then

@@ -7,7 +7,7 @@ We hope for this to be one of the last big bugfix releases before PBR (Iris 1.3.
 
 This release was developed by coderbot & IMS with additional help from Pepper.
 
-**⬇ Download the release here: https://irisshaders.net/download.html**
+**⬇ Download the release here: https://irisshaders.dev/download.html**
 
 Here's what's changed since 1.2.4:
 

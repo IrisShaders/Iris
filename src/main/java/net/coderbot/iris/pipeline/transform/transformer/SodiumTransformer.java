@@ -22,13 +22,13 @@ import static net.coderbot.iris.pipeline.transform.transformer.CommonTransformer
 
 public class SodiumTransformer {
 	public static void transform(
-			ASTParser t,
-			TranslationUnit tree,
-			Root root,
-			SodiumParameters parameters) {
+		ASTParser t,
+		TranslationUnit tree,
+		Root root,
+		SodiumParameters parameters) {
 		CommonTransformer.transform(t, tree, root, parameters, false);
 
-		replaceMidTexCoord(t, tree, root, parameters.textureScale);
+		replaceMidTexCoord(t, tree, root, 1.0f / 65536.0f);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
@@ -42,18 +42,18 @@ public class SodiumTransformer {
 
 			if (parameters.inputs.hasTex()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
-						"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
+					"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
-						"vec4(0.0, 0.0, 0.0, 1.0)");
+					"vec4(0.0, 0.0, 0.0, 1.0)");
 			}
 
 			if (parameters.inputs.hasLight()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
-						"vec4(_vert_tex_light_coord, 0.0, 1.0)");
+					"vec4(_vert_tex_light_coord, 0.0, 1.0)");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
-						"vec4(240.0, 240.0, 0.0, 1.0)");
+					"vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
 			AttributeTransformer.patchMultiTexCoord3(t, tree, root, parameters);
@@ -83,15 +83,15 @@ public class SodiumTransformer {
 		// TODO: Should probably add the normal matrix as a proper uniform that's
 		// computed on the CPU-side of things
 		root.replaceReferenceExpressions(t, "gl_NormalMatrix",
-				"iris_NormalMatrix");
+			"iris_NormalMatrix");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"uniform mat3 iris_NormalMatrix;");
+			"uniform mat3 iris_NormalMatrix;");
 
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"uniform mat4 iris_ModelViewMatrixInverse;");
+			"uniform mat4 iris_ModelViewMatrixInverse;");
 
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"uniform mat4 iris_ProjectionMatrixInverse;");
+			"uniform mat4 iris_ProjectionMatrixInverse;");
 
 		// TODO: All of the transformed variants of the input matrices, preferably
 		// computed on the CPU side...
@@ -104,14 +104,14 @@ public class SodiumTransformer {
 			// chunks.
 			if (root.identifierIndex.has("ftransform")) {
 				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-						"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
+					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 			}
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"uniform mat4 iris_ProjectionMatrix;",
-					"uniform mat4 iris_ModelViewMatrix;",
-					"uniform vec3 u_RegionOffset;",
-					// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-					"vec4 getVertexPosition() { return vec4(_vert_position + u_RegionOffset + _get_draw_translation(_draw_id), 1.0); }");
+				"uniform mat4 iris_ProjectionMatrix;",
+				"uniform mat4 iris_ModelViewMatrix;",
+				"uniform vec3 u_RegionOffset;",
+				// _draw_translation replaced with Chunks[_draw_id].offset.xyz
+				"vec4 getVertexPosition() { return vec4(_vert_position + u_RegionOffset + _get_draw_translation(_draw_id), 1.0); }");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 
 			// inject here so that _vert_position is available to the above. (injections
@@ -120,46 +120,46 @@ public class SodiumTransformer {
 			injectVertInit(t, tree, root, parameters);
 		} else {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-					"uniform mat4 iris_ModelViewMatrix;",
-					"uniform mat4 iris_ProjectionMatrix;");
+				"uniform mat4 iris_ModelViewMatrix;",
+				"uniform mat4 iris_ProjectionMatrix;");
 		}
 
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
-				"(iris_ProjectionMatrix * iris_ModelViewMatrix)");
+			"(iris_ProjectionMatrix * iris_ModelViewMatrix)");
 
 		CommonTransformer.applyIntelHd4000Workaround(root);
 	}
 
 	public static void injectVertInit(
-			ASTParser t,
-			TranslationUnit tree,
-			Root root,
-			SodiumParameters parameters) {
+		ASTParser t,
+		TranslationUnit tree,
+		Root root,
+		SodiumParameters parameters) {
 		String separateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo() ? "a_Color" : "vec4(a_Color.rgb * a_Color.a, 1.0)";
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-				// translated from sodium's chunk_vertex.glsl
-				"vec3 _vert_position;",
-				"vec2 _vert_tex_diffuse_coord;",
-				"ivec2 _vert_tex_light_coord;",
-				"vec4 _vert_color;",
-				"uint _draw_id;",
-				"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
-					"float _material_mip_bias(uint material) {\n" +
-					"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
-					"}",
-				"void _vert_init() {" +
-						"_vert_position = (vec3(a_PosId.xyz) * " + parameters.positionScale + " + "
-						+ parameters.positionOffset + ");" +
-						"_vert_tex_diffuse_coord = (a_TexCoord * " + parameters.textureScale + ");" +
-						"_vert_tex_light_coord = a_LightCoord;" +
-						"_vert_color = " + separateAo + ";" +
-						"_draw_id = (a_PosId.w >> 8u) & 0xFFu; }",
+			// translated from sodium's chunk_vertex.glsl
+			"vec3 _vert_position;",
+			"vec2 _vert_tex_diffuse_coord;",
+			"ivec2 _vert_tex_light_coord;",
+			"vec4 _vert_color;",
+			"uint _draw_id;",
+			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
+			"float _material_mip_bias(uint material) {\n" +
+				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
+				"}",
+			"void _vert_init() {" +
+				"_vert_position = (vec3(a_PosId.xyz) * 0.00048828125 + -8.0"
+				+ ");" +
+				"_vert_tex_diffuse_coord = (a_TexCoord * 1.52587891E-5);" +
+				"_vert_tex_light_coord = a_LightCoord;" +
+				"_vert_color = " + separateAo + ";" +
+				"_draw_id = (a_PosId.w >> 8u) & 0xFFu; }",
 
 			"uvec3 _get_relative_chunk_coord(uint pos) {\n" +
 				"    // Packing scheme is defined by LocalSectionIndex\n" +
 				"    return uvec3(pos) >> uvec3(5u, 0u, 2u) & uvec3(7u, 3u, 7u);\n" +
 				"}",
-				"vec3 _get_draw_translation(uint pos) {\n" +
+			"vec3 _get_draw_translation(uint pos) {\n" +
 				"    return _get_relative_chunk_coord(pos) * vec3(16.0f);\n" +
 				"}\n");
 		addIfNotExists(root, t, tree, "a_PosId", Type.U32VEC4, StorageQualifier.StorageType.IN);

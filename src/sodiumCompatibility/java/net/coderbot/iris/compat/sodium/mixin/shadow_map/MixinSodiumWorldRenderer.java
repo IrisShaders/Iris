@@ -7,22 +7,21 @@ import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 import me.jellysquid.mods.sodium.client.render.viewport.Viewport;
 import net.coderbot.iris.shadows.ShadowRenderingState;
-import net.coderbot.iris.compat.sodium.impl.shadow_map.SwappableRenderSectionManager;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.server.level.BlockDestructionProgress;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.SortedSet;
 
@@ -35,50 +34,12 @@ import java.util.SortedSet;
  */
 @Mixin(SodiumWorldRenderer.class)
 public class MixinSodiumWorldRenderer {
-    @Shadow(remap = false)
-    private RenderSectionManager renderSectionManager;
-
-    @Unique
-    private boolean wasRenderingShadows = false;
-
-	@Shadow(remap = false)
-	private double lastCameraX, lastCameraY, lastCameraZ, lastCameraPitch, lastCameraYaw;
-
-	@Unique
-	private double iris$swapLastCameraX, iris$swapLastCameraY, iris$swapLastCameraZ,
-		iris$swapLastCameraPitch, iris$swapLastCameraYaw;
-
-	@Unique
-	private void swapCachedCameraPositions() {
-		double tmp;
-
-		tmp = lastCameraX;
-		lastCameraX = iris$swapLastCameraX;
-		iris$swapLastCameraX = tmp;
-
-		tmp = lastCameraY;
-		lastCameraY = iris$swapLastCameraY;
-		iris$swapLastCameraY = tmp;
-
-		tmp = lastCameraZ;
-		lastCameraZ = iris$swapLastCameraZ;
-		iris$swapLastCameraZ = tmp;
-
-		tmp = lastCameraPitch;
-		lastCameraPitch = iris$swapLastCameraPitch;
-		iris$swapLastCameraPitch = tmp;
-
-		tmp = lastCameraYaw;
-		lastCameraYaw = iris$swapLastCameraYaw;
-		iris$swapLastCameraYaw = tmp;
-	}
-
-	@Inject(method = "renderBlockEntities", at = @At("HEAD"))
+	@Inject(method = "renderBlockEntities(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/RenderBuffers;Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;FLnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDDLnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;)V", at = @At("HEAD"))
 	private void resetEntityList(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher blockEntityRenderer, CallbackInfo ci) {
 		beList = 0;
 	}
 
-	@Inject(method = "renderBlockEntities", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/SodiumWorldRenderer;renderBlockEntity(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/RenderBuffers;Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;FLnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDDLnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;Lnet/minecraft/world/level/block/entity/BlockEntity;)V"))
+	@Inject(method = "renderBlockEntities(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/RenderBuffers;Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;FLnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDDLnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;)V", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/SodiumWorldRenderer;renderBlockEntity(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/RenderBuffers;Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;FLnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDDLnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;Lnet/minecraft/world/level/block/entity/BlockEntity;)V"))
 	private void addToList(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher blockEntityRenderer, CallbackInfo ci) {
 		beList++;
 	}
@@ -86,6 +47,11 @@ public class MixinSodiumWorldRenderer {
 	@Inject(method = "renderGlobalBlockEntities", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/SodiumWorldRenderer;renderBlockEntity(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/RenderBuffers;Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;FLnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDDLnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;Lnet/minecraft/world/level/block/entity/BlockEntity;)V"))
 	private void addToList2(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher blockEntityRenderer, CallbackInfo ci) {
 		beList++;
+	}
+
+	@Inject(method = "isEntityVisible", at = @At("HEAD"), cancellable = true)
+	private void iris$overrideEntityCulling(Entity entity, CallbackInfoReturnable<Boolean> cir) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) cir.setReturnValue(true);
 	}
 
 	private static int beList = 0;
@@ -98,65 +64,16 @@ public class MixinSodiumWorldRenderer {
         });
 	}
 
-    @Unique
-    private void iris$ensureStateSwapped() {
-        if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
-				((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
-				swapCachedCameraPositions();
-			}
-
-            wasRenderingShadows = true;
-        } else if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			if (this.renderSectionManager instanceof SwappableRenderSectionManager) {
-				((SwappableRenderSectionManager) this.renderSectionManager).iris$swapVisibilityState();
-				swapCachedCameraPositions();
-			}
-
-			wasRenderingShadows = false;
-		}
-    }
-
-    @Inject(method = "scheduleTerrainUpdate()V", remap = false,
-            at = @At(value = "INVOKE",
-                    target = "me/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager.markGraphDirty ()V",
-                    remap = false))
-    private void iris$ensureStateSwappedBeforeMarkDirty(CallbackInfo ci) {
-        iris$ensureStateSwapped();
-    }
-
-    // note: inject after the reload() check, but before the markDirty() call. This injection point was chosen just
-    //       because it's relatively solid and is in between those two calls.
-    @Inject(method = "setupTerrain", remap = false,
-            at = @At(value = "FIELD",
-                     target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
-                     ordinal = 0,
-                     remap = false))
-    private void iris$ensureStateSwappedInUpdateChunks(Camera camera, Viewport viewport, int frame, boolean spectator, boolean updateChunksImmediately, CallbackInfo ci) {
-        iris$ensureStateSwapped();
-    }
-
     @Redirect(method = "setupTerrain", remap = false,
-            at = @At(value = "FIELD",
-                    target = "me/jellysquid/mods/sodium/client/render/SodiumWorldRenderer.lastCameraX : D",
-                    ordinal = 0,
+            at = @At(value = "INVOKE",
+					target = "Lme/jellysquid/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z",
                     remap = false))
-    private double iris$forceChunkGraphRebuildInShadowPass(SodiumWorldRenderer worldRenderer) {
+    private boolean iris$forceChunkGraphRebuildInShadowPass(RenderSectionManager instance) {
         if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            // Returning NaN forces the comparison with the current camera to return false, making SodiumWorldRenderer
-            // think that the chunk graph always needs to be rebuilt. This is generally true in the shadow map pass,
-            // unless time is frozen.
-            //
-            // TODO: Detect when the sun/moon isn't moving
-            return Double.NaN;
+			// TODO: Detect when the sun/moon isn't moving
+            return true;
         } else {
-            return lastCameraX;
+            return instance.needsUpdate();
         }
-    }
-
-    @Inject(method = "drawChunkLayer",  remap = false, at = @At("HEAD"))
-    private void iris$beforeDrawChunkLayer(RenderType renderType, PoseStack poseStack, double x, double y,
-										   double z, CallbackInfo ci) {
-        iris$ensureStateSwapped();
     }
 }

@@ -61,7 +61,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 
 	@Override
 	public long write(long ptr,
-					  Material material, Vertex vertex, byte chunkId) {
+					  Material material, Vertex vertex, int chunkId) {
 		uSum += vertex.u;
 		vSum += vertex.v;
 		vertexCount++;
@@ -69,8 +69,8 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 		MemoryUtil.memPutShort(ptr + 0L, XHFPModelVertexType.encodePosition(vertex.x));
 		MemoryUtil.memPutShort(ptr + 2L, XHFPModelVertexType.encodePosition(vertex.y));
 		MemoryUtil.memPutShort(ptr + 4L, XHFPModelVertexType.encodePosition(vertex.z));
-		MemoryUtil.memPutByte(ptr + 6L, material.bits());
-		MemoryUtil.memPutByte(ptr + 7L, chunkId);
+		MemoryUtil.memPutByte(ptr + 6L, (byte) material.bits());
+		MemoryUtil.memPutByte(ptr + 7L, (byte) chunkId);
 
 		MemoryUtil.memPutInt(ptr + 8, vertex.color);
 

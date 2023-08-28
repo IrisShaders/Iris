@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  */
 @Mixin(RenderSectionManager.class)
 public class MixinRenderSectionManager {
-    @Redirect(method = "initSearch", remap = false,
+    @Redirect(method = "getSearchDistance", remap = false,
             at = @At(value = "FIELD",
                     target = "Lme/jellysquid/mods/sodium/client/gui/SodiumGameOptions$PerformanceSettings;useFogOcclusion:Z",
                     remap = false))

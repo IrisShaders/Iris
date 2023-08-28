@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 public class MixinRenderSectionManager {
 	@ModifyArg(method = "<init>", remap = false,
 			at = @At(value = "INVOKE",
-					target = "Lme/jellysquid/mods/sodium/client/render/chunk/RegionChunkRenderer;<init>(Lme/jellysquid/mods/sodium/client/gl/device/RenderDevice;Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;)V"))
+					target = "Lme/jellysquid/mods/sodium/client/render/chunk/DefaultChunkRenderer;<init>(Lme/jellysquid/mods/sodium/client/gl/device/RenderDevice;Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;)V"))
 	private ChunkVertexType iris$useExtendedVertexFormat$1(ChunkVertexType vertexType) {
 		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
 	}

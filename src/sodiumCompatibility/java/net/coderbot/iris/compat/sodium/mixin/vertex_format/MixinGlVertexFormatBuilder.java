@@ -4,14 +4,23 @@ import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttribute;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeFormat;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.EnumMap;
 
 @Mixin(GlVertexFormat.Builder.class)
-public class MixinGlVertexFormatBuilder {
+public class MixinGlVertexFormatBuilder<T extends Enum<T>> {
+	@Shadow
+	@Final
+	private int stride;
+	@Shadow
+	@Final
+	private EnumMap<T, GlVertexAttribute> attributes;
 	private static final GlVertexAttribute EMPTY
 			= new GlVertexAttribute(GlVertexAttributeFormat.FLOAT, 0, false, 0, 0, false);
 
@@ -23,14 +32,23 @@ public class MixinGlVertexFormatBuilder {
 		Object value = map.get(key);
 
 		if (value == null) {
-			if (key == IrisChunkMeshAttributes.NORMAL || key == IrisChunkMeshAttributes.TANGENT
-					|| key == IrisChunkMeshAttributes.MID_TEX_COORD || key == IrisChunkMeshAttributes.BLOCK_ID
-					|| key == IrisChunkMeshAttributes.MID_BLOCK) {
-				// Missing these attributes is acceptable and will be handled properly.
-				return EMPTY;
-			}
+			// Missing these attributes is acceptable and will be handled properly.
+			return EMPTY;
 		}
 
 		return value;
+	}
+
+	/**
+	 * @author
+	 * @reason
+	 */
+	@Overwrite(remap = false)
+	private GlVertexFormat.Builder<T> addElement(T type, GlVertexAttribute attribute) {
+		if (this.attributes.put(type, attribute) != null) {
+			throw new IllegalStateException("Generic attribute " + type.name() + " already defined in vertex format");
+		} else {
+			return (GlVertexFormat.Builder<T>) (Object) this;
+		}
 	}
 }

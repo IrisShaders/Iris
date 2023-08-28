@@ -6,7 +6,7 @@ This release mainly focuses on bug fixes, and closes over 50 GitHub issues! It r
 
 In other news, shader configuration is also in the final testing & bug fixing phases, meaning that very soon, official Iris releases will support modifying shaders through a GUI without the need for any 3rd-party forks or workarounds. Stay tuned for more updates on that!
 
-**⬇ Download the release here: https://irisshaders.net/download.html**
+**⬇ Download the release here: https://irisshaders.dev/download.html**
 
 Here's what's changed since 1.1.3:
 

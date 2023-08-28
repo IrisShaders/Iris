@@ -3,7 +3,7 @@ package net.coderbot.iris.compat.sodium.mixin.shader_overrides;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
 import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderMatrices;
-import me.jellysquid.mods.sodium.client.render.chunk.RegionChunkRenderer;
+import me.jellysquid.mods.sodium.client.render.chunk.DefaultChunkRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
 import org.joml.Matrix4f;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(RegionChunkRenderer.class)
+@Mixin(DefaultChunkRenderer.class)
 public abstract class MixinRegionChunkRenderer implements ShaderChunkRendererExt {
 	@Redirect(method = "render", remap = false,
 			at = @At(value = "INVOKE",
