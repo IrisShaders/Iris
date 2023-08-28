@@ -5,10 +5,12 @@ import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.jodah.expiringmap.ExpiringMap;
 import net.minecraft.core.Direction;
 import org.joml.*;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class IrisModelCuboid {
     public final Quad[] quads;
@@ -16,7 +18,7 @@ public class IrisModelCuboid {
     private final Vector3f[] vertices;
     private final Vector3f[] shared;
     private final Vector3f[] previous;
-    private final Int2ObjectOpenHashMap<VertexHistory> idToHistory = new Int2ObjectOpenHashMap<>();
+    private final ExpiringMap<Integer, VertexHistory> idToHistory = ExpiringMap.builder().maxSize(10000).expiration(30, TimeUnit.SECONDS).build();
 
     public IrisModelCuboid(int u, int v, float x1, float y1, float z1, float sizeX, float sizeY, float sizeZ, float extraX, float extraY, float extraZ, boolean mirror, float textureWidth, float textureHeight, Set<Direction> renderDirections) {
         float x2 = x1 + sizeX;
