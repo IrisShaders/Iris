@@ -44,6 +44,9 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	private boolean iris$isTerrain = false;
 
 	@Unique
+	private boolean iris$isParticle = false;
+
+	@Unique
 	private int vertexCount;
 
 	@Unique
@@ -115,7 +118,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	@Inject(method = "begin", at = @At("HEAD"))
 	private void iris$onBegin(VertexFormat.Mode drawMode, VertexFormat format, CallbackInfo ci) {
 		boolean shouldExtend = (!iris$shouldNotExtend) && BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat();
-		extending = shouldExtend && (format == DefaultVertexFormat.BLOCK || format == DefaultVertexFormat.NEW_ENTITY
+		extending = shouldExtend && (format == DefaultVertexFormat.BLOCK || format == DefaultVertexFormat.NEW_ENTITY || format == DefaultVertexFormat.PARTICLE
 			|| format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
 		vertexCount = 0;
 
@@ -130,9 +133,15 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			if (format == DefaultVertexFormat.BLOCK) {
 				this.switchFormat(IrisVertexFormats.TERRAIN);
 				this.iris$isTerrain = true;
+				this.iris$isParticle = false;
+			} else if (format == DefaultVertexFormat.PARTICLE) {
+				this.switchFormat(IrisVertexFormats.PARTICLES);
+				this.iris$isTerrain = false;
+				this.iris$isParticle = true;
 			} else {
 				this.switchFormat(IrisVertexFormats.ENTITY);
 				this.iris$isTerrain = false;
+				this.iris$isParticle = false;
 			}
 			this.currentElement = this.format.getElements().get(0);
 		}
@@ -154,9 +163,15 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			if (format == DefaultVertexFormat.BLOCK) {
 				this.switchFormat(IrisVertexFormats.TERRAIN);
 				this.iris$isTerrain = true;
+				this.iris$isParticle = false;
+			} else if (format == DefaultVertexFormat.PARTICLE) {
+				this.switchFormat(IrisVertexFormats.PARTICLES);
+				this.iris$isTerrain = false;
+				this.iris$isParticle = true;
 			} else {
 				this.switchFormat(IrisVertexFormats.ENTITY);
 				this.iris$isTerrain = false;
+				this.iris$isParticle = false;
 			}
 		}
 		return arg;
@@ -184,6 +199,15 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	@Inject(method = "endVertex", at = @At("HEAD"))
 	private void iris$beforeNext(CallbackInfo ci) {
 		if (!extending) {
+			return;
+		}
+
+		if (iris$isParticle) {
+			this.putFloat(0, 0);
+			this.putFloat(4, 0);
+			this.putFloat(8, 0);
+			this.nextElement();
+			vertexCount++;
 			return;
 		}
 

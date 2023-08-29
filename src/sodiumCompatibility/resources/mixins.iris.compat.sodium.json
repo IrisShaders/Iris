@@ -24,6 +24,7 @@
     "options.MixinSodiumOptionsGUI",
     "copyEntity.CuboidMixin",
     "copyEntity.ModelPartMixin",
+    "copyEntity.BillboardParticleMixin",
     "copyEntity.cull.EntityRendererMixin",
     "copyEntity.shadows.EntityRenderDispatcherMixin",
     "font.MixinGlyphRenderer",

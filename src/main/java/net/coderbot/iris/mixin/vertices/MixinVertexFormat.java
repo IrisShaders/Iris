@@ -22,6 +22,10 @@ public class MixinVertexFormat {
 				IrisVertexFormats.TERRAIN.setupBufferState();
 
 				ci.cancel();
+			} else if ((Object) this == DefaultVertexFormat.PARTICLE) {
+				IrisVertexFormats.PARTICLES.setupBufferState();
+
+				ci.cancel();
 			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				IrisVertexFormats.ENTITY.setupBufferState();
 
@@ -35,6 +39,10 @@ public class MixinVertexFormat {
 		if (BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
 			if ((Object) this == DefaultVertexFormat.BLOCK) {
 				IrisVertexFormats.TERRAIN.clearBufferState();
+
+				ci.cancel();
+			} else if ((Object) this == DefaultVertexFormat.PARTICLE) {
+				IrisVertexFormats.PARTICLES.clearBufferState();
 
 				ci.cancel();
 			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY || (Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {

@@ -18,6 +18,7 @@ public class IrisVertexFormats {
 	public static final VertexFormat TERRAIN;
 	public static final VertexFormat ENTITY;
 	public static final VertexFormat CLOUDS;
+	public static final VertexFormat PARTICLES;
 
 	static {
 		ENTITY_ELEMENT = new VertexFormatElement(11, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
@@ -30,6 +31,7 @@ public class IrisVertexFormats {
 
 		ImmutableMap.Builder<String, VertexFormatElement> terrainElements = ImmutableMap.builder();
 		ImmutableMap.Builder<String, VertexFormatElement> entityElements = ImmutableMap.builder();
+		ImmutableMap.Builder<String, VertexFormatElement> particleElements = ImmutableMap.builder();
 		ImmutableMap.Builder<String, VertexFormatElement> cloudsElements = ImmutableMap.builder();
 
 		terrainElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION); // 12
@@ -56,6 +58,12 @@ public class IrisVertexFormats {
 		entityElements.put("at_tangent", TANGENT_ELEMENT); // 48
 		entityElements.put("at_velocity", VELOCITY_FLOAT); // 60
 
+		particleElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION); // 12
+		particleElements.put("UV0", DefaultVertexFormat.ELEMENT_UV0); // 16
+		particleElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR); // 24
+		particleElements.put("UV2", DefaultVertexFormat.ELEMENT_UV2); // 28
+		particleElements.put("at_velocity", VELOCITY_FLOAT); // 40
+
 		cloudsElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION); // 12
 		cloudsElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR); // 16
 		cloudsElements.put("Normal", DefaultVertexFormat.ELEMENT_NORMAL); // 31
@@ -63,6 +71,7 @@ public class IrisVertexFormats {
 
 		TERRAIN = new VertexFormat(terrainElements.build());
 		ENTITY = new VertexFormat(entityElements.build());
+		PARTICLES = new VertexFormat(particleElements.build());
 		CLOUDS = new VertexFormat(cloudsElements.build());
 
 		debug(ENTITY);

@@ -57,6 +57,7 @@ public class MixinBlockEntityRenderDispatcher {
 		int intId = blockStateIds.getOrDefault(state, -1);
 
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(intId);
+		CapturedRenderingState.INSTANCE.setUniqueEntityId(blockEntity.getBlockPos().getX() + blockEntity.getBlockPos().getY());
 
 		return type ->
 			bufferSource.getBuffer(OuterWrappedRenderType.wrapExactlyOnce("iris:is_block_entity", type, BlockEntityRenderStateShard.INSTANCE));
@@ -67,5 +68,7 @@ public class MixinBlockEntityRenderDispatcher {
 	private void iris$afterRender(BlockEntity blockEntity, float tickDelta, PoseStack matrix,
 								  MultiBufferSource bufferSource, CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(0);
+		CapturedRenderingState.INSTANCE.setUniqueEntityId(0);
+
 	}
 }
