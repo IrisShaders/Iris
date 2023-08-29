@@ -85,7 +85,7 @@ public class ModelPartMixin {
 			boolean extend = extend();
 
 			try (MemoryStack stack = MemoryStack.stackPush()) {
-				long buffer = stack.nmalloc(4 * 6 * ModelVertex.STRIDE);
+				long buffer = stack.nmalloc(4 * 6 * (extend ? EntityVertex.STRIDE : ModelVertex.STRIDE));
 				long ptr = buffer;
 
 				int count = 0;
