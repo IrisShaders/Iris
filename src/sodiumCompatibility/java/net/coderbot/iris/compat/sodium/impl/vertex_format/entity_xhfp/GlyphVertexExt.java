@@ -39,7 +39,7 @@ public final class GlyphVertexExt {
 
 	private static Vector3f lastNormal = new Vector3f();
 
-	public static void write(long ptr, float x, float y, float z, int color, float u, float v, int light) {
+	public static void write(long ptr, float x, float y, float z, float prevX, float prevY, float prevZ, int color, float u, float v, int light) {
 		long i = ptr;
 
 		vertexCount++;
@@ -62,6 +62,10 @@ public final class GlyphVertexExt {
 		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 		MemoryUtil.memPutShort(ptr + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
 		MemoryUtil.memPutShort(ptr + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+
+		MemoryUtil.memPutFloat(ptr + 52, x - prevX);
+		MemoryUtil.memPutFloat(ptr + 56, y - prevY);
+		MemoryUtil.memPutFloat(ptr + 60, z - prevZ);
 
 		if (vertexCount == 4) {
 			endQuad(ptr);
@@ -131,7 +135,7 @@ public final class GlyphVertexExt {
 				float yt = (matPosition.m01() * x) + (matPosition.m11() * y) + (matPosition.m21() * z) + matPosition.m31();
 				float zt = (matPosition.m02() * x) + (matPosition.m12() * y) + (matPosition.m22() * z) + matPosition.m32();
 
-				write(ptr, xt, yt, zt, color, quad.getTexU(i), quad.getTexV(i), light);
+				write(ptr, xt, yt, zt, 0, 0, 0, color, quad.getTexU(i), quad.getTexV(i), light);
 				ptr += STRIDE;
 			}
 

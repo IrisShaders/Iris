@@ -5,6 +5,7 @@ import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.GlyphVertex;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.GlyphVertexExt;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.ImmediateState;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
@@ -100,9 +101,13 @@ public class MixinGlyphRenderer {
 		float x2 = Math.fma(matrix.m00(), x, Math.fma(matrix.m10(), y, Math.fma(matrix.m20(), z, matrix.m30())));
 		float y2 = Math.fma(matrix.m01(), x, Math.fma(matrix.m11(), y, Math.fma(matrix.m21(), z, matrix.m31())));
 		float z2 = Math.fma(matrix.m02(), x, Math.fma(matrix.m12(), y, Math.fma(matrix.m22(), z, matrix.m32())));
+		Matrix4f mat2 = CapturedRenderingState.INSTANCE.velocityInfoEdit.last().pose();
+		float x3 = Math.fma(mat2.m00(), x, Math.fma(mat2.m10(), y, Math.fma(mat2.m20(), z, mat2.m30())));
+		float y3 = Math.fma(mat2.m01(), x, Math.fma(mat2.m11(), y, Math.fma(mat2.m21(), z, mat2.m31())));
+		float z3 = Math.fma(mat2.m02(), x, Math.fma(mat2.m12(), y, Math.fma(mat2.m22(), z, mat2.m32())));
 
 		if (ext) {
-			GlyphVertexExt.write(buffer, x2, y2, z2, color, u, v, light);
+			GlyphVertexExt.write(buffer, x2, y2, z2, x3, y3, z3, color, u, v, light);
 		} else {
 			GlyphVertex.put(buffer, x2, y2, z2, color, u, v, light);
 		}

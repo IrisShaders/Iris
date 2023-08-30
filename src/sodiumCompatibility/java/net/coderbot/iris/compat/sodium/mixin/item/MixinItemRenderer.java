@@ -17,6 +17,7 @@ import net.coderbot.iris.compat.sodium.impl.entities.IrisBakedQuad;
 import net.coderbot.iris.compat.sodium.impl.entities.VertexHistory;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.entity_xhfp.EntityVertex;
 import net.coderbot.iris.shadows.ShadowRenderingState;
+import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.coderbot.iris.vertices.ImmediateState;
 import net.coderbot.iris.vertices.NormalHelper;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -92,8 +93,9 @@ public class MixinItemRenderer {
                 EntityVertex.writeUnknownTangentWithVelocity(ptr, xt, yt, zt, lastPos.storedPositions[i].x, lastPos.storedPositions[i].y, lastPos.storedPositions[i].z, color, quad.getTexU(i), quad.getTexV(i), midU, midV, light, overlay, normal);
                 ptr += EntityVertex.STRIDE;
 
-				if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) lastPos.storedPositions[i].set(xt, yt, zt);
+				if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered() && lastPos.lastFrame != SystemTimeUniforms.COUNTER.getAsInt()) lastPos.storedPositions[i].set(xt, yt, zt);
             }
+			lastPos.lastFrame = SystemTimeUniforms.COUNTER.getAsInt();
 
             writer.push(stack, buffer, 4, EntityVertex.FORMAT);
         }

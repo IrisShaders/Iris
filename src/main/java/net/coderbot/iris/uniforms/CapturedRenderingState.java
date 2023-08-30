@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
@@ -12,6 +13,7 @@ public class CapturedRenderingState {
 
 	private Matrix4f gbufferModelView;
 	private Matrix4f gbufferProjection;
+	public PoseStack velocityInfoEdit= new PoseStack();
 	private Vector3d fogColor;
 	private float fogDensity;
 	private float darknessLightFactor;

@@ -5,6 +5,7 @@ import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.jodah.expiringmap.ExpiringMap;
 import net.minecraft.core.Direction;
 import org.joml.*;
@@ -109,11 +110,12 @@ public class IrisModelCuboid {
 
             src.mulPosition(mat, dst);
 
-            if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+            if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered() && history.lastFrame != SystemTimeUniforms.COUNTER.getAsInt()) {
                 previous[i].set(history.storedPositions[i]);
                 history.storedPositions[i].set(dst);
             }
         }
+		history.lastFrame = SystemTimeUniforms.COUNTER.getAsInt();
 
     }
 

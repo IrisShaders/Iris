@@ -57,7 +57,7 @@ public class MixinBlockEntityRenderDispatcher {
 		int intId = blockStateIds.getOrDefault(state, -1);
 
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(intId);
-		CapturedRenderingState.INSTANCE.setUniqueEntityId(blockEntity.getBlockPos().getX() + blockEntity.getBlockPos().getY());
+		CapturedRenderingState.INSTANCE.setUniqueEntityId(blockEntity.getBlockPos().getX() + blockEntity.getBlockPos().getY() + blockEntity.getType().hashCode());
 
 		return type ->
 			bufferSource.getBuffer(OuterWrappedRenderType.wrapExactlyOnce("iris:is_block_entity", type, BlockEntityRenderStateShard.INSTANCE));

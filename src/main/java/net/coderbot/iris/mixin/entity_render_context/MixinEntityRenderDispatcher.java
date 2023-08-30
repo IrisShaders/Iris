@@ -14,12 +14,15 @@ import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -31,17 +34,34 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * rendered.
  */
 @Mixin(EntityRenderDispatcher.class)
-public class MixinEntityRenderDispatcher {
+public abstract class MixinEntityRenderDispatcher {
+	@Shadow
+	public abstract <T extends Entity> EntityRenderer<? super T> getRenderer(T pEntityRenderDispatcher0);
+
 	// Inject after MatrixStack#push since at this point we know that most cancellation checks have already passed.
 	@ModifyVariable(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER),
 		allow = 1, require = 1)
-	private MultiBufferSource iris$beginEntityRender(MultiBufferSource bufferSource, Entity entity) {
+	private MultiBufferSource iris$beginEntityRender(MultiBufferSource bufferSource, Entity entity,
+													 double pDouble1,
+													 double pDouble2,
+													 double pDouble3,
+													 float pFloat4,
+													 float pFloat5) {
+
+		Vec3 lvVec314 = this.getRenderer(entity).getRenderOffset(entity, pFloat5);
+		double lvDouble15 = pDouble1 + lvVec314.x();
+		double lvDouble17 = pDouble2 + lvVec314.y();
+		double lvDouble19 = pDouble3 + lvVec314.z();
+		CapturedRenderingState.INSTANCE.velocityInfoEdit.pushPose();
+		CapturedRenderingState.INSTANCE.velocityInfoEdit.translate(lvDouble15, lvDouble17, lvDouble19);
+
 		if (!(bufferSource instanceof Groupable)) {
 			// Fully batched entity rendering is not being used, do not use this wrapper!!!
 			return bufferSource;
 		}
 
 		Object2IntFunction<NamespacedId> entityIds = BlockRenderingSettings.INSTANCE.getEntityIds();
+
 
 		if (entityIds == null) {
 			return bufferSource;
@@ -71,5 +91,6 @@ public class MixinEntityRenderDispatcher {
 									  CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentEntity(0);
 		CapturedRenderingState.INSTANCE.setUniqueEntityId(0);
+		CapturedRenderingState.INSTANCE.velocityInfoEdit.popPose();
 	}
 }

@@ -114,6 +114,9 @@ public class MixinLevelRenderer {
 	private void iris$endLevelRender(PoseStack poseStack, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo callback) {
 		HandRenderer.INSTANCE.renderTranslucent(poseStack, tickDelta, camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
+		CapturedRenderingState.INSTANCE.velocityInfoEdit = new PoseStack();
+		CapturedRenderingState.INSTANCE.velocityInfoEdit.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+		CapturedRenderingState.INSTANCE.velocityInfoEdit.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
 		pipeline.finalizeLevelRendering();
 		pipeline = null;
 	}
