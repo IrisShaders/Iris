@@ -14,6 +14,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SolidBucketItem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,7 +31,7 @@ public abstract class MixinItemRenderer {
 	private void changeId(ItemStack pItemRenderer0, ItemTransforms.TransformType pItemTransforms$TransformType1, boolean pBoolean2, PoseStack pPoseStack3, MultiBufferSource pMultiBufferSource4, int pInt5, int pInt6, BakedModel pBakedModel7, CallbackInfo ci) {
 		if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
 
-		if (pItemRenderer0.getItem() instanceof BlockItem blockItem) {
+		if (pItemRenderer0.getItem() instanceof BlockItem blockItem && !(pItemRenderer0.getItem() instanceof SolidBucketItem)) {
 			if (BlockRenderingSettings.INSTANCE.getBlockStateIds() == null) return;
 
 			previousBeValue = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
