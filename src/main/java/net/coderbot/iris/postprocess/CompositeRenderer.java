@@ -236,8 +236,6 @@ public class CompositeRenderer {
 	}
 
 	public void renderAll() {
-		RenderSystem.disableBlend();
-
 		FullScreenQuadRenderer.INSTANCE.begin();
 		com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 
@@ -278,6 +276,8 @@ public class CompositeRenderer {
 			renderPass.program.use();
 			if (renderPass.blendModeOverride != null) {
 				renderPass.blendModeOverride.apply();
+			} else {
+				GL15C.glDisable(GL15C.GL_BLEND);
 			}
 
 			// program is the identifier for composite :shrug:
