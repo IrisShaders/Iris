@@ -45,7 +45,7 @@ public abstract class MixinItemRenderer {
 		}
 	}
 
-	@Inject(method = "render", at = @At(value = "TAIL"))
+	@Inject(method = "render", at = @At(value = "RETURN"))
 	private void changeId2(CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(previousBeValue);
