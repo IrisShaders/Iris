@@ -51,6 +51,8 @@
     "MixinUniform",
     "MixinVertexBuffer",
     "entity_render_context.MixinBlockEntityRenderDispatcher",
+    "entity_render_context.MixinCapeLayer",
+    "entity_render_context.MixinElytraLayer",
     "entity_render_context.MixinEntityRenderDispatcher",
     "entity_render_context.MixinHorseArmorLayer",
     "entity_render_context.MixinHumanoidArmorLayer",
