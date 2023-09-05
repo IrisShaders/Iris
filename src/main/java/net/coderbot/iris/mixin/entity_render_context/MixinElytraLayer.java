@@ -26,8 +26,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(ElytraLayer.class)
 public abstract class MixinElytraLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
-    private static final NamespacedId CAPE_LOCATION = new NamespacedId("minecraft", "player_cape");
-
     public MixinElytraLayer(RenderLayerParent<T, M> pRenderLayer0) {
         super(pRenderLayer0);
     }
@@ -36,7 +34,9 @@ public abstract class MixinElytraLayer<T extends LivingEntity, M extends EntityM
     private void changeId(PoseStack pElytraLayer0, MultiBufferSource pMultiBufferSource1, int pInt2, T pLivingEntity3, float pFloat4, float pFloat5, float pFloat6, float pFloat7, float pFloat8, float pFloat9, CallbackInfo ci, ItemStack lvItemStack11, ResourceLocation lvResourceLocation12) {
         if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
 
-        CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getItemIds().applyAsInt(CAPE_LOCATION));
+        ResourceLocation location = Registry.ITEM.getKey(Items.ELYTRA);
+
+        CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
     }
 
     @Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/LivingEntity;FFFFFF)V", at = @At(value = "RETURN"))
