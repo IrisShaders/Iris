@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.entity.layers.HorseArmorLayer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.item.BlockItem;
@@ -26,7 +27,7 @@ public class MixinHorseArmorLayer {
 	private void changeId(PoseStack pHorseArmorLayer0, MultiBufferSource pMultiBufferSource1, int pInt2, Horse pHorse3, float pFloat4, float pFloat5, float pFloat6, float pFloat7, float pFloat8, float pFloat9, CallbackInfo ci) {
 		if (BlockRenderingSettings.INSTANCE.getItemIds() == null || !(pHorse3.getArmor().getItem() instanceof HorseArmorItem)) return;
 
-		ResourceLocation location = Registry.ITEM.getKey((pHorse3.getArmor().getItem()));
+		ResourceLocation location = BuiltInRegistries.ITEM.getKey((pHorse3.getArmor().getItem()));
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
 	}
 

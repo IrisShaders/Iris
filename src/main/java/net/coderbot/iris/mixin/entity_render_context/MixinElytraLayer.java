@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.entity.layers.ElytraLayer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -47,7 +48,7 @@ public abstract class MixinElytraLayer<T extends LivingEntity, M extends EntityM
             return;
         }
 
-        ResourceLocation location = Registry.ITEM.getKey(Items.ELYTRA);
+        ResourceLocation location = BuiltInRegistries.ITEM.getKey(Items.ELYTRA);
 
         CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
     }
