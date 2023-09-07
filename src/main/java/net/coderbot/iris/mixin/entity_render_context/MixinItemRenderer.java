@@ -20,19 +20,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(ItemRenderer.class)
+@Mixin(value = ItemRenderer.class, priority = 1010)
 public abstract class MixinItemRenderer {
 	@Unique
 	private int previousBeValue;
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemBlockRenderTypes;getRenderType(Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/client/renderer/RenderType;"))
+	@Inject(method = "render", at = @At(value = "HEAD"))
 	private void changeId(ItemStack pItemRenderer0, ItemDisplayContext pItemTransforms$TransformType1, boolean pBoolean2, PoseStack pPoseStack3, MultiBufferSource pMultiBufferSource4, int pInt5, int pInt6, BakedModel pBakedModel7, CallbackInfo ci) {
-		iris$setupId(pItemRenderer0);
-	}
-
-	// Attempt Indium support
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/BlockEntityWithoutLevelRenderer;renderByItem(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V"))
-	private void changeId2(ItemStack pItemRenderer0, ItemDisplayContext pItemTransforms$TransformType1, boolean pBoolean2, PoseStack pPoseStack3, MultiBufferSource pMultiBufferSource4, int pInt5, int pInt6, BakedModel pBakedModel7, CallbackInfo ci) {
 		iris$setupId(pItemRenderer0);
 	}
 
@@ -55,7 +49,7 @@ public abstract class MixinItemRenderer {
 	}
 
 	@Inject(method = "render", at = @At(value = "RETURN"))
-	private void changeId2(CallbackInfo ci) {
+	private void changeId3(CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(previousBeValue);
 		previousBeValue = 0;
