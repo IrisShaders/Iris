@@ -68,5 +68,6 @@ public class MixinEntityRenderDispatcher {
 									  PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									  CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentEntity(0);
+		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 	}
 }

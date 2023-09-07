@@ -125,6 +125,14 @@ public class IrisExclusiveUniforms {
 					return 0;
 				}
 			});
+			uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "cloudHeight", () -> {
+				if (level != null) {
+					return level.effects().getCloudHeight();
+				} else {
+					return 192.0;
+				}
+			});
+
 			uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "heightLimit", () -> {
 				if (level != null) {
 					return level.dimensionType().height();
