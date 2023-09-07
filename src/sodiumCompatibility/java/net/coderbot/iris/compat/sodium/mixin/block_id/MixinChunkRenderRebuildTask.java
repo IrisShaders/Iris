@@ -28,7 +28,6 @@ import net.minecraft.world.level.material.FluidState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -74,24 +73,36 @@ public class MixinChunkRenderRebuildTask {
 		}
 	}
 
-	@Redirect(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/renderer/block/BlockModelShaper;getBlockModel(Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/client/resources/model/BakedModel;"))
-	private BakedModel iris$wrapGetBlockLayer(BlockModelShaper instance, BlockState blockState, ChunkBuildContext context) {
+	@Inject(method = "performBuild", at = @At(value = "INVOKE",
+			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getChunkRenderType(" +
+						"Lnet/minecraft/world/level/block/state/BlockState;" +
+					")Lnet/minecraft/client/renderer/RenderType;"), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void iris$wrapGetBlockLayer(ChunkBuildContext context,
+										CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult> cir,
+										ChunkRenderData.Builder renderData, VisGraph occluder, ChunkRenderBounds.Builder bounds, ChunkBuildBuffers buffers,
+										BlockRenderCache cacheLocal,
+										WorldSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
+										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, BlockRenderContext context2,
+										int relY, int relZ, int relX, BlockState blockState) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(blockState, ExtendedDataHelper.BLOCK_RENDER_TYPE);
 		}
-
-		return instance.getBlockModel(blockState);
 	}
 
-	@Redirect(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
-			target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/pipeline/FluidRenderer;render(Lme/jellysquid/mods/sodium/client/world/WorldSlice;Lnet/minecraft/world/level/material/FluidState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildBuffers;)V"))
-	private void iris$wrapGetFluidLayer(FluidRenderer instance, WorldSlice h2, FluidState fluidState, BlockPos h4, BlockPos north1, ChunkBuildBuffers buffers) {
-		if (buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE);
+	@Inject(method = "performBuild", at = @At(value = "INVOKE",
+			target = "net/minecraft/client/renderer/ItemBlockRenderTypes.getRenderLayer(" +
+						"Lnet/minecraft/world/level/material/FluidState;" +
+					")Lnet/minecraft/client/renderer/RenderType;"), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void iris$wrapGetFluidLayer(ChunkBuildContext context,
+										CancellationSource cancellationSource, CallbackInfoReturnable<ChunkBuildResult> cir,
+										ChunkRenderData.Builder renderData, VisGraph occluder, ChunkRenderBounds.Builder bounds, ChunkBuildBuffers buffers,
+										BlockRenderCache cacheLocal,
+										WorldSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
+										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, BlockRenderContext context2,
+										int relY, int relZ, int relX, BlockState blockState, boolean rendered, FluidState fluidState) {
+		if (context.buffers instanceof ChunkBuildBuffersExt) {
+			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE);
 		}
-
-		instance.render(h2, fluidState, h4, north1, buffers);
 	}
 
 	@Inject(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;",
