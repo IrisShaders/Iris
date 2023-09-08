@@ -4,10 +4,8 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
-import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.gl.program.ProgramBuilder;
-import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.postprocess.FullScreenQuadRenderer;
 import net.coderbot.iris.shaderpack.StringPair;
@@ -16,7 +14,6 @@ import net.coderbot.iris.vendored.joml.Matrix4f;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -54,7 +51,7 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		String vertexSource;
 		String source;
 		try {
-			vertexSource = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/colorSpace.vsh"))), StandardCharsets.UTF_8);
+			vertexSource = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/defaultComposite.vsh"))), StandardCharsets.UTF_8);
 			source = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/colorSpace.csh"))), StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			throw new RuntimeException(e);

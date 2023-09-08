@@ -9,13 +9,13 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 
 public class GlSampler extends GlResource {
-	public GlSampler(boolean linear, boolean mipmapped, boolean shadow, boolean hardwareShadow) {
+	public GlSampler(boolean linear, boolean wrap, boolean mipmapped, boolean shadow, boolean hardwareShadow) {
 		super(IrisRenderSystem.genSampler());
 
 		IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_MIN_FILTER, linear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
 		IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_MAG_FILTER, linear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
-		IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-		IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+		IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_WRAP_S, wrap ? GL13C.GL_REPEAT : GL13C.GL_CLAMP_TO_EDGE);
+		IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_WRAP_T, wrap ? GL13C.GL_REPEAT : GL13C.GL_CLAMP_TO_EDGE);
 
 		if (mipmapped) {
 			IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_MIN_FILTER, linear ? GL11C.GL_LINEAR_MIPMAP_LINEAR : GL11C.GL_NEAREST_MIPMAP_NEAREST);

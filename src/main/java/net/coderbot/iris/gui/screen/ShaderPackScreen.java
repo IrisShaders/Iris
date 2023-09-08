@@ -77,7 +77,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private MutableComponent developmentComponent;
 	private MutableComponent updateComponent;
 
-	private boolean guiHidden = false;
+	public boolean guiHidden = false;
 	private float guiButtonHoverTimer = 0.0f;
 
 	public ShaderPackScreen(Screen parent) {
@@ -220,8 +220,10 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		if (inWorld) {
 			this.shaderPackList.setRenderBackground(false);
+			this.shaderPackList.setRenderTopAndBottom(false);
 			if (shaderOptionList != null) {
 				this.shaderOptionList.setRenderBackground(false);
+				this.shaderOptionList.setRenderTopAndBottom(false);
 			}
 		}
 

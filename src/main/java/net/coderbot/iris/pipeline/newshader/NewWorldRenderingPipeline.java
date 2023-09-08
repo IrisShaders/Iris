@@ -35,6 +35,7 @@ import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -80,6 +81,7 @@ import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.coderbot.iris.texture.pbr.PBRTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import net.coderbot.iris.texture.pbr.PBRType;
+import net.coderbot.iris.uisupport.GaussianBlurRenderer;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
@@ -147,6 +149,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final CenterDepthSampler centerDepthSampler;
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 	private final ColorSpaceConverter colorSpaceConverter;
+	private final GaussianBlurRenderer gaussianBlurRenderer;
 
 	private final ImmutableSet<Integer> flippedBeforeShadow;
 	private final ImmutableSet<Integer> flippedAfterPrepare;
@@ -539,6 +542,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
 			}
 		}
+
+		gaussianBlurRenderer = new GaussianBlurRenderer(main.width, main.height);
 
 		currentColorSpace = IrisVideoSettings.colorSpace;
 	}
@@ -948,6 +953,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				packDirectives.getRenderTargetDirectives());
 			this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
 				packDirectives.getRenderTargetDirectives());
+			gaussianBlurRenderer.rebuildProgram(main.width, main.height);
+
 		}
 
 		if (changed || IrisVideoSettings.colorSpace != currentColorSpace) {
@@ -1090,6 +1097,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		centerDepthSampler.sampleCenterDepth();
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
+		if (Minecraft.getInstance().screen instanceof ShaderPackScreen screen && !screen.guiHidden) {
+			gaussianBlurRenderer.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
+		}
 		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
 	}
 
