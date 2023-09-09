@@ -149,7 +149,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final CenterDepthSampler centerDepthSampler;
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 	private final ColorSpaceConverter colorSpaceConverter;
-	private final GaussianBlurRenderer gaussianBlurRenderer;
+	public final GaussianBlurRenderer gaussianBlurRenderer;
 
 	private final ImmutableSet<Integer> flippedBeforeShadow;
 	private final ImmutableSet<Integer> flippedAfterPrepare;
@@ -543,7 +543,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			}
 		}
 
-		gaussianBlurRenderer = new GaussianBlurRenderer(main.width, main.height);
+		gaussianBlurRenderer = new GaussianBlurRenderer(main.width, main.height, updateNotifier);
 
 		currentColorSpace = IrisVideoSettings.colorSpace;
 	}
@@ -1098,8 +1098,19 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
 		if (Minecraft.getInstance().screen instanceof ShaderPackScreen screen && !screen.guiHidden) {
-			gaussianBlurRenderer.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
+			gaussianBlurRenderer.setBlurAmount(1.0f);
+			if (screen.isOptionMenuOpen()) {
+				gaussianBlurRenderer.setBlurAmount(0.5f);
+				gaussianBlurRenderer.setFrostAmount(0.0f);
+			} else {
+				gaussianBlurRenderer.setBlurAmount(1.0f);
+				gaussianBlurRenderer.setFrostAmount(1.0f);
+			}
+		} else {
+			gaussianBlurRenderer.setBlurAmount(0.0f);
+			gaussianBlurRenderer.setFrostAmount(0.0f);
 		}
+		gaussianBlurRenderer.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
 		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
 	}
 

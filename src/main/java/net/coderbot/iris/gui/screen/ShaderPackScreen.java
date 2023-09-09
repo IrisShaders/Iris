@@ -102,6 +102,10 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		refreshForChangedPack();
 	}
 
+	public boolean isOptionMenuOpen() {
+		return optionMenuOpen;
+	}
+
 	@Override
 	public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
 		if (this.minecraft.level == null) {

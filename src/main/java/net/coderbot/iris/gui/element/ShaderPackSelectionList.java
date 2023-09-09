@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
+import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -26,6 +27,12 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 	public ShaderPackSelectionList(ShaderPackScreen screen, Minecraft client, int width, int height, int top, int bottom, int left, int right) {
 		super(client, width, height, top, bottom, left, right, 20);
+
+		if (Iris.getPipelineManager().getPipelineNullable() instanceof NewWorldRenderingPipeline pipeline) {
+			int lvInt17 = this.x0 + this.width / 2 - this.getRowWidth() / 2;
+			int lvInt18 = this.x0 + this.width / 2 + this.getRowWidth() / 2;
+			pipeline.gaussianBlurRenderer.noiseBounds.set(getRowLeft(), y0, getRowLeft() + getRowWidth(), y0 + height);
+		}
 
 		this.screen = screen;
 		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());

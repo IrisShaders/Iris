@@ -29,6 +29,9 @@ const float WEIGHTS[10] = float[10](
 );
 
 
+uniform float blurAmount;
+uniform float frostAmount;
+
 uniform vec2 texSize;
 
 // blurDirection is:
@@ -38,17 +41,33 @@ uniform vec2 texSize;
 // pixelCoord is in [0..1]
 vec4 blur(in sampler2D sourceTexture, vec2 blurDirection, vec2 pixelCoord)
 {
+    float blurAm = 0.5;
     vec4 result = vec4(0.0);
     for (int i = 0; i < SAMPLE_COUNT; ++i)
     {
-        vec2 offset = blurDirection * OFFSETS[i] / texSize;
+        vec2 offset = blurDirection * OFFSETS[i] * (blurAm * 2) / texSize;
         float weight = WEIGHTS[i];
         result += texture(sourceTexture, pixelCoord + offset) * weight;
     }
     return result;
 }
+
+float random2 (in vec2 st) {
+    return fract(sin(dot(st.xy,vec2(12.9898,78.233)))* 43758.5453123);
+}
+
+vec2 myPattern(in vec2 uv){
+	vec2 uv2 = uv;
+    uv2.y = uv2.y + 1.0 * (random2(uv));
+    uv2.x = uv2.x + 1.0 * (random2(uv + 0.05));
+    return uv2 - uv;
+}
+
 uniform sampler2D readImage;
+uniform sampler2D noisetex;
 uniform vec2 direction;
+
+uniform vec4 noiseBounds;
 
 layout (location = 0) out vec4 color;
 
@@ -58,7 +77,17 @@ void main() {
             color = texture(readImage, gl_FragCoord.xy / texSize);
             return;
         }*/
+    float blurAm = frostAmount;
 
+      //if (gl_FragCoord.x > noiseBounds.x && gl_FragCoord.y > noiseBounds.y && gl_FragCoord.x < noiseBounds.z && gl_FragCoord.y < noiseBounds.w) {
+      vec2 p = size;
+            for (int i = 0; i < 3; i ++) p += myPattern(p) * 0.005;
+            for (int i = 0; i < 3; i ++) p -= myPattern(p) * 0.005;
+            size = mix(size, p, blurAm);
+      //}
+
+        vec4 originalImage = texture(readImage, gl_FragCoord.xy / texSize);
         float distance = (size.y > 0.5 ? -distance(1.0, size.y) : -distance(0, size.y)) * 3;
-        color = blur(readImage, direction, gl_FragCoord.xy / texSize) * mix(vec4(0.6, 0.6, 0.6, 1.0), vec4(0.45, 0.45, 0.45, 1.0), distance);
+        color = blur(readImage, direction, size) * mix(vec4(0.6, 0.6, 0.6, 1.0), vec4(0.45, 0.45, 0.45, 1.0), distance);
+        color = mix(originalImage, color, blurAmount);
 }
