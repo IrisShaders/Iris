@@ -198,12 +198,12 @@ public class MixinLevelRenderer {
 	}
 
 
-	@Inject(method = "renderChunkLayer", at = @At("HEAD"))
+	@Inject(method = "renderSectionLayer", at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderType renderType, PoseStack poseStack, double d, double e, double f, Matrix4f projectionMatrix, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.fromTerrainRenderType(renderType));
 	}
 
-	@Inject(method = "renderChunkLayer", at = @At("RETURN"))
+	@Inject(method = "renderSectionLayer", at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderType renderType, PoseStack poseStack, double d, double e, double f, Matrix4f projectionMatrix, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}

@@ -16,19 +16,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPacketListener.class)
 public class MixinClientPacketListener {
-	@Shadow
-	private Minecraft minecraft;
-
 	@Inject(method = "handleLogin", at = @At("TAIL"))
 	private void iris$showUpdateMessage(ClientboundLoginPacket a, CallbackInfo ci) {
-		if (this.minecraft.player == null) {
+		if (Minecraft.getInstance().player == null) {
 			return;
 		}
 
 		Iris.getUpdateChecker().getUpdateMessage().ifPresent(msg ->
-			this.minecraft.player.displayClientMessage(msg, false));
+			Minecraft.getInstance().player.displayClientMessage(msg, false));
 
 		Iris.getStoredError().ifPresent(e ->
-			this.minecraft.player.displayClientMessage(Component.translatable(e instanceof ShaderCompileException ? "iris.load.failure.shader" : "iris.load.failure.generic").append(Component.literal("Copy Info").withStyle(arg -> arg.withUnderlined(true).withColor(ChatFormatting.BLUE).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, e.getMessage())))), false));
+			Minecraft.getInstance().player.displayClientMessage(Component.translatable(e instanceof ShaderCompileException ? "iris.load.failure.shader" : "iris.load.failure.generic").append(Component.literal("Copy Info").withStyle(arg -> arg.withUnderlined(true).withColor(ChatFormatting.BLUE).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, e.getMessage())))), false));
 	}
 }
