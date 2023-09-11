@@ -533,11 +533,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				}
 			};
 		} else {
-			if (IrisRenderSystem.supportsCompute()) {
-				colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			} else {
+			// TODO: Fix grid appearing on some devices with compute converter
+			//if (IrisRenderSystem.supportsCompute()) {
+			//	colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
+			//} else {
 				colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			}
+			//}
 		}
 
 		currentColorSpace = IrisVideoSettings.colorSpace;
