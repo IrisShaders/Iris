@@ -30,12 +30,6 @@ public abstract class MixinItemRenderer {
 		iris$setupId(pItemRenderer0);
 	}
 
-	// Attempt Indium support
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/BlockEntityWithoutLevelRenderer;renderByItem(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/client/renderer/block/model/ItemTransforms$TransformType;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V"))
-	private void changeId2(ItemStack pItemRenderer0, ItemTransforms.TransformType pItemTransforms$TransformType1, boolean pBoolean2, PoseStack pPoseStack3, MultiBufferSource pMultiBufferSource4, int pInt5, int pInt6, BakedModel pBakedModel7, CallbackInfo ci) {
-		iris$setupId(pItemRenderer0);
-	}
-
 	@Unique
 	private void iris$setupId(ItemStack pItemRenderer0) {
 		if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
