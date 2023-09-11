@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.GuiUtil;
 import net.coderbot.iris.gui.NavigationController;
+import net.coderbot.iris.gui.OldImageButton;
 import net.coderbot.iris.gui.element.ShaderPackOptionList;
 import net.coderbot.iris.gui.element.ShaderPackSelectionList;
 import net.coderbot.iris.gui.element.widget.AbstractElementWidget;
@@ -284,7 +285,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				x = (int) (endOfLastButton + (freeSpace / 2.0f)) - 10;
 			}
 
-			ImageButton showHideButton = new ImageButton(
+			OldImageButton showHideButton = new OldImageButton(
 				x, this.height - 39,
 				20, 20,
 				this.guiHidden ? 20 : 0, 146, 20,
