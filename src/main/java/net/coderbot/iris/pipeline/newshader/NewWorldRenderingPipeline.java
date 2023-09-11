@@ -1051,6 +1051,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void beginHand() {
+		centerDepthSampler.sampleCenterDepth();
+
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content excluding the hand, as required.
 		renderTargets.copyPreHandDepth();
@@ -1088,7 +1090,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void finalizeLevelRendering() {
 		isRenderingWorld = false;
-		centerDepthSampler.sampleCenterDepth();
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
 		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
