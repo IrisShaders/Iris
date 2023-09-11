@@ -538,11 +538,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				}
 			};
 		} else {
-			if (IrisRenderSystem.supportsCompute()) {
-				colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			} else {
+			// TODO: Fix grid appearing on some devices with compute converter
+			//if (IrisRenderSystem.supportsCompute()) {
+			//	colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
+			//} else {
 				colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			}
+			//}
 		}
 
 		currentColorSpace = IrisVideoSettings.colorSpace;
@@ -1057,6 +1058,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void beginHand() {
+		centerDepthSampler.sampleCenterDepth();
+
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content excluding the hand, as required.
 		renderTargets.copyPreHandDepth();
@@ -1094,7 +1097,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void finalizeLevelRendering() {
 		isRenderingWorld = false;
-		centerDepthSampler.sampleCenterDepth();
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
 		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());

@@ -124,7 +124,7 @@ public class SodiumTerrainPipeline {
 
 	private static final Supplier<Optional<AlphaTest>> terrainCutoutDefault = () -> Optional.of(AlphaTests.ONE_TENTH_ALPHA);
 	private static final Supplier<Optional<AlphaTest>> translucentDefault = () -> Optional.of(AlphaTest.ALWAYS);
-	private static final Supplier<Optional<AlphaTest>> shadowDefault = () -> Optional.of(AlphaTests.NON_ZERO_ALPHA);
+	private static final Supplier<Optional<AlphaTest>> shadowDefault = () -> Optional.of(AlphaTests.ONE_TENTH_ALPHA);
 
 	public void patchShaders(ChunkVertexType vertexType) {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(true, true, false, true, true);
