@@ -199,6 +199,11 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	@Override
+	public void renderTransparentBackground(GuiGraphics pScreen0) {
+		// Nope
+	}
+
+	@Override
 	protected void init() {
 		super.init();
 		int bottomCenter = this.width / 2 - 50;
