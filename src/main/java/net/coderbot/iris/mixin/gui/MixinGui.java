@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
@@ -26,6 +27,10 @@ import java.util.List;
 public class MixinGui {
 	@Shadow @Final private Minecraft minecraft;
 
+	@Shadow
+	@Final
+	private DebugScreenOverlay debugOverlay;
+
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
 	public void iris$handleHudHidingScreens(GuiGraphics pGui0, float pFloat1, CallbackInfo ci) {
 		Screen screen = this.minecraft.screen;
@@ -39,7 +44,7 @@ public class MixinGui {
 	@Inject(method = "render", at = @At("RETURN"))
 	public void iris$displayBigSodiumWarning(GuiGraphics guiGraphics, float pFloat1, CallbackInfo ci) {
 		if (Iris.isSodiumInstalled()
-				|| Minecraft.getInstance().options.renderDebug
+				|| debugOverlay.showDebugScreen()
 				|| !Iris.getCurrentPack().isPresent()) {
 			return;
 		}

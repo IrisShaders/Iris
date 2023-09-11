@@ -22,6 +22,7 @@ import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceMetadata;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
@@ -90,9 +91,9 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		}
 		Resource resource = optionalResource.get();
 
-		AnimationMetadataSection animationMetadata;
+		ResourceMetadata animationMetadata;
 		try {
-			animationMetadata = resource.metadata().getSection(AnimationMetadataSection.SERIALIZER).orElse(AnimationMetadataSection.EMPTY);
+			animationMetadata = resource.metadata();
 		} catch (Exception e) {
 			Iris.logger.error("Unable to parse metadata from {}", pbrImageLocation, e);
 			return null;
@@ -108,7 +109,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 
 		int imageWidth = nativeImage.getWidth();
 		int imageHeight = nativeImage.getHeight();
-		FrameSize frameSize = animationMetadata.calculateFrameSize(imageWidth, imageHeight);
+		FrameSize frameSize = animationMetadata.getSection(AnimationMetadataSection.SERIALIZER).orElse(AnimationMetadataSection.EMPTY).calculateFrameSize(imageWidth, imageHeight);
 		int frameWidth = frameSize.width();
 		int frameHeight = frameSize.height();
 		if (!Mth.isMultipleOf(imageWidth, frameWidth) || !Mth.isMultipleOf(imageHeight, frameHeight)) {
@@ -168,7 +169,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	protected static class PBRSpriteContents extends SpriteContents implements CustomMipmapGenerator.Provider {
 		protected final PBRType pbrType;
 
-		public PBRSpriteContents(ResourceLocation name, FrameSize size, NativeImage image, AnimationMetadataSection metadata, PBRType pbrType) {
+		public PBRSpriteContents(ResourceLocation name, FrameSize size, NativeImage image, ResourceMetadata metadata, PBRType pbrType) {
 			super(name, size, image, metadata);
 			this.pbrType = pbrType;
 		}

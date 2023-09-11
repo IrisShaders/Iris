@@ -544,7 +544,7 @@ public class ShadowRenderer {
 
 		IrisRenderSystem.restorePlayerProjection();
 
-		debugStringTerrain = ((LevelRenderer) levelRenderer).getChunkStatistics();
+		debugStringTerrain = ((LevelRenderer) levelRenderer).getSectionStatistics();
 
 		levelRenderer.getLevel().getProfiler().popPush("generate mipmaps");
 

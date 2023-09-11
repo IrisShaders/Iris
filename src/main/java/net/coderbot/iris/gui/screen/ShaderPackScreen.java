@@ -108,7 +108,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	@Override
 	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
 		if (this.minecraft.level == null) {
-			this.renderBackground(guiGraphics);
+			this.renderBackground(guiGraphics, mouseX, mouseY, delta);
 		} else if (!this.guiHidden) {
 			guiGraphics.fillGradient(0, 0, width, height, 0x4F232323, 0x4F232323);
 		}
