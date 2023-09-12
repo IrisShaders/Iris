@@ -162,7 +162,7 @@ public class SodiumTerrainPipeline {
 		    // Transform the vertex position into model-view-projection space
 		    gl_Position = iris_ProjectionMatrix * iris_ModelViewMatrix * vec4(position, 1.0);
 
-		    v_ColorModulator = _vert_color * vec4(_sample_lightmap(_vert_tex_light_coord), 1.0);
+		    v_ColorModulator = vec4((_vert_color.rgb * _vert_color.a), 1) * vec4(_sample_lightmap(_vert_tex_light_coord), 1.0);
 		    v_TexCoord = _vert_tex_diffuse_coord;
 
 		    v_MaterialMipBias = _material_mip_bias(_material_params);
