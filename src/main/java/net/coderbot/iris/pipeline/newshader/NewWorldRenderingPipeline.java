@@ -493,6 +493,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.customUniforms.optimise();
 		boolean hasRun = false;
 
+		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
+			programSet.getPackDirectives().getRenderTargetDirectives());
+		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
+			programSet.getPackDirectives().getRenderTargetDirectives());
+
 		for (ComputeProgram program : setup) {
 			if (program != null) {
 				if (!hasRun) {
@@ -537,11 +542,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		currentColorSpace = IrisVideoSettings.colorSpace;
-
-		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
-			programSet.getPackDirectives().getRenderTargetDirectives());
-		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
-			programSet.getPackDirectives().getRenderTargetDirectives());
 	}
 
 	private ComputeProgram[] createShadowComputes(ComputeSource[] compute, ProgramSet programSet) {
