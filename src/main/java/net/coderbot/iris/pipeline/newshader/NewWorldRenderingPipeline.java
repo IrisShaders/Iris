@@ -448,11 +448,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		BlockRenderingSettings.INSTANCE.setSeparateEntityDraws(programSet.getPackDirectives().shouldUseSeparateEntityDraws());
 		BlockRenderingSettings.INSTANCE.setUseExtendedVertexFormat(true);
 
-		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
-				programSet.getPackDirectives().getRenderTargetDirectives());
-		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
-				programSet.getPackDirectives().getRenderTargetDirectives());
-
 		if (shadowRenderTargets == null && shadowDirectives.isShadowEnabled() == OptionalBoolean.TRUE) {
 			shadowRenderTargets = new ShadowRenderTargets(this, shadowMapResolution, shadowDirectives);
 		}
@@ -542,6 +537,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		}
 
 		currentColorSpace = IrisVideoSettings.colorSpace;
+
+		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
+			programSet.getPackDirectives().getRenderTargetDirectives());
+		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
+			programSet.getPackDirectives().getRenderTargetDirectives());
 	}
 
 	private ComputeProgram[] createShadowComputes(ComputeSource[] compute, ProgramSet programSet) {
