@@ -42,7 +42,7 @@ public abstract class MixinCloudRenderer {
 	protected abstract void rebuildGeometry(BufferBuilder bufferBuilder, int cloudDistance, int centerCellX, int centerCellZ);
 
 	@Shadow
-	private ShaderInstance clouds;
+	private ShaderInstance shader;
 
 	@Shadow
 	protected abstract void applyFogModifiers(ClientLevel world, FogRenderer.FogData fogData, LocalPlayer player, int cloudDistance, float tickDelta);
@@ -198,6 +198,6 @@ public abstract class MixinCloudRenderer {
 			return ((CoreWorldRenderingPipeline) pipeline).getShaderMap().getShader(ShaderKey.CLOUDS_SODIUM);
 		}
 
-		return clouds;
+		return shader;
 	}
 }
