@@ -130,6 +130,8 @@ public class CompositeRenderer {
 			// Flip the buffers that this shader wrote to, and set pass width and height
 			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
 
+			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
+
 			for (int buffer : drawBuffers) {
 				RenderTarget target = renderTargets.get(buffer);
 				if ((passWidth > 0 && passWidth != target.getWidth()) || (passHeight > 0 && passHeight != target.getHeight())) {
@@ -146,8 +148,6 @@ public class CompositeRenderer {
 				bufferFlipper.flip(buffer);
 				flippedAtLeastOnce.add(buffer);
 			}
-
-			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
 			explicitFlips.forEach((buffer, shouldFlip) -> {
 				if (shouldFlip) {
@@ -308,6 +308,8 @@ public class CompositeRenderer {
 	}
 
 	private static void setupMipmapping(net.coderbot.iris.rendertarget.RenderTarget target, boolean readFromAlt) {
+		if (target == null) return;
+
 		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer

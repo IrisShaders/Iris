@@ -448,11 +448,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		BlockRenderingSettings.INSTANCE.setSeparateEntityDraws(programSet.getPackDirectives().shouldUseSeparateEntityDraws());
 		BlockRenderingSettings.INSTANCE.setUseExtendedVertexFormat(true);
 
-		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
-				programSet.getPackDirectives().getRenderTargetDirectives());
-		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
-				programSet.getPackDirectives().getRenderTargetDirectives());
-
 		if (shadowRenderTargets == null && shadowDirectives.isShadowEnabled() == OptionalBoolean.TRUE) {
 			shadowRenderTargets = new ShadowRenderTargets(this, shadowMapResolution, shadowDirectives);
 		}
@@ -497,6 +492,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// first optimization pass
 		this.customUniforms.optimise();
 		boolean hasRun = false;
+
+		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
+			programSet.getPackDirectives().getRenderTargetDirectives());
+		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
+			programSet.getPackDirectives().getRenderTargetDirectives());
 
 		for (ComputeProgram program : setup) {
 			if (program != null) {
