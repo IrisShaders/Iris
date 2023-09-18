@@ -62,7 +62,7 @@ public class IrisSamplers {
 
 			IntSupplier texture = () -> {
 				ImmutableSet<Integer> flippedBuffers = flipped.get();
-				RenderTarget target = renderTargets.get(index);
+				RenderTarget target = renderTargets.getOrCreate(index);
 
 				if (flippedBuffers.contains(index)) {
 					return target.getAltTexture();
@@ -70,8 +70,6 @@ public class IrisSamplers {
 					return target.getMainTexture();
 				}
 			};
-
-			RenderTarget target = renderTargets.get(index);
 
 			final String name = "colortex" + i;
 
