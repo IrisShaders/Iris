@@ -131,7 +131,7 @@ public class FinalPassRenderer {
 			}
 
 			SwapPass swap = new SwapPass();
-			RenderTarget target1 = renderTargets.get(target);
+			RenderTarget target1 = renderTargets.getOrCreate(target);
 			swap.target = target;
 			swap.width = target1.getWidth();
 			swap.height = target1.getHeight();
@@ -295,6 +295,8 @@ public class FinalPassRenderer {
 	}
 
 	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
+		if (target == null) return;
+
 		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
@@ -319,6 +321,7 @@ public class FinalPassRenderer {
 	}
 
 	private static void resetRenderTarget(RenderTarget target) {
+		if (target == null) return;
 		// Resets the sampling mode of the given render target and then unbinds it to prevent accidental sampling of it
 		// elsewhere.
 		int filter = GL20C.GL_LINEAR;
