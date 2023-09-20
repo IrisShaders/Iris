@@ -45,6 +45,7 @@ public class ClearPassCreator {
 				}
 
 				RenderTarget target = renderTargets.get(buffer);
+				if (target == null) return;
 				Vector4f clearColor = settings.getClearColor().orElse(defaultClearColor);
 				clearByColor.computeIfAbsent(new Vector2i(target.getWidth(), target.getHeight()), size -> new HashMap<>()).computeIfAbsent(new ClearPassInformation(clearColor, target.getWidth(), target.getHeight()), color -> new IntArrayList()).add(buffer);
 			}
