@@ -45,8 +45,8 @@ import org.eclipse.jgit.lib.Constants;
 public class Buildscript extends SimpleFabricProject {
 	static final boolean SODIUM = true;
 	static final boolean CUSTOM_SODIUM = true;
-	static final String MC_VERSION = "1.20.2-pre2";
-	static final String customSodiumName = "sodium-fabric-mc1.20.2-pre1-0.5.2+git.a275424.jar";
+	static final String MC_VERSION = "1.20.2-rc2";
+	static final String customSodiumName = "sodium-fabric-mc1.20.2-rc2-0.5.3+git.63b0ad2.jar";
 
 	private static final String[] SOURCE_SETS = new String[] {
 		"main",
