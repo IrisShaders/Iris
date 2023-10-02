@@ -46,7 +46,6 @@
     "MixinShaderInstance",
     "MixinTheEndPortalRenderer",
     "MixinTitleScreen",
-    "MixinTweakFarPlane",
     "MixinWindow",
     "MixinSystemReport",
     "MixinUniform",
