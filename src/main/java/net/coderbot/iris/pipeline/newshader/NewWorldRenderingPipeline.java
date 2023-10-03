@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
@@ -75,6 +76,7 @@ import net.coderbot.iris.shaderpack.ShaderPack;
 import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.shadows.ShadowCompositeRenderer;
+import net.coderbot.iris.shadows.ShadowMatrices;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.texture.TextureInfoCache;
 import net.coderbot.iris.texture.format.TextureFormat;
@@ -82,7 +84,9 @@ import net.coderbot.iris.texture.format.TextureFormatLoader;
 import net.coderbot.iris.texture.pbr.PBRTextureHolder;
 import net.coderbot.iris.texture.pbr.PBRTextureManager;
 import net.coderbot.iris.texture.pbr.PBRType;
+import net.coderbot.iris.uniforms.CameraUniforms;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.CelestialUniforms;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.FrameUpdateNotifier;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
@@ -93,8 +97,13 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.joml.FrustumIntersection;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3d;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.ARBClearTexture;
 import org.lwjgl.opengl.GL15C;
@@ -123,6 +132,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final boolean separateHardwareSamplers;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
 	private final ProgramFallbackResolver resolver;
+	public PoseStack shadowModelView;
+	public Matrix4f shadowProjection;
 
 	private ShadowRenderTargets shadowRenderTargets;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
@@ -874,10 +885,95 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
 	}
 
+	private static float getSkyAngle() {
+		return Minecraft.getInstance().level.getTimeOfDay(CapturedRenderingState.INSTANCE.getTickDelta());
+	}
+
+	private static float getSunAngle() {
+		float skyAngle = getSkyAngle();
+
+		if (skyAngle < 0.75F) {
+			return skyAngle + 0.25F;
+		} else {
+			return skyAngle - 0.75F;
+		}
+	}
+
+	private static float getShadowAngle() {
+		float shadowAngle = getSunAngle();
+
+		if (!CelestialUniforms.isDay()) {
+			shadowAngle -= 0.5F;
+		}
+
+		return shadowAngle;
+	}
+
+	private static Matrix4f SetProjectionRange(Matrix4f matProj, float zNear, float zFar) {
+		Matrix4f newProj = new Matrix4f(matProj);
+		newProj.m22(-(zFar + zNear) / (zFar - zNear));
+		newProj.m32(-(2.0f * zFar * zNear) / (zFar - zNear));
+		return newProj;
+	}
+
+	Vector3f unproject(Vector4f pos) {
+		return new Vector3f(pos.x / pos.w, pos.y / pos.w, pos.z / pos.w);
+	}
+
+	void GetFrustumMinMax(Matrix4f matProjection, Vector3f clipMin, Vector3f clipMax) {
+		Vector3f[] frustum = new Vector3f[] {
+			new Vector3f(-1.0f, -1.0f, -1.0f),
+		new Vector3f( 1.0f, -1.0f, -1.0f),
+		new Vector3f(-1.0f,  1.0f, -1.0f),
+		new Vector3f( 1.0f,  1.0f, -1.0f),
+		new Vector3f(-1.0f, -1.0f,  1.0f),
+		new Vector3f( 1.0f, -1.0f,  1.0f),
+		new Vector3f(-1.0f,  1.0f,  1.0f),
+		new Vector3f( 1.0f,  1.0f,  1.0f)
+		};
+
+		for (int i = 0; i < 8; i++) {
+			Vector3f shadowClipPos = unproject(matProjection.transform(new Vector4f(frustum[i], 1.0f)));
+
+			if (i == 0) {
+				clipMin.set(shadowClipPos);
+				clipMax.set(shadowClipPos);
+			}
+			else {
+				clipMin.set(clipMin.min(shadowClipPos));
+				clipMax.set(clipMax.max(shadowClipPos));
+			}
+		}
+	}
+
+	Matrix4f GetShadowProjection(Matrix4f shadowModelViewEx) {
+		Matrix4f gbufferProjectionShadow = new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
+		gbufferProjectionShadow = SetProjectionRange(gbufferProjectionShadow, 0.05f, Math.min(shadowDirectives.getDistance(), CameraUniforms.getRenderDistanceInBlocks()));
+
+		Matrix4f matModelViewProjection = gbufferProjectionShadow.mul(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferModelView()));
+		Matrix4f matSceneToShadow = shadowModelViewEx.mul(new Matrix4f(matModelViewProjection).invert(), new Matrix4f());
+
+		Vector3f shadowMin = new Vector3f(), shadowMax = new Vector3f();
+		GetFrustumMinMax(matSceneToShadow, shadowMin, shadowMax);
+
+		Vector3f shadowSize = shadowMax.sub(shadowMin);
+		Vector2f center = new Vector2f(shadowSize.x * 0.5f, shadowSize.y * 0.5f);
+		center.negate();
+		float shadowFar = Math.max(Math.abs(shadowMin.z), Math.abs(shadowMax.z));
+		Matrix4f shadowProjection = new Matrix4f().setOrthoSymmetric(shadowSize.x, shadowSize.y, -200.0f, shadowFar);
+		Matrix4f shadowOffset = new Matrix4f().setTranslation(new Vector3f(center, 0));
+
+		return shadowProjection.mul(shadowOffset);
+	}
+
 	@Override
 	public void beginLevelRendering() {
 		isRenderingWorld = true;
 
+		shadowModelView = new PoseStack();
+		Vec3 cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+		ShadowMatrices.createModelViewMatrix(shadowModelView, getShadowAngle(), shadowDirectives.getIntervalSize(), packDirectives.getSunPathRotation(), cameraPos.x, cameraPos.y, cameraPos.z);
+		shadowProjection = GetShadowProjection(shadowModelView.last().pose());
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 		Vector4f emptyClearColor = new Vector4f(1.0F);

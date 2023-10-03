@@ -1,5 +1,7 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import org.joml.Matrix4f;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.pipeline.ShadowRenderer;
@@ -22,7 +24,7 @@ public final class MatrixUniforms {
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
 		addShadowMatrix(uniforms, "ModelView", () ->
 				new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose()));
-		addShadowMatrix(uniforms, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance()));
+		addShadowMatrix(uniforms, "Projection", () -> ((NewWorldRenderingPipeline) Iris.getPipelineManager().getPipelineNullable()).shadowProjection);
 	}
 
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {

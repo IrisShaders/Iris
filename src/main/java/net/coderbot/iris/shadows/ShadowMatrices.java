@@ -53,7 +53,6 @@ public class ShadowMatrices {
 		target.last().normal().identity();
 		target.last().pose().identity();
 
-		target.last().pose().translate(0.0f, 0.0f, -100.0f);
 		target.mulPose(Axis.XP.rotationDegrees(90.0F));
 		target.mulPose(Axis.ZP.rotationDegrees(skyAngle * -360.0f));
 		target.mulPose(Axis.XP.rotationDegrees(sunPathRotation));

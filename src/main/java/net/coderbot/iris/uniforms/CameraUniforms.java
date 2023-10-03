@@ -28,7 +28,7 @@ public class CameraUniforms {
 			.uniform3d(PER_FRAME, "previousCameraPosition", tracker::getPreviousCameraPosition);
 	}
 
-	private static int getRenderDistanceInBlocks() {
+	public static int getRenderDistanceInBlocks() {
 		// TODO: Should we ask the game renderer for this?
 		return client.options.getEffectiveRenderDistance() * 16;
 	}

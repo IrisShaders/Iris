@@ -15,6 +15,7 @@ import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
+import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.ComputeSource;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
@@ -433,7 +434,7 @@ public class ShadowRenderer {
 			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
 			shadowProjection = ShadowMatrices.createPerspectiveMatrix(this.fov);
 		} else {
-			shadowProjection = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
+			shadowProjection = ((NewWorldRenderingPipeline) Iris.getPipelineManager().getPipelineNullable()).shadowProjection;
 		}
 
 		IrisRenderSystem.setShadowProjection(shadowProjection);
