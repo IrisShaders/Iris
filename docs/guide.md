@@ -143,7 +143,7 @@ You can rebind these keyboard shortcuts to any other key you want in the Control
 
 For a list of compatible shaders, check out the [supported shaders list](supportedshaders.md).
 
-Other shaders are considered **unsupported** at the moment. When using shaders which are not in this list, except them to have major visual problems, or even not run at all. More shaders will be added as supported as new features are being added to Iris.
+Other shaders are considered **unsupported** at the moment. When using shaders which are not in this list, expect them to have major visual problems, or even not run at all. More shaders will be added as supported as new features are being added to Iris.
 
 For a list of known bugs with certain shaders, check out the [shader pack bug list](ShaderpackBugs.md).
 
@@ -204,7 +204,7 @@ Check the [Immersive Portals Wiki](https://qouteall.fun/immptl/wiki/#sodium-comp
 
 ### Support
 
-Before directly asking for support, check the [list of frequently asked questions](faq.md) and see if your can find the answer to your question here. If not, feel free to join our [Discord server](https://discord.gg/jQJnav2jPu) and ask us directly in the `#iris-support` channel!
+Before directly asking for support, check the [list of frequently asked questions](faq.md) and see if you can find the answer to your question here. If not, feel free to join our [Discord server](https://discord.gg/jQJnav2jPu) and ask us directly in the `#iris-support` channel!
 
 If you have any suggestions in regards to this specific guide, contact me on Discord: pajic#0234. I am a part of the support team on the Iris discord server.
 
