@@ -374,7 +374,7 @@ public class ShadowRenderer {
 		visibleBlockEntities = new ArrayList<>();
 
 		// Create our camera
-		PoseStack modelView = createShadowModelView(this.sunPathRotation, this.intervalSize);
+		PoseStack modelView = ((NewWorldRenderingPipeline) Iris.getPipelineManager().getPipelineNullable()).shadowModelView;
 		MODELVIEW = new Matrix4f(modelView.last().pose());
 
 		levelRenderer.getLevel().getProfiler().push("terrain_setup");

@@ -23,7 +23,7 @@ public final class MatrixUniforms {
 		// We need to audit Mojang's linear algebra.
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
 		addShadowMatrix(uniforms, "ModelView", () ->
-				new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose()));
+			((NewWorldRenderingPipeline) Iris.getPipelineManager().getPipelineNullable()).shadowModelView.last().pose());
 		addShadowMatrix(uniforms, "Projection", () -> ((NewWorldRenderingPipeline) Iris.getPipelineManager().getPipelineNullable()).shadowProjection);
 	}
 

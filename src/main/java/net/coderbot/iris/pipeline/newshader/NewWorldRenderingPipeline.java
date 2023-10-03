@@ -957,11 +957,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		GetFrustumMinMax(matSceneToShadow, shadowMin, shadowMax);
 
 		Vector3f shadowSize = shadowMax.sub(shadowMin);
-		Vector2f center = new Vector2f(shadowSize.x * 0.5f, shadowSize.y * 0.5f);
+		Vector3f center = new Vector3f((shadowMin.x + shadowMax.x) * 0.5f, (shadowMin.y + shadowMax.y) * 0.5f, (shadowMin.z + shadowMax.z) * 0.5f);
 		center.negate();
 		float shadowFar = Math.max(Math.abs(shadowMin.z), Math.abs(shadowMax.z));
 		Matrix4f shadowProjection = new Matrix4f().setOrthoSymmetric(shadowSize.x, shadowSize.y, -200.0f, shadowFar);
-		Matrix4f shadowOffset = new Matrix4f().setTranslation(new Vector3f(center, 0));
+		Matrix4f shadowOffset = new Matrix4f().setTranslation(center);
 
 		return shadowProjection.mul(shadowOffset);
 	}
