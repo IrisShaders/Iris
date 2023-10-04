@@ -35,7 +35,6 @@ public class MixinGui {
 		}
 	}
 
-	// TODO: Move this to a more appropriate mixin
 	@Inject(method = "render", at = @At("RETURN"))
 	public void iris$displayBigSodiumWarning(PoseStack poseStack, float tickDelta, CallbackInfo ci) {
 		if (Iris.isSodiumInstalled()

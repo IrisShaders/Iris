@@ -151,7 +151,6 @@ public class CustomTextureManager {
 				//     and we could end up holding on to a deleted texture unless we added special code to handle resource
 				//     reloads. Re-fetching the texture from the TextureManager every time is the most robust approach for
 				//     now.
-				// TODO: Should we give something else if the texture isn't there? This will need some thought
 				return new TextureWrapper(() -> {
 					AbstractTexture texture = textureManager.getTexture(textureLocation);
 					return texture != null ? texture.getId() : MissingTextureAtlasSprite.getTexture().getId();

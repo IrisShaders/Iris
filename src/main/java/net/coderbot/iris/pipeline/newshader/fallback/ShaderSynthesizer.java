@@ -80,7 +80,7 @@ public class ShaderSynthesizer {
 				shader.append("uniform vec3 Light0_Direction;\n");
 				shader.append("uniform vec3 Light1_Direction;\n");
 
-				// TODO: Copied from Mojang code.
+				// Copied from Mojang code.
 				shader.append("vec4 minecraft_mix_light(vec3 lightDir0, vec3 lightDir1, vec3 normal, vec4 color) {\n" +
 						"    lightDir0 = normalize(lightDir0);\n" +
 						"    lightDir1 = normalize(lightDir1);\n" +

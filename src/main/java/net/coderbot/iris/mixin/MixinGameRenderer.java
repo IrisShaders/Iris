@@ -114,7 +114,6 @@ public class MixinGameRenderer {
 	@Inject(method = "getNewEntityShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideNewEntityShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_BRIGHT : ShaderKey.HAND_WATER_BRIGHT, cir);
@@ -185,7 +184,6 @@ public class MixinGameRenderer {
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideTranslucentShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
 			override(ShaderKey.SHADOW_TERRAIN_CUTOUT, cir);
 		} else if (isBlockEntities() || isEntities()) {
 			override(ShaderKey.MOVING_BLOCK, cir);
@@ -204,7 +202,6 @@ public class MixinGameRenderer {
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityCutoutShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
@@ -239,7 +236,6 @@ public class MixinGameRenderer {
 		}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEnergySwirlShadowShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT : ShaderKey.HAND_TRANSLUCENT, cir);
@@ -270,7 +266,6 @@ public class MixinGameRenderer {
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntitySolidDiffuseShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE, cir);
@@ -286,7 +281,6 @@ public class MixinGameRenderer {
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntitySolidShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (HandRenderer.INSTANCE.isActive()) {
 			override(HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT : ShaderKey.HAND_TRANSLUCENT, cir);
@@ -319,7 +313,6 @@ public class MixinGameRenderer {
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEntityEyesShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
-			// TODO: Wrong program
 			override(ShaderKey.SHADOW_ENTITIES_CUTOUT, cir);
 		} else if (isBlockEntities()) {
 			override(ShaderKey.BLOCK_ENTITY, cir);

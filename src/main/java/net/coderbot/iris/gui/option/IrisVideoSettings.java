@@ -20,7 +20,6 @@ import java.util.List;
 public class IrisVideoSettings {
 	public static int shadowDistance = 32;
 
-	// TODO: Tell the user to check in the shader options once that's supported.
 	private static final Tooltip DISABLED_TOOLTIP = Tooltip.create(Component.translatable("options.iris.shadowDistance.disabled"));
 	private static final Tooltip ENABLED_TOOLTIP = Tooltip.create(Component.translatable("options.iris.shadowDistance.enabled"));
 	public static ColorSpace colorSpace = ColorSpace.SRGB;
