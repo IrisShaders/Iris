@@ -31,6 +31,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *
  * Fun.
  */
+
+/**
+ * Due to shader devs moving forward with removing legacy code, I have decided to disable this Mixin. It will be stored here for reference. -IMS
+ */
 @Mixin(GameRenderer.class)
 public class MixinTweakFarPlane {
 	@Shadow

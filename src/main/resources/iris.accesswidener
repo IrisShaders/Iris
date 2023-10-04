@@ -1,6 +1,7 @@
 accessWidener	v1	named
 
 accessible  class   com/mojang/blaze3d/platform/GlStateManager$BlendState
+accessible  class   com/mojang/blaze3d/platform/GlStateManager$BooleanState
 accessible  class   com/mojang/blaze3d/platform/GlStateManager$TextureState
 accessible  class   com/mojang/blaze3d/platform/GlStateManager$ColorMask
 accessible  class   com/mojang/blaze3d/platform/GlStateManager$DepthState
@@ -30,3 +31,4 @@ mutable field net/minecraft/client/renderer/ShaderInstance COLOR_MODULATOR Lcom/
 accessible field net/minecraft/client/renderer/ShaderInstance uniforms Ljava/util/List;
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
 accessible class net/minecraft/client/gui/components/AbstractSelectionList$Entry
+accessible field com/mojang/blaze3d/platform/GlStateManager$BooleanState enabled Z
