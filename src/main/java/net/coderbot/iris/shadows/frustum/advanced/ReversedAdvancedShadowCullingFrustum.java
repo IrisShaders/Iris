@@ -49,6 +49,14 @@ public class ReversedAdvancedShadowCullingFrustum extends AdvancedShadowCullingF
 	}
 
 	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ) || this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ) > 0;
+		if (distanceCuller != null && distanceCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) {
+			return false;
+		}
+
+		if (boxCuller != null && !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) {
+			return true;
+		}
+
+		return this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ) > 0;
 	}
 }
