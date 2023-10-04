@@ -15,6 +15,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -60,7 +61,7 @@ public class MixinEntityRenderDispatcher {
 	}
 
 	@Inject(method = "renderFlame", at = @At("HEAD"))
-	private void iris$setFlameId(PoseStack pEntityRenderDispatcher0, MultiBufferSource pMultiBufferSource1, Entity pEntity2, CallbackInfo ci) {
+	private void iris$setFlameId(PoseStack pEntityRenderDispatcher0, MultiBufferSource pMultiBufferSource1, Entity pEntity2, Quaternionf pQuaternionf3, CallbackInfo ci) {
         Object2IntFunction<NamespacedId> entityIds = BlockRenderingSettings.INSTANCE.getEntityIds();
 
         if (entityIds == null) {
@@ -72,7 +73,7 @@ public class MixinEntityRenderDispatcher {
     }
 
 	@Inject(method = "renderFlame", at = @At("RETURN"))
-	private void restoreFlameId(PoseStack pEntityRenderDispatcher0, MultiBufferSource pMultiBufferSource1, Entity pEntity2, CallbackInfo ci) {
+	private void restoreFlameId(PoseStack pEntityRenderDispatcher0, MultiBufferSource pMultiBufferSource1, Entity pEntity2, Quaternionf pQuaternionf3, CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentEntity(cachedId);
 		cachedId = 0;
 	}
