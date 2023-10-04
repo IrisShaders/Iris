@@ -13,7 +13,7 @@ See https://github.com/VazkiiMods/Botania/issues/3912
 
 Similarly to Botania, ComputerCraft uses custom shader programs for high-performance monitor rendering. Unfortunately, this doesn't work with Iris shader programs.
 
-The ComputerCraft: Restitched developers have implemented specific workarounds when using shader packs with OptiFine, but have not done so for Iris.
+The CC: Tweaked devs have made the renderer switch to VBO mode with shaders enabled, so there should be no issue.
 
 See: https://github.com/cc-tweaked/cc-restitched/issues/1
 
