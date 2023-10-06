@@ -278,6 +278,8 @@ public class CompositeRenderer {
 			renderPass.program.use();
 			if (renderPass.blendModeOverride != null) {
 				renderPass.blendModeOverride.apply();
+			} else {
+				RenderSystem.disableBlend();
 			}
 
 			// program is the identifier for composite :shrug:

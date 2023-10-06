@@ -128,6 +128,9 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			if (format == DefaultVertexFormat.BLOCK) {
 				this.switchFormat(IrisVertexFormats.TERRAIN);
 				this.iris$isTerrain = true;
+			} else if (format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
+				this.switchFormat(IrisVertexFormats.GLYPH);
+				this.iris$isTerrain = false;
 			} else {
 				this.switchFormat(IrisVertexFormats.ENTITY);
 				this.iris$isTerrain = false;
@@ -138,11 +141,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 
 	@Override
 	public @NotNull VertexConsumer uv2(int pBufferVertexConsumer0, int pInt1) {
-		if (injectNormalAndUV1 && currentElement == DefaultVertexFormat.ELEMENT_UV1) {
-			this.putShort(0, (short) 0);
-			this.putShort(2, (short) 10);
-			this.nextElement();
-		}
+
 		return BufferVertexConsumer.super.uv2(pBufferVertexConsumer0, pInt1);
 	}
 
@@ -152,6 +151,9 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			if (format == DefaultVertexFormat.BLOCK) {
 				this.switchFormat(IrisVertexFormats.TERRAIN);
 				this.iris$isTerrain = true;
+			} else if (format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
+				this.switchFormat(IrisVertexFormats.GLYPH);
+				this.iris$isTerrain = false;
 			} else {
 				this.switchFormat(IrisVertexFormats.ENTITY);
 				this.iris$isTerrain = false;

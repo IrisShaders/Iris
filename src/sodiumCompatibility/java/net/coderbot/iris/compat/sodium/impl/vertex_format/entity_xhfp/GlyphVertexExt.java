@@ -17,17 +17,16 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 public final class GlyphVertexExt {
-	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.instance().get(IrisVertexFormats.ENTITY);
-	public static final int STRIDE = IrisVertexFormats.ENTITY.getVertexSize();
+	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.instance().get(IrisVertexFormats.GLYPH);
+	public static final int STRIDE = IrisVertexFormats.GLYPH.getVertexSize();
 
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;
 	private static final int OFFSET_TEXTURE = 16;
-	private static final int OFFSET_MID_TEXTURE = 42;
-	private static final int OFFSET_OVERLAY = 24;
-	private static final int OFFSET_LIGHT = 28;
-	private static final int OFFSET_NORMAL = 32;
-	private static final int OFFSET_TANGENT = 50;
+	private static final int OFFSET_MID_TEXTURE = 38;
+	private static final int OFFSET_LIGHT = 24;
+	private static final int OFFSET_NORMAL = 28;
+	private static final int OFFSET_TANGENT = 46;
 
 
 	private static final QuadViewEntity.QuadViewEntityUnsafe quad = new QuadViewEntity.QuadViewEntityUnsafe();
@@ -57,11 +56,9 @@ public final class GlyphVertexExt {
 
 		MemoryUtil.memPutInt(ptr + OFFSET_LIGHT, light);
 
-		MemoryUtil.memPutInt(ptr + OFFSET_OVERLAY, OverlayTexture.NO_OVERLAY);
-
-		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
-		MemoryUtil.memPutShort(ptr + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
-		MemoryUtil.memPutShort(ptr + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+		MemoryUtil.memPutShort(ptr + 32, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+		MemoryUtil.memPutShort(ptr + 34, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 
 		if (vertexCount == 4) {
 			endQuad(ptr);
