@@ -12,6 +12,7 @@
     "ProgramTypeAccessor",
     "MixinBlockStateBehavior",
     "MixinBooleanState",
+    "MixinBiomes",
     "MixinClientLanguage",
     "MixinClientPacketListener",
     "MixinDebugScreenOverlay",
