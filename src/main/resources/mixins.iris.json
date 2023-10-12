@@ -13,6 +13,7 @@
     "MixinBlockStateBehavior",
     "MixinBiome",
     "MixinBooleanState",
+    "MixinBiomes",
     "MixinClientLanguage",
     "MixinClientPacketListener",
     "MixinDebugScreenOverlay",

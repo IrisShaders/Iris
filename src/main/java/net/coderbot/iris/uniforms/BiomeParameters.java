@@ -1,5 +1,7 @@
 package net.coderbot.iris.uniforms;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.coderbot.iris.gl.uniform.FloatSupplier;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.parsing.BiomeCategories;
@@ -20,13 +22,17 @@ import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public class BiomeParameters {
-	private static final Minecraft client = Minecraft.getInstance();
+	private static final Object2IntMap<ResourceKey<Biome>> biomeMap = new Object2IntOpenHashMap<>();
+
+	public static Object2IntMap<ResourceKey<Biome>> getBiomeMap() {
+		return biomeMap;
+	}
 
 	public static void addBiomeUniforms(UniformHolder uniforms) {
 
 		uniforms
 				.uniform1i(PER_TICK, "biome", playerI(player ->
-						BuiltinRegistries.BIOME.getId(player.level.getBiome(player.blockPosition()).value())))
+					biomeMap.getInt(player.level.getBiome(player.blockPosition()).unwrapKey().orElse(null))))
 				.uniform1i(PER_TICK, "biome_category", playerI(player -> {
 					Holder<Biome> holder = player.level.getBiome(player.blockPosition());
 					ExtendedBiome extendedBiome = ((ExtendedBiome) (Object) holder.value());
@@ -52,9 +58,11 @@ public class BiomeParameters {
 						player.level.getBiome(player.blockPosition()).value().getBaseTemperature()))
 
 
-				.uniform1i(ONCE, "PPT_NONE", () -> 0)
-				.uniform1i(ONCE, "PPT_RAIN", () -> 1)
-				.uniform1i(ONCE, "PPT_SNOW", () -> 2);
+			.uniform1i(ONCE, "PPT_NONE", () -> 0)
+			.uniform1i(ONCE, "PPT_RAIN", () -> 1)
+			.uniform1i(ONCE, "PPT_SNOW", () -> 2)
+			// Temporary fix for Sildur's Vibrant
+			.uniform1i(ONCE, "BIOME_SWAMP_HILLS", () -> -1);
 
 
 
@@ -105,15 +113,8 @@ public class BiomeParameters {
 		}
 	}
 
-	public static void addBiomes(UniformHolder uniforms) {
-		for (Biome biome : BuiltinRegistries.BIOME) {
-			ResourceLocation id = BuiltinRegistries.BIOME.getKey(biome);
-			if (id == null || !id.getNamespace().equals("minecraft")) {
-				continue; // TODO: What should we do with non-standard biomes?
-			}
-			int rawId = BuiltinRegistries.BIOME.getId(biome);
-			uniforms.uniform1i(ONCE, "BIOME_" + id.getPath().toUpperCase(Locale.ROOT), () -> rawId);
-		}
+	private static void addBiomes(UniformHolder uniforms) {
+		biomeMap.forEach((biome, id) -> uniforms.uniform1i(ONCE, "BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), () -> id));
 	}
 
 	public static void addCategories(UniformHolder uniforms) {
@@ -126,7 +127,7 @@ public class BiomeParameters {
 
 	static IntSupplier playerI(ToIntFunction<LocalPlayer> function) {
 		return () -> {
-			LocalPlayer player = client.player;
+			LocalPlayer player = Minecraft.getInstance().player;
 			if (player == null) {
 				return 0; // TODO: I'm not sure what I'm supposed to do here?
 			} else {
@@ -137,7 +138,7 @@ public class BiomeParameters {
 
 	static FloatSupplier playerF(ToFloatFunction<LocalPlayer> function) {
 		return () -> {
-			LocalPlayer player = client.player;
+			LocalPlayer player = Minecraft.getInstance().player;
 			if (player == null) {
 				return 0.0f; // TODO: I'm not sure what I'm supposed to do here?
 			} else {
