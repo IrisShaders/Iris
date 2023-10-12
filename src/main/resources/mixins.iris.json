@@ -15,6 +15,7 @@
     "MixinBiomes",
     "MixinChainedJsonException",
     "MixinBooleanState",
+    "MixinBiomes",
     "MixinClientLanguage",
     "MixinClientPacketListener",
     "MixinDebugScreenOverlay",

@@ -10,6 +10,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.level.biome.Biome;
 
@@ -57,11 +59,11 @@ public class BiomeParameters {
 						player.level().getBiome(player.blockPosition()).value().getBaseTemperature()))
 
 
-				.uniform1i(ONCE, "PPT_NONE", () -> 0)
-				.uniform1i(ONCE, "PPT_RAIN", () -> 1)
-				.uniform1i(ONCE, "PPT_SNOW", () -> 2)
+			.uniform1i(ONCE, "PPT_NONE", () -> 0)
+			.uniform1i(ONCE, "PPT_RAIN", () -> 1)
+			.uniform1i(ONCE, "PPT_SNOW", () -> 2)
 			// Temporary fix for Sildur's Vibrant
-				.uniform1i(ONCE, "BIOME_SWAMP_HILLS", () -> -1);
+			.uniform1i(ONCE, "BIOME_SWAMP_HILLS", () -> -1);
 
 
 
@@ -69,10 +71,6 @@ public class BiomeParameters {
 		addBiomes(uniforms);
 		addCategories(uniforms);
 
-	}
-
-	private static void addBiomes(UniformHolder uniforms) {
-		biomeMap.forEach((biome, id) -> uniforms.uniform1i(ONCE, "BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), () -> id));
 	}
 
 	private static BiomeCategories getBiomeCategory(Holder<Biome> holder) {
@@ -114,6 +112,10 @@ public class BiomeParameters {
 		} else {
 			return BiomeCategories.PLAINS;
 		}
+	}
+
+	private static void addBiomes(UniformHolder uniforms) {
+		biomeMap.forEach((biome, id) -> uniforms.uniform1i(ONCE, "BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), () -> id));
 	}
 
 	public static void addCategories(UniformHolder uniforms) {
