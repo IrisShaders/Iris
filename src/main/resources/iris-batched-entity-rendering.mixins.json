@@ -17,6 +17,7 @@
     "MixinCompositeRenderType",
     "MixinLevelRenderer",
     "MixinLevelRenderer_EntityListSorting",
+    "BufferSourceAccessor",
     "CompositeStateAccessor",
     "RenderTypeAccessor",
     "RenderStateShardAccessor"

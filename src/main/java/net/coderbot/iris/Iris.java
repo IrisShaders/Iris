@@ -101,7 +101,7 @@ public class Iris {
 	private static boolean fallback;
 
 	// Change this for snapshots!
-	private static String backupVersionNumber = "1.19.4";
+	private static String backupVersionNumber = "1.20.3";
 
 	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do

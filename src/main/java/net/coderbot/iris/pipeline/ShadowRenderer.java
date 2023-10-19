@@ -138,7 +138,9 @@ public class ShadowRenderer {
 
 		this.sunPathRotation = directives.getSunPathRotation();
 
-		this.buffers = new RenderBuffers();
+		int processors = Runtime.getRuntime().availableProcessors();
+		int threads = Minecraft.getInstance().is64Bit() ? processors : Math.min(processors, 4);
+		this.buffers = new RenderBuffers(threads);
 
 		if (this.buffers instanceof RenderBuffersExt) {
 			this.renderBuffersExt = (RenderBuffersExt) buffers;
