@@ -71,6 +71,13 @@ So, if you want to distribute a Forge port of Iris, we'd prefer if you let us kn
 * **The Iris support and moderation team**, for handling user support requests and allowing me to focus on developing Iris
 * **daxnitro, karyonix, and sp614x**, for creating and maintaining the current shaders mods
 
+
+## All Thanks To Our Contributors
+
+<a href="https://github.com/IrisShaders/Iris/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=IrisShaders/Iris" />
+</a>
+
 ## License
 
 All code in this (Iris) repository is completely free and open source, and you are free to read, distribute, and modify the code as long as you abide by the (fairly reasonable) terms of the [GNU LGPLv3 license](https://github.com/IrisShaders/Iris/blob/master/LICENSE).
