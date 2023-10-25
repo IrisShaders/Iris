@@ -1,6 +1,5 @@
 package net.coderbot.iris.uniforms;
 
-import net.coderbot.iris.gl.state.ValueUpdateNotifier;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
@@ -16,6 +15,7 @@ public class CapturedRenderingState {
 	private float fogDensity;
 	private float darknessLightFactor;
 	private float tickDelta;
+	private float realTickDelta;
 	private int currentRenderedBlockEntity;
 
 	private int currentRenderedEntity = -1;
@@ -67,8 +67,16 @@ public class CapturedRenderingState {
 		this.tickDelta = tickDelta;
 	}
 
+	public void setRealTickDelta(float tickDelta) {
+		this.realTickDelta = tickDelta;
+	}
+
 	public float getTickDelta() {
 		return tickDelta;
+	}
+
+	public float getRealTickDelta() {
+		return realTickDelta;
 	}
 
 	public void setCurrentBlockEntity(int entity) {
