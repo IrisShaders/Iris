@@ -226,11 +226,7 @@ public class TransformPatcher {
 							// TODO: Implement Optifine's special core profile mode
 							// handling of Optifine's special core profile mode
 							boolean isLine = (parameters.patch == Patch.VANILLA && ((VanillaParameters) parameters).isLines());
-							if (isLine && (profile.isCompatibility() || version.number < 130)) {
-								// Break here, prevent a Eldeston
-								throw new IllegalStateException("gbuffers_line used, but profile is compatibility! Can't continue.");
 
-							}
 							if (profile == Profile.CORE || version.number >= 150 && profile == null || isLine) {
 								// patch the version number to at least 330
 								if (version.number < 330) {

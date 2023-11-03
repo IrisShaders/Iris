@@ -25,6 +25,7 @@ public class MixinBufferBuilder implements MemoryTrackingBuffer {
 
 	@Override
 	public void freeAndDeleteBuffer() {
+		if (buffer == null) return;
 		MemoryUtil.getAllocator(false).free(MemoryUtil.memAddress(buffer));
 		buffer = null;
 	}
