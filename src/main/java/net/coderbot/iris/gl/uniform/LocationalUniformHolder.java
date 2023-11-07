@@ -5,6 +5,7 @@ import net.coderbot.iris.vendored.joml.Vector2f;
 import net.coderbot.iris.vendored.joml.Vector2i;
 import net.coderbot.iris.vendored.joml.Vector3d;
 import net.coderbot.iris.vendored.joml.Vector3f;
+import net.coderbot.iris.vendored.joml.Vector3i;
 import net.coderbot.iris.vendored.joml.Vector4f;
 
 import java.util.OptionalInt;
@@ -70,6 +71,13 @@ public interface LocationalUniformHolder extends UniformHolder {
 	@Override
 	default LocationalUniformHolder uniform3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3f> value) {
 		location(name, UniformType.VEC3).ifPresent(id -> addUniform(updateFrequency, new Vector3Uniform(id, value)));
+
+		return this;
+	}
+
+	@Override
+	default LocationalUniformHolder uniform3i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3i> value) {
+		location(name, UniformType.VEC3I).ifPresent(id -> addUniform(updateFrequency, new Vector3IntegerUniform(id, value)));
 
 		return this;
 	}
