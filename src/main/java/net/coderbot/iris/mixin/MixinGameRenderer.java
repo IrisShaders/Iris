@@ -178,6 +178,7 @@ public class MixinGameRenderer {
 
 	@Inject(method = {
 			"getRendertypeEntityCutoutShader",
+			"getRendertypeBreezeWindShader",
 			"getRendertypeEntityCutoutNoCullShader",
 			"getRendertypeEntityCutoutNoCullZOffsetShader",
 			"getRendertypeEntityDecalShader",
