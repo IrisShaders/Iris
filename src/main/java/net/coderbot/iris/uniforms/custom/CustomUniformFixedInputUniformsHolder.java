@@ -107,6 +107,10 @@ public class CustomUniformFixedInputUniformsHolder {
 			return this.put(name, new Float3VectorCachedUniform(name, updateFrequency, value));
 		}
 
+		@Override
+		public Builder uniform3i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3i> value) {
+			return this.put(name, new Int3VectorCachedUniform(name, updateFrequency, value));
+		}
 
 		@Override
 		public Builder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {

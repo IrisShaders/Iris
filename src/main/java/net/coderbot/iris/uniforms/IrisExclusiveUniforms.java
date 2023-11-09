@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
@@ -10,7 +11,10 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
@@ -35,6 +39,15 @@ public class IrisExclusiveUniforms {
 		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isSpectator", IrisExclusiveUniforms::isSpectator);
 		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "eyePosition", IrisExclusiveUniforms::getEyePosition);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "cloudTime", CapturedRenderingState.INSTANCE::getCloudTime);
+		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "relativeEyePosition", () -> {
+			return CameraUniforms.getUnshiftedCameraPosition().sub(getEyePosition());
+		});
+		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "playerLookVector", () -> {
+			return JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getLookAngle());
+		});
+		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "playerBodyVector", () -> {
+			return JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getForward());
+		});
 		Vector4f zero = new Vector4f(0, 0, 0, 0);
 		uniforms.uniform4f(UniformUpdateFrequency.PER_TICK, "lightningBoltPosition", () -> {
 			if (Minecraft.getInstance().level != null) {
