@@ -3,8 +3,8 @@ package net.coderbot.iris.uniforms;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
-import net.coderbot.iris.vendored.joml.Vector2i;
-import net.coderbot.iris.vendored.joml.Vector3i;
+import org.joml.Vector2i;
+import org.joml.Vector3i;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;

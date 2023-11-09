@@ -2,8 +2,8 @@ package net.coderbot.iris.uniforms.custom.cached;
 
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.parsing.VectorType;
-import net.coderbot.iris.vendored.joml.Vector3f;
-import net.coderbot.iris.vendored.joml.Vector3i;
+import org.joml.Vector3f;
+import org.joml.Vector3i;
 import org.lwjgl.opengl.GL21;
 
 import java.util.function.Supplier;
