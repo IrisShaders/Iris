@@ -8,6 +8,7 @@ public enum UniformType {
 	VEC2,
 	VEC2I,
 	VEC3,
+	VEC3I,
 	VEC4,
 	VEC4I
 }
