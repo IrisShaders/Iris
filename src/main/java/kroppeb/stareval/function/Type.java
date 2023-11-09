@@ -178,6 +178,7 @@ public abstract class Type {
 		else if (type == VectorType.VEC3) return UniformType.VEC3;
 		else if (type == VectorType.VEC4) return UniformType.VEC4;
 		else if (type == VectorType.I_VEC2) return UniformType.VEC2I;
+		else if (type == VectorType.I_VEC3) return UniformType.VEC3I;
 		else if (type == MatrixType.MAT4) return UniformType.MAT4;
 		else throw new IllegalArgumentException("Unsupported custom uniform type: " + type);
 	}
