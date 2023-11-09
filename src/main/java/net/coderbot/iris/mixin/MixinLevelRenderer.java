@@ -15,6 +15,7 @@ import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.IrisTimeUniforms;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import org.joml.Vector3d;
 import net.fabricmc.api.EnvType;
@@ -81,6 +82,7 @@ public class MixinLevelRenderer {
 				" didn't work. This is a bug! Please report it to the Iris developers.");
 		}
 
+		IrisTimeUniforms.updateTime();
 		CapturedRenderingState.INSTANCE.setGbufferModelView(poseStack.last().pose());
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projection);
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
