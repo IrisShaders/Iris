@@ -26,7 +26,6 @@ public class BiomeParameters {
 	}
 
 	public static void addBiomeUniforms(UniformHolder uniforms) {
-
 		uniforms
 			.uniform1i(PER_TICK, "biome", playerI(player ->
 				biomeMap.getInt(player.level.getBiome(player.blockPosition()).unwrapKey().orElse(null))))
@@ -45,33 +44,7 @@ public class BiomeParameters {
 			.uniform1f(PER_TICK, "rainfall", playerF(player ->
 				(player.level.getBiome(player.blockPosition()).value()).getDownfall()))
 			.uniform1f(PER_TICK, "temperature", playerF(player ->
-				player.level.getBiome(player.blockPosition()).value().getBaseTemperature()))
-
-
-			.uniform1i(ONCE, "PPT_NONE", () -> 0)
-			.uniform1i(ONCE, "PPT_RAIN", () -> 1)
-			.uniform1i(ONCE, "PPT_SNOW", () -> 2)
-			// Temporary fix for Sildur's Vibrant
-			.uniform1i(ONCE, "BIOME_SWAMP_HILLS", () -> -1);
-
-
-
-
-		addBiomes(uniforms);
-		addCategories(uniforms);
-
-	}
-
-	private static void addBiomes(UniformHolder uniforms) {
-		biomeMap.forEach((biome, id) -> uniforms.uniform1i(ONCE, "BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), () -> id));
-	}
-
-	public static void addCategories(UniformHolder uniforms) {
-		Biome.BiomeCategory[] categories = Biome.BiomeCategory.values();
-		for (int i = 0; i < categories.length; i++) {
-			int finalI = i;
-			uniforms.uniform1i(ONCE, "CAT_" + categories[i].getName().toUpperCase(Locale.ROOT), () -> finalI);
-		}
+				player.level.getBiome(player.blockPosition()).value().getBaseTemperature()));
 	}
 
 	static IntSupplier playerI(ToIntFunction<LocalPlayer> function) {
