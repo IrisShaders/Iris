@@ -3,6 +3,7 @@ package net.coderbot.iris.shaderpack;
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.shader.StandardMacros;
+import net.coderbot.iris.parsing.BiomeCategories;
 import net.coderbot.iris.uniforms.BiomeParameters;
 import net.minecraft.world.level.biome.Biome;
 
@@ -31,9 +32,9 @@ public class IrisDefines {
 
 		BiomeParameters.getBiomeMap().forEach((biome, id) -> define(s, "BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), String.valueOf(id)));
 
-		Biome.BiomeCategory[] categories = Biome.BiomeCategory.values();
+		BiomeCategories[] categories = BiomeCategories.values();
 		for (int i = 0; i < categories.length; i++) {
-            define(s, "CAT_" + categories[i].getName().toUpperCase(Locale.ROOT), String.valueOf(i));
+            define(s, "CAT_" + categories[i].name().toUpperCase(Locale.ROOT), String.valueOf(i));
 		}
 
 		return ImmutableList.copyOf(s);
