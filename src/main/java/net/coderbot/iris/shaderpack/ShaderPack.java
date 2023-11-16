@@ -45,17 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -161,9 +151,10 @@ public class ShaderPack {
 		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
 
+		Iterable<StringPair> replacements = IrisDefines.createIrisReplacements();
 		Iterable<StringPair> finalEnvironmentDefines = environmentDefines;
 		this.shaderProperties = loadProperties(root, "shaders.properties")
-				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
+				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines, replacements))
 				.orElseGet(ShaderProperties::empty);
 
 		activeFeatures = new HashSet<>();
@@ -248,7 +239,8 @@ public class ShaderPack {
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
 
 		// Set up our source provider for creating ProgramSets
-		Iterable<StringPair> finalEnvironmentDefines1 = environmentDefines;
+		ArrayList<StringPair> finalEnvironmentDefines1 = new ArrayList<>((Collection) finalEnvironmentDefines);
+		finalEnvironmentDefines1.addAll(IrisDefines.createIrisReplacements());
 		this.sourceProvider = (path) -> {
 			String pathString = path.getPathString();
 			// Removes the first "/" in the path if present, and the file
