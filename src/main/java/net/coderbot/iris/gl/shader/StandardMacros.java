@@ -38,7 +38,7 @@ public class StandardMacros {
 		defines.add(new StringPair(key, value));
 	}
 
-	public static Iterable<StringPair> createStandardEnvironmentDefines() {
+	public static ImmutableList<StringPair> createStandardEnvironmentDefines() {
 		ArrayList<StringPair> standardDefines = new ArrayList<>();
 
 		define(standardDefines, "MC_VERSION", getMcVersion());
