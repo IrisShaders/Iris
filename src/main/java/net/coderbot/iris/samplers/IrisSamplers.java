@@ -78,6 +78,10 @@ public class IrisSamplers {
 			if (i < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
 				String legacyName = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(i);
 
+				if (samplers.hasSampler(legacyName) || samplers.hasSampler(name)) {
+					renderTargets.createIfUnsure(index);
+				}
+
 				// colortex0 is the default sampler in fullscreen passes
 				if (i == 0 && isFullscreenPass) {
 					samplers.addDefaultSampler(TextureType.TEXTURE_2D, texture, null, null, name, legacyName);
@@ -85,6 +89,10 @@ public class IrisSamplers {
 					samplers.addDynamicSampler(TextureType.TEXTURE_2D, texture, null, name, legacyName);
 				}
 			} else {
+				if (samplers.hasSampler(name)) {
+					renderTargets.createIfUnsure(index);
+				}
+
 				samplers.addDynamicSampler(texture, name);
 			}
 		}
