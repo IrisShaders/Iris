@@ -8,10 +8,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 
 public class IrisObjectSelectionList<E extends AbstractSelectionList.Entry<E>> extends AbstractSelectionList<E> {
 	public IrisObjectSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right, int itemHeight) {
-		super(client, width, height, top, bottom, itemHeight);
-
-		this.x0 = left;
-		this.x1 = right;
+		super(client, width, height, top, itemHeight);
 	}
 
 	@Override
@@ -26,7 +23,7 @@ public class IrisObjectSelectionList<E extends AbstractSelectionList.Entry<E>> e
 	}
 
 	@Override
-	public void updateNarration(NarrationElementOutput p0) {
+	public void updateWidgetNarration(NarrationElementOutput p0) {
 
 	}
 }
