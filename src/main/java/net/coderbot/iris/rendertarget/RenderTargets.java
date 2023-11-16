@@ -372,4 +372,10 @@ public class RenderTargets {
 	public int getCurrentHeight() {
 		return cachedHeight;
 	}
+
+	public void createIfUnsure(int index) {
+		if (targets[index] == null) {
+			create(index);
+		}
+	}
 }
