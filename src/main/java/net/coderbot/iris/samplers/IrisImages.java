@@ -23,6 +23,8 @@ public class IrisImages {
 
 			if (!images.hasImage(name)) continue;
 
+			renderTargets.createIfUnsure(index);
+
 			// Note: image bindings *are* impacted by buffer flips.
 			IntSupplier textureID = () -> {
 				ImmutableSet<Integer> flippedBuffers = flipped.get();
