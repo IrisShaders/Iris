@@ -35,6 +35,7 @@
     "mixins.iris.bettermipmaps.json",
     "mixins.iris.optimized-stitching.json",
     "mixins.iris.compat.indigo.json",
+    "mixins.iris.compat.dh.json",
     "mixins.iris.compat.sodium.json",
     "mixins.iris.compat.indium.json",
     "mixins.iris.fixes.maxfpscrash.json"
