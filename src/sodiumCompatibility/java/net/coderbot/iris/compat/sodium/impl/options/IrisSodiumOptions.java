@@ -22,7 +22,7 @@ public class IrisSodiumOptions {
         OptionImpl<Options, Integer> maxShadowDistanceSlider = OptionImpl.createBuilder(int.class, vanillaOpts)
                 .setName(new TranslatableComponent("options.iris.shadowDistance"))
                 .setTooltip(new TranslatableComponent("options.iris.shadowDistance.sodium_tooltip"))
-                .setControl(option -> new SliderControl(option, 0, 32, 1, ControlValueFormatter.quantityOrDisabled("Chunks", "Disabled")))
+                .setControl(option -> new SliderControl(option, 0, 32, 1, ControlValueFormatter.quantityOrDisabled(Text.translatable("options.chunks", "placeholder").getString().replace("placeholder ", ""), Text.translatable("options.off").getString())))
 				.setBinding((options, value) -> {
 						IrisVideoSettings.shadowDistance = value;
 						try {
@@ -70,7 +70,7 @@ public class IrisSodiumOptions {
 				// TODO: State that Fabulous Graphics is incompatible with Shader Packs in the tooltip
                 .setTooltip(new TranslatableComponent("sodium.options.graphics_quality.tooltip"))
                 .setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class,
-						new Component[] { new TextComponent("Fast"), new TextComponent("Fancy") }))
+						new Component[] { Component.literal(Text.translatable("options.graphics.fast").getString()), Component.literal(Text.translatable("options.graphics.fancy").getString()) }))
                 .setBinding(
                         (opts, value) -> opts.graphicsMode = value.toVanilla(),
                         opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode))
