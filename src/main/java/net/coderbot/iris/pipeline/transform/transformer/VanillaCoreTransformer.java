@@ -18,7 +18,10 @@ public class VanillaCoreTransformer {
 			VanillaParameters parameters) {
 
 		if (parameters.inputs.hasOverlay()) {
-			AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
+			if (!parameters.inputs.isText()) {
+				AttributeTransformer.patchOverlayColor(t, tree, root, parameters);
+			}
+			AttributeTransformer.patchEntityId(t, tree, root, parameters);
 		}
 
 		CommonTransformer.transform(t, tree, root, parameters, true);
