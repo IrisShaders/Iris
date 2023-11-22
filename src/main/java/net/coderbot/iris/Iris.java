@@ -71,9 +71,6 @@ public class Iris {
 
 	private static ShaderPack currentPack;
 	private static String currentPackName;
-	private static boolean sodiumInvalid;
-	private static boolean hasNEC;
-	private static boolean sodiumInstalled;
 	private static boolean initialized;
 
 	private static PipelineManager pipelineManager;
@@ -103,21 +100,6 @@ public class Iris {
 	 * <p>This is called right before options are loaded, so we can add key bindings here.</p>
 	 */
 	public void onEarlyInitialize() {
-		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
-				modContainer -> {
-					sodiumInstalled = true;
-					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
-
-					// This makes it so that if we don't have the right version of Sodium, it will show the user a
-					// nice warning, and prevent them from playing the game with a wrong version of Sodium.
-					if (!SodiumVersionCheck.isAllowedVersion(versionString)) {
-						sodiumInvalid = true;
-					}
-				}
-		);
-
-		hasNEC = FabricLoader.getInstance().isModLoaded("notenoughcrashes");
-
 		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
 				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
 
@@ -721,18 +703,6 @@ public class Iris {
 		}
 
 		return color + version;
-	}
-
-	public static boolean isSodiumInvalid() {
-		return sodiumInvalid;
- 	}
-
-	public static boolean isSodiumInstalled() {
-		return sodiumInstalled;
-	}
-
-	public static boolean hasNotEnoughCrashes() {
-		return hasNEC;
 	}
 
 	public static Path getShaderpacksDirectory() {
