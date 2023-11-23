@@ -1,6 +1,7 @@
 package net.coderbot.iris.pipeline;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
@@ -64,4 +65,5 @@ public interface WorldRenderingPipeline {
 
 	float getSunPathRotation();
 
+    DHCompat getDHCompat();
 }

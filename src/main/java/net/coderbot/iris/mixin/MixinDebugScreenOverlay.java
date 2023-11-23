@@ -59,19 +59,19 @@ public abstract class MixinDebugScreenOverlay {
 
 		messages.add(3, "Direct Buffers: +" + iris$humanReadableByteCountBin(iris$directPool.getMemoryUsed()));
 
-		if (!Iris.isSodiumInstalled()) {
-			messages.add(3, "Native Memory: +" + iris$humanReadableByteCountBin(iris$getNativeMemoryUsage()));
-		}
+		//if (!Iris.isSodiumInstalled()) {
+		//	messages.add(3, "Native Memory: +" + iris$humanReadableByteCountBin(iris$getNativeMemoryUsage()));
+		//}
 	}
 
 	@Inject(method = "getGameInformation", at = @At("RETURN"))
 	private void iris$appendShadowDebugText(CallbackInfoReturnable<List<String>> cir) {
 		List<String> messages = cir.getReturnValue();
 
-		if (!Iris.isSodiumInstalled() && Iris.getCurrentPack().isPresent()) {
-			messages.add(1, ChatFormatting.YELLOW + "[" + Iris.MODNAME + "] Sodium isn't installed; you will have poor performance.");
-			messages.add(2, ChatFormatting.YELLOW + "[" + Iris.MODNAME + "] Install Sodium if you want to run benchmarks or get higher FPS!");
-		}
+		//if (!Iris.isSodiumInstalled() && Iris.getCurrentPack().isPresent()) {
+		//	messages.add(1, ChatFormatting.YELLOW + "[" + Iris.MODNAME + "] Sodium isn't installed; you will have poor performance.");
+		//	messages.add(2, ChatFormatting.YELLOW + "[" + Iris.MODNAME + "] Install Sodium if you want to run benchmarks or get higher FPS!");
+		//}
 
 		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.addDebugText(messages));
 	}

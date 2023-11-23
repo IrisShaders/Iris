@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.ProgramTable;
@@ -82,8 +83,6 @@ import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
@@ -571,6 +570,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	@Override
 	public float getSunPathRotation() {
 		return sunPathRotation;
+	}
+
+	@Override
+	public DHCompat getDHCompat() {
+		return null;
 	}
 
 	private RenderCondition getCondition(WorldRenderingPhase phase) {
