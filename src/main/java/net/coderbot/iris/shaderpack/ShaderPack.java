@@ -47,7 +47,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -75,7 +85,7 @@ public class ShaderPack {
 	private List<String> dimensionIds;
 	private Map<NamespacedId, String> dimensionMap;
 
-	public ShaderPack(Path root, Iterable<StringPair> environmentDefines) throws IOException, IllegalStateException {
+	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		this(root, Collections.emptyMap(), environmentDefines);
 	}
 
@@ -89,11 +99,13 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs, Iterable<StringPair> environmentDefines) throws IOException, IllegalStateException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
-
+		ArrayList<StringPair> envDefines1 = new ArrayList<>(environmentDefines);
+		envDefines1.addAll(IrisDefines.createIrisReplacements());
+		environmentDefines = ImmutableList.copyOf(envDefines1);
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
 
@@ -153,10 +165,9 @@ public class ShaderPack {
 		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
 
-		Iterable<StringPair> replacements = IrisDefines.createIrisReplacements();
 		Iterable<StringPair> finalEnvironmentDefines = environmentDefines;
 		this.shaderProperties = loadProperties(root, "shaders.properties")
-				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines, replacements))
+				.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
 				.orElseGet(ShaderProperties::empty);
 
 		activeFeatures = new HashSet<>();
@@ -201,7 +212,7 @@ public class ShaderPack {
 		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream().filter(flag -> !FeatureFlags.isInvalid(flag)).collect(Collectors.toList());
 
 		if (!optionalFeatureFlags.isEmpty()) {
-
+			optionalFeatureFlags.forEach(flag -> Iris.logger.warn("Found flag " + flag));
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
 
 		}
@@ -241,8 +252,7 @@ public class ShaderPack {
 		IncludeProcessor includeProcessor = new IncludeProcessor(graph);
 
 		// Set up our source provider for creating ProgramSets
-		ArrayList<StringPair> finalEnvironmentDefines1 = new ArrayList<>((Collection) finalEnvironmentDefines);
-		finalEnvironmentDefines1.addAll(IrisDefines.createIrisReplacements());
+		Iterable<StringPair> finalEnvironmentDefines1 = environmentDefines;
 		this.sourceProvider = (path) -> {
 			String pathString = path.getPathString();
 			// Removes the first "/" in the path if present, and the file
