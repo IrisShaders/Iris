@@ -1291,6 +1291,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 	}
 
 	@Override
+	public void finalizeGameRendering() {
+
+	}
+
+	@Override
 	public SodiumTerrainPipeline getSodiumTerrainPipeline() {
 		return sodiumTerrainPipeline;
 	}

@@ -10,7 +10,7 @@ layout(rgba8) uniform image2D readImage;
 #else
 uniform sampler2D readImage;
 in vec2 uv;
-out vec3 outColor;
+out vec4 outColor;
 #endif
 
 // https://en.wikipedia.org/wiki/Rec._709#Transfer_characteristics
@@ -107,13 +107,13 @@ void main() {
     #if CURRENT_COLOR_SPACE != SRGB
         #ifdef COMPUTE
         ivec2 PixelIndex = ivec2(gl_GlobalInvocationID.xy);
-        vec3 SourceColor = imageLoad(readImage, PixelIndex).rgb;
+        vec4 SourceColor = imageLoad(readImage, PixelIndex);
         #else
-        vec3 SourceColor = texture(readImage, uv).rgb;
+        vec4 SourceColor = texture(readImage, uv);
         #endif
-            SourceColor = InverseEOTF_IEC61966(SourceColor);
+            SourceColor.rgb = InverseEOTF_IEC61966(SourceColor.rgb);
 
-        vec3 TargetColor = SourceColor;
+        vec3 TargetColor = SourceColor.rgb;
 
         #if CURRENT_COLOR_SPACE == DCI_P3
             // https://en.wikipedia.org/wiki/DCI-P3
@@ -137,9 +137,9 @@ void main() {
 
         #endif
         #ifdef COMPUTE
-        imageStore(readImage, PixelIndex, vec4(TargetColor, 1.0));
+        imageStore(readImage, PixelIndex, vec4(TargetColor, SourceColor.a));
         #else
-        outColor = TargetColor;
+        outColor = vec4(TargetColor, SourceColor.a);
         #endif
     #endif
 }
