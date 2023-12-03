@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
@@ -93,7 +94,7 @@ public class EntityRenderDispatcherMixin {
         var matPosition = matrices.pose();
 
         var color = ColorABGR.withAlpha(SHADOW_COLOR, alpha);
-        var normal = MatrixHelper.transformNormal(matNormal, 0.0f, 1.0f, 0.0f);
+        var normal = MatrixHelper.transformNormal(matNormal, Direction.UP);
 
 		boolean extended = shouldBeExtended();
 
