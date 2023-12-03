@@ -182,8 +182,12 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		VertexFormatDescription formatDescription = VertexFormatRegistry.instance()
 			.get(format);
 
-		this.uv1Offset = formatDescription.getElementOffset(CommonVertexAttribute.OVERLAY);
-		this.normalOffset = formatDescription.getElementOffset(CommonVertexAttribute.NORMAL);
+		if (formatDescription.containsElement(CommonVertexAttribute.OVERLAY)) {
+			this.uv1Offset = formatDescription.getElementOffset(CommonVertexAttribute.OVERLAY);
+		}
+		if (formatDescription.containsElement(CommonVertexAttribute.NORMAL)) {
+			this.normalOffset = formatDescription.getElementOffset(CommonVertexAttribute.NORMAL);
+		}
 		if (formatDescription.containsElement(IrisCommonVertexAttributes.TANGENT)) {
 			this.tangentOffset = formatDescription.getElementOffset(IrisCommonVertexAttributes.TANGENT);
 		}
@@ -209,8 +213,8 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			return;
 		}
 
-		if (injectNormalAndUV1 && currentElement == DefaultVertexFormat.ELEMENT_NORMAL) {
-			MemoryUtil.memPutInt(MemoryUtil.memAddress(buffer, nextElementByte + uv1Offset), 0);
+		if (injectNormalAndUV1) {
+			this.normal(0, 0, 0);
 		}
 
 		if (iris$isTerrain) {
