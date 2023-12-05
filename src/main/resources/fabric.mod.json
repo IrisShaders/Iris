@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "iris",
-  "version": "1.6.10-development-environment",
+  "version": "1.6.11-development-environment",
 
   "name": "Iris",
   "description": "A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs",
@@ -34,6 +34,7 @@
     "mixins.iris.vertexformat.json",
     "mixins.iris.bettermipmaps.json",
     "mixins.iris.compat.indigo.json",
+    "mixins.iris.compat.dh.json",
     "mixins.iris.compat.sodium.json",
     "mixins.iris.compat.indium.json",
     "mixins.iris.fixes.maxfpscrash.json",

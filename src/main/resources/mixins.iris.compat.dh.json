@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "plugin": "net.coderbot.iris.compat.dh.mixin.IrisDHCompatMixinPlugin",
+  "package": "net.coderbot.iris.compat.dh.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinDHApplyShader"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
