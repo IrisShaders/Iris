@@ -1101,6 +1101,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		isRenderingWorld = false;
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
+	}
+
+	@Override
+	public void finalizeGameRendering() {
 		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
 	}
 

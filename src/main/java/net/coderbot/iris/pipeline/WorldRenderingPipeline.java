@@ -45,6 +45,7 @@ public interface WorldRenderingPipeline {
 
 	void beginTranslucents();
 	void finalizeLevelRendering();
+	void finalizeGameRendering();
 	void destroy();
 
 	SodiumTerrainPipeline getSodiumTerrainPipeline();

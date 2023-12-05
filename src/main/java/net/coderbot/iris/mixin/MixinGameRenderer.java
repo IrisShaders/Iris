@@ -56,6 +56,11 @@ public class MixinGameRenderer {
 		itemInHandRenderer.renderHandsWithItems(tickDelta, poseStack, bufferSource, localPlayer, light);
 	}
 
+	@Inject(method = "renderLevel", at = @At("TAIL"))
+	private void iris$runColorSpace(float pGameRenderer0, long pLong1, PoseStack pPoseStack2, CallbackInfo ci) {
+		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::finalizeGameRendering);
+	}
+
 	@Redirect(method = "reloadShaders", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayList()Ljava/util/ArrayList;"))
 	private ArrayList<Program> iris$reloadGeometryShaders() {
 		ArrayList<Program> programs = Lists.newArrayList();
