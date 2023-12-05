@@ -141,6 +141,11 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
+	public void finalizeGameRendering() {
+		// stub: nothing to do here
+	}
+
+	@Override
 	public void destroy() {
 		// stub: nothing to do here
 	}
