@@ -66,7 +66,7 @@ public class IrisSodiumOptions {
 
 	static ControlValueFormatter translateVariableOrDisabled(String key, String disabled) {
 		return (v) -> {
-			return v == 0 ? disabled : (Component.translatable(key, v)).getString();
+			return v == 0 ? Component.literal(disabled) : (Component.translatable(key, v));
 		};
 	}
 
