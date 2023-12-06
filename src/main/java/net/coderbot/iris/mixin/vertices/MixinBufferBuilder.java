@@ -138,12 +138,6 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		}
 	}
 
-	@Override
-	public @NotNull VertexConsumer uv2(int pBufferVertexConsumer0, int pInt1) {
-
-		return BufferVertexConsumer.super.uv2(pBufferVertexConsumer0, pInt1);
-	}
-
 	@ModifyArg(method = "begin", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;switchFormat(Lcom/mojang/blaze3d/vertex/VertexFormat;)V"))
 	private VertexFormat iris$afterBeginSwitchFormat(VertexFormat arg) {
 		if (extending) {
