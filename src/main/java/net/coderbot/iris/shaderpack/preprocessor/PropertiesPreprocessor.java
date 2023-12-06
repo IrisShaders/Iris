@@ -78,19 +78,7 @@ public class PropertiesPreprocessor {
 		// Not super efficient, but this removes trailing whitespace on lines, fixing an issue with whitespace after
 		// line continuations (see PreprocessorTest#testWeirdPropertiesLineContinuation)
 		// Required for Voyager Shader
-		source = Arrays.stream(source.split("\\R")).map(String::trim)
-			.map(line -> {
-				if (line.startsWith("#")) {
-					// In PropertyCollectingListener we suppress "unknown preprocessor directive errors" and
-					// assume the line to be a comment, since in .properties files `#` also functions as a comment
-					// marker.
-					return line;
-				} else {
-					// This is a hack to ensure that non-macro lines don't have any preprocessing applied...
-					// In properties files, we don't substitute #define values except on macro lines.
-					return "#warning IRIS_PASSTHROUGH " + line;
-				}
-			}).collect(Collectors.joining("\n")) + "\n";
+		source = Arrays.stream(source.split("\\R")).map(String::trim).collect(Collectors.joining("\n")) + "\n";
 		// TODO: This is a horrible fix to trick the preprocessor into not seeing the backslashes during processing. We need a better way to do this.
 		source = source.replace("\\", "IRIS_PASSTHROUGHBACKSLASH");
 

@@ -79,9 +79,6 @@ public class Iris {
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static Optional<Exception> storedError = Optional.empty();
-	private static boolean sodiumInvalid;
-	private static boolean hasNEC;
-	private static boolean sodiumInstalled;
 	private static boolean initialized;
 
 	private static PipelineManager pipelineManager;
@@ -114,12 +111,6 @@ public class Iris {
 	 * <p>This is called right before options are loaded, so we can add key bindings here.</p>
 	 */
 	public void onEarlyInitialize() {
-		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
-				modContainer -> sodiumInstalled = true
-		);
-
-		hasNEC = FabricLoader.getInstance().isModLoaded("notenoughcrashes");
-
 		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
 				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
 
@@ -751,18 +742,6 @@ public class Iris {
 
 	public static String getBackupVersionNumber() {
 		return backupVersionNumber;
-	}
-
-	public static boolean isSodiumInvalid() {
-		return sodiumInvalid;
- 	}
-
-	public static boolean isSodiumInstalled() {
-		return sodiumInstalled;
-	}
-
-	public static boolean hasNotEnoughCrashes() {
-		return hasNEC;
 	}
 
 	public static Path getShaderpacksDirectory() {

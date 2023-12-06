@@ -9,5 +9,6 @@ public class IrisCommonVertexAttributes {
 	public static CommonVertexAttribute TANGENT;
 	public static CommonVertexAttribute MID_TEX_COORD;
 	public static CommonVertexAttribute BLOCK_ID;
+	public static CommonVertexAttribute ENTITY_ID;
 	public static CommonVertexAttribute MID_BLOCK;
 }

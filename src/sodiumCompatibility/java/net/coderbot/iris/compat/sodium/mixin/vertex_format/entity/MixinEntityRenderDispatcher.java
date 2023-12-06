@@ -13,6 +13,7 @@ import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.Direction;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,7 +43,7 @@ public class MixinEntityRenderDispatcher {
 		var matPosition = matrices.pose();
 
 		var color = ColorABGR.withAlpha(SHADOW_COLOR, alpha);
-		var normal = MatrixHelper.transformNormal(matNormal, 0.0f, 1.0f, 0.0f);
+		var normal = MatrixHelper.transformNormal(matNormal, Direction.UP);
 
 		boolean extended = shouldBeExtended();
 

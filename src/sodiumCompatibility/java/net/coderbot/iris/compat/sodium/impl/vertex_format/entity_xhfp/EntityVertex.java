@@ -95,12 +95,10 @@ public final class EntityVertex {
 			long ptr = buffer;
 
 			// The packed normal vector
-			var n = quad.getNormal();
-
-			// The normal vector
-			float nx = NormI8.unpackX(n);
-			float ny = NormI8.unpackY(n);
-			float nz = NormI8.unpackZ(n);
+			var n = quad.getLightFace().step();
+			float nx = n.x;
+			float ny = n.y;
+			float nz = n.z;
 
 			float midU = ((quad.getTexU(0) + quad.getTexU(1) + quad.getTexU(2) + quad.getTexU(3)) * 0.25f);
 			float midV = ((quad.getTexV(0) + quad.getTexV(1) + quad.getTexV(2) + quad.getTexV(3)) * 0.25f);

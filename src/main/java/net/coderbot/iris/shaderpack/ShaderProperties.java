@@ -29,9 +29,11 @@ import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -111,12 +113,17 @@ public class ShaderProperties {
 	}
 
 	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
-	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines, Iterable<StringPair> replacements) {
-		for (StringPair pair : replacements) {
-			contents = contents.replace(pair.getKey(), pair.getValue());
-		}
-
+	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
 		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions, environmentDefines);
+
+		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
+			try {
+				Files.writeString(FabricLoader.getInstance().getGameDir().resolve("preprocessed.properties"), preprocessedContents);
+				Files.writeString(FabricLoader.getInstance().getGameDir().resolve("original.properties"), contents);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();

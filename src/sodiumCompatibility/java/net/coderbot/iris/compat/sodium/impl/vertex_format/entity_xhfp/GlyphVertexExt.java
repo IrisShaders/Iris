@@ -102,12 +102,10 @@ public final class GlyphVertexExt {
 			long ptr = buffer;
 
 			// The packed normal vector
-			var n = quad.getNormal();
-
-			// The normal vector
-			float nx = NormI8.unpackX(n);
-			float ny = NormI8.unpackY(n);
-			float nz = NormI8.unpackZ(n);
+			var n = quad.getLightFace().step();
+			float nx = n.x;
+			float ny = n.y;
+			float nz = n.z;
 
 			// The transformed normal vector
 			float nxt = (matNormal.m00() * nx) + (matNormal.m10() * ny) + (matNormal.m20() * nz);

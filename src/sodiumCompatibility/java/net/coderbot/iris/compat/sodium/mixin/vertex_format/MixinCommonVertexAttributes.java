@@ -40,13 +40,16 @@ public class MixinCommonVertexAttributes {
 				= CommonVertexAttributeAccessor.createCommonVertexElement("MID_TEX_COORD", baseOrdinal + 1, IrisVertexFormats.MID_TEXTURE_ELEMENT);
 		IrisCommonVertexAttributes.BLOCK_ID
 				= CommonVertexAttributeAccessor.createCommonVertexElement("BLOCK_ID", baseOrdinal + 2, IrisVertexFormats.ENTITY_ELEMENT);
+		IrisCommonVertexAttributes.ENTITY_ID
+				= CommonVertexAttributeAccessor.createCommonVertexElement("ENTITY_ID", baseOrdinal + 3, IrisVertexFormats.ENTITY_ID_ELEMENT);
 		IrisCommonVertexAttributes.MID_BLOCK
-				= CommonVertexAttributeAccessor.createCommonVertexElement("MID_BLOCK", baseOrdinal + 3, IrisVertexFormats.MID_BLOCK_ELEMENT);
+				= CommonVertexAttributeAccessor.createCommonVertexElement("MID_BLOCK", baseOrdinal + 4, IrisVertexFormats.MID_BLOCK_ELEMENT);
 
 		$VALUES = ArrayUtils.addAll($VALUES,
 				IrisCommonVertexAttributes.TANGENT,
 				IrisCommonVertexAttributes.MID_TEX_COORD,
 				IrisCommonVertexAttributes.BLOCK_ID,
+				IrisCommonVertexAttributes.ENTITY_ID,
 				IrisCommonVertexAttributes.MID_BLOCK);
 
 		COUNT = $VALUES.length;

@@ -68,11 +68,6 @@ public class MixinLevelRenderer {
 	private void iris$setupPipeline(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
 									   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
 									   Matrix4f projection, CallbackInfo callback) {
-		if (Iris.isSodiumInvalid() && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
-				" didn't work. This is a bug! Please report it to the Iris developers.");
-		}
-
 		IrisTimeUniforms.updateTime();
 		CapturedRenderingState.INSTANCE.setGbufferModelView(poseStack.last().pose());
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projection);
