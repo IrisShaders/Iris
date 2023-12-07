@@ -531,10 +531,6 @@ public class ShaderProperties {
 				customUniforms.addVariable(parts[0], parts[1], value, true);
 			});
 
-
-			handleWhitespacedListDirective(key, value, "iris.features.required", options -> requiredFeatureFlags = options);
-			handleWhitespacedListDirective(key, value, "iris.features.optional", options -> optionalFeatureFlags = options);
-
 			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
 		});
@@ -543,6 +539,9 @@ public class ShaderProperties {
 		original.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
 			String value = (String) valueObject;
+
+			handleWhitespacedListDirective(key, value, "iris.features.required", options -> requiredFeatureFlags = options);
+			handleWhitespacedListDirective(key, value, "iris.features.optional", options -> optionalFeatureFlags = options);
 
 			// Defining "sliders" multiple times in the properties file will only result in
 			// the last definition being used, should be tested if behavior matches OptiFine
