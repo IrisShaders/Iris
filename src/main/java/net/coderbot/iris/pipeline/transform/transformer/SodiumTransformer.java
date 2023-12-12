@@ -32,7 +32,7 @@ public class SodiumTransformer {
 		replaceMCEntity(t, tree, root);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
-		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "mat4(1.0)");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 
@@ -207,7 +207,6 @@ public class SodiumTransformer {
 
 				"int quad_index   = gl_VertexID >> 2;" +
 				"int corner_index = gl_VertexID  & 3;" +
-				"int wtf = gl_VertexID % 4;" +
 				"vec2 v_RelCoord = CORNERS[corner_index];" +
 				"uvec4 color = ssbo_Quads[quad_index].color;" +
 				"vec4 light01 = unpackUnorm4x8(ssbo_Quads[quad_index].light[0]);" + // (c0.x, c0.y, c1.x, c1.y)
