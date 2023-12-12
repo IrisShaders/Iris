@@ -225,7 +225,7 @@ public class SodiumTransformer {
 				"iris_Normal = unpackUnorm4x8(ssbo_Quads[quad_index].normal).xyz;" +
 				"iris_Tangent = unpackUnorm4x8(ssbo_Quads[quad_index].tangent);" +
 				"iris_Entity = vec2(ssbo_Quads[quad_index].blockInfo & 0xFFFF, ssbo_Quads[quad_index].blockInfo >> 16);" +
-				"mc_midTexCoord = unpackUnorm2x16(ssbo_Quads[quad_index].midTexCoord);" +
+				"mc_midTexCoord = vec2(ssbo_Quads[quad_index].midTexCoord & 0xFFFF, ssbo_Quads[quad_index].midTexCoord >> 16);" +
 				"_vert_color = " + separateAo + ";" +
 				"_mesh_id = ssbo_Quads[quad_index].mesh_id; }",
 
