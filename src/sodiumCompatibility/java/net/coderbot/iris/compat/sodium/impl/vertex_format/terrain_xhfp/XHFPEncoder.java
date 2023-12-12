@@ -54,7 +54,8 @@ public class XHFPEncoder implements ModelQuadEncoder, ContextAwareVertexWriter {
 
 		MemoryUtil.memPutShort(ptr + 80, (short) encodeTexture(midU));
 		MemoryUtil.memPutShort(ptr + 82, (short) encodeTexture(midV));
-		int normal = NormalHelper.computeFaceNormalCompact(vertices[0].x, vertices[0].y, vertices[0].z, vertices[1].x, vertices[1].y, vertices[1].z, vertices[2].x, vertices[2].y, vertices[2].z, vertices[3].x, vertices[3].y, vertices[3].z);
+		int normal = flipUpcomingNormal ? NormalHelper.computeFaceNormalCompact(vertices[3].x, vertices[3].y, vertices[3].z, vertices[2].x, vertices[2].y, vertices[2].z, vertices[1].x, vertices[1].y, vertices[1].z, vertices[0].x, vertices[0].y, vertices[0].z)
+		: NormalHelper.computeFaceNormalCompact(vertices[0].x, vertices[0].y, vertices[0].z, vertices[1].x, vertices[1].y, vertices[1].z, vertices[2].x, vertices[2].y, vertices[2].z, vertices[3].x, vertices[3].y, vertices[3].z);
 		MemoryUtil.memPutInt(ptr + 84, normal);
 		MemoryUtil.memPutInt(ptr + 88, NormalHelper.computeTangent(NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal),
 			vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v,
@@ -63,7 +64,7 @@ public class XHFPEncoder implements ModelQuadEncoder, ContextAwareVertexWriter {
 		));
 
 		MemoryUtil.memPutInt(ptr + 92, packU16x2(contextHolder.blockId, contextHolder.renderType));
-
+		flipUpcomingNormal = false;
 		// TODO 		MemoryUtil.memPutInt(ptr + 36, contextHolder.ignoreMidBlock ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 		return ptr + XHFPModelVertexType.STRIDE;
 	}

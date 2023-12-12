@@ -32,7 +32,7 @@ public class SodiumTransformer {
 		replaceMCEntity(t, tree, root);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
-		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "mat4(1.0)");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 
@@ -136,7 +136,7 @@ public class SodiumTransformer {
 		TranslationUnit tree,
 		Root root,
 		SodiumParameters parameters) {
-		String separateAo = "vec4(((color.xyz >> (corner_index << 3)) & 0xFFu) / 255.0, unpackUnorm4x8(color.a).wzyx[corner_index])";
+		String separateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo() ? "vec4(((color.xyz >> (corner_index << 3)) & 0xFFu) / 255.0, unpackUnorm4x8(color.a).wzyx[corner_index])" : "vec4((((color.xyz >> (corner_index << 3)) & 0xFFu) / 255.0) * (unpackUnorm4x8(color.a).wzyx[corner_index]), 1.0)";
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 			"""
 				struct IrisQuad {
@@ -218,7 +218,7 @@ public class SodiumTransformer {
 					                           mix(light23.zw, light23.xy, v_RelCoord.x),
 					                           v_RelCoord.y);""" +
 
-				"_vert_tex_light_coord = clamp(uv, vec2(0.5 / 16.0), vec2(15.5 / 16.0));" +
+				"_vert_tex_light_coord = clamp(uv, vec2(0.5 / 16.0), vec2(15.5 / 16.0)) * 255.0;" +
 				"_vert_position = _unpack_position(quad_index, corner_index);" +
 				"_vert_tex_diffuse_coord = _unpack_texcoord(quad_index, corner_index);" +
 				"iris_Normal = unpackUnorm4x8(ssbo_Quads[quad_index].normal).xyz;" +

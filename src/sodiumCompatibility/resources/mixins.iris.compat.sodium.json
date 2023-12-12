@@ -15,7 +15,7 @@
     "block_id.MixinBakedChunkModelBuilder",
     "block_id.MixinChunkRenderRebuildTask",
     "directional_shading.MixinFlatLightPipeline",
-    "directional_shading.MixinSmoothLightPipeline",
+    "directional_shading.MixinBlockRenderer",
     "clouds.MixinCloudRenderer",
     "options.MixinOptionImpl",
     "options.MixinRenderSectionManager",
