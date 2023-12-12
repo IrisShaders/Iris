@@ -7,7 +7,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPo
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ModelQuadFormat;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.coderbot.iris.gl.blending.AlphaTest;
@@ -139,7 +139,7 @@ public class IrisChunkProgramOverrides {
 	}
 
     @Nullable
-    private GlProgram<IrisChunkShaderInterface> createShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline, ChunkVertexType vertexType) {
+    private GlProgram<IrisChunkShaderInterface> createShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline, ModelQuadFormat vertexType) {
         GlShader vertShader = createVertexShader(pass, pipeline);
         GlShader geomShader = createGeometryShader(pass, pipeline);
         GlShader fragShader = createFragmentShader(pass, pipeline);
@@ -225,7 +225,7 @@ public class IrisChunkProgramOverrides {
 		}
 	}
 
-	public void createShaders(SodiumTerrainPipeline pipeline, ChunkVertexType vertexType) {
+	public void createShaders(SodiumTerrainPipeline pipeline, ModelQuadFormat vertexType) {
         if (pipeline != null) {
 			pipeline.patchShaders(vertexType);
             for (IrisTerrainPass pass : IrisTerrainPass.values()) {
@@ -249,7 +249,7 @@ public class IrisChunkProgramOverrides {
     }
 
     @Nullable
-    public GlProgram<IrisChunkShaderInterface> getProgramOverride(TerrainRenderPass pass, ChunkVertexType vertexType) {
+    public GlProgram<IrisChunkShaderInterface> getProgramOverride(TerrainRenderPass pass, ModelQuadFormat vertexType) {
 		if (versionCounterForSodiumShaderReload != Iris.getPipelineManager().getVersionCounterForSodiumShaderReload()) {
 			versionCounterForSodiumShaderReload = Iris.getPipelineManager().getVersionCounterForSodiumShaderReload();
 			deleteShaders();

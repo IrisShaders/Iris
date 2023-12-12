@@ -1,6 +1,6 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ModelQuadEncoder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -49,6 +49,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  *    which might take a while. Then, once those steps are available, use the debugger
  *    to its fullest extent.</p>
  */
-@Mixin(ChunkVertexType.class)
+@Mixin(ModelQuadEncoder.class)
 public interface MixinModelVertexType {
 }

@@ -11,7 +11,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.FluidRende
 import me.jellysquid.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderMeshingTask;
 import me.jellysquid.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ModelQuadEncoder;
 import me.jellysquid.mods.sodium.client.util.task.CancellationToken;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
@@ -36,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
  */
 @Mixin(ChunkBuilderMeshingTask.class)
 public class MixinChunkRenderRebuildTask {
-	private ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
+	private ModelQuadEncoder.Vertex[] vertices = ModelQuadEncoder.Vertex.uninitializedQuad();
 
 	@Inject(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
 		target = "net/minecraft/world/level/block/state/BlockState.getRenderShape()" +
@@ -63,7 +63,7 @@ public class MixinChunkRenderRebuildTask {
 				vertices[i].color = 0;
 				vertices[i].light = blockState.getLightEmission() << 4 | blockState.getLightEmission() << 20;
 			}
-			buildBuffers.getVertexBuffer(ModelQuadFacing.UNASSIGNED).push(vertices, DefaultMaterials.CUTOUT);
+			buildBuffers.getMeshBuffer(ModelQuadFacing.UNASSIGNED).push(vertices, DefaultMaterials.CUTOUT);
 			((ChunkBuildBuffersExt) buffers).iris$ignoreMidBlock(false);
 			return;
 		}

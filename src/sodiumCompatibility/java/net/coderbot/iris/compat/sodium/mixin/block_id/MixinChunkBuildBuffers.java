@@ -6,7 +6,8 @@ import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.BakedChunkModelBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ModelQuadFormat;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.coderbot.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
@@ -33,7 +34,7 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 	private BlockContextHolder contextHolder;
 
 	@Inject(method = "<init>", at = @At("RETURN"), remap = false)
-	private void iris$onConstruct(ChunkVertexType vertexType, CallbackInfo ci) {
+	private void iris$onConstruct(ModelQuadFormat vertexType, CallbackInfo ci) {
 		Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
 
 		if (blockStateIds != null) {
@@ -43,12 +44,11 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 		}
 	}
 
-	@Inject(method = "<init>", remap = false, at = @At(value = "TAIL", remap = false))
-	private void iris$redirectWriterCreation(ChunkVertexType vertexType, CallbackInfo ci) {
+	@Inject(method = "<init>", remap = false, at = @At(value = "TAIL"))
+	private void iris$redirectWriterCreation(ModelQuadFormat vertexType, CallbackInfo ci) {
 		for (BakedChunkModelBuilder builder : this.builders.values()) {
-			if (builder instanceof ContextAwareVertexWriter) {
-				((ContextAwareVertexWriter) builder).iris$setContextHolder(contextHolder);
-			}
+			((ContextAwareVertexWriter) builder).iris$setContextHolder(contextHolder);
+
 		}
 	}
 

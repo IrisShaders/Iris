@@ -86,6 +86,47 @@ public abstract class NormalHelper {
 	}
 
 	/**
+	 * Computes the face normal of the given quad and saves it in the provided non-null vector.
+	 *
+	 * <p>Assumes counter-clockwise winding order, which is the norm.
+	 * Expects convex quads with all points co-planar.
+	 */
+	public static int computeFaceNormalCompact(float x0, float y0, float z0,
+											   float x1, float y1, float z1,
+											   float x2, float y2, float z2,
+											   float x3, float y3, float z3) {
+//		final Direction nominalFace = q.nominalFace();
+//
+//		if (GeometryHelper.isQuadParallelToFace(nominalFace, q)) {
+//			Vec3i vec = nominalFace.getVector();
+//			saveTo.set(vec.getX(), vec.getY(), vec.getZ());
+//			return;
+//		}
+
+
+		final float dx0 = x2 - x0;
+		final float dy0 = y2 - y0;
+		final float dz0 = z2 - z0;
+		final float dx1 = x3 - x1;
+		final float dy1 = y3 - y1;
+		final float dz1 = z3 - z1;
+
+		float normX = dy0 * dz1 - dz0 * dy1;
+		float normY = dz0 * dx1 - dx0 * dz1;
+		float normZ = dx0 * dy1 - dy0 * dx1;
+
+		float l = (float) Math.sqrt(normX * normX + normY * normY + normZ * normZ);
+
+		if (l != 0) {
+			normX /= l;
+			normY /= l;
+			normZ /= l;
+		}
+
+		return NormI8.pack(normX, normY, normZ, 0);
+	}
+
+	/**
 	 * Computes the face normal of the given quad with a flipped order and saves it in the provided non-null vector.
 	 *
 	 * <p>Assumes counter-clockwise winding order, which is the norm. It will be read clockwise to flip it.

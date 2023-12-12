@@ -11,7 +11,7 @@ import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
 import me.jellysquid.mods.sodium.client.render.chunk.ShaderChunkRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ModelQuadFormat;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
@@ -50,10 +50,10 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 
     @Shadow(remap = false)
 	@Final
-	protected ChunkVertexType vertexType;
+	protected ModelQuadFormat vertexType;
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
-    private void iris$onInit(RenderDevice device, ChunkVertexType vertexType, CallbackInfo ci) {
+    private void iris$onInit(RenderDevice device, ModelQuadFormat vertexType, CallbackInfo ci) {
         irisChunkProgramOverrides = new IrisChunkProgramOverrides();
     }
 

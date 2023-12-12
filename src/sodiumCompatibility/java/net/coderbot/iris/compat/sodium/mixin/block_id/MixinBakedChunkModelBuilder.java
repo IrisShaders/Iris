@@ -13,18 +13,18 @@ public class MixinBakedChunkModelBuilder implements ContextAwareVertexWriter {
 
 	@Shadow
 	@Final
-	private ChunkMeshBufferBuilder[] vertexBuffers;
+	private ChunkMeshBufferBuilder[] meshBuffers;
 
 	@Override
 	public void iris$setContextHolder(BlockContextHolder holder) {
-		for (ChunkMeshBufferBuilder builder : this.vertexBuffers) {
+		for (ChunkMeshBufferBuilder builder : this.meshBuffers) {
 			((ContextAwareVertexWriter) builder).iris$setContextHolder(holder);
 		}
 	}
 
 	@Override
 	public void flipUpcomingQuadNormal() {
-		for (ChunkMeshBufferBuilder builder : this.vertexBuffers) {
+		for (ChunkMeshBufferBuilder builder : this.meshBuffers) {
 			((ContextAwareVertexWriter) builder).flipUpcomingQuadNormal();
 		}
 	}

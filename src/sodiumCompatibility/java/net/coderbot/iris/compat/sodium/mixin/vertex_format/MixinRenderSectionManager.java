@@ -1,7 +1,7 @@
 package net.coderbot.iris.compat.sodium.mixin.vertex_format;
 
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ModelQuadFormat;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
@@ -13,15 +13,15 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 public class MixinRenderSectionManager {
 	@ModifyArg(method = "<init>", remap = false,
 			at = @At(value = "INVOKE",
-					target = "Lme/jellysquid/mods/sodium/client/render/chunk/DefaultChunkRenderer;<init>(Lme/jellysquid/mods/sodium/client/gl/device/RenderDevice;Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;)V"))
-	private ChunkVertexType iris$useExtendedVertexFormat$1(ChunkVertexType vertexType) {
+					target = "Lme/jellysquid/mods/sodium/client/render/chunk/DefaultChunkRenderer;<init>(Lme/jellysquid/mods/sodium/client/gl/device/RenderDevice;Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ModelQuadFormat;)V"))
+	private ModelQuadFormat iris$useExtendedVertexFormat$1(ModelQuadFormat vertexType) {
 		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
 	}
 
 	@ModifyArg(method = "<init>",
 			at = @At(value = "INVOKE",
-					target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/executor/ChunkBuilder;<init>(Lnet/minecraft/client/multiplayer/ClientLevel;Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;)V"))
-	private ChunkVertexType iris$useExtendedVertexFormat$2(ChunkVertexType vertexType) {
+					target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/executor/ChunkBuilder;<init>(Lnet/minecraft/client/multiplayer/ClientLevel;Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ModelQuadFormat;)V"))
+	private ModelQuadFormat iris$useExtendedVertexFormat$2(ModelQuadFormat vertexType) {
 		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : vertexType;
 	}
 }

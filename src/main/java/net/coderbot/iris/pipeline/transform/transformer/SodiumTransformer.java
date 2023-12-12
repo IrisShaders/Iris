@@ -29,6 +29,7 @@ public class SodiumTransformer {
 		CommonTransformer.transform(t, tree, root, parameters, false);
 
 		replaceMidTexCoord(t, tree, root, 1.0f / 65536.0f);
+		replaceMCEntity(t, tree, root);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
@@ -70,11 +71,11 @@ public class SodiumTransformer {
 		} else {
 			root.replaceReferenceExpressions(t, "gl_Color", "vec4(1.0)");
 		}
+		root.replaceReferenceExpressions(t, "at_tangent", "iris_Tangent");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			if (parameters.inputs.hasNormal()) {
 				root.rename("gl_Normal", "iris_Normal");
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
 			} else {
 				root.replaceReferenceExpressions(t, "gl_Normal", "vec3(0.0, 0.0, 1.0)");
 			}
@@ -110,8 +111,8 @@ public class SodiumTransformer {
 				"uniform mat4 iris_ProjectionMatrix;",
 				"uniform mat4 iris_ModelViewMatrix;",
 				"uniform vec3 u_RegionOffset;",
-				// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-				"vec4 getVertexPosition() { return vec4(_vert_position + u_RegionOffset + _get_draw_translation(_draw_id), 1.0); }");
+				// _draw_translation replaced with Chunks[_mesh_id].offset.xyz
+				"vec4 getVertexPosition() { return vec4(_vert_position + _get_draw_translation(_mesh_id), 1.0); }");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 
 			// inject here so that _vert_position is available to the above. (injections
@@ -135,33 +136,106 @@ public class SodiumTransformer {
 		TranslationUnit tree,
 		Root root,
 		SodiumParameters parameters) {
-		String separateAo = BlockRenderingSettings.INSTANCE.shouldUseSeparateAo() ? "a_Color" : "vec4(a_Color.rgb * a_Color.a, 1.0)";
+		String separateAo = "vec4(((color.xyz >> (corner_index << 3)) & 0xFFu) / 255.0, unpackUnorm4x8(color.a).wzyx[corner_index])";
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+			"""
+				struct IrisQuad {
+				    uvec3 position_hi;    // offset: 0    size: 16
+				    uvec3 position_lo;    // offset: 16   size: 16
+
+				    uvec4 color;          // offset: 32   size: 16
+
+				    uvec2 tex_diffuse_hi; // offset: 48   size:  8
+				    uvec2 tex_diffuse_lo; // offset: 56   size:  8
+
+				    uvec2 light;          // offset: 64   size:  8
+
+				    uint material;        // offset: 72   size:  4
+				    uint mesh_id;         // offset: 76   size:  4
+
+				    uint midTexCoord;     // offset: 80   size:  4
+				    uint normal;          // offset: 84   size:  4
+				    uint tangent;         // offset: 88   size:  4
+				    uint blockInfo;       // offset: 92   size:  4
+				    // midBlock users mald for now
+				};
+				""",
+			"""
+				layout(std430, binding = 15) buffer QuadBuffer {
+				    IrisQuad ssbo_Quads[];
+				};
+				""",
+			"""
+				vec3 _unpack_position(int quad_index, int corner_index) {
+				    return vec3(
+				         ((ssbo_Quads[quad_index].position_lo >> (corner_index << 3)) & 0xFFu) |
+				        (((ssbo_Quads[quad_index].position_hi >> (corner_index << 3)) & 0xFFu) << 8)
+				    ) * 0.00048828125 - 8.0;
+				}
+				""",
+			"""
+				vec2 _unpack_texcoord(int quad_index, int corner_index) {
+				    return vec2(
+				         ((ssbo_Quads[quad_index].tex_diffuse_lo >> (corner_index << 3)) & 0xFFu) |
+				        (((ssbo_Quads[quad_index].tex_diffuse_hi >> (corner_index << 3)) & 0xFFu) << 8)
+				    ) / 65535.0;
+				}
+				""",
+			"""
+				const vec2 CORNERS[4] = vec2[] (
+				    vec2(0.0, 0.0),
+				    vec2(1.0, 0.0),
+				    vec2(1.0, 1.0),
+				    vec2(0.0, 1.0)
+				);
+				""",
 			// translated from sodium's chunk_vertex.glsl
 			"vec3 _vert_position;",
 			"vec2 _vert_tex_diffuse_coord;",
-			"ivec2 _vert_tex_light_coord;",
+			"vec2 _vert_tex_light_coord;",
 			"vec4 _vert_color;",
-			"uint _draw_id;",
+			"vec3 iris_Normal;",
+			"vec2 iris_Entity;",
+			"vec2 mc_midTexCoord;",
+			"vec4 iris_Tangent;",
+			"uint _mesh_id;",
 			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
 			"float _material_mip_bias(uint material) {\n" +
 				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
 				"}",
 			"void _vert_init() {" +
-				"_vert_position = (vec3(a_PosId.xyz) * 0.00048828125 + -8.0"
-				+ ");" +
-				"_vert_tex_diffuse_coord = (a_TexCoord * 1.52587891E-5);" +
-				"_vert_tex_light_coord = a_LightCoord;" +
+
+				"int quad_index   = gl_VertexID >> 2;" +
+				"int corner_index = gl_VertexID  & 3;" +
+				"int wtf = gl_VertexID % 4;" +
+				"vec2 v_RelCoord = CORNERS[corner_index];" +
+				"uvec4 color = ssbo_Quads[quad_index].color;" +
+				"vec4 light01 = unpackUnorm4x8(ssbo_Quads[quad_index].light[0]);" + // (c0.x, c0.y, c1.x, c1.y)
+				"vec4 light23 = unpackUnorm4x8(ssbo_Quads[quad_index].light[1]);" + // (c3.x, c3.y, c2.x, c2.y)
+
+				"""
+					vec2 uv = mix(
+					                           mix(light01.xy, light01.zw, v_RelCoord.x),
+					                           mix(light23.zw, light23.xy, v_RelCoord.x),
+					                           v_RelCoord.y);""" +
+
+				"_vert_tex_light_coord = clamp(uv, vec2(0.5 / 16.0), vec2(15.5 / 16.0));" +
+				"_vert_position = _unpack_position(quad_index, corner_index);" +
+				"_vert_tex_diffuse_coord = _unpack_texcoord(quad_index, corner_index);" +
+				"iris_Normal = unpackUnorm4x8(ssbo_Quads[quad_index].normal).xyz;" +
+				"iris_Tangent = unpackUnorm4x8(ssbo_Quads[quad_index].tangent);" +
+				"iris_Entity = vec2(ssbo_Quads[quad_index].blockInfo & 0xFFFF, ssbo_Quads[quad_index].blockInfo >> 16);" +
+				"mc_midTexCoord = unpackUnorm2x16(ssbo_Quads[quad_index].midTexCoord);" +
 				"_vert_color = " + separateAo + ";" +
-				"_draw_id = (a_PosId.w >> 8u) & 0xFFu; }",
+				"_mesh_id = ssbo_Quads[quad_index].mesh_id; }",
 
 			"uvec3 _get_relative_chunk_coord(uint pos) {\n" +
 				"    // Packing scheme is defined by LocalSectionIndex\n" +
 				"    return uvec3(pos) >> uvec3(5u, 0u, 2u) & uvec3(7u, 3u, 7u);\n" +
 				"}",
 			"vec3 _get_draw_translation(uint pos) {\n" +
-				"    return _get_relative_chunk_coord(pos) * vec3(16.0f);\n" +
-				"}\n");
+				"    return u_RegionOffset + _get_relative_chunk_coord(pos) * vec3(16.0f);\n" +
+				"}");
 		addIfNotExists(root, t, tree, "a_PosId", Type.U32VEC4, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_TexCoord", Type.F32VEC2, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_Color", Type.F32VEC4, StorageQualifier.StorageType.IN);
@@ -201,21 +275,72 @@ public class SodiumTransformer {
 			case BOOL:
 				return;
 			case FLOAT32:
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "float iris_MidTex = (mc_midTexCoord.x * " + textureScale + ").x;");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "float iris_MidTex;");
+				tree.prependMainFunctionBody(t, "iris_MidTex = (mc_midTexCoord.x * " + textureScale + ").x;");
 				break;
 			case F32VEC2:
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec2 iris_MidTex = (mc_midTexCoord.xy * " + textureScale + ").xy;");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec2 iris_MidTex;");
+				tree.prependMainFunctionBody(t, "iris_MidTex = (mc_midTexCoord.xy * " + textureScale + ").xy;");
 				break;
 			case F32VEC3:
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec3 iris_MidTex = vec3(mc_midTexCoord.xy * " + textureScale + ", 0.0);");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec3 iris_MidTex;");
+				tree.prependMainFunctionBody(t, "iris_MidTex = vec3((mc_midTexCoord.xy * " + textureScale + ").xy, 0.0);");
 				break;
 			case F32VEC4:
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_MidTex = vec4(mc_midTexCoord.xy * " + textureScale + ", 0.0, 1.0);");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_MidTex;");
+				tree.prependMainFunctionBody(t, "iris_MidTex = vec4((mc_midTexCoord.xy * " + textureScale + ").xy, 0.0, 1.0);");
 				break;
 			default:
 				throw new IllegalStateException("Somehow got a midTexCoord that is *above* 4 dimensions???");
 		}
 
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec2 mc_midTexCoord;");
+	}
+
+	public static void replaceMCEntity(ASTParser t,
+										  TranslationUnit tree, Root root) {
+		Type dimension = Type.BOOL;
+		for (Identifier id : root.identifierIndex.get("mc_Entity")) {
+			TypeAndInitDeclaration initDeclaration = (TypeAndInitDeclaration) id.getAncestor(
+				2, 0, TypeAndInitDeclaration.class::isInstance);
+			if (initDeclaration == null) {
+				continue;
+			}
+			DeclarationExternalDeclaration declaration = (DeclarationExternalDeclaration) initDeclaration.getAncestor(
+				1, 0, DeclarationExternalDeclaration.class::isInstance);
+			if (declaration == null) {
+				continue;
+			}
+			if (initDeclaration.getType().getTypeSpecifier() instanceof BuiltinNumericTypeSpecifier numeric) {
+				dimension = numeric.type;
+
+				declaration.detachAndDelete();
+				initDeclaration.detachAndDelete();
+				id.detachAndDelete();
+				break;
+			}
+		}
+
+		switch (dimension) {
+			case BOOL:
+				return;
+			case FLOAT32:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "float mc_Entity;");
+				tree.prependMainFunctionBody(t, "mc_Entity = iris_Entity.x;");
+				break;
+			case F32VEC2:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec2 mc_Entity;");
+				tree.prependMainFunctionBody(t, "mc_Entity = iris_Entity.xy;");
+				break;
+			case F32VEC3:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec3 mc_Entity;");
+				tree.prependMainFunctionBody(t, "mc_Entity = vec3(iris_Entity.xy, 0.0);");
+				break;
+			case F32VEC4:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec4 mc_Entity;");
+				tree.prependMainFunctionBody(t, "mc_Entity = vec4(iris_Entity.xy, 0.0, 1.0);");
+				break;
+			default:
+				throw new IllegalStateException("Somehow got a midTexCoord that is *above* 4 dimensions???");
+		}
 	}
 }

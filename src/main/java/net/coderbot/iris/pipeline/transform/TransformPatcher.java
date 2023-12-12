@@ -253,8 +253,8 @@ public class TransformPatcher {
 								}
 							} else {
 								// patch the version number to at least 330
-								if (version.number < 330) {
-									versionStatement.version = Version.GLSL33;
+								if (version.number < 450) {
+									versionStatement.version = Version.GLSL45;
 								}
 								versionStatement.profile = Profile.CORE;
 
