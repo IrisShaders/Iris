@@ -17,6 +17,7 @@ import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
+import net.coderbot.iris.vertices.ImmediateState;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -48,10 +49,11 @@ public class IrisChunkShaderInterface {
 	private final ProgramImages irisProgramImages;
 	private final List<BufferBlendOverride> bufferBlendOverrides;
 	private final boolean hasOverrides;
+	private final boolean isTess;
 	private CustomUniforms customUniforms;
 
 	public IrisChunkShaderInterface(int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
-									boolean isShadowPass, BlendModeOverride blendModeOverride, List<BufferBlendOverride> bufferOverrides, float alpha, CustomUniforms customUniforms) {
+									boolean isTess, boolean isShadowPass, BlendModeOverride blendModeOverride, List<BufferBlendOverride> bufferOverrides, float alpha, CustomUniforms customUniforms) {
 		this.uniformModelViewMatrix = contextExt.bindUniformIfPresent("iris_ModelViewMatrix", GlUniformMatrix4f::new);
 		this.uniformModelViewMatrixInverse = contextExt.bindUniformIfPresent("iris_ModelViewMatrixInverse", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("iris_ProjectionMatrix", GlUniformMatrix4f::new);
@@ -60,6 +62,7 @@ public class IrisChunkShaderInterface {
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("iris_NormalMatrix", GlUniformMatrix3f::new);
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
 		this.customUniforms = customUniforms;
+		this.isTess = isTess;
 
 		this.alpha = alpha;
 
@@ -87,6 +90,8 @@ public class IrisChunkShaderInterface {
 			blendModeOverride.apply();
 		}
 
+		ImmediateState.usingTessellation = isTess;
+
 		if (hasOverrides) {
 			bufferBlendOverrides.forEach(BufferBlendOverride::apply);
 		}
@@ -102,6 +107,8 @@ public class IrisChunkShaderInterface {
 	}
 
 	public void restore() {
+		ImmediateState.usingTessellation = false;
+
 		if (blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();
 		}

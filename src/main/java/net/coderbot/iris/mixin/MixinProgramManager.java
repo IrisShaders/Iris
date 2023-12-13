@@ -15,5 +15,11 @@ public class MixinProgramManager {
 		if (shader instanceof ExtendedShader && ((ExtendedShader) shader).getGeometry() != null) {
 			((ExtendedShader) shader).getGeometry().close();
 		}
+		if (shader instanceof ExtendedShader && ((ExtendedShader) shader).getTessControl() != null) {
+			((ExtendedShader) shader).getTessControl().close();
+		}
+		if (shader instanceof ExtendedShader && ((ExtendedShader) shader).getTessEval() != null) {
+			((ExtendedShader) shader).getTessEval().close();
+		}
 	}
 }
