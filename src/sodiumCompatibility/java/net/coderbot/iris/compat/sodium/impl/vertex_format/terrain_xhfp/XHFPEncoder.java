@@ -27,10 +27,12 @@ public class XHFPEncoder implements ModelQuadEncoder, ContextAwareVertexWriter {
 		MemoryUtil.memPutInt(ptr +  0, packU16x2_hi(encodePosition(vertices[3].x), encodePosition(vertices[2].x), encodePosition(vertices[1].x), encodePosition(vertices[0].x)));
 		MemoryUtil.memPutInt(ptr +  4, packU16x2_hi(encodePosition(vertices[3].y), encodePosition(vertices[2].y), encodePosition(vertices[1].y), encodePosition(vertices[0].y)));
 		MemoryUtil.memPutInt(ptr +  8, packU16x2_hi(encodePosition(vertices[3].z), encodePosition(vertices[2].z), encodePosition(vertices[1].z), encodePosition(vertices[0].z)));
+		MemoryUtil.memPutInt(ptr + 12, material.bits());
 
 		MemoryUtil.memPutInt(ptr + 16, packU16x2_lo(encodePosition(vertices[3].x), encodePosition(vertices[2].x), encodePosition(vertices[1].x), encodePosition(vertices[0].x)));
 		MemoryUtil.memPutInt(ptr + 20, packU16x2_lo(encodePosition(vertices[3].y), encodePosition(vertices[2].y), encodePosition(vertices[1].y), encodePosition(vertices[0].y)));
 		MemoryUtil.memPutInt(ptr + 24, packU16x2_lo(encodePosition(vertices[3].z), encodePosition(vertices[2].z), encodePosition(vertices[1].z), encodePosition(vertices[0].z)));
+		MemoryUtil.memPutInt(ptr + 28, sectionIndex);
 
 		MemoryUtil.memPutInt(ptr + 32, packU8x4(ColorABGR.unpackRed(vertices[0].color), ColorABGR.unpackRed(vertices[1].color), ColorABGR.unpackRed(vertices[2].color), ColorABGR.unpackRed(vertices[3].color)));
 		MemoryUtil.memPutInt(ptr + 36, packU8x4(ColorABGR.unpackGreen(vertices[0].color), ColorABGR.unpackGreen(vertices[1].color), ColorABGR.unpackGreen(vertices[2].color), ColorABGR.unpackGreen(vertices[3].color)));
@@ -46,25 +48,25 @@ public class XHFPEncoder implements ModelQuadEncoder, ContextAwareVertexWriter {
 		MemoryUtil.memPutInt(ptr + 64, packU16x2(encodeLight(vertices[0].light), encodeLight(vertices[1].light)));
 		MemoryUtil.memPutInt(ptr + 68, packU16x2(encodeLight(vertices[2].light), encodeLight(vertices[3].light)));
 
-		MemoryUtil.memPutInt(ptr + 72, material.bits());
-		MemoryUtil.memPutInt(ptr + 76, sectionIndex);
 
 		float midU = (vertices[0].u + vertices[1].u + vertices[2].u + vertices[3].u) * 0.25f;
 		float midV = (vertices[0].v + vertices[1].v + vertices[2].v + vertices[3].v) * 0.25f;
 
-		MemoryUtil.memPutShort(ptr + 80, (short) encodeTexture(midU));
-		MemoryUtil.memPutShort(ptr + 82, (short) encodeTexture(midV));
+		MemoryUtil.memPutShort(ptr + 72, (short) encodeTexture(midU));
+		MemoryUtil.memPutShort(ptr + 74, (short) encodeTexture(midV));
 		int normal = flipUpcomingNormal ? NormalHelper.computeFaceNormalCompact(vertices[3].x, vertices[3].y, vertices[3].z, vertices[2].x, vertices[2].y, vertices[2].z, vertices[1].x, vertices[1].y, vertices[1].z, vertices[0].x, vertices[0].y, vertices[0].z)
 		: NormalHelper.computeFaceNormalCompact(vertices[0].x, vertices[0].y, vertices[0].z, vertices[1].x, vertices[1].y, vertices[1].z, vertices[2].x, vertices[2].y, vertices[2].z, vertices[3].x, vertices[3].y, vertices[3].z);
-		MemoryUtil.memPutInt(ptr + 84, normal);
-		MemoryUtil.memPutInt(ptr + 88, NormalHelper.computeTangent(NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal),
+		MemoryUtil.memPutInt(ptr + 76, normal);
+
+		flipUpcomingNormal = false;
+
+		MemoryUtil.memPutInt(ptr + 80, NormalHelper.computeTangent(NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal),
 			vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v,
 			vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v,
 			vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v
 		));
 
-		MemoryUtil.memPutInt(ptr + 92, packU16x2(contextHolder.blockId, contextHolder.renderType));
-		flipUpcomingNormal = false;
+		MemoryUtil.memPutInt(ptr + 84, packU16x2(contextHolder.blockId, contextHolder.renderType));
 		// TODO 		MemoryUtil.memPutInt(ptr + 36, contextHolder.ignoreMidBlock ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
 		return ptr + XHFPModelVertexType.STRIDE;
 	}

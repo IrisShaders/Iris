@@ -140,8 +140,11 @@ public class SodiumTransformer {
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 			"""
 				struct IrisQuad {
-				    uvec3 position_hi;    // offset: 0    size: 16
-				    uvec3 position_lo;    // offset: 16   size: 16
+				    uvec3 position_hi;    // offset: 0    size: 12
+				    uint material;        // offset: 12   size:  4
+
+				    uvec3 position_lo;    // offset: 16   size: 12
+				    uint mesh_id;         // offset: 28   size:  4
 
 				    uvec4 color;          // offset: 32   size: 16
 
@@ -150,13 +153,11 @@ public class SodiumTransformer {
 
 				    uvec2 light;          // offset: 64   size:  8
 
-				    uint material;        // offset: 72   size:  4
-				    uint mesh_id;         // offset: 76   size:  4
 
-				    uint midTexCoord;     // offset: 80   size:  4
-				    uint normal;          // offset: 84   size:  4
-				    uint tangent;         // offset: 88   size:  4
-				    uint blockInfo;       // offset: 92   size:  4
+				    uint midTexCoord;     // offset: 72   size:  4
+				    uint normal;          // offset: 76   size:  4
+				    uint tangent;         // offset: 80   size:  4
+				    uint blockInfo;       // offset: 84   size:  4
 				    // midBlock users mald for now
 				};
 				""",

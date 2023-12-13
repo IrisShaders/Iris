@@ -36,4 +36,21 @@ public abstract class MixinFluidRenderer {
 
 	@Unique
     private boolean useSeparateAo;
+
+	//@Inject(method = "render", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/pipeline/FluidRenderer;writeQuad(Lme/jellysquid/mods/sodium/client/render/chunk/compile/buffers/ChunkModelBuilder;Lme/jellysquid/mods/sodium/client/render/chunk/terrain/material/Material;Lnet/minecraft/core/BlockPos;Lme/jellysquid/mods/sodium/client/model/quad/ModelQuadView;Lme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadFacing;Z)V", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void iris$flipNextQuad(WorldSlice world, FluidState fluidState, BlockPos blockPos, BlockPos offset, ChunkBuildBuffers buffers, CallbackInfo ci, Material material) {
+		((ContextAwareVertexWriter) buffers.get(material)).flipUpcomingQuadNormal();
+	}
+
+	//@Inject(method = "render", at = @At(value = "INVOKE", target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/pipeline/FluidRenderer;writeQuad(Lme/jellysquid/mods/sodium/client/render/chunk/compile/buffers/ChunkModelBuilder;Lme/jellysquid/mods/sodium/client/render/chunk/terrain/material/Material;Lnet/minecraft/core/BlockPos;Lme/jellysquid/mods/sodium/client/model/quad/ModelQuadView;Lme/jellysquid/mods/sodium/client/model/quad/properties/ModelQuadFacing;Z)V", ordinal = 2), locals = LocalCapture.CAPTURE_FAILHARD)
+	private void iris$flipNextQuad2(WorldSlice world, FluidState fluidState, BlockPos blockPos, BlockPos offset, ChunkBuildBuffers buffers, CallbackInfo ci, Material material) {
+		((ContextAwareVertexWriter) buffers.get(material)).flipUpcomingQuadNormal();
+	}
+
+	@Inject(method = "writeQuad", at = @At("HEAD"))
+	private void a(ChunkModelBuilder builder, Material material, BlockPos offset, ModelQuadView quad, ModelQuadFacing facing, boolean flip, CallbackInfo ci) {
+		if (facing == ModelQuadFacing.NEG_Y) {
+			((ContextAwareVertexWriter) builder.getMeshBuffer(facing)).flipUpcomingQuadNormal();
+		}
+	}
 }
