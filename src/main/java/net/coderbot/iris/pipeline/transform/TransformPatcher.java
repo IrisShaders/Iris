@@ -390,7 +390,7 @@ public class TransformPatcher {
 			ShaderAttributeInputs inputs,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(vertex, geometry, tessControl, tessEval, fragment,
-				new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null));
+				new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String tessControl, String tessEval, String fragment,
