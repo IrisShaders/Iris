@@ -79,6 +79,7 @@ public class Iris {
 	private static KeyMapping reloadKeybind;
 	private static KeyMapping toggleShadersKeybind;
 	private static KeyMapping shaderpackScreenKeybind;
+	private static KeyMapping wireframeKeybind;
 
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Flag variable used when reloading
@@ -130,6 +131,7 @@ public class Iris {
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
 		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
+		wireframeKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.wireframe", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), "iris.keybinds"));
 
 		setupCommands(Minecraft.getInstance());
 
@@ -238,6 +240,10 @@ public class Iris {
 		} else if (shaderpackScreenKeybind.consumeClick()) {
 			minecraft.setScreen(new ShaderPackScreen(null));
 		}
+	}
+
+	public static boolean shouldActivateWireframe() {
+		return wireframeKeybind.isDown();
 	}
 
 	public static void toggleShaders(Minecraft minecraft, boolean enabled) throws IOException {
