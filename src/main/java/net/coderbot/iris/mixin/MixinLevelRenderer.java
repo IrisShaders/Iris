@@ -6,6 +6,7 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.IsOutlineRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
@@ -89,7 +90,7 @@ public class MixinLevelRenderer {
 		}
 
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
-			GL43C.glPolygonMode(GL43C.GL_FRONT_AND_BACK, GL43C.GL_LINE);
+			IrisRenderSystem.setPolygonMode(GL43C.GL_LINE);
 		}
 	}
 
@@ -116,7 +117,7 @@ public class MixinLevelRenderer {
 		pipeline = null;
 
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
-			GL43C.glPolygonMode(GL43C.GL_FRONT_AND_BACK, GL43C.GL_FILL);
+			IrisRenderSystem.setPolygonMode(GL43C.GL_FILL);
 		}
 	}
 

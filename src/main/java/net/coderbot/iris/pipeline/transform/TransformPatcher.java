@@ -194,11 +194,7 @@ public class TransformPatcher {
 					throw new IllegalArgumentException(
 							"No #version directive found in source code! See debugging.md for more information.");
 				}
-				Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
-				if (version.number >= 200) {
-					version = Version.GLSL33;
-				}
-				transformer.getLexer().version = version;
+                transformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 
 				return super.parseTranslationUnit(rootInstance, input);
 			}

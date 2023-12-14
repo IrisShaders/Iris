@@ -41,6 +41,8 @@ public class IrisRenderSystem {
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
 	private static boolean supportsCompute;
+	private static int polygonMode = GL43C.GL_FILL;
+	private static int backupPolygonMode = GL43C.GL_FILL;
 	private static int[] samplers;
 
 	public static void initRenderer() {
@@ -423,6 +425,23 @@ public class IrisRenderSystem {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL43C.glDeleteBuffers(glId);
     }
+
+    public static void setPolygonMode(int mode) {
+		if (mode != polygonMode) {
+			polygonMode = mode;
+			GL43C.glPolygonMode(GL43C.GL_FRONT_AND_BACK, mode);
+		}
+    }
+
+	public static void overridePolygonMode() {
+		backupPolygonMode = polygonMode;
+		setPolygonMode(GL43C.GL_FILL);
+	}
+
+	public static void restorePolygonMode() {
+		setPolygonMode(backupPolygonMode);
+		backupPolygonMode = GL43C.GL_FILL;
+	}
 
     public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
