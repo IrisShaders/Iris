@@ -173,12 +173,12 @@ public class AttributeTransformer {
 
 			// TODO: this is passthrough behavior
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"patch out vec4 entityColorTCS[];",
+				"patch out vec4 entityColorTCS;",
 				"in vec4 entityColor[];",
 				"out vec4 iris_vertexColorTCS[];",
 				"in vec4 iris_vertexColor[];");
 			tree.prependMainFunctionBody(t,
-				"entityColorTCS[gl_InvocationID] = entityColor[gl_InvocationID];",
+				"entityColorTCS = entityColor[gl_InvocationID];",
 				"iris_vertexColorTCS[gl_InvocationID] = iris_vertexColor[gl_InvocationID];");
 		} else if (parameters.type.glShaderType == ShaderType.TESSELATION_EVAL) {
 			// replace read references to grab the color from the first vertex.
