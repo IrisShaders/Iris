@@ -12,6 +12,8 @@ import net.coderbot.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.debug.TimerQuerier;
+import net.coderbot.iris.gl.debug.TimerQuery;
 import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
@@ -360,6 +362,9 @@ public class ShadowRenderer {
 			return;
 		}
 
+		TimerQuery query = TimerQuerier.giveQuery();
+		query.startQuery("shadowPass");
+
 		Minecraft client = Minecraft.getInstance();
 
 		levelRenderer.getLevel().getProfiler().popPush("shadows");
@@ -555,6 +560,7 @@ public class ShadowRenderer {
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();
 		}
+		query.startMonitoring();
 
 		compositeRenderer.renderAll();
 

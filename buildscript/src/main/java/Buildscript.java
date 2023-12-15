@@ -100,6 +100,11 @@ public class Buildscript extends SimpleFabricProject {
 		jij(d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-key-binding-api-v1", "1.0.12+54e5b2ec60"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:2.0.0-pre13"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.lwjgl:lwjgl-nuklear:3.3.3"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.lwjgl:lwjgl-nuklear:3.3.3:natives-linux"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.lwjgl:lwjgl-nuklear:3.3.3:natives-windows"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.lwjgl:lwjgl-nuklear:3.3.3:natives-macos"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.lwjgl:lwjgl-nuklear:3.3.3:natives-macos-arm64"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.antlr:antlr4-runtime:4.11.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 		d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "distanthorizons", "2.0.0-a-1.18.2"), ModDependencyFlag.COMPILE);
 

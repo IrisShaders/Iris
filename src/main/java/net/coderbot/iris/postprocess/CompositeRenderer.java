@@ -17,6 +17,8 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.debug.TimerQuerier;
+import net.coderbot.iris.gl.debug.TimerQuery;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.program.ComputeProgram;
@@ -109,8 +111,9 @@ public class CompositeRenderer {
 			ImmutableSet<Integer> flippedAtLeastOnceSnapshot = flippedAtLeastOnce.build();
 
 			if (source == null || !source.isValid()) {
-				if (computes[i] != null) {
+				if (computes[i] != null && computes[i][0] != null) {
 					ComputeOnlyPass pass = new ComputeOnlyPass();
+					pass.name = computes[i][0].getName();
 					pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
 					passes.add(pass);
 				}
@@ -121,6 +124,7 @@ public class CompositeRenderer {
 			ProgramDirectives directives = source.getDirectives();
 
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
+			pass.name = source.getName();
 			pass.blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(null);
 			pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
 			int[] drawBuffers = directives.getDrawBuffers();
@@ -205,6 +209,7 @@ public class CompositeRenderer {
 		int viewWidth;
 		int viewHeight;
 		Program program;
+		String name;
 		BlendModeOverride blendModeOverride;
 		ComputeProgram[] computes;
 		GlFramebuffer framebuffer;
@@ -241,6 +246,8 @@ public class CompositeRenderer {
 		com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 
 		for (Pass renderPass : passes) {
+			TimerQuery query = TimerQuerier.giveQuery();
+			query.startQuery(renderPass.name);
 			boolean ranCompute = false;
 			for (ComputeProgram computeProgram : renderPass.computes) {
 				if (computeProgram != null) {
@@ -258,6 +265,7 @@ public class CompositeRenderer {
 			Program.unbind();
 
 			if (renderPass instanceof ComputeOnlyPass) {
+				query.startMonitoring();
 				continue;
 			}
 
@@ -287,6 +295,7 @@ public class CompositeRenderer {
 			FullScreenQuadRenderer.INSTANCE.renderQuad();
 
 			BlendModeOverride.restore();
+			query.startMonitoring();
 		}
 
 		FullScreenQuadRenderer.INSTANCE.end();

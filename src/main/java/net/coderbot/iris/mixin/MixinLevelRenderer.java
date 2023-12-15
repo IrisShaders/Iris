@@ -7,12 +7,15 @@ import com.mojang.math.Vector3f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.debug.TimerQuerier;
+import net.coderbot.iris.gl.debug.TimerQuery;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.IsOutlineRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.IrisTimeUniforms;
@@ -82,6 +85,7 @@ public class MixinLevelRenderer {
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
+		TimerQuerier.advanceFrameAndReset();
 
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 
@@ -200,15 +204,25 @@ public class MixinLevelRenderer {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
+	@Unique
+	TimerQuery query;
 
 	@Inject(method = "renderChunkLayer", at = @At("HEAD"))
 	private void iris$beginTerrainLayer(RenderType renderType, PoseStack poseStack, double d, double e, double f, Matrix4f projectionMatrix, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.fromTerrainRenderType(renderType));
+
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) return;
+		query = TimerQuerier.giveQuery();
+		query.startQuery(WorldRenderingPhase.fromTerrainRenderType(renderType).name());
 	}
 
 	@Inject(method = "renderChunkLayer", at = @At("RETURN"))
 	private void iris$endTerrainLayer(RenderType renderType, PoseStack poseStack, double d, double e, double f, Matrix4f projectionMatrix, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) return;
+
+		query.startMonitoring();
+		query = null;
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WEATHER))

@@ -7,6 +7,8 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.debug.TimerQuerier;
+import net.coderbot.iris.gl.debug.TimerQuery;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;

@@ -6,6 +6,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.coderbot.iris.compat.sodium.SodiumVersionCheck;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
+import net.coderbot.iris.gl.debug.TimerQuerier;
 import net.coderbot.iris.gl.shader.StandardMacros;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
@@ -182,6 +183,7 @@ public class Iris {
 			return;
 		}
 
+		TimerQuerier.initRenderer();
 		PBRTextureManager.INSTANCE.init();
 
 		// Only load the shader pack when we can access OpenGL
