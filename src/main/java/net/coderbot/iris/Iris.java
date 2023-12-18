@@ -38,6 +38,8 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
@@ -219,6 +221,10 @@ public class Iris {
 	}
 
 	public static void handleKeybinds(Minecraft minecraft) {
+		if (Minecraft.getInstance().player != null) {
+			Minecraft.getInstance().getSingleplayerServer().getPlayerList().getPlayers().get(0).getAttribute(Attributes.SCALE).setBaseValue(0.1);
+			Minecraft.getInstance().getSingleplayerServer().getPlayerList().getPlayers().get(0).getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.1);
+		}
 		if (reloadKeybind.consumeClick()) {
 			try {
 				reload();
