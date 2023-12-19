@@ -71,7 +71,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public FabricLoader getLoader() {
-		return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.14.24"));
+		return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.15.3"));
 	}
 
 	@Override
