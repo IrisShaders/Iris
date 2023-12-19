@@ -41,6 +41,7 @@ public class IrisRenderSystem {
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
 	private static boolean supportsCompute;
+	private static boolean supportsTesselation;
 	private static int polygonMode = GL43C.GL_FILL;
 	private static int backupPolygonMode = GL43C.GL_FILL;
 	private static int[] samplers;
@@ -60,6 +61,7 @@ public class IrisRenderSystem {
 		hasMultibind = GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind;
 
 		supportsCompute = GL.getCapabilities().glDispatchCompute != MemoryUtil.NULL;
+		supportsTesselation = GL.getCapabilities().GL_ARB_tessellation_shader || GL.getCapabilities().OpenGL40;
 
 		samplers = new int[SamplerLimits.get().getMaxTextureUnits()];
 	}
@@ -364,6 +366,10 @@ public class IrisRenderSystem {
 
 	public static boolean supportsCompute() {
 		return supportsCompute;
+	}
+
+	public static boolean supportsTesselation() {
+		return supportsTesselation;
 	}
 
     public static int genSampler() {
