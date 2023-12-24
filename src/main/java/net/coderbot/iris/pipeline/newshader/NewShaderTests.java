@@ -205,6 +205,16 @@ public class NewShaderTests {
 					return Optional.empty();
 				}
 				return Optional.of(new StringResource(id, geometry));
+			} else if (path.endsWith("tcs")) {
+				if (tessControl == null) {
+					return Optional.empty();
+				}
+				return Optional.of(new StringResource(id, tessControl));
+			} else if (path.endsWith("tes")) {
+				if (tessEval == null) {
+					return Optional.empty();
+				}
+				return Optional.of(new StringResource(id, tessEval));
 			} else if (path.endsWith("fsh")) {
 				return Optional.of(new StringResource(id, fragment));
 			}

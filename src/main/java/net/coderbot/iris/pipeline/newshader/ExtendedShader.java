@@ -259,10 +259,36 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	}
 
 	@Override
-	public void iris$createGeometryShader(ResourceProvider factory, String name) throws IOException {
+	public void iris$createExtraShaders(ResourceProvider factory, String name) throws IOException {
 		 factory.getResource(new ResourceLocation("minecraft", name + "_geometry.gsh")).ifPresent(geometry -> {
 			 try {
 				 this.geometry = Program.compileShader(IrisProgramTypes.GEOMETRY, name, geometry.open(), geometry.sourcePackId(), new GlslPreprocessor() {
+					 @Nullable
+					 @Override
+					 public String applyImport(boolean bl, String string) {
+						 return null;
+					 }
+				 });
+			 } catch (IOException e) {
+				 e.printStackTrace();
+			 }
+		 });
+		 factory.getResource(new ResourceLocation("minecraft", name + "_tessControl.tcs")).ifPresent(tessControl -> {
+			 try {
+				 this.tessControl = Program.compileShader(IrisProgramTypes.TESS_CONTROL, name, tessControl.open(), tessControl.sourcePackId(), new GlslPreprocessor() {
+					 @Nullable
+					 @Override
+					 public String applyImport(boolean bl, String string) {
+						 return null;
+					 }
+				 });
+			 } catch (IOException e) {
+				 e.printStackTrace();
+			 }
+		 });
+		 factory.getResource(new ResourceLocation("minecraft", name + "_tessEval.tes")).ifPresent(tessEval -> {
+			 try {
+				 this.tessEval = Program.compileShader(IrisProgramTypes.TESS_EVAL, name, tessEval.open(), tessEval.sourcePackId(), new GlslPreprocessor() {
 					 @Nullable
 					 @Override
 					 public String applyImport(boolean bl, String string) {
