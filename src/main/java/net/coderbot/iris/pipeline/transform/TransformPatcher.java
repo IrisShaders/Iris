@@ -77,13 +77,17 @@ public class TransformPatcher {
 		final Parameters parameters;
 		final String vertex;
 		final String geometry;
+		final String tessControl;
+		final String tessEval;
 		final String fragment;
 		final String compute;
 
-		public CacheKey(Parameters parameters, String vertex, String geometry, String fragment) {
+		public CacheKey(Parameters parameters, String vertex, String geometry, String tessControl, String tessEval, String fragment) {
 			this.parameters = parameters;
 			this.vertex = vertex;
 			this.geometry = geometry;
+			this.tessControl = tessControl;
+			this.tessEval = tessEval;
 			this.fragment = fragment;
 			this.compute = null;
 		}
@@ -92,6 +96,8 @@ public class TransformPatcher {
 			this.parameters = parameters;
 			this.vertex = null;
 			this.geometry = null;
+			this.tessControl = null;
+			this.tessEval = null;
 			this.fragment = null;
 			this.compute = compute;
 		}
@@ -103,6 +109,8 @@ public class TransformPatcher {
 			result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
 			result = prime * result + ((vertex == null) ? 0 : vertex.hashCode());
 			result = prime * result + ((geometry == null) ? 0 : geometry.hashCode());
+			result = prime * result + ((tessControl == null) ? 0 : tessControl.hashCode());
+			result = prime * result + ((tessEval == null) ? 0 : tessEval.hashCode());
 			result = prime * result + ((fragment == null) ? 0 : fragment.hashCode());
 			result = prime * result + ((compute == null) ? 0 : compute.hashCode());
 			return result;
@@ -131,6 +139,16 @@ public class TransformPatcher {
 				if (other.geometry != null)
 					return false;
 			} else if (!geometry.equals(other.geometry))
+				return false;
+			if (tessControl == null) {
+				if (other.tessControl != null)
+					return false;
+			} else if (!tessControl.equals(other.tessControl))
+				return false;
+			if (tessEval == null) {
+				if (other.tessEval != null)
+					return false;
+			} else if (!tessEval.equals(other.tessEval))
 				return false;
 			if (fragment == null) {
 				if (other.fragment != null)
@@ -176,11 +194,7 @@ public class TransformPatcher {
 					throw new IllegalArgumentException(
 							"No #version directive found in source code! See debugging.md for more information.");
 				}
-				Version version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
-				if (version.number >= 200) {
-					version = Version.GLSL33;
-				}
-				transformer.getLexer().version = version;
+                transformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 
 				return super.parseTranslationUnit(rootInstance, input);
 			}
@@ -300,10 +314,10 @@ public class TransformPatcher {
 		}
 	}
 
-	private static Map<PatchShaderType, String> transform(String vertex, String geometry, String fragment,
+	private static Map<PatchShaderType, String> transform(String vertex, String geometry, String tessControl, String tessEval, String fragment,
 			Parameters parameters) {
 		// stop if all are null
-		if (vertex == null && geometry == null && fragment == null) {
+		if (vertex == null && geometry == null && tessControl == null && tessEval == null && fragment == null) {
 			return null;
 		}
 
@@ -311,7 +325,7 @@ public class TransformPatcher {
 		CacheKey key;
 		Map<PatchShaderType, String> result = null;
 		if (useCache) {
-			key = new CacheKey(parameters, vertex, geometry, fragment);
+			key = new CacheKey(parameters, vertex, geometry, tessControl, tessEval, fragment);
 			if (cache.containsKey(key)) {
 				result = cache.get(key);
 			}
@@ -323,6 +337,8 @@ public class TransformPatcher {
 			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
 			inputs.put(PatchShaderType.VERTEX, vertex);
 			inputs.put(PatchShaderType.GEOMETRY, geometry);
+			inputs.put(PatchShaderType.TESS_CONTROL, tessControl);
+			inputs.put(PatchShaderType.TESS_EVAL, tessEval);
 			inputs.put(PatchShaderType.FRAGMENT, fragment);
 
 			result = transformInternal(inputs, parameters);
@@ -363,29 +379,21 @@ public class TransformPatcher {
 		return result;
 	}
 
-	public static Map<PatchShaderType, String> patchAttributes(
-			String vertex, String geometry, String fragment,
-			InputAvailability inputs,
-			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(vertex, geometry, fragment,
-				new AttributeParameters(Patch.ATTRIBUTES, textureMap, geometry != null, inputs));
-	}
-
 	public static Map<PatchShaderType, String> patchVanilla(
-			String vertex, String geometry, String fragment,
+			String vertex, String geometry, String tessControl, String tessEval, String fragment,
 			AlphaTest alpha, boolean isLines,
 			boolean hasChunkOffset,
 			ShaderAttributeInputs inputs,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(vertex, geometry, fragment,
-				new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null));
+		return transform(vertex, geometry, tessControl, tessEval, fragment,
+				new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
 	}
 
-	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String fragment,
+	public static Map<PatchShaderType, String> patchSodium(String vertex, String geometry, String tessControl, String tessEval, String fragment,
 			AlphaTest alpha, ShaderAttributeInputs inputs,
 			float positionScale, float positionOffset, float textureScale,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(vertex, geometry, fragment,
+		return transform(vertex, geometry, tessControl, tessEval, fragment,
 				new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs, positionScale, positionOffset,
 						textureScale));
 	}
@@ -394,7 +402,7 @@ public class TransformPatcher {
 			String vertex, String geometry, String fragment,
 			TextureStage stage,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(vertex, geometry, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap));
+		return transform(vertex, geometry, null, null, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap));
 	}
 
 	public static String patchCompute(

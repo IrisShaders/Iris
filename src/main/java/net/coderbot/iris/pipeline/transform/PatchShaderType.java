@@ -5,6 +5,8 @@ import net.coderbot.iris.gl.shader.ShaderType;
 public enum PatchShaderType {
 	VERTEX(ShaderType.VERTEX, ".vsh"),
 	GEOMETRY(ShaderType.GEOMETRY, ".gsh"),
+	TESS_CONTROL(ShaderType.TESSELATION_CONTROL, ".tcs"),
+	TESS_EVAL(ShaderType.TESSELATION_EVAL, ".tes"),
 	FRAGMENT(ShaderType.FRAGMENT, ".fsh"),
 	COMPUTE(ShaderType.COMPUTE, ".csh");
 
@@ -22,6 +24,10 @@ public enum PatchShaderType {
 				return new PatchShaderType[] { VERTEX };
 			case GEOMETRY:
 				return new PatchShaderType[] { GEOMETRY };
+			case TESSELATION_CONTROL:
+				return new PatchShaderType[] { TESS_CONTROL };
+			case TESSELATION_EVAL:
+				return new PatchShaderType[] { TESS_EVAL };
 			case COMPUTE:
 				return new PatchShaderType[] { COMPUTE };
 			case FRAGMENT:

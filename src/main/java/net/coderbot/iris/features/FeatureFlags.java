@@ -14,6 +14,7 @@ public enum FeatureFlags {
 	CUSTOM_IMAGES(() -> true, IrisRenderSystem::supportsImageLoadStore),
 	PER_BUFFER_BLENDING(() -> true, IrisRenderSystem::supportsBufferBlending),
 	COMPUTE_SHADERS(() -> true, IrisRenderSystem::supportsCompute),
+	TESSELATION_SHADERS(() -> true, IrisRenderSystem::supportsTesselation),
 	ENTITY_TRANSLUCENT(() -> true, () -> true),
 	REVERSED_CULLING(() -> true, () -> true),
 	SSBO(() -> true, IrisRenderSystem::supportsSSBO),

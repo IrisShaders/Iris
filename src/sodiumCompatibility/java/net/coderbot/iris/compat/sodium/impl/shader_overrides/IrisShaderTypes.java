@@ -7,4 +7,6 @@ import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
  */
 public class IrisShaderTypes {
 	public static ShaderType GEOMETRY;
+	public static ShaderType TESS_CONTROL;
+	public static ShaderType TESS_EVAL;
 }

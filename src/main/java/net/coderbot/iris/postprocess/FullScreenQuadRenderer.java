@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.fantastic.VertexBufferHelper;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.GL11;
 
 import org.lwjgl.opengl.GL20C;
@@ -53,7 +54,9 @@ public class FullScreenQuadRenderer {
 	}
 
 	public void renderQuad() {
+		IrisRenderSystem.overridePolygonMode();
 		quad.draw();
+		IrisRenderSystem.restorePolygonMode();
 	}
 
 	public void end() {
