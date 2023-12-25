@@ -19,6 +19,7 @@ import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.texture.TextureAccess;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.ShaderPrinter;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -276,8 +277,10 @@ public class FinalPassRenderer {
 		for (int i = 0; i < SamplerLimits.get().getMaxTextureUnits(); i++) {
 			// Unbind all textures that we may have used.
 			// NB: This is necessary for shader pack reloading to work properly
-			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + i);
-			RenderSystem.bindTexture(0);
+			if (GlStateManagerAccessor.getTEXTURES()[i].binding != 0) {
+				RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + i);
+				RenderSystem.bindTexture(0);
+			}
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
