@@ -34,6 +34,7 @@ import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -249,11 +250,15 @@ public class Iris {
 			}
 		} else if (shaderpackScreenKeybind.consumeClick()) {
 			minecraft.setScreen(new ShaderPackScreen(null));
+		} else if (wireframeKeybind.consumeClick()) {
+			if (irisConfig.areDebugOptionsEnabled() && minecraft.player != null && !Minecraft.getInstance().isLocalServer()) {
+				minecraft.player.displayClientMessage(new TextComponent("No cheating; wireframe only in singleplayer!"), false);
+			}
 		}
 	}
 
 	public static boolean shouldActivateWireframe() {
-		return wireframeKeybind.isDown();
+		return irisConfig.areDebugOptionsEnabled() && wireframeKeybind.isDown();
 	}
 
 	public static void toggleShaders(Minecraft minecraft, boolean enabled) throws IOException {

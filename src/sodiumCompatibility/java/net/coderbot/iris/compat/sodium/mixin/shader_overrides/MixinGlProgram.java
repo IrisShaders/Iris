@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.function.IntFunction;
 
-@Mixin(GlProgram.class)
+@Mixin(value = GlProgram.class, remap = false)
 public class MixinGlProgram extends GlObject implements ShaderBindingContextExt {
 	public <U extends GlUniform<?>> U bindUniformIfPresent(String name, IntFunction<U> factory) {
 		int index = GlStateManager._glGetUniformLocation(this.handle(), name);

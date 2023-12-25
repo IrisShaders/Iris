@@ -28,7 +28,7 @@ public class MixinGlStateManager_DepthColorOverride {
 		}
 	}
 
-	@Redirect(method = "_drawElements", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glDrawElements(IIIJ)V"))
+	@Redirect(method = "_drawElements", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glDrawElements(IIIJ)V"), remap = false)
 	private static void iris$modify(int mode, int count, int type, long indices) {
 		if (mode == GL43C.GL_TRIANGLES && ImmediateState.usingTessellation) {
 			mode = GL43C.GL_PATCHES;
@@ -37,7 +37,7 @@ public class MixinGlStateManager_DepthColorOverride {
 		GL43C.glDrawElements(mode, count, type, indices);
 	}
 
-	@Inject(method = "_glUseProgram", at = @At("TAIL"))
+	@Inject(method = "_glUseProgram", at = @At("TAIL"), remap = false)
 	private static void iris$resetTessellation(int pInt0, CallbackInfo ci) {
 		ImmediateState.usingTessellation = false;
 	}
