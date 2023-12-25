@@ -255,7 +255,7 @@ public class Iris {
 			minecraft.setScreen(new ShaderPackScreen(null));
 		} else if (wireframeKeybind.consumeClick()) {
 			if (irisConfig.areDebugOptionsEnabled() && minecraft.player != null && !Minecraft.getInstance().isLocalServer()) {
-				minecraft.player.displayClientMessage(new TextComponent("No cheating; wireframe only in singleplayer!"), false);
+				minecraft.player.displayClientMessage(Component.literal("No cheating; wireframe only in singleplayer!"), false);
 			}
 		}
 	}
