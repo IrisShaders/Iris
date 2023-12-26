@@ -18,6 +18,7 @@ import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.ViewportData;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
@@ -212,7 +213,7 @@ public class CompositeRenderer {
 		ImmutableSet<Integer> flippedAtLeastOnce;
 		ImmutableSet<Integer> stageReadsFromAlt;
 		ImmutableSet<Integer> mipmappedBuffers;
-		float viewportScale;
+		ViewportData viewportScale;
 
 		protected void destroy() {
 			this.program.destroy();
@@ -270,9 +271,11 @@ public class CompositeRenderer {
 				}
 			}
 
-			float scaledWidth = renderPass.viewWidth * renderPass.viewportScale;
-			float scaledHeight = renderPass.viewHeight * renderPass.viewportScale;
-			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
+			float scaledWidth = renderPass.viewWidth * renderPass.viewportScale.scale();
+			float scaledHeight = renderPass.viewHeight * renderPass.viewportScale.scale();
+			int beginWidth = (int) (renderPass.viewWidth * renderPass.viewportScale.viewportX());
+			int beginHeight = (int) (renderPass.viewHeight * renderPass.viewportScale.viewportY());
+			RenderSystem.viewport(beginWidth, beginHeight, (int) scaledWidth, (int) scaledHeight);
 
 			renderPass.framebuffer.bind();
 			renderPass.program.use();
