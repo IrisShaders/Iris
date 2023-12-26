@@ -8,10 +8,12 @@ import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderBindingContextExt;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.function.IntFunction;
 
-@Mixin(GlProgram.class)
+@Mixin(value = GlProgram.class, remap = false)
 public class MixinGlProgram extends GlObject implements ShaderBindingContextExt {
 	public <U extends GlUniform<?>> U bindUniformIfPresent(String name, IntFunction<U> factory) {
 		int index = GlStateManager._glGetUniformLocation(this.handle(), name);
@@ -20,6 +22,16 @@ public class MixinGlProgram extends GlObject implements ShaderBindingContextExt 
 		} else {
 			return factory.apply(index);
 		}
+	}
+
+	@Redirect(method = "bind", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL20C;glUseProgram(I)V"))
+	private void iris$useGlStateManager(int i) {
+		GlStateManager._glUseProgram(i);
+	}
+
+	@Redirect(method = "unbind", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL20C;glUseProgram(I)V"))
+	private void iris$useGlStateManager2(int i) {
+		GlStateManager._glUseProgram(i);
 	}
 
 	public GlUniformBlock bindUniformBlockIfPresent(String name, int bindingPoint) {
