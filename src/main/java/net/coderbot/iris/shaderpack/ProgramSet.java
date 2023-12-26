@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -81,11 +82,13 @@ public class ProgramSet implements ProgramSetInterface {
 		//
 		// - https://github.com/IrisShaders/Iris/issues/483
 		// - https://github.com/IrisShaders/Iris/issues/987
+		boolean readTesselation = pack.hasFeature(FeatureFlags.TESSELATION_SHADERS);
+
 		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, shaderProperties,
-				BlendModeOverride.OFF);
+				BlendModeOverride.OFF, readTesselation);
 		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow");
 
-		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", shaderProperties);
+		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", shaderProperties, readTesselation);
 
 		this.shadowCompCompute = new ComputeSource[shadowcomp.length][];
 		for (int i = 0; i < shadowcomp.length; i++) {
@@ -94,57 +97,57 @@ public class ProgramSet implements ProgramSetInterface {
 
 		this.setup = readProgramArray(directory, sourceProvider, "setup");
 
-		this.begin = readProgramArray(directory, sourceProvider, "begin", shaderProperties);
+		this.begin = readProgramArray(directory, sourceProvider, "begin", shaderProperties, readTesselation);
 		this.beginCompute = new ComputeSource[begin.length][];
 		for (int i = 0; i < begin.length; i++) {
 			this.beginCompute[i] = readComputeArray(directory, sourceProvider, "begin" + ((i == 0) ? "" : i));
 		}
 
-		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
+		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties, readTesselation);
 		this.prepareCompute = new ComputeSource[prepare.length][];
 		for (int i = 0; i < prepare.length; i++) {
 			this.prepareCompute[i] = readComputeArray(directory, sourceProvider, "prepare" + ((i == 0) ? "" : i));
 		}
 
-		this.gbuffersBasic = readProgramSource(directory, sourceProvider, "gbuffers_basic", this, shaderProperties);
-		this.gbuffersLine = readProgramSource(directory, sourceProvider, "gbuffers_line", this, shaderProperties);
-		this.gbuffersBeaconBeam = readProgramSource(directory, sourceProvider, "gbuffers_beaconbeam", this, shaderProperties);
-		this.gbuffersTextured = readProgramSource(directory, sourceProvider, "gbuffers_textured", this, shaderProperties);
-		this.gbuffersTexturedLit = readProgramSource(directory, sourceProvider, "gbuffers_textured_lit", this, shaderProperties);
-		this.gbuffersTerrain = readProgramSource(directory, sourceProvider, "gbuffers_terrain", this, shaderProperties);
-		this.gbuffersTerrainSolid = readProgramSource(directory, sourceProvider, "gbuffers_terrain_solid", this, shaderProperties);
-		this.gbuffersTerrainCutout = readProgramSource(directory, sourceProvider, "gbuffers_terrain_cutout", this, shaderProperties);
-		this.gbuffersDamagedBlock = readProgramSource(directory, sourceProvider, "gbuffers_damagedblock", this, shaderProperties);
-		this.gbuffersSkyBasic = readProgramSource(directory, sourceProvider, "gbuffers_skybasic", this, shaderProperties);
-		this.gbuffersSkyTextured = readProgramSource(directory, sourceProvider, "gbuffers_skytextured", this, shaderProperties);
-		this.gbuffersClouds = readProgramSource(directory, sourceProvider, "gbuffers_clouds", this, shaderProperties);
-		this.gbuffersWeather = readProgramSource(directory, sourceProvider, "gbuffers_weather", this, shaderProperties);
-		this.gbuffersEntities = readProgramSource(directory, sourceProvider, "gbuffers_entities", this, shaderProperties);
-		this.gbuffersEntitiesTrans = readProgramSource(directory, sourceProvider, "gbuffers_entities_translucent", this, shaderProperties);
-		this.gbuffersParticles = readProgramSource(directory, sourceProvider, "gbuffers_particles", this, shaderProperties);
-		this.gbuffersParticlesTrans = readProgramSource(directory, sourceProvider, "gbuffers_particles_translucent", this, shaderProperties);
-		this.gbuffersEntitiesGlowing = readProgramSource(directory, sourceProvider, "gbuffers_entities_glowing", this, shaderProperties);
-		this.gbuffersGlint = readProgramSource(directory, sourceProvider, "gbuffers_armor_glint", this, shaderProperties);
-		this.gbuffersEntityEyes = readProgramSource(directory, sourceProvider, "gbuffers_spidereyes", this, shaderProperties);
-		this.gbuffersBlock = readProgramSource(directory, sourceProvider, "gbuffers_block", this, shaderProperties);
-		this.gbuffersBlockTrans = readProgramSource(directory, sourceProvider, "gbuffers_block_translucent", this, shaderProperties);
-		this.gbuffersHand = readProgramSource(directory, sourceProvider, "gbuffers_hand", this, shaderProperties);
+		this.gbuffersBasic = readProgramSource(directory, sourceProvider, "gbuffers_basic", this, shaderProperties, readTesselation);
+		this.gbuffersLine = readProgramSource(directory, sourceProvider, "gbuffers_line", this, shaderProperties, readTesselation);
+		this.gbuffersBeaconBeam = readProgramSource(directory, sourceProvider, "gbuffers_beaconbeam", this, shaderProperties, readTesselation);
+		this.gbuffersTextured = readProgramSource(directory, sourceProvider, "gbuffers_textured", this, shaderProperties, readTesselation);
+		this.gbuffersTexturedLit = readProgramSource(directory, sourceProvider, "gbuffers_textured_lit", this, shaderProperties, readTesselation);
+		this.gbuffersTerrain = readProgramSource(directory, sourceProvider, "gbuffers_terrain", this, shaderProperties, readTesselation);
+		this.gbuffersTerrainSolid = readProgramSource(directory, sourceProvider, "gbuffers_terrain_solid", this, shaderProperties, readTesselation);
+		this.gbuffersTerrainCutout = readProgramSource(directory, sourceProvider, "gbuffers_terrain_cutout", this, shaderProperties, readTesselation);
+		this.gbuffersDamagedBlock = readProgramSource(directory, sourceProvider, "gbuffers_damagedblock", this, shaderProperties, readTesselation);
+		this.gbuffersSkyBasic = readProgramSource(directory, sourceProvider, "gbuffers_skybasic", this, shaderProperties, readTesselation);
+		this.gbuffersSkyTextured = readProgramSource(directory, sourceProvider, "gbuffers_skytextured", this, shaderProperties, readTesselation);
+		this.gbuffersClouds = readProgramSource(directory, sourceProvider, "gbuffers_clouds", this, shaderProperties, readTesselation);
+		this.gbuffersWeather = readProgramSource(directory, sourceProvider, "gbuffers_weather", this, shaderProperties, readTesselation);
+		this.gbuffersEntities = readProgramSource(directory, sourceProvider, "gbuffers_entities", this, shaderProperties, readTesselation);
+		this.gbuffersEntitiesTrans = readProgramSource(directory, sourceProvider, "gbuffers_entities_translucent", this, shaderProperties, readTesselation);
+		this.gbuffersParticles = readProgramSource(directory, sourceProvider, "gbuffers_particles", this, shaderProperties, readTesselation);
+		this.gbuffersParticlesTrans = readProgramSource(directory, sourceProvider, "gbuffers_particles_translucent", this, shaderProperties, readTesselation);
+		this.gbuffersEntitiesGlowing = readProgramSource(directory, sourceProvider, "gbuffers_entities_glowing", this, shaderProperties, readTesselation);
+		this.gbuffersGlint = readProgramSource(directory, sourceProvider, "gbuffers_armor_glint", this, shaderProperties, readTesselation);
+		this.gbuffersEntityEyes = readProgramSource(directory, sourceProvider, "gbuffers_spidereyes", this, shaderProperties, readTesselation);
+		this.gbuffersBlock = readProgramSource(directory, sourceProvider, "gbuffers_block", this, shaderProperties, readTesselation);
+		this.gbuffersBlockTrans = readProgramSource(directory, sourceProvider, "gbuffers_block_translucent", this, shaderProperties, readTesselation);
+		this.gbuffersHand = readProgramSource(directory, sourceProvider, "gbuffers_hand", this, shaderProperties, readTesselation);
 
-		this.deferred = readProgramArray(directory, sourceProvider, "deferred", shaderProperties);
+		this.deferred = readProgramArray(directory, sourceProvider, "deferred", shaderProperties, readTesselation);
 		this.deferredCompute = new ComputeSource[deferred.length][];
 		for (int i = 0; i < deferred.length; i++) {
 			this.deferredCompute[i] = readComputeArray(directory, sourceProvider, "deferred" + ((i == 0) ? "" : i));
 		}
 
-		this.gbuffersWater = readProgramSource(directory, sourceProvider, "gbuffers_water", this, shaderProperties);
-		this.gbuffersHandWater = readProgramSource(directory, sourceProvider, "gbuffers_hand_water", this, shaderProperties);
+		this.gbuffersWater = readProgramSource(directory, sourceProvider, "gbuffers_water", this, shaderProperties, readTesselation);
+		this.gbuffersHandWater = readProgramSource(directory, sourceProvider, "gbuffers_hand_water", this, shaderProperties, readTesselation);
 
-		this.composite = readProgramArray(directory, sourceProvider, "composite", shaderProperties);
+		this.composite = readProgramArray(directory, sourceProvider, "composite", shaderProperties, readTesselation);
 		this.compositeCompute = new ComputeSource[composite.length][];
 		for (int i = 0; i < deferred.length; i++) {
 			this.compositeCompute[i] = readComputeArray(directory, sourceProvider, "composite" + ((i == 0) ? "" : i));
 		}
-		this.compositeFinal = readProgramSource(directory, sourceProvider, "final", this, shaderProperties);
+		this.compositeFinal = readProgramSource(directory, sourceProvider, "final", this, shaderProperties, readTesselation);
 		this.finalCompute = readComputeArray(directory, sourceProvider, "final");
 
 		locateDirectives();
@@ -173,13 +176,13 @@ public class ProgramSet implements ProgramSetInterface {
 
 	private ProgramSource[] readProgramArray(AbsolutePackPath directory,
 											 Function<AbsolutePackPath, String> sourceProvider, String name,
-											 ShaderProperties shaderProperties) {
+											 ShaderProperties shaderProperties, boolean readTesselation) {
 		ProgramSource[] programs = new ProgramSource[100];
 
 		for (int i = 0; i < programs.length; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
 
-			programs[i] = readProgramSource(directory, sourceProvider, name + suffix, this, shaderProperties);
+			programs[i] = readProgramSource(directory, sourceProvider, name + suffix, this, shaderProperties, readTesselation);
 		}
 
 		return programs;
@@ -501,19 +504,30 @@ public class ProgramSet implements ProgramSetInterface {
 
 	private static ProgramSource readProgramSource(AbsolutePackPath directory,
 												   Function<AbsolutePackPath, String> sourceProvider, String program,
-												   ProgramSet programSet, ShaderProperties properties) {
-		return readProgramSource(directory, sourceProvider, program, programSet, properties, null);
+												   ProgramSet programSet, ShaderProperties properties, boolean readTesselation) {
+		return readProgramSource(directory, sourceProvider, program, programSet, properties, null, readTesselation);
 	}
 
 	private static ProgramSource readProgramSource(AbsolutePackPath directory,
 												   Function<AbsolutePackPath, String> sourceProvider, String program,
 												   ProgramSet programSet, ShaderProperties properties,
-												   BlendModeOverride defaultBlendModeOverride) {
+												   BlendModeOverride defaultBlendModeOverride, boolean readTesselation) {
 		AbsolutePackPath vertexPath = directory.resolve(program + ".vsh");
 		String vertexSource = sourceProvider.apply(vertexPath);
 
 		AbsolutePackPath geometryPath = directory.resolve(program + ".gsh");
 		String geometrySource = sourceProvider.apply(geometryPath);
+
+		String tessControlSource = null;
+		String tessEvalSource = null;
+
+		if (readTesselation) {
+			AbsolutePackPath tessControlPath = directory.resolve(program + ".tcs");
+			tessControlSource = sourceProvider.apply(tessControlPath);
+
+			AbsolutePackPath tessEvalPath = directory.resolve(program + ".tes");
+			tessEvalSource = sourceProvider.apply(tessEvalPath);
+		}
 
 		AbsolutePackPath fragmentPath = directory.resolve(program + ".fsh");
 		String fragmentSource = sourceProvider.apply(fragmentPath);
@@ -537,7 +551,7 @@ public class ProgramSet implements ProgramSetInterface {
 				""";
 		}
 
-		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties,
+		return new ProgramSource(program, vertexSource, geometrySource, tessControlSource, tessEvalSource, fragmentSource, programSet, properties,
 				defaultBlendModeOverride);
 	}
 

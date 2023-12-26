@@ -19,8 +19,8 @@ public class VanillaParameters extends GeometryInfoParameters {
 			Patch patch,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
 			AlphaTest alpha, boolean isLines, boolean hasChunkOffset,
-			ShaderAttributeInputs inputs, boolean hasGeometry) {
-		super(patch, textureMap, hasGeometry);
+			ShaderAttributeInputs inputs, boolean hasGeometry, boolean hasTesselation) {
+		super(patch, textureMap, hasGeometry, hasTesselation);
 		this.alpha = alpha;
 		this.isLines = isLines;
 		this.hasChunkOffset = hasChunkOffset;

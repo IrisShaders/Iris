@@ -15,7 +15,7 @@ public class AttributeParameters extends GeometryInfoParameters {
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
 			boolean hasGeometry,
 			InputAvailability inputs) {
-		super(patch, textureMap, hasGeometry);
+		super(patch, textureMap, hasGeometry, false);
 		this.inputs = inputs;
 	}
 

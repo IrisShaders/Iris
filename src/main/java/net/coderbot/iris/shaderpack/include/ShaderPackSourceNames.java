@@ -74,6 +74,8 @@ public class ShaderPackSourceNames {
 
 	private static void addStarts(ImmutableList.Builder<String> potentialFileNames, String baseName) {
 		potentialFileNames.add(baseName + ".vsh");
+		potentialFileNames.add(baseName + ".tcs");
+		potentialFileNames.add(baseName + ".tes");
 		potentialFileNames.add(baseName + ".gsh");
 		potentialFileNames.add(baseName + ".fsh");
 	}

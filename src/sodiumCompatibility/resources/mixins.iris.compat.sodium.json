@@ -29,6 +29,7 @@
     "font.MixinGlyphRenderer",
     "pbr_animation.MixinSpriteContents",
     "shader_overrides.MixinGlProgram",
+    "shader_overrides.MixinGlRenderDevice",
     "shader_overrides.MixinRegionChunkRenderer",
     "shader_overrides.MixinShaderChunkRenderer",
     "shader_overrides.MixinBlockRenderPass",

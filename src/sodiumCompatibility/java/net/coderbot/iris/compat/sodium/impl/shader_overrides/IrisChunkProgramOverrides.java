@@ -83,6 +83,56 @@ public class IrisChunkProgramOverrides {
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".gsh"), source);
     }
 
+    private GlShader createTessControlShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+        Optional<String> irisTessControlShader;
+
+        if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
+            irisTessControlShader = pipeline.getShadowTessControlShaderSource();
+        } else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
+            irisTessControlShader = pipeline.getTerrainSolidTessControlShaderSource();
+        } else if (pass == IrisTerrainPass.GBUFFER_CUTOUT) {
+            irisTessControlShader = pipeline.getTerrainCutoutTessControlShaderSource();
+        } else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+            irisTessControlShader = pipeline.getTranslucentTessControlShaderSource();
+        } else {
+            throw new IllegalArgumentException("Unknown pass type " + pass);
+        }
+
+        String source = irisTessControlShader.orElse(null);
+
+        if (source == null) {
+            return null;
+        }
+
+        return new GlShader(IrisShaderTypes.TESS_CONTROL, new ResourceLocation("iris",
+			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".tcs"), source);
+    }
+
+    private GlShader createTessEvalShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+        Optional<String> irisTessEvalShader;
+
+        if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
+            irisTessEvalShader = pipeline.getShadowTessEvalShaderSource();
+        } else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
+            irisTessEvalShader = pipeline.getTerrainSolidTessEvalShaderSource();
+        } else if (pass == IrisTerrainPass.GBUFFER_CUTOUT) {
+            irisTessEvalShader = pipeline.getTerrainCutoutTessEvalShaderSource();
+        } else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+            irisTessEvalShader = pipeline.getTranslucentTessEvalShaderSource();
+        } else {
+            throw new IllegalArgumentException("Unknown pass type " + pass);
+        }
+
+        String source = irisTessEvalShader.orElse(null);
+
+        if (source == null) {
+            return null;
+        }
+
+        return new GlShader(IrisShaderTypes.TESS_EVAL, new ResourceLocation("iris",
+			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".tes"), source);
+    }
+
     private GlShader createFragmentShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
         Optional<String> irisFragmentShader;
 
@@ -142,6 +192,8 @@ public class IrisChunkProgramOverrides {
     private GlProgram<IrisChunkShaderInterface> createShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline, ChunkVertexType vertexType) {
         GlShader vertShader = createVertexShader(pass, pipeline);
         GlShader geomShader = createGeometryShader(pass, pipeline);
+        GlShader tessCShader = createTessControlShader(pass, pipeline);
+        GlShader tessEShader = createTessEvalShader(pass, pipeline);
         GlShader fragShader = createFragmentShader(pass, pipeline);
 		BlendModeOverride blendOverride = getBlendOverride(pass, pipeline);
 		List<BufferBlendOverride> bufferOverrides = getBufferBlendOverride(pass, pipeline);
@@ -154,6 +206,14 @@ public class IrisChunkProgramOverrides {
 
             if (geomShader != null) {
                 geomShader.delete();
+            }
+
+            if (tessCShader != null) {
+				tessCShader.delete();
+            }
+
+            if (tessEShader != null) {
+				tessEShader.delete();
             }
 
             if (fragShader != null) {
@@ -170,6 +230,12 @@ public class IrisChunkProgramOverrides {
 
             if (geomShader != null) {
                 builder.attachShader(geomShader);
+            }
+            if (tessCShader != null) {
+                builder.attachShader(tessCShader);
+            }
+            if (tessEShader != null) {
+                builder.attachShader(tessEShader);
             }
 
             return builder.attachShader(vertShader)
@@ -190,12 +256,18 @@ public class IrisChunkProgramOverrides {
 						ShaderBindingContextExt contextExt = (ShaderBindingContextExt) shader;
 
 						return new IrisChunkShaderInterface(handle, contextExt, pipeline, new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass.toTerrainPass()),
-								pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, blendOverride, bufferOverrides, alpha, pipeline.getCustomUniforms());
+								tessCShader != null || tessEShader != null, pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, blendOverride, bufferOverrides, alpha, pipeline.getCustomUniforms());
 					});
         } finally {
             vertShader.delete();
             if (geomShader != null) {
                 geomShader.delete();
+            }
+            if (tessCShader != null) {
+				tessCShader.delete();
+            }
+            if (tessEShader != null) {
+				tessEShader.delete();
             }
             fragShader.delete();
         }
