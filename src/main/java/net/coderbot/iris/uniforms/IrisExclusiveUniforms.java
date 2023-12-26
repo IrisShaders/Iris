@@ -98,7 +98,7 @@ public class IrisExclusiveUniforms {
 			return -1;
 		}
 
-		return (float) Minecraft.getInstance().player.getArmor() / (float) 50.0);
+		return (float) Minecraft.getInstance().player.getArmor() / (float) 50.0;
 	}
 
 	private static float getMaxAir() {
