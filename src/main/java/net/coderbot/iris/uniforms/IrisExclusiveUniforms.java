@@ -33,6 +33,8 @@ public class IrisExclusiveUniforms {
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerHealth", IrisExclusiveUniforms::getMaxHealth);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerHunger", IrisExclusiveUniforms::getCurrentHunger);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerHunger", () -> 20);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerArmor", IrisExclusiveUniforms::getCurrentArmor);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerArmor", () -> 50);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerAir", IrisExclusiveUniforms::getCurrentAir);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerAir", IrisExclusiveUniforms::getMaxAir);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "firstPersonCamera", IrisExclusiveUniforms::isFirstPersonCamera);
@@ -92,6 +94,14 @@ public class IrisExclusiveUniforms {
 		return (float) Minecraft.getInstance().player.getAirSupply() / (float) Minecraft.getInstance().player.getMaxAirSupply();
 	}
 
+	private static float getCurrentArmor() {
+		if (Minecraft.getInstance().player == null || !Minecraft.getInstance().gameMode.getPlayerMode().isSurvival()) {
+			return -1;
+		}
+
+		return (float) (Minecraft.getInstance().player.getArmorValue() / 50.0f);
+	}
+
 	private static float getMaxAir() {
 		if (Minecraft.getInstance().player == null || !Minecraft.getInstance().gameMode.getPlayerMode().isSurvival()) {
 			return -1;
@@ -107,6 +117,8 @@ public class IrisExclusiveUniforms {
 
 		return Minecraft.getInstance().player.getMaxHealth();
 	}
+
+
 
 	private static boolean isFirstPersonCamera() {
 		// If camera type is not explicitly third-person, assume it's first-person.
