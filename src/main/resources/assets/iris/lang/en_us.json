@@ -11,6 +11,7 @@
   "iris.shaders.ssbofailure": "The shader requested a specific feature (SSBO) that is not supported by your GPU, it may not work correctly.",
   "iris.keybind.reload": "Reload Shaders",
   "iris.keybind.shaderPackSelection": "Shaderpack Selection Screen",
+  "iris.keybind.wireframe": "Wireframe (SP only)",
   "iris.keybind.toggleShaders": "Toggle Shaders",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Failed to reload shaders! Reason: %s",

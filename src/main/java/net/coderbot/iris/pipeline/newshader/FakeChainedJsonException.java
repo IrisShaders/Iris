@@ -7,7 +7,7 @@ public class FakeChainedJsonException extends ChainedJsonException {
 	private final ShaderCompileException trueException;
 
 	public FakeChainedJsonException(ShaderCompileException e) {
-		super("");
+		super("", e);
 		this.trueException = e;
 	}
 
