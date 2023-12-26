@@ -7,6 +7,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.framebuffer.ViewportData;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
@@ -154,7 +155,7 @@ public class ShadowCompositeRenderer {
 		ImmutableSet<Integer> flippedAtLeastOnce;
 		ImmutableSet<Integer> stageReadsFromAlt;
 		ImmutableSet<Integer> mipmappedBuffers;
-		float viewportScale;
+		ViewportData viewportScale;
 		ComputeProgram[] computes;
 
 		protected void destroy() {
@@ -213,9 +214,11 @@ public class ShadowCompositeRenderer {
 				}
 			}
 
-			float scaledWidth = renderTargets.getResolution() * renderPass.viewportScale;
-			float scaledHeight = renderTargets.getResolution() * renderPass.viewportScale;
-			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
+			float scaledWidth = renderTargets.getResolution() * renderPass.viewportScale.scale();
+			float scaledHeight = renderTargets.getResolution() * renderPass.viewportScale.scale();
+			int beginWidth = (int) (renderTargets.getResolution() * renderPass.viewportScale.viewportX());
+			int beginHeight = (int) (renderTargets.getResolution() * renderPass.viewportScale.viewportY());
+			RenderSystem.viewport(beginWidth, beginHeight, (int) scaledWidth, (int) scaledHeight);
 
 			renderPass.framebuffer.bind();
 			renderPass.program.use();
