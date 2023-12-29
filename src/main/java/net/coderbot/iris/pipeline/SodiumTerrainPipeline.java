@@ -135,7 +135,10 @@ public class SodiumTerrainPipeline {
 
 		void _vert_init() {
 			_vert_position = (vec3(a_PosId.xyz) * 4.8828125E-4f + -8.0f);
-			_vert_tex_diffuse_coord = (a_TexCoord * 1.52587891E-5f);
+
+		""" +
+		"_vert_tex_diffuse_coord = (a_TexCoord * " + (1.0f / 32768.0f) + ");" +
+		"""
 			_vert_tex_light_coord = a_LightCoord;
 			_vert_color = a_Color;
 			_draw_id = (a_PosId.w >> 8u) & 0xffu;
