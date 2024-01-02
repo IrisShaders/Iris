@@ -30,6 +30,8 @@ public class RenderTargets {
 	private DepthCopyStrategy copyStrategy;
 
 	private final List<GlFramebuffer> ownedFramebuffers;
+	private final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> targetSettingsMap;
+	private final PackDirectives packDirectives;
 
 	private int cachedWidth;
 	private int cachedHeight;
@@ -43,13 +45,8 @@ public class RenderTargets {
 	public RenderTargets(int width, int height, int depthTexture, int depthBufferVersion, DepthBufferFormat depthFormat, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets, PackDirectives packDirectives) {
 		targets = new RenderTarget[renderTargets.size()];
 
-		renderTargets.forEach((index, settings) -> {
-			// TODO: Handle mipmapping?
-			Vector2i dimensions = packDirectives.getTextureScaleOverride(index, width, height);
-			targets[index] = RenderTarget.builder().setDimensions(dimensions.x, dimensions.y)
-					.setInternalFormat(settings.getInternalFormat())
-					.setPixelFormat(settings.getInternalFormat().getPixelFormat()).build();
-		});
+		targetSettingsMap = renderTargets;
+		this.packDirectives = packDirectives;
 
 		this.currentDepthTexture = depthTexture;
 		this.currentDepthFormat = depthFormat;
@@ -88,7 +85,9 @@ public class RenderTargets {
 		}
 
 		for (RenderTarget target : targets) {
-			target.destroy();
+			if (target != null) {
+				target.destroy();
+			}
 		}
 
 		noTranslucents.destroy();
@@ -104,7 +103,31 @@ public class RenderTargets {
 			throw new IllegalStateException("Tried to use destroyed RenderTargets");
 		}
 
+		if (targets[index] == null) {
+			return null;
+		}
+
 		return targets[index];
+	}
+
+	public RenderTarget getOrCreate(int index) {
+		if (destroyed) {
+			throw new IllegalStateException("Tried to use destroyed RenderTargets");
+		}
+
+		if (targets[index] != null) return targets[index];
+
+		create(index);
+
+		return targets[index];
+	}
+
+	private void create(int index) {
+		PackRenderTargetDirectives.RenderTargetSettings settings = targetSettingsMap.get(index);
+		Vector2i dimensions = packDirectives.getTextureScaleOverride(index, cachedWidth, cachedHeight);
+		targets[index] = RenderTarget.builder().setDimensions(dimensions.x, dimensions.y)
+			.setInternalFormat(settings.getInternalFormat())
+			.setPixelFormat(settings.getInternalFormat().getPixelFormat()).build();
 	}
 
 	public int getDepthTexture() {
@@ -174,7 +197,9 @@ public class RenderTargets {
 			cachedHeight = newHeight;
 
 			for (int i = 0; i < targets.length; i++) {
-				targets[i].resize(packDirectives.getTextureScaleOverride(i, newWidth, newHeight));
+				if (targets[i] != null) {
+					targets[i].resize(packDirectives.getTextureScaleOverride(i, newWidth, newHeight));
+				}
 			}
 
 			fullClearRequired = true;
@@ -253,7 +278,7 @@ public class RenderTargets {
 
 		// NB: Before OpenGL 3.0, all framebuffers are required to have a color
 		// attachment no matter what.
-		framebuffer.addColorAttachment(0, get(0).getMainTexture());
+		framebuffer.addColorAttachment(0, getOrCreate(0).getMainTexture());
 		framebuffer.noDrawBuffers();
 
 		return framebuffer;
@@ -316,7 +341,7 @@ public class RenderTargets {
 						+ getRenderTargetCount() + " render targets are supported.");
 			}
 
-			RenderTarget target = this.get(drawBuffers[i]);
+			RenderTarget target = this.getOrCreate(drawBuffers[i]);
 
 			int textureId = stageWritesToMain.contains(drawBuffers[i]) ? target.getMainTexture() : target.getAltTexture();
 
@@ -346,5 +371,11 @@ public class RenderTargets {
 
 	public int getCurrentHeight() {
 		return cachedHeight;
+	}
+
+	public void createIfUnsure(int index) {
+		if (targets[index] == null) {
+			create(index);
+		}
 	}
 }

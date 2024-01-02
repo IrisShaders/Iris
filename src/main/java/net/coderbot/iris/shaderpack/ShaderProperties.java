@@ -17,6 +17,7 @@ import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeFunction;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.buffer.ShaderStorageInfo;
+import net.coderbot.iris.gl.framebuffer.ViewportData;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.gl.texture.PixelFormat;
 import net.coderbot.iris.gl.texture.PixelType;
@@ -29,9 +30,11 @@ import net.coderbot.iris.shaderpack.option.ShaderPackOptions;
 import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.coderbot.iris.shaderpack.texture.TextureStage;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -90,7 +93,7 @@ public class ShaderProperties {
 	// TODO: private Map<String, String> optifineVersionRequirements;
 	// TODO: Parse custom uniforms / variables
 	private final Object2ObjectMap<String, AlphaTest> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
-	private final Object2FloatMap<String> viewportScaleOverrides = new Object2FloatOpenHashMap<>();
+	private final Object2ObjectMap<String, ViewportData> viewportScaleOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureScaleOverride> textureScaleOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, ArrayList<BufferBlendInformation>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
@@ -113,6 +116,15 @@ public class ShaderProperties {
 	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
 	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
 		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions, environmentDefines);
+
+		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
+			try {
+				Files.writeString(FabricLoader.getInstance().getGameDir().resolve("preprocessed.properties"), preprocessedContents);
+				Files.writeString(FabricLoader.getInstance().getGameDir().resolve("original.properties"), contents);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
@@ -201,16 +213,22 @@ public class ShaderProperties {
 			// TODO: Custom uniforms
 
 			handlePassDirective("scale.", key, value, pass -> {
-				float scale;
+				float scale, offsetX = 0.0f, offsetY = 0.0f;
+				String[] parts = value.split(" ");
 
 				try {
-					scale = Float.parseFloat(value);
-				} catch (NumberFormatException e) {
+					scale = Float.parseFloat(parts[0]);
+
+					if (parts.length > 1) {
+						offsetX = Float.parseFloat(parts[1]);
+						offsetY = Float.parseFloat(parts[2]);
+					}
+				} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 					Iris.logger.error("Unable to parse scale directive for " + pass + ": " + value, e);
 					return;
 				}
 
-				viewportScaleOverrides.put(pass, scale);
+				viewportScaleOverrides.put(pass, new ViewportData(scale, offsetX, offsetY));
 			});
 
 			handlePassDirective("size.buffer.", key, value, pass -> {
@@ -520,10 +538,6 @@ public class ShaderProperties {
 				customUniforms.addVariable(parts[0], parts[1], value, true);
 			});
 
-
-			handleWhitespacedListDirective(key, value, "iris.features.required", options -> requiredFeatureFlags = options);
-			handleWhitespacedListDirective(key, value, "iris.features.optional", options -> optionalFeatureFlags = options);
-
 			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
 		});
@@ -532,6 +546,9 @@ public class ShaderProperties {
 		original.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
 			String value = (String) valueObject;
+
+			handleWhitespacedListDirective(key, value, "iris.features.required", options -> requiredFeatureFlags = options);
+			handleWhitespacedListDirective(key, value, "iris.features.optional", options -> optionalFeatureFlags = options);
 
 			// Defining "sliders" multiple times in the properties file will only result in
 			// the last definition being used, should be tested if behavior matches OptiFine
@@ -783,7 +800,7 @@ public class ShaderProperties {
 		return prepareBeforeShadow;
 	}
 
-	public Object2FloatMap<String> getViewportScaleOverrides() {
+	public Object2ObjectMap<String, ViewportData> getViewportScaleOverrides() {
 		return viewportScaleOverrides;
 	}
 

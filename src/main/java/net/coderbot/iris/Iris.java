@@ -3,6 +3,7 @@ package net.coderbot.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.sun.jna.platform.unix.LibC;
 import net.coderbot.iris.config.IrisConfig;
 import net.coderbot.iris.gl.GLDebug;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
@@ -14,6 +15,7 @@ import net.coderbot.iris.pipeline.PipelineManager;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.DimensionId;
+import net.coderbot.iris.shaderpack.IrisDefines;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.ProgramSet;
 import net.coderbot.iris.shaderpack.ShaderPack;
@@ -30,6 +32,7 @@ import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
+import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -41,6 +44,7 @@ import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.Configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,9 +82,6 @@ public class Iris {
 	private static ShaderPack currentPack;
 	private static String currentPackName;
 	private static Optional<Exception> storedError = Optional.empty();
-	private static boolean sodiumInvalid;
-	private static boolean hasNEC;
-	private static boolean sodiumInstalled;
 	private static boolean initialized;
 
 	private static PipelineManager pipelineManager;
@@ -89,6 +90,7 @@ public class Iris {
 	private static KeyMapping reloadKeybind;
 	private static KeyMapping toggleShadersKeybind;
 	private static KeyMapping shaderpackScreenKeybind;
+	private static KeyMapping wireframeKeybind;
 
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Flag variable used when reloading
@@ -99,6 +101,14 @@ public class Iris {
 	private static Version IRIS_VERSION;
 	private static UpdateChecker updateChecker;
 	private static boolean fallback;
+
+	static {
+		// Custom fix only for me for Plasma 6
+		if (FabricLoader.getInstance().isDevelopmentEnvironment() && Util.getPlatform() == Util.OS.LINUX && System.getProperty("user.name").contains("ims")) {
+			LibC.INSTANCE.setenv("__GL_THREADED_OPTIMIZATIONS", "0", 1);
+			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
+		}
+	}
 
 	// Change this for snapshots!
 	private static String backupVersionNumber = "1.19.4";
@@ -113,12 +123,6 @@ public class Iris {
 	 * <p>This is called right before options are loaded, so we can add key bindings here.</p>
 	 */
 	public void onEarlyInitialize() {
-		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
-				modContainer -> sodiumInstalled = true
-		);
-
-		hasNEC = FabricLoader.getInstance().isModLoaded("notenoughcrashes");
-
 		ModContainer iris = FabricLoader.getInstance().getModContainer(MODID)
 				.orElseThrow(() -> new IllegalStateException("Couldn't find the mod container for Iris"));
 
@@ -129,6 +133,7 @@ public class Iris {
 		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
 		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
 		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
+		wireframeKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.wireframe", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), "iris.keybinds"));
 
 		try {
 			if (!Files.exists(getShaderpacksDirectory())) {
@@ -256,7 +261,15 @@ public class Iris {
 			}
 		} else if (shaderpackScreenKeybind.consumeClick()) {
 			minecraft.setScreen(new ShaderPackScreen(null));
+		} else if (wireframeKeybind.consumeClick()) {
+			if (irisConfig.areDebugOptionsEnabled() && minecraft.player != null && !Minecraft.getInstance().isLocalServer()) {
+				minecraft.player.displayClientMessage(Component.literal("No cheating; wireframe only in singleplayer!"), false);
+			}
 		}
+	}
+
+	public static boolean shouldActivateWireframe() {
+		return irisConfig.areDebugOptionsEnabled() && wireframeKeybind.isDown();
 	}
 
 	public static void toggleShaders(Minecraft minecraft, boolean enabled) throws IOException {
@@ -750,18 +763,6 @@ public class Iris {
 
 	public static String getBackupVersionNumber() {
 		return backupVersionNumber;
-	}
-
-	public static boolean isSodiumInvalid() {
-		return sodiumInvalid;
- 	}
-
-	public static boolean isSodiumInstalled() {
-		return sodiumInstalled;
-	}
-
-	public static boolean hasNotEnoughCrashes() {
-		return hasNEC;
 	}
 
 	public static Path getShaderpacksDirectory() {

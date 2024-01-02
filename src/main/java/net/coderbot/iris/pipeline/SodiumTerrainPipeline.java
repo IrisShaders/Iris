@@ -39,6 +39,8 @@ import net.coderbot.iris.uniforms.custom.CustomUniforms;
 public class SodiumTerrainPipeline {
 	Optional<String> terrainSolidVertex;
 	Optional<String> terrainSolidGeometry;
+	Optional<String> terrainSolidTessControl;
+	Optional<String> terrainSolidTessEval;
 	Optional<String> terrainSolidFragment;
 	GlFramebuffer terrainSolidFramebuffer;
 	BlendModeOverride terrainSolidBlendOverride;
@@ -46,6 +48,8 @@ public class SodiumTerrainPipeline {
 
 	Optional<String> terrainCutoutVertex;
 	Optional<String> terrainCutoutGeometry;
+	Optional<String> terrainCutoutTessControl;
+	Optional<String> terrainCutoutTessEval;
 	Optional<String> terrainCutoutFragment;
 	GlFramebuffer terrainCutoutFramebuffer;
 	BlendModeOverride terrainCutoutBlendOverride;
@@ -54,6 +58,8 @@ public class SodiumTerrainPipeline {
 
 	Optional<String> translucentVertex;
 	Optional<String> translucentGeometry;
+	Optional<String> translucentTessControl;
+	Optional<String> translucentTessEval;
 	Optional<String> translucentFragment;
 	GlFramebuffer translucentFramebuffer;
 	BlendModeOverride translucentBlendOverride;
@@ -62,12 +68,158 @@ public class SodiumTerrainPipeline {
 
 	Optional<String> shadowVertex;
 	Optional<String> shadowGeometry;
+	Optional<String> shadowTessControl;
+	Optional<String> shadowTessEval;
 	Optional<String> shadowFragment;
 	Optional<String> shadowCutoutFragment;
 	GlFramebuffer shadowFramebuffer;
 	BlendModeOverride shadowBlendOverride = BlendModeOverride.OFF;
 	List<BufferBlendOverride> shadowBufferOverrides;
 	Optional<AlphaTest> shadowAlpha;
+
+	private static String defaultVertex = """
+		#version 330 core
+
+		in ivec2 a_LightCoord;
+		in vec4 a_Color;
+		in vec2 a_TexCoord;
+		in uvec4 a_PosId;
+		uniform mat4 iris_ProjectionMatrix;
+		uniform int fogShape;
+		uniform mat4 iris_ModelViewMatrix;
+		uniform vec3 u_RegionOffset;
+		vec3 _vert_position;
+		vec2 _vert_tex_diffuse_coord;
+		ivec2 _vert_tex_light_coord;
+		vec4 _vert_color;
+		uint _draw_id;
+		uint _material_params;
+		out float v_FragDistance;
+
+
+		const int FOG_SHAPE_SPHERICAL = 0;
+		const int FOG_SHAPE_CYLINDRICAL = 1;
+
+		vec4 _linearFog(vec4 fragColor, float fragDistance, vec4 fogColor, float fogStart, float fogEnd) {
+		    float factor = smoothstep(fogStart, fogEnd, fragDistance * fogColor.a); // alpha value of fog is used as a weight
+		    vec3 blended = mix(fragColor.rgb, fogColor.rgb, factor);
+
+		    return vec4(blended, fragColor.a); // alpha value of fragment cannot be modified
+		}
+
+		float getFragDistance(int fogShape, vec3 position) {
+		    // Use the maximum of the horizontal and vertical distance to get cylindrical fog if fog shape is cylindrical
+		    switch (fogShape) {
+		        case FOG_SHAPE_SPHERICAL: return length(position);
+		        case FOG_SHAPE_CYLINDRICAL: return max(length(position.xz), abs(position.y));
+		        default: return length(position); // This shouldn't be possible to get, but return a sane value just in case
+		    }
+		}
+
+		out vec4 v_ColorModulator;
+		out vec2 v_TexCoord;
+		out float v_MaterialMipBias;
+		out float v_MaterialAlphaCutoff;
+		const uint MATERIAL_USE_MIP_OFFSET = 0u;
+		const uint MATERIAL_ALPHA_CUTOFF_OFFSET = 1u;
+
+		float _material_mip_bias(uint material) {
+			return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;
+		}
+
+		const float[4] ALPHA_CUTOFF = float[4](0.0, 0.1, 0.5, 1.0);
+
+		float _material_alpha_cutoff(uint material) {
+		    return ALPHA_CUTOFF[(material >> MATERIAL_ALPHA_CUTOFF_OFFSET) & 3u];
+		}
+
+		void _vert_init() {
+			_vert_position = (vec3(a_PosId.xyz) * 4.8828125E-4f + -8.0f);
+			_vert_tex_diffuse_coord = (a_TexCoord * 1.52587891E-5f);
+			_vert_tex_light_coord = a_LightCoord;
+			_vert_color = a_Color;
+			_draw_id = (a_PosId.w >> 8u) & 0xffu;
+			_material_params = (a_PosId.w >> 0u) & 0xFFu;
+		}
+		uvec3 _get_relative_chunk_coord(uint pos) {
+			return uvec3(pos) >> uvec3(5u, 0u, 2u) & uvec3(7u, 3u, 7u);
+		}
+		vec3 _get_draw_translation(uint pos) {
+			return _get_relative_chunk_coord(pos) * vec3(16.0f);
+		}
+		vec4 getVertexPosition() {
+			return vec4(_vert_position + u_RegionOffset + _get_draw_translation(_draw_id), 1.0f);
+		}
+
+		uniform sampler2D lightmap; // The light map texture
+
+		vec3 _sample_lightmap(ivec2 uv) {
+		    return texture(lightmap, clamp(uv / 256.0, vec2(0.5 / 16.0), vec2(15.5 / 16.0))).rgb;
+		}
+
+
+		void main() {
+		    _vert_init();
+
+		    // Transform the chunk-local vertex position into world model space
+		    vec3 translation = u_RegionOffset + _get_draw_translation(_draw_id);
+		    vec3 position = _vert_position + translation;
+
+		    v_FragDistance = getFragDistance(fogShape, position);
+
+		    // Transform the vertex position into model-view-projection space
+		    gl_Position = iris_ProjectionMatrix * iris_ModelViewMatrix * vec4(position, 1.0);
+
+		    v_ColorModulator = vec4((_vert_color.rgb * _vert_color.a), 1) * vec4(_sample_lightmap(_vert_tex_light_coord), 1.0);
+		    v_TexCoord = _vert_tex_diffuse_coord;
+
+		    v_MaterialMipBias = _material_mip_bias(_material_params);
+		    v_MaterialAlphaCutoff = _material_alpha_cutoff(_material_params);
+		}
+		""";
+
+	private static String defaultFragment = """
+		#version 330 core
+
+		const int FOG_SHAPE_SPHERICAL = 0;
+		const int FOG_SHAPE_CYLINDRICAL = 1;
+
+		vec4 _linearFog(vec4 fragColor, float fragDistance, vec4 fogColor, float fogStart, float fogEnd) {
+		    float factor = smoothstep(fogStart, fogEnd, fragDistance * fogColor.a); // alpha value of fog is used as a weight
+		    vec3 blended = mix(fragColor.rgb, fogColor.rgb, factor);
+
+		    return vec4(blended, fragColor.a); // alpha value of fragment cannot be modified
+		}
+
+		in vec4 v_ColorModulator; // The interpolated vertex color
+		in vec2 v_TexCoord; // The interpolated block texture coordinates
+
+		in float v_FragDistance; // The fragment's distance from the camera
+
+		in float v_MaterialMipBias;
+		in float v_MaterialAlphaCutoff;
+
+		uniform sampler2D gtexture; // The block atlas texture
+
+		uniform vec4 iris_FogColor; // The color of the shader fog
+		uniform float iris_FogStart; // The starting position of the shader fog
+		uniform float iris_FogEnd; // The ending position of the shader fog
+
+		out vec4 out_FragColor; // The output fragment for the color framebuffer
+
+		void main() {
+		    vec4 diffuseColor = texture(gtexture, v_TexCoord, v_MaterialMipBias);
+
+		    if (diffuseColor.a < 0.1) {
+		        discard;
+		    }
+
+		    // Modulate the color (used by ambient occlusion and per-vertex colouring)
+		    diffuseColor.rgb *= v_ColorModulator.rgb;
+
+		    out_FragColor = _linearFog(diffuseColor, v_FragDistance, iris_FogColor, iris_FogStart, iris_FogEnd);
+		}
+		""";
 
 	ProgramSet programSet;
 
@@ -148,19 +300,25 @@ public class SodiumTerrainPipeline {
 				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
+				sources.getTessControlSource().orElse(null),
+				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				AlphaTest.ALWAYS, inputs, parent.getTextureMap());
 			terrainSolidVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			terrainSolidGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
+			terrainSolidTessControl = Optional.ofNullable(transformed.get(PatchShaderType.TESS_CONTROL));
+			terrainSolidTessEval = Optional.ofNullable(transformed.get(PatchShaderType.TESS_EVAL));
 			terrainSolidFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
 			ShaderPrinter.printProgram(sources.getName() + "_sodium_solid").addSources(transformed).print();
 		}, () -> {
 			terrainSolidBlendOverride = null;
 			terrainSolidBufferOverrides = Collections.emptyList();
-			terrainSolidVertex = Optional.empty();
+			terrainSolidVertex = Optional.of(defaultVertex);
 			terrainSolidGeometry = Optional.empty();
-			terrainSolidFragment = Optional.empty();
+			terrainSolidTessControl = Optional.empty();
+			terrainSolidTessEval = Optional.empty();
+			terrainSolidFragment = Optional.of(defaultFragment);
 		});
 
 		terrainCutoutSource.ifPresentOrElse(sources -> {
@@ -178,10 +336,14 @@ public class SodiumTerrainPipeline {
 				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
+				sources.getTessControlSource().orElse(null),
+				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				terrainCutoutAlpha.orElse(AlphaTests.ONE_TENTH_ALPHA), inputs, parent.getTextureMap());
 			terrainCutoutVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			terrainCutoutGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
+			terrainCutoutTessControl = Optional.ofNullable(transformed.get(PatchShaderType.TESS_CONTROL));
+			terrainCutoutTessEval = Optional.ofNullable(transformed.get(PatchShaderType.TESS_EVAL));
 			terrainCutoutFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
 			ShaderPrinter.printProgram(sources.getName() + "_sodium_cutout").addSources(transformed).print();
@@ -189,9 +351,11 @@ public class SodiumTerrainPipeline {
 			terrainCutoutBlendOverride = null;
 			terrainCutoutBufferOverrides = Collections.emptyList();
 			terrainCutoutAlpha = terrainCutoutDefault.get();
-			terrainCutoutVertex = Optional.empty();
+			terrainCutoutVertex = Optional.of(defaultVertex);
 			terrainCutoutGeometry = Optional.empty();
-			terrainCutoutFragment = Optional.empty();
+			terrainCutoutTessControl = Optional.empty();
+			terrainCutoutTessEval = Optional.empty();
+			terrainCutoutFragment = Optional.of(defaultFragment);
 		});
 
 
@@ -210,10 +374,14 @@ public class SodiumTerrainPipeline {
 				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
+				sources.getTessControlSource().orElse(null),
+				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				translucentAlpha.orElse(AlphaTest.ALWAYS), inputs, parent.getTextureMap());
 			translucentVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			translucentGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
+			translucentTessControl = Optional.ofNullable(transformed.get(PatchShaderType.TESS_CONTROL));
+			translucentTessEval = Optional.ofNullable(transformed.get(PatchShaderType.TESS_EVAL));
 			translucentFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
 			ShaderPrinter.printProgram(sources.getName() + "_sodium").addSources(transformed).print();
@@ -221,9 +389,11 @@ public class SodiumTerrainPipeline {
 			translucentBlendOverride = null;
 			translucentBufferOverrides = Collections.emptyList();
 			translucentAlpha = translucentDefault.get();
-			translucentVertex = Optional.empty();
+			translucentVertex = Optional.of(defaultVertex);
 			translucentGeometry = Optional.empty();
-			translucentFragment = Optional.empty();
+			translucentTessControl = Optional.empty();
+			translucentTessEval = Optional.empty();
+			translucentFragment = Optional.of(defaultFragment);
 		});
 
 		programSet.getShadow().ifPresentOrElse(sources -> {
@@ -241,16 +411,22 @@ public class SodiumTerrainPipeline {
 				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
+				sources.getTessControlSource().orElse(null),
+				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				AlphaTest.ALWAYS, inputs, parent.getTextureMap());
 			Map<PatchShaderType, String> transformedCutout = TransformPatcher.patchSodium(
 				sources.getName(),
 				sources.getVertexSource().orElse(null),
 				sources.getGeometrySource().orElse(null),
+				sources.getTessControlSource().orElse(null),
+				sources.getTessEvalSource().orElse(null),
 				sources.getFragmentSource().orElse(null),
 				shadowAlpha.get(), inputs, parent.getTextureMap());
 			shadowVertex = Optional.ofNullable(transformed.get(PatchShaderType.VERTEX));
 			shadowGeometry = Optional.ofNullable(transformed.get(PatchShaderType.GEOMETRY));
+			shadowTessControl = Optional.ofNullable(transformed.get(PatchShaderType.TESS_CONTROL));
+			shadowTessEval = Optional.ofNullable(transformed.get(PatchShaderType.TESS_EVAL));
 			shadowCutoutFragment = Optional.ofNullable(transformedCutout.get(PatchShaderType.FRAGMENT));
 			shadowFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
@@ -265,6 +441,8 @@ public class SodiumTerrainPipeline {
 			shadowAlpha = shadowDefault.get();
 			shadowVertex = Optional.empty();
 			shadowGeometry = Optional.empty();
+			shadowTessControl = Optional.empty();
+			shadowTessEval = Optional.empty();
 			shadowCutoutFragment = Optional.empty();
 			shadowFragment = Optional.empty();
 		});
@@ -278,6 +456,14 @@ public class SodiumTerrainPipeline {
 		return terrainSolidGeometry;
 	}
 
+	public Optional<String> getTerrainSolidTessControlShaderSource() {
+		return terrainSolidTessControl;
+	}
+
+	public Optional<String> getTerrainSolidTessEvalShaderSource() {
+		return terrainSolidTessEval;
+	}
+
 	public Optional<String> getTerrainSolidFragmentShaderSource() {
 		return terrainSolidFragment;
 	}
@@ -288,6 +474,14 @@ public class SodiumTerrainPipeline {
 
 	public Optional<String> getTerrainCutoutGeometryShaderSource() {
 		return terrainCutoutGeometry;
+	}
+
+	public Optional<String> getTerrainCutoutTessControlShaderSource() {
+		return terrainCutoutTessControl;
+	}
+
+	public Optional<String> getTerrainCutoutTessEvalShaderSource() {
+		return terrainCutoutTessEval;
 	}
 
 	public Optional<String> getTerrainCutoutFragmentShaderSource() {
@@ -329,6 +523,14 @@ public class SodiumTerrainPipeline {
 		return translucentGeometry;
 	}
 
+	public Optional<String> getTranslucentTessControlShaderSource() {
+		return translucentTessControl;
+	}
+
+	public Optional<String> getTranslucentTessEvalShaderSource() {
+		return translucentTessEval;
+	}
+
 	public Optional<String> getTranslucentFragmentShaderSource() {
 		return translucentFragment;
 	}
@@ -355,6 +557,14 @@ public class SodiumTerrainPipeline {
 
 	public Optional<String> getShadowGeometryShaderSource() {
 		return shadowGeometry;
+	}
+
+	public Optional<String> getShadowTessControlShaderSource() {
+		return shadowTessControl;
+	}
+
+	public Optional<String> getShadowTessEvalShaderSource() {
+		return shadowTessEval;
 	}
 
 	public Optional<String> getShadowFragmentShaderSource() {

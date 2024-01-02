@@ -71,8 +71,6 @@ public class MixinLevelRenderer implements CullingDataCache {
 		renderChunksInFrustum = savedRenderChunks;
 		savedRenderChunks = tmpList;
 
-		// TODO: If the normal chunks need a terrain update, these chunks probably do too...
-		// We probably should copy it over
 		boolean tmpBool = needsFullRenderChunkUpdate;
 		needsFullRenderChunkUpdate = savedNeedsTerrainUpdate;
 		savedNeedsTerrainUpdate = tmpBool;

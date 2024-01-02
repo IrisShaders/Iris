@@ -306,7 +306,7 @@ public class CustomUniforms implements FunctionContext {
 				ExpressionElement ast = Parser.parse(expression, IrisOptions.options);
 				variables.put(name, new Variable(parsedType, name, ast, isUniform));
 			} catch (Exception e) {
-				Iris.logger.warn("Failed to parse custom variable/uniform", e);
+				Iris.logger.warn("Failed to parse custom variable/uniform " + name + " with expression " + expression, e);
 			}
 		}
 

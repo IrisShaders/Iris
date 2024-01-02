@@ -24,7 +24,6 @@ public class PBRTextureManager {
 	public static final PBRTextureManager INSTANCE = new PBRTextureManager();
 
 
-	// TODO: Figure out how to merge these two.
 	private static Runnable normalTextureChangeListener;
 	private static Runnable specularTextureChangeListener;
 

@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.ProgramTable;
@@ -82,8 +83,6 @@ import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
@@ -573,6 +572,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		return sunPathRotation;
 	}
 
+	@Override
+	public DHCompat getDHCompat() {
+		return null;
+	}
+
 	private RenderCondition getCondition(WorldRenderingPhase phase) {
 		if (isRenderingShadow) {
 			return RenderCondition.SHADOW;
@@ -680,17 +684,9 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 	private Pass createPass(ProgramSource source, InputAvailability availability, boolean shadow, ProgramId id) {
 		// TODO: Properly handle empty shaders?
-		Map<PatchShaderType, String> transformed = null; // 1.16 is the zombie haunting us all
-		String vertex = transformed.get(PatchShaderType.VERTEX);
-		String geometry = transformed.get(PatchShaderType.GEOMETRY);
-		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 
-		ShaderPrinter.printProgram(source.getName()).addSources(transformed).print();
 
-		ProgramBuilder builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
-			IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-
-		return createPassInner(builder, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives(), availability, shadow, id);
+		return createPassInner(null, source.getParent().getPack().getIdMap(), source.getDirectives(), source.getParent().getPackDirectives(), availability, shadow, id);
 	}
 
 	private Pass createPassInner(ProgramBuilder builder, IdMap map, ProgramDirectives programDirectives,
@@ -1279,6 +1275,11 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		finalPassRenderer.renderFinalPass();
 
 		isRenderingFullScreenPass = false;
+	}
+
+	@Override
+	public void finalizeGameRendering() {
+
 	}
 
 	@Override

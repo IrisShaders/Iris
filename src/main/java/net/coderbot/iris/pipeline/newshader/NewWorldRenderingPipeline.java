@@ -8,13 +8,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.block_rendering.BlockMaterialMapping;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.colorspace.ColorSpace;
-import net.coderbot.iris.colorspace.ColorSpaceComputeConverter;
 import net.coderbot.iris.colorspace.ColorSpaceConverter;
 import net.coderbot.iris.colorspace.ColorSpaceFragmentConverter;
+import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
@@ -188,6 +187,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShaderPack pack;
 	private PackShadowDirectives shadowDirectives;
 	private ColorSpace currentColorSpace;
+	private DHCompat dhCompat;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		ShaderPrinter.resetPrintState();
@@ -206,6 +206,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
+		this.dhCompat = new DHCompat();
 
 		this.resolver = new ProgramFallbackResolver(programSet);
 		this.pack = programSet.getPack();
@@ -453,11 +454,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		BlockRenderingSettings.INSTANCE.setSeparateEntityDraws(programSet.getPackDirectives().shouldUseSeparateEntityDraws());
 		BlockRenderingSettings.INSTANCE.setUseExtendedVertexFormat(true);
 
-		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
-				programSet.getPackDirectives().getRenderTargetDirectives());
-		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
-				programSet.getPackDirectives().getRenderTargetDirectives());
-
 		if (shadowRenderTargets == null && shadowDirectives.isShadowEnabled() == OptionalBoolean.TRUE) {
 			shadowRenderTargets = new ShadowRenderTargets(this, shadowMapResolution, shadowDirectives);
 		}
@@ -490,6 +486,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.shadowRenderer = null;
 		}
 
+		dhCompat.setFramebuffer(renderTargets.createGbufferFramebuffer(ImmutableSet.of(), new int[] { 0 }));
 		// TODO: Create fallback Sodium shaders if the pack doesn't provide terrain shaders
 		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
@@ -502,6 +499,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		// first optimization pass
 		this.customUniforms.optimise();
 		boolean hasRun = false;
+
+		this.clearPassesFull = ClearPassCreator.createClearPasses(renderTargets, true,
+			programSet.getPackDirectives().getRenderTargetDirectives());
+		this.clearPasses = ClearPassCreator.createClearPasses(renderTargets, false,
+			programSet.getPackDirectives().getRenderTargetDirectives());
 
 		for (ComputeProgram program : setup) {
 			if (program != null) {
@@ -538,11 +540,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 				}
 			};
 		} else {
-			if (IrisRenderSystem.supportsCompute()) {
-				colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			} else {
+			// TODO: Fix grid appearing on some devices with compute converter
+			//if (IrisRenderSystem.supportsCompute()) {
+			//	colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
+			//} else {
 				colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			}
+			//}
 		}
 
 		currentColorSpace = IrisVideoSettings.colorSpace;
@@ -1057,6 +1060,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void beginHand() {
+		centerDepthSampler.sampleCenterDepth();
+
 		// We need to copy the current depth texture so that depthtex2 can contain the depth values for
 		// all non-translucent content excluding the hand, as required.
 		renderTargets.copyPreHandDepth();
@@ -1094,9 +1099,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void finalizeLevelRendering() {
 		isRenderingWorld = false;
-		centerDepthSampler.sampleCenterDepth();
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
+	}
+
+	@Override
+	public void finalizeGameRendering() {
 		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
 	}
 
@@ -1178,7 +1186,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public void destroy() {
 		destroyed = true;
 
-
 		destroyShaders();
 
 		// Unbind all textures
@@ -1255,6 +1262,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public float getSunPathRotation() {
 		return sunPathRotation;
+	}
+
+	@Override
+	public DHCompat getDHCompat() {
+		return dhCompat;
 	}
 
 	protected AbstractTexture getWhitePixel() {

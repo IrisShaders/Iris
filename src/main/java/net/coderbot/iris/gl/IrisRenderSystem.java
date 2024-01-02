@@ -42,6 +42,9 @@ public class IrisRenderSystem {
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
 	private static boolean supportsCompute;
+	private static boolean supportsTesselation;
+	private static int polygonMode = GL43C.GL_FILL;
+	private static int backupPolygonMode = GL43C.GL_FILL;
 	private static int[] samplers;
 
 	public static void initRenderer() {
@@ -59,6 +62,7 @@ public class IrisRenderSystem {
 		hasMultibind = GL.getCapabilities().OpenGL45 || GL.getCapabilities().GL_ARB_multi_bind;
 
 		supportsCompute = GL.getCapabilities().glDispatchCompute != MemoryUtil.NULL;
+		supportsTesselation = GL.getCapabilities().GL_ARB_tessellation_shader || GL.getCapabilities().OpenGL40;
 
 		samplers = new int[SamplerLimits.get().getMaxTextureUnits()];
 	}
@@ -129,6 +133,11 @@ public class IrisRenderSystem {
 	public static void uniform3f(int location, float v0, float v1, float v2) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniform3f(location, v0, v1, v2);
+	}
+
+	public static void uniform3i(int location, int v0, int v1, int v2) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glUniform3i(location, v0, v1, v2);
 	}
 
 	public static void uniform4f(int location, float v0, float v1, float v2, float v3) {
@@ -300,11 +309,13 @@ public class IrisRenderSystem {
 	public static void disableBufferBlend(int buffer) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glDisablei(GL32C.GL_BLEND, buffer);
+		((BooleanStateExtended) GlStateManagerAccessor.getBLEND().mode).setUnknownState();
 	}
 
 	public static void enableBufferBlend(int buffer) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glEnablei(GL32C.GL_BLEND, buffer);
+		((BooleanStateExtended) GlStateManagerAccessor.getBLEND().mode).setUnknownState();
 	}
 
 	public static void blendFuncSeparatei(int buffer, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
@@ -356,6 +367,10 @@ public class IrisRenderSystem {
 
 	public static boolean supportsCompute() {
 		return supportsCompute;
+	}
+
+	public static boolean supportsTesselation() {
+		return supportsTesselation;
 	}
 
     public static int genSampler() {
@@ -417,6 +432,23 @@ public class IrisRenderSystem {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL43C.glDeleteBuffers(glId);
     }
+
+    public static void setPolygonMode(int mode) {
+		if (mode != polygonMode) {
+			polygonMode = mode;
+			GL43C.glPolygonMode(GL43C.GL_FRONT_AND_BACK, mode);
+		}
+    }
+
+	public static void overridePolygonMode() {
+		backupPolygonMode = polygonMode;
+		setPolygonMode(GL43C.GL_FILL);
+	}
+
+	public static void restorePolygonMode() {
+		setPolygonMode(backupPolygonMode);
+		backupPolygonMode = GL43C.GL_FILL;
+	}
 
     public interface DSAAccess {
 		void generateMipmaps(int texture, int target);

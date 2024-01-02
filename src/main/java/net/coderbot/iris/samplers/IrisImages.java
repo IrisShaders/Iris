@@ -19,10 +19,16 @@ public class IrisImages {
 		for (int i = 0; i < renderTargets.getRenderTargetCount(); i++) {
 			final int index = i;
 
+			final String name = "colorimg" + i;
+
+			if (!images.hasImage(name)) continue;
+
+			renderTargets.createIfUnsure(index);
+
 			// Note: image bindings *are* impacted by buffer flips.
 			IntSupplier textureID = () -> {
 				ImmutableSet<Integer> flippedBuffers = flipped.get();
-				RenderTarget target = renderTargets.get(index);
+				RenderTarget target = renderTargets.getOrCreate(index);
 
 				if (flippedBuffers.contains(index)) {
 					return target.getAltTexture();
@@ -31,8 +37,7 @@ public class IrisImages {
 				}
 			};
 
-			final InternalTextureFormat internalFormat = renderTargets.get(i).getInternalFormat();
-			final String name = "colorimg" + i;
+			final InternalTextureFormat internalFormat = renderTargets.getOrCreate(i).getInternalFormat();
 
 			images.addTextureImage(textureID, internalFormat, name);
 		}

@@ -62,7 +62,7 @@ public class IrisSamplers {
 
 			IntSupplier texture = () -> {
 				ImmutableSet<Integer> flippedBuffers = flipped.get();
-				RenderTarget target = renderTargets.get(index);
+				RenderTarget target = renderTargets.getOrCreate(index);
 
 				if (flippedBuffers.contains(index)) {
 					return target.getAltTexture();
@@ -71,14 +71,16 @@ public class IrisSamplers {
 				}
 			};
 
-			RenderTarget target = renderTargets.get(index);
-
 			final String name = "colortex" + i;
 
 			// TODO: How do custom textures interact with aliases?
 
 			if (i < PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.size()) {
 				String legacyName = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS.get(i);
+
+				if (samplers.hasSampler(legacyName) || samplers.hasSampler(name)) {
+					renderTargets.createIfUnsure(index);
+				}
 
 				// colortex0 is the default sampler in fullscreen passes
 				if (i == 0 && isFullscreenPass) {
@@ -87,6 +89,10 @@ public class IrisSamplers {
 					samplers.addDynamicSampler(TextureType.TEXTURE_2D, texture, null, name, legacyName);
 				}
 			} else {
+				if (samplers.hasSampler(name)) {
+					renderTargets.createIfUnsure(index);
+				}
+
 				samplers.addDynamicSampler(texture, name);
 			}
 		}

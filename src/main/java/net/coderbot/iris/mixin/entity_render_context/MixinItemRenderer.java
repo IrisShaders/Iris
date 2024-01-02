@@ -12,10 +12,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,16 +20,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(ItemRenderer.class)
+@Mixin(value = ItemRenderer.class, priority = 1010)
 public abstract class MixinItemRenderer {
 	@Unique
 	private int previousBeValue;
 
 	@Inject(method = "render", at = @At(value = "HEAD"))
 	private void changeId(ItemStack pItemRenderer0, ItemDisplayContext pItemTransforms$TransformType1, boolean pBoolean2, PoseStack pPoseStack3, MultiBufferSource pMultiBufferSource4, int pInt5, int pInt6, BakedModel pBakedModel7, CallbackInfo ci) {
+		iris$setupId(pItemRenderer0);
+	}
+
+	@Unique
+	private void iris$setupId(ItemStack pItemRenderer0) {
 		if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
 
-		if (pItemRenderer0.getItem() instanceof BlockItem blockItem) {
+		if (pItemRenderer0.getItem() instanceof BlockItem blockItem && !(pItemRenderer0.getItem() instanceof SolidBucketItem)) {
 			if (BlockRenderingSettings.INSTANCE.getBlockStateIds() == null) return;
 
 			previousBeValue = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
@@ -46,8 +48,8 @@ public abstract class MixinItemRenderer {
 		}
 	}
 
-	@Inject(method = "render", at = @At(value = "TAIL"))
-	private void changeId2(CallbackInfo ci) {
+	@Inject(method = "render", at = @At(value = "RETURN"))
+	private void changeId3(CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(previousBeValue);
 		previousBeValue = 0;

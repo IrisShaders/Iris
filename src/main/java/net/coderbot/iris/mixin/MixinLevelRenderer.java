@@ -7,6 +7,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.joml.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.program.Program;
 import net.coderbot.iris.layer.IsOutlineRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
@@ -15,12 +16,14 @@ import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.coderbot.iris.uniforms.IrisTimeUniforms;
 import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import org.joml.Vector3d;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
@@ -30,6 +33,8 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL43C;
 import org.spongepowered.asm.mixin.Final;
 import net.minecraft.client.Options;
 
@@ -68,6 +73,9 @@ public class MixinLevelRenderer {
 	@Shadow
 	private Frustum cullingFrustum;
 
+	@Shadow
+	private @Nullable ClientLevel level;
+
 	// Begin shader rendering after buffers have been cleared.
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
 	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
@@ -76,11 +84,7 @@ public class MixinLevelRenderer {
 	private void iris$setupPipeline(PoseStack poseStack, float tickDelta, long startTime, boolean renderBlockOutline,
 									   Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
 									   Matrix4f projection, CallbackInfo callback) {
-		if (Iris.isSodiumInvalid() && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			throw new IllegalStateException("An invalid version of Sodium is installed, and the warning screen somehow" +
-				" didn't work. This is a bug! Please report it to the Iris developers.");
-		}
-
+		IrisTimeUniforms.updateTime();
 		CapturedRenderingState.INSTANCE.setGbufferModelView(poseStack.last().pose());
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projection);
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
@@ -92,6 +96,10 @@ public class MixinLevelRenderer {
 
 		if (pipeline.shouldDisableFrustumCulling()) {
 			this.cullingFrustum = new NonCullingFrustum();
+		}
+
+		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
+			IrisRenderSystem.setPolygonMode(GL43C.GL_LINE);
 		}
 	}
 
@@ -119,6 +127,10 @@ public class MixinLevelRenderer {
 		CapturedRenderingState.INSTANCE.velocityInfoEdit.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
 		pipeline.finalizeLevelRendering();
 		pipeline = null;
+
+		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
+			IrisRenderSystem.setPolygonMode(GL43C.GL_FILL);
+		}
 	}
 
 	// Setup shadow terrain & render shadows before the main terrain setup. We need to do things in this order to

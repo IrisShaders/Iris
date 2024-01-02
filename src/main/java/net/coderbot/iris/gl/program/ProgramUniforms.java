@@ -168,8 +168,7 @@ public class ProgramUniforms {
 				return OptionalInt.empty();
 			}
 
-			// TODO: Temporary hack until custom uniforms are merged.
-			if ((!locations.containsKey(id) && !uniformNames.containsKey(name)) || name.equals("framemod8")) {
+			if ((!locations.containsKey(id) && !uniformNames.containsKey(name))) {
 				locations.put(id, name);
 				uniformNames.put(name, type);
 			} else {
@@ -323,7 +322,7 @@ public class ProgramUniforms {
 		} else if (type == GL20C.GL_FLOAT_VEC3) {
 			return UniformType.VEC3;
 		} else if (type == GL20C.GL_INT_VEC3) {
-			return null;
+			return UniformType.VEC3I;
 		} else if (type == GL20C.GL_FLOAT_MAT2) {
 			return null;
 		} else if (type == GL20C.GL_FLOAT_VEC2) {

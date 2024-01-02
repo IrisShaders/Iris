@@ -83,7 +83,7 @@ public class ShaderPack {
 	private List<String> dimensionIds;
 	private Map<NamespacedId, String> dimensionMap;
 
-	public ShaderPack(Path root, Iterable<StringPair> environmentDefines) throws IOException, IllegalStateException {
+	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		this(root, Collections.emptyMap(), environmentDefines);
 	}
 
@@ -97,11 +97,13 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs, Iterable<StringPair> environmentDefines) throws IOException, IllegalStateException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
-
+		ArrayList<StringPair> envDefines1 = new ArrayList<>(environmentDefines);
+		envDefines1.addAll(IrisDefines.createIrisReplacements());
+		environmentDefines = ImmutableList.copyOf(envDefines1);
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
 
@@ -208,7 +210,7 @@ public class ShaderPack {
 		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream().filter(flag -> !FeatureFlags.isInvalid(flag)).collect(Collectors.toList());
 
 		if (!optionalFeatureFlags.isEmpty()) {
-
+			optionalFeatureFlags.forEach(flag -> Iris.logger.warn("Found flag " + flag));
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
 
 		}

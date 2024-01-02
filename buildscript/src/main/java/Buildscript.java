@@ -71,7 +71,7 @@ public class Buildscript extends SimpleFabricProject {
 
 	@Override
 	public FabricLoader getLoader() {
-		return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.14.21"));
+		return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.14.24"));
 	}
 
 	@Override
@@ -102,20 +102,22 @@ public class Buildscript extends SimpleFabricProject {
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("io.github.douira:glsl-transformer:2.0.0-pre13"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("net.jodah:expiringmap:0.5.10"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
 		jij(d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.antlr:antlr4-runtime:4.11.1"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME));
+		d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "distanthorizons", "2.0.0-a-1.19.4"), ModDependencyFlag.COMPILE);
 
 		if (SODIUM) {
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.17+93d8cb8253"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-data-attachment-v1", "0.3.21+12bfe4ea53"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-block-view-api-v2", "1.0.0+92a0d36777"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-rendering-fluids-v1", "3.0.13+fbde993d53"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.10.8+12a6ba2c17"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 
 			if (CUSTOM_SODIUM) {
 				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			} else {
-				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.20.1-0.5.2"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.20.1-0.5.3"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			}
 		} else {
-			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.20.1-0.5.2"), ModDependencyFlag.COMPILE);
+			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.20.1-0.5.3"), ModDependencyFlag.COMPILE);
 		}
 	}
 

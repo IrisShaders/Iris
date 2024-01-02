@@ -18,6 +18,7 @@ import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.ViewportData;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
@@ -27,6 +28,7 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.texture.TextureAccess;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
@@ -131,6 +133,8 @@ public class CompositeRenderer {
 			// Flip the buffers that this shader wrote to, and set pass width and height
 			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
 
+			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
+
 			for (int buffer : drawBuffers) {
 				RenderTarget target = renderTargets.get(buffer);
 				if ((passWidth > 0 && passWidth != target.getWidth()) || (passHeight > 0 && passHeight != target.getHeight())) {
@@ -147,8 +151,6 @@ public class CompositeRenderer {
 				bufferFlipper.flip(buffer);
 				flippedAtLeastOnce.add(buffer);
 			}
-
-			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
 
 			explicitFlips.forEach((buffer, shouldFlip) -> {
 				if (shouldFlip) {
@@ -212,7 +214,7 @@ public class CompositeRenderer {
 		ImmutableSet<Integer> flippedAtLeastOnce;
 		ImmutableSet<Integer> stageReadsFromAlt;
 		ImmutableSet<Integer> mipmappedBuffers;
-		float viewportScale;
+		ViewportData viewportScale;
 
 		protected void destroy() {
 			this.program.destroy();
@@ -270,14 +272,18 @@ public class CompositeRenderer {
 				}
 			}
 
-			float scaledWidth = renderPass.viewWidth * renderPass.viewportScale;
-			float scaledHeight = renderPass.viewHeight * renderPass.viewportScale;
-			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
+			float scaledWidth = renderPass.viewWidth * renderPass.viewportScale.scale();
+			float scaledHeight = renderPass.viewHeight * renderPass.viewportScale.scale();
+			int beginWidth = (int) (renderPass.viewWidth * renderPass.viewportScale.viewportX());
+			int beginHeight = (int) (renderPass.viewHeight * renderPass.viewportScale.viewportY());
+			RenderSystem.viewport(beginWidth, beginHeight, (int) scaledWidth, (int) scaledHeight);
 
 			renderPass.framebuffer.bind();
 			renderPass.program.use();
 			if (renderPass.blendModeOverride != null) {
 				renderPass.blendModeOverride.apply();
+			} else {
+				RenderSystem.disableBlend();
 			}
 
 			// program is the identifier for composite :shrug:
@@ -301,14 +307,18 @@ public class CompositeRenderer {
 		for (int i = 0; i < SamplerLimits.get().getMaxTextureUnits(); i++) {
 			// Unbind all textures that we may have used.
 			// NB: This is necessary for shader pack reloading to work propely
-			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + i);
-			RenderSystem.bindTexture(0);
+			if (GlStateManagerAccessor.getTEXTURES()[i].binding != 0) {
+				RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + i);
+				RenderSystem.bindTexture(0);
+			}
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
 
 	private static void setupMipmapping(net.coderbot.iris.rendertarget.RenderTarget target, boolean readFromAlt) {
+		if (target == null) return;
+
 		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer

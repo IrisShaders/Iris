@@ -92,5 +92,6 @@ public abstract class MixinEntityRenderDispatcher {
 		CapturedRenderingState.INSTANCE.setCurrentEntity(0);
 		CapturedRenderingState.INSTANCE.setUniqueEntityId(0);
 		CapturedRenderingState.INSTANCE.velocityInfoEdit.popPose();
+		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 	}
 }
