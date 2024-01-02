@@ -92,6 +92,7 @@ public class MixinGlyphRenderer {
 		}
 	}
 
+
 	private boolean extend() {
 		return IrisApi.getInstance().isShaderPackInUse() && ImmediateState.renderWithExtendedVertexFormat;
 	}

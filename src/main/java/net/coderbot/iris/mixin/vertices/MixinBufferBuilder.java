@@ -141,6 +141,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			} else if (format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				this.switchFormat(IrisVertexFormats.GLYPH);
 				this.iris$isTerrain = false;
+				injectNormalAndUV1 = true;
 				this.iris$isParticle = false;
 			} else {
 				this.switchFormat(IrisVertexFormats.ENTITY);
@@ -171,6 +172,8 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			} else if (format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
 				this.switchFormat(IrisVertexFormats.GLYPH);
 				this.iris$isTerrain = false;
+				injectNormalAndUV1 = true;
+
 				this.iris$isParticle = false;
 			} else {
 				this.switchFormat(IrisVertexFormats.ENTITY);

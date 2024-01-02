@@ -75,7 +75,8 @@ public class IrisVertexFormats {
 		glyphElements.put("iris_Entity", ENTITY_ID_ELEMENT); // 38
 		glyphElements.put("mc_midTexCoord", MID_TEXTURE_ELEMENT); // 46
 		glyphElements.put("at_tangent", TANGENT_ELEMENT); // 50
-		glyphElements.put("Padding2", PADDING_SHORT); // 52
+		glyphElements.put("at_velocity", VELOCITY_FLOAT); // 60
+
 
 		cloudsElements.put("Position", DefaultVertexFormat.ELEMENT_POSITION); // 12
 		cloudsElements.put("Color", DefaultVertexFormat.ELEMENT_COLOR); // 16
@@ -89,6 +90,7 @@ public class IrisVertexFormats {
 		CLOUDS = new VertexFormat(cloudsElements.build());
 
 		debug(ENTITY);
+		debug(GLYPH);
 	}
 
 	private static void debug(VertexFormat format) {

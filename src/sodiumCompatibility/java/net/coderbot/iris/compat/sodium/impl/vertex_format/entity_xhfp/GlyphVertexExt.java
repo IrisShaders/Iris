@@ -23,10 +23,10 @@ public final class GlyphVertexExt {
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;
 	private static final int OFFSET_TEXTURE = 16;
-	private static final int OFFSET_MID_TEXTURE = 38;
+	private static final int OFFSET_MID_TEXTURE = 40;
 	private static final int OFFSET_LIGHT = 24;
 	private static final int OFFSET_NORMAL = 28;
-	private static final int OFFSET_TANGENT = 46;
+	private static final int OFFSET_TANGENT = 44;
 
 
 	private static final QuadViewEntity.QuadViewEntityUnsafe quad = new QuadViewEntity.QuadViewEntityUnsafe();
@@ -60,9 +60,11 @@ public final class GlyphVertexExt {
 		MemoryUtil.memPutShort(ptr + 34, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
 		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 
-		MemoryUtil.memPutFloat(ptr + 52, x - prevX);
-		MemoryUtil.memPutFloat(ptr + 56, y - prevY);
-		MemoryUtil.memPutFloat(ptr + 60, z - prevZ);
+		// 38 empty
+
+		MemoryUtil.memPutFloat(ptr + 48, x - prevX);
+		MemoryUtil.memPutFloat(ptr + 52, y - prevY);
+		MemoryUtil.memPutFloat(ptr + 56, z - prevZ);
 
 		if (vertexCount == 4) {
 			endQuad(ptr);

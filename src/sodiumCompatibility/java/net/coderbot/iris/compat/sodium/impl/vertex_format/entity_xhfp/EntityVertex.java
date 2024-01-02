@@ -58,6 +58,10 @@ public final class EntityVertex {
 		MemoryUtil.memPutShort(ptr + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 		MemoryUtil.memPutShort(ptr + 38, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
 		MemoryUtil.memPutShort(ptr + 40, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+
+		MemoryUtil.memPutFloat(ptr + 52, 0);
+		MemoryUtil.memPutFloat(ptr + 56, 0);
+		MemoryUtil.memPutFloat(ptr + 60, 0);
 	}
 
 	public static void writeWithVelocity(long ptr,
