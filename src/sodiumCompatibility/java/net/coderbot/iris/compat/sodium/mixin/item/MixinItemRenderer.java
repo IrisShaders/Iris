@@ -93,7 +93,7 @@ public class MixinItemRenderer {
                 EntityVertex.writeUnknownTangentWithVelocity(ptr, xt, yt, zt, lastPos.storedPositions[i].x, lastPos.storedPositions[i].y, lastPos.storedPositions[i].z, color, quad.getTexU(i), quad.getTexV(i), midU, midV, light, overlay, normal);
                 ptr += EntityVertex.STRIDE;
 
-				if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered() && lastPos.lastFrame != SystemTimeUniforms.COUNTER.getAsInt()) lastPos.storedPositions[i].set(xt, yt, zt);
+				if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) lastPos.storedPositions[i].set(xt, yt, zt);
             }
 			lastPos.lastFrame = SystemTimeUniforms.COUNTER.getAsInt();
 

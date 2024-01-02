@@ -110,12 +110,13 @@ public class IrisModelCuboid {
 
             src.mulPosition(mat, dst);
 
-            if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered() && history.lastFrame != SystemTimeUniforms.COUNTER.getAsInt()) {
+            if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
                 previous[i].set(history.storedPositions[i]);
                 history.storedPositions[i].set(dst);
-            }
+				history.lastFrame = SystemTimeUniforms.COUNTER.getAsInt();
+
+			}
         }
-		history.lastFrame = SystemTimeUniforms.COUNTER.getAsInt();
 
     }
 

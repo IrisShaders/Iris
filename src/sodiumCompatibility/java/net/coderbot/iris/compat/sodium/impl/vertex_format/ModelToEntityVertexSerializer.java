@@ -38,6 +38,9 @@ public class ModelToEntityVertexSerializer implements VertexSerializer {
 				MemoryUtil.memPutFloat(dst + 46, midV);
 				MemoryUtil.memPutInt(dst + 50, tangent);
 
+				MemoryUtil.memPutFloat(dst + 52, 0);
+				MemoryUtil.memPutFloat(dst + 56, 0);
+				MemoryUtil.memPutFloat(dst + 60, 0);
 				src += ModelVertex.STRIDE;
 				dst += IrisVertexFormats.ENTITY.getVertexSize();
 			}
