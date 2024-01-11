@@ -7,6 +7,7 @@ public enum ProgramGroup {
 	ShadowComposite("shadowcomp"),
 	Prepare("prepare"),
 	Gbuffers("gbuffers"),
+	Dh("dh"),
 	Deferred("deferred"),
 	Composite("composite"),
 	Final("final")

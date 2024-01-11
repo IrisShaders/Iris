@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.coderbot.iris.gl.shader.ShaderCompileException;
+import net.coderbot.iris.pipeline.transform.transformer.DHTransformer;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.logging.log4j.LogManager;
@@ -259,7 +260,7 @@ public class TransformPatcher {
 										VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
 										break;
 									default:
-										throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
+										throw new UnsupportedOperationException("Unknown core patch type: " + parameters.patch);
 								}
 
 								if (parameters.type == PatchShaderType.FRAGMENT) {
@@ -282,6 +283,9 @@ public class TransformPatcher {
 										break;
 									case VANILLA:
 										VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+										break;
+									case DH:
+										DHTransformer.transform(transformer, tree, root, parameters);
 										break;
 									default:
 										throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
@@ -388,6 +392,18 @@ public class TransformPatcher {
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
 				new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
+	}
+
+	public static Map<PatchShaderType, String> patchDH(
+			String name, String vertex, String fragment,
+			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(name, vertex, null, null, null, fragment,
+			new Parameters(Patch.DH, textureMap) {
+				@Override
+				public TextureStage getTextureStage() {
+					return TextureStage.GBUFFERS_AND_SHADOW;
+				}
+			});
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,

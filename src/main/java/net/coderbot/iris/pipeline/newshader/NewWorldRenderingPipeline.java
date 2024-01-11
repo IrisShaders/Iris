@@ -31,7 +31,6 @@ import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
-import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.TextureType;
@@ -150,7 +149,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ColorSpaceConverter colorSpaceConverter;
 
 	private final ImmutableSet<Integer> flippedBeforeShadow;
-	private final ImmutableSet<Integer> flippedAfterPrepare;
+	public final ImmutableSet<Integer> flippedAfterPrepare;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
 	public boolean isBeforeTranslucent;
@@ -496,6 +495,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
 
+		DHCompat.connectNewPipeline(this);
 		// first optimization pass
 		this.customUniforms.optimise();
 		boolean hasRun = false;
@@ -1232,6 +1232,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 
 		renderTargets.destroy();
+		DHCompat.clearPipeline();
 
 		customImages.forEach(GlImage::destroy);
 
@@ -1286,5 +1287,22 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void setIsMainBound(boolean bound) {
 		isMainBound = bound;
+	}
+
+	public Optional<ProgramSource> getDHTerrainShader() {
+		return resolver.resolve(ProgramId.DhTerrain);
+	}
+
+	public Optional<ProgramSource> getDHWaterShader() {
+		return resolver.resolve(ProgramId.DhWater);
+	}
+
+	public CustomUniforms getCustomUniforms() {
+		return customUniforms;
+	}
+
+	public GlFramebuffer createDHFramebuffer(ProgramSource sources) {
+		return renderTargets.createDHFramebuffer(flippedAfterPrepare,
+			sources.getDirectives().getDrawBuffers());
 	}
 }

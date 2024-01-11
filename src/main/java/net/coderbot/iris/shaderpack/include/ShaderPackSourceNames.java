@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack.include;
 
 import com.google.common.collect.ImmutableList;
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.shaderpack.loading.ProgramArrayId;
 import net.coderbot.iris.shaderpack.loading.ProgramId;
 
