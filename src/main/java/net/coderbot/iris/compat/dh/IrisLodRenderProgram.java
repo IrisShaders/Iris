@@ -33,12 +33,14 @@ import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL32;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
@@ -84,6 +86,12 @@ public class IrisLodRenderProgram extends ShaderProgram
 		return new IrisLodRenderProgram(name, vertex2, fragment2, uniforms, pipeline);
 	}
 
+	public int tryGetUniformLocation2(CharSequence name) {
+		int i = GL32.glGetUniformLocation(this.id, name);
+		if (i == -1) Iris.logger.warn("Couldn't find " + name);
+		return i;
+	}
+
 	// Noise Uniforms
 
 	// This will bind  AbstractVertexAttribute
@@ -106,17 +114,17 @@ public class IrisLodRenderProgram extends ShaderProgram
 		samplers = samplerBuilder.build();
 		images = builder.build();
 
-		modelOffsetUniform = tryGetUniformLocation("modelOffset");
-		worldYOffsetUniform = tryGetUniformLocation("worldYOffset");
-		mircoOffsetUniform = tryGetUniformLocation("mircoOffset");
-		projectionUniform = tryGetUniformLocation("iris_ProjectionMatrix");
-		projectionInverseUniform = tryGetUniformLocation("iris_ProjectionMatrixInverse");
-		modelViewUniform = tryGetUniformLocation("iris_ModelViewMatrix");
-		modelViewInverseUniform = tryGetUniformLocation("iris_ModelViewMatrixInverse");
-		normalMatrix3fUniform = tryGetUniformLocation("iris_NormalMatrix");
+		modelOffsetUniform = tryGetUniformLocation2("modelOffset");
+		worldYOffsetUniform = tryGetUniformLocation2("worldYOffset");
+		mircoOffsetUniform = tryGetUniformLocation2("mircoOffset");
+		projectionUniform = tryGetUniformLocation2("iris_ProjectionMatrix");
+		projectionInverseUniform = tryGetUniformLocation2("iris_ProjectionMatrixInverse");
+		modelViewUniform = tryGetUniformLocation2("iris_ModelViewMatrix");
+		modelViewInverseUniform = tryGetUniformLocation2("iris_ModelViewMatrixInverse");
+		normalMatrix3fUniform = tryGetUniformLocation2("iris_NormalMatrix");
 
 		// Fog/Clip Uniforms
-		clipDistanceUniform = tryGetUniformLocation("clipDistance");
+		clipDistanceUniform = tryGetUniformLocation2("clipDistance");
 
 		// TODO: Add better use of the LODFormat thing
 		int vertexByteCount = LodUtil.LOD_VERTEX_FORMAT.getByteSize();
@@ -167,13 +175,11 @@ public class IrisLodRenderProgram extends ShaderProgram
 	public void bind()
 	{
 		super.bind();
-		vao.bind();
 	}
 	// Override ShaderProgram.unbind()
 	public void unbind()
 	{
 		super.unbind();
-		vao.unbind();
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
 	}

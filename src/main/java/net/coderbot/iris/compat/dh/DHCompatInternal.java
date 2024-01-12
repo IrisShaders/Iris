@@ -47,12 +47,9 @@ public class DHCompatInternal {
 	}
 
 	public void reconnectDHTextures(int depthTex) {
-		if (storedDepthTex != depthTex) {
-			storedDepthTex = depthTex;
-			if (dhTerrainFramebuffer != null) {
-				dhTerrainFramebuffer.addDepthAttachment(depthTex);
-				dhWaterFramebuffer.addDepthAttachment(depthTex);
-			}
+		if (dhTerrainFramebuffer != null) {
+			dhTerrainFramebuffer.addDepthAttachment(depthTex);
+			dhWaterFramebuffer.addDepthAttachment(depthTex);
 		}
 	}
 
@@ -62,6 +59,9 @@ public class DHCompatInternal {
 		translucentProgram.free();
 		translucentProgram = null;
 		shouldOverride = false;
+		dhTerrainFramebuffer = null;
+		dhWaterFramebuffer = null;
+		storedDepthTex = -1;
 	}
 
 	public void setModelPos(Vec3f modelPos) {
@@ -69,6 +69,7 @@ public class DHCompatInternal {
 		solidProgram.setModelPos(modelPos);
 		translucentProgram.bind();
 		translucentProgram.setModelPos(modelPos);
+		solidProgram.bind();
 	}
 
 	public IrisLodRenderProgram getSolidShader() {
@@ -77,5 +78,13 @@ public class DHCompatInternal {
 
 	public GlFramebuffer getSolidFB() {
 		return dhTerrainFramebuffer;
+	}
+
+	public IrisLodRenderProgram getTranslucentShader() {
+		return translucentProgram;
+	}
+
+	public GlFramebuffer getTranslucentFB() {
+		return dhWaterFramebuffer;
 	}
 }
