@@ -65,7 +65,7 @@ public class DHCompat {
     }
 
 	public static void connectNewPipeline(NewWorldRenderingPipeline pipeline) {
-		if (compatInternalInstance == null) throw new IllegalStateException("missingno");
+		if (compatInternalInstance == null) return;
         try {
             createNewPipeline.invoke(compatInternalInstance, pipeline);
         } catch (Throwable e) {
@@ -84,7 +84,7 @@ public class DHCompat {
     }
 
 	public static int getDepthTex() {
-		if (compatInternalInstance == null) return -1;
+		if (compatInternalInstance == null) throw new IllegalStateException("Couldn't find DH depth texture");
 
 		try {
 			return (int) getDepthTex.invoke(compatInternalInstance);

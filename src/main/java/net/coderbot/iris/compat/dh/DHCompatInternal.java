@@ -42,11 +42,13 @@ public class DHCompatInternal {
 		ProgramSource terrain = pipeline.getDHTerrainShader().get();
 		solidProgram = IrisLodRenderProgram.createProgram(terrain.getName(), terrain, pipeline.getCustomUniforms(), pipeline);
 
-		ProgramSource water = pipeline.getDHWaterShader().get();
-		translucentProgram = IrisLodRenderProgram.createProgram(water.getName(), water, pipeline.getCustomUniforms(), pipeline);
+		if (pipeline.getDHWaterShader().isPresent()) {
+			ProgramSource water = pipeline.getDHWaterShader().get();
+			translucentProgram = IrisLodRenderProgram.createProgram(water.getName(), water, pipeline.getCustomUniforms(), pipeline);
+			dhWaterFramebuffer = pipeline.createDHFramebuffer(water);
+		}
 
 		dhTerrainFramebuffer = pipeline.createDHFramebuffer(terrain);
-		dhWaterFramebuffer = pipeline.createDHFramebuffer(water);
 
 		if (translucentProgram == null) {
 			translucentProgram = solidProgram;

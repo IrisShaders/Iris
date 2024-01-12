@@ -22,6 +22,7 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.GlUniformMatrix3f;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
@@ -37,6 +38,7 @@ import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.uniforms.CommonUniforms;
 import net.coderbot.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -69,6 +71,7 @@ public class IrisLodRenderProgram extends ShaderProgram
 	private final CustomUniforms customUniforms;
 	private final ProgramSamplers samplers;
 	private final ProgramImages images;
+	private final BlendModeOverride blend;
 
 	public static IrisLodRenderProgram createProgram(String name, ProgramSource source, CustomUniforms uniforms, NewWorldRenderingPipeline pipeline) {
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchDH(
@@ -83,7 +86,7 @@ public class IrisLodRenderProgram extends ShaderProgram
 			.addSources(transformed)
 			.setName("dh_" + name)
 			.print();
-		return new IrisLodRenderProgram(name, vertex2, fragment2, uniforms, pipeline);
+		return new IrisLodRenderProgram(name, source.getDirectives().getBlendModeOverride().orElse(null), vertex2, fragment2, uniforms, pipeline);
 	}
 
 	public int tryGetUniformLocation2(CharSequence name) {
@@ -95,12 +98,13 @@ public class IrisLodRenderProgram extends ShaderProgram
 	// Noise Uniforms
 
 	// This will bind  AbstractVertexAttribute
-	private IrisLodRenderProgram(String name, String vertex, String fragment, CustomUniforms customUniforms, NewWorldRenderingPipeline pipeline)
+	private IrisLodRenderProgram(String name, BlendModeOverride override, String vertex, String fragment, CustomUniforms customUniforms, NewWorldRenderingPipeline pipeline)
 	{
 		super(() -> vertex,
 			() -> fragment,
 			"fragColor", new String[]{"vPosition", "color"});
 
+		blend = override;
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(name, id);
 		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(id, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		CommonUniforms.addDynamicUniforms(uniformBuilder, FogMode.PER_VERTEX);
@@ -175,6 +179,7 @@ public class IrisLodRenderProgram extends ShaderProgram
 	public void bind()
 	{
 		super.bind();
+		if (blend != null) blend.apply();
 	}
 	// Override ShaderProgram.unbind()
 	public void unbind()
@@ -182,6 +187,7 @@ public class IrisLodRenderProgram extends ShaderProgram
 		super.unbind();
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
+		BlendModeOverride.restore();
 	}
 
 	// Override ShaderProgram.free()
@@ -205,8 +211,8 @@ public class IrisLodRenderProgram extends ShaderProgram
 	{
 		super.bind();
 
+		Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
-
 		setUniform(modelViewUniform, modelView);
 		setUniform(modelViewInverseUniform, modelView.invert(new Matrix4f()));
 		setUniform(projectionUniform, projection);

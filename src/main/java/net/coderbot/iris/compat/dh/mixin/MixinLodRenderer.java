@@ -15,6 +15,7 @@ import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.coderbot.iris.compat.dh.DHCompatInternal;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL43C;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,7 +48,7 @@ public class MixinLodRenderer {
 
 	@Inject(method = "drawLODs", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/RenderBufferHandler;renderTransparent(Lcom/seibel/distanthorizons/core/render/renderer/LodRenderer;)V"))
 	private void onTransparent(IClientLevelWrapper clientLevelWrapper, Mat4f baseModelViewMatrix, Mat4f baseProjectionMatrix, float partialTicks, IProfilerWrapper profiler, CallbackInfo ci) {
-		if (DHCompatInternal.INSTANCE.shouldOverride) {
+		if (DHCompatInternal.INSTANCE.shouldOverride && DHCompatInternal.INSTANCE.getTranslucentFB() != null) {
 			DHCompatInternal.INSTANCE.getTranslucentShader().bind();
 			Matrix4f projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
 			float nearClip = 0.1f;
@@ -61,6 +62,14 @@ public class MixinLodRenderer {
 		atTranslucent = true;
 	}
 
+	@Redirect(method = "drawLODs", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL32;glClear(I)V"))
+	private void properClear(int i) {
+		if (DHCompatInternal.INSTANCE.shouldOverride) {
+			GL43C.glClear(GL43C.GL_DEPTH_BUFFER_BIT);
+		} else {
+			GL43C.glClear(i);
+		}
+ 	}
 	@Redirect(method = "drawLODs", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/renderer/LodRenderProgram;bind()V"))
 	private void bindSolid(LodRenderProgram instance) {
 		if (DHCompatInternal.INSTANCE.shouldOverride) {
@@ -100,17 +109,15 @@ public class MixinLodRenderer {
 		}
 	}
 
-	@Redirect(method = "drawLODs", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/renderer/LodRenderProgram;fillUniformData(Lcom/seibel/distanthorizons/coreapi/util/math/Mat4f;III)V"))
-	private void fillUniformDataSolid(LodRenderProgram instance, Mat4f combinedMatrix, int lightmapBindPoint, int worldYOffset, int vanillaDrawDistance, IClientLevelWrapper clientLevelWrapper, Mat4f baseModelViewMatrix, Mat4f baseProjectionMatrix, float partialTicks) {
+	@Inject(method = "drawLODs", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/wrapperInterfaces/misc/ILightMapWrapper;bind()V", remap = true))
+	private void fillUniformDataSolid(IClientLevelWrapper clientLevelWrapper, Mat4f baseModelViewMatrix, Mat4f baseProjectionMatrix, float partialTicks, IProfilerWrapper profiler, CallbackInfo ci) {
 		if (DHCompatInternal.INSTANCE.shouldOverride) {
 			Matrix4f projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
 			float nearClip = 0.1f;
 			float farClip = (float)((double)(RenderUtil.getFarClipPlaneDistanceInBlocks() + 512) * Math.sqrt(2.0));
 
 
-			DHCompatInternal.INSTANCE.getSolidShader().fillUniformData(new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), nearClip, farClip), CapturedRenderingState.INSTANCE.getGbufferModelView(), worldYOffset, partialTicks);
-		} else {
-			instance.fillUniformData(combinedMatrix, lightmapBindPoint, worldYOffset, vanillaDrawDistance);
+			DHCompatInternal.INSTANCE.getSolidShader().fillUniformData(new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), nearClip, farClip), CapturedRenderingState.INSTANCE.getGbufferModelView(), MC.getWrappedClientLevel().getMinHeight(), partialTicks);
 		}
 	}
 

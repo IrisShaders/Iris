@@ -99,7 +99,7 @@ public class IrisSamplers {
 		}
 
 		// Add the DH texture here, to make sure it's always visible.
-		//samplers.addDynamicSampler(TextureType.TEXTURE_2D, DHCompat::getDepthTex, null, "dhDepthTex");
+		samplers.addDynamicSampler(TextureType.TEXTURE_2D, DHCompat::getDepthTex, null, "dhDepthTex");
 	}
 
 	public static void addNoiseSampler(SamplerHolder samplers, TextureAccess sampler) {
