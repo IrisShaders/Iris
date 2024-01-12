@@ -3,6 +3,7 @@ package net.coderbot.iris.samplers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.image.GlImage;
@@ -96,6 +97,9 @@ public class IrisSamplers {
 				samplers.addDynamicSampler(texture, name);
 			}
 		}
+
+		// Add the DH texture here, to make sure it's always visible.
+		//samplers.addDynamicSampler(TextureType.TEXTURE_2D, DHCompat::getDepthTex, null, "dhDepthTex");
 	}
 
 	public static void addNoiseSampler(SamplerHolder samplers, TextureAccess sampler) {

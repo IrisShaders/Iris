@@ -3,6 +3,7 @@ package net.coderbot.iris.uniforms;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.coderbot.iris.JomlConversions;
+import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
@@ -154,7 +155,10 @@ public final class CommonUniforms {
 			})
 			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(directives.getWetnessHalfLife(), directives.getDrynessHalfLife(), CommonUniforms::getRainStrength, updateNotifier))
-			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor);
+			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
+			// DH
+			.uniform1f(PER_FRAME, "dhFarPlane", DHCompat::getFarPlane)
+			.uniform1i(PER_FRAME, "dhRenderDistance", DHCompat::getRenderDistance);
 	}
 
 	private static boolean isOnGround() {

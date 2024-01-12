@@ -1,5 +1,6 @@
 package net.coderbot.iris.uniforms;
 
+import net.coderbot.iris.compat.dh.DHCompat;
 import org.joml.Matrix4f;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.pipeline.ShadowRenderer;
@@ -20,6 +21,7 @@ public final class MatrixUniforms {
 		// TODO: In some cases, gbufferProjectionInverse takes on a value much different than OptiFine...
 		// We need to audit Mojang's linear algebra.
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
+		addDHMatrix(uniforms, "Projection", DHCompat.getProjection());
 		addShadowMatrix(uniforms, "ModelView", () ->
 				new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose()));
 		addShadowMatrix(uniforms, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance()));
@@ -30,6 +32,13 @@ public final class MatrixUniforms {
 			.uniformMatrix(PER_FRAME, "gbuffer" + name, supplier)
 			.uniformMatrix(PER_FRAME, "gbuffer" + name + "Inverse", new Inverted(supplier))
 			.uniformMatrix(PER_FRAME, "gbufferPrevious" + name, new Previous(supplier));
+	}
+
+	private static void addDHMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
+		uniforms
+			.uniformMatrix(PER_FRAME, "dh" + name, supplier)
+			.uniformMatrix(PER_FRAME, "dh" + name + "Inverse", new Inverted(supplier))
+			.uniformMatrix(PER_FRAME, "dhPrevious" + name, new Previous(supplier));
 	}
 
 	private static void addShadowMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {

@@ -1,6 +1,7 @@
 package net.coderbot.iris.compat.dh;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.seibel.distanthorizons.core.util.RenderUtil;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.buffer.ShaderStorageBuffer;
@@ -22,12 +23,16 @@ public class DHCompatInternal {
 	public void prepareNewPipeline(NewWorldRenderingPipeline pipeline) {
 		if (solidProgram != null) {
 			solidProgram.free();
-			translucentProgram.free();
 			solidProgram = null;
-			translucentProgram = null;
+
 			shouldOverride = false;
 		}
 
+		if (translucentProgram != null) {
+			translucentProgram.free();
+
+			translucentProgram = null;
+		}
 
 		if (pipeline.getDHTerrainShader().isEmpty() && pipeline.getDHWaterShader().isEmpty()) {
 			Iris.logger.warn("No DH shader found in this pack.");
@@ -43,21 +48,30 @@ public class DHCompatInternal {
 		dhTerrainFramebuffer = pipeline.createDHFramebuffer(terrain);
 		dhWaterFramebuffer = pipeline.createDHFramebuffer(water);
 
+		if (translucentProgram == null) {
+			translucentProgram = solidProgram;
+		}
+
 		shouldOverride = true;
 	}
 
 	public void reconnectDHTextures(int depthTex) {
-		if (dhTerrainFramebuffer != null) {
+		if (storedDepthTex != depthTex && dhTerrainFramebuffer != null) {
+			storedDepthTex = depthTex;
 			dhTerrainFramebuffer.addDepthAttachment(depthTex);
 			dhWaterFramebuffer.addDepthAttachment(depthTex);
 		}
 	}
 
 	public void clear() {
-		solidProgram.free();
-		solidProgram = null;
-		translucentProgram.free();
-		translucentProgram = null;
+		if (solidProgram != null) {
+			solidProgram.free();
+			solidProgram = null;
+		}
+		if (translucentProgram != null) {
+			translucentProgram.free();
+			translucentProgram = null;
+		}
 		shouldOverride = false;
 		dhTerrainFramebuffer = null;
 		dhWaterFramebuffer = null;
@@ -81,7 +95,22 @@ public class DHCompatInternal {
 	}
 
 	public IrisLodRenderProgram getTranslucentShader() {
+		if (translucentProgram == null) {
+			return solidProgram;
+		}
 		return translucentProgram;
+	}
+
+	public int getStoredDepthTex() {
+		return storedDepthTex;
+	}
+
+	public int getRenderDistance() {
+		return RenderUtil.getFarClipPlaneDistanceInBlocks();
+	}
+
+	public float getFarPlane() {
+		return (float)((double)(RenderUtil.getFarClipPlaneDistanceInBlocks() + 512) * Math.sqrt(2.0));
 	}
 
 	public GlFramebuffer getTranslucentFB() {
