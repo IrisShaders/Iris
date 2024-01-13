@@ -395,9 +395,9 @@ public class TransformPatcher {
 	}
 
 	public static Map<PatchShaderType, String> patchDH(
-			String name, String vertex, String fragment,
+			String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
 			Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(name, vertex, null, null, null, fragment,
+		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
 			new Parameters(Patch.DH, textureMap) {
 				@Override
 				public TextureStage getTextureStage() {

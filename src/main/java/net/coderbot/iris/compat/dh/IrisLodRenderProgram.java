@@ -26,6 +26,8 @@ import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.gl.shader.GlShader;
+import net.coderbot.iris.gl.shader.ShaderType;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.pipeline.ShaderPrinter;
 import net.coderbot.iris.pipeline.newshader.FogMode;
@@ -43,16 +45,15 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL43C;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
 import java.util.Map;
 
-public class IrisLodRenderProgram extends ShaderProgram
+public class IrisLodRenderProgram
 {
-	private static final IVersionConstants VERSION_CONSTANTS = SingletonInjector.INSTANCE.get(IVersionConstants.class);
-
-	public final AbstractVertexAttribute vao;
+	private final int id;
 
 	// Uniforms
 	public final int modelOffsetUniform;
@@ -77,16 +78,21 @@ public class IrisLodRenderProgram extends ShaderProgram
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchDH(
 			name,
 			source.getVertexSource().orElseThrow(RuntimeException::new),
+			source.getTessControlSource().orElse(null),
+			source.getTessEvalSource().orElse(null),
+			source.getGeometrySource().orElse(null),
 			source.getFragmentSource().orElseThrow(RuntimeException::new),
 			pipeline.getTextureMap());
-		String vertex2 = transformed.get(PatchShaderType.VERTEX);
-		String fragment2 = transformed.get(PatchShaderType.FRAGMENT);
-		Iris.logger.error("GOT A DH PROGRAM (not an error)");
+		String vertex = transformed.get(PatchShaderType.VERTEX);
+		String tessControl = transformed.get(PatchShaderType.TESS_CONTROL);
+		String tessEval = transformed.get(PatchShaderType.TESS_EVAL);
+		String geometry = transformed.get(PatchShaderType.GEOMETRY);
+		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 		ShaderPrinter.printProgram(name)
 			.addSources(transformed)
 			.setName("dh_" + name)
 			.print();
-		return new IrisLodRenderProgram(name, source.getDirectives().getBlendModeOverride().orElse(null), vertex2, fragment2, uniforms, pipeline);
+		return new IrisLodRenderProgram(name, source.getDirectives().getBlendModeOverride().orElse(null), vertex, tessControl, tessEval, geometry, fragment, uniforms, pipeline);
 	}
 
 	public int tryGetUniformLocation2(CharSequence name) {
@@ -98,11 +104,53 @@ public class IrisLodRenderProgram extends ShaderProgram
 	// Noise Uniforms
 
 	// This will bind  AbstractVertexAttribute
-	private IrisLodRenderProgram(String name, BlendModeOverride override, String vertex, String fragment, CustomUniforms customUniforms, NewWorldRenderingPipeline pipeline)
+	private IrisLodRenderProgram(String name, BlendModeOverride override, String vertex, String tessControl, String tessEval, String geometry, String fragment, CustomUniforms customUniforms, NewWorldRenderingPipeline pipeline)
 	{
-		super(() -> vertex,
-			() -> fragment,
-			"fragColor", new String[]{"vPosition", "color"});
+		id = GL43C.glCreateProgram();
+
+		GL32.glBindAttribLocation(this.id, 0, "vPosition");
+		GL32.glBindAttribLocation(this.id, 1, "color");
+
+		GlShader vert = new GlShader(ShaderType.VERTEX, name + ".vsh", vertex);
+		GL43C.glAttachShader(id, vert.getHandle());
+
+		GlShader tessCont = null;
+		if (tessControl != null) {
+			tessCont = new GlShader(ShaderType.TESSELATION_CONTROL, name + ".tcs", tessControl);
+			GL43C.glAttachShader(id, tessCont.getHandle());
+		}
+
+		GlShader tessE = null;
+		if (tessEval != null) {
+			tessE = new GlShader(ShaderType.TESSELATION_EVAL, name + ".tes", tessEval);
+			GL43C.glAttachShader(id, tessE.getHandle());
+		}
+
+		GlShader geom = null;
+		if (tessControl != null) {
+			geom = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometry);
+			GL43C.glAttachShader(id, geom.getHandle());
+		}
+
+		GlShader frag = new GlShader(ShaderType.FRAGMENT, name + ".fsh", fragment);
+		GL43C.glAttachShader(id, frag.getHandle());
+
+		GL32.glLinkProgram(this.id);
+		int status = GL32.glGetProgrami(this.id, 35714);
+		if (status != 1) {
+			String message = "Shader link error in Iris DH program! Details: " + GL32.glGetProgramInfoLog(this.id);
+			this.free();
+			throw new RuntimeException(message);
+		} else {
+			GL32.glUseProgram(this.id);
+		}
+
+		vert.destroy();
+		frag.destroy();
+
+		if (tessCont != null) tessCont.destroy();
+		if (tessE != null) tessE.destroy();
+		if (geom != null) geom.destroy();
 
 		blend = override;
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(name, id);
@@ -129,26 +177,6 @@ public class IrisLodRenderProgram extends ShaderProgram
 
 		// Fog/Clip Uniforms
 		clipDistanceUniform = tryGetUniformLocation2("clipDistance");
-
-		// TODO: Add better use of the LODFormat thing
-		int vertexByteCount = LodUtil.LOD_VERTEX_FORMAT.getByteSize();
-		if (GLProxy.getInstance().VertexAttributeBufferBindingSupported)
-			vao = new VertexAttributePostGL43(); // also binds AbstractVertexAttribute
-		else
-			vao = new VertexAttributePreGL43(); // also binds AbstractVertexAttribute
-		vao.bind();
-		// Now a pos+light.
-		vao.setVertexAttribute(0, 0, VertexPointer.addUnsignedShortsPointer(4, false, true)); // 2+2+2+2
-		vao.setVertexAttribute(0, 1, VertexPointer.addUnsignedBytesPointer(4, true, false)); // +4
-		try
-		{
-			vao.completeAndCheck(vertexByteCount);
-		}
-		catch (RuntimeException e)
-		{
-			System.out.println(LodUtil.LOD_VERTEX_FORMAT);
-			throw e;
-		}
 	}
 
 	public void setUniform(int index, Matrix4f matrix) {
@@ -178,38 +206,26 @@ public class IrisLodRenderProgram extends ShaderProgram
 	// Override ShaderProgram.bind()
 	public void bind()
 	{
-		super.bind();
+		GL43C.glUseProgram(id);
 		if (blend != null) blend.apply();
 	}
-	// Override ShaderProgram.unbind()
+
 	public void unbind()
 	{
-		super.unbind();
+		GL43C.glUseProgram(0);
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
 		BlendModeOverride.restore();
 	}
 
-	// Override ShaderProgram.free()
 	public void free()
 	{
-		vao.free();
-		super.free();
-	}
-
-	public void bindVertexBuffer(int vbo)
-	{
-		vao.bindBufferToAllBindingPoints(vbo);
-	}
-
-	public void unbindVertexBuffer()
-	{
-		vao.unbindBuffersFromAllBindingPoint();
+		GL43C.glDeleteProgram(id);
 	}
 
 	public void fillUniformData(Matrix4f projection, Matrix4f modelView, int worldYOffset, float partialTicks)
 	{
-		super.bind();
+		GL43C.glUseProgram(id);
 
 		Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
@@ -237,9 +253,17 @@ public class IrisLodRenderProgram extends ShaderProgram
 		images.update();
 	}
 
+	private void setUniform(int index, float value) {
+		GL43C.glUniform1f(index, value);
+	}
+
 	public void setModelPos(Vec3f modelPos)
 	{
 		setUniform(modelOffsetUniform, modelPos);
+	}
+
+	private void setUniform(int index, Vec3f pos) {
+		GL43C.glUniform3f(index, pos.x, pos.y, pos.z);
 	}
 
 }
