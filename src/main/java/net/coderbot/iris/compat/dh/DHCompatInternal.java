@@ -8,6 +8,7 @@ import net.coderbot.iris.gl.buffer.ShaderStorageBuffer;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.shaderpack.ProgramSource;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
 
 public class DHCompatInternal {
 	public static DHCompatInternal INSTANCE = new DHCompatInternal();
@@ -45,10 +46,10 @@ public class DHCompatInternal {
 		if (pipeline.getDHWaterShader().isPresent()) {
 			ProgramSource water = pipeline.getDHWaterShader().get();
 			translucentProgram = IrisLodRenderProgram.createProgram(water.getName(), water, pipeline.getCustomUniforms(), pipeline);
-			dhWaterFramebuffer = pipeline.createDHFramebuffer(water);
+			dhWaterFramebuffer = pipeline.createDHFramebuffer(water, true);
 		}
 
-		dhTerrainFramebuffer = pipeline.createDHFramebuffer(terrain);
+		dhTerrainFramebuffer = pipeline.createDHFramebuffer(terrain, false);
 
 		if (translucentProgram == null) {
 			translucentProgram = solidProgram;
@@ -61,7 +62,9 @@ public class DHCompatInternal {
 		if (storedDepthTex != depthTex && dhTerrainFramebuffer != null) {
 			storedDepthTex = depthTex;
 			dhTerrainFramebuffer.addDepthAttachment(depthTex);
-			dhWaterFramebuffer.addDepthAttachment(depthTex);
+			if (dhWaterFramebuffer != null) {
+				dhWaterFramebuffer.addDepthAttachment(depthTex);
+			}
 		}
 	}
 
@@ -113,6 +116,10 @@ public class DHCompatInternal {
 
 	public float getFarPlane() {
 		return (float)((double)(RenderUtil.getFarClipPlaneDistanceInBlocks() + 512) * Math.sqrt(2.0));
+	}
+
+	public float getNearPlane() {
+		return RenderUtil.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
 	public GlFramebuffer getTranslucentFB() {

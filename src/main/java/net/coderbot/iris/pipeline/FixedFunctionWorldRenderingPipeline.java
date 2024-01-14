@@ -227,9 +227,4 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 		// No sun tilt
 		return 0;
 	}
-
-	@Override
-	public DHCompat getDHCompat() {
-		return null;
-	}
 }

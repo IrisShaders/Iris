@@ -186,7 +186,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShaderPack pack;
 	private PackShadowDirectives shadowDirectives;
 	private ColorSpace currentColorSpace;
-	private DHCompat dhCompat;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		ShaderPrinter.resetPrintState();
@@ -205,7 +204,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
-		this.dhCompat = new DHCompat();
 
 		this.resolver = new ProgramFallbackResolver(programSet);
 		this.pack = programSet.getPack();
@@ -485,7 +483,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.shadowRenderer = null;
 		}
 
-		dhCompat.setFramebuffer(renderTargets.createGbufferFramebuffer(ImmutableSet.of(), new int[] { 0 }));
 		// TODO: Create fallback Sodium shaders if the pack doesn't provide terrain shaders
 		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
@@ -1265,11 +1262,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return sunPathRotation;
 	}
 
-	@Override
-	public DHCompat getDHCompat() {
-		return dhCompat;
-	}
-
 	protected AbstractTexture getWhitePixel() {
 		return whitePixel;
 	}
@@ -1301,8 +1293,8 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return customUniforms;
 	}
 
-	public GlFramebuffer createDHFramebuffer(ProgramSource sources) {
-		return renderTargets.createDHFramebuffer(flippedAfterPrepare,
+	public GlFramebuffer createDHFramebuffer(ProgramSource sources, boolean trans) {
+		return renderTargets.createDHFramebuffer(trans ? flippedAfterTranslucent : flippedAfterPrepare,
 			sources.getDirectives().getDrawBuffers());
 	}
 }

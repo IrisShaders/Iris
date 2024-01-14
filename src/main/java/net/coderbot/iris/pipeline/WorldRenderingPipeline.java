@@ -65,6 +65,4 @@ public interface WorldRenderingPipeline {
 	boolean hasFeature(FeatureFlags flags);
 
 	float getSunPathRotation();
-
-    DHCompat getDHCompat();
 }

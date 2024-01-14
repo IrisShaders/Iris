@@ -24,15 +24,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 	FogShader.class
 }, remap = false)
 public class MixinDHApplyShader extends AbstractShaderRenderer {
-	//@Redirect(method = "onRender", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/wrapperInterfaces/minecraft/IMinecraftRenderWrapper;getTargetFrameBuffer()I"))
-	private int changeFB(IMinecraftRenderWrapper instance) {
-		if (Iris.getPipelineManager().getPipelineNullable() instanceof NewWorldRenderingPipeline pipeline) {
-			return pipeline.getDHCompat().getFramebuffer();
-		} else {
-			return instance.getTargetFrameBuffer();
-		}
-	}
-
 	@Inject(method = "onRender", at = @At("HEAD"), cancellable = true)
 	private void onRender2(CallbackInfo ci) {
 		if (DHCompatInternal.INSTANCE.shouldOverride) ci.cancel();

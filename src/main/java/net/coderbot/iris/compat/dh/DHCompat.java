@@ -1,7 +1,5 @@
 package net.coderbot.iris.compat.dh;
 
-import com.seibel.distanthorizons.api.DhApi;
-import com.seibel.distanthorizons.core.config.Config;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
@@ -17,21 +15,9 @@ import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
 public class DHCompat {
-	private GlFramebuffer fb;
-
-	public static Supplier<Matrix4f> getProjection() {
-		return () -> {
+	public static Matrix4f getProjection() {
 			Matrix4f projection = new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
-			return new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), 0.01f, DHCompat.getFarPlane());
-		};
-	}
-
-	public int getFramebuffer() {
-		return fb.getId();
-	}
-
-	public void setFramebuffer(GlFramebuffer fb) {
-		this.fb = fb;
+			return new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), DHCompat.getNearPlane(), DHCompat.getFarPlane());
 	}
 
 	private static Field renderingEnabled;
@@ -41,6 +27,7 @@ public class DHCompat {
 	private static MethodHandle deletePipeline;
 	private static MethodHandle getDepthTex;
 	private static MethodHandle getFarPlane;
+	private static MethodHandle getNearPlane;
 	private static MethodHandle getRenderDistance;
 
 	static {
@@ -54,6 +41,7 @@ public class DHCompat {
 				getDepthTex = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getStoredDepthTex", MethodType.methodType(int.class));
 				getRenderDistance = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
 				getFarPlane = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getFarPlane", MethodType.methodType(float.class));
+				getNearPlane = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getNearPlane", MethodType.methodType(float.class));
 			}
 		} catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException | IllegalAccessException e) {
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
@@ -98,6 +86,16 @@ public class DHCompat {
 
 		try {
 			return (float) getFarPlane.invoke(compatInternalInstance);
+		} catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+	public static float getNearPlane() {
+		if (compatInternalInstance == null) return 0.01f;
+
+		try {
+			return (float) getNearPlane.invoke(compatInternalInstance);
 		} catch (Throwable e) {
             throw new RuntimeException(e);
         }
