@@ -28,6 +28,7 @@ public class DHCompat {
 	private static MethodHandle getDepthTex;
 	private static MethodHandle getFarPlane;
 	private static MethodHandle getNearPlane;
+	private static MethodHandle getDepthTexNoTranslucent;
 	private static MethodHandle getRenderDistance;
 
 	static {
@@ -42,6 +43,7 @@ public class DHCompat {
 				getRenderDistance = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
 				getFarPlane = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getFarPlane", MethodType.methodType(float.class));
 				getNearPlane = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getNearPlane", MethodType.methodType(float.class));
+				getDepthTexNoTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getDepthTexNoTranslucent", MethodType.methodType(int.class));
 			}
 		} catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException | IllegalAccessException e) {
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
@@ -76,6 +78,16 @@ public class DHCompat {
 
 		try {
 			return (int) getDepthTex.invoke(compatInternalInstance);
+		} catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+	public static int getDepthTexNoTranslucent() {
+		if (compatInternalInstance == null) throw new IllegalStateException("Couldn't find DH depth texture");
+
+		try {
+			return (int) getDepthTexNoTranslucent.invoke(compatInternalInstance);
 		} catch (Throwable e) {
             throw new RuntimeException(e);
         }

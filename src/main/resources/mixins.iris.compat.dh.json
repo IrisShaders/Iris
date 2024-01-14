@@ -5,8 +5,10 @@
   "package": "net.coderbot.iris.compat.dh.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "MixinClientLevelModule",
     "MixinDHApplyShader",
-    "MixinLodRenderer"
+    "MixinLodRenderer",
+    "MixinLodUtil"
   ],
   "injectors": {
     "defaultRequire": 1

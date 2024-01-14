@@ -2,6 +2,7 @@ package net.coderbot.iris.compat.dh.mixin;
 
 import com.seibel.distanthorizons.core.pos.DhBlockPos;
 import com.seibel.distanthorizons.core.render.RenderBufferHandler;
+import com.seibel.distanthorizons.core.render.glObject.texture.DHDepthTexture;
 import com.seibel.distanthorizons.core.render.glObject.texture.DhFramebuffer;
 import com.seibel.distanthorizons.core.render.renderer.LodRenderProgram;
 import com.seibel.distanthorizons.core.render.renderer.LodRenderer;
@@ -14,6 +15,7 @@ import com.seibel.distanthorizons.coreapi.util.math.Mat4f;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3d;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.coderbot.iris.compat.dh.DHCompatInternal;
+import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.gui.screens.Screen;
@@ -43,6 +45,14 @@ public class MixinLodRenderer {
 
 	@Shadow
 	private boolean deferWaterRendering;
+	@Shadow
+	private DhFramebuffer framebuffer;
+	@Shadow
+	private DHDepthTexture depthTexture;
+	@Shadow
+	private int cachedWidth;
+	@Shadow
+	private int cachedHeight;
 	@Unique
 	private boolean atTranslucent;
 
@@ -56,8 +66,14 @@ public class MixinLodRenderer {
 		DHCompatInternal.INSTANCE.reconnectDHTextures(depthTextureId);
 	}
 
+	@Inject(method = "createColorAndDepthTextures", at = @At("TAIL"))
+	private void createDepthTex(int width, int height, CallbackInfo ci) {
+		DHCompatInternal.INSTANCE.createDepthTex(width, height);
+	}
+
 	@Inject(method = "renderWaterOnly", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/RenderBufferHandler;renderTransparent(Lcom/seibel/distanthorizons/core/render/renderer/LodRenderer;)V"))
 	private void onTransparent(IProfilerWrapper profiler, float partialTicks, CallbackInfo ci) {
+		DepthCopyStrategy.fastest(false).copy(DHCompatInternal.INSTANCE.getSolidFB(), depthTexture.getTextureId(), null, DHCompatInternal.INSTANCE.getDepthTexNoTranslucent(), cachedWidth, cachedHeight);
 		if (DHCompatInternal.INSTANCE.shouldOverride && DHCompatInternal.INSTANCE.getTranslucentFB() != null) {
 			DHCompatInternal.INSTANCE.getTranslucentShader().bind();
 			Matrix4f projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
@@ -73,7 +89,7 @@ public class MixinLodRenderer {
 	}
 
 	@Redirect(method = {
-		"drawLODs",
+		"setupGLState",
 	}, at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL32;glClear(I)V"))
 	private void properClear(int i) {
 		if (DHCompatInternal.INSTANCE.shouldOverride) {

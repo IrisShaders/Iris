@@ -6,7 +6,9 @@ import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.buffer.ShaderStorageBuffer;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
+import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 
@@ -17,6 +19,7 @@ public class DHCompatInternal {
 	private IrisLodRenderProgram translucentProgram;
 	private GlFramebuffer dhTerrainFramebuffer;
 	private GlFramebuffer dhWaterFramebuffer;
+	private DepthTexture depthTexNoTranslucent;
 
 	private int storedDepthTex;
 	public boolean shouldOverride;
@@ -66,6 +69,15 @@ public class DHCompatInternal {
 				dhWaterFramebuffer.addDepthAttachment(depthTex);
 			}
 		}
+	}
+
+	public void createDepthTex(int width, int height) {
+		if (depthTexNoTranslucent != null) {
+			depthTexNoTranslucent.destroy();
+			depthTexNoTranslucent = null;
+		}
+
+		depthTexNoTranslucent = new DepthTexture(width, height, DepthBufferFormat.DEPTH32F);
 	}
 
 	public void clear() {
@@ -124,5 +136,11 @@ public class DHCompatInternal {
 
 	public GlFramebuffer getTranslucentFB() {
 		return dhWaterFramebuffer;
+	}
+
+	public int getDepthTexNoTranslucent() {
+		if (depthTexNoTranslucent == null) return 0;
+
+		return depthTexNoTranslucent.getTextureId();
 	}
 }

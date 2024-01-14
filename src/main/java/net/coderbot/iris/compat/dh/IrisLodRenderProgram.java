@@ -110,6 +110,7 @@ public class IrisLodRenderProgram
 
 		GL32.glBindAttribLocation(this.id, 0, "vPosition");
 		GL32.glBindAttribLocation(this.id, 1, "color");
+		GL32.glBindAttribLocation(this.id, 2, "irisExtra");
 
 		GlShader vert = new GlShader(ShaderType.VERTEX, name + ".vsh", vertex);
 		GL43C.glAttachShader(id, vert.getHandle());
