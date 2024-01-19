@@ -85,17 +85,27 @@ public class MixinLodRenderer {
 		DHCompatInternal.INSTANCE.createDepthTex(width, height);
 	}
 
+	@Inject(method = {
+		"drawLODs",
+		"drawTranslucentLODs"
+	}, at = @At("HEAD"), cancellable = true)
+	private void cancelIfShadowDoesNotExist(IClientLevelWrapper clientLevelWrapper, Mat4f baseModelViewMatrix, Mat4f baseProjectionMatrix, float partialTicks, IProfilerWrapper profiler, CallbackInfo ci) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !DHCompatInternal.INSTANCE.shouldOverrideShadow) {
+			ci.cancel();
+		}
+	}
+
 	@Inject(method = "renderWaterOnly", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/RenderBufferHandler;renderTransparent(Lcom/seibel/distanthorizons/core/render/renderer/LodRenderer;)V"))
 	private void onTransparent(IProfilerWrapper profiler, float partialTicks, CallbackInfo ci) {
-		if (DHCompatInternal.INSTANCE.shouldOverride && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+		if (DHCompatInternal.INSTANCE.shouldOverrideShadow && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			DHCompatInternal.INSTANCE.getShadowShader().bind();
 			DHCompatInternal.INSTANCE.getShadowFB().bind();
 			atTranslucent = true;
 
 			return;
 		}
-		DepthCopyStrategy.fastest(false).copy(DHCompatInternal.INSTANCE.getSolidFB(), depthTexture.getTextureId(), null, DHCompatInternal.INSTANCE.getDepthTexNoTranslucent(), cachedWidth, cachedHeight);
 		if (DHCompatInternal.INSTANCE.shouldOverride && DHCompatInternal.INSTANCE.getTranslucentFB() != null) {
+			DepthCopyStrategy.fastest(false).copy(DHCompatInternal.INSTANCE.getSolidFB(), depthTexture.getTextureId(), null, DHCompatInternal.INSTANCE.getDepthTexNoTranslucent(), cachedWidth, cachedHeight);
 			DHCompatInternal.INSTANCE.getTranslucentShader().bind();
 			Matrix4f projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
 			float nearClip = RenderUtil.getNearClipPlaneDistanceInBlocks(partialTicks);

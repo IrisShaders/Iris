@@ -20,8 +20,9 @@ import net.minecraft.client.Minecraft;
 
 public class DHCompatInternal {
 	public static DHCompatInternal INSTANCE = new DHCompatInternal();
+	public boolean shouldOverrideShadow;
 
-	private IrisLodRenderProgram solidProgram;
+    private IrisLodRenderProgram solidProgram;
 	private IrisLodRenderProgram translucentProgram;
 	private IrisLodRenderProgram shadowProgram;
 	private GlFramebuffer dhTerrainFramebuffer;
@@ -70,6 +71,9 @@ public class DHCompatInternal {
 			ProgramSource shadow = pipeline.getDHShadowShader().get();
 			shadowProgram = IrisLodRenderProgram.createProgram(shadow.getName(), true, shadow, pipeline.getCustomUniforms(), pipeline);
 			dhShadowFramebuffer = pipeline.createDHFramebufferShadow(shadow);
+			shouldOverrideShadow = true;
+		} else {
+			shouldOverrideShadow = false;
 		}
 
 		dhTerrainFramebuffer = pipeline.createDHFramebuffer(terrain, false);
@@ -127,6 +131,7 @@ public class DHCompatInternal {
 			shadowProgram.free();
 			shadowProgram = null;
 		}
+		shouldOverrideShadow = false;
 		shouldOverride = false;
 		dhTerrainFramebuffer = null;
 		dhWaterFramebuffer = null;

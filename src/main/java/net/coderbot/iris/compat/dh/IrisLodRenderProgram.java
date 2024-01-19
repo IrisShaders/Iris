@@ -181,7 +181,7 @@ public class IrisLodRenderProgram
 	}
 
 	public void setUniform(int index, Matrix4f matrix) {
-		if (index == -1) return;
+		if (index == -1 || matrix == null) return;
 
 		try (MemoryStack stack = MemoryStack.stackPush()) {
 			FloatBuffer buffer = stack.callocFloat(16);
@@ -234,7 +234,7 @@ public class IrisLodRenderProgram
 		setUniform(modelViewInverseUniform, modelView.invert(new Matrix4f()));
 		setUniform(projectionUniform, projection);
 		setUniform(projectionInverseUniform, projection.invert(new Matrix4f()));
-		setUniform(normalMatrix3fUniform, modelView.transpose3x3(new Matrix3f()));
+		setUniform(normalMatrix3fUniform, new Matrix4f(modelView).invert().transpose3x3(new Matrix3f()));
 
 		setUniform(mircoOffsetUniform, 0.01f); // 0.01 block offset
 
