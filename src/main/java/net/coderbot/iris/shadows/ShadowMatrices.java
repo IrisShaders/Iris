@@ -2,6 +2,7 @@ package net.coderbot.iris.shadows;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.coderbot.iris.compat.dh.DHCompat;
 import org.joml.Matrix4f;
 
 

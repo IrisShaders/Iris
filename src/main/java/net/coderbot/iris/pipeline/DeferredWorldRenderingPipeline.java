@@ -572,11 +572,6 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 		return sunPathRotation;
 	}
 
-	@Override
-	public DHCompat getDHCompat() {
-		return null;
-	}
-
 	private RenderCondition getCondition(WorldRenderingPhase phase) {
 		if (isRenderingShadow) {
 			return RenderCondition.SHADOW;

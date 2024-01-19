@@ -21,7 +21,7 @@ public abstract class Parameters implements JobParameters {
 	}
 
 	public AlphaTest getAlphaTest() {
-		return null;
+		return AlphaTest.ALWAYS;
 	}
 
 	public abstract TextureStage getTextureStage();

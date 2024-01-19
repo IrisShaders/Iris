@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.pipeline.HandRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.shaderpack.StringPair;
 import net.coderbot.iris.texture.format.TextureFormat;
 import net.coderbot.iris.texture.format.TextureFormatLoader;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import org.lwjgl.opengl.GL11;
@@ -48,6 +50,10 @@ public class StandardMacros {
 		define(standardDefines, getVendor());
 		define(standardDefines, getRenderer());
 		define(standardDefines, "IS_IRIS");
+
+		if (FabricLoader.getInstance().isModLoaded("distanthorizons") && DHCompat.hasRenderingEnabled()) {
+			define(standardDefines, "DISTANT_HORIZONS");
+		}
 
 		for (String glExtension : getGlExtensions()) {
 			define(standardDefines, glExtension);
