@@ -3,7 +3,6 @@ package net.coderbot.iris.shadows;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -14,12 +13,11 @@ import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.rendertarget.RenderTarget;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
+import net.fabricmc.loader.api.FabricLoader;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class ShadowRenderTargets {
 	private final RenderTarget[] targets;
@@ -56,14 +54,13 @@ public class ShadowRenderTargets {
 		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 		this.noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 
+		this.ownedFramebuffers = new ArrayList<>();
+		this.resolution = resolution;
+
 		for (int i = 0; i < shadowDirectives.getDepthSamplingSettings().size(); i++) {
 			this.hardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
 			this.linearFiltered[i] = !shadowDirectives.getDepthSamplingSettings().get(i).getNearest();
 		}
-
-		this.resolution = resolution;
-
-		this.ownedFramebuffers = new ArrayList<>();
 
 		// NB: Make sure all buffers are cleared so that they don't contain undefined
 		// data. Otherwise very weird things can happen.
@@ -218,13 +215,27 @@ public class ShadowRenderTargets {
 
 		// NB: Before OpenGL 3.0, all framebuffers are required to have a color
 		// attachment no matter what.
-		framebuffer.addColorAttachment(0, get(0).getMainTexture());
+//		framebuffer.addColorAttachment(0, get(0).getMainTexture());
 		framebuffer.noDrawBuffers();
 
 		return framebuffer;
 	}
 
 	public GlFramebuffer createShadowFramebuffer(ImmutableSet<Integer> stageWritesToAlt, int[] drawBuffers) {
+		if (drawBuffers.length == 0) {
+			return createEmptyFramebuffer();
+		}
+
+		ImmutableSet<Integer> stageWritesToMain = invert(stageWritesToAlt, drawBuffers);
+
+		GlFramebuffer framebuffer =  createColorFramebuffer(stageWritesToMain, drawBuffers);
+
+		framebuffer.addDepthAttachment(mainDepth.getTextureId());
+
+		return framebuffer;
+	}
+
+	public GlFramebuffer createDHFramebuffer(ImmutableSet<Integer> stageWritesToAlt, int[] drawBuffers) {
 		if (drawBuffers.length == 0) {
 			return createEmptyFramebuffer();
 		}
@@ -334,5 +345,4 @@ public class ShadowRenderTargets {
 	public IntList getBuffersToBeCleared() {
 		return buffersToBeCleared;
 	}
-
 }

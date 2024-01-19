@@ -1,24 +1,32 @@
 package net.coderbot.iris.compat.dh;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.util.RenderUtil;
+import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
+import loaderCommon.fabric.com.seibel.distanthorizons.common.wrappers.McObjectConverter;
+import loaderCommon.fabric.com.seibel.distanthorizons.common.wrappers.world.ClientLevelWrapper;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.buffer.ShaderStorageBuffer;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
+import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.minecraft.client.Minecraft;
 
 public class DHCompatInternal {
 	public static DHCompatInternal INSTANCE = new DHCompatInternal();
 
 	private IrisLodRenderProgram solidProgram;
 	private IrisLodRenderProgram translucentProgram;
+	private IrisLodRenderProgram shadowProgram;
 	private GlFramebuffer dhTerrainFramebuffer;
 	private GlFramebuffer dhWaterFramebuffer;
+	private GlFramebuffer dhShadowFramebuffer;
 	private DepthTexture depthTexNoTranslucent;
 
 	private int storedDepthTex;
@@ -38,18 +46,30 @@ public class DHCompatInternal {
 			translucentProgram = null;
 		}
 
+		if (shadowProgram != null) {
+			shadowProgram.free();
+
+			shadowProgram = null;
+		}
+
 		if (pipeline.getDHTerrainShader().isEmpty() && pipeline.getDHWaterShader().isEmpty()) {
 			Iris.logger.warn("No DH shader found in this pack.");
 			return;
 		}
 
 		ProgramSource terrain = pipeline.getDHTerrainShader().get();
-		solidProgram = IrisLodRenderProgram.createProgram(terrain.getName(), terrain, pipeline.getCustomUniforms(), pipeline);
+		solidProgram = IrisLodRenderProgram.createProgram(terrain.getName(), false, terrain, pipeline.getCustomUniforms(), pipeline);
 
 		if (pipeline.getDHWaterShader().isPresent()) {
 			ProgramSource water = pipeline.getDHWaterShader().get();
-			translucentProgram = IrisLodRenderProgram.createProgram(water.getName(), water, pipeline.getCustomUniforms(), pipeline);
+			translucentProgram = IrisLodRenderProgram.createProgram(water.getName(), false, water, pipeline.getCustomUniforms(), pipeline);
 			dhWaterFramebuffer = pipeline.createDHFramebuffer(water, true);
+		}
+
+		if (pipeline.getDHShadowShader().isPresent()) {
+			ProgramSource shadow = pipeline.getDHShadowShader().get();
+			shadowProgram = IrisLodRenderProgram.createProgram(shadow.getName(), true, shadow, pipeline.getCustomUniforms(), pipeline);
+			dhShadowFramebuffer = pipeline.createDHFramebufferShadow(shadow);
 		}
 
 		dhTerrainFramebuffer = pipeline.createDHFramebuffer(terrain, false);
@@ -80,6 +100,20 @@ public class DHCompatInternal {
 		depthTexNoTranslucent = new DepthTexture(width, height, DepthBufferFormat.DEPTH32F);
 	}
 
+	public void renderShadowSolid() {
+		ClientApi.INSTANCE.renderLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
+			McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
+			McObjectConverter.Convert(ShadowRenderer.PROJECTION),
+			CapturedRenderingState.INSTANCE.getTickDelta());
+	}
+
+	public void renderShadowTranslucent() {
+		ClientApi.INSTANCE.renderTranslucentLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
+			McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
+			McObjectConverter.Convert(ShadowRenderer.PROJECTION),
+			CapturedRenderingState.INSTANCE.getTickDelta());
+	}
+
 	public void clear() {
 		if (solidProgram != null) {
 			solidProgram.free();
@@ -89,9 +123,14 @@ public class DHCompatInternal {
 			translucentProgram.free();
 			translucentProgram = null;
 		}
+		if (shadowProgram != null) {
+			shadowProgram.free();
+			shadowProgram = null;
+		}
 		shouldOverride = false;
 		dhTerrainFramebuffer = null;
 		dhWaterFramebuffer = null;
+		dhShadowFramebuffer = null;
 		storedDepthTex = -1;
 	}
 
@@ -109,6 +148,14 @@ public class DHCompatInternal {
 
 	public GlFramebuffer getSolidFB() {
 		return dhTerrainFramebuffer;
+	}
+
+	public IrisLodRenderProgram getShadowShader() {
+		return shadowProgram;
+	}
+
+	public GlFramebuffer getShadowFB() {
+		return dhShadowFramebuffer;
 	}
 
 	public IrisLodRenderProgram getTranslucentShader() {

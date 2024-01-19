@@ -30,6 +30,8 @@ public class DHCompat {
 	private static MethodHandle getNearPlane;
 	private static MethodHandle getDepthTexNoTranslucent;
 	private static MethodHandle getRenderDistance;
+	private static MethodHandle renderShadowSolid;
+	private static MethodHandle renderShadowTranslucent;
 
 	static {
         try {
@@ -44,6 +46,8 @@ public class DHCompat {
 				getFarPlane = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getFarPlane", MethodType.methodType(float.class));
 				getNearPlane = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getNearPlane", MethodType.methodType(float.class));
 				getDepthTexNoTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getDepthTexNoTranslucent", MethodType.methodType(int.class));
+				renderShadowSolid = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "renderShadowSolid", MethodType.methodType(void.class));
+				renderShadowTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "renderShadowTranslucent", MethodType.methodType(void.class));
 			}
 		} catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException | IllegalAccessException e) {
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
@@ -118,6 +122,26 @@ public class DHCompat {
 
 		try {
 			return (int) getRenderDistance.invoke(compatInternalInstance);
+		} catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+	public static void renderShadowSolid() {
+		if (compatInternalInstance == null) return;
+
+		try {
+			renderShadowSolid.invoke(compatInternalInstance);
+		} catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+	public static void renderShadowTranslucent() {
+		if (compatInternalInstance == null) return;
+
+		try {
+			renderShadowTranslucent.invoke(compatInternalInstance);
 		} catch (Throwable e) {
             throw new RuntimeException(e);
         }

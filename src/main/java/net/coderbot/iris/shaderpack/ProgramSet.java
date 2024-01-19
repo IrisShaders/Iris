@@ -65,6 +65,7 @@ public class ProgramSet implements ProgramSetInterface {
 	private final ComputeSource[] finalCompute;
 	private final ProgramSource dhTerrain;
 	private final ProgramSource dhWater;
+	private final ProgramSource dhShadow;
 
 
 
@@ -137,6 +138,7 @@ public class ProgramSet implements ProgramSetInterface {
 		this.gbuffersHand = readProgramSource(directory, sourceProvider, "gbuffers_hand", this, shaderProperties, readTesselation);
 		this.dhTerrain = readProgramSource(directory, sourceProvider, "dh_terrain", this, shaderProperties, readTesselation);
 		this.dhWater = readProgramSource(directory, sourceProvider, "dh_water", this, shaderProperties, readTesselation);
+		this.dhShadow = readProgramSource(directory, sourceProvider, "dh_shadow", this, shaderProperties, readTesselation);
 
 		this.deferred = readProgramArray(directory, sourceProvider, "deferred", shaderProperties, readTesselation);
 		this.deferredCompute = new ComputeSource[deferred.length][];
@@ -426,6 +428,10 @@ public class ProgramSet implements ProgramSetInterface {
 		return dhWater.requireValid();
 	}
 
+	public Optional<ProgramSource> getDhShadow() {
+		return dhShadow.requireValid();
+	}
+
 	public Optional<ProgramSource> get(ProgramId programId) {
 		switch (programId) {
 			case Shadow: return getShadow();
@@ -457,6 +463,7 @@ public class ProgramSet implements ProgramSetInterface {
 			case Final: return getCompositeFinal();
 			case DhTerrain: return getDhTerrain();
 			case DhWater: return getDhWater();
+			case DhShadow: return getDhShadow();
 			default: return Optional.empty();
 		}
 	}

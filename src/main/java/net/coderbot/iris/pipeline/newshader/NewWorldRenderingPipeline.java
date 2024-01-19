@@ -110,6 +110,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline, RenderTargetStateListener {
 	private final RenderTargets renderTargets;
@@ -148,7 +149,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 	private final ColorSpaceConverter colorSpaceConverter;
 
-	private final ImmutableSet<Integer> flippedBeforeShadow;
+	public final ImmutableSet<Integer> flippedBeforeShadow;
 	public final ImmutableSet<Integer> flippedAfterPrepare;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
 
@@ -1289,6 +1290,10 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return resolver.resolve(ProgramId.DhWater);
 	}
 
+	public Optional<ProgramSource> getDHShadowShader() {
+		return resolver.resolve(ProgramId.DhShadow);
+	}
+
 	public CustomUniforms getCustomUniforms() {
 		return customUniforms;
 	}
@@ -1296,5 +1301,9 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	public GlFramebuffer createDHFramebuffer(ProgramSource sources, boolean trans) {
 		return renderTargets.createDHFramebuffer(trans ? flippedAfterTranslucent : flippedAfterPrepare,
 			sources.getDirectives().getDrawBuffers());
+	}
+
+	public GlFramebuffer createDHFramebufferShadow(ProgramSource sources) {
+		return shadowRenderTargets.createDHFramebuffer(ImmutableSet.of(), new int[]{0, 1});
 	}
 }
