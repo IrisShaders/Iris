@@ -19,6 +19,7 @@ public class PackShadowDirectives {
 	public static final int MAX_SHADOW_COLOR_BUFFERS_OF = 2;
 
 	private final OptionalBoolean shadowEnabled;
+	private final OptionalBoolean dhShadowEnabled;
 
 	private int resolution;
 	// Use a boxed form so we can use null to indicate that there is not an FOV specified.
@@ -87,6 +88,7 @@ public class PackShadowDirectives {
 		this.shouldRenderBlockEntities = properties.getShadowBlockEntities().orElse(true);
 		this.cullingState = properties.getShadowCulling();
 		this.shadowEnabled = properties.getShadowEnabled();
+		this.dhShadowEnabled = properties.getDhShadowEnabled();
 
 		this.depthSamplingSettings = ImmutableList.of(new DepthSamplingSettings(), new DepthSamplingSettings());
 
@@ -113,6 +115,7 @@ public class PackShadowDirectives {
 		this.depthSamplingSettings = shadowDirectives.depthSamplingSettings;
 		this.colorSamplingSettings = shadowDirectives.colorSamplingSettings;
 		this.shadowEnabled = shadowDirectives.shadowEnabled;
+		this.dhShadowEnabled = shadowDirectives.dhShadowEnabled;
 	}
 
 	public int getResolution() {
@@ -173,6 +176,10 @@ public class PackShadowDirectives {
 
 	public OptionalBoolean isShadowEnabled() {
 		return shadowEnabled;
+	}
+
+	public OptionalBoolean isDhShadowEnabled() {
+		return dhShadowEnabled;
 	}
 
 	public ImmutableList<DepthSamplingSettings> getDepthSamplingSettings() {

@@ -39,7 +39,7 @@ public class DHCompat {
 			renderingEnabledGet = MethodHandles.lookup().findVirtual(Class.forName("com.seibel.distanthorizons.core.config.types.ConfigEntry"), "get", MethodType.methodType(Object.class));
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
 				compatInternalInstance = Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal").getField("INSTANCE").get(null);
-				createNewPipeline = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "prepareNewPipeline", MethodType.methodType(void.class, NewWorldRenderingPipeline.class));
+				createNewPipeline = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "prepareNewPipeline", MethodType.methodType(void.class, NewWorldRenderingPipeline.class, boolean.class));
 				deletePipeline = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "clear", MethodType.methodType(void.class));
 				getDepthTex = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getStoredDepthTex", MethodType.methodType(int.class));
 				getRenderDistance = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
@@ -58,10 +58,10 @@ public class DHCompat {
         }
     }
 
-	public static void connectNewPipeline(NewWorldRenderingPipeline pipeline) {
+	public static void connectNewPipeline(NewWorldRenderingPipeline pipeline, boolean renderDhShadow) {
 		if (compatInternalInstance == null) return;
         try {
-            createNewPipeline.invoke(compatInternalInstance, pipeline);
+            createNewPipeline.invoke(compatInternalInstance, pipeline, renderDhShadow);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

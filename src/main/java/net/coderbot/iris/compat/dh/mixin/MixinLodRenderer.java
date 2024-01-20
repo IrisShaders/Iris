@@ -1,5 +1,6 @@
 package net.coderbot.iris.compat.dh.mixin;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.core.pos.DhBlockPos;
 import com.seibel.distanthorizons.core.render.RenderBufferHandler;
 import com.seibel.distanthorizons.core.render.glObject.GLProxy;
@@ -110,6 +111,7 @@ public class MixinLodRenderer {
 			Matrix4f projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
 			float nearClip = RenderUtil.getNearClipPlaneDistanceInBlocks(partialTicks);
 			float farClip = (float) ((double) (RenderUtil.getFarClipPlaneDistanceInBlocks() + 512) * Math.sqrt(2.0));
+			RenderSystem.disableCull();
 
 
 			DHCompatInternal.INSTANCE.getTranslucentShader().fillUniformData(new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), nearClip, farClip), CapturedRenderingState.INSTANCE.getGbufferModelView(), MC.getWrappedClientLevel().getMinHeight(), partialTicks);

@@ -2,6 +2,7 @@ package net.coderbot.iris.compat.dh.mixin;
 
 import com.seibel.distanthorizons.core.render.vertexFormat.LodVertexFormat;
 import com.seibel.distanthorizons.core.util.LodUtil;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.dh.DHCompatInternal;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,6 +21,6 @@ public class MixinLodUtil {
 
 	@Overwrite(remap = false)
 	public static LodVertexFormat getPreferredVertexFormat() {
-		return DHCompatInternal.INSTANCE.shouldOverride ? LOD_VERTEX_FORMAT_EXTENDED : LOD_VERTEX_FORMAT;
+		return LOD_VERTEX_FORMAT_EXTENDED;
 	}
 }
