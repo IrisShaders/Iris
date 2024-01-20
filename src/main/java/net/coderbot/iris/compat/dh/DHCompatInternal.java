@@ -33,7 +33,7 @@ public class DHCompatInternal {
 	private int storedDepthTex;
 	public boolean shouldOverride;
 
-	public void prepareNewPipeline(NewWorldRenderingPipeline pipeline) {
+	public void prepareNewPipeline(NewWorldRenderingPipeline pipeline, boolean dhShadowEnabled) {
 		if (solidProgram != null) {
 			solidProgram.free();
 			solidProgram = null;
@@ -67,7 +67,7 @@ public class DHCompatInternal {
 			dhWaterFramebuffer = pipeline.createDHFramebuffer(water, true);
 		}
 
-		if (pipeline.getDHShadowShader().isPresent()) {
+		if (pipeline.getDHShadowShader().isPresent() && dhShadowEnabled) {
 			ProgramSource shadow = pipeline.getDHShadowShader().get();
 			shadowProgram = IrisLodRenderProgram.createProgram(shadow.getName(), true, shadow, pipeline.getCustomUniforms(), pipeline);
 			dhShadowFramebuffer = pipeline.createDHFramebufferShadow(shadow);

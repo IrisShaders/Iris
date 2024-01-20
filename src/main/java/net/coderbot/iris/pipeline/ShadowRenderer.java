@@ -71,8 +71,8 @@ public class ShadowRenderer {
 	private final int resolution;
 	private final float intervalSize;
 	private final Float fov;
-	public static Matrix4f MODELVIEW;
-	public static Matrix4f PROJECTION;
+	public static Matrix4f MODELVIEW = new Matrix4f();
+	public static Matrix4f PROJECTION = new Matrix4f();
 
 	private final ShadowRenderTargets targets;
 	private final ShadowCullState packCullingState;
@@ -90,6 +90,7 @@ public class ShadowRenderer {
 	private final String debugStringOverall;
 	private FrustumHolder terrainFrustumHolder;
 	private FrustumHolder entityFrustumHolder;
+	private boolean renderDhShadow;
 	private String debugStringTerrain = "(unavailable)";
 	private int renderedShadowEntities = 0;
 	private int renderedShadowBlockEntities = 0;
@@ -127,6 +128,8 @@ public class ShadowRenderer {
 
 		this.fov = shadowDirectives.getFov();
 		this.targets = shadowRenderTargets;
+
+		this.renderDhShadow = shadowDirectives.isDhShadowEnabled().orElse(true);
 
 		if (shadow != null) {
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
@@ -534,7 +537,9 @@ public class ShadowRenderer {
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
 		if (shouldRenderTranslucent) {
-			DHCompat.renderShadowTranslucent();
+			if (renderDhShadow) {
+				DHCompat.renderShadowTranslucent();
+			}
 
 			levelRenderer.invokeRenderSectionLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
 		}

@@ -493,7 +493,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
 
-		DHCompat.connectNewPipeline(this);
+		DHCompat.connectNewPipeline(this, shadowDirectives.isDhShadowEnabled().orElse(true));
 		// first optimization pass
 		this.customUniforms.optimise();
 		boolean hasRun = false;
