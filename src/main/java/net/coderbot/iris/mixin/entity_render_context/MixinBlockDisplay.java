@@ -16,19 +16,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinBlockDisplay {
 	@Unique
 	private int previousBeValue;
-	@Inject(method = "renderInner(Lnet/minecraft/world/entity/Display$BlockDisplay;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IF)V", at = @At("HEAD"))
-	private void iris$setId(Display.BlockDisplay pDisplayRenderer$BlockDisplayRenderer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, float pFloat4, CallbackInfo ci) {
-		if (pDisplayRenderer$BlockDisplayRenderer0.getBlockState() != null) {
+	@Inject(method = "renderInner(Lnet/minecraft/world/entity/Display$BlockDisplay;Lnet/minecraft/world/entity/Display$BlockDisplay$BlockRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IF)V", at = @At("HEAD"))
+	private void iris$setId(Display.BlockDisplay pDisplayRenderer$BlockDisplayRenderer0, Display.BlockDisplay.BlockRenderState pDisplay$BlockDisplay$BlockRenderState1, PoseStack pPoseStack2, MultiBufferSource pMultiBufferSource3, int pInt4, float pFloat5, CallbackInfo ci) {
+		if (pDisplay$BlockDisplay$BlockRenderState1.blockState() != null) {
 
 			previousBeValue = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
 			CapturedRenderingState.INSTANCE.setCurrentBlockEntity(1);
 
-			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getBlockStateIds().getOrDefault(pDisplayRenderer$BlockDisplayRenderer0.getBlockState(), 0));
+			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getBlockStateIds().getOrDefault(pDisplay$BlockDisplay$BlockRenderState1.blockState(), 0));
 		}
 	}
 
-	@Inject(method = "renderInner(Lnet/minecraft/world/entity/Display$BlockDisplay;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IF)V", at = @At("RETURN"))
-	private void iris$resetId(Display.BlockDisplay pDisplayRenderer$BlockDisplayRenderer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, float pFloat4, CallbackInfo ci) {
+	@Inject(method = "renderInner(Lnet/minecraft/world/entity/Display$BlockDisplay;Lnet/minecraft/world/entity/Display$BlockDisplay$BlockRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IF)V", at = @At("RETURN"))
+	private void iris$resetId(Display.BlockDisplay pDisplayRenderer$BlockDisplayRenderer0, Display.BlockDisplay.BlockRenderState pDisplay$BlockDisplay$BlockRenderState1, PoseStack pPoseStack2, MultiBufferSource pMultiBufferSource3, int pInt4, float pFloat5, CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(previousBeValue);
 	}

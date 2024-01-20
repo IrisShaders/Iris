@@ -128,7 +128,7 @@ public class IrisLodRenderProgram
 		}
 
 		GlShader geom = null;
-		if (tessControl != null) {
+		if (geometry != null) {
 			geom = new GlShader(ShaderType.GEOMETRY, name + ".gsh", geometry);
 			GL43C.glAttachShader(id, geom.getHandle());
 		}
