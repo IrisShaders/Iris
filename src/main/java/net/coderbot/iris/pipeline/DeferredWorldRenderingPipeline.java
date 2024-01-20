@@ -288,25 +288,25 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 
 		ShaderPrinter.resetPrintState();
 
-		this.prepareRenderer = new CompositeRenderer(this, programs.getPackDirectives(), programs.getPrepare(), programs.getPrepareCompute(), renderTargets,
+		this.prepareRenderer = new CompositeRenderer(this, programs.getPackDirectives(), programs.getPrepare(), programs.getPrepareCompute(), renderTargets, null,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 			TextureStage.PREPARE, customTextureManager.getCustomTextureIdMap(TextureStage.PREPARE),
 			customTextureManager.getIrisCustomTextures(), null, programs.getPackDirectives().getExplicitFlips("prepare_pre"), customUniforms);
 
 		flippedAfterPrepare = flipper.snapshot();
 
-		this.deferredRenderer = new CompositeRenderer(this, programs.getPackDirectives(), programs.getDeferred(), programs.getDeferredCompute(), renderTargets,
+		this.deferredRenderer = new CompositeRenderer(this, programs.getPackDirectives(), programs.getDeferred(), programs.getDeferredCompute(), renderTargets, null,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 			TextureStage.DEFERRED, customTextureManager.getCustomTextureIdMap(TextureStage.DEFERRED), customTextureManager.getIrisCustomTextures(), null,
 				programs.getPackDirectives().getExplicitFlips("deferred_pre"), customUniforms);
 
 		flippedAfterTranslucent = flipper.snapshot();
 
-		this.compositeRenderer = new CompositeRenderer(this, programs.getPackDirectives(), programs.getComposite(), programs.getCompositeCompute(), renderTargets,
+		this.compositeRenderer = new CompositeRenderer(this, programs.getPackDirectives(), programs.getComposite(), programs.getCompositeCompute(), renderTargets, null,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
 			TextureStage.COMPOSITE_AND_FINAL, customTextureManager.getCustomTextureIdMap(TextureStage.COMPOSITE_AND_FINAL),
 			customTextureManager.getIrisCustomTextures(), null, programs.getPackDirectives().getExplicitFlips("composite_pre"), customUniforms);
-		this.finalPassRenderer = new FinalPassRenderer(this, programs, renderTargets, customTextureManager.getNoiseTexture(), updateNotifier, flipper.snapshot(),
+		this.finalPassRenderer = new FinalPassRenderer(this, programs, renderTargets, customTextureManager.getNoiseTexture(), null, updateNotifier, flipper.snapshot(),
 				centerDepthSampler, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.COMPOSITE_AND_FINAL), customTextureManager.getIrisCustomTextures(), null,
 			this.compositeRenderer.getFlippedAtLeastOnceFinal(), customUniforms);
@@ -402,7 +402,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 			if (programs.getPackDirectives().getShadowDirectives().isShadowEnabled().orElse(true)) {
 				Program shadowProgram = table.match(RenderCondition.SHADOW, new InputAvailability(true, true, true)).getProgram();
 
-				this.shadowCompositeRenderer = new ShadowCompositeRenderer(this, programs.getPackDirectives(), programs.getShadowComposite(), programs.getShadowCompCompute(), this.shadowRenderTargets, customTextureManager.getNoiseTexture(), updateNotifier,
+				this.shadowCompositeRenderer = new ShadowCompositeRenderer(this, programs.getPackDirectives(), programs.getShadowComposite(), programs.getShadowCompCompute(), this.shadowRenderTargets, null, customTextureManager.getNoiseTexture(), updateNotifier,
 					customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), null, programs.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customTextureManager.getIrisCustomTextures(), customUniforms);
 				this.shadowRenderer = new ShadowRenderer(programs.getShadow().orElse(null),
 					programs.getPackDirectives(), shadowRenderTargets, shadowCompositeRenderer, customUniforms, false);
@@ -1096,7 +1096,7 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline, R
 				// tell the customUniforms that those locations belong to this pass
 				this.customUniforms.mapholderToPass(builder, programs[i]);
 
-				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups(), null);
 			}
 		}
 

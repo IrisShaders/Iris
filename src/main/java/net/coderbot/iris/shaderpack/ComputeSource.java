@@ -12,11 +12,13 @@ public class ComputeSource {
 	private final ProgramSet parent;
 	private Vector3i workGroups;
 	private Vector2f workGroupRelative;
+	private IndirectPointer indirectPointer;
 
-	public ComputeSource(String name, String source, ProgramSet parent) {
+	public ComputeSource(String name, String source, ProgramSet parent, ShaderProperties properties) {
 		this.name = name;
 		this.source = source;
 		this.parent = parent;
+		this.indirectPointer = properties.getIndirectPointers().get(name);
 	}
 
 	public String getName() {
@@ -49,6 +51,10 @@ public class ComputeSource {
 
 	public Vector3i getWorkGroups() {
 		return workGroups;
+	}
+
+	public IndirectPointer getIndirectPointer() {
+		return indirectPointer;
 	}
 
 	public Optional<ComputeSource> requireValid() {

@@ -60,6 +60,7 @@ import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.CloudSetting;
 import net.coderbot.iris.shaderpack.ComputeSource;
+import net.coderbot.iris.shaderpack.FilledIndirectPointer;
 import net.coderbot.iris.shaderpack.ImageInformation;
 import net.coderbot.iris.shaderpack.OptionalBoolean;
 import net.coderbot.iris.shaderpack.PackDirectives;
@@ -214,6 +215,20 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
+		if (!programSet.getPackDirectives().getBufferObjects().isEmpty()) {
+			if (IrisRenderSystem.supportsSSBO()) {
+				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programSet.getPackDirectives().getBufferObjects(), main.width, main.height);
+
+				this.shaderStorageBufferHolder.setupBuffers();
+			} else {
+				throw new IllegalStateException("Shader storage buffers/immutable buffer storage is not supported on this graphics card, however the shaderpack requested them? This shouldn't be possible.");
+			}
+		} else {
+			for (int i = 0; i < Math.min(16, SamplerLimits.get().getMaxShaderStorageUnits()); i++) {
+				IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, 0);
+			}
+		}
+
 		this.customImages = new HashSet<>();
 		for (ImageInformation information : programSet.getPack().getIrisCustomImages()) {
 			if (information.isRelative()) {
@@ -278,48 +293,34 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			return shadowRenderTargets;
 		};
 
-		if (!programSet.getPackDirectives().getBufferObjects().isEmpty()) {
-			if (IrisRenderSystem.supportsSSBO()) {
-				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programSet.getPackDirectives().getBufferObjects(), main.width, main.height);
-
-				this.shaderStorageBufferHolder.setupBuffers();
-			} else {
-				throw new IllegalStateException("Shader storage buffers/immutable buffer storage is not supported on this graphics card, however the shaderpack requested them? This shouldn't be possible.");
-			}
-		} else {
-			for (int i = 0; i < Math.min(16, SamplerLimits.get().getMaxShaderStorageUnits()); i++) {
-				IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, i, 0);
-			}
-		}
-
 		this.shadowComputes = createShadowComputes(programSet.getShadowCompute(), programSet);
 
-		this.beginRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getBegin(), programSet.getBeginCompute(), renderTargets,
+		this.beginRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getBegin(), programSet.getBeginCompute(), renderTargets, shaderStorageBufferHolder,
 			customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.BEGIN,
 			customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.BEGIN, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 			programSet.getPackDirectives().getExplicitFlips("begin_pre"), customUniforms);
 
 		flippedBeforeShadow = flipper.snapshot();
 
-		this.prepareRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getPrepare(), programSet.getPrepareCompute(), renderTargets,
+		this.prepareRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getPrepare(), programSet.getPrepareCompute(), renderTargets, shaderStorageBufferHolder,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.PREPARE,
 				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 				programSet.getPackDirectives().getExplicitFlips("prepare_pre"), customUniforms);
 
 		flippedAfterPrepare = flipper.snapshot();
 
-		this.deferredRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getDeferred(), programSet.getDeferredCompute(), renderTargets,
+		this.deferredRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getDeferred(), programSet.getDeferredCompute(), renderTargets, shaderStorageBufferHolder,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.DEFERRED,
 				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 				programSet.getPackDirectives().getExplicitFlips("deferred_pre"), customUniforms);
 
 		flippedAfterTranslucent = flipper.snapshot();
 
-		this.compositeRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getComposite(), programSet.getCompositeCompute(), renderTargets,
+		this.compositeRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getComposite(), programSet.getCompositeCompute(), renderTargets, shaderStorageBufferHolder,
 				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier, TextureStage.COMPOSITE_AND_FINAL,
 				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 				programSet.getPackDirectives().getExplicitFlips("composite_pre"), customUniforms);
-		this.finalPassRenderer = new FinalPassRenderer(this, programSet, renderTargets, customTextureManager.getNoiseTexture(), updateNotifier, flipper.snapshot(),
+		this.finalPassRenderer = new FinalPassRenderer(this, programSet, renderTargets, customTextureManager.getNoiseTexture(), shaderStorageBufferHolder, updateNotifier, flipper.snapshot(),
 				centerDepthSampler, shadowTargetsSupplier,
 				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()), customTextureManager.getIrisCustomTextures(), customImages,
 				this.compositeRenderer.getFlippedAtLeastOnceFinal(), customUniforms);
@@ -464,7 +465,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 			this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
 			this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
-			this.shadowCompositeRenderer = new ShadowCompositeRenderer(this, programSet.getPackDirectives(), programSet.getShadowComposite(), programSet.getShadowCompCompute(), this.shadowRenderTargets, customTextureManager.getNoiseTexture(), updateNotifier,
+			this.shadowCompositeRenderer = new ShadowCompositeRenderer(this, programSet.getPackDirectives(), programSet.getShadowComposite(), programSet.getShadowCompCompute(), this.shadowRenderTargets, this.shaderStorageBufferHolder, customTextureManager.getNoiseTexture(), updateNotifier,
 				customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), customImages, programSet.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customTextureManager.getIrisCustomTextures(), customUniforms);
 
 			if (programSet.getPackDirectives().getShadowDirectives().isShadowEnabled().orElse(true)) {
@@ -600,7 +601,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 				this.customUniforms.mapholderToPass(builder, programs[i]);
 
-				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups(), FilledIndirectPointer.basedOff(shaderStorageBufferHolder, source.getIndirectPointer()));
 			}
 		}
 
@@ -663,7 +664,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 				this.customUniforms.mapholderToPass(builder, programs[i]);
 
-				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups());
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups(), FilledIndirectPointer.basedOff(shaderStorageBufferHolder, source.getIndirectPointer()));
 			}
 		}
 
