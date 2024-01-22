@@ -6,8 +6,7 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinDHApplyShader",
-    "MixinLodRenderer",
-    "MixinLodUtil"
+    "MixinLodRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

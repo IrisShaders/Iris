@@ -48,27 +48,26 @@ public class MixinLodRenderer {
 	@Shadow
 	@Final
 	private static IMinecraftClientWrapper MC;
-
-	@Shadow
-	private boolean deferWaterRendering;
 	@Shadow
 	private DHDepthTexture depthTexture;
 	@Shadow
 	private int cachedWidth;
 	@Shadow
 	private int cachedHeight;
+	@Shadow
+	private boolean deferTransparentRendering;
 	@Unique
 	private boolean atTranslucent;
 
 	@Unique
 	private int frame;
 
-	@Inject(method = "drawLODs", at = @At("TAIL"))
+	@Inject(method = "drawLods", at = @At("HEAD"))
 	private void setDeferred(IClientLevelWrapper clientLevelWrapper, Mat4f baseModelViewMatrix, Mat4f baseProjectionMatrix, float partialTicks, IProfilerWrapper profiler, CallbackInfo ci) {
-		this.deferWaterRendering = IrisApi.getInstance().isShaderPackInUse();
+		this.deferTransparentRendering = IrisApi.getInstance().isShaderPackInUse();
 	}
 
-	@Redirect(method = "drawLODs", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/RenderBufferHandler;buildRenderListAndUpdateSections(Lcom/seibel/distanthorizons/coreapi/util/math/Vec3f;)V"))
+	@Redirect(method = "renderLodPass", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/RenderBufferHandler;buildRenderListAndUpdateSections(Lcom/seibel/distanthorizons/coreapi/util/math/Vec3f;)V"))
 	private void dontBuildTwice(RenderBufferHandler instance, Vec3f e) {
 		if (frame != SystemTimeUniforms.COUNTER.getAsInt()) {
 			frame = SystemTimeUniforms.COUNTER.getAsInt();
@@ -87,8 +86,8 @@ public class MixinLodRenderer {
 	}
 
 	@Inject(method = {
-		"drawLODs",
-		"drawTranslucentLODs"
+		"drawLods",
+		"drawDeferredLods"
 	}, at = @At("HEAD"), cancellable = true)
 	private void cancelIfShadowDoesNotExist(IClientLevelWrapper clientLevelWrapper, Mat4f baseModelViewMatrix, Mat4f baseProjectionMatrix, float partialTicks, IProfilerWrapper profiler, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !DHCompatInternal.INSTANCE.shouldOverrideShadow) {
@@ -96,7 +95,7 @@ public class MixinLodRenderer {
 		}
 	}
 
-	@Inject(method = "renderWaterOnly", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/RenderBufferHandler;renderTransparent(Lcom/seibel/distanthorizons/core/render/renderer/LodRenderer;)V"))
+	@Inject(method = "renderTransparentBuffers", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/RenderBufferHandler;renderTransparent(Lcom/seibel/distanthorizons/core/render/renderer/LodRenderer;)V"))
 	private void onTransparent(IProfilerWrapper profiler, float partialTicks, CallbackInfo ci) {
 		if (DHCompatInternal.INSTANCE.shouldOverrideShadow && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			DHCompatInternal.INSTANCE.getShadowShader().bind();
@@ -121,7 +120,7 @@ public class MixinLodRenderer {
 		atTranslucent = true;
 	}
 
-	@Redirect(method = "drawLODs", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/glObject/GLProxy;runRenderThreadTasks()V"))
+	@Redirect(method = "renderLodPass", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/glObject/GLProxy;runRenderThreadTasks()V"))
 	private void runOnlyOnMain(GLProxy instance) {
 		if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			instance.runRenderThreadTasks();
@@ -129,7 +128,7 @@ public class MixinLodRenderer {
 	}
 
 	@Redirect(method = {
-		"setupGLState",
+		"setupGLStateAndRenderObjects",
 	}, at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL32;glClear(I)V"))
 	private void properClear(int i) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) return;
@@ -141,7 +140,7 @@ public class MixinLodRenderer {
 		}
  	}
 
-	@Redirect(method = "setupGLState", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/renderer/LodRenderProgram;bind()V"))
+	@Redirect(method = "setupGLStateAndRenderObjects", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/renderer/LodRenderProgram;bind()V"))
 	private void bindSolid(LodRenderProgram instance) {
 		if (DHCompatInternal.INSTANCE.shouldOverride) {
 			instance.bind();
@@ -157,8 +156,7 @@ public class MixinLodRenderer {
 	}
 
 	@Redirect(method = {
-		"drawLODs",
-		"drawTranslucentLODs"
+		"renderLodPass"
 	}, at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/renderer/LodRenderProgram;unbind()V"))
 	private void unbindSolid(LodRenderProgram instance) {
 		if (DHCompatInternal.INSTANCE.shouldOverride) {
@@ -173,7 +171,7 @@ public class MixinLodRenderer {
 		}
 	}
 
-	@Redirect(method = "setupGLState", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/glObject/texture/DhFramebuffer;bind()V"))
+	@Redirect(method = "setupGLStateAndRenderObjects", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/glObject/texture/DhFramebuffer;bind()V"))
 	private void changeFramebuffer(DhFramebuffer instance) {
 		if (DHCompatInternal.INSTANCE.shouldOverride) {
 			if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
@@ -186,7 +184,7 @@ public class MixinLodRenderer {
 		}
 	}
 
-	@Redirect(method = "setupGLState", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/glObject/texture/DhFramebuffer;getId()I"))
+	@Redirect(method = "setupGLStateAndRenderObjects", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/glObject/texture/DhFramebuffer;getId()I"))
 	private int changeFramebuffer2(DhFramebuffer instance) {
 		if (DHCompatInternal.INSTANCE.shouldOverride) {
 			if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
@@ -199,8 +197,8 @@ public class MixinLodRenderer {
 		}
 	}
 
-	@Inject(method = "drawLODs", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/wrapperInterfaces/misc/ILightMapWrapper;bind()V", remap = true))
-	private void fillUniformDataSolid(IClientLevelWrapper clientLevelWrapper, Mat4f baseModelViewMatrix, Mat4f baseProjectionMatrix, float partialTicks, IProfilerWrapper profiler, CallbackInfo ci) {
+	@Inject(method = "renderLodPass", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/render/RenderBufferHandler;renderOpaque(Lcom/seibel/distanthorizons/core/render/renderer/LodRenderer;)V", remap = true))
+	private void fillUniformDataSolid(IClientLevelWrapper clientLevelWrapper, Mat4f baseModelViewMatrix, Mat4f baseProjectionMatrix, float partialTicks, IProfilerWrapper profiler, boolean runningDeferredPass, CallbackInfo ci) {
 		if (DHCompatInternal.INSTANCE.shouldOverride) {
 			if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 				DHCompatInternal.INSTANCE.getShadowShader().fillUniformData(ShadowRenderer.PROJECTION, ShadowRenderer.MODELVIEW, MC.getWrappedClientLevel().getMinHeight(), partialTicks);

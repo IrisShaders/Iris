@@ -112,7 +112,7 @@ public class DHCompatInternal {
 	}
 
 	public void renderShadowTranslucent() {
-		ClientApi.INSTANCE.renderTranslucentLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
+		ClientApi.INSTANCE.renderDeferredLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
 			McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
 			McObjectConverter.Convert(ShadowRenderer.PROJECTION),
 			CapturedRenderingState.INSTANCE.getTickDelta());
