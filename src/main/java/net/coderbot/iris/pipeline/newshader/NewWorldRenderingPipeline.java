@@ -785,7 +785,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
 		IrisSamplers.addCustomImages(samplerHolder, customImages);
 
-		if (isShadowPass || IrisSamplers.hasShadowSamplers(samplerHolder)) {
+		if (IrisSamplers.hasShadowSamplers(samplerHolder)) {
 			if (!isShadowPass) {
 				shadowTargetsSupplier.get();
 			}
@@ -793,7 +793,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			IrisSamplers.addShadowSamplers(samplerHolder, Objects.requireNonNull(shadowRenderTargets), null, separateHardwareSamplers);
 		}
 
-		if (isShadowPass || IrisImages.hasShadowImages(images)) {
+		if ( IrisImages.hasShadowImages(images)) {
 			// Note: hasShadowSamplers currently queries for shadow images too, so the shadow render targets will be
 			// created by this point... that's sorta ugly, though.
 			IrisImages.addShadowColorImages(images, Objects.requireNonNull(shadowRenderTargets), null);
@@ -1304,6 +1304,11 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	}
 
 	public GlFramebuffer createDHFramebufferShadow(ProgramSource sources) {
+
 		return shadowRenderTargets.createDHFramebuffer(ImmutableSet.of(), new int[]{0, 1});
+	}
+
+	public boolean hasShadowRenderTargets() {
+		return shadowRenderTargets != null;
 	}
 }

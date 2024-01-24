@@ -70,7 +70,9 @@ public class DHCompatInternal {
 		if (pipeline.getDHShadowShader().isPresent() && dhShadowEnabled) {
 			ProgramSource shadow = pipeline.getDHShadowShader().get();
 			shadowProgram = IrisLodRenderProgram.createProgram(shadow.getName(), true, shadow, pipeline.getCustomUniforms(), pipeline);
-			dhShadowFramebuffer = pipeline.createDHFramebufferShadow(shadow);
+			if (pipeline.hasShadowRenderTargets()) {
+				dhShadowFramebuffer = pipeline.createDHFramebufferShadow(shadow);
+			}
 			shouldOverrideShadow = true;
 		} else {
 			shouldOverrideShadow = false;

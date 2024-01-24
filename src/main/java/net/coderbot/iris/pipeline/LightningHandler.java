@@ -5,6 +5,8 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.coderbot.iris.layer.InnerWrappedRenderType;
 import net.coderbot.iris.layer.LightningRenderStateShard;
 import net.coderbot.iris.layer.OuterWrappedRenderType;
+import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 
 public class LightningHandler extends RenderType {
@@ -22,6 +24,19 @@ public class LightningHandler extends RenderType {
                     .setOutputState(WEATHER_TARGET)
                     .createCompositeState(false)
     ), new LightningRenderStateShard());
+    public static final RenderType IRIS_WATERMASK = RenderType.create(
+		"iris_water_mask",
+		DefaultVertexFormat.NEW_ENTITY,
+		VertexFormat.Mode.QUADS,
+		1536,
+		false,
+		true,
+		RenderType.CompositeState.builder()
+			.setShaderState(RenderStateShard.RENDERTYPE_WATER_MASK_SHADER)
+			.setTextureState(NO_TEXTURE)
+			.setWriteMaskState(DEPTH_WRITE)
+			.createCompositeState(false)
+	);
 
     public LightningHandler(String pRenderType0, VertexFormat pVertexFormat1, VertexFormat.Mode pVertexFormat$Mode2, int pInt3, boolean pBoolean4, boolean pBoolean5, Runnable pRunnable6, Runnable pRunnable7) {
         super(pRenderType0, pVertexFormat1, pVertexFormat$Mode2, pInt3, pBoolean4, pBoolean5, pRunnable6, pRunnable7);

@@ -362,6 +362,11 @@ public class ShaderProperties {
 						return;
 					}
 
+					if (trueSize < 1) {
+						// Assume the shader dev intended to disable the buffer
+						return;
+					}
+
 					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0));
 				} else {
 					// Assume it's a long one
@@ -373,6 +378,11 @@ public class ShaderProperties {
 						scaleY = Float.parseFloat(parts[3]);
 					} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size, or not correct format!", e);
+						return;
+					}
+
+					if (trueSize < 1) {
+						// Assume the shader dev intended to disable the buffer
 						return;
 					}
 

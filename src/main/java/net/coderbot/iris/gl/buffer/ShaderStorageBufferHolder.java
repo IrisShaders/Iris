@@ -63,13 +63,17 @@ public class ShaderStorageBufferHolder {
 		}
 
 		for (ShaderStorageBuffer buffer : buffers) {
-			buffer.bind();
+			if (buffer != null) {
+				buffer.bind();
+			}
 		}
 	}
 
 	public void destroyBuffers() {
 		for (ShaderStorageBuffer buffer : buffers) {
-			buffer.destroy();
+			if (buffer != null) {
+				buffer.destroy();
+			}
 		}
 		buffers = null;
 		destroyed = true;
