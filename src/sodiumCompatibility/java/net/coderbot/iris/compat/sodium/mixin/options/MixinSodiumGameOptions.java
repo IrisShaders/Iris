@@ -15,8 +15,8 @@ import java.io.IOException;
  */
 @Mixin(SodiumGameOptions.class)
 public class MixinSodiumGameOptions {
-	@Inject(method = "writeChanges()V", at = @At("RETURN"), remap = false)
-	public void iris$writeIrisConfig(CallbackInfo ci) {
+	@Inject(method = "writeToDisk", at = @At("RETURN"), remap = false)
+	private static void iris$writeIrisConfig(CallbackInfo ci) {
 		try {
 			if (Iris.getIrisConfig() != null) {
 				Iris.getIrisConfig().save();

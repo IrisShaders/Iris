@@ -7,11 +7,7 @@ import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
-import net.caffeinemc.mods.sodium.api.vertex.attributes.CommonVertexAttribute;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisCommonVertexAttributes;
 import org.joml.Vector3f;
 import net.coderbot.iris.vertices.NormI8;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +19,6 @@ import net.coderbot.iris.vertices.ExtendingBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.coderbot.iris.vertices.NormalHelper;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -100,7 +95,13 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	public abstract void begin(VertexFormat.Mode drawMode, VertexFormat vertexFormat);
 
 	@Shadow
+	public abstract void putShort(int i, short s);
+
+	@Shadow
 	protected abstract void switchFormat(VertexFormat arg);
+
+	@Shadow
+	public abstract void nextElement();
 
 	@Override
 	public void iris$beginWithoutExtending(VertexFormat.Mode drawMode, VertexFormat vertexFormat) {
@@ -138,6 +139,12 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		}
 	}
 
+	@Override
+	public @NotNull VertexConsumer uv2(int pBufferVertexConsumer0, int pInt1) {
+
+		return BufferVertexConsumer.super.uv2(pBufferVertexConsumer0, pInt1);
+	}
+
 	@ModifyArg(method = "begin", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;switchFormat(Lcom/mojang/blaze3d/vertex/VertexFormat;)V"))
 	private VertexFormat iris$afterBeginSwitchFormat(VertexFormat arg) {
 		if (extending) {
@@ -164,39 +171,12 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		vertexCount = 0;
 	}
 
-	@Unique
-	private int uv1Offset, normalOffset, tangentOffset, midTexOffset, midBlockOffset, blockIdOffset, entityIdOffset;
-
 	@Inject(method = "switchFormat", at = @At("RETURN"))
 	private void iris$preventHardcodedVertexWriting(VertexFormat format, CallbackInfo ci) {
 		if (!extending) {
 			return;
 		}
 
-		VertexFormatDescription formatDescription = VertexFormatRegistry.instance()
-			.get(format);
-
-		if (formatDescription.containsElement(CommonVertexAttribute.OVERLAY)) {
-			this.uv1Offset = formatDescription.getElementOffset(CommonVertexAttribute.OVERLAY);
-		}
-		if (formatDescription.containsElement(CommonVertexAttribute.NORMAL)) {
-			this.normalOffset = formatDescription.getElementOffset(CommonVertexAttribute.NORMAL);
-		}
-		if (formatDescription.containsElement(IrisCommonVertexAttributes.TANGENT)) {
-			this.tangentOffset = formatDescription.getElementOffset(IrisCommonVertexAttributes.TANGENT);
-		}
-		if (formatDescription.containsElement(IrisCommonVertexAttributes.MID_TEX_COORD)) {
-			this.midTexOffset = formatDescription.getElementOffset(IrisCommonVertexAttributes.MID_TEX_COORD);
-		}
-		if (formatDescription.containsElement(IrisCommonVertexAttributes.BLOCK_ID)) {
-			this.blockIdOffset = formatDescription.getElementOffset(IrisCommonVertexAttributes.BLOCK_ID);
-		}
-		if (formatDescription.containsElement(IrisCommonVertexAttributes.ENTITY_ID)) {
-			this.entityIdOffset = formatDescription.getElementOffset(IrisCommonVertexAttributes.ENTITY_ID);
-		}
-		if (formatDescription.containsElement(IrisCommonVertexAttributes.MID_BLOCK)) {
-			this.midBlockOffset = formatDescription.getElementOffset(IrisCommonVertexAttributes.MID_BLOCK);
-		}
 		fastFormat = false;
 		fullFormat = false;
 	}
@@ -207,30 +187,39 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			return;
 		}
 
-		if (injectNormalAndUV1) {
-			this.normal(0, 0, 0);
+		if (injectNormalAndUV1 && currentElement == DefaultVertexFormat.ELEMENT_NORMAL) {
+			this.putInt(0, 0);
+			this.nextElement();
 		}
 
 		if (iris$isTerrain) {
 			// ENTITY_ELEMENT
-			long offset = MemoryUtil.memAddress(buffer, nextElementByte + blockIdOffset);
-			MemoryUtil.memPutShort(offset, currentBlock);
-			MemoryUtil.memPutShort(offset + 2, currentRenderType);
+			this.putShort(0, currentBlock);
+			this.putShort(2, currentRenderType);
 		} else {
 			// ENTITY_ELEMENT
-			long offset = MemoryUtil.memAddress(buffer, nextElementByte + entityIdOffset);
-			MemoryUtil.memPutShort(offset, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
-			MemoryUtil.memPutShort(offset + 2, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
-			MemoryUtil.memPutShort(offset + 4, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+			this.putShort(0, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+			this.putShort(2, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+			this.putShort(4, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 		}
 
+		this.nextElement();
+
+		// MID_TEXTURE_ELEMENT
+		this.putFloat(0, 0);
+		this.putFloat(4, 0);
+		this.nextElement();
+		// TANGENT_ELEMENT
+		this.putInt(0, 0);
+		this.nextElement();
 		if (iris$isTerrain) {
 			// MID_BLOCK_ELEMENT
-			long bufferIndex = MemoryUtil.memAddress(buffer, nextElementByte);
-			float x = MemoryUtil.memGetFloat(bufferIndex);
-			float y = MemoryUtil.memGetFloat(bufferIndex + 4);
-			float z = MemoryUtil.memGetFloat(bufferIndex + 8);
-			MemoryUtil.memPutInt(MemoryUtil.memAddress(buffer, nextElementByte + midBlockOffset), ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
+			int posIndex = this.nextElementByte - 48;
+			float x = buffer.getFloat(posIndex);
+			float y = buffer.getFloat(posIndex + 4);
+			float z = buffer.getFloat(posIndex + 8);
+			this.putInt(0, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
+			this.nextElement();
 		}
 
 		vertexCount++;
@@ -246,9 +235,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 
 		int stride = format.getVertexSize();
 
-		int offset = nextElementByte + stride;
-
-		polygon.setup(buffer, offset, stride, vertexAmount);
+		polygon.setup(buffer, nextElementByte, stride, vertexAmount);
 
 		float midU = 0;
 		float midV = 0;
@@ -281,13 +268,13 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			// NormalHelper.computeFaceNormalTri(normal, polygon);	// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
-				int packedNormal = buffer.getInt(offset - normalOffset - stride * vertex); // retrieve per-vertex normal
+				int packedNormal = buffer.getInt(nextElementByte - normalOffset - stride * vertex); // retrieve per-vertex normal
 
 				int tangent = NormalHelper.computeTangentSmooth(NormI8.unpackX(packedNormal), NormI8.unpackY(packedNormal), NormI8.unpackZ(packedNormal), polygon);
 
-				buffer.putFloat(offset - midUOffset - stride * vertex, midU);
-				buffer.putFloat(offset - midVOffset - stride * vertex, midV);
-				buffer.putInt(offset - tangentOffset - stride * vertex, tangent);
+				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
+				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
+				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
 			}
 		} else {
 			NormalHelper.computeFaceNormal(normal, polygon);
@@ -295,10 +282,10 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
-				buffer.putFloat(offset - midUOffset - stride * vertex, midU);
-				buffer.putFloat(offset - midVOffset - stride * vertex, midV);
-				buffer.putInt(offset - normalOffset - stride * vertex, packedNormal);
-				buffer.putInt(offset - tangentOffset - stride * vertex, tangent);
+				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
+				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
+				buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
+				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
 			}
 		}
 	}
@@ -319,5 +306,10 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		this.currentLocalPosX = 0;
 		this.currentLocalPosY = 0;
 		this.currentLocalPosZ = 0;
+	}
+
+	@Unique
+	private void putInt(int i, int value) {
+		this.buffer.putInt(this.nextElementByte + i, value);
 	}
 }

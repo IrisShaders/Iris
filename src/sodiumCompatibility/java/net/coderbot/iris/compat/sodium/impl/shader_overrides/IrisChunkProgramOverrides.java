@@ -255,7 +255,7 @@ public class IrisChunkProgramOverrides {
 						int handle = ((GlObject) shader).handle();
 						ShaderBindingContextExt contextExt = (ShaderBindingContextExt) shader;
 
-						return new IrisChunkShaderInterface(handle, contextExt, pipeline, new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass.toTerrainPass()),
+						return new IrisChunkShaderInterface(handle, contextExt, pipeline, new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass.toTerrainPass(), vertexType),
 								tessCShader != null || tessEShader != null, pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, blendOverride, bufferOverrides, alpha, pipeline.getCustomUniforms());
 					});
         } finally {
