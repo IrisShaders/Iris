@@ -6,7 +6,7 @@ import net.coderbot.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.coderbot.batchedentityrendering.impl.MemoryTrackingBuffer;
 import net.coderbot.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.coderbot.batchedentityrendering.impl.RenderBuffersExt;
-import net.minecraft.client.renderer.SectionBufferBuilderPack;
+import net.minecraft.client.renderer.ChunkBufferBuilderPack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
@@ -45,7 +45,7 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 
 	@Shadow
 	@Final
-	private SectionBufferBuilderPack fixedBufferPack;
+	private ChunkBufferBuilderPack fixedBufferPack;
 
 	@Inject(method = "bufferSource", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceBufferSource(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {

@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.world.TickRateManager;
 import org.joml.Matrix4f;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.layer.IsOutlineRenderStateShard;
@@ -71,11 +70,9 @@ public class MixinLevelRenderer {
 		IrisTimeUniforms.updateTime();
 		CapturedRenderingState.INSTANCE.setGbufferModelView(poseStack.last().pose());
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projection);
-		TickRateManager lvTickRateManager10 = this.minecraft.level.tickRateManager();
-		float fakeTickDelta = lvTickRateManager10.runsNormally() ? tickDelta : 1.0F;
-		CapturedRenderingState.INSTANCE.setTickDelta(fakeTickDelta);
+		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 		CapturedRenderingState.INSTANCE.setRealTickDelta(tickDelta);
-		CapturedRenderingState.INSTANCE.setCloudTime((ticks + fakeTickDelta) * 0.03F);
+		CapturedRenderingState.INSTANCE.setCloudTime((ticks + tickDelta) * 0.03F);
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 

@@ -6,7 +6,6 @@ import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.client.renderer.culling.Frustum;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,15 +31,35 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinPreventRebuildNearInShadowPass {
 	@Shadow
 	@Final
-	private ObjectArrayList<SectionRenderDispatcher.RenderSection> visibleSections;
+	private ObjectArrayList<LevelRenderer.RenderChunkInfo> renderChunksInFrustum;
 
+	@Shadow
+	protected abstract void applyFrustum(Frustum frustum);
+
+	@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
 	@Inject(method = "setupRender",
-			at = @At(value = "TAIL"))
+		at = @At(value = "INVOKE",
+			target = "Ljava/util/concurrent/atomic/AtomicReference;get()Ljava/lang/Object;"),
+		cancellable = true,
+		require = 0)
 	private void iris$preventRebuildNearInShadowPass(Camera camera, Frustum frustum, boolean bl, boolean bl2, CallbackInfo ci) {
 		if (ShadowRenderer.ACTIVE) {
-			for (SectionRenderDispatcher.RenderSection chunk : this.visibleSections) {
-				ShadowRenderer.visibleBlockEntities.addAll(chunk.getCompiled().getRenderableBlockEntities());
+			for (LevelRenderer.RenderChunkInfo chunk : this.renderChunksInFrustum) {
+				ShadowRenderer.visibleBlockEntities.addAll(((ChunkInfoAccessor) chunk).getChunk().getCompiledChunk().getRenderableBlockEntities());
 			}
+			Minecraft.getInstance().getProfiler().pop();
+			this.applyFrustum(frustum);
+			ci.cancel();
 		}
+	}
+
+	@Group(name = "iris_MixinPreventRebuildNearInShadowPass", min = 1, max = 1)
+	@Inject(method = "setupRender",
+		at = @At(value = "INVOKE",
+			target = "me/jellysquid/mods/sodium/client/gl/device/RenderDevice.enterManagedCode ()V",
+			remap = false),
+		require = 0)
+	private void iris$cannotInject(Camera camera, Frustum frustum, boolean bl, boolean bl2, CallbackInfo ci) {
+		// Dummy injection just to assert that either Sodium is present, or the vanilla injection passed.
 	}
 }

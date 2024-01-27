@@ -69,6 +69,7 @@
     "rendertype.RenderTypeAccessor",
     "rendertype.RenderStateShardAccessor",
     "rendertype.RenderTypeAccessor",
+    "shadows.ChunkInfoAccessor",
     "shadows.MixinBeaconRenderer",
     "shadows.MixinLevelRenderer",
     "shadows.MixinPreventRebuildNearInShadowPass",
