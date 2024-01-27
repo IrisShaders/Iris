@@ -120,38 +120,33 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		int targetFrameWidth = sprite.contents().width();
 		int targetFrameHeight = sprite.contents().height();
 		if (frameWidth != targetFrameWidth || frameHeight != targetFrameHeight) {
-			try {
-				// We can assume the following is always true:
-				// imageWidth % frameWidth == 0 && imageHeight % frameHeight == 0
-				int targetImageWidth = imageWidth / frameWidth * targetFrameWidth;
-				int targetImageHeight = imageHeight / frameHeight * targetFrameHeight;
+			// We can assume the following is always true:
+			// imageWidth % frameWidth == 0 && imageHeight % frameHeight == 0
+			int targetImageWidth = imageWidth / frameWidth * targetFrameWidth;
+			int targetImageHeight = imageHeight / frameHeight * targetFrameHeight;
 
-				NativeImage scaledImage;
-				if (targetImageWidth % imageWidth == 0 && targetImageHeight % imageHeight == 0) {
-					scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, targetImageWidth, targetImageHeight);
-				} else {
-					scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
+			NativeImage scaledImage;
+			if (targetImageWidth % imageWidth == 0 && targetImageHeight % imageHeight == 0) {
+				scaledImage = ImageManipulationUtil.scaleNearestNeighbor(nativeImage, targetImageWidth, targetImageHeight);
+			} else {
+				scaledImage = ImageManipulationUtil.scaleBilinear(nativeImage, targetImageWidth, targetImageHeight);
+			}
+			nativeImage.close();
+			nativeImage = scaledImage;
+
+			frameWidth = targetFrameWidth;
+			frameHeight = targetFrameHeight;
+
+			if (animationMetadata != AnimationMetadataSection.EMPTY) {
+				AnimationMetadataSectionAccessor animationAccessor = (AnimationMetadataSectionAccessor) animationMetadata;
+				int internalFrameWidth = animationAccessor.getFrameWidth();
+				int internalFrameHeight = animationAccessor.getFrameHeight();
+				if (internalFrameWidth != -1) {
+					animationAccessor.setFrameWidth(frameWidth);
 				}
-				nativeImage.close();
-				nativeImage = scaledImage;
-
-				frameWidth = targetFrameWidth;
-				frameHeight = targetFrameHeight;
-
-				if (metadataSection != AnimationMetadataSection.EMPTY) {
-					AnimationMetadataSectionAccessor animationAccessor = (AnimationMetadataSectionAccessor) metadataSection;
-					int internalFrameWidth = animationAccessor.getFrameWidth();
-					int internalFrameHeight = animationAccessor.getFrameHeight();
-					if (internalFrameWidth != -1) {
-						animationAccessor.setFrameWidth(frameWidth);
-					}
-					if (internalFrameHeight != -1) {
-						animationAccessor.setFrameHeight(frameHeight);
-					}
+				if (internalFrameHeight != -1) {
+					animationAccessor.setFrameHeight(frameHeight);
 				}
-			} catch (Exception e) {
-				Iris.logger.error("Something bad happened trying to load PBR texture " + spriteName.getPath() + pbrType.getSuffix() + "!", e);
-				throw e;
 			}
 		}
 

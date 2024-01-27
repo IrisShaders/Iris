@@ -50,7 +50,6 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		super(client, width, height, top, bottom, left, right, 24);
 		this.navigation = navigation;
 		this.screen = screen;
-		this.setRenderBackground(false);
 
 		applyShaderPack(pack);
 	}
@@ -60,12 +59,12 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		// Renders top/bottom dirt
 		int lvInt9 = 32;
 		pAbstractSelectionList0.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-		pAbstractSelectionList0.blit(Screen.BACKGROUND_LOCATION, this.getX(), 0, 0.0F, 0.0F, this.width, this.getY(), 32, 32);
-		pAbstractSelectionList0.blit(Screen.BACKGROUND_LOCATION, this.getX(), this.getBottom(), 0.0F, (float)this.getBottom(), this.width, this.height - this.getBottom(), 32, 32);
+		pAbstractSelectionList0.blit(Screen.BACKGROUND_LOCATION, this.x0, 0, 0.0F, 0.0F, this.width, this.y0, 32, 32);
+		pAbstractSelectionList0.blit(Screen.BACKGROUND_LOCATION, this.x0, this.y1, 0.0F, (float)this.y1, this.width, this.height - this.y1, 32, 32);
 		pAbstractSelectionList0.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 		int lvInt10 = 4;
-		pAbstractSelectionList0.fillGradient(RenderType.guiOverlay(), this.getX(), this.getY(), this.getRight(), this.getY() + 4, -16777216, 0, 0);
-		pAbstractSelectionList0.fillGradient(RenderType.guiOverlay(), this.getX(), this.getBottom() - 4, this.getRight(), this.getBottom(), 0, -16777216, 0);
+		pAbstractSelectionList0.fillGradient(RenderType.guiOverlay(), this.x0, this.y0, this.x1, this.y0 + 4, -16777216, 0, 0);
+		pAbstractSelectionList0.fillGradient(RenderType.guiOverlay(), this.x0, this.y1 - 4, this.x1, this.y1, 0, -16777216, 0);
 		super.renderDecorations(pAbstractSelectionList0, pInt1, pInt2);
 	}
 

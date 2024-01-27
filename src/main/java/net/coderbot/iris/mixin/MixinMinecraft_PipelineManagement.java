@@ -18,7 +18,7 @@ public class MixinMinecraft_PipelineManagement {
 	/**
 	 * Should run before the Minecraft.level field is updated after disconnecting from a server or leaving a singleplayer world
 	 */
-	@Inject(method = "clearClientLevel", at = @At("HEAD"))
+	@Inject(method = "clearLevel(Lnet/minecraft/client/gui/screens/Screen;)V", at = @At("HEAD"))
 	public void iris$trackLastDimensionOnLeave(Screen arg, CallbackInfo ci) {
 		Iris.lastDimension = Iris.getCurrentDimension();
 	}

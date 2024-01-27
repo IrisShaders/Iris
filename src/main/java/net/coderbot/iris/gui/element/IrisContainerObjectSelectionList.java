@@ -8,7 +8,10 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 
 public class IrisContainerObjectSelectionList<E extends ContainerObjectSelectionList.Entry<E>> extends ContainerObjectSelectionList<E> {
 	public IrisContainerObjectSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right, int itemHeight) {
-		super(client, width, height, top, itemHeight);
+		super(client, width, height, top, bottom, itemHeight);
+
+		this.x0 = left;
+		this.x1 = right;
 	}
 
 	@Override

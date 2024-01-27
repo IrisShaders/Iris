@@ -14,11 +14,25 @@ public class MixinLevelRenderer implements CullingDataCache {
 	@Shadow
 	@Final
 	@Mutable
-	private ObjectArrayList visibleSections;
+	private ObjectArrayList renderChunksInFrustum;
 
 	@Unique
 	private ObjectArrayList savedRenderChunks = new ObjectArrayList(69696);
 
+	@Shadow
+	private boolean needsFullRenderChunkUpdate;
+
+	@Unique
+	private boolean savedNeedsTerrainUpdate;
+
+	@Shadow
+	private double lastCameraX;
+
+	@Shadow
+	private double lastCameraY;
+
+	@Shadow
+	private double lastCameraZ;
 
 	@Shadow
 	private double prevCamRotX;
@@ -53,10 +67,29 @@ public class MixinLevelRenderer implements CullingDataCache {
 
 	@Unique
 	private void swap() {
-		ObjectArrayList tmpList = visibleSections;
-		visibleSections = savedRenderChunks;
+		ObjectArrayList tmpList = renderChunksInFrustum;
+		renderChunksInFrustum = savedRenderChunks;
 		savedRenderChunks = tmpList;
+
+		// TODO: If the normal chunks need a terrain update, these chunks probably do too...
+		// We probably should copy it over
+		boolean tmpBool = needsFullRenderChunkUpdate;
+		needsFullRenderChunkUpdate = savedNeedsTerrainUpdate;
+		savedNeedsTerrainUpdate = tmpBool;
+
 		double tmp;
+
+		tmp = lastCameraX;
+		lastCameraX = savedLastCameraX;
+		savedLastCameraX = tmp;
+
+		tmp = lastCameraY;
+		lastCameraY = savedLastCameraY;
+		savedLastCameraY = tmp;
+
+		tmp = lastCameraZ;
+		lastCameraZ = savedLastCameraZ;
+		savedLastCameraZ = tmp;
 
 		tmp = prevCamRotX;
 		prevCamRotX = savedLastCameraPitch;

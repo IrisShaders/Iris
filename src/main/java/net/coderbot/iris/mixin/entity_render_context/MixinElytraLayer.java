@@ -41,7 +41,7 @@ public abstract class MixinElytraLayer<T extends LivingEntity, M extends EntityM
     private void changeId(PoseStack pElytraLayer0, MultiBufferSource pMultiBufferSource1, int pInt2, T pLivingEntity3, float pFloat4, float pFloat5, float pFloat6, float pFloat7, float pFloat8, float pFloat9, CallbackInfo ci, ItemStack lvItemStack11, ResourceLocation lvResourceLocation12) {
         if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
 
-        if (pLivingEntity3 instanceof AbstractClientPlayer player && player.getSkin().capeTexture() != null
+        if (pLivingEntity3 instanceof AbstractClientPlayer player && player.getCloakTextureLocation() != null
                 && player.isModelPartShown(PlayerModelPart.CAPE)) {
             CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getItemIds().applyAsInt(ELYTRA_CAPE_LOCATION));
             return;
