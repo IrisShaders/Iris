@@ -11,8 +11,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.Nullable;
@@ -167,20 +165,6 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		});
 
 		this.addEntry(entry);
-	}
-
-	@Override
-	protected void renderDecorations(GuiGraphics pAbstractSelectionList0, int pInt1, int pInt2) {
-		// Renders top/bottom dirt
-		int lvInt9 = 32;
-		pAbstractSelectionList0.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-		pAbstractSelectionList0.blit(Screen.BACKGROUND_LOCATION, this.getX(), 0, 0.0F, 0.0F, this.width, this.getHeight(), 32, 32);
-		pAbstractSelectionList0.blit(Screen.BACKGROUND_LOCATION, this.getX(), this.getBottom(), 0.0F, (float)this.getBottom(), this.width, this.height - this.getBottom(), 32, 32);
-		pAbstractSelectionList0.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-		int lvInt10 = 4;
-		pAbstractSelectionList0.fillGradient(RenderType.guiOverlay(), this.getX(), this.getHeight(), this.getRight(), this.getHeight() + 4, -16777216, 0, 0);
-		pAbstractSelectionList0.fillGradient(RenderType.guiOverlay(), this.getX(), this.getBottom() - 4, this.getRight(), this.getBottom(), 0, -16777216, 0);
-		super.renderDecorations(pAbstractSelectionList0, pInt1, pInt2);
 	}
 
 	public void addLabelEntries(Component... lines) {
