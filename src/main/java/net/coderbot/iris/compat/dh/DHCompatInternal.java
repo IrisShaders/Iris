@@ -59,17 +59,17 @@ public class DHCompatInternal {
 		}
 
 		ProgramSource terrain = pipeline.getDHTerrainShader().get();
-		solidProgram = IrisLodRenderProgram.createProgram(terrain.getName(), false, terrain, pipeline.getCustomUniforms(), pipeline);
+		solidProgram = IrisLodRenderProgram.createProgram(terrain.getName(), false, false, terrain, pipeline.getCustomUniforms(), pipeline);
 
 		if (pipeline.getDHWaterShader().isPresent()) {
 			ProgramSource water = pipeline.getDHWaterShader().get();
-			translucentProgram = IrisLodRenderProgram.createProgram(water.getName(), false, water, pipeline.getCustomUniforms(), pipeline);
+			translucentProgram = IrisLodRenderProgram.createProgram(water.getName(), false, true, water, pipeline.getCustomUniforms(), pipeline);
 			dhWaterFramebuffer = pipeline.createDHFramebuffer(water, true);
 		}
 
 		if (pipeline.getDHShadowShader().isPresent() && dhShadowEnabled) {
 			ProgramSource shadow = pipeline.getDHShadowShader().get();
-			shadowProgram = IrisLodRenderProgram.createProgram(shadow.getName(), true, shadow, pipeline.getCustomUniforms(), pipeline);
+			shadowProgram = IrisLodRenderProgram.createProgram(shadow.getName(), true, false, shadow, pipeline.getCustomUniforms(), pipeline);
 			if (pipeline.hasShadowRenderTargets()) {
 				dhShadowFramebuffer = pipeline.createDHFramebufferShadow(shadow);
 			}

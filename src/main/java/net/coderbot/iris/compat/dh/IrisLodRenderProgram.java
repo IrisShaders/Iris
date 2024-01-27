@@ -74,7 +74,7 @@ public class IrisLodRenderProgram
 	private final ProgramImages images;
 	private final BlendModeOverride blend;
 
-	public static IrisLodRenderProgram createProgram(String name, boolean isShadowPass, ProgramSource source, CustomUniforms uniforms, NewWorldRenderingPipeline pipeline) {
+	public static IrisLodRenderProgram createProgram(String name, boolean isShadowPass, boolean translucent, ProgramSource source, CustomUniforms uniforms, NewWorldRenderingPipeline pipeline) {
 		Map<PatchShaderType, String> transformed = TransformPatcher.patchDH(
 			name,
 			source.getVertexSource().orElseThrow(RuntimeException::new),
@@ -92,7 +92,7 @@ public class IrisLodRenderProgram
 			.addSources(transformed)
 			.setName("dh_" + name)
 			.print();
-		return new IrisLodRenderProgram(name, isShadowPass, source.getDirectives().getBlendModeOverride().orElse(null), vertex, tessControl, tessEval, geometry, fragment, uniforms, pipeline);
+		return new IrisLodRenderProgram(name, isShadowPass, translucent, source.getDirectives().getBlendModeOverride().orElse(null), vertex, tessControl, tessEval, geometry, fragment, uniforms, pipeline);
 	}
 
 	public int tryGetUniformLocation2(CharSequence name) {
@@ -104,7 +104,7 @@ public class IrisLodRenderProgram
 	// Noise Uniforms
 
 	// This will bind  AbstractVertexAttribute
-	private IrisLodRenderProgram(String name, boolean isShadowPass, BlendModeOverride override, String vertex, String tessControl, String tessEval, String geometry, String fragment, CustomUniforms customUniforms, NewWorldRenderingPipeline pipeline)
+	private IrisLodRenderProgram(String name, boolean isShadowPass, boolean translucent, BlendModeOverride override, String vertex, String tessControl, String tessEval, String geometry, String fragment, CustomUniforms customUniforms, NewWorldRenderingPipeline pipeline)
 	{
 		id = GL43C.glCreateProgram();
 
@@ -160,7 +160,7 @@ public class IrisLodRenderProgram
 		customUniforms.assignTo(uniformBuilder);
 		BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniformBuilder);
 		ProgramImages.Builder builder = ProgramImages.builder(id);
-		pipeline.addGbufferOrShadowSamplers(samplerBuilder, builder, isShadowPass ? () -> pipeline.flippedBeforeShadow : () -> pipeline.flippedAfterPrepare, isShadowPass, new InputAvailability(false, true, false));
+		pipeline.addGbufferOrShadowSamplers(samplerBuilder, builder, isShadowPass ? () -> pipeline.flippedBeforeShadow : () -> translucent ? pipeline.flippedAfterTranslucent : pipeline.flippedAfterPrepare, isShadowPass, new InputAvailability(false, true, false));
 		customUniforms.mapholderToPass(uniformBuilder, this);
 		this.uniforms = uniformBuilder.buildUniforms();
 		this.customUniforms = customUniforms;

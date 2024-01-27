@@ -151,7 +151,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	public final ImmutableSet<Integer> flippedBeforeShadow;
 	public final ImmutableSet<Integer> flippedAfterPrepare;
-	private final ImmutableSet<Integer> flippedAfterTranslucent;
+	public final ImmutableSet<Integer> flippedAfterTranslucent;
 
 	public boolean isBeforeTranslucent;
 
