@@ -213,12 +213,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.removeWidget(this.shaderPackList);
 		this.removeWidget(this.shaderOptionList);
 
-		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58 - 32, 0, this.width);
+		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
 
 		if (Iris.getCurrentPack().isPresent() && this.navigation != null) {
 			ShaderPack currentPack = Iris.getCurrentPack().get();
 
-			this.shaderOptionList = new ShaderPackOptionList(this, this.navigation, currentPack, this.minecraft, this.width, this.height, 32, this.height - 58-32, 0, this.width);
+			this.shaderOptionList = new ShaderPackOptionList(this, this.navigation, currentPack, this.minecraft, this.width, this.height, 32, this.height - 58, 0, this.width);
 			this.navigation.setActiveOptionList(this.shaderOptionList);
 
 			this.shaderOptionList.rebuild();
