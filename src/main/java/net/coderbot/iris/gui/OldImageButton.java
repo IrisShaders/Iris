@@ -1,6 +1,5 @@
 package net.coderbot.iris.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.GuiGraphics;
@@ -92,29 +91,5 @@ public class OldImageButton extends Button {
 			this.textureWidth,
 			this.textureHeight
 		);
-	}
-
-	public void renderTexture(
-		GuiGraphics pAbstractWidget0,
-		ResourceLocation pResourceLocation1,
-		int pInt2,
-		int pInt3,
-		int pInt4,
-		int pInt5,
-		int pInt6,
-		int pInt7,
-		int pInt8,
-		int pInt9,
-		int pInt10
-	) {
-		int lvInt12 = pInt5;
-		if (!this.isActive()) {
-			lvInt12 = pInt5 + pInt6 * 2;
-		} else if (this.isHoveredOrFocused()) {
-			lvInt12 = pInt5 + pInt6;
-		}
-
-		RenderSystem.enableDepthTest();
-		pAbstractWidget0.blit(pResourceLocation1, pInt2, pInt3, (float)pInt4, (float)lvInt12, pInt7, pInt8, pInt9, pInt10);
 	}
 }
