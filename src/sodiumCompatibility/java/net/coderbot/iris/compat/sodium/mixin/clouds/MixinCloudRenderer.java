@@ -17,6 +17,7 @@ import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.ShaderKey;
 import net.coderbot.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.api.v0.IrisApi;
+import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -50,6 +51,8 @@ public abstract class MixinCloudRenderer {
 	@Shadow
 	@Final
 	private FogRenderer.FogData fogData;
+	@Shadow
+	private CloudStatus cloudRenderMode;
 	@Unique
 	private VertexBuffer vertexBufferWithNormals;
 
@@ -83,9 +86,10 @@ public abstract class MixinCloudRenderer {
 		int centerCellX = (int) (Math.floor(cloudCenterX / 12));
 		int centerCellZ = (int) (Math.floor(cloudCenterZ / 12));
 
-		if (this.vertexBufferWithNormals == null || this.prevCenterCellXIris != centerCellX || this.prevCenterCellYIris != centerCellZ || this.cachedRenderDistanceIris != renderDistance) {
+		if (this.vertexBufferWithNormals == null || this.prevCenterCellXIris != centerCellX || this.prevCenterCellYIris != centerCellZ || this.cachedRenderDistanceIris != renderDistance || this.cloudRenderMode != Minecraft.getInstance().options.getCloudsType()) {
 			BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
 			bufferBuilder.begin(VertexFormat.Mode.QUADS, IrisVertexFormats.CLOUDS);
+			this.cloudRenderMode = Minecraft.getInstance().options.getCloudsType();
 
 			// Give some space for shaders
 			this.rebuildGeometry(bufferBuilder, cloudDistance + 4, centerCellX, centerCellZ);
@@ -124,7 +128,7 @@ public abstract class MixinCloudRenderer {
 
 		boolean insideClouds = cameraY < cloudHeight + 4.5f && cameraY > cloudHeight - 0.5f;
 
-		if (insideClouds) {
+		if (insideClouds || (cloudRenderMode == CloudStatus.FAST)) {
 			RenderSystem.disableCull();
 		} else {
 			RenderSystem.enableCull();
