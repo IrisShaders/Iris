@@ -28,7 +28,7 @@ public class SodiumTransformer {
 		SodiumParameters parameters) {
 		CommonTransformer.transform(t, tree, root, parameters, false);
 
-		replaceMidTexCoord(t, tree, root, 1.0f / 65536.0f);
+		replaceMidTexCoord(t, tree, root, 1.0f / 32768.0f);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
@@ -150,7 +150,7 @@ public class SodiumTransformer {
 			"void _vert_init() {" +
 				"_vert_position = (vec3(a_PosId.xyz) * 0.00048828125 + -8.0"
 				+ ");" +
-				"_vert_tex_diffuse_coord = (a_TexCoord * 1.52587891E-5);" +
+				"_vert_tex_diffuse_coord = (a_TexCoord * " + (1.0f / 32768.0f) + ");" +
 				"_vert_tex_light_coord = a_LightCoord;" +
 				"_vert_color = " + separateAo + ";" +
 				"_draw_id = (a_PosId.w >> 8u) & 0xFFu; }",

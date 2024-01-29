@@ -18,6 +18,7 @@ import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.gl.framebuffer.ViewportData;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.program.ComputeProgram;
 import net.coderbot.iris.gl.program.Program;
@@ -27,6 +28,7 @@ import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.texture.TextureAccess;
+import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.RenderTarget;
@@ -212,7 +214,7 @@ public class CompositeRenderer {
 		ImmutableSet<Integer> flippedAtLeastOnce;
 		ImmutableSet<Integer> stageReadsFromAlt;
 		ImmutableSet<Integer> mipmappedBuffers;
-		float viewportScale;
+		ViewportData viewportScale;
 
 		protected void destroy() {
 			this.program.destroy();
@@ -270,9 +272,11 @@ public class CompositeRenderer {
 				}
 			}
 
-			float scaledWidth = renderPass.viewWidth * renderPass.viewportScale;
-			float scaledHeight = renderPass.viewHeight * renderPass.viewportScale;
-			RenderSystem.viewport(0, 0, (int) scaledWidth, (int) scaledHeight);
+			float scaledWidth = renderPass.viewWidth * renderPass.viewportScale.scale();
+			float scaledHeight = renderPass.viewHeight * renderPass.viewportScale.scale();
+			int beginWidth = (int) (renderPass.viewWidth * renderPass.viewportScale.viewportX());
+			int beginHeight = (int) (renderPass.viewHeight * renderPass.viewportScale.viewportY());
+			RenderSystem.viewport(beginWidth, beginHeight, (int) scaledWidth, (int) scaledHeight);
 
 			renderPass.framebuffer.bind();
 			renderPass.program.use();
@@ -303,8 +307,10 @@ public class CompositeRenderer {
 		for (int i = 0; i < SamplerLimits.get().getMaxTextureUnits(); i++) {
 			// Unbind all textures that we may have used.
 			// NB: This is necessary for shader pack reloading to work propely
-			RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + i);
-			RenderSystem.bindTexture(0);
+			if (GlStateManagerAccessor.getTEXTURES()[i].binding != 0) {
+				RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + i);
+				RenderSystem.bindTexture(0);
+			}
 		}
 
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);

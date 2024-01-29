@@ -308,7 +308,7 @@ public class CompatibilityTransformer {
 		}
 	}
 
-	private static final ShaderType[] pipeline = { ShaderType.VERTEX, ShaderType.GEOMETRY, ShaderType.FRAGMENT };
+	private static final ShaderType[] pipeline = { ShaderType.VERTEX, ShaderType.TESSELATION_CONTROL, ShaderType.TESSELATION_EVAL, ShaderType.GEOMETRY, ShaderType.FRAGMENT };
 	private static final Matcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(
 			StorageType.OUT);
 	private static final Matcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(

@@ -65,6 +65,8 @@ public class MixinGameRenderer {
 	private ArrayList<Program> iris$reloadGeometryShaders() {
 		ArrayList<Program> programs = Lists.newArrayList();
 		programs.addAll(IrisProgramTypes.GEOMETRY.getPrograms().values());
+		programs.addAll(IrisProgramTypes.TESS_CONTROL.getPrograms().values());
+		programs.addAll(IrisProgramTypes.TESS_EVAL.getPrograms().values());
 		return programs;
 	}
 

@@ -11,6 +11,7 @@ import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendMode;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.blending.BufferBlendInformation;
+import net.coderbot.iris.gl.framebuffer.ViewportData;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -24,7 +25,7 @@ public class ProgramDirectives {
 	private static final ImmutableList<String> LEGACY_RENDER_TARGETS = PackRenderTargetDirectives.LEGACY_RENDER_TARGETS;
 
 	private final int[] drawBuffers;
-	private final float viewportScale;
+	private final ViewportData viewportScale;
 	@Nullable
 	private final AlphaTest alphaTestOverride;
 
@@ -34,7 +35,7 @@ public class ProgramDirectives {
 	private final ImmutableMap<Integer, Boolean> explicitFlips;
 	private boolean unknownDrawBuffers;
 
-	private ProgramDirectives(int[] drawBuffers, float viewportScale, @Nullable AlphaTest alphaTestOverride,
+	private ProgramDirectives(int[] drawBuffers, ViewportData viewportScale, @Nullable AlphaTest alphaTestOverride,
 							  Optional<BlendModeOverride> blendModeOverride, List<BufferBlendInformation> bufferBlendInformations, ImmutableSet<Integer> mipmappedBuffers,
 							  ImmutableMap<Integer, Boolean> explicitFlips) {
 		this.drawBuffers = drawBuffers;
@@ -74,7 +75,7 @@ public class ProgramDirectives {
 		});
 
 		if (properties != null) {
-			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), 1.0f);
+			viewportScale = properties.getViewportScaleOverrides().getOrDefault(source.getName(), ViewportData.defaultValue());
 			alphaTestOverride = properties.getAlphaTestOverrides().get(source.getName());
 
 			BlendModeOverride blendModeOverride = properties.getBlendModeOverrides().get(source.getName());
@@ -84,7 +85,7 @@ public class ProgramDirectives {
 
 			explicitFlips = source.getParent().getPackDirectives().getExplicitFlips(source.getName());
 		} else {
-			viewportScale = 1.0f;
+			viewportScale = ViewportData.defaultValue();
 			alphaTestOverride = null;
 			blendModeOverride = Optional.ofNullable(defaultBlendOverride);
 			bufferBlendInformations = Collections.emptyList();
@@ -173,7 +174,7 @@ public class ProgramDirectives {
 		return unknownDrawBuffers;
 	}
 
-	public float getViewportScale() {
+	public ViewportData getViewportScale() {
 		return viewportScale;
 	}
 
