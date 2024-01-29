@@ -1,7 +1,7 @@
 package net.coderbot.iris.compat.dh;
 
+import com.seibel.distanthorizons.api.DhApi;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.fabricmc.loader.api.FabricLoader;
@@ -10,18 +10,17 @@ import org.joml.Matrix4f;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.function.Supplier;
 
-public class DHCompat {
-	public static Matrix4f getProjection() {
+public class DHCompat
+{
+	public static Matrix4f getProjection()
+	{
 			Matrix4f projection = new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
 			return new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), DHCompat.getNearPlane(), DHCompat.getFarPlane());
 	}
 
-	private static Field renderingEnabled;
-	private static MethodHandle renderingEnabledGet;
+	private static boolean dhPresent = true;
+
 	private static Object compatInternalInstance;
 	private static MethodHandle createNewPipeline;
 	private static MethodHandle deletePipeline;
@@ -33,11 +32,14 @@ public class DHCompat {
 	private static MethodHandle renderShadowSolid;
 	private static MethodHandle renderShadowTranslucent;
 
-	static {
-        try {
-			renderingEnabled = Class.forName("com.seibel.distanthorizons.core.config.Config$Client").getField("quickEnableRendering");
-			renderingEnabledGet = MethodHandles.lookup().findVirtual(Class.forName("com.seibel.distanthorizons.core.config.types.ConfigEntry"), "get", MethodType.methodType(Object.class));
-			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
+	static
+	{
+		try
+		{
+			if (FabricLoader.getInstance().isModLoaded("distanthorizons"))
+			{
+				LodRendererEvents.setupEventHandlers();
+
 				compatInternalInstance = Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal").getField("INSTANCE").get(null);
 				createNewPipeline = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "prepareNewPipeline", MethodType.methodType(void.class, NewWorldRenderingPipeline.class, boolean.class));
 				deletePipeline = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "clear", MethodType.methodType(void.class));
@@ -49,14 +51,21 @@ public class DHCompat {
 				renderShadowSolid = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "renderShadowSolid", MethodType.methodType(void.class));
 				renderShadowTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.coderbot.iris.compat.dh.DHCompatInternal"), "renderShadowTranslucent", MethodType.methodType(void.class));
 			}
-		} catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException | IllegalAccessException e) {
-			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
+		}
+		catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException | IllegalAccessException e)
+		{
+			dhPresent = false;
+
+			if (FabricLoader.getInstance().isModLoaded("distanthorizons"))
+			{
 				throw new RuntimeException("DH 2.0 not found, yet Fabric claims it's there. Curious.", e);
-			} else {
+			}
+			else
+			{
 				Iris.logger.info("DH not found, and classes not found.");
 			}
-        }
-    }
+		}
+	}
 
 	public static void connectNewPipeline(NewWorldRenderingPipeline pipeline, boolean renderDhShadow) {
 		if (compatInternalInstance == null) return;
@@ -147,13 +156,34 @@ public class DHCompat {
         }
     }
 
-	public static boolean hasRenderingEnabled() {
-		if (renderingEnabledGet == null) return false;
 
-		try {
-            return (boolean) renderingEnabledGet.invoke(renderingEnabled.get(null));
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
+	public static boolean hasRenderingEnabled()
+	{
+		if (!dhPresent)
+		{
+			return false;
+		}
+
+
+		try
+		{
+			if (DhApi.Delayed.configs == null)
+			{
+				// DH hasn't finished loading yet
+				return false;
+			}
+
+			return DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
+		}
+		catch (NoClassDefFoundError e)
+		{
+			// if Distant Horizons isn't present the dhPresent
+			// variable should already be set to false,
+			// but this try-catch is present just in case
+
+			dhPresent = false;
+			return false;
+		}
+	}
+
 }

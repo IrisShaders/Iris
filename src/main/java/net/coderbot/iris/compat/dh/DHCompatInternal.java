@@ -1,9 +1,11 @@
 package net.coderbot.iris.compat.dh;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.util.RenderUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
+import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import loaderCommon.fabric.com.seibel.distanthorizons.common.wrappers.McObjectConverter;
 import loaderCommon.fabric.com.seibel.distanthorizons.common.wrappers.world.ClientLevelWrapper;
@@ -18,7 +20,8 @@ import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 
-public class DHCompatInternal {
+public class DHCompatInternal
+{
 	public static DHCompatInternal INSTANCE = new DHCompatInternal();
 	public boolean shouldOverrideShadow;
 
@@ -26,12 +29,16 @@ public class DHCompatInternal {
 	private IrisLodRenderProgram translucentProgram;
 	private IrisLodRenderProgram shadowProgram;
 	private GlFramebuffer dhTerrainFramebuffer;
+	private DhFrameBufferWrapper dhTerrainFramebufferWrapper;
 	private GlFramebuffer dhWaterFramebuffer;
 	private GlFramebuffer dhShadowFramebuffer;
+	private DhFrameBufferWrapper dhShadowFramebufferWrapper;
 	private DepthTexture depthTexNoTranslucent;
 
 	private int storedDepthTex;
 	public boolean shouldOverride;
+
+
 
 	public void prepareNewPipeline(NewWorldRenderingPipeline pipeline, boolean dhShadowEnabled) {
 		if (solidProgram != null) {
@@ -72,6 +79,7 @@ public class DHCompatInternal {
 			shadowProgram = IrisLodRenderProgram.createProgram(shadow.getName(), true, false, shadow, pipeline.getCustomUniforms(), pipeline);
 			if (pipeline.hasShadowRenderTargets()) {
 				dhShadowFramebuffer = pipeline.createDHFramebufferShadow(shadow);
+				dhShadowFramebufferWrapper = new DhFrameBufferWrapper(dhShadowFramebuffer);
 			}
 			shouldOverrideShadow = true;
 		} else {
@@ -79,6 +87,7 @@ public class DHCompatInternal {
 		}
 
 		dhTerrainFramebuffer = pipeline.createDHFramebuffer(terrain, false);
+		dhTerrainFramebufferWrapper = new DhFrameBufferWrapper(dhTerrainFramebuffer);
 
 		if (translucentProgram == null) {
 			translucentProgram = solidProgram;
@@ -139,6 +148,11 @@ public class DHCompatInternal {
 		dhWaterFramebuffer = null;
 		dhShadowFramebuffer = null;
 		storedDepthTex = -1;
+
+		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhTerrainFramebufferWrapper);
+		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhShadowFramebufferWrapper);
+		dhTerrainFramebufferWrapper = null;
+		dhShadowFramebufferWrapper = null;
 	}
 
 	public void setModelPos(Vec3f modelPos) {
@@ -156,6 +170,9 @@ public class DHCompatInternal {
 	public GlFramebuffer getSolidFB() {
 		return dhTerrainFramebuffer;
 	}
+	public DhFrameBufferWrapper getSolidFBWrapper() {
+		return dhTerrainFramebufferWrapper;
+	}
 
 	public IrisLodRenderProgram getShadowShader() {
 		return shadowProgram;
@@ -163,6 +180,9 @@ public class DHCompatInternal {
 
 	public GlFramebuffer getShadowFB() {
 		return dhShadowFramebuffer;
+	}
+	public DhFrameBufferWrapper getShadowFBWrapper() {
+		return dhShadowFramebufferWrapper;
 	}
 
 	public IrisLodRenderProgram getTranslucentShader() {
@@ -197,4 +217,5 @@ public class DHCompatInternal {
 
 		return depthTexNoTranslucent.getTextureId();
 	}
+
 }
