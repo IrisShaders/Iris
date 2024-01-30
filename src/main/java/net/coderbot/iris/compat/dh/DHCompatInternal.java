@@ -3,11 +3,8 @@ package net.coderbot.iris.compat.dh;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
-import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
-import loaderCommon.fabric.com.seibel.distanthorizons.common.wrappers.McObjectConverter;
-import loaderCommon.fabric.com.seibel.distanthorizons.common.wrappers.world.ClientLevelWrapper;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.buffer.ShaderStorageBuffer;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -115,17 +112,19 @@ public class DHCompatInternal
 	}
 
 	public void renderShadowSolid() {
-		ClientApi.INSTANCE.renderLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
-			McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
-			McObjectConverter.Convert(ShadowRenderer.PROJECTION),
-			CapturedRenderingState.INSTANCE.getTickDelta());
+		// FIXME doesn't appear to do anything
+		//ClientApi.INSTANCE.renderLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
+		//	McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
+		//	McObjectConverter.Convert(ShadowRenderer.PROJECTION),
+		//	CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
 	public void renderShadowTranslucent() {
-		ClientApi.INSTANCE.renderDeferredLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
-			McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
-			McObjectConverter.Convert(ShadowRenderer.PROJECTION),
-			CapturedRenderingState.INSTANCE.getTickDelta());
+		// FIXME doesn't appear to do anything
+		//ClientApi.INSTANCE.renderDeferredLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
+		//	McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
+		//	McObjectConverter.Convert(ShadowRenderer.PROJECTION),
+		//	CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
 	public void clear() {
