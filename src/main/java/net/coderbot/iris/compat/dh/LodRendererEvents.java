@@ -14,7 +14,6 @@ import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
-import net.irisshaders.iris.api.v0.IrisApi;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL43C;
 
@@ -69,10 +68,13 @@ public class LodRendererEvents
 	{
 		DhApiBeforeRenderEvent beforeRenderEvent = new DhApiBeforeRenderEvent()
 		{
+			// this event is called before DH starts any rendering prep
+			// canceling it will prevent DH from rendering for that frame
 			@Override
 			public void beforeRender(DhApiCancelableEventParam<EventParam> input)
 			{
-				DhApi.Delayed.renderProxy.setDeferTransparentRendering(IrisApi.getInstance().isShaderPackInUse());
+				// FIXME uncommenting this causes opaque LODs to render incorrectly
+				//DhApi.Delayed.renderProxy.setDeferTransparentRendering(IrisApi.getInstance().isShaderPackInUse());
 			}
 		};
 
