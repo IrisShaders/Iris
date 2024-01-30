@@ -1,7 +1,7 @@
 package net.coderbot.iris.compat.dh;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.seibel.distanthorizons.core.util.RenderUtil;
+import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
@@ -230,7 +230,7 @@ public class IrisLodRenderProgram
 		if (worldYOffsetUniform != -1) setUniform(worldYOffsetUniform, (float) worldYOffset);
 
 		// Fog/Clip Uniforms
-		float dhNearClipDistance = RenderUtil.getNearClipPlaneDistanceInBlocks(partialTicks);
+		float dhNearClipDistance = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);
 		setUniform(clipDistanceUniform, dhNearClipDistance);
 
 		samplers.update();

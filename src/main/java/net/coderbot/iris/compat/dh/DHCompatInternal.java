@@ -1,10 +1,9 @@
 package net.coderbot.iris.compat.dh;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
-import com.seibel.distanthorizons.core.util.RenderUtil;
-import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import loaderCommon.fabric.com.seibel.distanthorizons.common.wrappers.McObjectConverter;
@@ -197,15 +196,24 @@ public class DHCompatInternal
 	}
 
 	public int getRenderDistance() {
-		return RenderUtil.getFarClipPlaneDistanceInBlocks();
+		return getDhBlockRenderDistance();
+	}
+	public static int getDhBlockRenderDistance() {
+		if (DhApi.Delayed.configs == null)
+		{
+			// Called before DH has finished setup
+			return 0;
+		}
+
+		return DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue() * 16;
 	}
 
 	public float getFarPlane() {
-		return (float)((double)(RenderUtil.getFarClipPlaneDistanceInBlocks() + 512) * Math.sqrt(2.0));
+		return (float)((double)(getDhBlockRenderDistance() + 512) * Math.sqrt(2.0));
 	}
 
 	public float getNearPlane() {
-		return RenderUtil.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getTickDelta());
+		return DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
 	public GlFramebuffer getTranslucentFB() {

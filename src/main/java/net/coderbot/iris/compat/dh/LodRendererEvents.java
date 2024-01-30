@@ -7,7 +7,6 @@ import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFrameb
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.*;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam;
-import com.seibel.distanthorizons.core.util.RenderUtil;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.coderbot.iris.Iris;
@@ -293,8 +292,8 @@ public class LodRendererEvents
 						else
 						{
 							Matrix4f projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
-							float nearClip = RenderUtil.getNearClipPlaneDistanceInBlocks(partialTicks);
-							float farClip = (float) ((double) (RenderUtil.getFarClipPlaneDistanceInBlocks() + 512) * Math.sqrt(2.0));
+							float nearClip = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);
+							float farClip = (float) ((double) (DHCompatInternal.getDhBlockRenderDistance() + 512) * Math.sqrt(2.0));
 
 							DHCompatInternal.INSTANCE.getSolidShader().fillUniformData(
 								new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), nearClip, farClip),
@@ -326,8 +325,8 @@ public class LodRendererEvents
 						DepthCopyStrategy.fastest(false).copy(DHCompatInternal.INSTANCE.getSolidFB(), depthTextureId, null, DHCompatInternal.INSTANCE.getDepthTexNoTranslucent(), textureWidth, textureHeight);
 						DHCompatInternal.INSTANCE.getTranslucentShader().bind();
 						Matrix4f projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
-						float nearClip = RenderUtil.getNearClipPlaneDistanceInBlocks(partialTicks);
-						float farClip = (float) ((double) (RenderUtil.getFarClipPlaneDistanceInBlocks() + 512) * Math.sqrt(2.0));
+						float nearClip = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);
+						float farClip = (float) ((double) (DHCompatInternal.getDhBlockRenderDistance() + 512) * Math.sqrt(2.0));
 						RenderSystem.disableCull();
 
 
