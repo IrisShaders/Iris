@@ -342,7 +342,7 @@ public class LodRendererEvents
 
 					if (DHCompatInternal.INSTANCE.shouldOverride && DHCompatInternal.INSTANCE.getTranslucentFB() != null)
 					{
-						DepthCopyStrategy.fastest(false).copy(DHCompatInternal.INSTANCE.getSolidFB(), depthTextureId, null, DHCompatInternal.INSTANCE.getDepthTexNoTranslucent(), textureWidth, textureHeight);
+						DHCompatInternal.INSTANCE.copyTranslucents(textureWidth, textureHeight);
 						DHCompatInternal.INSTANCE.getTranslucentShader().bind();
 						Matrix4f projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
 						//float nearClip = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);

@@ -6,15 +6,18 @@ import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFrameb
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.buffer.ShaderStorageBuffer;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.gl.texture.DepthBufferFormat;
+import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
 import net.coderbot.iris.rendertarget.DepthTexture;
 import net.coderbot.iris.shaderpack.ProgramSource;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
+import org.lwjgl.opengl.GL20C;
 
 public class DHCompatInternal
 {
@@ -30,6 +33,7 @@ public class DHCompatInternal
 	private GlFramebuffer dhShadowFramebuffer;
 	private DhFrameBufferWrapper dhShadowFramebufferWrapper;
 	private DepthTexture depthTexNoTranslucent;
+	private boolean translucentDepthDirty;
 
 	private int storedDepthTex;
 	public boolean shouldOverride;
@@ -108,6 +112,8 @@ public class DHCompatInternal
 			depthTexNoTranslucent = null;
 		}
 
+		translucentDepthDirty = true;
+
 		depthTexNoTranslucent = new DepthTexture(width, height, DepthBufferFormat.DEPTH32F);
 	}
 
@@ -146,6 +152,7 @@ public class DHCompatInternal
 		dhWaterFramebuffer = null;
 		dhShadowFramebuffer = null;
 		storedDepthTex = -1;
+		translucentDepthDirty = true;
 
 		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhTerrainFramebufferWrapper);
 		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhShadowFramebufferWrapper);
@@ -205,6 +212,17 @@ public class DHCompatInternal
 		}
 
 		return DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue() * 16;
+	}
+
+	public void copyTranslucents(int width, int height) {
+		if (translucentDepthDirty) {
+			translucentDepthDirty = false;
+			RenderSystem.bindTexture(depthTexNoTranslucent.getTextureId());
+			dhTerrainFramebuffer.bindAsReadBuffer();
+			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, DepthBufferFormat.DEPTH32F.getGlInternalFormat(), 0, 0, width, height, 0);
+		} else {
+			DepthCopyStrategy.fastest(false).copy(dhTerrainFramebuffer, storedDepthTex, null, depthTexNoTranslucent.getTextureId(), width, height);
+		}
 	}
 
 	public float getFarPlane() {
