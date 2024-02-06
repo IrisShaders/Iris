@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set up JDK 17
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: 17
       - name: Cache Brachyura directory
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             .brachyura
@@ -29,7 +29,7 @@ jobs:
         run: java -Diris.release=true -jar brachyura-bootstrap-0.jar build
 
       - name: Upload artifacts to Modrinth, Curseforge and GitHub
-        uses: Kir-Antipov/mc-publish@v3.2
+        uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: YL57xq9U
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
