@@ -9,6 +9,7 @@
   "iris.shaders.ssbofailure": "Varjutaja taotles konkreetset funktsiooni (SSBO), mis ei ole sinu videokaardi poolt toetatud, see ei pruugi korrektselt töötada.",
   "iris.keybind.reload": "Laadi varjutajad uuesti",
   "iris.keybind.shaderPackSelection": "Varjutajapaki valikukuva",
+  "iris.keybind.wireframe": "Traatraam (ainult üksikmäng)",
   "iris.keybind.toggleShaders": "Lülita varjutajad sisse/välja",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Varjutajate taaslaadimine ebaõnnestus! Põhjus: %s",
@@ -59,6 +60,8 @@
   "options.iris.shadowDistance.enabled": "Võimaldab muuta varjude maksimaalset kaugust. Sellest kaugem maastik ning olemid ei heida varjusid. Varjukauguse vähendamine võib jõudlust märkimisväärselt suurendada.",
   "options.iris.shadowDistance.disabled": "Sinu praegune varjutajapakk on varjude nähtavuskauguse juba seadnud, sa ei saa seda muuta.",
   "options.iris.shadowDistance.sodium_tooltip": "Varjude nähtavuskaugus määrab, kui kaugel olevat maastikku saab varjutuskäigul renderdada. Väiksemad kaugused tähendavad vähema maastiku renderdamist, mis parandab kaadrisagedust. Seda valikut ei saa muuta pakkide puhul, mis määravad varjude nähtavuskauguse ise. Tegelik varjude nähtavuskaugus on piiratud nähtavuskauguse valikuga.",
+  "options.iris.colorSpace": "Värviruum",
+  "options.iris.colorSpace.sodium_tooltip": "Värviruum, millesse ekraan teisendada. Töötab varjutajapakkide kohal. Kui pole kindel, kasuta SRGB.",
   "options.iris.gui.hide": "Peida liides",
   "options.iris.gui.show": "Kuva liides",
 
