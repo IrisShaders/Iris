@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v4
       with:
         java-version: 17
 
     - name: Cache Brachyura directory
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           .brachyura
@@ -30,7 +30,7 @@ jobs:
       run: java -jar brachyura-bootstrap-0.jar build
 
     - name: Upload built JAR
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: iris-artifacts
         path: build/libs
