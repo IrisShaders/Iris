@@ -2,6 +2,8 @@ package net.coderbot.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import me.jellysquid.mods.sodium.client.render.vertex.buffer.ExtendedBufferBuilder;
+import me.jellysquid.mods.sodium.client.render.vertex.buffer.SodiumBufferBuilder;
 import net.coderbot.batchedentityrendering.impl.ordering.GraphTranslucencyRenderOrderManager;
 import net.coderbot.batchedentityrendering.impl.ordering.RenderOrderManager;
 import net.coderbot.iris.fantastic.WrappingMultiBufferSource;
@@ -90,7 +92,16 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			affinities.put(renderType, affinity);
 		}
 
-		return builders[affinity].getBuffer(renderType);
+		VertexConsumer buffer = builders[affinity].getBuffer(renderType);
+
+		if (buffer instanceof ExtendedBufferBuilder bufferBuilder) {
+			SodiumBufferBuilder replacement = bufferBuilder.sodium$getDelegate();
+			if (replacement != null) {
+				return replacement;
+			}
+		}
+
+		return buffer;
 	}
 
 	private void removeReady() {
