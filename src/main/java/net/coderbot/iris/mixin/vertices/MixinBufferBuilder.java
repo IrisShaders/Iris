@@ -109,6 +109,10 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 
 	@ModifyVariable(method = "begin", at = @At("HEAD"), argsOnly = true)
 	private VertexFormat iris$extendFormat(VertexFormat format) {
+		extending = false;
+		iris$isTerrain = false;
+		injectNormalAndUV1 = false;
+
 		if (iris$shouldNotExtend || !BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()) {
 			return format;
 		}
