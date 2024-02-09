@@ -128,7 +128,7 @@ public abstract class MixinSodiumBufferBuilder implements BlockSensitiveBufferBu
 		((BlockSensitiveBufferBuilder) getOriginalBufferBuilder()).endBlock();
 	}
 
-	@Inject(method = "resetAttributeBindings", at = @At("RETURN"))
+	@Inject(method = "resetAttributeBindings", at = @At("RETURN"), remap = false)
 	private void onResetAttributeBindings(CallbackInfo ci) {
 		attributeOffsetTangent = ATTRIBUTE_NOT_PRESENT;
 		attributeOffsetMidTexCoord = ATTRIBUTE_NOT_PRESENT;
@@ -137,7 +137,7 @@ public abstract class MixinSodiumBufferBuilder implements BlockSensitiveBufferBu
 		attributeOffsetMidBlock = ATTRIBUTE_NOT_PRESENT;
 	}
 
-	@Inject(method = "updateAttributeBindings", at = @At("RETURN"))
+	@Inject(method = "updateAttributeBindings", at = @At("RETURN"), remap = false)
 	private void onUpdateAttributeBindings(VertexFormatDescription desc, CallbackInfo ci) {
 		if (desc.containsElement(IrisCommonVertexAttributes.TANGENT)) {
 			requiredAttributes |= ATTRIBUTE_TANGENT_BIT;
