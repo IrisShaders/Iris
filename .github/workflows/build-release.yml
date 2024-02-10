@@ -29,7 +29,7 @@ jobs:
         run: java -Diris.release=true -jar brachyura-bootstrap-0.jar build
 
       - name: Upload artifacts to Modrinth and GitHub
-        uses: Kir-Antipov/mc-publish@v3.2
+        uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: YL57xq9U
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
@@ -43,6 +43,6 @@ jobs:
 
           loaders: fabric quilt
 
-          dependencies: sodium | depends | *
+          dependencies: sodium
 
           version-resolver: latest # Defaults to selecting the latest compatible version of Minecraft, using the tag from the fabric.mod.json
