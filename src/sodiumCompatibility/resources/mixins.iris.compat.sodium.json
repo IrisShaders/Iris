@@ -56,6 +56,8 @@
     "vertex_format.MixinRenderSectionManager",
     "vertex_format.MixinCommonVertexAttributes",
     "vertex_format.CommonVertexAttributeAccessor",
+    "vertex_format.MixinSodiumBufferBuilder",
+    "vertex_format.MixinVertexFormatDescriptionImpl",
     "vertex_format.MixinVertexSerializerCache",
     "vertex_format.MixinVertexTransform",
     "separate_ao.MixinBlockRenderer",

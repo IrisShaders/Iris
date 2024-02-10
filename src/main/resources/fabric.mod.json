@@ -46,7 +46,7 @@
   "depends": {
     "fabricloader": ">=0.12.3",
     "minecraft": ["1.20.1"],
-    "sodium": ["0.5.7", "0.5.8"]
+    "sodium": ["0.5.8"]
   },
 
   "breaks": {
@@ -66,6 +66,9 @@
       "mixin.features.render.world.sky": false,
       "mixin.features.render.entity": false,
       "mixin.features.render.gui.font": false
+    },
+    "mc-publish": {
+      "loaders": ["fabric", "quilt"]
     }
   }
 }

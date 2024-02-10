@@ -114,10 +114,10 @@ public class Buildscript extends SimpleFabricProject {
 			if (CUSTOM_SODIUM) {
 				d.add(new JavaJarDependency(getProjectDir().resolve("custom_sodium").resolve(customSodiumName).toAbsolutePath(), null, new MavenId("me.jellysquid.mods", "sodium-fabric", customSodiumName.replace("sodium-fabric-", ""))), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			} else {
-				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.20.1-0.5.7"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
+				d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.20.1-0.5.8"), ModDependencyFlag.COMPILE, ModDependencyFlag.RUNTIME);
 			}
 		} else {
-			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.20.1-0.5.7"), ModDependencyFlag.COMPILE);
+			d.addMaven("https://api.modrinth.com/maven", new MavenId("maven.modrinth", "sodium", "mc1.20.1-0.5.8"), ModDependencyFlag.COMPILE);
 		}
 	}
 

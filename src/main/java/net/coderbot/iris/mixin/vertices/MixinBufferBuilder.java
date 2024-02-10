@@ -8,23 +8,24 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import org.joml.Vector3f;
-import net.coderbot.iris.vertices.NormI8;
-import org.jetbrains.annotations.NotNull;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.coderbot.iris.vertices.BlockSensitiveBufferBuilder;
 import net.coderbot.iris.vertices.BufferBuilderPolygonView;
 import net.coderbot.iris.vertices.ExtendedDataHelper;
 import net.coderbot.iris.vertices.ExtendingBufferBuilder;
+import net.coderbot.iris.vertices.IrisExtendedBufferBuilder;
 import net.coderbot.iris.vertices.IrisVertexFormats;
+import net.coderbot.iris.vertices.NormI8;
 import net.coderbot.iris.vertices.NormalHelper;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.ByteBuffer;
@@ -33,33 +34,27 @@ import java.nio.ByteBuffer;
  * Dynamically and transparently extends the vanilla vertex formats with additional data
  */
 @Mixin(BufferBuilder.class)
-public abstract class MixinBufferBuilder extends DefaultedVertexConsumer implements BufferVertexConsumer, BlockSensitiveBufferBuilder, ExtendingBufferBuilder {
+public abstract class MixinBufferBuilder extends DefaultedVertexConsumer implements BufferVertexConsumer, BlockSensitiveBufferBuilder, ExtendingBufferBuilder, IrisExtendedBufferBuilder {
+	@Unique
+	private boolean iris$shouldNotExtend;
+
 	@Unique
 	private boolean extending;
 
 	@Unique
-	private boolean iris$shouldNotExtend = false;
-
-	@Unique
-	private boolean iris$isTerrain = false;
-
-	@Unique
-	private int vertexCount;
-
-	@Unique
-	private final BufferBuilderPolygonView polygon = new BufferBuilderPolygonView();
-
-	@Unique
-	private final Vector3f normal = new Vector3f();
+	private boolean iris$isTerrain;
 
 	@Unique
 	private boolean injectNormalAndUV1;
 
 	@Unique
-	private short currentBlock;
+	private int vertexCount;
 
 	@Unique
-	private short currentRenderType;
+	private short currentBlock = -1;
+
+	@Unique
+	private short currentRenderType = -1;
 
 	@Unique
 	private int currentLocalPosX;
@@ -70,11 +65,11 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	@Unique
 	private int currentLocalPosZ;
 
-	@Shadow
-	private boolean fastFormat;
+	@Unique
+	private final BufferBuilderPolygonView polygon = new BufferBuilderPolygonView();
 
-	@Shadow
-	private boolean fullFormat;
+	@Unique
+	private final Vector3f normal = new Vector3f();
 
 	@Shadow
 	private ByteBuffer buffer;
@@ -98,9 +93,6 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	public abstract void putShort(int i, short s);
 
 	@Shadow
-	protected abstract void switchFormat(VertexFormat arg);
-
-	@Shadow
 	public abstract void nextElement();
 
 	@Override
@@ -110,75 +102,44 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		iris$shouldNotExtend = false;
 	}
 
-	@Inject(method = "begin", at = @At("HEAD"))
-	private void iris$onBegin(VertexFormat.Mode drawMode, VertexFormat format, CallbackInfo ci) {
-		boolean shouldExtend = (!iris$shouldNotExtend) && BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat();
-		extending = shouldExtend && (format == DefaultVertexFormat.BLOCK || format == DefaultVertexFormat.NEW_ENTITY
-			|| format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
-		vertexCount = 0;
-
-		if (extending) {
-			injectNormalAndUV1 = format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP;
-		}
-	}
-
-	@Inject(method = "begin", at = @At("RETURN"))
-	private void iris$afterBegin(VertexFormat.Mode drawMode, VertexFormat format, CallbackInfo ci) {
-		if (extending) {
-			if (format == DefaultVertexFormat.BLOCK) {
-				this.switchFormat(IrisVertexFormats.TERRAIN);
-				this.iris$isTerrain = true;
-			} else if (format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
-				this.switchFormat(IrisVertexFormats.GLYPH);
-				this.iris$isTerrain = false;
-			} else {
-				this.switchFormat(IrisVertexFormats.ENTITY);
-				this.iris$isTerrain = false;
-			}
-			this.currentElement = this.format.getElements().get(0);
-		}
-	}
-
 	@Override
 	public @NotNull VertexConsumer uv2(int pBufferVertexConsumer0, int pInt1) {
-
 		return BufferVertexConsumer.super.uv2(pBufferVertexConsumer0, pInt1);
 	}
 
-	@ModifyArg(method = "begin", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;switchFormat(Lcom/mojang/blaze3d/vertex/VertexFormat;)V"))
-	private VertexFormat iris$afterBeginSwitchFormat(VertexFormat arg) {
-		if (extending) {
-			if (format == DefaultVertexFormat.BLOCK) {
-				this.switchFormat(IrisVertexFormats.TERRAIN);
-				this.iris$isTerrain = true;
-			} else if (format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
-				this.switchFormat(IrisVertexFormats.GLYPH);
-				this.iris$isTerrain = false;
-			} else {
-				this.switchFormat(IrisVertexFormats.ENTITY);
-				this.iris$isTerrain = false;
-			}
-		}
-		return arg;
-	}
-
-
-
-	@Inject(method = "discard()V", at = @At("HEAD"))
-	private void iris$onDiscard(CallbackInfo ci) {
+	@ModifyVariable(method = "begin", at = @At("HEAD"), argsOnly = true)
+	private VertexFormat iris$extendFormat(VertexFormat format) {
 		extending = false;
+		iris$isTerrain = false;
 		injectNormalAndUV1 = false;
-		vertexCount = 0;
-	}
 
-	@Inject(method = "switchFormat", at = @At("RETURN"))
-	private void iris$preventHardcodedVertexWriting(VertexFormat format, CallbackInfo ci) {
-		if (!extending) {
-			return;
+		if (iris$shouldNotExtend || !BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()) {
+			return format;
 		}
 
-		fastFormat = false;
-		fullFormat = false;
+		if (format == DefaultVertexFormat.BLOCK) {
+			extending = true;
+			iris$isTerrain = true;
+			injectNormalAndUV1 = false;
+			return IrisVertexFormats.TERRAIN;
+		} else if (format == DefaultVertexFormat.NEW_ENTITY) {
+			extending = true;
+			iris$isTerrain = false;
+			injectNormalAndUV1 = false;
+			return IrisVertexFormats.ENTITY;
+		} else if (format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
+			extending = true;
+			iris$isTerrain = false;
+			injectNormalAndUV1 = true;
+			return IrisVertexFormats.GLYPH;
+		}
+
+		return format;
+	}
+
+	@Inject(method = "reset()V", at = @At("HEAD"))
+	private void iris$onReset(CallbackInfo ci) {
+		vertexCount = 0;
 	}
 
 	@Inject(method = "endVertex", at = @At("HEAD"))
@@ -197,7 +158,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			this.putShort(0, currentBlock);
 			this.putShort(2, currentRenderType);
 		} else {
-			// ENTITY_ELEMENT
+			// ENTITY_ID_ELEMENT
 			this.putShort(0, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 			this.putShort(2, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
 			this.putShort(4, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
@@ -290,6 +251,11 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		}
 	}
 
+	@Unique
+	private void putInt(int i, int value) {
+		this.buffer.putInt(this.nextElementByte + i, value);
+	}
+
 	@Override
 	public void beginBlock(short block, short renderType, int localPosX, int localPosY, int localPosZ) {
 		this.currentBlock = block;
@@ -308,8 +274,68 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		this.currentLocalPosZ = 0;
 	}
 
-	@Unique
-	private void putInt(int i, int value) {
-		this.buffer.putInt(this.nextElementByte + i, value);
+	@Override
+	public VertexFormat iris$format() {
+		return format;
+	}
+
+	@Override
+	public VertexFormat.Mode iris$mode() {
+		return mode;
+	}
+
+	@Override
+	public boolean iris$extending() {
+		return extending;
+	}
+
+	@Override
+	public boolean iris$isTerrain() {
+		return iris$isTerrain;
+	}
+
+	@Override
+	public boolean iris$injectNormalAndUV1() {
+		return injectNormalAndUV1;
+	}
+
+	@Override
+	public int iris$vertexCount() {
+		return vertexCount;
+	}
+
+	@Override
+	public void iris$incrementVertexCount() {
+		vertexCount++;
+	}
+
+	@Override
+	public void iris$resetVertexCount() {
+		vertexCount = 0;
+	}
+
+	@Override
+	public short iris$currentBlock() {
+		return currentBlock;
+	}
+
+	@Override
+	public short iris$currentRenderType() {
+		return currentRenderType;
+	}
+
+	@Override
+	public int iris$currentLocalPosX() {
+		return currentLocalPosX;
+	}
+
+	@Override
+	public int iris$currentLocalPosY() {
+		return currentLocalPosY;
+	}
+
+	@Override
+	public int iris$currentLocalPosZ() {
+		return currentLocalPosZ;
 	}
 }
