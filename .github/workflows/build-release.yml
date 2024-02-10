@@ -35,6 +35,9 @@ jobs:
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           modrinth-featured: false
 
+          curseforge-id: 455508
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
           files: build/libs/!(*-@(dev|sources|all)).jar
