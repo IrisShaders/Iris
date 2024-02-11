@@ -18,6 +18,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: 17
+        check-latest: true
 
     - name: Cache Brachyura directory
       uses: actions/cache@v4
