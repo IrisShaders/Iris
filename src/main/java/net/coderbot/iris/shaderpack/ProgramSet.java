@@ -86,27 +86,27 @@ public class ProgramSet implements ProgramSetInterface {
 
 		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, shaderProperties,
 				BlendModeOverride.OFF, readTesselation);
-		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow");
+		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow", shaderProperties);
 
 		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", shaderProperties, readTesselation);
 
 		this.shadowCompCompute = new ComputeSource[shadowcomp.length][];
 		for (int i = 0; i < shadowcomp.length; i++) {
-			this.shadowCompCompute[i] = readComputeArray(directory, sourceProvider, "shadowcomp" + ((i == 0) ? "" : i));
+			this.shadowCompCompute[i] = readComputeArray(directory, sourceProvider, "shadowcomp" + ((i == 0) ? "" : i), shaderProperties);
 		}
 
-		this.setup = readProgramArray(directory, sourceProvider, "setup");
+		this.setup = readProgramArray(directory, sourceProvider, "setup", shaderProperties);
 
 		this.begin = readProgramArray(directory, sourceProvider, "begin", shaderProperties, readTesselation);
 		this.beginCompute = new ComputeSource[begin.length][];
 		for (int i = 0; i < begin.length; i++) {
-			this.beginCompute[i] = readComputeArray(directory, sourceProvider, "begin" + ((i == 0) ? "" : i));
+			this.beginCompute[i] = readComputeArray(directory, sourceProvider, "begin" + ((i == 0) ? "" : i), shaderProperties);
 		}
 
 		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties, readTesselation);
 		this.prepareCompute = new ComputeSource[prepare.length][];
 		for (int i = 0; i < prepare.length; i++) {
-			this.prepareCompute[i] = readComputeArray(directory, sourceProvider, "prepare" + ((i == 0) ? "" : i));
+			this.prepareCompute[i] = readComputeArray(directory, sourceProvider, "prepare" + ((i == 0) ? "" : i), shaderProperties);
 		}
 
 		this.gbuffersBasic = readProgramSource(directory, sourceProvider, "gbuffers_basic", this, shaderProperties, readTesselation);
@@ -136,7 +136,7 @@ public class ProgramSet implements ProgramSetInterface {
 		this.deferred = readProgramArray(directory, sourceProvider, "deferred", shaderProperties, readTesselation);
 		this.deferredCompute = new ComputeSource[deferred.length][];
 		for (int i = 0; i < deferred.length; i++) {
-			this.deferredCompute[i] = readComputeArray(directory, sourceProvider, "deferred" + ((i == 0) ? "" : i));
+			this.deferredCompute[i] = readComputeArray(directory, sourceProvider, "deferred" + ((i == 0) ? "" : i), shaderProperties);
 		}
 
 		this.gbuffersWater = readProgramSource(directory, sourceProvider, "gbuffers_water", this, shaderProperties, readTesselation);
@@ -145,10 +145,10 @@ public class ProgramSet implements ProgramSetInterface {
 		this.composite = readProgramArray(directory, sourceProvider, "composite", shaderProperties, readTesselation);
 		this.compositeCompute = new ComputeSource[composite.length][];
 		for (int i = 0; i < deferred.length; i++) {
-			this.compositeCompute[i] = readComputeArray(directory, sourceProvider, "composite" + ((i == 0) ? "" : i));
+			this.compositeCompute[i] = readComputeArray(directory, sourceProvider, "composite" + ((i == 0) ? "" : i), shaderProperties);
 		}
 		this.compositeFinal = readProgramSource(directory, sourceProvider, "final", this, shaderProperties, readTesselation);
-		this.finalCompute = readComputeArray(directory, sourceProvider, "final");
+		this.finalCompute = readComputeArray(directory, sourceProvider, "final", shaderProperties);
 
 		locateDirectives();
 
@@ -189,28 +189,28 @@ public class ProgramSet implements ProgramSetInterface {
 	}
 
 	private ComputeSource[] readProgramArray(AbsolutePackPath directory,
-											 Function<AbsolutePackPath, String> sourceProvider, String name) {
+											 Function<AbsolutePackPath, String> sourceProvider, String name, ShaderProperties properties) {
 		ComputeSource[] programs = new ComputeSource[100];
 
 		for (int i = 0; i < programs.length; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
 
-			programs[i] = readComputeSource(directory, sourceProvider, name + suffix, this);
+			programs[i] = readComputeSource(directory, sourceProvider, name + suffix, this, properties);
 		}
 
 		return programs;
 	}
 
 	private ComputeSource[] readComputeArray(AbsolutePackPath directory,
-											 Function<AbsolutePackPath, String> sourceProvider, String name) {
+											 Function<AbsolutePackPath, String> sourceProvider, String name, ShaderProperties properties) {
 		ComputeSource[] programs = new ComputeSource[27];
 
-		programs[0] = readComputeSource(directory, sourceProvider, name, this);
+		programs[0] = readComputeSource(directory, sourceProvider, name, this, properties);
 
 		for (char c = 'a'; c <= 'z'; ++c) {
 			String suffix = "_" + c;
 
-			programs[c - 96] = readComputeSource(directory, sourceProvider, name + suffix, this);
+			programs[c - 96] = readComputeSource(directory, sourceProvider, name + suffix, this, properties);
 
 			if (programs[c - 96] == null) {
 				break;
@@ -557,7 +557,7 @@ public class ProgramSet implements ProgramSetInterface {
 
 	private static ComputeSource readComputeSource(AbsolutePackPath directory,
 												   Function<AbsolutePackPath, String> sourceProvider, String program,
-												   ProgramSet programSet) {
+												   ProgramSet programSet, ShaderProperties properties) {
 		AbsolutePackPath computePath = directory.resolve(program + ".csh");
 		String computeSource = sourceProvider.apply(computePath);
 
@@ -565,6 +565,6 @@ public class ProgramSet implements ProgramSetInterface {
 			return null;
 		}
 
-		return new ComputeSource(program, computeSource, programSet);
+		return new ComputeSource(program, computeSource, programSet, properties);
 	}
 }

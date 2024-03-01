@@ -6,10 +6,13 @@ import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.GlResource;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.shaderpack.FilledIndirectPointer;
+import net.coderbot.iris.shaderpack.IndirectPointer;
 import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.joml.Vector2f;
 import org.joml.Vector3i;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 
 public final class ComputeProgram extends GlResource {
 	private final ProgramUniforms uniforms;
@@ -21,6 +24,7 @@ public final class ComputeProgram extends GlResource {
 	private float cachedWidth;
 	private float cachedHeight;
 	private Vector3i cachedWorkGroups;
+	private FilledIndirectPointer indirectPointer;
 
 	ComputeProgram(int program, ProgramUniforms uniforms, ProgramSamplers samplers, ProgramImages images) {
 		super(program);
@@ -32,12 +36,15 @@ public final class ComputeProgram extends GlResource {
 		this.images = images;
 	}
 
-	public void setWorkGroupInfo(Vector2f relativeWorkGroups, Vector3i absoluteWorkGroups) {
+	public void setWorkGroupInfo(Vector2f relativeWorkGroups, Vector3i absoluteWorkGroups, FilledIndirectPointer indirectPointer) {
 		this.relativeWorkGroups = relativeWorkGroups;
 		this.absoluteWorkGroups = absoluteWorkGroups;
+		this.indirectPointer = indirectPointer;
 	}
 
 	public Vector3i getWorkGroups(float width, float height) {
+		if (indirectPointer != null) return null;
+
 		if (cachedWidth != width || cachedHeight != height || cachedWorkGroups == null) {
 			this.cachedWidth = width;
 			this.cachedHeight = height;
@@ -67,7 +74,12 @@ public final class ComputeProgram extends GlResource {
 			IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 		}
 
-		IrisRenderSystem.dispatchCompute(getWorkGroups(width, height));
+		if (indirectPointer != null) {
+			IrisRenderSystem.bindBuffer(GL46C.GL_DISPATCH_INDIRECT_BUFFER, indirectPointer.buffer());
+			IrisRenderSystem.dispatchComputeIndirect(indirectPointer.offset());
+		} else {
+			IrisRenderSystem.dispatchCompute(getWorkGroups(width, height));
+		}
 	}
 
 	public static void unbind() {

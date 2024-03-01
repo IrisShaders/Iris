@@ -96,6 +96,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, ViewportData> viewportScaleOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureScaleOverride> textureScaleOverrides = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, BlendModeOverride> blendModeOverrides = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, IndirectPointer> indirectPointers = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, ArrayList<BufferBlendInformation>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> customTextures = new EnumMap<>(TextureStage.class);
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching = new Object2ObjectOpenHashMap<>();
@@ -334,6 +335,16 @@ public class ShaderProperties {
 				}
 
 				blendModeOverrides.put(pass, new BlendModeOverride(new BlendMode(modes[0], modes[1], modes[2], modes[3])));
+			});
+
+			handlePassDirective("indirect.", key, value, pass -> {
+				try {
+					String[] locations = value.split(" ");
+
+					indirectPointers.put(pass, new IndirectPointer(Integer.parseInt(locations[0]), Long.parseLong(locations[1])));
+				} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+					Iris.logger.fatal("Failed to parse indirect command for " + pass + "! " + value);
+				}
 			});
 
 			handleProgramEnabledDirective("program.", key, value, program -> {
@@ -810,6 +821,10 @@ public class ShaderProperties {
 
 	public Object2ObjectMap<String, BlendModeOverride> getBlendModeOverrides() {
 		return blendModeOverrides;
+	}
+
+	public Object2ObjectMap<String, IndirectPointer> getIndirectPointers() {
+		return indirectPointers;
 	}
 
 	public Object2ObjectMap<String, ArrayList<BufferBlendInformation>> getBufferBlendOverrides() {

@@ -25,6 +25,7 @@ import org.lwjgl.opengl.GL40C;
 import org.lwjgl.opengl.GL42C;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL45C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.NVXGPUMemoryInfo;
 import org.lwjgl.opengl.GL45C;
 import org.lwjgl.system.MemoryUtil;
@@ -450,7 +451,15 @@ public class IrisRenderSystem {
 		backupPolygonMode = GL43C.GL_FILL;
 	}
 
-    public interface DSAAccess {
+    public static void dispatchComputeIndirect(long offset) {
+		GL43C.glDispatchComputeIndirect(offset);
+    }
+
+	public static void bindBuffer(int target, int buffer) {
+		GL46C.glBindBuffer(target, buffer);
+	}
+
+	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
 
 		void texParameteri(int texture, int target, int pname, int param);
