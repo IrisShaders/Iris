@@ -7,7 +7,7 @@ import org.lwjgl.opengl.GL11;
 
 public interface PBRTextureLoader<T extends AbstractTexture> {
 	/**
-	 * This method must not modify global GL state except the texture binding for {@link GL11.GL_TEXTURE_2D}.
+	 * This method must not modify global GL state except the texture binding for {@code GL_TEXTURE_2D}.
 	 *
 	 * @param texture The base texture.
 	 * @param resourceManager The resource manager.

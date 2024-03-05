@@ -2,7 +2,6 @@ package net.coderbot.iris.uniforms;
 
 import com.mojang.math.Axis;
 import org.joml.Matrix4f;
-import net.coderbot.iris.JomlConversions;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import org.joml.Vector4f;
 import net.minecraft.client.Minecraft;

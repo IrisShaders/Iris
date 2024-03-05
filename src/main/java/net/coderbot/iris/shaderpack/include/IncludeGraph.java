@@ -255,6 +255,6 @@ public class IncludeGraph {
 	}
 
 	private static String readFile(Path path) throws IOException {
-		return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+		return Files.readString(path);
 	}
 }

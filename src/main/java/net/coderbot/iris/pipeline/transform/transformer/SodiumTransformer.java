@@ -11,12 +11,8 @@ import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.util.Type;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.shader.ShaderType;
-import net.coderbot.iris.pipeline.newshader.AlphaTests;
 import net.coderbot.iris.pipeline.transform.parameter.SodiumParameters;
-
-import java.util.Set;
 
 import static net.coderbot.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
@@ -56,7 +52,7 @@ public class SodiumTransformer {
 					"vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
-			AttributeTransformer.patchMultiTexCoord3(t, tree, root, parameters);
+			CommonTransformer.patchMultiTexCoord3(t, tree, root, parameters);
 
 			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs (with
 			// gl_MultiTexCoord2 and gl_MultiTexCoord3 as aliases), other texture

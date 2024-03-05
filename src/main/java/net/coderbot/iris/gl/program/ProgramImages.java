@@ -24,7 +24,7 @@ public class ProgramImages {
 	public void update() {
 		if (initializer != null) {
 			for (GlUniform1iCall call : initializer) {
-				RenderSystem.glUniform1i(call.getLocation(), call.getValue());
+				RenderSystem.glUniform1i(call.location(), call.value());
 			}
 
 			initializer = null;

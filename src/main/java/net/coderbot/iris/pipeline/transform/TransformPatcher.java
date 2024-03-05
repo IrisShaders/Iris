@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 
 import net.coderbot.iris.gl.shader.ShaderCompileException;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,19 +27,15 @@ import io.github.douira.glsl_transformer.token_filter.TokenFilter;
 import io.github.douira.glsl_transformer.util.LRUCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
-import net.coderbot.iris.pipeline.ShaderPrinter;
-import net.coderbot.iris.pipeline.newshader.ShaderAttributeInputs;
-import net.coderbot.iris.pipeline.transform.parameter.AttributeParameters;
+import net.coderbot.iris.gl.state.ShaderAttributeInputs;
 import net.coderbot.iris.pipeline.transform.parameter.ComputeParameters;
 import net.coderbot.iris.pipeline.transform.parameter.Parameters;
 import net.coderbot.iris.pipeline.transform.parameter.SodiumParameters;
 import net.coderbot.iris.pipeline.transform.parameter.TextureStageParameters;
 import net.coderbot.iris.pipeline.transform.parameter.VanillaParameters;
-import net.coderbot.iris.pipeline.transform.transformer.AttributeTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.CommonTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.CompatibilityTransformer;
 import net.coderbot.iris.pipeline.transform.transformer.CompositeCoreTransformer;
@@ -229,9 +224,6 @@ public class TransformPatcher {
 					Profile profile = versionStatement.profile;
 					Version version = versionStatement.version;
 					switch (parameters.patch) {
-						case ATTRIBUTES:
-							AttributeTransformer.transform(transformer, tree, root, (AttributeParameters) parameters);
-							break;
 						case COMPUTE:
 							// we can assume the version is at least 400 because it's a compute shader
 							versionStatement.profile = Profile.CORE;

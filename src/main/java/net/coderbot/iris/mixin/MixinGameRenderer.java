@@ -6,13 +6,13 @@ import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.HandRenderer;
-import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.pathways.HandRenderer;
+import net.coderbot.iris.shadows.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
-import net.coderbot.iris.pipeline.newshader.IrisProgramTypes;
-import net.coderbot.iris.pipeline.newshader.ShaderKey;
+import net.coderbot.iris.pipeline.CoreWorldRenderingPipeline;
+import net.coderbot.iris.gl.program.IrisProgramTypes;
+import net.coderbot.iris.pipeline.ShaderKey;
 
 import net.irisshaders.iris.api.v0.IrisApi;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,12 +1,9 @@
 package net.coderbot.iris.gl.program;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.sampler.GlSampler;
@@ -46,7 +43,7 @@ public class ProgramSamplers {
 
 		if (initializer != null) {
 			for (GlUniform1iCall call : initializer) {
-				RenderSystem.glUniform1i(call.getLocation(), call.getValue());
+				RenderSystem.glUniform1i(call.location(), call.value());
 			}
 
 			initializer = null;

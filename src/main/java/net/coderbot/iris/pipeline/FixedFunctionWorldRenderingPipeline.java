@@ -6,9 +6,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.features.FeatureFlags;
-import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
-import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
-import net.coderbot.iris.gbuffer_overrides.state.RenderTargetStateListener;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.helpers.Tri;
 import net.coderbot.iris.mixin.LevelRendererAccessor;
@@ -31,11 +28,6 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 		BlockRenderingSettings.INSTANCE.setUseExtendedVertexFormat(false);
 		BlockRenderingSettings.INSTANCE.setVoxelizeLightBlocks(false);
 		BlockRenderingSettings.INSTANCE.setBlockTypeIds(null);
-	}
-
-	@Override
-	public void onShadowBufferChange() {
-
 	}
 
 	@Override
@@ -71,32 +63,12 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 	}
 
 	@Override
-	public void beginSodiumTerrainRendering() {
-
-	}
-
-	@Override
-	public void endSodiumTerrainRendering() {
-
-	}
-
-	@Override
 	public void setOverridePhase(WorldRenderingPhase phase) {
 
 	}
 
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
-
-	}
-
-	//@Override
-	public void setInputs(InputAvailability availability) {
-
-	}
-
-	@Override
-	public void setSpecialCondition(SpecialCondition special) {
 
 	}
 

@@ -9,10 +9,11 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(ChunkMeshFormats.class)
 public class MixinVertexTransform {
-	/**
-	 * @author IMS
+	/*
+	  @author IMS
 	 * @reason Rewrite to edit midTexCoord too
 	 */
+	// TODO: Re-add this
 	/*@Overwrite(remap = false)
 	public static void transformSprite(long ptr, int count, VertexFormatDescription format,
 									   float minU, float minV, float maxU, float maxV) {

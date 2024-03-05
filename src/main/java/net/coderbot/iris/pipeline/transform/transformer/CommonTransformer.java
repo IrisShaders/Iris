@@ -93,6 +93,27 @@ public class CommonTransformer {
 				});
 	}
 
+	public static void patchMultiTexCoord3(
+		ASTParser t,
+		TranslationUnit tree,
+		Root root,
+		Parameters parameters) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX
+			&& root.identifierIndex.has("gl_MultiTexCoord3")
+			&& !root.identifierIndex.has("mc_midTexCoord")) {
+			// TODO: proper type conversion
+			// gl_MultiTexCoord3 is a super legacy alias of mc_midTexCoord. We don't do this
+			// replacement if we think mc_midTexCoord could be defined just we can't handle
+			// an existing declaration robustly. But basically the proper way to do this is
+			// to define mc_midTexCoord only if it's not defined, and if it is defined,
+			// figure out its type, then replace all occurrences of gl_MultiTexCoord3 with
+			// the correct conversion from mc_midTexCoord's declared type to vec4.
+			root.rename("gl_MultiTexCoord3", "mc_midTexCoord");
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+				"attribute vec4 mc_midTexCoord;");
+		}
+	}
+
 	public static void upgradeStorageQualifiers(
 			ASTParser t,
 			TranslationUnit tree,
@@ -263,17 +284,8 @@ public class CommonTransformer {
 		renameAndWrapShadow(t, root, "shadow2DLod", "textureLod");
 	}
 
-	private static class RenameTargetResult {
-		public final DeclarationExternalDeclaration samplerDeclaration;
-		public final DeclarationMember samplerDeclarationMember;
-		public final Stream<Identifier> targets;
-
-		public RenameTargetResult(DeclarationExternalDeclaration samplerDeclaration,
-				DeclarationMember samplerDeclarationMember, Stream<Identifier> targets) {
-			this.samplerDeclaration = samplerDeclaration;
-			this.samplerDeclarationMember = samplerDeclarationMember;
-			this.targets = targets;
-		}
+	private record RenameTargetResult(DeclarationExternalDeclaration samplerDeclaration,
+									  DeclarationMember samplerDeclarationMember, Stream<Identifier> targets) {
 	}
 
 	private static RenameTargetResult getGtextureRenameTargets(String name, Root root) {

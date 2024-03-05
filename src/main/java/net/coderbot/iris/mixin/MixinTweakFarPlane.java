@@ -11,25 +11,25 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * Tweaks the far plane of the projection matrix to match OptiFine.
- *
- * As it turns out, OptiFine significantly reduces the far plane distance compared to vanilla. This is likely because
- * vanilla chooses a far plane that is four times the render distance in blocks, which is a bit overkill. Instead,
- * OptiFine makes the far plane only 1024 blocks above the render distance in blocks (two times the render distance in 1.16 and lower), and (in 1.16) to compensate, adds a minimum distance
- * for the far plane to make it not appear too closely to the player.
- *
- * On 1.16 and lower, OptiFine also modifies the distance of the far plane based on the fog setting.
- *
- * So why is this needed? As it turns out, shaderpacks actually rely on this behavior to work properly. Most notably,
- * the water reflection code in Sildur's Vibrant Shaders will often create impossible reflections with the default far
- * plane, where things that are close to the player will be reflected in water that is very far away.
- *
- * A possible reason for this is that the value of the {@code far} uniform does not actually match the far plane
- * distance, so shaderpacks one way or another have come to just bodge things to work around the issue, and in the
- * process become subtly reliant on OptiFine implementation details.
- *
- * Fun.
+/*
+  Tweaks the far plane of the projection matrix to match OptiFine.
+
+  As it turns out, OptiFine significantly reduces the far plane distance compared to vanilla. This is likely because
+  vanilla chooses a far plane that is four times the render distance in blocks, which is a bit overkill. Instead,
+  OptiFine makes the far plane only 1024 blocks above the render distance in blocks (two times the render distance in 1.16 and lower), and (in 1.16) to compensate, adds a minimum distance
+  for the far plane to make it not appear too closely to the player.
+
+  On 1.16 and lower, OptiFine also modifies the distance of the far plane based on the fog setting.
+
+  So why is this needed? As it turns out, shaderpacks actually rely on this behavior to work properly. Most notably,
+  the water reflection code in Sildur's Vibrant Shaders will often create impossible reflections with the default far
+  plane, where things that are close to the player will be reflected in water that is very far away.
+
+  A possible reason for this is that the value of the {@code far} uniform does not actually match the far plane
+  distance, so shaderpacks one way or another have come to just bodge things to work around the issue, and in the
+  process become subtly reliant on OptiFine implementation details.
+
+  Fun.
  */
 
 /**

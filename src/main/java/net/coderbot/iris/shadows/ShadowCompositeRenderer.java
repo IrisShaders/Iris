@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.coderbot.iris.gl.framebuffer.ViewportData;
 import net.coderbot.iris.gl.image.GlImage;
@@ -19,13 +18,13 @@ import net.coderbot.iris.gl.program.ProgramBuilder;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.gl.texture.TextureAccess;
-import net.coderbot.iris.pipeline.ShaderPrinter;
+import net.coderbot.iris.pipeline.transform.ShaderPrinter;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.coderbot.iris.pipeline.newshader.FogMode;
+import net.coderbot.iris.gl.state.FogMode;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
 import net.coderbot.iris.postprocess.FullScreenQuadRenderer;
-import net.coderbot.iris.rendertarget.RenderTarget;
+import net.coderbot.iris.targets.RenderTarget;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.ComputeSource;
@@ -44,7 +43,6 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -246,7 +244,7 @@ public class ShadowCompositeRenderer {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
 
-	private static void setupMipmapping(net.coderbot.iris.rendertarget.RenderTarget target, boolean readFromAlt) {
+	private static void setupMipmapping(net.coderbot.iris.targets.RenderTarget target, boolean readFromAlt) {
 		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
 
 		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer

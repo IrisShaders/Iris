@@ -2,11 +2,10 @@ package net.coderbot.iris.uniforms;
 
 import org.joml.Matrix4f;
 import net.coderbot.iris.gl.uniform.UniformHolder;
-import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.shadows.ShadowRenderer;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shadows.ShadowMatrices;
 
-import java.nio.FloatBuffer;
 import java.util.function.Supplier;
 
 import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;

@@ -1,20 +1,15 @@
 package net.coderbot.iris.uniforms;
 
-import net.coderbot.iris.JomlConversions;
+import net.coderbot.iris.helpers.JomlConversions;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.coderbot.iris.gl.uniform.UniformUpdateFrequency;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
-import net.coderbot.iris.mixin.DimensionTypeAccessor;
 import org.joml.Math;
 import org.joml.Vector3d;
-import org.joml.Vector3f;
 import org.joml.Vector4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LightningBolt;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 

@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.coderbot.iris.pipeline.HandRenderer;
+import net.coderbot.iris.pathways.HandRenderer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;

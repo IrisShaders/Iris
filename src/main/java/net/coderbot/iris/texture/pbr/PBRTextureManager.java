@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
-import net.coderbot.iris.rendertarget.NativeImageBackedSingleColorTexture;
+import net.coderbot.iris.targets.backed.NativeImageBackedSingleColorTexture;
 import net.coderbot.iris.texture.TextureTracker;
 import net.coderbot.iris.texture.pbr.loader.PBRTextureLoader;
 import net.coderbot.iris.texture.pbr.loader.PBRTextureLoader.PBRTextureConsumer;

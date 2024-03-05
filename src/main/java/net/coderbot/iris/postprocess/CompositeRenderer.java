@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableList;
@@ -13,7 +12,6 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
@@ -30,14 +28,13 @@ import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.shader.ShaderCompileException;
 import net.coderbot.iris.gl.texture.TextureAccess;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
-import net.coderbot.iris.pipeline.DeferredWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.coderbot.iris.rendertarget.RenderTarget;
-import net.coderbot.iris.pipeline.ShaderPrinter;
+import net.coderbot.iris.targets.RenderTarget;
+import net.coderbot.iris.pipeline.transform.ShaderPrinter;
 import net.coderbot.iris.pipeline.transform.PatchShaderType;
 import net.coderbot.iris.pipeline.transform.TransformPatcher;
-import net.coderbot.iris.pipeline.newshader.FogMode;
-import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.gl.state.FogMode;
+import net.coderbot.iris.targets.RenderTargets;
 import net.coderbot.iris.samplers.IrisImages;
 import net.coderbot.iris.samplers.IrisSamplers;
 import net.coderbot.iris.shaderpack.ComputeSource;
@@ -57,10 +54,6 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Supplier;
-
 public class CompositeRenderer {
 	private final RenderTargets renderTargets;
 
@@ -73,8 +66,8 @@ public class CompositeRenderer {
 	private final CustomUniforms customUniforms;
 	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
 	private final Set<GlImage> customImages;
-	private TextureStage textureStage;
-	private WorldRenderingPipeline pipeline;
+	private final TextureStage textureStage;
+	private final WorldRenderingPipeline pipeline;
 
 	public CompositeRenderer(WorldRenderingPipeline pipeline, PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets, ShaderStorageBufferHolder holder,
 							 TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
@@ -318,7 +311,7 @@ public class CompositeRenderer {
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 	}
 
-	private static void setupMipmapping(net.coderbot.iris.rendertarget.RenderTarget target, boolean readFromAlt) {
+	private static void setupMipmapping(net.coderbot.iris.targets.RenderTarget target, boolean readFromAlt) {
 		if (target == null) return;
 
 		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();

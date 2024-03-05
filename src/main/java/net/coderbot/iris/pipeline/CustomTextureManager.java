@@ -1,7 +1,6 @@
 package net.coderbot.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -12,8 +11,8 @@ import net.coderbot.iris.gl.texture.TextureAccess;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.gl.texture.TextureWrapper;
 import net.coderbot.iris.mixin.LightTextureAccessor;
-import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
-import net.coderbot.iris.rendertarget.NativeImageBackedNoiseTexture;
+import net.coderbot.iris.targets.backed.NativeImageBackedCustomTexture;
+import net.coderbot.iris.targets.backed.NativeImageBackedNoiseTexture;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureStage;

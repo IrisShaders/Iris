@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SpriteContents.class)
 public abstract class MixinSpriteContents {
+	@SuppressWarnings("all")
 	@Inject(method = "sodium$setActive(Z)V", at = @At("TAIL"), remap = false)
 	private void iris$onTailMarkActive(CallbackInfo ci) {
 		PBRSpriteHolder pbrHolder = ((SpriteContentsExtension) this).getPBRHolder();

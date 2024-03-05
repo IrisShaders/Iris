@@ -35,7 +35,7 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
     private int vertices;
 
     @Shadow
-	protected void ensureVertexCapacity() {
+	private void ensureVertexCapacity() {
         throw new AssertionError("not shadowed");
     }
 

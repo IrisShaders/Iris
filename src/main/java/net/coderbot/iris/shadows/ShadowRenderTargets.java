@@ -3,7 +3,6 @@ package net.coderbot.iris.shadows;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import net.coderbot.iris.Iris;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -11,15 +10,13 @@ import net.coderbot.iris.gl.texture.DepthBufferFormat;
 import net.coderbot.iris.gl.texture.DepthCopyStrategy;
 import net.coderbot.iris.gl.texture.InternalTextureFormat;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.coderbot.iris.rendertarget.DepthTexture;
-import net.coderbot.iris.rendertarget.RenderTarget;
+import net.coderbot.iris.targets.DepthTexture;
+import net.coderbot.iris.targets.RenderTarget;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import org.lwjgl.opengl.GL30C;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class ShadowRenderTargets {
 	private final RenderTarget[] targets;
@@ -41,6 +38,8 @@ public class ShadowRenderTargets {
 	private InternalTextureFormat[] formats;
 	private IntList buffersToBeCleared;
 	private int size;
+
+	private boolean shouldRefresh;
 
 	public ShadowRenderTargets(WorldRenderingPipeline pipeline, int resolution, PackShadowDirectives shadowDirectives) {
 		this.pipeline = pipeline;
@@ -75,6 +74,7 @@ public class ShadowRenderTargets {
 		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents.getTextureId());
 
 		this.translucentDepthDirty = true;
+		this.shouldRefresh = false;
 	}
 
 	// TODO: Actually flip. This is required for shadow composites!
@@ -144,7 +144,6 @@ public class ShadowRenderTargets {
 		}
 
 		fullClearRequired = true;
-		pipeline.onShadowBufferChange();
 	}
 
 	public void createIfEmpty(int index) {

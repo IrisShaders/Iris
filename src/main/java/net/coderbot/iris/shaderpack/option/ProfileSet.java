@@ -41,7 +41,7 @@ public class ProfileSet {
 	}
 
 	public ProfileResult scan(OptionSet options, OptionValues values) {
-		if (sortedProfiles.size() <= 0) {
+		if (sortedProfiles.isEmpty()) {
 			return new ProfileResult(null, null, null);
 		}
 

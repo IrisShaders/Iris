@@ -9,7 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.colorspace.ColorSpace;
+import net.coderbot.iris.pathways.colorspace.ColorSpace;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gui.FeatureMissingErrorScreen;
 import net.coderbot.iris.gui.screen.ShaderPackScreen;
@@ -58,7 +58,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ShaderPack {
 	private static final Gson GSON = new Gson();
@@ -515,7 +514,7 @@ public class ShaderPack {
 	private static String readProperties(Path shaderPath, String name) {
 		try {
 			// Property files should be encoded in ISO_8859_1.
-			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.ISO_8859_1);
+			return Files.readString(shaderPath.resolve(name), StandardCharsets.ISO_8859_1);
 		} catch (NoSuchFileException e) {
 			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
 

@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.gl.shader.ShaderCompileException;
-import net.coderbot.iris.pipeline.newshader.FakeChainedJsonException;
+import net.coderbot.iris.helpers.FakeChainedJsonException;
 import net.minecraft.server.ChainedJsonException;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

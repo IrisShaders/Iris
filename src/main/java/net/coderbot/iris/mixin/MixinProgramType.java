@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import com.mojang.blaze3d.shaders.Program;
-import net.coderbot.iris.pipeline.newshader.IrisProgramTypes;
+import net.coderbot.iris.gl.program.IrisProgramTypes;
 import org.apache.commons.lang3.ArrayUtils;
 import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL42C;

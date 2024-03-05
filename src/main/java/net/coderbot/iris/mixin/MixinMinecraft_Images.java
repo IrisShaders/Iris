@@ -1,7 +1,7 @@
 package net.coderbot.iris.mixin;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.rendertarget.NativeImageBackedCustomTexture;
+import net.coderbot.iris.targets.backed.NativeImageBackedCustomTexture;
 import net.coderbot.iris.shaderpack.texture.CustomTextureData;
 import net.coderbot.iris.shaderpack.texture.TextureFilteringData;
 import net.fabricmc.loader.api.FabricLoader;

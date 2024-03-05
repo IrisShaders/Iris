@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  */
 @Mixin(targets = "link/infra/indium/renderer/render/AbstractBlockRenderContext", remap = false)
 @Pseudo
+@SuppressWarnings("all")
 public class MixinAbstractBlockRenderContext {
 	// One of these injections must pass, or else the game will crash.
 	//@Group(name = "iris_separateIndiumAO", min = 2, max = 3)

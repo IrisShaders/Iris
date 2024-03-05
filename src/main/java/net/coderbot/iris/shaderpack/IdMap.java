@@ -111,7 +111,7 @@ public class IdMap {
 	private static String readProperties(Path shaderPath, String name) {
 		try {
 			// ID maps should be encoded in ISO_8859_1.
-			return new String(Files.readAllBytes(shaderPath.resolve(name)), StandardCharsets.ISO_8859_1);
+			return Files.readString(shaderPath.resolve(name), StandardCharsets.ISO_8859_1);
 		} catch (NoSuchFileException e) {
 			Iris.logger.debug("An " + name + " file was not found in the current shaderpack");
 

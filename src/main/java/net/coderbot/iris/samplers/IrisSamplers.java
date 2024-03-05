@@ -3,23 +3,19 @@ package net.coderbot.iris.samplers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
-import net.coderbot.iris.gl.IrisRenderSystem;
 import net.coderbot.iris.gl.image.GlImage;
 import net.coderbot.iris.gl.sampler.GlSampler;
 import net.coderbot.iris.gl.sampler.SamplerHolder;
-import net.coderbot.iris.gl.sampler.SamplerLimits;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.texture.TextureAccess;
 import net.coderbot.iris.gl.texture.TextureType;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.coderbot.iris.rendertarget.RenderTarget;
-import net.coderbot.iris.rendertarget.RenderTargets;
+import net.coderbot.iris.targets.RenderTarget;
+import net.coderbot.iris.targets.RenderTargets;
 import net.coderbot.iris.shaderpack.PackRenderTargetDirectives;
 import net.coderbot.iris.shaderpack.PackShadowDirectives;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.minecraft.client.renderer.texture.AbstractTexture;
-import org.lwjgl.opengl.GL33C;
 
 import java.util.Set;
 import java.util.function.IntSupplier;
@@ -178,8 +174,8 @@ public class IrisSamplers {
 		return samplers.hasSampler("normals") || samplers.hasSampler("specular");
 	}
 
-	public static void addLevelSamplers(SamplerHolder samplers, WorldRenderingPipeline pipeline, AbstractTexture whitePixel, InputAvailability availability) {
-		if (availability.texture) {
+	public static void addLevelSamplers(SamplerHolder samplers, WorldRenderingPipeline pipeline, AbstractTexture whitePixel, boolean hasTexture, boolean hasLightmap, boolean hasOverlay) {
+		if (hasTexture) {
 			samplers.addExternalSampler(ALBEDO_TEXTURE_UNIT, "tex", "texture", "gtexture");
 		} else {
 			// TODO: Rebind unbound sampler IDs instead of hardcoding a list...
@@ -187,13 +183,13 @@ public class IrisSamplers {
 					"gcolor", "colortex0");
 		}
 
-		if (availability.lightmap) {
+		if (hasLightmap) {
 			samplers.addExternalSampler(LIGHTMAP_TEXTURE_UNIT, "lightmap");
 		} else {
 			samplers.addDynamicSampler(whitePixel::getId, "lightmap");
 		}
 
-		if (availability.overlay) {
+		if (hasOverlay) {
 			samplers.addExternalSampler(OVERLAY_TEXTURE_UNIT, "iris_overlay");
 		} else {
 			samplers.addDynamicSampler(whitePixel::getId, "iris_overlay");

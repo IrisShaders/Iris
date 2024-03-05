@@ -1,15 +1,9 @@
 package net.coderbot.iris.mixin;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.coderbot.iris.pipeline.LightningHandler;
-import net.minecraft.client.renderer.LightTexture;
+import net.coderbot.iris.pathways.LightningHandler;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.LightningBoltRenderer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 

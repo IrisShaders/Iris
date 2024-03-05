@@ -9,32 +9,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class LabPBRTextureFormat implements TextureFormat {
+public record LabPBRTextureFormat(String name, @Nullable String version) implements TextureFormat {
 	public static final ChannelMipmapGenerator SPECULAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(
-			LinearBlendFunction.INSTANCE,
-			new DiscreteBlendFunction(v -> v < 230 ? 0 : v - 229),
-			new DiscreteBlendFunction(v -> v < 65 ? 0 : 1),
-			new DiscreteBlendFunction(v -> v < 255 ? 0 : 1)
+		LinearBlendFunction.INSTANCE,
+		new DiscreteBlendFunction(v -> v < 230 ? 0 : v - 229),
+		new DiscreteBlendFunction(v -> v < 65 ? 0 : 1),
+		new DiscreteBlendFunction(v -> v < 255 ? 0 : 1)
 	);
 
-	private final String name;
-	@Nullable
-	private final String version;
-
-	public LabPBRTextureFormat(String name, @Nullable String version) {
-		this.name = name;
-		this.version = version;
-	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
-	public @Nullable String getVersion() {
-		return version;
-	}
 
 	@Override
 	public boolean canInterpolateValues(PBRType pbrType) {
@@ -50,11 +32,6 @@ public class LabPBRTextureFormat implements TextureFormat {
 			return SPECULAR_MIPMAP_GENERATOR;
 		}
 		return null;
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(name, version);
 	}
 
 	@Override

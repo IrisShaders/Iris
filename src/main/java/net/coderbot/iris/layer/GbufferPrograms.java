@@ -1,7 +1,6 @@
 package net.coderbot.iris.layer;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.pipeline.WorldRenderingPhase;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -101,14 +100,6 @@ public class GbufferPrograms {
 		if (fallbackEntityListener != null) {
 			fallbackEntityListener.run();
 		}
-	}
-
-	public static void setupSpecialRenderCondition(SpecialCondition override) {
-		Iris.getPipelineManager().getPipeline().ifPresent(p -> p.setSpecialCondition(override));
-	}
-
-	public static void teardownSpecialRenderCondition(SpecialCondition override) {
-		Iris.getPipelineManager().getPipeline().ifPresent(p -> p.setSpecialCondition(null));
 	}
 
 	static {

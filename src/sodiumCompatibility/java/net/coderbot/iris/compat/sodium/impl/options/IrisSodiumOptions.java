@@ -8,7 +8,7 @@ import me.jellysquid.mods.sodium.client.gui.options.control.CyclingControl;
 import me.jellysquid.mods.sodium.client.gui.options.control.SliderControl;
 import me.jellysquid.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.colorspace.ColorSpace;
+import net.coderbot.iris.pathways.colorspace.ColorSpace;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;

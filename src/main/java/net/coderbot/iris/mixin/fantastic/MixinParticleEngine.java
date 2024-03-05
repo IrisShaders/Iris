@@ -2,11 +2,9 @@ package net.coderbot.iris.mixin.fantastic;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.fantastic.IrisParticleRenderTypes;
 import net.coderbot.iris.fantastic.ParticleRenderingPhase;
 import net.coderbot.iris.fantastic.PhasedParticleEngine;
-import net.coderbot.iris.pipeline.ShaderAccess;
+import net.coderbot.iris.pipeline.programs.ShaderAccess;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.ShaderInstance;

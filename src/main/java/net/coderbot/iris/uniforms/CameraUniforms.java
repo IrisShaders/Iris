@@ -1,6 +1,6 @@
 package net.coderbot.iris.uniforms;
 
-import net.coderbot.iris.JomlConversions;
+import net.coderbot.iris.helpers.JomlConversions;
 import net.coderbot.iris.gl.uniform.UniformHolder;
 import net.minecraft.client.Minecraft;
 import org.joml.Vector3d;

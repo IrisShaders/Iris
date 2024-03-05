@@ -1,7 +1,7 @@
 package net.coderbot.iris.config;
 
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.colorspace.ColorSpace;
+import net.coderbot.iris.pathways.colorspace.ColorSpace;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 
 import java.io.IOException;

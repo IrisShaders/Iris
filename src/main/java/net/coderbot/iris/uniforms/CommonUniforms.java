@@ -2,7 +2,7 @@ package net.coderbot.iris.uniforms;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.coderbot.iris.JomlConversions;
+import net.coderbot.iris.helpers.JomlConversions;
 import net.coderbot.iris.gl.state.StateUpdateNotifiers;
 import net.coderbot.iris.gl.uniform.DynamicUniformHolder;
 import net.coderbot.iris.gl.uniform.UniformHolder;
@@ -10,7 +10,7 @@ import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.mixin.GlStateManagerAccessor;
 import net.coderbot.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.coderbot.iris.mixin.texture.TextureAtlasAccessor;
-import net.coderbot.iris.pipeline.newshader.FogMode;
+import net.coderbot.iris.gl.state.FogMode;
 import net.coderbot.iris.shaderpack.IdMap;
 import net.coderbot.iris.shaderpack.PackDirectives;
 import net.coderbot.iris.texture.TextureInfoCache;

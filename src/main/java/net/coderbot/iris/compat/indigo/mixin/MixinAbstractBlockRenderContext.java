@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  */
 @Mixin(targets = "net/fabricmc/fabric/impl/client/indigo/renderer/render/AbstractBlockRenderContext", remap = false)
 @Pseudo
+@SuppressWarnings("all")
 public class MixinAbstractBlockRenderContext {
 	// One of these injections must pass, or else the game will crash.
 	@Redirect(method = {"shadeQuad", "shadeFlatQuad"},

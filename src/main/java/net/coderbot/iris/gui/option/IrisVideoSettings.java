@@ -1,21 +1,13 @@
 package net.coderbot.iris.gui.option;
 
-import com.mojang.serialization.Codec;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.colorspace.ColorSpace;
+import net.coderbot.iris.pathways.colorspace.ColorSpace;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
-import net.minecraft.client.Options;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.Mth;
-
 import java.io.IOException;
-import java.util.List;
 
 public class IrisVideoSettings {
 	public static int shadowDistance = 32;

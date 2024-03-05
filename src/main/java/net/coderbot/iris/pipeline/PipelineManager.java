@@ -16,8 +16,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class PipelineManager {
-	private static PipelineManager instance;
-	private final Function<NamespacedId, WorldRenderingPipeline> pipelineFactory;
+    private final Function<NamespacedId, WorldRenderingPipeline> pipelineFactory;
 	private final Map<NamespacedId, WorldRenderingPipeline> pipelinesPerDimension = new HashMap<>();
 	private WorldRenderingPipeline pipeline = new FixedFunctionWorldRenderingPipeline();
 	private int versionCounterForSodiumShaderReload = 0;
