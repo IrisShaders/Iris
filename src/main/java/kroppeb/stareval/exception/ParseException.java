@@ -1,6 +1,6 @@
 package kroppeb.stareval.exception;
 
-public abstract class ParseException extends Exception{
+public abstract class ParseException extends Exception {
 	public ParseException() {
 	}
 

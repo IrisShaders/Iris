@@ -1,12 +1,12 @@
-package net.coderbot.iris.test.shaderpack;
+package net.irisshaders.iris.test.shaderpack;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.coderbot.iris.shaderpack.ShaderPack;
-import net.coderbot.iris.shaderpack.materialmap.BlockEntry;
-import net.coderbot.iris.shaderpack.materialmap.BlockRenderType;
-import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
-import net.coderbot.iris.test.IrisTests;
+import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.shaderpack.materialmap.BlockEntry;
+import net.irisshaders.iris.shaderpack.materialmap.BlockRenderType;
+import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
+import net.irisshaders.iris.test.IrisTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -37,9 +37,9 @@ public class IdMapTest {
 
 		EXPECTED_BLOCKS = new Int2ObjectOpenHashMap<>();
 		EXPECTED_BLOCKS.put(37, Arrays.asList(
-				new BlockEntry(new NamespacedId("minecraft", "red_stained_glass"), new HashMap<>()),
-				new BlockEntry(new NamespacedId("minecraft", "blue_stained_glass"), new HashMap<>()),
-				new BlockEntry(new NamespacedId("minecraft", "white_stained_glass"), new HashMap<>())));
+			new BlockEntry(new NamespacedId("minecraft", "red_stained_glass"), new HashMap<>()),
+			new BlockEntry(new NamespacedId("minecraft", "blue_stained_glass"), new HashMap<>()),
+			new BlockEntry(new NamespacedId("minecraft", "white_stained_glass"), new HashMap<>())));
 	}
 
 	@Test

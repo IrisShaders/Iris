@@ -1,8 +1,8 @@
-package net.coderbot.iris.test.shaderpack;
+package net.irisshaders.iris.test.shaderpack;
 
-import net.coderbot.iris.shaderpack.ShaderPack;
-import net.coderbot.iris.shaderpack.texture.CustomTextureData;
-import net.coderbot.iris.test.IrisTests;
+import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
+import net.irisshaders.iris.test.IrisTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

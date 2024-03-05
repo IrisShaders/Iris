@@ -1,7 +1,7 @@
-package net.coderbot.iris.test.shaderpack;
+package net.irisshaders.iris.test.shaderpack;
 
-import net.coderbot.iris.shaderpack.preprocessor.PropertiesPreprocessor;
-import net.coderbot.iris.test.IrisTests;
+import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
+import net.irisshaders.iris.test.IrisTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -34,8 +34,8 @@ public class PreprocessorTest {
 		// Note: Verify that this does not spam the log by inspecting manually.
 		String line =
 			"# Test\n" +
-			"#test comment\n" +
-			"#1xxx\n";
+				"#test comment\n" +
+				"#1xxx\n";
 
 		Assertions.assertEquals("", PropertiesPreprocessor.preprocessSource(line,
 			IrisTests.TEST_ENVIRONMENT_DEFINES).trim());
@@ -45,10 +45,10 @@ public class PreprocessorTest {
 	void testPreprocessorDirectives() {
 		String line =
 			"#if MC_VERSION >= 11300\n" +
-			"block.1=minecraft:grass_block\n" +
-			"#else\n" +
-			"block.1=minecraft:grass\n" +
-			"#endif\n";
+				"block.1=minecraft:grass_block\n" +
+				"#else\n" +
+				"block.1=minecraft:grass\n" +
+				"#endif\n";
 
 		Assertions.assertEquals("block.1=minecraft:grass_block", PropertiesPreprocessor.preprocessSource(line,
 			IrisTests.TEST_ENVIRONMENT_DEFINES).trim());

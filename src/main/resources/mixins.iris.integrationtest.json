@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.coderbot.iris.mixin.integrationtest",
+  "package": "net.irisshaders.iris.mixin.integrationtest",
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinRenderTarget_StencilBufferTest"

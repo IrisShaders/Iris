@@ -16,7 +16,6 @@
   "iris.sodium.failure.download": "Lataa Sodium",
   "iris.sodium.failure.reason.notFound": "Iris vaatii Sodiumin hyvän suorituskyvyn takaamiseksi, mutta Sodiumia ei ole asennettu. Lataa Sodium, laita se modit-kansioosi, ja käynnistä pelisi uudelleen.",
   "iris.sodium.failure.reason.incompatible": "Iris vaatii Sodiumin hyvän suorituskyvyn takaamiseksi, mutta Sodium versiosi on yhteensopimaton. Lataa yhteensopiva Sodium versio, laita se modit-kansioosi ja poista yhteensopimaton versio, käynnistä sitten pelisi uudelleen.",
-  
   "options.iris.apply": "Ota käyttöön",
   "options.iris.refresh": "Lataa uudelleen",
   "options.iris.openShaderPackFolder": "Avaa shader-pakettikansio...",
@@ -48,12 +47,10 @@
   "options.iris.profile.custom": "Mukautettu",
   "options.iris.shadowDistance": "Varjojen enimmäisetäisyys",
   "options.iris.shadowDistance.enabled": "Sallii varjojen enimmäisetäisyydeen määrittämisen. Maasto ja kohteet asetetun etäisyyden jälkeen eivät enää tuota varjoja. Varjoetäisyyden alentaminen saattaa nostaa pelin kuvataajuutta huomattavasti.",
-  "options.iris.shadowDistance.disabled": "Käyttöön ottamasi shader-paketti määrittää varjoetäisyyden jo; et voi muuttaa sitä.", 
-
+  "options.iris.shadowDistance.disabled": "Käyttöön ottamasi shader-paketti määrittää varjoetäisyyden jo; et voi muuttaa sitä.",
   "pack.iris.select.title": "Valitse",
   "pack.iris.configure.title": "Mukauta",
   "pack.iris.list.label": "+ Raahaa ja pudota shader-paketti lisätäksesi sen",
-
   "label.iris.true": "Päällä",
   "label.iris.false": "Pois"
 }

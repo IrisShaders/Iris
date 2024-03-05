@@ -61,11 +61,9 @@
   "options.iris.shadowDistance.sodium_tooltip": "A distância das sombras permite controlar o quão longe o terreno será carregado com sombras. Distâncias menores significam menos terrenos sendo carregados, o que melhora o desempenho do jogo. Esta opção não pode ser alterada por pacotes que definem uma distância das sombras e ela é limitada pelo alcance visual.",
   "options.iris.gui.hide": "Ocultar interface",
   "options.iris.gui.show": "Exibir interface",
-
   "pack.iris.select.title": "Selecionar um pacote",
   "pack.iris.configure.title": "Configurando um pacote",
   "pack.iris.list.label": "Arraste os pacotes até esta janela para adicioná-los",
-
   "label.iris.true": "Sim",
   "label.iris.false": "Não"
 }

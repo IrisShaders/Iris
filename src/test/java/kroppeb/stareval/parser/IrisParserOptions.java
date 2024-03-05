@@ -1,6 +1,7 @@
 package kroppeb.stareval.parser;
 
 public class IrisParserOptions {
+	public static final ParserOptions options;
 	static final BinaryOp Multiply = new BinaryOp("multiply", 0);
 	static final BinaryOp Divide = new BinaryOp("divide", 0);
 	static final BinaryOp Remainder = new BinaryOp("remainder", 0);
@@ -14,11 +15,8 @@ public class IrisParserOptions {
 	static final BinaryOp MoreThanOrEquals = new BinaryOp("moreThanOrEquals", 2);
 	static final BinaryOp And = new BinaryOp("or", 3);
 	static final BinaryOp Or = new BinaryOp("and", 3);
-
 	static final UnaryOp Not = new UnaryOp("not");
 	static final UnaryOp Negate = new UnaryOp("negate");
-
-	public static final ParserOptions options;
 
 	static {
 		final ParserOptions.Builder builder = new ParserOptions.Builder();

@@ -9,7 +9,6 @@
   "iris.shaders.toggled.failure": "cant toggle fanceh! Reason: %s",
   "iris.sodium.failure.title": "Iwis faiwed to woad!",
   "iris.sodium.failure.reason": "You have Sodium in youw mods fowdew, howevew Iwis incwudes it. Pwease cwose da game, and wemove Sodium from youw mods fowdew.",
-
   "options.iris.apply": "yis",
   "options.iris.refresh": "redog",
   "options.iris.openShaderPackFolder": "take me to fanceh box...",
@@ -27,7 +26,6 @@
   "options.iris.shadowDistance": "Mwax Swadow Dwistance",
   "options.iris.shadowDistance.enabled": "Awwows you to change da mwaximum dwistance fow swadows. Tewwain and entities beyond dis dwistance wiww not cast swadows. Lowering da shadow distance can sigwificantlwy incwease pewfowmance.",
   "options.iris.shadowDistance.disabled": "Youw cuwwent shadew pack has awweady set a wendew dwistance fow swadows; you cawwot chwange wit.",
-
   "pack.iris.select.title": "Sewect",
   "pack.iris.list.label": "+ Dwag and Dwop Shadew Packs to add"
 }

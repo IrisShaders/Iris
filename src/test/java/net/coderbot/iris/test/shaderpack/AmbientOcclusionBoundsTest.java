@@ -1,8 +1,8 @@
-package net.coderbot.iris.test.shaderpack;
+package net.irisshaders.iris.test.shaderpack;
 
-import net.coderbot.iris.shaderpack.DimensionId;
-import net.coderbot.iris.shaderpack.ShaderPack;
-import net.coderbot.iris.test.IrisTests;
+import net.irisshaders.iris.shaderpack.DimensionId;
+import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.test.IrisTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
