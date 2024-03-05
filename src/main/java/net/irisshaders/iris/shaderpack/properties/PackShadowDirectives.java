@@ -19,6 +19,7 @@ public class PackShadowDirectives {
 	public static final int MAX_SHADOW_COLOR_BUFFERS_OF = 2;
 
 	private final OptionalBoolean shadowEnabled;
+	private final OptionalBoolean dhShadowEnabled;
 	private final boolean shouldRenderTerrain;
 	private final boolean shouldRenderTranslucent;
 	private final boolean shouldRenderEntities;
@@ -31,6 +32,8 @@ public class PackShadowDirectives {
 	// Use a boxed form so we can use null to indicate that there is not an FOV specified.
 	private Float fov;
 	private float distance;
+	private float nearPlane;
+	private float farPlane;
 	private float voxelDistance;
 	private float distanceRenderMul;
 	private float entityShadowDistanceMul;
@@ -56,6 +59,8 @@ public class PackShadowDirectives {
 		// shadowRenderDistanceMul to a nonzero value, since having a high shadow render distance will impact
 		// performance quite heavily on most systems.
 		this.distance = 160.0f;
+		this.nearPlane = 0.05f;
+		this.farPlane = 256.0f;
 		this.voxelDistance = 0.0f;
 
 		// By default, shadows are not culled based on distance from the player. However, pack authors may
@@ -84,6 +89,7 @@ public class PackShadowDirectives {
 		this.shouldRenderBlockEntities = properties.getShadowBlockEntities().orElse(true);
 		this.cullingState = properties.getShadowCulling();
 		this.shadowEnabled = properties.getShadowEnabled();
+		this.dhShadowEnabled = properties.getDhShadowEnabled();
 
 		this.depthSamplingSettings = ImmutableList.of(new DepthSamplingSettings(), new DepthSamplingSettings());
 
@@ -96,6 +102,8 @@ public class PackShadowDirectives {
 		this.resolution = shadowDirectives.resolution;
 		this.fov = shadowDirectives.fov;
 		this.distance = shadowDirectives.distance;
+		this.nearPlane = shadowDirectives.nearPlane;
+		this.farPlane = shadowDirectives.farPlane;
 		this.voxelDistance = shadowDirectives.voxelDistance;
 		this.distanceRenderMul = shadowDirectives.distanceRenderMul;
 		this.entityShadowDistanceMul = shadowDirectives.entityShadowDistanceMul;
@@ -110,6 +118,7 @@ public class PackShadowDirectives {
 		this.depthSamplingSettings = shadowDirectives.depthSamplingSettings;
 		this.colorSamplingSettings = shadowDirectives.colorSamplingSettings;
 		this.shadowEnabled = shadowDirectives.shadowEnabled;
+		this.dhShadowEnabled = shadowDirectives.dhShadowEnabled;
 	}
 
 	/**
@@ -214,6 +223,14 @@ public class PackShadowDirectives {
 		return distance;
 	}
 
+	public float getNearPlane() {
+		return nearPlane;
+	}
+
+	public float getFarPlane() {
+		return farPlane;
+	}
+
 	public float getVoxelDistance() {
 		return voxelDistance;
 	}
@@ -262,6 +279,10 @@ public class PackShadowDirectives {
 		return shadowEnabled;
 	}
 
+	public OptionalBoolean isDhShadowEnabled() {
+		return dhShadowEnabled;
+	}
+
 	public ImmutableList<DepthSamplingSettings> getDepthSamplingSettings() {
 		return depthSamplingSettings;
 	}
@@ -279,6 +300,8 @@ public class PackShadowDirectives {
 
 		directives.acceptCommentFloatDirective("SHADOWHPL", distance -> this.distance = distance);
 		directives.acceptConstFloatDirective("shadowDistance", distance -> this.distance = distance);
+		directives.acceptConstFloatDirective("shadowNearPlane", nearPlane -> this.nearPlane = nearPlane);
+		directives.acceptConstFloatDirective("shadowFarPlane", farPlane -> this.farPlane = farPlane);
 		directives.acceptConstFloatDirective("voxelDistance", distance -> this.voxelDistance = distance);
 
 		directives.acceptConstFloatDirective("entityShadowDistanceMul", distance -> this.entityShadowDistanceMul = distance);

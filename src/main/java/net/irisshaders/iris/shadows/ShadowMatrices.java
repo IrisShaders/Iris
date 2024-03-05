@@ -10,16 +10,16 @@ public class ShadowMatrices {
 
 	// NB: These matrices are in column-major order, not row-major order like what you'd expect!
 
-	public static Matrix4f createOrthoMatrix(float halfPlaneLength) {
+	public static Matrix4f createOrthoMatrix(float halfPlaneLength, float nearPlane, float farPlane) {
 		return new Matrix4f(
 			// column 1
 			1.0f / halfPlaneLength, 0f, 0f, 0f,
 			// column 2
 			0f, 1.0f / halfPlaneLength, 0f, 0f,
 			// column 3
-			0f, 0f, 2.0f / (NEAR - FAR), 0f,
+			0f, 0f, 2.0f / (nearPlane - farPlane), 0f,
 			// column 4
-			0f, 0f, -(FAR + NEAR) / (FAR - NEAR), 1f
+			0f, 0f, -(farPlane + nearPlane) / (farPlane - nearPlane), 1f
 		);
 	}
 
@@ -104,7 +104,7 @@ public class ShadowMatrices {
 				0f, 0f, -1.000390648841858f, 1f
 			);
 
-			test("ortho projection hpl=32", expected, createOrthoMatrix(32.0f));
+			test("ortho projection hpl=32", expected, createOrthoMatrix(32.0f, 0.05f, 256.0f));
 
 			// const float shadowDistance = 110.0;
 			// /* SHADOWHPL:110.0 */
@@ -115,7 +115,7 @@ public class ShadowMatrices {
 				0, 0, -1.000390648841858f, 1
 			);
 
-			test("ortho projection hpl=110", expected110, createOrthoMatrix(110.0f));
+			test("ortho projection hpl=110", expected110, createOrthoMatrix(110.0f, 0.05f, 256.0f));
 
 			Matrix4f expected90Proj = new Matrix4f(
 				1.0f, 0.0f, 0.0f, 0.0f,

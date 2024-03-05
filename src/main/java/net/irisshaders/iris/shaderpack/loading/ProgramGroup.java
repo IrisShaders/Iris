@@ -9,7 +9,8 @@ public enum ProgramGroup {
 	Gbuffers("gbuffers"),
 	Deferred("deferred"),
 	Composite("composite"),
-	Final("final");
+	Final("final"),
+	Dh("dh");
 
 	private final String baseName;
 

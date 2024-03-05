@@ -101,6 +101,7 @@ public class ShaderProperties {
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private ShadowCullState shadowCulling = ShadowCullState.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
+	private OptionalBoolean dhShadowEnabled = OptionalBoolean.DEFAULT;
 	private Optional<ParticleRenderingSettings> particleRenderingSettings = Optional.empty();
 	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
@@ -194,6 +195,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "separateEntityDraws", bool -> separateEntityDraws = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
+			handleBooleanDirective(key, value, "dhShadow.enabled", bool -> dhShadowEnabled = bool);
 			handleBooleanDirective(key, value, "particles.before.deferred", bool -> {
 				if (bool.orElse(false) && particleRenderingSettings.isEmpty()) {
 					particleRenderingSettings = Optional.of(ParticleRenderingSettings.BEFORE);
@@ -372,6 +374,11 @@ public class ShaderProperties {
 						return;
 					}
 
+					if (trueSize < 1) {
+						// Assume the shader dev intended to disable the buffer
+						return;
+					}
+
 					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0));
 				} else {
 					// Assume it's a long one
@@ -388,6 +395,11 @@ public class ShaderProperties {
 
 					if (trueIndex > 8) {
 						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
+						return;
+					}
+
+					if (trueSize < 1) {
+						// Assume the shader dev intended to disable the buffer
 						return;
 					}
 
@@ -578,6 +590,10 @@ public class ShaderProperties {
 			handleWhitespacedListDirective(key, value, "screen", options -> mainScreenOptions = options);
 			handlePrefixedWhitespacedListDirective("screen.", key, value, subScreenOptions::put);
 		});
+	}
+
+	public OptionalBoolean getDhShadowEnabled() {
+		return dhShadowEnabled;
 	}
 
 	private static void handleBooleanValue(String key, String value, BooleanConsumer handler) {

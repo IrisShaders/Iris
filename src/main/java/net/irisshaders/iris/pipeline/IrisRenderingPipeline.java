@@ -469,7 +469,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			this.shadowRenderer = null;
 		}
 
-		dhCompat.setFramebuffer(renderTargets.createGbufferFramebuffer(ImmutableSet.of(), new int[]{0}));
 		// TODO: Create fallback Sodium shaders if the pack doesn't provide terrain shaders
 		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
@@ -478,6 +477,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 
 		this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
+
+		DHCompat.connectNewPipeline(this, shadowDirectives.isDhShadowEnabled().orElse(true));
 
 		// first optimization pass
 		this.customUniforms.optimise();
@@ -770,7 +771,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
 		IrisSamplers.addCustomImages(samplerHolder, customImages);
 
-		if (isShadowPass || IrisSamplers.hasShadowSamplers(samplerHolder)) {
+		if (IrisSamplers.hasShadowSamplers(samplerHolder)) {
 			if (!isShadowPass) {
 				shadowTargetsSupplier.get();
 			}
@@ -1198,6 +1199,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 
 		renderTargets.destroy();
+		DHCompat.clearPipeline();
 
 		customImages.forEach(GlImage::destroy);
 
@@ -1252,5 +1254,47 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	@Override
 	public void setIsMainBound(boolean bound) {
 		isMainBound = bound;
+	}
+
+	public Optional<ProgramSource> getDHTerrainShader() {
+		return resolver.resolve(ProgramId.DhTerrain);
+	}
+
+	public Optional<ProgramSource> getDHWaterShader() {
+		return resolver.resolve(ProgramId.DhWater);
+	}
+
+	public Optional<ProgramSource> getDHShadowShader() {
+		return resolver.resolve(ProgramId.DhShadow);
+	}
+
+	public CustomUniforms getCustomUniforms() {
+		return customUniforms;
+	}
+
+	public GlFramebuffer createDHFramebuffer(ProgramSource sources, boolean trans) {
+		return renderTargets.createDHFramebuffer(trans ? flippedAfterTranslucent : flippedAfterPrepare,
+			sources.getDirectives().getDrawBuffers());
+	}
+
+	public ImmutableSet<Integer> getFlippedBeforeShadow() {
+		return flippedBeforeShadow;
+	}
+
+	public ImmutableSet<Integer> getFlippedAfterPrepare() {
+		return flippedAfterPrepare;
+	}
+
+	public ImmutableSet<Integer> getFlippedAfterTranslucent() {
+		return flippedAfterTranslucent;
+	}
+
+	public GlFramebuffer createDHFramebufferShadow(ProgramSource sources) {
+
+		return shadowRenderTargets.createDHFramebuffer(ImmutableSet.of(), new int[]{0, 1});
+	}
+
+	public boolean hasShadowRenderTargets() {
+		return shadowRenderTargets != null;
 	}
 }

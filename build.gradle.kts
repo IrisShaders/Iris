@@ -124,7 +124,7 @@ dependencies {
     modRuntimeOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
     modRuntimeOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
 
-    modCompileOnly("maven.modrinth", "distanthorizons", "2.0.0-a-1.19.4")
+    modCompileOnly(files(projectDir.resolve("custom_sodium").resolve("DistantHorizons-fabric-2.0.2-a-dev-1.20.4.jar")))
 
     fun addEmbeddedFabricModule(name: String) {
         val module = fabricApi.module(name, Constants.FABRIC_API_VERSION)
@@ -141,6 +141,7 @@ tasks {
 
     jar {
         from("${rootProject.projectDir}/LICENSE")
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
         val sodiumCompatibility = sourceSets.getByName("sodiumCompatibility")
         from(sodiumCompatibility.output.classesDirs)
@@ -149,6 +150,12 @@ tasks {
         val vendored = sourceSets.getByName("vendored")
         from(vendored.output.classesDirs)
         from(vendored.output.resourcesDir)
+
+        from (sodiumCompatibility.output) {
+            this.filesMatching("*refmap.json") {
+                this.name = "iris-sodium-compat-refmap.json"
+            }
+        }
 
         manifest.attributes["Main-Class"] = "net.irisshaders.iris.LaunchWarn"
     }

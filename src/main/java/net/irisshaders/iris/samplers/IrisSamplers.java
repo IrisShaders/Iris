@@ -3,6 +3,7 @@ package net.irisshaders.iris.samplers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.gl.image.GlImage;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
@@ -92,6 +93,10 @@ public class IrisSamplers {
 				samplers.addDynamicSampler(texture, name);
 			}
 		}
+
+		// Add the DH texture here, to make sure it's always visible.
+		samplers.addDynamicSampler(TextureType.TEXTURE_2D, DHCompat::getDepthTex, null, "dhDepthTex", "dhDepthTex0");
+		samplers.addDynamicSampler(TextureType.TEXTURE_2D, DHCompat::getDepthTexNoTranslucent, null, "dhDepthTex1");
 	}
 
 	public static void addNoiseSampler(SamplerHolder samplers, TextureAccess sampler) {
@@ -102,7 +107,7 @@ public class IrisSamplers {
 		// TODO: Keep this up to date with the actual definitions.
 		// TODO: Don't query image presence using the sampler interface even though the current underlying implementation
 		//       is the same.
-		ImmutableList.Builder<String> shadowSamplers = ImmutableList.<String>builder().add("shadowtex0", "shadowtex0HW", "shadowtex1", "shadowtex1HW", "shadow", "watershadow",
+		ImmutableList.Builder<String> shadowSamplers = ImmutableList.<String>builder().add("shadowtex0", "shadowtex0DH", "shadowtex0HW", "shadowtex1", "shadowtex1HW", "shadowtex1DH", "shadow", "watershadow",
 			"shadowcolor");
 
 		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS; i++) {

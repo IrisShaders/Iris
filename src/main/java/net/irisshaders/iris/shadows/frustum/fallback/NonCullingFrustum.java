@@ -1,10 +1,12 @@
 package net.irisshaders.iris.shadows.frustum.fallback;
 
+import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
+import com.seibel.distanthorizons.coreapi.util.math.Mat4f;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import org.joml.Matrix4f;
 
-public class NonCullingFrustum extends Frustum {
+public class NonCullingFrustum extends Frustum implements IDhApiShadowCullingFrustum {
 	public NonCullingFrustum() {
 		super(new Matrix4f(), new Matrix4f());
 	}
@@ -18,6 +20,16 @@ public class NonCullingFrustum extends Frustum {
 	}
 
 	public boolean isVisible(AABB box) {
+		return true;
+	}
+
+	@Override
+	public void update(int worldMinBlockY, int worldMaxBlockY, Mat4f worldViewProjection) {
+
+	}
+
+	@Override
+	public boolean intersects(int lodBlockPosMinX, int lodBlockPosMinZ, int lodBlockWidth, int lodDetailLevel) {
 		return true;
 	}
 }

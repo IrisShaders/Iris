@@ -1,5 +1,7 @@
 package net.irisshaders.iris.shadows.frustum.advanced;
 
+import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
+import com.seibel.distanthorizons.coreapi.util.math.Mat4f;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
@@ -28,9 +30,12 @@ import org.joml.Vector4f;
  * are not sensitive to the specific internal ordering of planes and corners, in order to avoid potential bugs at the
  * cost of slightly more computations.</p>
  */
-public class AdvancedShadowCullingFrustum extends Frustum {
+public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShadowCullingFrustum {
 	private static final int MAX_CLIPPING_PLANES = 13;
 	protected final BoxCuller boxCuller;
+	private int worldMinYDH;
+	private int worldMaxYDH;
+
 	/**
 	 * We store each plane equation as a Vector4f.
 	 *
@@ -378,5 +383,16 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		}
 
 		return true;
+	}
+
+	@Override
+	public void update(int worldMinBlockY, int worldMaxBlockY, Mat4f worldViewProjection) {
+		this.worldMinYDH = worldMinBlockY;
+		this.worldMaxYDH = worldMaxBlockY;
+	}
+
+	@Override
+	public boolean intersects(int lodBlockPosMinX, int lodBlockPosMinZ, int lodBlockWidth, int lodDetailLevel) {
+		return this.isVisible(lodBlockPosMinX, this.worldMinYDH, lodBlockPosMinZ, lodBlockPosMinX + lodBlockWidth, this.worldMaxYDH, lodBlockPosMinZ + lodBlockWidth) != 0;
 	}
 }

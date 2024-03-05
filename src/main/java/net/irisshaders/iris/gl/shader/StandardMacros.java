@@ -3,7 +3,9 @@ package net.irisshaders.iris.gl.shader;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
+import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.helpers.StringPair;
@@ -47,6 +49,27 @@ public class StandardMacros {
 		define(standardDefines, getVendor());
 		define(standardDefines, getRenderer());
 		define(standardDefines, "IS_IRIS");
+
+
+		if (FabricLoader.getInstance().isModLoaded("distanthorizons") && DHCompat.hasRenderingEnabled()) {
+			define(standardDefines, "DISTANT_HORIZONS");
+		}
+
+		define(standardDefines, "DH_BLOCK_UNKNOWN", String.valueOf(0));
+		define(standardDefines, "DH_BLOCK_LEAVES", String.valueOf(1));
+		define(standardDefines, "DH_BLOCK_STONE", String.valueOf(2));
+		define(standardDefines, "DH_BLOCK_WOOD", String.valueOf(3));
+		define(standardDefines, "DH_BLOCK_METAL", String.valueOf(4));
+		define(standardDefines, "DH_BLOCK_DIRT", String.valueOf(5));
+		define(standardDefines, "DH_BLOCK_LAVA", String.valueOf(6));
+		define(standardDefines, "DH_BLOCK_DEEPSLATE", String.valueOf(7));
+		define(standardDefines, "DH_BLOCK_SNOW", String.valueOf(8));
+		define(standardDefines, "DH_BLOCK_SAND", String.valueOf(9));
+		define(standardDefines, "DH_BLOCK_TERRACOTTA", String.valueOf(10));
+		define(standardDefines, "DH_BLOCK_NETHER_STONE", String.valueOf(11));
+		define(standardDefines, "DH_BLOCK_WATER", String.valueOf(12));
+		define(standardDefines, "DH_BLOCK_AIR", String.valueOf(14));
+		define(standardDefines, "DH_BLOCK_ILLUMINATED", String.valueOf(15));
 
 		for (String glExtension : getGlExtensions()) {
 			define(standardDefines, glExtension);

@@ -55,14 +55,13 @@ public class ShadowRenderTargets {
 		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 		this.noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
 
+		this.ownedFramebuffers = new ArrayList<>();
+		this.resolution = resolution;
+
 		for (int i = 0; i < shadowDirectives.getDepthSamplingSettings().size(); i++) {
 			this.hardwareFiltered[i] = shadowDirectives.getDepthSamplingSettings().get(i).getHardwareFiltering();
 			this.linearFiltered[i] = !shadowDirectives.getDepthSamplingSettings().get(i).getNearest();
 		}
-
-		this.resolution = resolution;
-
-		this.ownedFramebuffers = new ArrayList<>();
 
 		// NB: Make sure all buffers are cleared so that they don't contain undefined
 		// data. Otherwise very weird things can happen.
@@ -220,6 +219,20 @@ public class ShadowRenderTargets {
 		// attachment no matter what.
 		framebuffer.addColorAttachment(0, get(0).getMainTexture());
 		framebuffer.noDrawBuffers();
+
+		return framebuffer;
+	}
+
+	public GlFramebuffer createDHFramebuffer(ImmutableSet<Integer> stageWritesToAlt, int[] drawBuffers) {
+		if (drawBuffers.length == 0) {
+			return createEmptyFramebuffer();
+		}
+
+		ImmutableSet<Integer> stageWritesToMain = invert(stageWritesToAlt, drawBuffers);
+
+		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
+
+		framebuffer.addDepthAttachment(mainDepth.getTextureId());
 
 		return framebuffer;
 	}
