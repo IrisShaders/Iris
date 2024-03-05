@@ -204,7 +204,7 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 	}
 
 	@Override
-	public void dumpContents(ResourceLocation id, Path path) throws IOException {
+	public void dumpContents(ResourceLocation id, Path path) {
 		String fileName = id.toDebugFileName();
 		TextureUtil.writeAsPNG(path, fileName, getId(), mipLevel, width, height);
 		dumpSpriteNames(path, fileName, texturesByName);

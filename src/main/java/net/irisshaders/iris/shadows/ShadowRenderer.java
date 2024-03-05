@@ -249,7 +249,7 @@ public class ShadowRenderer {
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE4);
 
 		for (MipmapPass mipmapPass : mipmapPasses) {
-			setupMipmappingForTexture(mipmapPass.getTexture(), mipmapPass.getTargetFilteringMode());
+			setupMipmappingForTexture(mipmapPass.texture(), mipmapPass.targetFilteringMode());
 		}
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0);
@@ -706,21 +706,8 @@ public class ShadowRenderer {
 		((MemoryTrackingRenderBuffers) buffers).freeAndDeleteBuffers();
 	}
 
-	private static class MipmapPass {
-		private final int texture;
-		private final int targetFilteringMode;
+	private record MipmapPass(int texture, int targetFilteringMode) {
 
-		public MipmapPass(int texture, int targetFilteringMode) {
-			this.texture = texture;
-			this.targetFilteringMode = targetFilteringMode;
-		}
 
-		public int getTexture() {
-			return texture;
-		}
-
-		public int getTargetFilteringMode() {
-			return targetFilteringMode;
-		}
 	}
 }

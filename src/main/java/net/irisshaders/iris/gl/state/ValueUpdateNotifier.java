@@ -5,9 +5,7 @@ package net.irisshaders.iris.gl.state;
  */
 public interface ValueUpdateNotifier {
 	/**
-	 * Sets up a listener with this notifier. Whenever the underlying value of
-	 *
-	 * @param listener
+	 * Sets up a listener with this notifier.
 	 */
 	void setListener(Runnable listener);
 }

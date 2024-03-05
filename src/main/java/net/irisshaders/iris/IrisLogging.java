@@ -17,6 +17,10 @@ public class IrisLogging {
 		this.logger.error(LogUtils.FATAL_MARKER, fatal);
 	}
 
+	public void fatal(String fatal, Throwable t) {
+		this.logger.error(LogUtils.FATAL_MARKER, fatal, t);
+	}
+
 	public void error(String error) {
 		this.logger.error(error);
 	}

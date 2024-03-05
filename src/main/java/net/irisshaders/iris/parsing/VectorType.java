@@ -40,16 +40,12 @@ abstract public class VectorType extends Type.ObjectType {
 
 	public static VectorType of(Type.Primitive primitive, int size) {
 		if (primitive.equals(Type.Float)) {
-			switch (size) {
-				case 2:
-					return VEC2;
-				case 3:
-					return VEC3;
-				case 4:
-					return VEC4;
-				default:
-					throw new IllegalArgumentException("not a valid vector");
-			}
+            return switch (size) {
+                case 2 -> VEC2;
+                case 3 -> VEC3;
+                case 4 -> VEC4;
+                default -> throw new IllegalArgumentException("not a valid vector");
+            };
 		} else {
 			return new ArrayVector(primitive, size);
 		}

@@ -28,7 +28,7 @@ public class ShaderpackDirectoryManager {
 
 		for (int i = 0; i < original.length; i++) {
 			// check if it's a section sign
-			if (original[i] == '\u00a7') {
+			if (original[i] == '§') {
 				i++;
 			} else {
 				cleaned[c++] = original[i];

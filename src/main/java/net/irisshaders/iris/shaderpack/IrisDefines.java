@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.parsing.BiomeCategories;
-import net.irisshaders.iris.uniforms.BiomeParameters;
+import net.irisshaders.iris.uniforms.BiomeUniforms;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ public class IrisDefines {
 		define(s, "PPT_SNOW", "2");
 		define(s, "BIOME_SWAMP_HILLS", "-1");
 
-		BiomeParameters.getBiomeMap().forEach((biome, id) -> define(s, "BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), String.valueOf(id)));
+		BiomeUniforms.getBiomeMap().forEach((biome, id) -> define(s, "BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), String.valueOf(id)));
 
 		BiomeCategories[] categories = BiomeCategories.values();
 		for (int i = 0; i < categories.length; i++) {

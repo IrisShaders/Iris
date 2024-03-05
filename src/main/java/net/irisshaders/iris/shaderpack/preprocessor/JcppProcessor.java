@@ -40,7 +40,7 @@ public class JcppProcessor {
 		// in errors...
 		try {
 			for (StringPair envDefine : environmentDefines) {
-				pp.addMacro(envDefine.getKey(), envDefine.getValue());
+				pp.addMacro(envDefine.key(), envDefine.value());
 			}
 		} catch (LexerException e) {
 			throw new RuntimeException("Unexpected LexerException processing macros", e);

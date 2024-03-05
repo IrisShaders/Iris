@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * Disables void plane rendering when submerged in a fluid, to avoid breaking the fog illusion in oceans
  * and lava.
  * <p>
- * Inspired by https://github.com/CaffeineMC/sodium-fabric/pull/710, but this implementation
+ * Inspired by <a href="https://github.com/CaffeineMC/sodium-fabric/pull/710">this Sodium PR</a>, but this implementation
  * takes a far more conservative approach and only disables specific parts of sky rendering in high-fog
  * situations.
  */

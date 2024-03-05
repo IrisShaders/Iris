@@ -308,9 +308,9 @@ public class SodiumTerrainPipeline {
 			terrainSolidBlendOverride = sources.getDirectives().getBlendModeOverride().orElse(ProgramId.Terrain.getBlendModeOverride());
 			terrainSolidBufferOverrides = new ArrayList<>();
 			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
-				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());
+				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.index());
 				if (index > -1) {
-					terrainSolidBufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+					terrainSolidBufferOverrides.add(new BufferBlendOverride(index, information.blendMode()));
 				}
 			});
 
@@ -343,9 +343,9 @@ public class SodiumTerrainPipeline {
 			terrainCutoutBlendOverride = sources.getDirectives().getBlendModeOverride().orElse(ProgramId.Terrain.getBlendModeOverride());
 			terrainCutoutBufferOverrides = new ArrayList<>();
 			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
-				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());
+				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.index());
 				if (index > -1) {
-					terrainCutoutBufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+					terrainCutoutBufferOverrides.add(new BufferBlendOverride(index, information.blendMode()));
 				}
 			});
 			terrainCutoutAlpha = sources.getDirectives().getAlphaTestOverride().or(terrainCutoutDefault);
@@ -381,9 +381,9 @@ public class SodiumTerrainPipeline {
 			translucentBlendOverride = sources.getDirectives().getBlendModeOverride().orElse(ProgramId.Water.getBlendModeOverride());
 			translucentBufferOverrides = new ArrayList<>();
 			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
-				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());
+				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.index());
 				if (index > -1) {
-					translucentBufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+					translucentBufferOverrides.add(new BufferBlendOverride(index, information.blendMode()));
 				}
 			});
 			translucentAlpha = sources.getDirectives().getAlphaTestOverride().or(translucentDefault);
@@ -418,9 +418,9 @@ public class SodiumTerrainPipeline {
 			shadowBlendOverride = sources.getDirectives().getBlendModeOverride().orElse(ProgramId.Shadow.getBlendModeOverride());
 			shadowBufferOverrides = new ArrayList<>();
 			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {
-				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.getIndex());
+				int index = Ints.indexOf(sources.getDirectives().getDrawBuffers(), information.index());
 				if (index > -1) {
-					shadowBufferOverrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+					shadowBufferOverrides.add(new BufferBlendOverride(index, information.blendMode()));
 				}
 			});
 			shadowAlpha = sources.getDirectives().getAlphaTestOverride().or(shadowDefault);

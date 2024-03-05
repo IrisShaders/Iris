@@ -84,7 +84,7 @@ public class UpdateChecker {
 				try (InputStream in = new URL("https://github.com/IrisShaders/Iris-Update-Index/releases/latest/download/updateIndex.json").openStream()) {
 					String updateIndex;
 					try {
-						updateIndex = new JsonParser().parse(new InputStreamReader(in)).getAsJsonObject().get(StandardMacros.getMcVersion()).getAsString();
+						updateIndex = JsonParser.parseReader(new InputStreamReader(in)).getAsJsonObject().get(StandardMacros.getMcVersion()).getAsString();
 					} catch (NullPointerException e) {
 						Iris.logger.warn("[Iris Update Check] This version doesn't have an update index, skipping.");
 						return null;

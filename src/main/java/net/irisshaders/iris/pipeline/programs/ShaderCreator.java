@@ -101,9 +101,9 @@ public class ShaderCreator {
 
 		List<BufferBlendOverride> overrides = new ArrayList<>();
 		source.getDirectives().getBufferBlendOverrides().forEach(information -> {
-			int index = Ints.indexOf(source.getDirectives().getDrawBuffers(), information.getIndex());
+			int index = Ints.indexOf(source.getDirectives().getDrawBuffers(), information.index());
 			if (index > -1) {
-				overrides.add(new BufferBlendOverride(index, information.getBlendMode()));
+				overrides.add(new BufferBlendOverride(index, information.blendMode()));
 			}
 		});
 
@@ -177,69 +177,53 @@ public class ShaderCreator {
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, null, null, fragment);
 
 		return new FallbackShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
-			writingToAfterTranslucent, blendModeOverride, alpha.getReference(), parent);
+			writingToAfterTranslucent, blendModeOverride, alpha.reference(), parent);
 	}
 
-	private static class IrisProgramResourceFactory implements ResourceProvider {
-		private final String json;
-		private final String vertex;
-		private final String geometry;
-		private final String tessControl;
-		private final String tessEval;
-		private final String fragment;
-
-		public IrisProgramResourceFactory(String json, String vertex, String geometry, String tessControl, String tessEval, String fragment) {
-			this.json = json;
-			this.vertex = vertex;
-			this.geometry = geometry;
-			this.tessControl = tessControl;
-			this.tessEval = tessEval;
-			this.fragment = fragment;
-		}
+	private record IrisProgramResourceFactory(String json, String vertex, String geometry, String tessControl,
+											  String tessEval, String fragment) implements ResourceProvider {
 
 		@Override
-		public Optional<Resource> getResource(ResourceLocation id) {
-			final String path = id.getPath();
+			public Optional<Resource> getResource(ResourceLocation id) {
+				final String path = id.getPath();
 
-			if (path.endsWith("json")) {
-				return Optional.of(new StringResource(id, json));
-			} else if (path.endsWith("vsh")) {
-				return Optional.of(new StringResource(id, vertex));
-			} else if (path.endsWith("gsh")) {
-				if (geometry == null) {
-					return Optional.empty();
+				if (path.endsWith("json")) {
+					return Optional.of(new StringResource(id, json));
+				} else if (path.endsWith("vsh")) {
+					return Optional.of(new StringResource(id, vertex));
+				} else if (path.endsWith("gsh")) {
+					if (geometry == null) {
+						return Optional.empty();
+					}
+					return Optional.of(new StringResource(id, geometry));
+				} else if (path.endsWith("tcs")) {
+					if (tessControl == null) {
+						return Optional.empty();
+					}
+					return Optional.of(new StringResource(id, tessControl));
+				} else if (path.endsWith("tes")) {
+					if (tessEval == null) {
+						return Optional.empty();
+					}
+					return Optional.of(new StringResource(id, tessEval));
+				} else if (path.endsWith("fsh")) {
+					return Optional.of(new StringResource(id, fragment));
 				}
-				return Optional.of(new StringResource(id, geometry));
-			} else if (path.endsWith("tcs")) {
-				if (tessControl == null) {
-					return Optional.empty();
-				}
-				return Optional.of(new StringResource(id, tessControl));
-			} else if (path.endsWith("tes")) {
-				if (tessEval == null) {
-					return Optional.empty();
-				}
-				return Optional.of(new StringResource(id, tessEval));
-			} else if (path.endsWith("fsh")) {
-				return Optional.of(new StringResource(id, fragment));
+
+				return Optional.empty();
 			}
-
-			return Optional.empty();
 		}
-	}
 
 	private static class StringResource extends Resource {
-		private final ResourceLocation id;
-		private final String content;
+        private final String content;
 
 		private StringResource(ResourceLocation id, String content) {
 			super(new PathPackResources("<iris shaderpack shaders>", FabricLoader.getInstance().getConfigDir(), true), () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
-			this.id = id;
-			this.content = content;
+            this.content = content;
 		}
 
 		@Override
-		public InputStream open() throws IOException {
+		public InputStream open() {
 			return IOUtils.toInputStream(content, StandardCharsets.UTF_8);
 		}
 	}

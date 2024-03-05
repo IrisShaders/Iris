@@ -397,18 +397,10 @@ public class MixinGameRenderer {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null) {
-			switch (pipeline.getPhase()) {
-				case CUSTOM_SKY:
-				case SKY:
-				case SUNSET:
-				case SUN:
-				case STARS:
-				case VOID:
-				case MOON:
-					return true;
-				default:
-					return false;
-			}
+            return switch (pipeline.getPhase()) {
+                case CUSTOM_SKY, SKY, SUNSET, SUN, STARS, VOID, MOON -> true;
+                default -> false;
+            };
 		} else {
 			return false;
 		}

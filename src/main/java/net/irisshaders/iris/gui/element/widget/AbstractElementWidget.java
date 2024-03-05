@@ -14,21 +14,21 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractElementWidget<T extends OptionMenuElement> implements GuiEventListener, NarratableEntry {
-	public static final AbstractElementWidget<OptionMenuElement> EMPTY = new AbstractElementWidget<OptionMenuElement>(null) {
-		@Override
-		public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float tickDelta, boolean hovered) {
-		}
+	public static final AbstractElementWidget<OptionMenuElement> EMPTY = new AbstractElementWidget<>(null) {
+        @Override
+        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+        }
 
-		@Override
-		public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent pGuiEventListener0) {
-			return null;
-		}
+        @Override
+        public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent pGuiEventListener0) {
+            return null;
+        }
 
-		@Override
-		public @NotNull ScreenRectangle getRectangle() {
-			return ScreenRectangle.empty();
-		}
-	};
+        @Override
+        public @NotNull ScreenRectangle getRectangle() {
+            return ScreenRectangle.empty();
+        }
+    };
 	protected final T element;
 	public ScreenRectangle bounds = ScreenRectangle.empty();
 	private boolean focused;

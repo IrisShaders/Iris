@@ -160,19 +160,13 @@ public class CustomTextureManager {
 					if (texture != null) {
 						int id = texture.getId();
 						PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
-						AbstractTexture pbrTexture;
-						switch (pbrType) {
-							case NORMAL:
-								pbrTexture = pbrHolder.getNormalTexture();
-								break;
-							case SPECULAR:
-								pbrTexture = pbrHolder.getSpecularTexture();
-								break;
-							default:
-								throw new Error("Unknown PBRType '" + pbrType + "'");
-						}
+						AbstractTexture pbrTexture = switch (pbrType) {
+                            case NORMAL -> pbrHolder.getNormalTexture();
+                            case SPECULAR -> pbrHolder.getSpecularTexture();
+                            default -> throw new IllegalArgumentException("Unknown PBRType '" + pbrType + "'");
+                        };
 
-						TextureFormat textureFormat = TextureFormatLoader.getFormat();
+                        TextureFormat textureFormat = TextureFormatLoader.getFormat();
 						if (textureFormat != null) {
 							int previousBinding = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 							GlStateManager._bindTexture(pbrTexture.getId());

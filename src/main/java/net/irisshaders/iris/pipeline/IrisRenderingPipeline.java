@@ -119,8 +119,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final ProgramFallbackResolver resolver;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
 	private final Set<ShaderInstance> loadedShaders;
-	private final GlFramebuffer baseline;
-	private final CompositeRenderer beginRenderer;
+    private final CompositeRenderer beginRenderer;
 	private final CompositeRenderer prepareRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
@@ -175,7 +174,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private int currentSpecularTexture;
 	private ColorSpace currentColorSpace;
 
-	public IrisRenderingPipeline(ProgramSet programSet) throws IOException {
+	public IrisRenderingPipeline(ProgramSet programSet) {
 		ShaderPrinter.resetPrintState();
 
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
@@ -400,8 +399,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			return builder.build();
 		};
 
-		this.baseline = renderTargets.createFramebufferWritingToMain(new int[]{0});
-		this.loadedShaders = new HashSet<>();
+        this.loadedShaders = new HashSet<>();
 
 
 		this.shaderMap = new ShaderMap(key -> {

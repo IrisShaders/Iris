@@ -29,7 +29,7 @@ public class BlendModeStorage {
 			GlStateManager._disableBlend();
 		} else {
 			GlStateManager._enableBlend();
-			GlStateManager._blendFuncSeparate(override.getSrcRgb(), override.getDstRgb(), override.getSrcAlpha(), override.getDstAlpha());
+			GlStateManager._blendFuncSeparate(override.srcRgb(), override.dstRgb(), override.srcAlpha(), override.dstAlpha());
 		}
 
 		blendLocked = true;
@@ -48,7 +48,7 @@ public class BlendModeStorage {
 			IrisRenderSystem.disableBufferBlend(index);
 		} else {
 			IrisRenderSystem.enableBufferBlend(index);
-			IrisRenderSystem.blendFuncSeparatei(index, override.getSrcRgb(), override.getDstRgb(), override.getSrcAlpha(), override.getDstAlpha());
+			IrisRenderSystem.blendFuncSeparatei(index, override.srcRgb(), override.dstRgb(), override.srcAlpha(), override.dstAlpha());
 		}
 
 		blendLocked = true;
@@ -75,7 +75,7 @@ public class BlendModeStorage {
 			GlStateManager._disableBlend();
 		}
 
-		GlStateManager._blendFuncSeparate(originalBlend.getSrcRgb(), originalBlend.getDstRgb(),
-			originalBlend.getSrcAlpha(), originalBlend.getDstAlpha());
+		GlStateManager._blendFuncSeparate(originalBlend.srcRgb(), originalBlend.dstRgb(),
+			originalBlend.srcAlpha(), originalBlend.dstAlpha());
 	}
 }

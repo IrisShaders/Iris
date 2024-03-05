@@ -352,7 +352,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 	}
 
-	public class TopButtonRowEntry extends BaseEntry {
+	static class TopButtonRowEntry extends BaseEntry {
 		private static final Component NONE_PRESENT_LABEL = Component.translatable("options.iris.shaders.nonePresent").withStyle(ChatFormatting.GRAY);
 		private static final Component SHADERS_DISABLED_LABEL = Component.translatable("options.iris.shaders.disabled");
 		private static final Component SHADERS_ENABLED_LABEL = Component.translatable("options.iris.shaders.enabled");

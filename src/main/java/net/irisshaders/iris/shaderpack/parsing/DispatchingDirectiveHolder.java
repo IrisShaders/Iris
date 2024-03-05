@@ -250,7 +250,7 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 		}
 	}
 
-	private void typeCheckHelper(String expected, Map<String, ? extends Object> candidates, ConstDirectiveParser.ConstDirective directive) {
+	private void typeCheckHelper(String expected, Map<String, ?> candidates, ConstDirectiveParser.ConstDirective directive) {
 		if (candidates.containsKey(directive.getKey())) {
 			Iris.logger.warn("Ignoring " + directive + " because it is of the wrong type, a type of " + expected + " is expected.");
 		}

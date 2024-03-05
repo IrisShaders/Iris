@@ -41,23 +41,15 @@ public enum TextureStage {
 	COMPOSITE_AND_FINAL;
 
 	public static Optional<TextureStage> parse(String name) {
-		switch (name) {
-			case "setup":
-				return Optional.of(SETUP);
-			case "begin":
-				return Optional.of(BEGIN);
-			case "shadowcomp":
-				return Optional.of(SHADOWCOMP);
-			case "prepare":
-				return Optional.of(PREPARE);
-			case "gbuffers":
-				return Optional.of(GBUFFERS_AND_SHADOW);
-			case "deferred":
-				return Optional.of(DEFERRED);
-			case "composite":
-				return Optional.of(COMPOSITE_AND_FINAL);
-			default:
-				return Optional.empty();
-		}
+        return switch (name) {
+            case "setup" -> Optional.of(SETUP);
+            case "begin" -> Optional.of(BEGIN);
+            case "shadowcomp" -> Optional.of(SHADOWCOMP);
+            case "prepare" -> Optional.of(PREPARE);
+            case "gbuffers" -> Optional.of(GBUFFERS_AND_SHADOW);
+            case "deferred" -> Optional.of(DEFERRED);
+            case "composite" -> Optional.of(COMPOSITE_AND_FINAL);
+            default -> Optional.empty();
+        };
 	}
 }

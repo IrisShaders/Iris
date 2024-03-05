@@ -133,20 +133,20 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 
 			NeighboringPlaneSet neighbors = NeighboringPlaneSet.forPlane(planeIndex);
 
-			if (!isBack[neighbors.getPlane0()]) {
-				addEdgePlane(plane, planes[neighbors.getPlane0()]);
+			if (!isBack[neighbors.plane0()]) {
+				addEdgePlane(plane, planes[neighbors.plane0()]);
 			}
 
-			if (!isBack[neighbors.getPlane1()]) {
-				addEdgePlane(plane, planes[neighbors.getPlane1()]);
+			if (!isBack[neighbors.plane1()]) {
+				addEdgePlane(plane, planes[neighbors.plane1()]);
 			}
 
-			if (!isBack[neighbors.getPlane2()]) {
-				addEdgePlane(plane, planes[neighbors.getPlane2()]);
+			if (!isBack[neighbors.plane2()]) {
+				addEdgePlane(plane, planes[neighbors.plane2()]);
 			}
 
-			if (!isBack[neighbors.getPlane3()]) {
-				addEdgePlane(plane, planes[neighbors.getPlane3()]);
+			if (!isBack[neighbors.plane3()]) {
+				addEdgePlane(plane, planes[neighbors.plane3()]);
 			}
 		}
 	}

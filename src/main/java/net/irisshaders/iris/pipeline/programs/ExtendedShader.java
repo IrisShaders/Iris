@@ -6,6 +6,7 @@ import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
@@ -96,7 +97,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.blendModeOverride = blendModeOverride;
 		this.bufferBlendOverrides = bufferBlendOverrides;
 		this.hasOverrides = bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty();
-		this.alphaTest = alphaTest.getReference();
+		this.alphaTest = alphaTest.reference();
 		this.parent = parent;
 
 		this.modelViewInverse = this.getUniform("ModelViewMatInverse");
@@ -161,7 +162,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 			if (normalMatrix != null) {
 				normalMatrix.set(tempMatrix3f.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer())).invert().transpose().get(tempFloats2));
 			}
-		} else {
 		}
 
 		uploadIfNotNull(projectionInverse);
@@ -229,7 +229,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	}
 
 	@Override
-	public void iris$createExtraShaders(ResourceProvider factory, String name) throws IOException {
+	public void iris$createExtraShaders(ResourceProvider factory, String name) {
 		factory.getResource(new ResourceLocation("minecraft", name + "_geometry.gsh")).ifPresent(geometry -> {
 			try {
 				this.geometry = Program.compileShader(IrisProgramTypes.GEOMETRY, name, geometry.open(), geometry.sourcePackId(), new GlslPreprocessor() {
@@ -240,7 +240,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 					}
 				});
 			} catch (IOException e) {
-				e.printStackTrace();
+				Iris.logger.error("Failed to create shader program", e);
 			}
 		});
 		factory.getResource(new ResourceLocation("minecraft", name + "_tessControl.tcs")).ifPresent(tessControl -> {
@@ -253,7 +253,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 					}
 				});
 			} catch (IOException e) {
-				e.printStackTrace();
+				Iris.logger.error("Failed to create shader program", e);
 			}
 		});
 		factory.getResource(new ResourceLocation("minecraft", name + "_tessEval.tes")).ifPresent(tessEval -> {
@@ -266,7 +266,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 					}
 				});
 			} catch (IOException e) {
-				e.printStackTrace();
+				Iris.logger.error("Failed to create shader program", e);
 			}
 		});
 	}

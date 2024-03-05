@@ -170,18 +170,13 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714">Optifine Doc</a>
 	 */
 	public static String getOsString() {
-		switch (Util.getPlatform()) {
-			case OSX:
-				return "MC_OS_MAC";
-			case LINUX:
-				return "MC_OS_LINUX";
-			case WINDOWS:
-				return "MC_OS_WINDOWS";
-			case SOLARIS: // Note: Optifine doesn't have a macro for Solaris. https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714
-			case UNKNOWN:
-			default:
-				return "MC_OS_UNKNOWN";
-		}
+        return switch (Util.getPlatform()) {
+            case OSX -> "MC_OS_MAC";
+            case LINUX -> "MC_OS_LINUX";
+            case WINDOWS ->
+                    "MC_OS_WINDOWS"; // Note: Optifine doesn't have a macro for Solaris. https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714
+            default -> "MC_OS_UNKNOWN";
+        };
 	}
 
 	/**
@@ -242,7 +237,7 @@ public class StandardMacros {
 	 * Returns the list of currently enabled GL extensions
 	 * This is done by calling {@link GL11#glGetString} with the arg {@link GL11#GL_EXTENSIONS}
 	 *
-	 * @return list of activated extensions prefixed with "MC_"
+	 * @return set of activated extensions prefixed with "MC_"
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L735-L738">Optifine Doc</a>
 	 */
 	public static Set<String> getGlExtensions() {

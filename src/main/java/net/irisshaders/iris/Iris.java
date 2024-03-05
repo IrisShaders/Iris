@@ -382,7 +382,7 @@ public class Iris {
 			irisConfig.setDebugEnabled(enable);
 			irisConfig.save();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Iris.logger.fatal("Failed to save config!", e);
 		}
 	}
 

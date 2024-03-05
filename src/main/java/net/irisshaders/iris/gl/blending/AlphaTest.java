@@ -1,16 +1,9 @@
 package net.irisshaders.iris.gl.blending;
 
-public class AlphaTest {
+public record AlphaTest(AlphaTestFunction function, float reference) {
 	public static final AlphaTest ALWAYS = new AlphaTest(AlphaTestFunction.ALWAYS, 0.0f);
 
-	private final AlphaTestFunction function;
-	private final float reference;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
-
-	public AlphaTest(AlphaTestFunction function, float reference) {
-		this.function = function;
-		this.reference = reference;
-	}
 
 	public String toExpression(String indentation) {
 		return toExpression("gl_FragData[0].a", "iris_currentAlphaTest", indentation);
@@ -34,22 +27,6 @@ public class AlphaTest {
 			indentation + "}\n";
 	}
 
-	public AlphaTestFunction getFunction() {
-		return function;
-	}
-
-	public float getReference() {
-		return reference;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((function == null) ? 0 : function.hashCode());
-		result = prime * result + Float.floatToIntBits(reference);
-		return result;
-	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -62,6 +39,6 @@ public class AlphaTest {
 		AlphaTest other = (AlphaTest) obj;
 		if (function != other.function)
 			return false;
-        return Float.floatToIntBits(reference) == Float.floatToIntBits(other.reference);
-    }
+		return Float.floatToIntBits(reference) == Float.floatToIntBits(other.reference);
+	}
 }

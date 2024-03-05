@@ -75,38 +75,38 @@ public class CompatibilityTransformer {
 		.withStatement("__oldDecl = vec3(__internalDecl);");
 	private static final Template<Statement> statementTemplateVector = Template
 		.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
-	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<ExternalDeclaration>(
-		"out float name;",
-		ParseShape.EXTERNAL_DECLARATION) {
-		{
-			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
-			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*",
-				pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
-		}
+	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<>(
+            "out float name;",
+            ParseShape.EXTERNAL_DECLARATION) {
+        {
+            markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
+            markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
+            markClassWildcard("name*",
+                    pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+        }
 
-		@Override
-		public boolean matchesExtract(ExternalDeclaration tree) {
-			boolean result = super.matchesExtract(tree);
-			if (!result) {
-				return false;
-			}
+        @Override
+        public boolean matchesExtract(ExternalDeclaration tree) {
+            boolean result = super.matchesExtract(tree);
+            if (!result) {
+                return false;
+            }
 
-			// look for an out qualifier but no layout qualifier
-			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
-			var hasOutQualifier = false;
-			for (TypeQualifierPart part : qualifier.getParts()) {
-				if (part instanceof StorageQualifier storageQualifier) {
+            // look for an out qualifier but no layout qualifier
+            TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
+            var hasOutQualifier = false;
+            for (TypeQualifierPart part : qualifier.getParts()) {
+                if (part instanceof StorageQualifier storageQualifier) {
                     if (storageQualifier.storageType == StorageType.OUT) {
-						hasOutQualifier = true;
-					}
-				} else if (part instanceof LayoutQualifier) {
-					return false;
-				}
-			}
-			return hasOutQualifier;
-		}
-	};
+                        hasOutQualifier = true;
+                    }
+                } else if (part instanceof LayoutQualifier) {
+                    return false;
+                }
+            }
+            return hasOutQualifier;
+        }
+    };
 	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
 		.withExternalDeclaration("out __type __name;");
 	private static final String attachTargetPrefix = "outColor";
@@ -639,8 +639,8 @@ public class CompatibilityTransformer {
 		// outColor4 for example)
 
 		// iterate the declarations
-		ArrayList<NewDeclarationData> newDeclarationData = new ArrayList<NewDeclarationData>();
-		ArrayList<ExternalDeclaration> declarationsToRemove = new ArrayList<ExternalDeclaration>();
+		ArrayList<NewDeclarationData> newDeclarationData = new ArrayList<>();
+		ArrayList<ExternalDeclaration> declarationsToRemove = new ArrayList<>();
 		for (DeclarationExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
 			if (!nonLayoutOutDeclarationMatcher.matchesExtract(declaration)) {
 				continue;
@@ -693,7 +693,7 @@ public class CompatibilityTransformer {
 		}
 
 		// generate new declarations with layout qualifiers for each outColor member
-		ArrayList<ExternalDeclaration> newDeclarations = new ArrayList<ExternalDeclaration>();
+		ArrayList<ExternalDeclaration> newDeclarations = new ArrayList<>();
 
 		// Note: since everything is wrapped in a big Root.indexBuildSession, we don't
 		// need to do it manually here

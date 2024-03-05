@@ -35,14 +35,14 @@ public class PropertiesPreprocessor {
 			}
 
 			for (StringPair envDefine : environmentDefines) {
-				pp.addMacro(envDefine.getKey(), envDefine.getValue());
+				pp.addMacro(envDefine.key(), envDefine.value());
 			}
 
 			stringValues.forEach((name, value) -> {
 				try {
 					pp.addMacro(name, value);
 				} catch (LexerException e) {
-					e.printStackTrace();
+					Iris.logger.fatal("Failed to preprocess property file!", e);
 				}
 			});
 
@@ -63,10 +63,10 @@ public class PropertiesPreprocessor {
 
 		try {
 			for (StringPair envDefine : environmentDefines) {
-				preprocessor.addMacro(envDefine.getKey(), envDefine.getValue());
+				preprocessor.addMacro(envDefine.key(), envDefine.value());
 			}
 		} catch (LexerException e) {
-			e.printStackTrace();
+			Iris.logger.fatal("Failed to preprocess property file!", e);
 		}
 
 		return process(preprocessor, source);

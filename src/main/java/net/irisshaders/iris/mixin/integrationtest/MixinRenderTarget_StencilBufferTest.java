@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
  *         Sildur's Vibrant Medium.</li>
  * </ul>
  * <p>
- * Based on https://gist.github.com/burgerguy/8233170683ad93eea6aa27ee02a5c4d1
+ * Based on <a href="https://gist.github.com/burgerguy/8233170683ad93eea6aa27ee02a5c4d1">this Gist.</a>
  */
 @Mixin(RenderTarget.class)
 public class MixinRenderTarget_StencilBufferTest {

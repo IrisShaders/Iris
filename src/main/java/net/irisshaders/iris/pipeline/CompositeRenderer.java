@@ -454,7 +454,7 @@ public class CompositeRenderer {
 		}
 	}
 
-	private class ComputeOnlyPass extends Pass {
+	private static class ComputeOnlyPass extends Pass {
 		@Override
 		protected void destroy() {
 			for (ComputeProgram compute : this.computes) {

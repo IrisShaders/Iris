@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import net.irisshaders.iris.uniforms.BiomeParameters;
+import net.irisshaders.iris.uniforms.BiomeUniforms;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
@@ -15,6 +15,6 @@ public class MixinBiomes {
 
 	@Inject(method = "register", at = @At("TAIL"))
 	private static void iris$registerBiome(String string, CallbackInfoReturnable<ResourceKey<Biome>> cir) {
-		BiomeParameters.getBiomeMap().put(cir.getReturnValue(), currentId++);
+		BiomeUniforms.getBiomeMap().put(cir.getReturnValue(), currentId++);
 	}
 }

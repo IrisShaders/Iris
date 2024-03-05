@@ -19,8 +19,8 @@ public class TextureTransformer {
 		Root root,
 		TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		textureMap.forEach((stringTextureTypeTextureStageTri, s) -> {
-			if (stringTextureTypeTextureStageTri.getThird() == stage) {
-				String name = stringTextureTypeTextureStageTri.getFirst();
+			if (stringTextureTypeTextureStageTri.third() == stage) {
+				String name = stringTextureTypeTextureStageTri.first();
 
 				// check if the declaration has the right type and rename if one is found
 				// iterates all hits of the identifier and checks the ancestors
@@ -36,8 +36,8 @@ public class TextureTransformer {
 						continue;
 					}
 					if (initDeclaration.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier fixed
-						&& isTypeValid(stringTextureTypeTextureStageTri.getSecond(), fixed.type)) {
-						root.rename(stringTextureTypeTextureStageTri.getFirst(), s);
+						&& isTypeValid(stringTextureTypeTextureStageTri.second(), fixed.type)) {
+						root.rename(stringTextureTypeTextureStageTri.first(), s);
 						break;
 					}
 				}
@@ -46,26 +46,21 @@ public class TextureTransformer {
 	}
 
 	private static boolean isTypeValid(TextureType expectedType, BuiltinFixedTypeSpecifier.BuiltinType extractedType) {
-		switch (expectedType) {
-			case TEXTURE_1D:
-				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER1D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER1D;
-			case TEXTURE_RECTANGLE:
-				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2DRECT ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2DRECT ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2DRECT;
-			case TEXTURE_2D:
-				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2D;
-			case TEXTURE_3D:
-				return extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER3D ||
-					extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER3D;
-			default:
-				// not TransformationException because this should never happen
-				throw new IllegalStateException("Unexpected enum! " + expectedType);
-		}
+        // not TransformationException because this should never happen
+        return switch (expectedType) {
+            case TEXTURE_1D -> extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER1D ||
+                    extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER1D ||
+                    extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER1D;
+            case TEXTURE_RECTANGLE -> extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2DRECT ||
+                    extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2DRECT ||
+                    extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2DRECT;
+            case TEXTURE_2D -> extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER2D ||
+                    extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER2D ||
+                    extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER2D;
+            case TEXTURE_3D -> extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D ||
+                    extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER3D ||
+                    extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER3D;
+            default -> throw new IllegalStateException("Unexpected enum! " + expectedType);
+        };
 	}
 }

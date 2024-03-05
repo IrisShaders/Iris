@@ -115,7 +115,7 @@ public final class CommonUniforms {
 		ViewportUniforms.addViewportUniforms(uniforms);
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
-		BiomeParameters.addBiomeUniforms(uniforms);
+		BiomeUniforms.addBiomeUniforms(uniforms);
 		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
 		IrisExclusiveUniforms.addIrisExclusiveUniforms(uniforms);
 		IrisTimeUniforms.addTimeUniforms(uniforms);

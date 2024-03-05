@@ -28,8 +28,8 @@ import java.util.Map;
  * This is even more effective with vanilla's entity rendering, since it only has a single buffer for most purposes,
  * except for a configured set of batched render types.
  * <p>
- * This injection point has been carefully chosen to avoid conflicts with other mixins such as one from Carpet:
- * https://github.com/gnembon/fabric-carpet/blob/776f798aecb792a5881ccae8784888156207a047/src/main/java/carpet/mixins/WorldRenderer_pausedShakeMixin.java#L23
+ * This injection point has been carefully chosen to avoid conflicts with other mixins such as
+ * <a href="https://github.com/gnembon/fabric-carpet/blob/776f798aecb792a5881ccae8784888156207a047/src/main/java/carpet/mixins/WorldRenderer_pausedShakeMixin.java#L23"> one from Carpet:</a>
  * <p>
  * By using ModifyVariable instead of Redirect, it is more likely to be compatible with other rendering mods. We also
  * use a priority of 999 to apply before most other mixins to this method, meaning that other mods adding entities to

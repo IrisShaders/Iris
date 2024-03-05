@@ -273,13 +273,13 @@ public class IrisChunkProgramOverrides {
 
 	private float getAlphaReference(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
 		if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
-			return pipeline.getShadowAlpha().orElse(AlphaTests.ONE_TENTH_ALPHA).getReference();
+			return pipeline.getShadowAlpha().orElse(AlphaTests.ONE_TENTH_ALPHA).reference();
 		} else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
-			return AlphaTest.ALWAYS.getReference();
+			return AlphaTest.ALWAYS.reference();
 		} else if (pass == IrisTerrainPass.GBUFFER_CUTOUT) {
-			return pipeline.getTerrainCutoutAlpha().orElse(AlphaTests.ONE_TENTH_ALPHA).getReference();
+			return pipeline.getTerrainCutoutAlpha().orElse(AlphaTests.ONE_TENTH_ALPHA).reference();
 		} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
-			return pipeline.getTranslucentAlpha().orElse(AlphaTest.ALWAYS).getReference();
+			return pipeline.getTranslucentAlpha().orElse(AlphaTest.ALWAYS).reference();
 		} else {
 			throw new IllegalArgumentException("Unknown pass type " + pass);
 		}

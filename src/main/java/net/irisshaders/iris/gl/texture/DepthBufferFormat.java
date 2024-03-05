@@ -22,26 +22,17 @@ public enum DepthBufferFormat {
 
 	@Nullable
 	public static DepthBufferFormat fromGlEnum(int glenum) {
-		switch (glenum) {
-			case GL30C.GL_DEPTH_COMPONENT:
-				return DepthBufferFormat.DEPTH;
-			case GL30C.GL_DEPTH_COMPONENT16:
-				return DepthBufferFormat.DEPTH16;
-			case GL30C.GL_DEPTH_COMPONENT24:
-				return DepthBufferFormat.DEPTH24;
-			case GL30C.GL_DEPTH_COMPONENT32:
-				return DepthBufferFormat.DEPTH32;
-			case GL30C.GL_DEPTH_COMPONENT32F:
-				return DepthBufferFormat.DEPTH32F;
-			case GL30C.GL_DEPTH_STENCIL:
-				return DepthBufferFormat.DEPTH_STENCIL;
-			case GL30C.GL_DEPTH24_STENCIL8:
-				return DepthBufferFormat.DEPTH24_STENCIL8;
-			case GL30C.GL_DEPTH32F_STENCIL8:
-				return DepthBufferFormat.DEPTH32F_STENCIL8;
-			default:
-				return null;
-		}
+        return switch (glenum) {
+            case GL30C.GL_DEPTH_COMPONENT -> DepthBufferFormat.DEPTH;
+            case GL30C.GL_DEPTH_COMPONENT16 -> DepthBufferFormat.DEPTH16;
+            case GL30C.GL_DEPTH_COMPONENT24 -> DepthBufferFormat.DEPTH24;
+            case GL30C.GL_DEPTH_COMPONENT32 -> DepthBufferFormat.DEPTH32;
+            case GL30C.GL_DEPTH_COMPONENT32F -> DepthBufferFormat.DEPTH32F;
+            case GL30C.GL_DEPTH_STENCIL -> DepthBufferFormat.DEPTH_STENCIL;
+            case GL30C.GL_DEPTH24_STENCIL8 -> DepthBufferFormat.DEPTH24_STENCIL8;
+            case GL30C.GL_DEPTH32F_STENCIL8 -> DepthBufferFormat.DEPTH32F_STENCIL8;
+            default -> null;
+        };
 	}
 
 	public static DepthBufferFormat fromGlEnumOrDefault(int glenum) {
@@ -54,51 +45,33 @@ public enum DepthBufferFormat {
 	}
 
 	public int getGlInternalFormat() {
-		switch (this) {
-			case DEPTH:
-				return GL30C.GL_DEPTH_COMPONENT;
-			case DEPTH16:
-				return GL30C.GL_DEPTH_COMPONENT16;
-			case DEPTH24:
-				return GL30C.GL_DEPTH_COMPONENT24;
-			case DEPTH32:
-				return GL30C.GL_DEPTH_COMPONENT32;
-			case DEPTH32F:
-				return GL30C.GL_DEPTH_COMPONENT32F;
-			case DEPTH_STENCIL:
-				return GL30C.GL_DEPTH_STENCIL;
-			case DEPTH24_STENCIL8:
-				return GL30C.GL_DEPTH24_STENCIL8;
-			case DEPTH32F_STENCIL8:
-				return GL30C.GL_DEPTH32F_STENCIL8;
-		}
+        return switch (this) {
+            case DEPTH -> GL30C.GL_DEPTH_COMPONENT;
+            case DEPTH16 -> GL30C.GL_DEPTH_COMPONENT16;
+            case DEPTH24 -> GL30C.GL_DEPTH_COMPONENT24;
+            case DEPTH32 -> GL30C.GL_DEPTH_COMPONENT32;
+            case DEPTH32F -> GL30C.GL_DEPTH_COMPONENT32F;
+            case DEPTH_STENCIL -> GL30C.GL_DEPTH_STENCIL;
+            case DEPTH24_STENCIL8 -> GL30C.GL_DEPTH24_STENCIL8;
+            case DEPTH32F_STENCIL8 -> GL30C.GL_DEPTH32F_STENCIL8;
+        };
 
-		throw new AssertionError("unreachable");
-	}
+    }
 
 	public int getGlType() {
 		return isCombinedStencil() ? GL30C.GL_DEPTH_STENCIL : GL30C.GL_DEPTH_COMPONENT;
 	}
 
 	public int getGlFormat() {
-		switch (this) {
-			case DEPTH:
-			case DEPTH16:
-				return GL43C.GL_UNSIGNED_SHORT;
-			case DEPTH24:
-			case DEPTH32:
-				return GL43C.GL_UNSIGNED_INT;
-			case DEPTH32F:
-				return GL30C.GL_FLOAT;
-			case DEPTH_STENCIL:
-			case DEPTH24_STENCIL8:
-				return GL30C.GL_UNSIGNED_INT_24_8;
-			case DEPTH32F_STENCIL8:
-				return GL30C.GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
-		}
+        return switch (this) {
+            case DEPTH, DEPTH16 -> GL43C.GL_UNSIGNED_SHORT;
+            case DEPTH24, DEPTH32 -> GL43C.GL_UNSIGNED_INT;
+            case DEPTH32F -> GL30C.GL_FLOAT;
+            case DEPTH_STENCIL, DEPTH24_STENCIL8 -> GL30C.GL_UNSIGNED_INT_24_8;
+            case DEPTH32F_STENCIL8 -> GL30C.GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
+        };
 
-		throw new AssertionError("unreachable");
-	}
+    }
 
 	public boolean isCombinedStencil() {
 		return combinedStencil;

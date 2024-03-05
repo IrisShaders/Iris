@@ -116,7 +116,7 @@ public class ShaderPack {
 
 		// This cannot be done in IDMap, as we do not have the include graph, and subsequently the shader settings.
 		List<String> dimensionIdCreator = loadProperties(root, "dimension.properties", environmentDefines).map(dimensionProperties -> {
-			hasDimensionIds[0] = dimensionProperties.size() > 0;
+			hasDimensionIds[0] = !dimensionProperties.isEmpty();
 			dimensionMap = parseDimensionMap(dimensionProperties, "dimension.", "dimension.properties");
 			return parseDimensionIds(dimensionProperties, "dimension.");
 		}).orElse(new ArrayList<>());
@@ -198,8 +198,7 @@ public class ShaderPack {
 			}
 			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(false);
 		}
-		List<StringPair> newEnvDefines = new ArrayList<>();
-		environmentDefines.forEach(newEnvDefines::add);
+        List<StringPair> newEnvDefines = new ArrayList<>(environmentDefines);
 
 		if (shaderProperties.supportsColorCorrection().orElse(false)) {
 			for (ColorSpace space : ColorSpace.values()) {
@@ -497,22 +496,17 @@ public class ShaderPack {
 			if (definition instanceof TextureDefinition.PNGDefinition) {
 				customTextureData = new CustomTextureData.PngData(new TextureFilteringData(blur, clamp), content);
 			} else if (definition instanceof TextureDefinition.RawDefinition rawDefinition) {
-                switch (rawDefinition.getTarget()) {
-					case TEXTURE_1D:
-						customTextureData = new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
-						break;
-					case TEXTURE_2D:
-						customTextureData = new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
-						break;
-					case TEXTURE_3D:
-						customTextureData = new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
-						break;
-					case TEXTURE_RECTANGLE:
-						customTextureData = new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
-						break;
-					default:
-						throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
-				}
+                customTextureData = switch (rawDefinition.getTarget()) {
+                    case TEXTURE_1D ->
+                            new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
+                    case TEXTURE_2D ->
+                            new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+                    case TEXTURE_3D ->
+                            new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
+                    case TEXTURE_RECTANGLE ->
+                            new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+                    default -> throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
+                };
 			} else {
 				customTextureData = null;
 			}

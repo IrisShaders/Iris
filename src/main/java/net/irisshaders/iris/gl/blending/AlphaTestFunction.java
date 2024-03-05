@@ -23,26 +23,17 @@ public enum AlphaTestFunction {
 	}
 
 	public static Optional<AlphaTestFunction> fromGlId(int glId) {
-		switch (glId) {
-			case GL11.GL_NEVER:
-				return Optional.of(NEVER);
-			case GL11.GL_LESS:
-				return Optional.of(LESS);
-			case GL11.GL_EQUAL:
-				return Optional.of(EQUAL);
-			case GL11.GL_LEQUAL:
-				return Optional.of(LEQUAL);
-			case GL11.GL_GREATER:
-				return Optional.of(GREATER);
-			case GL11.GL_NOTEQUAL:
-				return Optional.of(NOTEQUAL);
-			case GL11.GL_GEQUAL:
-				return Optional.of(GEQUAL);
-			case GL11.GL_ALWAYS:
-				return Optional.of(ALWAYS);
-			default:
-				return Optional.empty();
-		}
+        return switch (glId) {
+            case GL11.GL_NEVER -> Optional.of(NEVER);
+            case GL11.GL_LESS -> Optional.of(LESS);
+            case GL11.GL_EQUAL -> Optional.of(EQUAL);
+            case GL11.GL_LEQUAL -> Optional.of(LEQUAL);
+            case GL11.GL_GREATER -> Optional.of(GREATER);
+            case GL11.GL_NOTEQUAL -> Optional.of(NOTEQUAL);
+            case GL11.GL_GEQUAL -> Optional.of(GEQUAL);
+            case GL11.GL_ALWAYS -> Optional.of(ALWAYS);
+            default -> Optional.empty();
+        };
 	}
 
 	public static Optional<AlphaTestFunction> fromString(String name) {

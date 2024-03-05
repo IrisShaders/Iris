@@ -7,22 +7,21 @@ import java.util.Objects;
 /**
  * An absurdly simple class for storing pairs of strings because Java lacks pair / tuple types.
  */
-public class StringPair {
-	private final String key;
-	private final String value;
-
+public record StringPair(String key, String value) {
 	public StringPair(@NotNull String key, @NotNull String value) {
 		this.key = Objects.requireNonNull(key);
 		this.value = Objects.requireNonNull(value);
 	}
 
+	@Override
 	@NotNull
-	public String getKey() {
+	public String key() {
 		return key;
 	}
 
+	@Override
 	@NotNull
-	public String getValue() {
+	public String value() {
 		return value;
 	}
 }

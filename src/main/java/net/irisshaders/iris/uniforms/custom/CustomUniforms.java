@@ -345,18 +345,7 @@ public class CustomUniforms implements FunctionContext {
 			return this.build(inputs.build());
 		}
 
-		private static class Variable {
-			final public Type type;
-			final public String name;
-			final public ExpressionElement expression;
-			final public boolean uniform;
-
-			public Variable(Type type, String name, ExpressionElement expression, boolean uniform) {
-				this.type = type;
-				this.name = name;
-				this.expression = expression;
-				this.uniform = uniform;
-			}
+		private record Variable(Type type, String name, ExpressionElement expression, boolean uniform) {
 		}
 
 

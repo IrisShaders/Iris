@@ -26,6 +26,7 @@ public class LaunchWarn {
 					try {
 						Desktop.getDesktop().browse(URI.create("https://irisshaders.dev"));
 					} catch (IOException e) {
+						System.out.println("Welp; we're screwed.");
 						e.printStackTrace();
 					}
 				}

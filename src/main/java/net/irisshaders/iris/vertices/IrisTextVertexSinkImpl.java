@@ -75,8 +75,8 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 		if (vertexCount == 4) {
 			// TODO: compute this at the head of quad()
 			vertexCount = 0;
-			uSum *= 0.25;
-			vSum *= 0.25;
+			uSum *= 0.25f;
+			vSum *= 0.25f;
 			quad.setup(elementOffset, IrisVertexFormats.GLYPH.getVertexSize());
 
 			NormalHelper.computeFaceNormal(saveNormal, quad);
