@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin.vertices.block_rendering;
 
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 public class MixinClientLevel {
 	@ModifyVariable(method = "getShade", at = @At("HEAD"), argsOnly = true)
 	private boolean iris$maybeDisableDirectionalShading(boolean shaded) {
-		if (BlockRenderingSettings.INSTANCE.shouldDisableDirectionalShading()) {
+		if (WorldRenderingSettings.INSTANCE.shouldDisableDirectionalShading()) {
 			return false;
 		} else {
 			return shaded;

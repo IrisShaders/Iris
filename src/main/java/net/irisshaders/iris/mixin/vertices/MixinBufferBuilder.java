@@ -7,7 +7,7 @@ import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.BlockSensitiveBufferBuilder;
 import net.irisshaders.iris.vertices.BufferBuilderPolygonView;
@@ -101,7 +101,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 		iris$isTerrain = false;
 		injectNormalAndUV1 = false;
 
-		if (iris$shouldNotExtend || !BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()) {
+		if (iris$shouldNotExtend || !WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()) {
 			return format;
 		}
 

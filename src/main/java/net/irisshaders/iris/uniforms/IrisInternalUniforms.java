@@ -17,7 +17,6 @@ public class IrisInternalUniforms {
 
 	public static void addFogUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
 		uniforms
-			// TODO: Update frequency of continuous?
 			.uniform4f(PER_FRAME, "iris_FogColor", () -> {
 				float[] fogColor = RenderSystem.getShaderFogColor();
 				return new Vector4f(fogColor[0], fogColor[1], fogColor[2], fogColor[3]);

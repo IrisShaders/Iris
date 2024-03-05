@@ -6,7 +6,7 @@ import net.irisshaders.batchedentityrendering.impl.FullyBufferedMultiBufferSourc
 import net.irisshaders.batchedentityrendering.impl.Groupable;
 import net.irisshaders.batchedentityrendering.impl.RenderBuffersExt;
 import net.irisshaders.batchedentityrendering.impl.TransparencyType;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -73,7 +73,7 @@ public class MixinLevelRenderer {
 			fullyBufferedMultiBufferSource.readyUp();
 		}
 
-		if (BlockRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
+		if (WorldRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
 			Minecraft.getInstance().getProfiler().popPush("entity_draws_opaque");
 			if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource source) {
 				source.endBatchWithType(TransparencyType.OPAQUE);
@@ -90,7 +90,7 @@ public class MixinLevelRenderer {
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void batchedentityrendering$endTranslucents(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {
-		if (BlockRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
+		if (WorldRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
 			this.renderBuffers.bufferSource().endBatch();
 		}
 	}

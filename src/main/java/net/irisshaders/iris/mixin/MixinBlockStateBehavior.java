@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
@@ -43,7 +43,7 @@ public abstract class MixinBlockStateBehavior {
 	@SuppressWarnings("deprecation")
 	public float getShadeBrightness(BlockGetter blockGetter, BlockPos blockPos) {
 		float originalValue = this.getBlock().getShadeBrightness(this.asState(), blockGetter, blockPos);
-		float aoLightValue = BlockRenderingSettings.INSTANCE.getAmbientOcclusionLevel();
+		float aoLightValue = WorldRenderingSettings.INSTANCE.getAmbientOcclusionLevel();
 		return 1.0F - aoLightValue * (1.0F - originalValue);
 	}
 }

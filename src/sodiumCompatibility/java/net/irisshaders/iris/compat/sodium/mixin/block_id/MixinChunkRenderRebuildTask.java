@@ -13,7 +13,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.DefaultMat
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import me.jellysquid.mods.sodium.client.util.task.CancellationToken;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
 import net.irisshaders.iris.vertices.ExtendedDataHelper;
 import net.minecraft.client.renderer.chunk.VisGraph;
@@ -45,7 +45,7 @@ public class MixinChunkRenderRebuildTask {
 								  WorldSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
 								  BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, BlockRenderContext context2,
 								  int relY, int relZ, int relX, BlockState blockState) {
-		if (BlockRenderingSettings.INSTANCE.shouldVoxelizeLightBlocks() && blockState.getBlock() instanceof LightBlock) {
+		if (WorldRenderingSettings.INSTANCE.shouldVoxelizeLightBlocks() && blockState.getBlock() instanceof LightBlock) {
 			ChunkModelBuilder buildBuffers = buffers.get(DefaultMaterials.CUTOUT);
 			((ChunkBuildBuffersExt) buffers).iris$setLocalPos(0, 0, 0);
 			((ChunkBuildBuffersExt) buffers).iris$ignoreMidBlock(true);

@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.level.block.Block;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class MixinItemBlockRenderTypes {
 	@Inject(method = "getChunkRenderType", at = @At("HEAD"), cancellable = true)
 	private static void iris$setCustomRenderType(BlockState arg, CallbackInfoReturnable<RenderType> cir) {
-		Map<Block, RenderType> idMap = BlockRenderingSettings.INSTANCE.getBlockTypeIds();
+		Map<Block, RenderType> idMap = WorldRenderingSettings.INSTANCE.getBlockTypeIds();
 		if (idMap != null) {
 			RenderType type = idMap.get(arg.getBlock());
 			if (type != null) {

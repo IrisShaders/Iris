@@ -3,7 +3,7 @@ package net.irisshaders.iris.mixin.vertices.block_rendering;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.vertices.BlockSensitiveBufferBuilder;
 import net.irisshaders.iris.vertices.ExtendedDataHelper;
 import net.minecraft.client.renderer.RenderType;
@@ -42,7 +42,7 @@ public class MixinChunkRebuildTask {
 
 	@Unique
 	private Object2IntMap<BlockState> getBlockStateIds() {
-		return BlockRenderingSettings.INSTANCE.getBlockStateIds();
+		return WorldRenderingSettings.INSTANCE.getBlockStateIds();
 	}
 
 	@Unique

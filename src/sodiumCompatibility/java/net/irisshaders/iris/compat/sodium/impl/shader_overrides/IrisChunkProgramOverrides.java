@@ -239,7 +239,7 @@ public class IrisChunkProgramOverrides {
 
 			return builder.attachShader(vertShader)
 				.attachShader(fragShader)
-				// The following 4 attributes are part of Sodium
+				// The following 4 attributes are part of Sodium.
 				.bindAttribute("a_PosId", IrisChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID)
 				.bindAttribute("a_Color", IrisChunkShaderBindingPoints.ATTRIBUTE_COLOR)
 				.bindAttribute("a_TexCoord", IrisChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE)
@@ -250,7 +250,6 @@ public class IrisChunkProgramOverrides {
 				.bindAttribute("iris_Normal", IrisChunkShaderBindingPoints.NORMAL)
 				.bindAttribute("at_midBlock", IrisChunkShaderBindingPoints.MID_BLOCK)
 				.link((shader) -> {
-					// TODO: Better way for this? It's a bit too much casting for me.
 					int handle = ((GlObject) shader).handle();
 					ShaderBindingContextExt contextExt = (ShaderBindingContextExt) shader;
 
@@ -383,7 +382,6 @@ public class IrisChunkProgramOverrides {
 		SodiumTerrainPipeline pipeline = getSodiumTerrainPipeline();
 
 		if (pipeline != null) {
-			// TODO: Bind the framebuffer to whatever fallback is specified by SodiumTerrainPipeline.
 			Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 		}
 	}

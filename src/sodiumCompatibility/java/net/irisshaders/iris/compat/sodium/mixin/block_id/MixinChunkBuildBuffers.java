@@ -6,7 +6,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.BakedChunkModelBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.irisshaders.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
 import net.irisshaders.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
@@ -33,7 +33,7 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 
 	@Inject(method = "<init>", at = @At("RETURN"), remap = false)
 	private void iris$onConstruct(ChunkVertexType vertexType, CallbackInfo ci) {
-		Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
+		Object2IntMap<BlockState> blockStateIds = WorldRenderingSettings.INSTANCE.getBlockStateIds();
 
 		if (blockStateIds != null) {
 			this.contextHolder = new BlockContextHolder(blockStateIds);

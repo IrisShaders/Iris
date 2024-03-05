@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-public class BlockRenderingSettings {
-	public static final BlockRenderingSettings INSTANCE = new BlockRenderingSettings();
+public class WorldRenderingSettings {
+	public static final WorldRenderingSettings INSTANCE = new WorldRenderingSettings();
 
 	private boolean reloadRequired;
 	private Object2IntMap<BlockState> blockStateIds;
@@ -25,7 +25,7 @@ public class BlockRenderingSettings {
 	private boolean separateEntityDraws;
 	private boolean voxelizeLightBlocks;
 
-	public BlockRenderingSettings() {
+	public WorldRenderingSettings() {
 		reloadRequired = false;
 		blockStateIds = null;
 		blockTypeIds = null;
@@ -74,7 +74,6 @@ public class BlockRenderingSettings {
 		this.blockTypeIds = blockTypeIds;
 	}
 
-	// TODO (coderbot): This doesn't belong here. But I couldn't think of a nicer place to put it.
 	@Nullable
 	public Object2IntFunction<NamespacedId> getEntityIds() {
 		return entityIds;

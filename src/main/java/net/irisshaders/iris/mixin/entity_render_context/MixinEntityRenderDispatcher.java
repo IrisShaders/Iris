@@ -3,7 +3,7 @@ package net.irisshaders.iris.mixin.entity_render_context;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.irisshaders.batchedentityrendering.impl.Groupable;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.layer.EntityRenderStateShard;
 import net.irisshaders.iris.layer.OuterWrappedRenderType;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
@@ -36,7 +36,7 @@ public class MixinEntityRenderDispatcher {
 			return bufferSource;
 		}
 
-		Object2IntFunction<NamespacedId> entityIds = BlockRenderingSettings.INSTANCE.getEntityIds();
+		Object2IntFunction<NamespacedId> entityIds = WorldRenderingSettings.INSTANCE.getEntityIds();
 
 		if (entityIds == null) {
 			return bufferSource;
@@ -44,7 +44,7 @@ public class MixinEntityRenderDispatcher {
 
 		int intId;
 
-		if (entity instanceof ZombieVillager zombie && zombie.isConverting() && BlockRenderingSettings.INSTANCE.hasVillagerConversionId()) {
+		if (entity instanceof ZombieVillager zombie && zombie.isConverting() && WorldRenderingSettings.INSTANCE.hasVillagerConversionId()) {
 			intId = entityIds.applyAsInt(new NamespacedId("minecraft", "zombie_villager_converting"));
         } else {
 			ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());

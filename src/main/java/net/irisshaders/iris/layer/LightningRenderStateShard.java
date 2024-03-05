@@ -1,6 +1,6 @@
 package net.irisshaders.iris.layer;
 
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -12,13 +12,13 @@ public class LightningRenderStateShard extends RenderStateShard {
 
 	public LightningRenderStateShard() {
 		super("iris:lightning", () -> {
-			if (BlockRenderingSettings.INSTANCE.getEntityIds() != null) {
+			if (WorldRenderingSettings.INSTANCE.getEntityIds() != null) {
 				backupValue = CapturedRenderingState.INSTANCE.getCurrentRenderedEntity();
-				CapturedRenderingState.INSTANCE.setCurrentEntity(BlockRenderingSettings.INSTANCE.getEntityIds().applyAsInt(LIGHT));
+				CapturedRenderingState.INSTANCE.setCurrentEntity(WorldRenderingSettings.INSTANCE.getEntityIds().applyAsInt(LIGHT));
 				GbufferPrograms.runFallbackEntityListener();
 			}
 		}, () -> {
-			if (BlockRenderingSettings.INSTANCE.getEntityIds() != null) {
+			if (WorldRenderingSettings.INSTANCE.getEntityIds() != null) {
 				CapturedRenderingState.INSTANCE.setCurrentEntity(backupValue);
 				backupValue = 0;
 				GbufferPrograms.runFallbackEntityListener();

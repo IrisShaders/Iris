@@ -14,8 +14,6 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 
-// TODO: Port this Mixin
-
 /**
  * Adds the Iris-specific options / option changes to the Sodium game options pages.
  */

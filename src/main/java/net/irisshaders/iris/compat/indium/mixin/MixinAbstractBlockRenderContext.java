@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.indium.mixin;
 
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,7 +29,7 @@ public class MixinAbstractBlockRenderContext {
 		at = @At(value = "INVOKE",
 			target = "Llink/infra/indium/renderer/helper/ColorHelper;multiplyRGB(IF)I"), require = 0)
 	private int iris$separateAoColorMultiply(int color, float ao) {
-		if (BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
+		if (WorldRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			color &= 0x00FFFFFF;
 			color |= ((int) (ao * 255.0f)) << 24;
 

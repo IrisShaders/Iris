@@ -3,7 +3,7 @@ package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,6 +16,6 @@ public class MixinRenderRegionArenas {
 			target = "Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ChunkMeshFormats;COMPACT:Lme/jellysquid/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;",
 			remap = false))
 	private ChunkVertexType iris$useExtendedStride() {
-		return BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : ChunkMeshFormats.COMPACT;
+		return WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : ChunkMeshFormats.COMPACT;
 	}
 }

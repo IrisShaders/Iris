@@ -3,7 +3,7 @@ package net.irisshaders.iris.mixin.entity_render_context;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.irisshaders.batchedentityrendering.impl.Groupable;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.layer.BlockEntityRenderStateShard;
 import net.irisshaders.iris.layer.OuterWrappedRenderType;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -46,7 +46,7 @@ public class MixinBlockEntityRenderDispatcher {
 
 		BlockState state = blockEntity.getBlockState();
 
-		Object2IntMap<BlockState> blockStateIds = BlockRenderingSettings.INSTANCE.getBlockStateIds();
+		Object2IntMap<BlockState> blockStateIds = WorldRenderingSettings.INSTANCE.getBlockStateIds();
 
 		if (blockStateIds == null) {
 			return bufferSource;

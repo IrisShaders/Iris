@@ -3,7 +3,7 @@ package net.irisshaders.iris.pipeline;
 import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.texture.TextureType;
@@ -21,13 +21,13 @@ import java.util.OptionalInt;
 
 public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
 	public FixedFunctionWorldRenderingPipeline() {
-		BlockRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
-		BlockRenderingSettings.INSTANCE.setUseSeparateAo(false);
-		BlockRenderingSettings.INSTANCE.setSeparateEntityDraws(false);
-		BlockRenderingSettings.INSTANCE.setAmbientOcclusionLevel(1.0f);
-		BlockRenderingSettings.INSTANCE.setUseExtendedVertexFormat(false);
-		BlockRenderingSettings.INSTANCE.setVoxelizeLightBlocks(false);
-		BlockRenderingSettings.INSTANCE.setBlockTypeIds(null);
+		WorldRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
+		WorldRenderingSettings.INSTANCE.setUseSeparateAo(false);
+		WorldRenderingSettings.INSTANCE.setSeparateEntityDraws(false);
+		WorldRenderingSettings.INSTANCE.setAmbientOcclusionLevel(1.0f);
+		WorldRenderingSettings.INSTANCE.setUseExtendedVertexFormat(false);
+		WorldRenderingSettings.INSTANCE.setVoxelizeLightBlocks(false);
+		WorldRenderingSettings.INSTANCE.setBlockTypeIds(null);
 	}
 
 	@Override

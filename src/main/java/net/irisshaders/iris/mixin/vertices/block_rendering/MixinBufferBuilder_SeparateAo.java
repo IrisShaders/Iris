@@ -3,7 +3,7 @@ package net.irisshaders.iris.mixin.vertices.block_rendering;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -31,7 +31,7 @@ public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsu
 	@Override
 	public void putBulkData(PoseStack.Pose matrixEntry, BakedQuad quad, float[] brightnesses, float red, float green,
 							float blue, int[] lights, int overlay, boolean useQuadColorData) {
-		if (BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
+		if (WorldRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			this.brightnesses = brightnesses;
 			this.brightnessIndex = 0;
 
@@ -44,7 +44,7 @@ public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsu
 
 	@ModifyVariable(method = "vertex", at = @At("HEAD"), index = 7, argsOnly = true)
 	public float vertex(float alpha) {
-		if (brightnesses != null && BlockRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
+		if (brightnesses != null && WorldRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			if (brightnessIndex < brightnesses.length) {
 				alpha = brightnesses[brightnessIndex++];
 			} else {

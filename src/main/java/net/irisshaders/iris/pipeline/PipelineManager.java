@@ -2,7 +2,7 @@ package net.irisshaders.iris.pipeline;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
@@ -33,12 +33,12 @@ public class PipelineManager {
 			pipeline = pipelineFactory.apply(currentDimension);
 			pipelinesPerDimension.put(currentDimension, pipeline);
 
-			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
+			if (WorldRenderingSettings.INSTANCE.isReloadRequired()) {
 				if (Minecraft.getInstance().levelRenderer != null) {
 					Minecraft.getInstance().levelRenderer.allChanged();
 				}
 
-				BlockRenderingSettings.INSTANCE.clearReloadRequired();
+				WorldRenderingSettings.INSTANCE.clearReloadRequired();
 			}
 		} else {
 			pipeline = pipelinesPerDimension.get(currentDimension);

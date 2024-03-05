@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin.entity_render_context;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.irisshaders.iris.shaderpack.materialmap.BlockRenderingSettings;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -31,19 +31,19 @@ public abstract class MixinItemRenderer {
 
 	@Unique
 	private void iris$setupId(ItemStack pItemRenderer0) {
-		if (BlockRenderingSettings.INSTANCE.getItemIds() == null) return;
+		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		if (pItemRenderer0.getItem() instanceof BlockItem blockItem && !(pItemRenderer0.getItem() instanceof SolidBucketItem)) {
-			if (BlockRenderingSettings.INSTANCE.getBlockStateIds() == null) return;
+			if (WorldRenderingSettings.INSTANCE.getBlockStateIds() == null) return;
 
 			previousBeValue = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
 			CapturedRenderingState.INSTANCE.setCurrentBlockEntity(1);
 
-			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getBlockStateIds().getOrDefault(blockItem.getBlock().defaultBlockState(), 0));
+			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getBlockStateIds().getOrDefault(blockItem.getBlock().defaultBlockState(), 0));
 		} else {
 			ResourceLocation location = BuiltInRegistries.ITEM.getKey(pItemRenderer0.getItem());
 
-			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(BlockRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
+			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
 		}
 	}
 
