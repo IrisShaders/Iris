@@ -72,6 +72,7 @@ public class Iris {
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	public static NamespacedId lastDimension = null;
+	public static boolean testing = false;
 	private static Path shaderpacksDirectory;
 	private static ShaderpackDirectoryManager shaderpacksDirectoryManager;
 	private static ShaderPack currentPack;
@@ -94,14 +95,6 @@ public class Iris {
 	private static boolean fallback;
 	// Change this for snapshots!
 	private static final String backupVersionNumber = "1.20.3";
-
-	static {
-		// Custom fix only for me for Plasma 6
-		if (FabricLoader.getInstance().isDevelopmentEnvironment() && Util.getPlatform() == Util.OS.LINUX && System.getProperty("user.name").contains("ims")) {
-			LibC.INSTANCE.setenv("__GL_THREADED_OPTIMIZATIONS", "0", 1);
-			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
-		}
-	}
 
 	/**
 	 * Called once RenderSystem#initRenderer has completed. This means that we can safely access OpenGL.
@@ -665,6 +658,7 @@ public class Iris {
 	 */
 	public static String getReleaseTarget() {
 		// If this is a snapshot, you must change backupVersionNumber!
+		SharedConstants.tryDetectVersion();
 		return SharedConstants.getCurrentVersion().isStable() ? SharedConstants.getCurrentVersion().getName() : backupVersionNumber;
 	}
 

@@ -1,8 +1,9 @@
 package net.irisshaders.iris.test;
 
 import com.google.common.collect.ImmutableList;
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.ShaderPack;
-import net.irisshaders.iris.shaderpack.StringPair;
 import org.junit.jupiter.api.Assertions;
 
 import java.net.URISyntaxException;
@@ -23,6 +24,10 @@ public class IrisTests {
 		new StringPair("MC_SPECULAR_MAP", ""),
 		new StringPair("MC_HAND_DEPTH", "0.125")
 	);
+
+	static {
+		Iris.testing = true;
+	}
 
 	public static ShaderPack loadPackOrFail(String name) {
 		try {

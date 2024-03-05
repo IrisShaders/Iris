@@ -2,13 +2,13 @@ package net.irisshaders.iris.test.shaderpack;
 
 import com.google.common.collect.ImmutableMap;
 import net.irisshaders.iris.shaderpack.DimensionId;
-import net.irisshaders.iris.shaderpack.ProgramSource;
 import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.option.OptionAnnotatedSource;
 import net.irisshaders.iris.shaderpack.option.OptionSet;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
+import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.test.IrisTests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
