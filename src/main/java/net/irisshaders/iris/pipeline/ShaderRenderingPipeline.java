@@ -2,7 +2,7 @@ package net.irisshaders.iris.pipeline;
 
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 
-public interface CoreWorldRenderingPipeline extends WorldRenderingPipeline {
+public interface ShaderRenderingPipeline extends WorldRenderingPipeline {
 	ShaderMap getShaderMap();
 
 	FrameUpdateNotifier getFrameUpdateNotifier();

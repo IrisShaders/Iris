@@ -12,7 +12,7 @@ import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.ColorVertex;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.CloudVertex;
-import net.irisshaders.iris.pipeline.CoreWorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
 import net.irisshaders.iris.pipeline.ShaderKey;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
@@ -192,8 +192,8 @@ public abstract class MixinCloudRenderer {
 	private ShaderInstance getClouds() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			return ((CoreWorldRenderingPipeline) pipeline).getShaderMap().getShader(ShaderKey.CLOUDS_SODIUM);
+		if (pipeline instanceof ShaderRenderingPipeline) {
+			return ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(ShaderKey.CLOUDS_SODIUM);
 		}
 
 		return shader;

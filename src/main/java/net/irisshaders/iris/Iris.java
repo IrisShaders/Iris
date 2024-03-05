@@ -10,8 +10,8 @@ import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.gui.debug.DebugLoadFailedGridScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
-import net.irisshaders.iris.pipeline.FixedFunctionWorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.NewWorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
+import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.DimensionId;
@@ -570,14 +570,14 @@ public class Iris {
 	private static WorldRenderingPipeline createPipeline(NamespacedId dimensionId) {
 		if (currentPack == null) {
 			// Completely disables shader-based rendering
-			return new FixedFunctionWorldRenderingPipeline();
+			return new VanillaRenderingPipeline();
 		}
 
 		ProgramSet programs = currentPack.getProgramSet(dimensionId);
 
 		// We use DeferredWorldRenderingPipeline on 1.16, and NewWorldRendering pipeline on 1.17 when rendering shaders.
 		try {
-			return new NewWorldRenderingPipeline(programs);
+			return new IrisRenderingPipeline(programs);
 		} catch (Exception e) {
 			if (irisConfig.areDebugOptionsEnabled()) {
 				Minecraft.getInstance().setScreen(new DebugLoadFailedGridScreen(Minecraft.getInstance().screen, Component.literal(e instanceof ShaderCompileException ? "Failed to compile shaders" : "Exception"), e));
@@ -592,7 +592,7 @@ public class Iris {
 			// TODO: This should be reverted if a dimension change causes shaders to compile again
 			fallback = true;
 
-			return new FixedFunctionWorldRenderingPipeline();
+			return new VanillaRenderingPipeline();
 		}
 	}
 

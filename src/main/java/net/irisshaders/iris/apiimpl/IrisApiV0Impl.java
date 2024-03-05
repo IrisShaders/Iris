@@ -2,7 +2,7 @@ package net.irisshaders.iris.apiimpl;
 
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
-import net.irisshaders.iris.pipeline.FixedFunctionWorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.vertices.IrisTextVertexSinkImpl;
@@ -31,7 +31,7 @@ public class IrisApiV0Impl implements IrisApi {
 			return false;
 		}
 
-		return !(pipeline instanceof FixedFunctionWorldRenderingPipeline);
+		return !(pipeline instanceof VanillaRenderingPipeline);
 	}
 
 	@Override

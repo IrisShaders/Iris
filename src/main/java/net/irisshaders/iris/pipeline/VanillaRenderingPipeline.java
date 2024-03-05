@@ -19,8 +19,8 @@ import net.minecraft.client.Minecraft;
 import java.util.List;
 import java.util.OptionalInt;
 
-public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeline {
-	public FixedFunctionWorldRenderingPipeline() {
+public class VanillaRenderingPipeline implements WorldRenderingPipeline {
+	public VanillaRenderingPipeline() {
 		WorldRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		WorldRenderingSettings.INSTANCE.setUseSeparateAo(false);
 		WorldRenderingSettings.INSTANCE.setSeparateEntityDraws(false);

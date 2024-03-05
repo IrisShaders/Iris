@@ -3,7 +3,7 @@ package net.irisshaders.iris.compat.dh.mixin;
 import com.seibel.distanthorizons.core.render.renderer.shaders.DhApplyShader;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.pipeline.NewWorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinDHApplyShader {
 	@Redirect(method = "onRender", at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/core/wrapperInterfaces/minecraft/IMinecraftRenderWrapper;getTargetFrameBuffer()I"))
 	private int changeFB(IMinecraftRenderWrapper instance) {
-		if (Iris.getPipelineManager().getPipelineNullable() instanceof NewWorldRenderingPipeline pipeline) {
+		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline pipeline) {
 			return pipeline.getDHCompat().getFramebuffer();
 		} else {
 			return instance.getTargetFrameBuffer();

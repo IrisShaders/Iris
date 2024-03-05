@@ -19,7 +19,7 @@ import net.irisshaders.iris.gl.program.ProgramUniforms;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.gl.uniform.DynamicLocationalUniformHolder;
-import net.irisshaders.iris.pipeline.NewWorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
@@ -55,7 +55,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private final Uniform projectionInverse;
 	private final Uniform normalMatrix;
 	private final CustomUniforms customUniforms;
-	private final NewWorldRenderingPipeline parent;
+	private final IrisRenderingPipeline parent;
 	private final ProgramUniforms uniforms;
 	private final ProgramSamplers samplers;
 	private final ProgramImages images;
@@ -74,7 +74,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  BlendModeOverride blendModeOverride, AlphaTest alphaTest,
 						  Consumer<DynamicLocationalUniformHolder> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
-						  NewWorldRenderingPipeline parent, @Nullable List<BufferBlendOverride> bufferBlendOverrides, CustomUniforms customUniforms) throws IOException {
+						  IrisRenderingPipeline parent, @Nullable List<BufferBlendOverride> bufferBlendOverrides, CustomUniforms customUniforms) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
 		int programId = this.getId();

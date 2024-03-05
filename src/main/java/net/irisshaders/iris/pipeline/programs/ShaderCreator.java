@@ -10,7 +10,7 @@ import net.irisshaders.iris.gl.blending.BufferBlendOverride;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
-import net.irisshaders.iris.pipeline.NewWorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.fallback.ShaderSynthesizer;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
@@ -44,7 +44,7 @@ public class ShaderCreator {
 	public static ExtendedShader create(WorldRenderingPipeline pipeline, String name, ProgramSource source, ProgramId programId, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, ShaderAttributeInputs inputs, FrameUpdateNotifier updateNotifier,
-										NewWorldRenderingPipeline parent, Supplier<ImmutableSet<Integer>> flipped, FogMode fogMode, boolean isIntensity,
+										IrisRenderingPipeline parent, Supplier<ImmutableSet<Integer>> flipped, FogMode fogMode, boolean isIntensity,
 										boolean isFullbright, boolean isShadowPass, boolean isLines, CustomUniforms customUniforms) throws IOException {
 		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
 		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(programId.getBlendModeOverride());
@@ -122,7 +122,7 @@ public class ShaderCreator {
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
 												GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
 												VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
-												NewWorldRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
+												IrisRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
 												boolean isGlint, boolean isText, boolean intensityTex, boolean isFullbright) throws IOException {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, false, isGlint, isText);
 

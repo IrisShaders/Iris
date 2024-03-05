@@ -7,7 +7,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.program.IrisProgramTypes;
 import net.irisshaders.iris.pathways.HandRenderer;
-import net.irisshaders.iris.pipeline.CoreWorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
 import net.irisshaders.iris.pipeline.ShaderKey;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
@@ -430,8 +430,8 @@ public class MixinGameRenderer {
 	private static boolean shouldOverrideShaders() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			return ((CoreWorldRenderingPipeline) pipeline).shouldOverrideShaders();
+		if (pipeline instanceof ShaderRenderingPipeline) {
+			return ((ShaderRenderingPipeline) pipeline).shouldOverrideShaders();
 		} else {
 			return false;
 		}
@@ -440,8 +440,8 @@ public class MixinGameRenderer {
 	private static void override(ShaderKey key, CallbackInfoReturnable<ShaderInstance> cir) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-		if (pipeline instanceof CoreWorldRenderingPipeline) {
-			ShaderInstance override = ((CoreWorldRenderingPipeline) pipeline).getShaderMap().getShader(key);
+		if (pipeline instanceof ShaderRenderingPipeline) {
+			ShaderInstance override = ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(key);
 
 			if (override != null) {
 				cir.setReturnValue(override);

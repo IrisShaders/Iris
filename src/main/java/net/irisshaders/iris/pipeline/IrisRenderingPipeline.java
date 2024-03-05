@@ -108,7 +108,7 @@ import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWorldRenderingPipeline, RenderTargetStateListener {
+public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRenderingPipeline, RenderTargetStateListener {
 	private final RenderTargets renderTargets;
 	private final ShaderMap shaderMap;
 	private final CustomUniforms customUniforms;
@@ -175,7 +175,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private int currentSpecularTexture;
 	private ColorSpace currentColorSpace;
 
-	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
+	public IrisRenderingPipeline(ProgramSet programSet) throws IOException {
 		ShaderPrinter.resetPrintState();
 
 		this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
