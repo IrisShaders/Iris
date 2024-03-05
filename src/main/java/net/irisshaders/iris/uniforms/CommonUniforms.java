@@ -12,7 +12,7 @@ import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.irisshaders.iris.mixin.texture.TextureAtlasAccessor;
 import net.irisshaders.iris.shaderpack.IdMap;
-import net.irisshaders.iris.shaderpack.PackDirectives;
+import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.texture.TextureInfoCache;
 import net.irisshaders.iris.texture.TextureInfoCache.TextureInfo;
 import net.irisshaders.iris.texture.TextureTracker;

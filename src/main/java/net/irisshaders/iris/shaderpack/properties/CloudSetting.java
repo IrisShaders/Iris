@@ -1,4 +1,4 @@
-package net.irisshaders.iris.shaderpack;
+package net.irisshaders.iris.shaderpack.properties;
 
 public enum CloudSetting {
 	DEFAULT,

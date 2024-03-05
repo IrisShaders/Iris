@@ -1,6 +1,7 @@
-package net.irisshaders.iris.shaderpack;
+package net.irisshaders.iris.shaderpack.parsing;
 
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.shaderpack.programs.ComputeSource;
 import org.joml.Vector2f;
 import org.joml.Vector3i;
 

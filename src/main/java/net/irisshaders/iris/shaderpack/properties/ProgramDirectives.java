@@ -1,4 +1,4 @@
-package net.irisshaders.iris.shaderpack;
+package net.irisshaders.iris.shaderpack.properties;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -8,6 +8,11 @@ import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendInformation;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
+import net.irisshaders.iris.shaderpack.parsing.ConstDirectiveParser;
+import net.irisshaders.iris.shaderpack.parsing.DispatchingDirectiveHolder;
+import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.shaderpack.parsing.CommentDirective;
+import net.irisshaders.iris.shaderpack.parsing.CommentDirectiveParser;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -44,8 +49,8 @@ public class ProgramDirectives {
 		this.unknownDrawBuffers = false;
 	}
 
-	ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets,
-					  @Nullable BlendModeOverride defaultBlendOverride) {
+	public ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets,
+							 @Nullable BlendModeOverride defaultBlendOverride) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
 		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
 		// For SEUS v08 and SEUS v10 to work, this will need to be set to 01234567. However, doing this causes

@@ -6,7 +6,7 @@ import com.mojang.blaze3d.platform.GlUtil;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
-import net.irisshaders.iris.shaderpack.StringPair;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.texture.format.TextureFormat;
 import net.irisshaders.iris.texture.format.TextureFormatLoader;
 import net.minecraft.Util;

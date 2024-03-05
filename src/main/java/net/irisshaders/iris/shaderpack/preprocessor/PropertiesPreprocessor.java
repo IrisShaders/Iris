@@ -1,7 +1,7 @@
 package net.irisshaders.iris.shaderpack.preprocessor;
 
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.shaderpack.StringPair;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import org.anarres.cpp.Feature;
 import org.anarres.cpp.LexerException;

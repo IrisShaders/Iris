@@ -13,12 +13,14 @@ import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.texture.TextureDefinition;
 import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.include.IncludeGraph;
 import net.irisshaders.iris.shaderpack.include.IncludeProcessor;
 import net.irisshaders.iris.shaderpack.include.ShaderPackSourceNames;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
+import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ProfileSet;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.option.menu.OptionMenuContainer;
@@ -26,6 +28,9 @@ import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
 import net.irisshaders.iris.shaderpack.preprocessor.JcppProcessor;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
+import net.irisshaders.iris.shaderpack.programs.ProgramSet;
+import net.irisshaders.iris.shaderpack.programs.ProgramSetInterface;
+import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.irisshaders.iris.shaderpack.texture.TextureFilteringData;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
@@ -313,7 +318,7 @@ public class ShaderPack {
 
 		this.irisCustomImages = shaderProperties.getIrisCustomImages();
 
-		this.customUniforms = shaderProperties.customUniforms;
+		this.customUniforms = shaderProperties.getCustomUniforms();
 
 		shaderProperties.getIrisCustomTextures().forEach((name, texture) -> {
 			try {

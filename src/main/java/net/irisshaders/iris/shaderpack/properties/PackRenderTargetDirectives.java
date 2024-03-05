@@ -1,4 +1,4 @@
-package net.irisshaders.iris.shaderpack;
+package net.irisshaders.iris.shaderpack.properties;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -8,6 +8,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
+import net.irisshaders.iris.shaderpack.parsing.DirectiveHolder;
+import net.irisshaders.iris.gl.IrisLimits;
 import org.joml.Vector4f;
 
 import java.util.Collections;

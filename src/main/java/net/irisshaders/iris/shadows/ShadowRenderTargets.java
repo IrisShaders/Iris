@@ -10,7 +10,7 @@ import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.shaderpack.PackShadowDirectives;
+import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
 import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.targets.RenderTarget;
 import org.lwjgl.opengl.GL30C;

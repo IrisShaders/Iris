@@ -5,7 +5,7 @@ import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.program.ComputeProgram;
 import net.irisshaders.iris.gl.program.ProgramBuilder;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
-import net.irisshaders.iris.shaderpack.StringPair;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.preprocessor.JcppProcessor;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.GL43C;

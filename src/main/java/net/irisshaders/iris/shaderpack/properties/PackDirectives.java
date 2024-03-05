@@ -1,4 +1,4 @@
-package net.irisshaders.iris.shaderpack;
+package net.irisshaders.iris.shaderpack.properties;
 
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -11,6 +11,7 @@ import net.irisshaders.iris.gl.buffer.ShaderStorageInfo;
 import net.irisshaders.iris.gl.texture.TextureScaleOverride;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
+import net.irisshaders.iris.shaderpack.parsing.DirectiveHolder;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.joml.Vector2i;
 
@@ -62,7 +63,7 @@ public class PackDirectives {
 		shadowDirectives = packShadowDirectives;
 	}
 
-	PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
+	public PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
 		this(supportedRenderTargets, new PackShadowDirectives(properties));
 		cloudSetting = properties.getCloudSetting();
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);

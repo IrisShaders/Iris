@@ -9,9 +9,12 @@ import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.materialmap.BlockEntry;
 import net.irisshaders.iris.shaderpack.materialmap.BlockRenderType;
+import net.irisshaders.iris.shaderpack.materialmap.LegacyIdMap;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
+import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 

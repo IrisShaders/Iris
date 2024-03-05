@@ -1,4 +1,4 @@
-package net.irisshaders.iris.shaderpack;
+package net.irisshaders.iris.shaderpack.parsing;
 
 import java.util.Optional;
 import java.util.function.Supplier;

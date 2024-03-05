@@ -8,7 +8,7 @@ import net.irisshaders.iris.gl.program.Program;
 import net.irisshaders.iris.gl.program.ProgramBuilder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.pathways.FullScreenQuadRenderer;
-import net.irisshaders.iris.shaderpack.StringPair;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.preprocessor.JcppProcessor;
 import org.apache.commons.io.IOUtils;
 import org.joml.Matrix4f;

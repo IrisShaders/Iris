@@ -1,4 +1,4 @@
-package net.irisshaders.iris.shaderpack;
+package net.irisshaders.iris.shaderpack.materialmap;
 
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.Function;

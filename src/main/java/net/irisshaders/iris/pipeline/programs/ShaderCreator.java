@@ -16,7 +16,7 @@ import net.irisshaders.iris.pipeline.fallback.ShaderSynthesizer;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
-import net.irisshaders.iris.shaderpack.ProgramSource;
+import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;

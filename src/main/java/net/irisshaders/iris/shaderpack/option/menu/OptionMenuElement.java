@@ -1,6 +1,6 @@
 package net.irisshaders.iris.shaderpack.option.menu;
 
-import net.irisshaders.iris.shaderpack.ShaderProperties;
+import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 import net.irisshaders.iris.shaderpack.option.MergedBooleanOption;
 import net.irisshaders.iris.shaderpack.option.MergedStringOption;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;

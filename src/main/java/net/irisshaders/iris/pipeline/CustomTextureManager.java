@@ -11,7 +11,7 @@ import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.gl.texture.TextureWrapper;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.LightTextureAccessor;
-import net.irisshaders.iris.shaderpack.PackDirectives;
+import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.targets.backed.NativeImageBackedCustomTexture;

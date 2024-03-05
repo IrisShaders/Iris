@@ -1,6 +1,6 @@
 package net.irisshaders.iris.shaderpack.preprocessor;
 
-import net.irisshaders.iris.shaderpack.StringPair;
+import net.irisshaders.iris.helpers.StringPair;
 import org.anarres.cpp.Feature;
 import org.anarres.cpp.LexerException;
 import org.anarres.cpp.Preprocessor;

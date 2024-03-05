@@ -1,4 +1,4 @@
-package net.irisshaders.iris.shaderpack;
+package net.irisshaders.iris.shaderpack.parsing;
 
 public class CommentDirective {
 	private final Type type;

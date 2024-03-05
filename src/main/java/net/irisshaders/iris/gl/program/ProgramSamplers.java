@@ -14,7 +14,7 @@ import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
-import net.irisshaders.iris.shaderpack.PackRenderTargetDirectives;
+import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;
 import org.lwjgl.opengl.GL20C;
 
 import java.util.ArrayList;

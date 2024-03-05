@@ -1,6 +1,6 @@
 package net.irisshaders.iris.shaderpack.option.menu;
 
-import net.irisshaders.iris.shaderpack.ShaderProperties;
+import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 import net.irisshaders.iris.shaderpack.option.BooleanOption;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
 

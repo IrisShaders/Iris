@@ -1,4 +1,4 @@
-package net.irisshaders.iris.shaderpack;
+package net.irisshaders.iris.shaderpack.properties;
 
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
@@ -22,7 +22,11 @@ import net.irisshaders.iris.gl.texture.PixelType;
 import net.irisshaders.iris.gl.texture.TextureDefinition;
 import net.irisshaders.iris.gl.texture.TextureScaleOverride;
 import net.irisshaders.iris.gl.texture.TextureType;
+import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.helpers.Tri;
+import net.irisshaders.iris.shaderpack.ImageInformation;
+import net.irisshaders.iris.helpers.StringPair;
+import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
@@ -895,5 +899,9 @@ public class ShaderProperties {
 
 	public OptionalBoolean supportsColorCorrection() {
 		return supportsColorCorrection;
+	}
+
+	public CustomUniforms.Builder getCustomUniforms() {
+		return customUniforms;
 	}
 }
