@@ -158,16 +158,6 @@ public class ProgramSet implements ProgramSetInterface {
 		this.finalCompute = readComputeArray(directory, sourceProvider, "final", shaderProperties);
 
 		locateDirectives();
-
-		if (!gbuffersDamagedBlock.isValid()) {
-			// Special behavior inherited by OptiFine & Iris from old ShadersMod
-			// Presumably this was added before DRAWBUFFERS was a thing? Or just a hardcoded hacky fix for some
-			// shader packs - in any case, Sildurs Vibrant Shaders and other packs rely on it.
-			first(getGbuffersTerrain(), getGbuffersTexturedLit(), getGbuffersTextured(), getGbuffersBasic()).ifPresent(src -> {
-				ProgramDirectives overrideDirectives = src.getDirectives().withOverriddenDrawBuffers(new int[]{0});
-				this.gbuffersDamagedBlock = src.withDirectiveOverride(overrideDirectives);
-			});
-		}
 	}
 
 	@SafeVarargs

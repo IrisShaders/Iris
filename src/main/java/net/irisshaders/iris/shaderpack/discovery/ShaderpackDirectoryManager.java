@@ -82,18 +82,28 @@ public class ShaderpackDirectoryManager {
 		//
 		// We also ignore chat formatting characters when sorting - some shader packs include chat
 		// formatting in the file name so that they have fancy text when displayed in the shaders list.
-		Comparator<String> baseComparator = String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder());
-		Comparator<String> comparator = (a, b) -> {
-			a = removeFormatting(a);
-			b = removeFormatting(b);
+		// If debug mode is on, show unzipped packs above zipped ones.
 
-			return baseComparator.compare(a, b);
+		boolean debug = Iris.getIrisConfig().areDebugOptionsEnabled();
+
+		Comparator<String> baseComparator = String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder());
+		Comparator<Path> comparator = (a, b) -> {
+			if (debug) {
+				if (Files.isDirectory(a)) {
+					if (!Files.isDirectory(b)) return -1;
+				} else if (Files.isDirectory(b)) {
+					if (!Files.isDirectory(a)) return 1;
+				}
+			}
+
+			return baseComparator.compare(removeFormatting(a.getFileName().toString()), removeFormatting(b.getFileName().toString()));
 		};
 
 		try (Stream<Path> list = Files.list(root)) {
 			return list.filter(Iris::isValidToShowPack)
+				.sorted(comparator)
 				.map(path -> path.getFileName().toString())
-				.sorted(comparator).collect(Collectors.toList());
+				.collect(Collectors.toList());
 		}
 	}
 
