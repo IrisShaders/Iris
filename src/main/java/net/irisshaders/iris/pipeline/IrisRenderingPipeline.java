@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderMap;
 import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
@@ -797,6 +798,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
+		if (phase == WorldRenderingPhase.NONE) {
+			if (this.phase != WorldRenderingPhase.NONE) {
+				GLDebug.popGroup();
+			}
+		} else {
+			if (this.phase != WorldRenderingPhase.NONE) {
+				GLDebug.popGroup();
+			}
+			GLDebug.pushGroup(phase.ordinal(), phase.name());
+		}
 		this.phase = phase;
 	}
 

@@ -29,7 +29,6 @@ public final class Program extends GlResource {
 		IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 		ProgramManager.glUseProgram(getGlId());
 
-
 		uniforms.update();
 		samplers.update();
 		images.update();

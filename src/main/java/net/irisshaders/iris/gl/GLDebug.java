@@ -308,6 +308,14 @@ public final class GLDebug {
 		debugState.nameObject(id, object, name);
 	}
 
+	public static void pushGroup(int id, String name) {
+		debugState.pushGroup(id, name);
+	}
+
+	public static void popGroup() {
+		debugState.popGroup();
+	}
+
 	private interface DebugState {
 		void nameObject(int id, int object, String name);
 
@@ -317,7 +325,7 @@ public final class GLDebug {
 	}
 
 	private static class KHRDebugState implements DebugState {
-		private boolean hasGroup;
+		private int stackSize;
 
 		@Override
 		public void nameObject(int id, int object, String name) {
@@ -327,14 +335,14 @@ public final class GLDebug {
 		@Override
 		public void pushGroup(int id, String name) {
 			KHRDebug.glPushDebugGroup(KHRDebug.GL_DEBUG_SOURCE_APPLICATION, id, name);
-			hasGroup = true;
+			stackSize += 1;
 		}
 
 		@Override
 		public void popGroup() {
-			if (hasGroup) {
+			if (stackSize != 0) {
 				KHRDebug.glPopDebugGroup();
-				hasGroup = false;
+				stackSize -= 1;
 			}
 		}
 	}

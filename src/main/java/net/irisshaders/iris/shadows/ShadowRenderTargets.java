@@ -52,8 +52,8 @@ public class ShadowRenderTargets {
 		linearFiltered = new boolean[size];
 		buffersToBeCleared = new IntArrayList();
 
-		this.mainDepth = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
-		this.noTranslucents = new DepthTexture(resolution, resolution, DepthBufferFormat.DEPTH);
+		this.mainDepth = new DepthTexture("shadowtex0", resolution, resolution, DepthBufferFormat.DEPTH);
+		this.noTranslucents = new DepthTexture("shadowtex1", resolution, resolution, DepthBufferFormat.DEPTH);
 
 		this.ownedFramebuffers = new ArrayList<>();
 		this.resolution = resolution;
@@ -133,6 +133,7 @@ public class ShadowRenderTargets {
 		PackShadowDirectives.SamplingSettings settings = shadowDirectives.getColorSamplingSettings().computeIfAbsent(index, i -> new PackShadowDirectives.SamplingSettings());
 		targets[index] = RenderTarget.builder().setDimensions(resolution, resolution)
 			.setInternalFormat(settings.getFormat())
+			.setName("shadowcolor" + index)
 			.setPixelFormat(settings.getFormat().getPixelFormat()).build();
 		formats[index] = settings.getFormat();
 		if (settings.getClear()) {

@@ -110,7 +110,7 @@ public class DHCompatInternal {
 
 		translucentDepthDirty = true;
 
-		depthTexNoTranslucent = new DepthTexture(width, height, DepthBufferFormat.DEPTH32F);
+		depthTexNoTranslucent = new DepthTexture("DH depth tex", width, height, DepthBufferFormat.DEPTH32F);
 	}
 
 	public void renderShadowSolid() {

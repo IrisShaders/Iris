@@ -1,6 +1,7 @@
 package net.irisshaders.iris.gl.image;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.GlResource;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
@@ -12,6 +13,7 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL43C;
 
 public class GlImage extends GlResource {
 	protected final String name;
@@ -32,6 +34,8 @@ public class GlImage extends GlResource {
 		this.internalTextureFormat = internalFormat;
 		this.pixelType = pixelType;
 		this.clear = clear;
+
+		GLDebug.nameObject(GL43C.GL_TEXTURE, getGlId(), name);
 
 		IrisRenderSystem.bindTextureForSetup(target.getGlType(), getGlId());
 		target.apply(getGlId(), width, height, depth, internalFormat.getGlFormat(), format.getGlFormat(), pixelType.getGlFormat(), null);
