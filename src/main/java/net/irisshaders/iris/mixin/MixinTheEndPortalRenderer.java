@@ -51,7 +51,7 @@ public class MixinTheEndPortalRenderer {
 		VertexConsumer vertexConsumer =
 			multiBufferSource.getBuffer(RenderType.entitySolid(TheEndPortalRenderer.END_PORTAL_LOCATION));
 
-		Matrix4f pose = poseStack.last().pose();
+		PoseStack.Pose pose = poseStack.last();
 		Matrix3f normal = poseStack.last().normal();
 
 		// animation with a period of 100 seconds.
@@ -98,7 +98,7 @@ public class MixinTheEndPortalRenderer {
 	}
 
 	@Unique
-	private void quad(TheEndPortalBlockEntity entity, VertexConsumer vertexConsumer, Matrix4f pose, Matrix3f normal,
+	private void quad(TheEndPortalBlockEntity entity, VertexConsumer vertexConsumer, PoseStack.Pose pose, Matrix3f normal,
 					  Direction direction, float progress, int overlay, int light,
 					  float x1, float y1, float z1,
 					  float x2, float y2, float z2,
@@ -114,18 +114,18 @@ public class MixinTheEndPortalRenderer {
 
 		vertexConsumer.vertex(pose, x1, y1, z1).color(RED, GREEN, BLUE, 1.0f)
 			.uv(0.0F + progress, 0.0F + progress).overlayCoords(overlay).uv2(light)
-			.normal(normal, nx, ny, nz).endVertex();
+			.normal(pose, nx, ny, nz).endVertex();
 
 		vertexConsumer.vertex(pose, x2, y2, z2).color(RED, GREEN, BLUE, 1.0f)
 			.uv(0.0F + progress, 0.2F + progress).overlayCoords(overlay).uv2(light)
-			.normal(normal, nx, ny, nz).endVertex();
+			.normal(pose, nx, ny, nz).endVertex();
 
 		vertexConsumer.vertex(pose, x3, y3, z3).color(RED, GREEN, BLUE, 1.0f)
 			.uv(0.2F + progress, 0.2F + progress).overlayCoords(overlay).uv2(light)
-			.normal(normal, nx, ny, nz).endVertex();
+			.normal(pose, nx, ny, nz).endVertex();
 
 		vertexConsumer.vertex(pose, x4, y4, z4).color(RED, GREEN, BLUE, 1.0f)
 			.uv(0.2F + progress, 0.0F + progress).overlayCoords(overlay).uv2(light)
-			.normal(normal, nx, ny, nz).endVertex();
+			.normal(pose, nx, ny, nz).endVertex();
 	}
 }

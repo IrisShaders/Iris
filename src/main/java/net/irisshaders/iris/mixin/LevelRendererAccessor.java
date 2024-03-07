@@ -21,7 +21,7 @@ public interface LevelRendererAccessor {
 	EntityRenderDispatcher getEntityRenderDispatcher();
 
 	@Invoker("renderSectionLayer")
-	void invokeRenderSectionLayer(RenderType terrainLayer, PoseStack modelView, double cameraX, double cameraY, double cameraZ, Matrix4f projectionMatrix);
+	void invokeRenderSectionLayer(RenderType terrainLayer, double cameraX, double cameraY, double cameraZ, Matrix4f modelView, Matrix4f projectionMatrix);
 
 	@Invoker("setupRender")
 	void invokeSetupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator);

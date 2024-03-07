@@ -1,6 +1,7 @@
 package net.irisshaders.iris.gl.uniform;
 
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3d;
@@ -40,7 +41,7 @@ public interface UniformHolder {
 
 	UniformHolder uniform4fArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value);
 
-	UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value);
+	UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4fc> value);
 
 	UniformHolder uniformMatrixFromArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value);
 

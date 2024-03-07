@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import org.joml.Math;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -72,7 +73,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShado
 	public double z;
 	private int planeCount = 0;
 
-	public AdvancedShadowCullingFrustum(Matrix4f playerView, Matrix4f playerProjection, Vector3f shadowLightVectorFromOrigin,
+	public AdvancedShadowCullingFrustum(Matrix4fc playerView, Matrix4fc playerProjection, Vector3f shadowLightVectorFromOrigin,
 										BoxCuller boxCuller) {
 		// We're overriding all of the methods, don't pass any matrices down.
 		super(new org.joml.Matrix4f(), new org.joml.Matrix4f());

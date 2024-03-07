@@ -2,6 +2,7 @@ package net.irisshaders.iris.uniforms;
 
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector3d;
 
 public class CapturedRenderingState {
@@ -9,8 +10,8 @@ public class CapturedRenderingState {
 
 	private static final Vector3d ZERO_VECTOR_3d = new Vector3d();
 
-	private Matrix4f gbufferModelView;
-	private Matrix4f gbufferProjection;
+	private Matrix4fc gbufferModelView;
+	private Matrix4fc gbufferProjection;
 	private Vector3d fogColor;
 	private float fogDensity;
 	private float darknessLightFactor;
@@ -27,15 +28,15 @@ public class CapturedRenderingState {
 	private CapturedRenderingState() {
 	}
 
-	public Matrix4f getGbufferModelView() {
+	public Matrix4fc getGbufferModelView() {
 		return gbufferModelView;
 	}
 
-	public void setGbufferModelView(Matrix4f gbufferModelView) {
-		this.gbufferModelView = new Matrix4f(gbufferModelView);
+	public void setGbufferModelView(Matrix4fc gbufferModelView) {
+		this.gbufferModelView = gbufferModelView;
 	}
 
-	public Matrix4f getGbufferProjection() {
+	public Matrix4fc getGbufferProjection() {
 		return gbufferProjection;
 	}
 

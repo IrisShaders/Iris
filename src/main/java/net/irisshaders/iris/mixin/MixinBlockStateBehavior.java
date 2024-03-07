@@ -9,6 +9,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * This Mixin implements support for the ambientOcclusionLevel value. This injection point was chosen because it's
@@ -39,11 +42,11 @@ public abstract class MixinBlockStateBehavior {
 	 * @author IMS
 	 * @reason ambientOcclusionLevel support. Semantically, we're completely changing the meaning of the method.
 	 */
-	@Overwrite
+	@Inject(method = "getShadeBrightness", at = @At("RETURN"), cancellable = true)
 	@SuppressWarnings("deprecation")
-	public float getShadeBrightness(BlockGetter blockGetter, BlockPos blockPos) {
-		float originalValue = this.getBlock().getShadeBrightness(this.asState(), blockGetter, blockPos);
+	public void getShadeBrightness(BlockGetter pBlockBehaviour$BlockStateBase0, BlockPos pBlockPos1, CallbackInfoReturnable<Float> cir) {
+		float originalValue = cir.getReturnValue();
 		float aoLightValue = WorldRenderingSettings.INSTANCE.getAmbientOcclusionLevel();
-		return 1.0F - aoLightValue * (1.0F - originalValue);
+		cir.setReturnValue(1.0F - aoLightValue * (1.0F - originalValue));
 	}
 }

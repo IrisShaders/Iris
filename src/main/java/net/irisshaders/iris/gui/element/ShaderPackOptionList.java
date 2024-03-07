@@ -2,6 +2,7 @@ package net.irisshaders.iris.gui.element;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.FileDialogUtil;
 import net.irisshaders.iris.gui.GuiUtil;
@@ -21,10 +22,12 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,23 +51,8 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		super(client, width, bottom, top, bottom, left, right, 24);
 		this.navigation = navigation;
 		this.screen = screen;
-		this.setRenderBackground(false);
 
 		applyShaderPack(pack);
-	}
-
-	@Override
-	protected void renderDecorations(GuiGraphics pAbstractSelectionList0, int pInt1, int pInt2) {
-		// Renders top/bottom dirt
-		int lvInt9 = 32;
-		pAbstractSelectionList0.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-		pAbstractSelectionList0.blit(Screen.BACKGROUND_LOCATION, this.getX(), 0, 0.0F, 0.0F, this.width, this.getY(), 32, 32);
-		pAbstractSelectionList0.blit(Screen.BACKGROUND_LOCATION, this.getX(), this.getBottom(), 0.0F, 0.0F, this.width, this.height, 32, 32);
-		pAbstractSelectionList0.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-		int lvInt10 = 4;
-		pAbstractSelectionList0.fillGradient(RenderType.guiOverlay(), this.getX(), this.getY(), this.getRight(), this.getY() + 4, -16777216, 0, 0);
-		pAbstractSelectionList0.fillGradient(RenderType.guiOverlay(), this.getX(), this.getBottom() - 4, this.getRight(), this.getBottom(), 0, -16777216, 0);
-		super.renderDecorations(pAbstractSelectionList0, pInt1, pInt2);
 	}
 
 	public void applyShaderPack(ShaderPack pack) {
@@ -84,6 +72,44 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 	@Override
 	public int getRowWidth() {
 		return Math.min(400, width - 12);
+	}
+
+	private static final ResourceLocation MENU_LIST_BACKGROUND = new ResourceLocation("textures/gui/menu_background.png");
+
+	@Override
+	protected void renderListBackground(GuiGraphics pAbstractSelectionList0) {
+		if (screen.listTransition.getAsFloat() < 0.02f) return;
+		RenderSystem.enableBlend();
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, screen.listTransition.getAsFloat());
+		pAbstractSelectionList0.blit(
+			MENU_LIST_BACKGROUND,
+			this.getX(),
+			this.getY() + 3,
+			(float)this.getRight(),
+			(float)(this.getBottom() + (int)this.getScrollAmount()),
+			this.getWidth(),
+			this.getHeight(),
+			32,
+			32
+		);
+
+		RenderSystem.disableBlend();
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+	}
+
+	@Override
+	protected void renderMenuBackground(GuiGraphics pAbstractWidget0, int pInt1, int pInt2, int pInt3, int pInt4) {
+
+	}
+
+	@Override
+	protected void renderListSeparators(GuiGraphics pAbstractSelectionList0) {
+		RenderSystem.enableBlend();
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, screen.listTransition.getAsFloat());
+		pAbstractSelectionList0.blit(CreateWorldScreen.HEADER_SEPARATOR, this.getX(), this.getY() + 2, 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
+		pAbstractSelectionList0.blit(CreateWorldScreen.FOOTER_SEPARATOR, this.getX(), this.getBottom(), 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+		RenderSystem.disableBlend();
 	}
 
 	public void addHeader(Component text, boolean backButton) {

@@ -1,16 +1,17 @@
 package net.irisshaders.iris.shadows.frustum.advanced;
 
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector4f;
 
 public class BaseClippingPlanes {
 	private final Vector4f[] planes = new Vector4f[6];
 
-	public BaseClippingPlanes(Matrix4f playerView, Matrix4f playerProjection) {
+	public BaseClippingPlanes(Matrix4fc playerView, Matrix4fc playerProjection) {
 		this.init(playerView, playerProjection);
 	}
 
-	private static Vector4f transform(Matrix4f transform, float x, float y, float z) {
+	private static Vector4f transform(Matrix4fc transform, float x, float y, float z) {
 		Vector4f vector4f = new Vector4f(x, y, z, 1.0F);
 		vector4f.mul(transform);
 		vector4f.normalize();
@@ -18,7 +19,7 @@ public class BaseClippingPlanes {
 		return vector4f;
 	}
 
-	private void init(Matrix4f view, Matrix4f projection) {
+	private void init(Matrix4fc view, Matrix4fc projection) {
 		// Transform = Transpose(Projection x View)
 
 		Matrix4f transform = new Matrix4f(projection);

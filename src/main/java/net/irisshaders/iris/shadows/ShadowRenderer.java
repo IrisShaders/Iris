@@ -460,9 +460,9 @@ public class ShadowRenderer {
 
 		// Render all opaque terrain unless pack requests not to
 		if (shouldRenderTerrain) {
-			levelRenderer.invokeRenderSectionLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
-			levelRenderer.invokeRenderSectionLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
-			levelRenderer.invokeRenderSectionLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+			levelRenderer.invokeRenderSectionLayer(RenderType.solid(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
+			levelRenderer.invokeRenderSectionLayer(RenderType.cutout(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
+			levelRenderer.invokeRenderSectionLayer(RenderType.cutoutMipped(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
 		}
 
 		// Reset our viewport in case Sodium overrode it
@@ -533,7 +533,7 @@ public class ShadowRenderer {
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
 		if (shouldRenderTranslucent) {
-			levelRenderer.invokeRenderSectionLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+			levelRenderer.invokeRenderSectionLayer(RenderType.translucent(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
 		}
 
 		// Note: Apparently tripwire isn't rendered in the shadow pass.

@@ -30,7 +30,7 @@ public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsu
 
 	@Override
 	public void putBulkData(PoseStack.Pose matrixEntry, BakedQuad quad, float[] brightnesses, float red, float green,
-							float blue, int[] lights, int overlay, boolean useQuadColorData) {
+							float blue, float alpha, int[] lights, int overlay, boolean useQuadColorData) {
 		if (WorldRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			this.brightnesses = brightnesses;
 			this.brightnessIndex = 0;
@@ -39,7 +39,7 @@ public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsu
 			Arrays.fill(brightnesses, 1.0f);
 		}
 
-		super.putBulkData(matrixEntry, quad, brightnesses, red, green, blue, lights, overlay, useQuadColorData);
+		super.putBulkData(matrixEntry, quad, brightnesses, red, green, blue, alpha, lights, overlay, useQuadColorData);
 	}
 
 	@ModifyVariable(method = "vertex", at = @At("HEAD"), index = 7, argsOnly = true)

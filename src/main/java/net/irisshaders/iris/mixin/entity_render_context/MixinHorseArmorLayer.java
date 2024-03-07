@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.entity.layers.HorseArmorLayer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.horse.Horse;
-import net.minecraft.world.item.HorseArmorItem;
+import net.minecraft.world.item.AnimalArmorItem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,10 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinHorseArmorLayer {
 	@Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/animal/horse/Horse;FFFFFF)V", at = @At(value = "HEAD"))
 	private void changeId(PoseStack pHorseArmorLayer0, MultiBufferSource pMultiBufferSource1, int pInt2, Horse pHorse3, float pFloat4, float pFloat5, float pFloat6, float pFloat7, float pFloat8, float pFloat9, CallbackInfo ci) {
-		if (WorldRenderingSettings.INSTANCE.getItemIds() == null || !(pHorse3.getArmor().getItem() instanceof HorseArmorItem))
+		if (WorldRenderingSettings.INSTANCE.getItemIds() == null || !(pHorse3.getBodyArmorItem().getItem() instanceof AnimalArmorItem))
 			return;
 
-		ResourceLocation location = BuiltInRegistries.ITEM.getKey((pHorse3.getArmor().getItem()));
+		ResourceLocation location = BuiltInRegistries.ITEM.getKey((pHorse3.getBodyArmorItem().getItem()));
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
 	}
 

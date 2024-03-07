@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -42,15 +43,15 @@ public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends 
 	}
 
 	@Inject(method = "renderTrim", at = @At(value = "HEAD"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void changeTrimTemp(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, A pHumanoidModel5, boolean pBoolean6, CallbackInfo ci) {
+	private void changeTrimTemp(Holder<ArmorMaterial> holder, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, ArmorTrim armorTrim, A humanoidModel, boolean bl, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		backupValue = CapturedRenderingState.INSTANCE.getCurrentRenderedItem();
-		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId("minecraft", "trim_" + pArmorTrim4.material().value().assetName())));
+		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId("minecraft", "trim_" + armorTrim.material().value().assetName())));
 	}
 
 	@Inject(method = "renderTrim", at = @At(value = "TAIL"))
-	private void changeTrimTemp2(ArmorMaterial pHumanoidArmorLayer0, PoseStack pPoseStack1, MultiBufferSource pMultiBufferSource2, int pInt3, ArmorTrim pArmorTrim4, A pHumanoidModel5, boolean pBoolean6, CallbackInfo ci) {
+	private void changeTrimTemp2(Holder<ArmorMaterial> holder, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, ArmorTrim armorTrim, A humanoidModel, boolean bl, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(backupValue);
 		backupValue = 0;

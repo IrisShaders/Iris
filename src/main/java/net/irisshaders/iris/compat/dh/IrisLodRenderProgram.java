@@ -27,6 +27,7 @@ import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.system.MemoryStack;
@@ -173,7 +174,7 @@ public class IrisLodRenderProgram {
 		return i;
 	}
 
-	public void setUniform(int index, Matrix4f matrix) {
+	public void setUniform(int index, Matrix4fc matrix) {
 		if (index == -1 || matrix == null) return;
 
 		try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -218,7 +219,7 @@ public class IrisLodRenderProgram {
 		GL43C.glDeleteProgram(id);
 	}
 
-	public void fillUniformData(Matrix4f projection, Matrix4f modelView, int worldYOffset, float partialTicks) {
+	public void fillUniformData(Matrix4fc projection, Matrix4fc modelView, int worldYOffset, float partialTicks) {
 		GL43C.glUseProgram(id);
 
 		Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();

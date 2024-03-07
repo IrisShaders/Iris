@@ -24,8 +24,12 @@ import net.irisshaders.iris.uniforms.VanillaUniforms;
 import net.irisshaders.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackLocationInfo;
 import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.server.packs.repository.KnownPack;
+import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.apache.commons.io.IOUtils;
@@ -218,7 +222,7 @@ public class ShaderCreator {
         private final String content;
 
 		private StringResource(ResourceLocation id, String content) {
-			super(new PathPackResources("<iris shaderpack shaders>", FabricLoader.getInstance().getConfigDir(), true), () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
+			super(new PathPackResources(new PackLocationInfo("<iris shaderpack shaders>", Component.literal("iris"), PackSource.BUILT_IN, Optional.of(new KnownPack("iris", "shader", "1.0"))), FabricLoader.getInstance().getConfigDir()), () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
             this.content = content;
 		}
 

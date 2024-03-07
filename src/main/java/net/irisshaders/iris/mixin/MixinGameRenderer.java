@@ -13,6 +13,8 @@ import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.api.v0.IrisApi;
+import net.irisshaders.iris.uniforms.CapturedRenderingState;
+import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -95,7 +97,7 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getPositionTexColorNormalShader", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "getRendertypeCloudsShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexColorNormalShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_CLOUDS, cir);
@@ -132,7 +134,6 @@ public class MixinGameRenderer {
 
 	@Inject(method = {
 		"getRendertypeTranslucentShader",
-		"getRendertypeTranslucentNoCrumblingShader",
 		"getRendertypeTranslucentMovingBlockShader",
 		"getRendertypeTripwireShader"
 	}, at = @At("HEAD"), cancellable = true)
@@ -325,6 +326,14 @@ public class MixinGameRenderer {
 		}
 	}
 
+	@Inject(method = "render", at = @At("HEAD"))
+	private void iris$startFrame(float tickDelta, long startTime, boolean pBoolean2, CallbackInfo ci) {
+		// This allows certain functions like float smoothing to function outside a world.
+		CapturedRenderingState.INSTANCE.setRealTickDelta(tickDelta);
+		SystemTimeUniforms.COUNTER.beginFrame();
+		SystemTimeUniforms.TIMER.beginFrame(startTime);
+	}
+
 	@Inject(method = {
 		"getRendertypeTextShader",
 		"getRendertypeTextSeeThroughShader",
@@ -459,7 +468,7 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At("TAIL"))
-	private void iris$runColorSpace(float pGameRenderer0, long pLong1, PoseStack pPoseStack2, CallbackInfo ci) {
+	private void iris$runColorSpace(float f, long l, CallbackInfo ci) {
 		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::finalizeGameRendering);
 	}
 

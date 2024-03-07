@@ -19,6 +19,7 @@ import net.irisshaders.iris.uniforms.custom.cached.Int2VectorCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Int3VectorCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.IntCachedUniform;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3d;
@@ -165,7 +166,7 @@ public class CustomUniformFixedInputUniformsHolder {
 
 		@Override
 		public UniformHolder uniformMatrix(
-			UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4f> value) {
+			UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4fc> value) {
 			return this.put(name, new Float4MatrixCachedUniform(name, updateFrequency, value));
 		}
 

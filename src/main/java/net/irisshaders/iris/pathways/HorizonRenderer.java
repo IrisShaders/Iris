@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 
 /**
  * Renders the sky horizon. Vanilla Minecraft simply uses the "clear color" for its horizon, and then draws a plane
@@ -164,14 +165,14 @@ public class HorizonRenderer {
 		buildBottomPlane(consumer, 384);
 	}
 
-	public void renderHorizon(Matrix4f modelView, Matrix4f projection, ShaderInstance shader) {
+	public void renderHorizon(Matrix4fc modelView, Matrix4fc projection, ShaderInstance shader) {
 		if (currentRenderDistance != Minecraft.getInstance().options.getEffectiveRenderDistance()) {
 			currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
 			rebuildBuffer();
 		}
 
 		buffer.bind();
-		buffer.drawWithShader(modelView, projection, shader);
+		buffer.drawWithShader(new Matrix4f(modelView), new Matrix4f(projection), shader);
 		VertexBuffer.unbind();
 	}
 

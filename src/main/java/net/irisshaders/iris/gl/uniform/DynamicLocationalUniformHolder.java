@@ -2,6 +2,7 @@ package net.irisshaders.iris.gl.uniform;
 
 import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -75,7 +76,7 @@ public interface DynamicLocationalUniformHolder extends LocationalUniformHolder,
 		return this;
 	}
 
-	default DynamicUniformHolder uniformMatrix(String name, Supplier<Matrix4f> value, ValueUpdateNotifier notifier) {
+	default DynamicUniformHolder uniformMatrix(String name, Supplier<Matrix4fc> value, ValueUpdateNotifier notifier) {
 		location(name, UniformType.MAT4).ifPresent(id -> addDynamicUniform(new MatrixUniform(id, value, notifier), notifier));
 
 		return this;
