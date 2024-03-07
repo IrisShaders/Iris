@@ -1,3 +1,5 @@
+import org.ajoberstar.grgit.Grgit
+
 object Constants {
     // https://fabricmc.net/develop/
     const val MINECRAFT_VERSION: String = "1.20.4"
@@ -33,6 +35,7 @@ plugins {
     // is not reachable for some reason, and it makes builds much more reproducible. Observation also shows that it
     // really helps to improve startup times on slow connections.
     id("fabric-loom") version "1.5.7"
+    id("org.ajoberstar.grgit") version "5.2.2"
 }
 
 base {
@@ -188,13 +191,19 @@ fun createVersionString(): String {
         builder.append("-snapshot")
     }
 
+    val open = Grgit.open {
+        dir = rootDir
+    }
+
     builder.append("+mc").append(Constants.MINECRAFT_VERSION)
 
     if (!isReleaseBuild) {
         if (buildId != null) {
             builder.append("-build.${buildId}")
-        } else {
+        } else if (open == null) {
             builder.append("-local")
+        } else {
+            builder.append("-" + open.head().abbreviatedId + (if (!open.status().isClean) "-dirty" else ""))
         }
     }
 
