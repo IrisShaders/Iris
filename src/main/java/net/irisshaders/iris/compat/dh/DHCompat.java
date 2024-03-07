@@ -1,6 +1,5 @@
 package net.irisshaders.iris.compat.dh;
 
-import com.seibel.distanthorizons.api.DhApi;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -11,11 +10,11 @@ import org.joml.Matrix4f;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.InvocationTargetException;
 
 public class DHCompat {
 	private static boolean dhPresent = true;
-	private static Object compatInternalInstance;
-	private static MethodHandle createNewPipeline;
+	private Object compatInternalInstance;
 	private static MethodHandle deletePipeline;
 	private static MethodHandle getDepthTex;
 	private static MethodHandle getFarPlane;
@@ -26,8 +25,19 @@ public class DHCompat {
 	private static MethodHandle renderShadowSolid;
 	private static MethodHandle renderShadowTranslucent;
 
+	public DHCompat(IrisRenderingPipeline pipeline, boolean renderDHShadow) {
+        try {
+			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
+				compatInternalInstance = Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal").getDeclaredConstructor(pipeline.getClass(), boolean.class).newInstance(pipeline, renderDHShadow);
+			}
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException |
+                 ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 	public static Matrix4f getProjection() {
-		if (compatInternalInstance == null) {
+		if (!dhPresent) {
 			return new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
 		}
 
@@ -40,19 +50,19 @@ public class DHCompat {
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
 				LodRendererEvents.setupEventHandlers();
 
-				compatInternalInstance = Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal").getField("INSTANCE").get(null);
-				createNewPipeline = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "prepareNewPipeline", MethodType.methodType(void.class, IrisRenderingPipeline.class, boolean.class));
 				deletePipeline = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "clear", MethodType.methodType(void.class));
 				getDepthTex = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getStoredDepthTex", MethodType.methodType(int.class));
-				getRenderDistance = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
-				getFarPlane = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getFarPlane", MethodType.methodType(float.class));
-				getNearPlane = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getNearPlane", MethodType.methodType(float.class));
+				getRenderDistance = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
+				getFarPlane = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getFarPlane", MethodType.methodType(float.class));
+				getNearPlane = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getNearPlane", MethodType.methodType(float.class));
 				getDepthTexNoTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getDepthTexNoTranslucent", MethodType.methodType(int.class));
-				checkFrame = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "checkFrame", MethodType.methodType(void.class));
+				checkFrame = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "checkFrame", MethodType.methodType(boolean.class));
 				renderShadowSolid = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "renderShadowSolid", MethodType.methodType(void.class));
 				renderShadowTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "renderShadowTranslucent", MethodType.methodType(void.class));
+			} else {
+				dhPresent = false;
 			}
-		} catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException | IllegalAccessException e) {
+		} catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException e) {
 			dhPresent = false;
 
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
@@ -63,16 +73,7 @@ public class DHCompat {
 		}
 	}
 
-	public static void connectNewPipeline(IrisRenderingPipeline pipeline, boolean renderDhShadow) {
-		if (compatInternalInstance == null) return;
-		try {
-			createNewPipeline.invoke(compatInternalInstance, pipeline, renderDhShadow);
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public static void clearPipeline() {
+	public void clearPipeline() {
 		if (compatInternalInstance == null) return;
 
 		try {
@@ -82,7 +83,7 @@ public class DHCompat {
 		}
 	}
 
-	public static int getDepthTex() {
+	public int getDepthTex() {
 		if (compatInternalInstance == null) throw new IllegalStateException("Couldn't find DH depth texture");
 
 		try {
@@ -92,7 +93,7 @@ public class DHCompat {
 		}
 	}
 
-	public static int getDepthTexNoTranslucent() {
+	public int getDepthTexNoTranslucent() {
 		if (compatInternalInstance == null) throw new IllegalStateException("Couldn't find DH depth texture");
 
 		try {
@@ -103,36 +104,36 @@ public class DHCompat {
 	}
 
 	public static float getFarPlane() {
-		if (compatInternalInstance == null) return 0.01f;
+		if (!dhPresent) return 0.01f;
 
 		try {
-			return (float) getFarPlane.invoke(compatInternalInstance);
+			return (float) getFarPlane.invoke();
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public static float getNearPlane() {
-		if (compatInternalInstance == null) return 0.01f;
+		if (!dhPresent) return 0.01f;
 
 		try {
-			return (float) getNearPlane.invoke(compatInternalInstance);
+			return (float) getNearPlane.invoke();
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public static int getRenderDistance() {
-		if (compatInternalInstance == null) return Minecraft.getInstance().options.getEffectiveRenderDistance();
+		if (!dhPresent) return Minecraft.getInstance().options.getEffectiveRenderDistance();
 
 		try {
-			return (int) getRenderDistance.invoke(compatInternalInstance);
+			return (int) getRenderDistance.invoke();
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public static void renderShadowSolid() {
+	public void renderShadowSolid() {
 		if (compatInternalInstance == null) return;
 
 		try {
@@ -142,7 +143,7 @@ public class DHCompat {
 		}
 	}
 
-	public static void renderShadowTranslucent() {
+	public void renderShadowTranslucent() {
 		if (compatInternalInstance == null) return;
 
 		try {
@@ -152,15 +153,13 @@ public class DHCompat {
 		}
 	}
 
-	public static void checkFrame() {
-		if (compatInternalInstance == null) return;
-
+	public static boolean checkFrame() {
 		try {
-			checkFrame.invoke(compatInternalInstance);
+			return (boolean) checkFrame.invoke();
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
-	}
+    }
 
 
 	public static boolean hasRenderingEnabled() {
@@ -168,22 +167,10 @@ public class DHCompat {
 			return false;
 		}
 
-
-		try {
-			if (DhApi.Delayed.configs == null) {
-				// DH hasn't finished loading yet
-				return false;
-			}
-
-			return DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
-		} catch (NoClassDefFoundError e) {
-			// if Distant Horizons isn't present the dhPresent
-			// variable should already be set to false,
-			// but this try-catch is present just in case
-
-			dhPresent = false;
-			return false;
-		}
+		return checkFrame();
 	}
 
+	public Object getInstance() {
+		return compatInternalInstance;
+	}
 }

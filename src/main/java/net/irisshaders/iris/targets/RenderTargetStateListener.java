@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline;
+package net.irisshaders.iris.targets;
 
 public interface RenderTargetStateListener {
 	RenderTargetStateListener NOP = new RenderTargetStateListener() {

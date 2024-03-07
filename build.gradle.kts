@@ -99,7 +99,6 @@ sourceSets {
 }
 
 dependencies {
-
     minecraft(group = "com.mojang", name = "minecraft", version = Constants.MINECRAFT_VERSION)
     mappings(loom.officialMojangMappings())
     modImplementation(group = "net.fabricmc", name = "fabric-loader", version = Constants.FABRIC_LOADER_VERSION)

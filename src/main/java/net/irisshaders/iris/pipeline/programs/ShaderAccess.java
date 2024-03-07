@@ -2,7 +2,6 @@ package net.irisshaders.iris.pipeline.programs;
 
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
-import net.irisshaders.iris.pipeline.ShaderKey;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;

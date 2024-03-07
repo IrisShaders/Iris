@@ -8,6 +8,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.irisshaders.iris.pipeline.programs.ShaderKey;
+import net.irisshaders.iris.pipeline.programs.ShaderMap;
 import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.compat.dh.DHCompat;
@@ -69,6 +71,7 @@ import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import net.irisshaders.iris.targets.ClearPass;
 import net.irisshaders.iris.targets.ClearPassCreator;
+import net.irisshaders.iris.targets.RenderTargetStateListener;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.targets.backed.NativeImageBackedSingleColorTexture;
 import net.irisshaders.iris.texture.TextureInfoCache;
@@ -191,8 +194,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
-		this.dhCompat = new DHCompat();
-
 		this.resolver = new ProgramFallbackResolver(programSet);
 		this.pack = programSet.getPack();
 
@@ -265,7 +266,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		BufferFlipper flipper = new BufferFlipper();
 
-
 		this.centerDepthSampler = new CenterDepthSampler(() -> renderTargets.getDepthTexture(), programSet.getPackDirectives().getCenterDepthHalfLife());
 
 		this.shadowMapResolution = programSet.getPackDirectives().getShadowDirectives().getResolution();
@@ -319,7 +319,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false, this);
 			IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 
 			if (!shouldBindPBR) {
@@ -355,12 +355,14 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			return builder.build();
 		};
 
+		this.dhCompat = new DHCompat(this, shadowDirectives.isDhShadowEnabled().orElse(true));
+
 		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
 			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 
 			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
 
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeShadow, renderTargets, false);
+			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeShadow, renderTargets, false, this);
 			IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 
 			if (!shouldBindPBR) {
@@ -478,8 +480,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
 
-		DHCompat.connectNewPipeline(this, shadowDirectives.isDhShadowEnabled().orElse(true));
-
 		// first optimization pass
 		this.customUniforms.optimise();
 		boolean hasRun = false;
@@ -570,7 +570,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 					ProgramSamplers.customTextureSamplerInterceptor(builder,
 						customTextureManager.getCustomTextureIdMap(textureStage));
 
-				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false);
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false, this);
 				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 				IrisImages.addRenderTargetImages(builder, flipped, renderTargets);
@@ -633,7 +633,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 					ProgramSamplers.customTextureSamplerInterceptor(builder,
 						customTextureManager.getCustomTextureIdMap(textureStage));
 
-				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, true);
+				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, true, this);
 				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 				IrisSamplers.addCompositeSamplers(builder, renderTargets);
 				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
@@ -757,7 +757,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			ProgramSamplers.customTextureSamplerInterceptor(samplers,
 				customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
 
-		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false);
+		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false, this);
 		IrisSamplers.addCustomTextures(samplerHolder, customTextureManager.getIrisCustomTextures());
 		IrisImages.addRenderTargetImages(images, flipped, renderTargets);
 		IrisImages.addCustomImages(images, customImages);
@@ -1199,7 +1199,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 
 		renderTargets.destroy();
-		DHCompat.clearPipeline();
+		dhCompat.clearPipeline();
 
 		customImages.forEach(GlImage::destroy);
 

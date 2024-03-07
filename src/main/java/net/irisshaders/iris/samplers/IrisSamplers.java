@@ -49,7 +49,7 @@ public class IrisSamplers {
 	}
 
 	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped,
-											   RenderTargets renderTargets, boolean isFullscreenPass) {
+											   RenderTargets renderTargets, boolean isFullscreenPass, WorldRenderingPipeline pipeline) {
 		// colortex0,1,2,3 are only able to be sampled from fullscreen passes.
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.
 		int startIndex = isFullscreenPass ? 0 : 4;
@@ -95,8 +95,8 @@ public class IrisSamplers {
 		}
 
 		// Add the DH texture here, to make sure it's always visible.
-		samplers.addDynamicSampler(TextureType.TEXTURE_2D, DHCompat::getDepthTex, null, "dhDepthTex", "dhDepthTex0");
-		samplers.addDynamicSampler(TextureType.TEXTURE_2D, DHCompat::getDepthTexNoTranslucent, null, "dhDepthTex1");
+		samplers.addDynamicSampler(TextureType.TEXTURE_2D, () -> pipeline.getDHCompat().getDepthTex(), null, "dhDepthTex", "dhDepthTex0");
+		samplers.addDynamicSampler(TextureType.TEXTURE_2D, () -> pipeline.getDHCompat().getDepthTexNoTranslucent(), null, "dhDepthTex1");
 	}
 
 	public static void addNoiseSampler(SamplerHolder samplers, TextureAccess sampler) {

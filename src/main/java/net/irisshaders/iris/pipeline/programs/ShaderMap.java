@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline;
+package net.irisshaders.iris.pipeline.programs;
 
 import net.minecraft.client.renderer.ShaderInstance;
 

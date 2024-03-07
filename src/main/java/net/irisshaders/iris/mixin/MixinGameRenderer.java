@@ -8,7 +8,7 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.program.IrisProgramTypes;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
-import net.irisshaders.iris.pipeline.ShaderKey;
+import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderer;

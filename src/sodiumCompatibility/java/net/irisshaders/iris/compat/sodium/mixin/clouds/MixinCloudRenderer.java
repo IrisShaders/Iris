@@ -13,7 +13,7 @@ import net.caffeinemc.mods.sodium.api.vertex.format.common.ColorVertex;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.CloudVertex;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
-import net.irisshaders.iris.pipeline.ShaderKey;
+import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.api.v0.IrisApi;
