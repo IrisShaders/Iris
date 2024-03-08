@@ -92,6 +92,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import org.apache.commons.lang3.text.WordUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
@@ -105,6 +106,7 @@ import org.lwjgl.opengl.GL43C;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -795,19 +797,12 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		return phase;
 	}
+	private int stackSize = 0;
 
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
-		if (phase == WorldRenderingPhase.NONE) {
-			if (this.phase != WorldRenderingPhase.NONE) {
-				GLDebug.popGroup();
-			}
-		} else {
-			if (this.phase != WorldRenderingPhase.NONE) {
-				GLDebug.popGroup();
-			}
-			GLDebug.pushGroup(phase.ordinal(), phase.name());
-		}
+		GLDebug.popGroup();
+		if (phase != WorldRenderingPhase.NONE) GLDebug.pushGroup(phase.ordinal(), WordUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
 		this.phase = phase;
 	}
 

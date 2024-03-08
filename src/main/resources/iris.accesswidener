@@ -31,3 +31,4 @@ accessible field net/minecraft/client/renderer/ShaderInstance uniforms Ljava/uti
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
 accessible class net/minecraft/client/gui/components/AbstractSelectionList$Entry
 accessible field com/mojang/blaze3d/platform/GlStateManager$BooleanState enabled Z
+accessible method com/mojang/blaze3d/shaders/Program getId ()I
