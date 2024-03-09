@@ -82,7 +82,7 @@ public class LodRendererEvents {
 			@Override
 			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
 
-				DhApi.Delayed.renderProxy.setDeferTransparentRendering(IrisApi.getInstance().isShaderPackInUse());
+				DhApi.Delayed.renderProxy.setDeferTransparentRendering(IrisApi.getInstance().isShaderPackInUse() && getInstance().shouldOverride);
 			}
 		};
 
@@ -207,7 +207,9 @@ public class LodRendererEvents {
 			@Override
 			public void beforeSetup(DhApiEventParam<DhApiRenderParam> event) {
 				DHCompatInternal instance = getInstance();
-
+				OverrideInjector.INSTANCE.unbind(IDhApiShadowCullingFrustum.class, (IDhApiOverrideable) ShadowRenderer.FRUSTUM);
+				OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getShadowFBWrapper());
+				OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getSolidFBWrapper());
 				if (instance.shouldOverride) {
 					if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && instance.shouldOverrideShadow) {
 						OverrideInjector.INSTANCE.bind(IDhApiFramebuffer.class, instance.getShadowFBWrapper());

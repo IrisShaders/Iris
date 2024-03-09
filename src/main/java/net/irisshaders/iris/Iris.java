@@ -70,6 +70,11 @@ public class Iris {
 	 */
 	public static final String MODNAME = "Iris";
 
+	static {
+		if (FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims")) {
+			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
+		}
+	}
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	public static NamespacedId lastDimension = null;
@@ -524,6 +529,10 @@ public class Iris {
 		if (Minecraft.getInstance().level != null) {
 			Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 		}
+
+		if (loadedIncompatiblePack() && Minecraft.getInstance().player != null) {
+			Minecraft.getInstance().player.displayClientMessage(Component.literal("This pack (" + Iris.getCurrentPackName() + ") doesn't have DH support; DH chunks won't show up."), false);
+		}
 	}
 
 	/**
@@ -681,6 +690,10 @@ public class Iris {
 		}
 
 		return shaderpacksDirectoryManager;
+	}
+
+	public static boolean loadedIncompatiblePack() {
+		return DHCompat.lastPackIncompatible();
 	}
 
 	/**

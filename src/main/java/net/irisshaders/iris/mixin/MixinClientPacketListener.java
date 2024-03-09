@@ -26,5 +26,9 @@ public class MixinClientPacketListener {
 
 		Iris.getStoredError().ifPresent(e ->
 			Minecraft.getInstance().player.displayClientMessage(Component.translatable(e instanceof ShaderCompileException ? "iris.load.failure.shader" : "iris.load.failure.generic").append(Component.literal("Copy Info").withStyle(arg -> arg.withUnderlined(true).withColor(ChatFormatting.BLUE).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, e.getMessage())))), false));
+
+		if (Iris.loadedIncompatiblePack()) {
+			Minecraft.getInstance().player.displayClientMessage(Component.literal("This pack (" + Iris.getCurrentPackName() + ") doesn't have DH support; DH chunks won't show up."), false);
+		}
 	}
 }

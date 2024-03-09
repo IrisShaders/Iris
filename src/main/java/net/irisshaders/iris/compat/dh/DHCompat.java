@@ -14,8 +14,10 @@ import java.lang.reflect.InvocationTargetException;
 
 public class DHCompat {
 	private static boolean dhPresent = true;
+	private static boolean lastIncompatible;
 	private Object compatInternalInstance;
 	private static MethodHandle deletePipeline;
+	private static MethodHandle incompatible;
 	private static MethodHandle getDepthTex;
 	private static MethodHandle getFarPlane;
 	private static MethodHandle getNearPlane;
@@ -29,11 +31,13 @@ public class DHCompat {
         try {
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
 				compatInternalInstance = Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal").getDeclaredConstructor(pipeline.getClass(), boolean.class).newInstance(pipeline, renderDHShadow);
+				lastIncompatible = (boolean) incompatible.invoke(compatInternalInstance);
 			}
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException |
-                 ClassNotFoundException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable e) {
+			lastIncompatible = false;
+			throw new RuntimeException(e);
         }
+
     }
 
 	public static Matrix4f getProjection() {
@@ -53,6 +57,7 @@ public class DHCompat {
 				deletePipeline = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "clear", MethodType.methodType(void.class));
 				getDepthTex = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getStoredDepthTex", MethodType.methodType(int.class));
 				getRenderDistance = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
+				incompatible = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "incompatiblePack", MethodType.methodType(boolean.class));
 				getFarPlane = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getFarPlane", MethodType.methodType(float.class));
 				getNearPlane = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getNearPlane", MethodType.methodType(float.class));
 				getDepthTexNoTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getDepthTexNoTranslucent", MethodType.methodType(int.class));
@@ -73,7 +78,11 @@ public class DHCompat {
 		}
 	}
 
-	public void clearPipeline() {
+    public static boolean lastPackIncompatible() {
+		return dhPresent && lastIncompatible;
+    }
+
+    public void clearPipeline() {
 		if (compatInternalInstance == null) return;
 
 		try {

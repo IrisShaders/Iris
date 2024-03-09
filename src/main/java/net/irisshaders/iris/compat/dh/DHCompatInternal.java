@@ -36,6 +36,7 @@ public class DHCompatInternal {
 	private DepthTexture depthTexNoTranslucent;
 	private boolean translucentDepthDirty;
 	private int storedDepthTex;
+	private boolean incompatible = false;
 
 	public DHCompatInternal(IrisRenderingPipeline pipeline, boolean dhShadowEnabled) {
 		this.pipeline = pipeline;
@@ -46,6 +47,7 @@ public class DHCompatInternal {
 
 		if (pipeline.getDHTerrainShader().isEmpty() && pipeline.getDHWaterShader().isEmpty()) {
 			Iris.logger.warn("No DH shader found in this pack.");
+			incompatible = true;
 			return;
 		}
 
@@ -81,6 +83,10 @@ public class DHCompatInternal {
 		}
 
 		shouldOverride = true;
+	}
+
+	public boolean incompatiblePack() {
+		return incompatible;
 	}
 
 	public static int getDhBlockRenderDistance() {
