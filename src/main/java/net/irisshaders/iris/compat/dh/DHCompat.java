@@ -1,6 +1,7 @@
 package net.irisshaders.iris.compat.dh;
 
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.fabricmc.loader.api.FabricLoader;
@@ -35,7 +36,11 @@ public class DHCompat {
 			}
         } catch (Throwable e) {
 			lastIncompatible = false;
-			throw new RuntimeException(e);
+			if (e.getCause() instanceof ShaderCompileException sce) {
+				throw sce;
+			} else {
+				throw new RuntimeException(e);
+			}
         }
 
     }
