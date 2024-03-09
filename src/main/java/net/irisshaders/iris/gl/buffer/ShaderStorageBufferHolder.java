@@ -52,7 +52,9 @@ public class ShaderStorageBufferHolder {
 			cachedWidth = width;
 			cachedHeight = height;
 			for (ShaderStorageBuffer buffer : buffers) {
-				buffer.resizeIfRelative(width, height);
+				if (buffer != null) {
+					buffer.resizeIfRelative(width, height);
+				}
 			}
 		}
 	}
