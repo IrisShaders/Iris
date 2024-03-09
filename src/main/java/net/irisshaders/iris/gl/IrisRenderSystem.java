@@ -451,7 +451,11 @@ public class IrisRenderSystem {
 		GL46C.glBindBuffer(target, buffer);
 	}
 
-	public interface DSAAccess {
+    public static int createBuffers() {
+		return dsaState.createBuffers();
+    }
+
+    public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
 
 		void texParameteri(int texture, int target, int pname, int param);
@@ -479,6 +483,8 @@ public class IrisRenderSystem {
 		int createFramebuffer();
 
 		int createTexture(int target);
+
+		int createBuffers();
 	}
 
 	public static class DSACore extends DSAARB {
@@ -544,6 +550,11 @@ public class IrisRenderSystem {
 			int buffer = GL45C.glCreateBuffers();
 			GL45C.glNamedBufferData(buffer, data, usage);
 			return buffer;
+		}
+
+		@Override
+		public int createBuffers() {
+			return ARBDirectStateAccess.glCreateBuffers();
 		}
 
 		@Override
@@ -661,6 +672,12 @@ public class IrisRenderSystem {
 			int texture = GlStateManager._genTexture();
 			GlStateManager._bindTexture(texture);
 			return texture;
+		}
+
+		@Override
+		public int createBuffers() {
+			int value = GlStateManager._glGenBuffers();
+			return value;
 		}
 	}
 

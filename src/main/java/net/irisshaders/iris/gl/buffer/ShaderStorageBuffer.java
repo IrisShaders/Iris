@@ -12,7 +12,7 @@ public class ShaderStorageBuffer {
 	protected int id;
 
 	public ShaderStorageBuffer(int index, ShaderStorageInfo info) {
-		this.id = GlStateManager._glGenBuffers();
+		this.id = IrisRenderSystem.createBuffers();
 		GLDebug.nameObject(GL43C.GL_BUFFER, id, "SSBO " + index);
 		this.index = index;
 		this.info = info;
