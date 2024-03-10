@@ -17,6 +17,7 @@ public class DHCompat {
 	private static boolean dhPresent = true;
 	private static boolean lastIncompatible;
 	private Object compatInternalInstance;
+	private static MethodHandle setupEventHandlers;
 	private static MethodHandle deletePipeline;
 	private static MethodHandle incompatible;
 	private static MethodHandle getDepthTex;
@@ -30,7 +31,7 @@ public class DHCompat {
 
 	public DHCompat(IrisRenderingPipeline pipeline, boolean renderDHShadow) {
         try {
-			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
+			if (dhPresent) {
 				compatInternalInstance = Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal").getDeclaredConstructor(pipeline.getClass(), boolean.class).newInstance(pipeline, renderDHShadow);
 				lastIncompatible = (boolean) incompatible.invoke(compatInternalInstance);
 			}
@@ -57,9 +58,8 @@ public class DHCompat {
 	public static void run() {
 		try {
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
-				LodRendererEvents.setupEventHandlers();
-
 				deletePipeline = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "clear", MethodType.methodType(void.class));
+				setupEventHandlers = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.LodRendererEvents"), "setupEventHandlers", MethodType.methodType(void.class));
 				getDepthTex = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getStoredDepthTex", MethodType.methodType(int.class));
 				getRenderDistance = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
 				incompatible = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "incompatiblePack", MethodType.methodType(boolean.class));
@@ -69,10 +69,12 @@ public class DHCompat {
 				checkFrame = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "checkFrame", MethodType.methodType(boolean.class));
 				renderShadowSolid = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "renderShadowSolid", MethodType.methodType(void.class));
 				renderShadowTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "renderShadowTranslucent", MethodType.methodType(void.class));
+
+				setupEventHandlers.invoke();
 			} else {
 				dhPresent = false;
 			}
-		} catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException e) {
+		} catch (Throwable e) {
 			dhPresent = false;
 
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {

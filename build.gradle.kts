@@ -12,6 +12,10 @@ object Constants {
     const val CUSTOM_SODIUM: Boolean = false
     const val CUSTOM_SODIUM_NAME: String = ""
 
+    const val IS_SHARED_BETA: Boolean = true
+    const val BETA_TAG: String = "DH Support"
+    const val BETA_VERSION = 1
+
     const val SODIUM_VERSION: String = "mc1.20.4-0.5.8"
 }
 
@@ -36,6 +40,7 @@ plugins {
     // really helps to improve startup times on slow connections.
     id("fabric-loom") version "1.5.7"
     id("org.ajoberstar.grgit") version "5.2.2"
+    id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
 base {
@@ -62,6 +67,7 @@ sourceSets {
     val main = getByName("main")
     val test = getByName("test")
     val headers = create("headers")
+    val desktop = create("desktop")
     val vendored = create("vendored")
     val sodiumCompatibility = create("sodiumCompatibility")
 
@@ -100,6 +106,21 @@ sourceSets {
         }
     }
 }
+
+buildConfig {
+    className("BuildConfig")   // forces the class name. Defaults to 'BuildConfig'
+    packageName("net.irisshaders.iris")  // forces the package. Defaults to '${project.group}'
+    useJavaOutput()
+
+    buildConfigField("IS_SHARED_BETA", Constants.IS_SHARED_BETA)
+    buildConfigField("BETA_TAG", Constants.BETA_TAG)
+    buildConfigField("BETA_VERSION", Constants.BETA_VERSION)
+
+    sourceSets.getByName("desktop") {
+        buildConfigField("IS_SHARED_BETA", Constants.IS_SHARED_BETA)
+    }
+}
+
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -145,6 +166,10 @@ dependencies {
 }
 
 tasks {
+    getByName<JavaCompile>("compileDesktopJava") {
+        sourceCompatibility = JavaVersion.VERSION_1_8.toString()
+        targetCompatibility = JavaVersion.VERSION_1_8.toString()
+    }
 
     jar {
         from("${rootProject.projectDir}/LICENSE")
@@ -157,6 +182,10 @@ tasks {
         val vendored = sourceSets.getByName("vendored")
         from(vendored.output.classesDirs)
         from(vendored.output.resourcesDir)
+
+        val desktop = sourceSets.getByName("desktop")
+        from(desktop.output.classesDirs)
+        from(desktop.output.resourcesDir)
 
         from (sodiumCompatibility.output) {
             this.filesMatching("*refmap.json") {
