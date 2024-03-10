@@ -30,13 +30,11 @@ public final class GlyphVertexExt {
 
 	private static final QuadViewEntity.QuadViewEntityUnsafe quad = new QuadViewEntity.QuadViewEntityUnsafe();
 	private static final Vector3f saveNormal = new Vector3f();
-
+	private static final Vector3f lastNormal = new Vector3f();
+	private static final QuadViewEntity.QuadViewEntityUnsafe quadView = new QuadViewEntity.QuadViewEntityUnsafe();
 	private static int vertexCount;
 	private static float uSum;
 	private static float vSum;
-
-	private static final Vector3f lastNormal = new Vector3f();
-	private static final QuadViewEntity.QuadViewEntityUnsafe quadView = new QuadViewEntity.QuadViewEntityUnsafe();
 
 	public static void write(long ptr, float x, float y, float z, int color, float u, float v, int light) {
 		long i = ptr;

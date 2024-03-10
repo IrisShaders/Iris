@@ -43,7 +43,7 @@ public class DebugTextWidget
 		for (int i = 0; i < elements.length; ++i) {
 			StackTraceElement element = elements[i];
 			if (element == null) continue;
-            lv.addLine(font, Component.literal(element.toString()));
+			lv.addLine(font, Component.literal(element.toString()));
 			if (i >= elements.length - 1) continue;
 			lv.addSpacer(this.font.lineHeight);
 		}

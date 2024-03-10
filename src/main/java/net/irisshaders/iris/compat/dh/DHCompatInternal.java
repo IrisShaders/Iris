@@ -6,15 +6,15 @@ import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFrameb
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
-import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL20C;
 
@@ -22,6 +22,7 @@ import java.io.IOException;
 
 public class DHCompatInternal {
 	public static final DHCompatInternal SHADERLESS = new DHCompatInternal(null, false);
+	static boolean dhEnabled;
 	private final IrisRenderingPipeline pipeline;
 	public boolean shouldOverrideShadow;
 	public boolean shouldOverride;
@@ -85,10 +86,6 @@ public class DHCompatInternal {
 		shouldOverride = true;
 	}
 
-	public boolean incompatiblePack() {
-		return incompatible;
-	}
-
 	public static int getDhBlockRenderDistance() {
 		if (DhApi.Delayed.configs == null) {
 			// Called before DH has finished setup
@@ -96,6 +93,48 @@ public class DHCompatInternal {
 		}
 
 		return DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue() * 16;
+	}
+
+	public static int getRenderDistance() {
+		return getDhBlockRenderDistance();
+	}
+
+	public static float getFarPlane() {
+		if (DhApi.Delayed.configs == null) {
+			// Called before DH has finished setup
+			return 0;
+		}
+
+		int lodChunkDist = DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue();
+		int lodBlockDist = lodChunkDist * 16;
+		// sqrt 2 to prevent the corners from being cut off
+		return (float) ((lodBlockDist + 512) * Math.sqrt(2));
+	}
+
+	public static float getNearPlane() {
+		if (DhApi.Delayed.renderProxy == null) {
+			// Called before DH has finished setup
+			return 0;
+		}
+
+		return DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getRealTickDelta());
+	}
+
+	public static boolean checkFrame() {
+		if (dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() && IrisApi.getInstance().isShaderPackInUse()) {
+			dhEnabled = DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
+			try {
+				Iris.reload();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return dhEnabled;
+	}
+
+	public boolean incompatiblePack() {
+		return incompatible;
 	}
 
 	public void reconnectDHTextures(int depthTex) {
@@ -205,10 +244,6 @@ public class DHCompatInternal {
 		return storedDepthTex;
 	}
 
-	public static int getRenderDistance() {
-		return getDhBlockRenderDistance();
-	}
-
 	public void copyTranslucents(int width, int height) {
 		if (translucentDepthDirty) {
 			translucentDepthDirty = false;
@@ -220,27 +255,6 @@ public class DHCompatInternal {
 		}
 	}
 
-	public static float getFarPlane() {
-		if (DhApi.Delayed.configs == null) {
-			// Called before DH has finished setup
-			return 0;
-		}
-
-		int lodChunkDist = DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue();
-		int lodBlockDist = lodChunkDist * 16;
-		// sqrt 2 to prevent the corners from being cut off
-		return (float) ((lodBlockDist +  512) * Math.sqrt(2));
-	}
-
-	public static float getNearPlane() {
-		if (DhApi.Delayed.renderProxy == null) {
-			// Called before DH has finished setup
-			return 0;
-		}
-
-		return DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getRealTickDelta());
-	}
-
 	public GlFramebuffer getTranslucentFB() {
 		return dhWaterFramebuffer;
 	}
@@ -249,19 +263,5 @@ public class DHCompatInternal {
 		if (depthTexNoTranslucent == null) return 0;
 
 		return depthTexNoTranslucent.getTextureId();
-	}
-	static boolean dhEnabled;
-
-	public static boolean checkFrame() {
-		if (dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() && IrisApi.getInstance().isShaderPackInUse()) {
-			dhEnabled = DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
-			try {
-				Iris.reload();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		return dhEnabled;
 	}
 }

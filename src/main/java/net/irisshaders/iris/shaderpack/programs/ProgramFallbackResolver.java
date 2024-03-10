@@ -1,8 +1,6 @@
 package net.irisshaders.iris.shaderpack.programs;
 
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
-import net.irisshaders.iris.shaderpack.programs.ProgramSet;
-import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;

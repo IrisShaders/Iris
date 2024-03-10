@@ -1,8 +1,8 @@
 package net.irisshaders.iris.shaderpack.option.menu;
 
-import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 import net.irisshaders.iris.shaderpack.option.BooleanOption;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
+import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 
 public class OptionMenuBooleanOptionElement extends OptionMenuOptionElement {
 	public final BooleanOption option;

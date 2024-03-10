@@ -41,12 +41,12 @@ public class BiomeUniforms {
 			}))
 			.uniform1i(PER_TICK, "biome_precipitation", playerI(player -> {
 				Biome.Precipitation precipitation = player.level().getBiome(player.blockPosition()).value().getPrecipitationAt(player.blockPosition());
-                return switch (precipitation) {
-                    case NONE -> 0;
-                    case RAIN -> 1;
-                    case SNOW -> 2;
-                };
-            }))
+				return switch (precipitation) {
+					case NONE -> 0;
+					case RAIN -> 1;
+					case SNOW -> 2;
+				};
+			}))
 			.uniform1f(PER_TICK, "rainfall", playerF(player ->
 				((ExtendedBiome) (Object) player.level().getBiome(player.blockPosition()).value()).getDownfall()))
 			.uniform1f(PER_TICK, "temperature", playerF(player ->

@@ -125,7 +125,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final ProgramFallbackResolver resolver;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
 	private final Set<ShaderInstance> loadedShaders;
-    private final CompositeRenderer beginRenderer;
+	private final CompositeRenderer beginRenderer;
 	private final CompositeRenderer prepareRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
@@ -179,6 +179,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
 	private ColorSpace currentColorSpace;
+	private int stackSize = 0;
 
 	public IrisRenderingPipeline(ProgramSet programSet) {
 		ShaderPrinter.resetPrintState();
@@ -404,7 +405,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			return builder.build();
 		};
 
-        this.loadedShaders = new HashSet<>();
+		this.loadedShaders = new HashSet<>();
 
 
 		this.shaderMap = new ShaderMap(key -> {
@@ -797,12 +798,12 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		return phase;
 	}
-	private int stackSize = 0;
 
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
 		GLDebug.popGroup();
-		if (phase != WorldRenderingPhase.NONE) GLDebug.pushGroup(phase.ordinal(), WordUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
+		if (phase != WorldRenderingPhase.NONE)
+			GLDebug.pushGroup(phase.ordinal(), WordUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
 		this.phase = phase;
 	}
 

@@ -100,7 +100,7 @@ public class GlFramebuffer extends GlResource {
 	public int getStatus() {
 		bind();
 
-        return GlStateManager.glCheckFramebufferStatus(GL30C.GL_FRAMEBUFFER);
+		return GlStateManager.glCheckFramebufferStatus(GL30C.GL_FRAMEBUFFER);
 	}
 
 	public int getId() {

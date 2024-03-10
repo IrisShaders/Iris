@@ -3,13 +3,12 @@ package net.irisshaders.iris;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import net.irisshaders.iris.BuildConfig;
-import net.irisshaders.iris.config.IrisConfig;
-import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
+import net.irisshaders.iris.config.IrisConfig;
+import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -128,14 +127,14 @@ public class UpdateChecker {
 			try {
 				try (InputStream in = new URL("https://raw.githubusercontent.com/IrisShaders/Iris-Installer-Files/master/betaTag.json").openStream()) {
 					BetaInfo updateInfo = new Gson().fromJson(JsonParser.parseReader(new InputStreamReader(in)).getAsJsonObject(), BetaInfo.class);
-                    if (BuildConfig.BETA_VERSION < updateInfo.betaVersion && BuildConfig.BETA_TAG.equalsIgnoreCase(updateInfo.betaTag)) {
-                        shouldShowUpdateMessage = true;
-                        Iris.logger.info("[Iris Beta Update Check] New update detected, showing update message!");
-                        return updateInfo;
-                    } else {
-                        return null;
-                    }
-                }
+					if (BuildConfig.BETA_VERSION < updateInfo.betaVersion && BuildConfig.BETA_TAG.equalsIgnoreCase(updateInfo.betaTag)) {
+						shouldShowUpdateMessage = true;
+						Iris.logger.info("[Iris Beta Update Check] New update detected, showing update message!");
+						return updateInfo;
+					} else {
+						return null;
+					}
+				}
 			} catch (FileNotFoundException e) {
 				Iris.logger.warn("[Iris Beta Update Check] Unable to download " + e.getMessage());
 			} catch (IOException e) {

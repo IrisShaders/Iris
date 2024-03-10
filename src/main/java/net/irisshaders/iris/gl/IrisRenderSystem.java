@@ -31,8 +31,8 @@ import java.nio.IntBuffer;
  * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread.
  */
 public class IrisRenderSystem {
+	private static final int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
 	private static Matrix4f backupProjection;
-
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
 	private static boolean supportsCompute;
@@ -40,7 +40,6 @@ public class IrisRenderSystem {
 	private static int polygonMode = GL43C.GL_FILL;
 	private static int backupPolygonMode = GL43C.GL_FILL;
 	private static int[] samplers;
-	private static final int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
 
 	public static void initRenderer() {
 		if (GL.getCapabilities().OpenGL45) {
@@ -451,11 +450,11 @@ public class IrisRenderSystem {
 		GL46C.glBindBuffer(target, buffer);
 	}
 
-    public static int createBuffers() {
+	public static int createBuffers() {
 		return dsaState.createBuffers();
-    }
+	}
 
-    public interface DSAAccess {
+	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
 
 		void texParameteri(int texture, int target, int pname, int param);

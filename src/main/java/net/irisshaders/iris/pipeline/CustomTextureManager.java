@@ -104,7 +104,7 @@ public class CustomTextureManager {
 			return new TextureWrapper(((LightTextureAccessor) Minecraft.getInstance().gameRenderer.lightTexture())
 				.getLightTexture()::getId, TextureType.TEXTURE_2D);
 		} else if (textureData instanceof CustomTextureData.RawData1D rawData1D) {
-            GlTexture texture = new GlTexture(TextureType.TEXTURE_1D, rawData1D.getSizeX(), 0, 0, rawData1D.getInternalFormat().getGlFormat(), rawData1D.getPixelFormat().getGlFormat(), rawData1D.getPixelType().getGlFormat(), rawData1D.getContent(), rawData1D.getFilteringData());
+			GlTexture texture = new GlTexture(TextureType.TEXTURE_1D, rawData1D.getSizeX(), 0, 0, rawData1D.getInternalFormat().getGlFormat(), rawData1D.getPixelFormat().getGlFormat(), rawData1D.getPixelType().getGlFormat(), rawData1D.getContent(), rawData1D.getFilteringData());
 			ownedRawTextures.add(texture);
 
 			return texture;
@@ -114,17 +114,17 @@ public class CustomTextureManager {
 
 			return texture;
 		} else if (textureData instanceof CustomTextureData.RawData2D rawData2D) {
-            GlTexture texture = new GlTexture(TextureType.TEXTURE_2D, rawData2D.getSizeX(), rawData2D.getSizeY(), 0, rawData2D.getInternalFormat().getGlFormat(), rawData2D.getPixelFormat().getGlFormat(), rawData2D.getPixelType().getGlFormat(), rawData2D.getContent(), rawData2D.getFilteringData());
+			GlTexture texture = new GlTexture(TextureType.TEXTURE_2D, rawData2D.getSizeX(), rawData2D.getSizeY(), 0, rawData2D.getInternalFormat().getGlFormat(), rawData2D.getPixelFormat().getGlFormat(), rawData2D.getPixelType().getGlFormat(), rawData2D.getContent(), rawData2D.getFilteringData());
 			ownedRawTextures.add(texture);
 
 			return texture;
 		} else if (textureData instanceof CustomTextureData.RawData3D rawData3D) {
-            GlTexture texture = new GlTexture(TextureType.TEXTURE_3D, rawData3D.getSizeX(), rawData3D.getSizeY(), rawData3D.getSizeZ(), rawData3D.getInternalFormat().getGlFormat(), rawData3D.getPixelFormat().getGlFormat(), rawData3D.getPixelType().getGlFormat(), rawData3D.getContent(), rawData3D.getFilteringData());
+			GlTexture texture = new GlTexture(TextureType.TEXTURE_3D, rawData3D.getSizeX(), rawData3D.getSizeY(), rawData3D.getSizeZ(), rawData3D.getInternalFormat().getGlFormat(), rawData3D.getPixelFormat().getGlFormat(), rawData3D.getPixelType().getGlFormat(), rawData3D.getContent(), rawData3D.getFilteringData());
 			ownedRawTextures.add(texture);
 
 			return texture;
 		} else if (textureData instanceof CustomTextureData.ResourceData resourceData) {
-            String namespace = resourceData.getNamespace();
+			String namespace = resourceData.getNamespace();
 			String location = resourceData.getLocation();
 
 			String withoutExtension;
@@ -161,12 +161,12 @@ public class CustomTextureManager {
 						int id = texture.getId();
 						PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
 						AbstractTexture pbrTexture = switch (pbrType) {
-                            case NORMAL -> pbrHolder.getNormalTexture();
-                            case SPECULAR -> pbrHolder.getSpecularTexture();
-                            default -> throw new IllegalArgumentException("Unknown PBRType '" + pbrType + "'");
-                        };
+							case NORMAL -> pbrHolder.getNormalTexture();
+							case SPECULAR -> pbrHolder.getSpecularTexture();
+							default -> throw new IllegalArgumentException("Unknown PBRType '" + pbrType + "'");
+						};
 
-                        TextureFormat textureFormat = TextureFormatLoader.getFormat();
+						TextureFormat textureFormat = TextureFormatLoader.getFormat();
 						if (textureFormat != null) {
 							int previousBinding = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 							GlStateManager._bindTexture(pbrTexture.getId());

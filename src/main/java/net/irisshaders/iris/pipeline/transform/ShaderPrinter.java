@@ -1,7 +1,7 @@
 package net.irisshaders.iris.pipeline.transform;
 
-import net.irisshaders.iris.Iris;
 import net.fabricmc.loader.api.FabricLoader;
+import net.irisshaders.iris.Iris;
 
 import java.io.IOException;
 import java.nio.file.Files;

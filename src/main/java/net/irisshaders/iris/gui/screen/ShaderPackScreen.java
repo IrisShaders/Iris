@@ -2,6 +2,7 @@ package net.irisshaders.iris.gui.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gui.GuiUtil;
 import net.irisshaders.iris.gui.NavigationController;
 import net.irisshaders.iris.gui.OldImageButton;
@@ -10,7 +11,6 @@ import net.irisshaders.iris.gui.element.ShaderPackSelectionList;
 import net.irisshaders.iris.gui.element.widget.AbstractElementWidget;
 import net.irisshaders.iris.gui.element.widget.CommentedElementWidget;
 import net.irisshaders.iris.shaderpack.ShaderPack;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -561,7 +561,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			return;
 		}
 
-        this.shaderPackList.setApplied(entry);
+		this.shaderPackList.setApplied(entry);
 
 		String name = entry.getPackName();
 

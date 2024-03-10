@@ -30,12 +30,12 @@ public enum BlockRenderType {
 	TRANSLUCENT;
 
 	public static Optional<BlockRenderType> fromString(String name) {
-        return switch (name) {
-            case "solid" -> Optional.of(SOLID);
-            case "cutout" -> Optional.of(CUTOUT);
-            case "cutout_mipped" -> Optional.of(CUTOUT_MIPPED);
-            case "translucent" -> Optional.of(TRANSLUCENT);
-            default -> Optional.empty();
-        };
+		return switch (name) {
+			case "solid" -> Optional.of(SOLID);
+			case "cutout" -> Optional.of(CUTOUT);
+			case "cutout_mipped" -> Optional.of(CUTOUT_MIPPED);
+			case "translucent" -> Optional.of(TRANSLUCENT);
+			default -> Optional.empty();
+		};
 	}
 }

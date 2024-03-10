@@ -6,8 +6,8 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.irisshaders.iris.helpers.VertexBufferHelper;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.helpers.VertexBufferHelper;
 
 /**
  * Renders a full-screen textured quad to the screen. Used in composite / deferred rendering.

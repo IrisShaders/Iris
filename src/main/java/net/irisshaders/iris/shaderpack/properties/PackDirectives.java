@@ -21,12 +21,12 @@ import java.util.Set;
 public class PackDirectives {
 	private final PackRenderTargetDirectives renderTargetDirectives;
 	private final PackShadowDirectives shadowDirectives;
+	private final float drynessHalfLife;
 	private boolean supportsColorCorrection;
 	private int noiseTextureResolution;
 	private float sunPathRotation;
 	private float ambientOcclusionLevel;
 	private float wetnessHalfLife;
-	private final float drynessHalfLife;
 	private float eyeBrightnessHalfLife;
 	private float centerDepthHalfLife;
 	private CloudSetting cloudSetting;

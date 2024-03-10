@@ -22,16 +22,14 @@ import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhAp
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
-import net.irisshaders.iris.api.v0.IrisApi;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL46C;
-
-import java.io.IOException;
 
 public class LodRendererEvents {
 	private static boolean eventHandlersBound = false;
@@ -260,7 +258,7 @@ public class LodRendererEvents {
 				}
 
 
-                // opaque
+				// opaque
 				if (event.value.renderPass == EDhApiRenderPass.OPAQUE) {
 					float partialTicks = event.value.partialTicks;
 

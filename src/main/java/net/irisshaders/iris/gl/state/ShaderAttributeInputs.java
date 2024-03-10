@@ -119,8 +119,8 @@ public class ShaderAttributeInputs {
 			return false;
 		if (glint != other.glint)
 			return false;
-        return text == other.text;
-    }
+		return text == other.text;
+	}
 
 	public boolean isText() {
 		return text;

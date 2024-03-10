@@ -8,11 +8,11 @@ import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendInformation;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
+import net.irisshaders.iris.shaderpack.parsing.CommentDirective;
+import net.irisshaders.iris.shaderpack.parsing.CommentDirectiveParser;
 import net.irisshaders.iris.shaderpack.parsing.ConstDirectiveParser;
 import net.irisshaders.iris.shaderpack.parsing.DispatchingDirectiveHolder;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
-import net.irisshaders.iris.shaderpack.parsing.CommentDirective;
-import net.irisshaders.iris.shaderpack.parsing.CommentDirectiveParser;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;

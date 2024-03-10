@@ -6,9 +6,9 @@ import com.mojang.blaze3d.platform.GlUtil;
 import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.dh.DHCompat;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
-import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.texture.format.TextureFormat;
 import net.irisshaders.iris.texture.format.TextureFormatLoader;
 import net.minecraft.Util;
@@ -193,13 +193,13 @@ public class StandardMacros {
 	 * @see <a href="https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714">Optifine Doc</a>
 	 */
 	public static String getOsString() {
-        return switch (Util.getPlatform()) {
-            case OSX -> "MC_OS_MAC";
-            case LINUX -> "MC_OS_LINUX";
-            case WINDOWS ->
-                    "MC_OS_WINDOWS"; // Note: Optifine doesn't have a macro for Solaris. https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714
-            default -> "MC_OS_UNKNOWN";
-        };
+		return switch (Util.getPlatform()) {
+			case OSX -> "MC_OS_MAC";
+			case LINUX -> "MC_OS_LINUX";
+			case WINDOWS ->
+				"MC_OS_WINDOWS"; // Note: Optifine doesn't have a macro for Solaris. https://github.com/sp614x/optifine/blob/9c6a5b5326558ccc57c6490b66b3be3b2dc8cbef/OptiFineDoc/doc/shaders.txt#L709-L714
+			default -> "MC_OS_UNKNOWN";
+		};
 	}
 
 	/**

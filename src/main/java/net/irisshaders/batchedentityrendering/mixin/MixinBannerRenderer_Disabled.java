@@ -39,7 +39,7 @@ public class MixinBannerRenderer_Disabled {
 	@ModifyVariable(method = RENDER_PATTERNS, at = @At("HEAD"), argsOnly = true)
 	private static MultiBufferSource iris$wrapBufferSource(MultiBufferSource multiBufferSource) {
 		if (multiBufferSource instanceof Groupable groupable) {
-            boolean started = groupable.maybeStartGroup();
+			boolean started = groupable.maybeStartGroup();
 
 			if (started) {
 				groupableToEnd = groupable;

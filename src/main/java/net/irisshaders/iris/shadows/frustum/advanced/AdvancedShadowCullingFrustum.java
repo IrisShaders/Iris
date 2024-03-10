@@ -33,9 +33,6 @@ import org.joml.Vector4f;
 public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShadowCullingFrustum {
 	private static final int MAX_CLIPPING_PLANES = 13;
 	protected final BoxCuller boxCuller;
-	private int worldMinYDH;
-	private int worldMaxYDH;
-
 	/**
 	 * We store each plane equation as a Vector4f.
 	 *
@@ -70,6 +67,8 @@ public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShado
 	public double x;
 	public double y;
 	public double z;
+	private int worldMinYDH;
+	private int worldMaxYDH;
 	private int planeCount = 0;
 
 	public AdvancedShadowCullingFrustum(Matrix4f playerView, Matrix4f playerProjection, Vector3f shadowLightVectorFromOrigin,

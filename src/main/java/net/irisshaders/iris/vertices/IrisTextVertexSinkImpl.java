@@ -1,8 +1,8 @@
 package net.irisshaders.iris.vertices;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.api.v0.IrisTextVertexSink;
+import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.views.QuadView;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
@@ -27,6 +27,7 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	private long elementOffset;
 	private float uSum;
 	private float vSum;
+
 	public IrisTextVertexSinkImpl(int maxQuadCount, IntFunction<ByteBuffer> buffer) {
 		this.buffer = buffer.apply(format.getVertexSize() * 4 * maxQuadCount);
 		this.elementOffset = MemoryUtil.memAddress(this.buffer);

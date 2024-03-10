@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
@@ -16,14 +17,13 @@ import net.irisshaders.iris.pipeline.fallback.ShaderSynthesizer;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
-import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
+import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.VanillaUniforms;
 import net.irisshaders.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.resources.Resource;
@@ -63,37 +63,37 @@ public class ShaderCreator {
 		String tessEval = transformed.get(PatchShaderType.TESS_EVAL);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 
-        String shaderJsonString = "{\n" +
-                "    \"blend\": {\n" +
-                "        \"func\": \"add\",\n" +
-                "        \"srcrgb\": \"srcalpha\",\n" +
-                "        \"dstrgb\": \"1-srcalpha\"\n" +
-                "    },\n" +
-                "    \"vertex\": \"" + name + "\",\n" +
-                "    \"fragment\": \"" + name + "\",\n" +
-                "    \"attributes\": [\n" +
-                "        \"Position\",\n" +
-                "        \"Color\",\n" +
-                "        \"UV0\",\n" +
-                "        \"UV1\",\n" +
-                "        \"UV2\",\n" +
-                "        \"Normal\"\n" +
-                "    ],\n" +
-                "    \"uniforms\": [\n" +
-                "        { \"name\": \"iris_TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-                "        { \"name\": \"iris_ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-                "        { \"name\": \"iris_ModelViewMatInverse\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-                "        { \"name\": \"iris_ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-                "        { \"name\": \"iris_ProjMatInverse\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
-                "        { \"name\": \"iris_NormalMat\", \"type\": \"matrix3x3\", \"count\": 9, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 ] },\n" +
-                "        { \"name\": \"iris_ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
-                "        { \"name\": \"iris_ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
-                "        { \"name\": \"iris_GlintAlpha\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-                "        { \"name\": \"iris_FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
-                "        { \"name\": \"iris_FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
-                "        { \"name\": \"iris_FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
-                "    ]\n" +
-                "}";
+		String shaderJsonString = "{\n" +
+			"    \"blend\": {\n" +
+			"        \"func\": \"add\",\n" +
+			"        \"srcrgb\": \"srcalpha\",\n" +
+			"        \"dstrgb\": \"1-srcalpha\"\n" +
+			"    },\n" +
+			"    \"vertex\": \"" + name + "\",\n" +
+			"    \"fragment\": \"" + name + "\",\n" +
+			"    \"attributes\": [\n" +
+			"        \"Position\",\n" +
+			"        \"Color\",\n" +
+			"        \"UV0\",\n" +
+			"        \"UV1\",\n" +
+			"        \"UV2\",\n" +
+			"        \"Normal\"\n" +
+			"    ],\n" +
+			"    \"uniforms\": [\n" +
+			"        { \"name\": \"iris_TextureMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_ModelViewMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_ModelViewMatInverse\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_ProjMat\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_ProjMatInverse\", \"type\": \"matrix4x4\", \"count\": 16, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_NormalMat\", \"type\": \"matrix3x3\", \"count\": 9, \"values\": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 ] },\n" +
+			"        { \"name\": \"iris_ChunkOffset\", \"type\": \"float\", \"count\": 3, \"values\": [ 0.0, 0.0, 0.0 ] },\n" +
+			"        { \"name\": \"iris_ColorModulator\", \"type\": \"float\", \"count\": 4, \"values\": [ 1.0, 1.0, 1.0, 1.0 ] },\n" +
+			"        { \"name\": \"iris_GlintAlpha\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
+			"        { \"name\": \"iris_FogStart\", \"type\": \"float\", \"count\": 1, \"values\": [ 0.0 ] },\n" +
+			"        { \"name\": \"iris_FogEnd\", \"type\": \"float\", \"count\": 1, \"values\": [ 1.0 ] },\n" +
+			"        { \"name\": \"iris_FogColor\", \"type\": \"float\", \"count\": 4, \"values\": [ 0.0, 0.0, 0.0, 0.0 ] }\n" +
+			"    ]\n" +
+			"}";
 
 		ShaderPrinter.printProgram(name).addSources(transformed).addJson(shaderJsonString).print();
 
@@ -184,42 +184,42 @@ public class ShaderCreator {
 											  String tessEval, String fragment) implements ResourceProvider {
 
 		@Override
-			public Optional<Resource> getResource(ResourceLocation id) {
-				final String path = id.getPath();
+		public Optional<Resource> getResource(ResourceLocation id) {
+			final String path = id.getPath();
 
-				if (path.endsWith("json")) {
-					return Optional.of(new StringResource(id, json));
-				} else if (path.endsWith("vsh")) {
-					return Optional.of(new StringResource(id, vertex));
-				} else if (path.endsWith("gsh")) {
-					if (geometry == null) {
-						return Optional.empty();
-					}
-					return Optional.of(new StringResource(id, geometry));
-				} else if (path.endsWith("tcs")) {
-					if (tessControl == null) {
-						return Optional.empty();
-					}
-					return Optional.of(new StringResource(id, tessControl));
-				} else if (path.endsWith("tes")) {
-					if (tessEval == null) {
-						return Optional.empty();
-					}
-					return Optional.of(new StringResource(id, tessEval));
-				} else if (path.endsWith("fsh")) {
-					return Optional.of(new StringResource(id, fragment));
+			if (path.endsWith("json")) {
+				return Optional.of(new StringResource(id, json));
+			} else if (path.endsWith("vsh")) {
+				return Optional.of(new StringResource(id, vertex));
+			} else if (path.endsWith("gsh")) {
+				if (geometry == null) {
+					return Optional.empty();
 				}
-
-				return Optional.empty();
+				return Optional.of(new StringResource(id, geometry));
+			} else if (path.endsWith("tcs")) {
+				if (tessControl == null) {
+					return Optional.empty();
+				}
+				return Optional.of(new StringResource(id, tessControl));
+			} else if (path.endsWith("tes")) {
+				if (tessEval == null) {
+					return Optional.empty();
+				}
+				return Optional.of(new StringResource(id, tessEval));
+			} else if (path.endsWith("fsh")) {
+				return Optional.of(new StringResource(id, fragment));
 			}
+
+			return Optional.empty();
 		}
+	}
 
 	private static class StringResource extends Resource {
-        private final String content;
+		private final String content;
 
 		private StringResource(ResourceLocation id, String content) {
 			super(new PathPackResources("<iris shaderpack shaders>", FabricLoader.getInstance().getConfigDir(), true), () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
-            this.content = content;
+			this.content = content;
 		}
 
 		@Override

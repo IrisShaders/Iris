@@ -48,7 +48,7 @@ public final class GLDebug {
 		StackTraceElement[] filtered = new StackTraceElement[elems.length];
 		int j = 0;
 		for (int i = offset; i < elems.length; i++) {
-            filtered[j++] = elems[i];
+			filtered[j++] = elems[i];
 		}
 		StackTraceElement[] newElems = new StackTraceElement[j];
 		System.arraycopy(filtered, 0, newElems, 0, j);
@@ -58,17 +58,17 @@ public final class GLDebug {
 
 	private static void printTrace(PrintStream stream) {
 		trace(new Consumer<>() {
-            boolean first = true;
+			boolean first = true;
 
-            public void accept(String str) {
-                if (first) {
-                    printDetail(stream, "Stacktrace", str);
-                    first = false;
-                } else {
-                    printDetailLine(stream, "Stacktrace", str);
-                }
-            }
-        });
+			public void accept(String str) {
+				if (first) {
+					printDetail(stream, "Stacktrace", str);
+					first = false;
+				} else {
+					printDetailLine(stream, "Stacktrace", str);
+				}
+			}
+		});
 	}
 
 	public static int setupDebugMessageCallback(PrintStream stream) {
@@ -192,108 +192,108 @@ public final class GLDebug {
 	}
 
 	private static String getDebugSource(int source) {
-        switch (source) {
-            case 33350 -> {
-                return "API";
-            }
-            case 33351 -> {
-                return "WINDOW SYSTEM";
-            }
-            case 33352 -> {
-                return "SHADER COMPILER";
-            }
-            case 33353 -> {
-                return "THIRD PARTY";
-            }
-            case 33354 -> {
-                return "APPLICATION";
-            }
-            case 33355 -> {
-                return "OTHER";
-            }
-            default -> {
-                return APIUtil.apiUnknownToken(source);
-            }
-        }
+		switch (source) {
+			case 33350 -> {
+				return "API";
+			}
+			case 33351 -> {
+				return "WINDOW SYSTEM";
+			}
+			case 33352 -> {
+				return "SHADER COMPILER";
+			}
+			case 33353 -> {
+				return "THIRD PARTY";
+			}
+			case 33354 -> {
+				return "APPLICATION";
+			}
+			case 33355 -> {
+				return "OTHER";
+			}
+			default -> {
+				return APIUtil.apiUnknownToken(source);
+			}
+		}
 	}
 
 	private static String getDebugType(int type) {
-        return switch (type) {
-            case 33356 -> "ERROR";
-            case 33357 -> "DEPRECATED BEHAVIOR";
-            case 33358 -> "UNDEFINED BEHAVIOR";
-            case 33359 -> "PORTABILITY";
-            case 33360 -> "PERFORMANCE";
-            case 33361 -> "OTHER";
-            case 33384 -> "MARKER";
-            default -> APIUtil.apiUnknownToken(type);
-        };
+		return switch (type) {
+			case 33356 -> "ERROR";
+			case 33357 -> "DEPRECATED BEHAVIOR";
+			case 33358 -> "UNDEFINED BEHAVIOR";
+			case 33359 -> "PORTABILITY";
+			case 33360 -> "PERFORMANCE";
+			case 33361 -> "OTHER";
+			case 33384 -> "MARKER";
+			default -> APIUtil.apiUnknownToken(type);
+		};
 	}
 
 	private static String getDebugSeverity(int severity) {
-        return switch (severity) {
-            case 33387 -> "NOTIFICATION";
-            case 37190 -> "HIGH";
-            case 37191 -> "MEDIUM";
-            case 37192 -> "LOW";
-            default -> APIUtil.apiUnknownToken(severity);
-        };
+		return switch (severity) {
+			case 33387 -> "NOTIFICATION";
+			case 37190 -> "HIGH";
+			case 37191 -> "MEDIUM";
+			case 37192 -> "LOW";
+			default -> APIUtil.apiUnknownToken(severity);
+		};
 	}
 
 	private static String getSourceARB(int source) {
-        return switch (source) {
-            case 33350 -> "API";
-            case 33351 -> "WINDOW SYSTEM";
-            case 33352 -> "SHADER COMPILER";
-            case 33353 -> "THIRD PARTY";
-            case 33354 -> "APPLICATION";
-            case 33355 -> "OTHER";
-            default -> APIUtil.apiUnknownToken(source);
-        };
+		return switch (source) {
+			case 33350 -> "API";
+			case 33351 -> "WINDOW SYSTEM";
+			case 33352 -> "SHADER COMPILER";
+			case 33353 -> "THIRD PARTY";
+			case 33354 -> "APPLICATION";
+			case 33355 -> "OTHER";
+			default -> APIUtil.apiUnknownToken(source);
+		};
 	}
 
 	private static String getTypeARB(int type) {
-        return switch (type) {
-            case 33356 -> "ERROR";
-            case 33357 -> "DEPRECATED BEHAVIOR";
-            case 33358 -> "UNDEFINED BEHAVIOR";
-            case 33359 -> "PORTABILITY";
-            case 33360 -> "PERFORMANCE";
-            case 33361 -> "OTHER";
-            default -> APIUtil.apiUnknownToken(type);
-        };
+		return switch (type) {
+			case 33356 -> "ERROR";
+			case 33357 -> "DEPRECATED BEHAVIOR";
+			case 33358 -> "UNDEFINED BEHAVIOR";
+			case 33359 -> "PORTABILITY";
+			case 33360 -> "PERFORMANCE";
+			case 33361 -> "OTHER";
+			default -> APIUtil.apiUnknownToken(type);
+		};
 	}
 
 	private static String getSeverityARB(int severity) {
-        return switch (severity) {
-            case 37190 -> "HIGH";
-            case 37191 -> "MEDIUM";
-            case 37192 -> "LOW";
-            default -> APIUtil.apiUnknownToken(severity);
-        };
+		return switch (severity) {
+			case 37190 -> "HIGH";
+			case 37191 -> "MEDIUM";
+			case 37192 -> "LOW";
+			default -> APIUtil.apiUnknownToken(severity);
+		};
 	}
 
 	private static String getCategoryAMD(int category) {
-        return switch (category) {
-            case 37193 -> "API ERROR";
-            case 37194 -> "WINDOW SYSTEM";
-            case 37195 -> "DEPRECATION";
-            case 37196 -> "UNDEFINED BEHAVIOR";
-            case 37197 -> "PERFORMANCE";
-            case 37198 -> "SHADER COMPILER";
-            case 37199 -> "APPLICATION";
-            case 37200 -> "OTHER";
-            default -> APIUtil.apiUnknownToken(category);
-        };
+		return switch (category) {
+			case 37193 -> "API ERROR";
+			case 37194 -> "WINDOW SYSTEM";
+			case 37195 -> "DEPRECATION";
+			case 37196 -> "UNDEFINED BEHAVIOR";
+			case 37197 -> "PERFORMANCE";
+			case 37198 -> "SHADER COMPILER";
+			case 37199 -> "APPLICATION";
+			case 37200 -> "OTHER";
+			default -> APIUtil.apiUnknownToken(category);
+		};
 	}
 
 	private static String getSeverityAMD(int severity) {
-        return switch (severity) {
-            case 37190 -> "HIGH";
-            case 37191 -> "MEDIUM";
-            case 37192 -> "LOW";
-            default -> APIUtil.apiUnknownToken(severity);
-        };
+		return switch (severity) {
+			case 37190 -> "HIGH";
+			case 37191 -> "MEDIUM";
+			case 37192 -> "LOW";
+			default -> APIUtil.apiUnknownToken(severity);
+		};
 	}
 
 	public static void initRenderer() {
