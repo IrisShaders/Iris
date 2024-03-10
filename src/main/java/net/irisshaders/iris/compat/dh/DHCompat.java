@@ -84,7 +84,7 @@ public class DHCompat {
 	}
 
     public static boolean lastPackIncompatible() {
-		return dhPresent && lastIncompatible;
+		return dhPresent && hasRenderingEnabled() && lastIncompatible;
     }
 
     public void clearPipeline() {

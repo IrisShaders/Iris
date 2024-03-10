@@ -531,7 +531,10 @@ public class Iris {
 		}
 
 		if (loadedIncompatiblePack() && Minecraft.getInstance().player != null) {
-			Minecraft.getInstance().player.displayClientMessage(Component.literal("This pack (" + Iris.getCurrentPackName() + ") doesn't have DH support; DH chunks won't show up."), false);
+			Minecraft.getInstance().gui.setTimes(10, 70, 140);
+			Iris.logger.warn("Incompatible pack for DH!");
+			Minecraft.getInstance().gui.setTitle(Component.literal("This pack doesn't have DH support").withStyle(ChatFormatting.BOLD, ChatFormatting.RED));
+			Minecraft.getInstance().gui.setSubtitle(Component.literal("Distant Horizons (DH) chunks won't show up. This isn't a bug, get another shader.").withStyle(ChatFormatting.RED));
 		}
 	}
 

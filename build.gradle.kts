@@ -101,6 +101,11 @@ sourceSets {
     }
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
 dependencies {
     minecraft(group = "com.mojang", name = "minecraft", version = Constants.MINECRAFT_VERSION)
     mappings(loom.officialMojangMappings())
