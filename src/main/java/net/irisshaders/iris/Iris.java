@@ -31,6 +31,7 @@ import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.texture.pbr.PBRTextureManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
+import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -95,7 +96,7 @@ public class Iris {
 	private static boolean fallback;
 
 	static {
-		if (FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims")) {
+		if (FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
 			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
 		}
 	}
