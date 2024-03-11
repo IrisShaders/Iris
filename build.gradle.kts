@@ -52,7 +52,7 @@ base {
 
 loom {
     mixin {
-        defaultRefmapName = "iris.refmap.json"
+        useLegacyMixinAp = false
     }
 
     accessWidenerPath = file("src/main/resources/iris.accesswidener")
@@ -67,7 +67,7 @@ sourceSets {
     val main = getByName("main")
     val test = getByName("test")
     val headers = create("headers")
-    val desktop = create("desktop")
+    create("desktop")
     val vendored = create("vendored")
     val sodiumCompatibility = create("sodiumCompatibility")
 
@@ -186,12 +186,6 @@ tasks {
         val desktop = sourceSets.getByName("desktop")
         from(desktop.output.classesDirs)
         from(desktop.output.resourcesDir)
-
-        from (sodiumCompatibility.output) {
-            this.filesMatching("*refmap.json") {
-                this.name = "iris-sodium-compat-refmap.json"
-            }
-        }
 
         manifest.attributes["Main-Class"] = "net.irisshaders.iris.LaunchWarn"
     }
