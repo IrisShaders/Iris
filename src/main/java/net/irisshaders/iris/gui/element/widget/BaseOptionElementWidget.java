@@ -18,6 +18,8 @@ import net.minecraft.network.chat.TextColor;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import net.irisshaders.iris.Iris;
+
 import java.util.Optional;
 
 public abstract class BaseOptionElementWidget<T extends OptionMenuElement> extends CommentedElementWidget<T> {
@@ -165,6 +167,7 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {
+		Iris.logger.info("Button" + String.valueOf(button));
 		if (button == GLFW.GLFW_MOUSE_BUTTON_1 || button == GLFW.GLFW_MOUSE_BUTTON_2) {
 			boolean refresh = false;
 
