@@ -33,12 +33,13 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	private final BufferSegmentRenderer segmentRenderer;
 	private final UnflushableWrapper unflushableWrapper;
 	private final List<Function<RenderType, RenderType>> wrappingFunctionStack;
+	private final Map<RenderType, List<BufferSegment>> typeToSegment = new HashMap<>();
 	private int drawCalls;
 	private int renderTypes;
 	private Function<RenderType, RenderType> wrappingFunction = null;
 	private boolean isReady;
-	private final Map<RenderType, List<BufferSegment>> typeToSegment = new HashMap<>();
 	private List<RenderType> renderOrder = new ArrayList<>();
+
 	public FullyBufferedMultiBufferSource() {
 		super(new BufferBuilder(0), Collections.emptyMap());
 

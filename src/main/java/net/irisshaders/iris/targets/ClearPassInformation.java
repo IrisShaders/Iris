@@ -31,6 +31,6 @@ public class ClearPassInformation {
 			return false;
 		}
 
-        return information.color.equals(this.color) && information.height == this.height && information.width == this.width;
+		return information.color.equals(this.color) && information.height == this.height && information.width == this.width;
 	}
 }

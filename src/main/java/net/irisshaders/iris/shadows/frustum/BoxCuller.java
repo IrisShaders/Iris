@@ -39,8 +39,8 @@ public class BoxCuller {
 			return true;
 		}
 
-        return maxZ < this.minAllowedZ || minZ > this.maxAllowedZ;
-    }
+		return maxZ < this.minAllowedZ || minZ > this.maxAllowedZ;
+	}
 
 	public boolean isCulledSodium(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		if (maxX < -this.maxDistance || minX > this.maxDistance) {
@@ -51,8 +51,8 @@ public class BoxCuller {
 			return true;
 		}
 
-        return maxZ < -this.maxDistance || minZ > this.maxDistance;
-    }
+		return maxZ < -this.maxDistance || minZ > this.maxDistance;
+	}
 
 	@Override
 	public String toString() {

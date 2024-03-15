@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.AlphaTest;
@@ -23,15 +24,14 @@ import net.irisshaders.iris.gl.texture.TextureDefinition;
 import net.irisshaders.iris.gl.texture.TextureScaleOverride;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.OptionalBoolean;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.shaderpack.ImageInformation;
-import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -72,6 +72,7 @@ public class ShaderProperties {
 	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
 	private final Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects = new Int2ObjectArrayMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
@@ -108,7 +109,6 @@ public class ShaderProperties {
 	private List<String> mainScreenOptions = null;
 	private Integer mainScreenColumnCount = null;
 	private String noiseTexturePath = null;
-	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
 	private List<String> requiredFeatureFlags = new ArrayList<>();
 	private List<String> optionalFeatureFlags = new ArrayList<>();
 
@@ -592,10 +592,6 @@ public class ShaderProperties {
 		});
 	}
 
-	public OptionalBoolean getDhShadowEnabled() {
-		return dhShadowEnabled;
-	}
-
 	private static void handleBooleanValue(String key, String value, BooleanConsumer handler) {
 		if ("true".equals(value)) {
 			handler.accept(true);
@@ -708,6 +704,10 @@ public class ShaderProperties {
 
 	public static ShaderProperties empty() {
 		return new ShaderProperties();
+	}
+
+	public OptionalBoolean getDhShadowEnabled() {
+		return dhShadowEnabled;
 	}
 
 	public CloudSetting getCloudSetting() {

@@ -5,12 +5,13 @@ import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gl.program.IrisProgramTypes;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
-import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -406,10 +407,10 @@ public class MixinGameRenderer {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null) {
-            return switch (pipeline.getPhase()) {
-                case CUSTOM_SKY, SKY, SUNSET, SUN, STARS, VOID, MOON -> true;
-                default -> false;
-            };
+			return switch (pipeline.getPhase()) {
+				case CUSTOM_SKY, SKY, SUNSET, SUN, STARS, VOID, MOON -> true;
+				default -> false;
+			};
 		} else {
 			return false;
 		}

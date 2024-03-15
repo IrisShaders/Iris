@@ -24,6 +24,7 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 			// We can't use Iris' logger here due to classloading issues.
 			System.err.println("[Iris] Invalid/missing version of Sodium detected, disabling compatibility mixins!");
 		}
+
 	}
 
 	@Override

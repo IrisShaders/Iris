@@ -3,16 +3,15 @@ package net.irisshaders.iris.shaderpack.programs;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
-import net.irisshaders.iris.shaderpack.parsing.DispatchingDirectiveHolder;
-import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.shaderpack.ShaderPack;
-import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.parsing.ComputeDirectiveParser;
 import net.irisshaders.iris.shaderpack.parsing.ConstDirectiveParser;
+import net.irisshaders.iris.shaderpack.parsing.DispatchingDirectiveHolder;
+import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;
-import net.irisshaders.iris.shaderpack.properties.ProgramDirectives;
+import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +68,7 @@ public class ProgramSet implements ProgramSetInterface {
 	private final ProgramSource dhWater;
 	private final ProgramSource dhShadow;
 	private final ShaderPack pack;
-	private ProgramSource gbuffersDamagedBlock;
+	private final ProgramSource gbuffersDamagedBlock;
 
 	public ProgramSet(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
 					  ShaderProperties shaderProperties, ShaderPack pack) {
@@ -489,39 +488,39 @@ public class ProgramSet implements ProgramSetInterface {
 	}
 
 	public Optional<ProgramSource> get(ProgramId programId) {
-        return switch (programId) {
-            case Shadow -> getShadow();
-            case Basic -> getGbuffersBasic();
-            case Line -> gbuffersLine.requireValid();
-            case Textured -> getGbuffersTextured();
-            case TexturedLit -> getGbuffersTexturedLit();
-            case SkyBasic -> getGbuffersSkyBasic();
-            case SkyTextured -> getGbuffersSkyTextured();
-            case Clouds -> getGbuffersClouds();
-            case Terrain -> getGbuffersTerrain();
-            case TerrainSolid -> getGbuffersTerrainSolid();
-            case TerrainCutout -> getGbuffersTerrainCutout();
-            case DamagedBlock -> getGbuffersDamagedBlock();
-            case Block -> getGbuffersBlock();
-            case BlockTrans -> getGbuffersBlockTrans();
-            case BeaconBeam -> getGbuffersBeaconBeam();
-            case Entities -> getGbuffersEntities();
-            case EntitiesTrans -> getGbuffersEntitiesTrans();
-            case Particles -> getGbuffersParticles();
-            case ParticlesTrans -> getGbuffersParticlesTrans();
-            case EntitiesGlowing -> getGbuffersEntitiesGlowing();
-            case ArmorGlint -> getGbuffersGlint();
-            case SpiderEyes -> getGbuffersEntityEyes();
-            case Hand -> getGbuffersHand();
-            case Weather -> getGbuffersWeather();
-            case Water -> getGbuffersWater();
-            case HandWater -> getGbuffersHandWater();
-            case Final -> getCompositeFinal();
+		return switch (programId) {
+			case Shadow -> getShadow();
+			case Basic -> getGbuffersBasic();
+			case Line -> gbuffersLine.requireValid();
+			case Textured -> getGbuffersTextured();
+			case TexturedLit -> getGbuffersTexturedLit();
+			case SkyBasic -> getGbuffersSkyBasic();
+			case SkyTextured -> getGbuffersSkyTextured();
+			case Clouds -> getGbuffersClouds();
+			case Terrain -> getGbuffersTerrain();
+			case TerrainSolid -> getGbuffersTerrainSolid();
+			case TerrainCutout -> getGbuffersTerrainCutout();
+			case DamagedBlock -> getGbuffersDamagedBlock();
+			case Block -> getGbuffersBlock();
+			case BlockTrans -> getGbuffersBlockTrans();
+			case BeaconBeam -> getGbuffersBeaconBeam();
+			case Entities -> getGbuffersEntities();
+			case EntitiesTrans -> getGbuffersEntitiesTrans();
+			case Particles -> getGbuffersParticles();
+			case ParticlesTrans -> getGbuffersParticlesTrans();
+			case EntitiesGlowing -> getGbuffersEntitiesGlowing();
+			case ArmorGlint -> getGbuffersGlint();
+			case SpiderEyes -> getGbuffersEntityEyes();
+			case Hand -> getGbuffersHand();
+			case Weather -> getGbuffersWeather();
+			case Water -> getGbuffersWater();
+			case HandWater -> getGbuffersHandWater();
+			case Final -> getCompositeFinal();
 			case DhTerrain -> getDhTerrain();
 			case DhWater -> getDhWater();
 			case DhShadow -> getDhShadow();
-            default -> Optional.empty();
-        };
+			default -> Optional.empty();
+		};
 	}
 
 	public ProgramSource[] getDeferred() {

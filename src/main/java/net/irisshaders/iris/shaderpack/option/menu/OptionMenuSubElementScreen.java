@@ -1,7 +1,7 @@
 package net.irisshaders.iris.shaderpack.option.menu;
 
-import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
+import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 
 import java.util.List;
 import java.util.Optional;

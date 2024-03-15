@@ -50,12 +50,12 @@ public class BlockMaterialMapping {
 			return null;
 		}
 
-        return switch (type) {
-            case SOLID -> RenderType.solid();
-            case CUTOUT -> RenderType.cutout();
-            case CUTOUT_MIPPED -> RenderType.cutoutMipped();
-            case TRANSLUCENT -> RenderType.translucent();
-        };
+		return switch (type) {
+			case SOLID -> RenderType.solid();
+			case CUTOUT -> RenderType.cutout();
+			case CUTOUT_MIPPED -> RenderType.cutoutMipped();
+			case TRANSLUCENT -> RenderType.translucent();
+		};
 	}
 
 	private static void addBlockStates(BlockEntry entry, Object2IntMap<BlockState> idMap, int intId) {

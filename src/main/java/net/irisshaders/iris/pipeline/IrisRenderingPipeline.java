@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderMap;
 import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
@@ -91,6 +92,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import org.apache.commons.lang3.text.WordUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
@@ -104,6 +106,7 @@ import org.lwjgl.opengl.GL43C;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -122,7 +125,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final ProgramFallbackResolver resolver;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
 	private final Set<ShaderInstance> loadedShaders;
-    private final CompositeRenderer beginRenderer;
+	private final CompositeRenderer beginRenderer;
 	private final CompositeRenderer prepareRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
@@ -176,6 +179,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
 	private ColorSpace currentColorSpace;
+	private int stackSize = 0;
 
 	public IrisRenderingPipeline(ProgramSet programSet) {
 		ShaderPrinter.resetPrintState();
@@ -401,7 +405,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			return builder.build();
 		};
 
-        this.loadedShaders = new HashSet<>();
+		this.loadedShaders = new HashSet<>();
 
 
 		this.shaderMap = new ShaderMap(key -> {
@@ -797,6 +801,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
+		GLDebug.popGroup();
+		if (phase != WorldRenderingPhase.NONE)
+			GLDebug.pushGroup(phase.ordinal(), WordUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
 		this.phase = phase;
 	}
 

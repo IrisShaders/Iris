@@ -61,8 +61,8 @@ public class RenderTargets {
 
 		this.depthSourceFb = createFramebufferWritingToMain(new int[]{0});
 
-		this.noTranslucents = new DepthTexture(width, height, currentDepthFormat);
-		this.noHand = new DepthTexture(width, height, currentDepthFormat);
+		this.noTranslucents = new DepthTexture("depthtex1", width, height, currentDepthFormat);
+		this.noHand = new DepthTexture("dephtex2", width, height, currentDepthFormat);
 
 		this.noTranslucentsDestFb = createFramebufferWritingToMain(new int[]{0});
 		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents.getTextureId());
@@ -123,6 +123,7 @@ public class RenderTargets {
 		PackRenderTargetDirectives.RenderTargetSettings settings = targetSettingsMap.get(index);
 		Vector2i dimensions = packDirectives.getTextureScaleOverride(index, cachedWidth, cachedHeight);
 		targets[index] = RenderTarget.builder().setDimensions(dimensions.x, dimensions.y)
+			.setName("colortex" + index)
 			.setInternalFormat(settings.getInternalFormat())
 			.setPixelFormat(settings.getInternalFormat().getPixelFormat()).build();
 	}

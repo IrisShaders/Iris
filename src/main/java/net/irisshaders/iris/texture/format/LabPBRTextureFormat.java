@@ -20,8 +20,8 @@ public record LabPBRTextureFormat(String name, @Nullable String version) impleme
 
 	@Override
 	public boolean canInterpolateValues(PBRType pbrType) {
-        return pbrType != PBRType.SPECULAR;
-    }
+		return pbrType != PBRType.SPECULAR;
+	}
 
 	@Override
 	public @Nullable CustomMipmapGenerator getMipmapGenerator(PBRType pbrType) {

@@ -185,20 +185,20 @@ public class ExpressionResolver {
 			expression, targetType, allowNonImplicit ? 1 : 0, allowImplicit ? 1 : 0);
 		if (expression instanceof UnaryExpressionElement token) {
 			// I want my pattern matching =(
-            return this.resolveCallExpression(targetType, token.getOp().getName(), Collections.singletonList(token.getInner()),
+			return this.resolveCallExpression(targetType, token.getOp().getName(), Collections.singletonList(token.getInner()),
 				allowNonImplicit, allowImplicit);
 		} else if (expression instanceof BinaryExpressionElement token) {
-            return this.resolveCallExpression(targetType, token.getOp().getName(), Arrays.asList(token.getLeft(), token.getRight()),
+			return this.resolveCallExpression(targetType, token.getOp().getName(), Arrays.asList(token.getLeft(), token.getRight()),
 				allowNonImplicit, allowImplicit);
 		} else if (expression instanceof FunctionCall token) {
-            return this.resolveCallExpression(targetType, token.getId(), token.getArgs(),
+			return this.resolveCallExpression(targetType, token.getId(), token.getArgs(),
 				allowNonImplicit, allowImplicit);
 		} else if (expression instanceof AccessExpressionElement token) {
-            return this.resolveCallExpression(targetType, "<access$" + token.getIndex() + ">",
+			return this.resolveCallExpression(targetType, "<access$" + token.getIndex() + ">",
 				Collections.singletonList(token.getBase()),
 				allowNonImplicit, allowImplicit);
 		} else if (expression instanceof NumberToken token) {
-            ConstantExpression exp = this.resolveNumber(token.getNumber());
+			ConstantExpression exp = this.resolveNumber(token.getNumber());
 			if (exp.getType().equals(targetType)) {
 				this.log("[DEBUG] resolved constant %s to type %s", token.getNumber(), targetType);
 				return exp;
@@ -214,7 +214,7 @@ public class ExpressionResolver {
 			castable = exp;
 			innerType = exp.getType();
 		} else if (expression instanceof IdToken token) {
-            final String name = token.getId();
+			final String name = token.getId();
 			Type type = this.variableTypeMap.apply(name);
 			if (type == null)
 				throw new RuntimeException("Unknown variable: " + name);

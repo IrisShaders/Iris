@@ -1,11 +1,11 @@
 package net.irisshaders.iris.uniforms;
 
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
+import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.shaderpack.IdMap;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
-import net.irisshaders.iris.api.v0.item.IrisItemLightProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.registries.BuiltInRegistries;

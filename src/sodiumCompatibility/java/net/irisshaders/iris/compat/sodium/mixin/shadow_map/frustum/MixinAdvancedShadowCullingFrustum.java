@@ -13,6 +13,8 @@ import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(AdvancedShadowCullingFrustum.class)
 public abstract class MixinAdvancedShadowCullingFrustum implements ViewportProvider, Frustum {
+	@Unique
+	private final Vector3d position = new Vector3d();
 	@Shadow
 	public double x;
 	@Shadow
@@ -22,8 +24,6 @@ public abstract class MixinAdvancedShadowCullingFrustum implements ViewportProvi
 	@Shadow
 	@Final
 	protected BoxCuller boxCuller;
-	@Unique
-	private final Vector3d position = new Vector3d();
 
 	@Shadow(remap = false)
 	protected abstract int checkCornerVisibility(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);

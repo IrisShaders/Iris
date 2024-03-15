@@ -268,6 +268,88 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 	}
 
+	public static class TopButtonRowEntry extends BaseEntry {
+		private static final Component NONE_PRESENT_LABEL = Component.translatable("options.iris.shaders.nonePresent").withStyle(ChatFormatting.GRAY);
+		private static final Component SHADERS_DISABLED_LABEL = Component.translatable("options.iris.shaders.disabled");
+		private static final Component SHADERS_ENABLED_LABEL = Component.translatable("options.iris.shaders.enabled");
+
+		private final ShaderPackSelectionList list;
+
+		public boolean allowEnableShadersButton = true;
+		public boolean shadersEnabled;
+
+		public TopButtonRowEntry(ShaderPackSelectionList list, boolean shadersEnabled) {
+			this.list = list;
+			this.shadersEnabled = shadersEnabled;
+		}
+
+		public void setShadersEnabled(boolean shadersEnabled) {
+			this.shadersEnabled = shadersEnabled;
+			this.list.screen.refreshScreenSwitchButton();
+		}
+
+		@Override
+		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			guiGraphics.drawCenteredString(Minecraft.getInstance().font, getEnableDisableLabel(), (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
+		}
+
+		private Component getEnableDisableLabel() {
+			return this.allowEnableShadersButton ? this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL : NONE_PRESENT_LABEL;
+		}
+
+		@Override
+		public boolean mouseClicked(double mouseX, double mouseY, int button) {
+			if (this.allowEnableShadersButton) {
+				setShadersEnabled(!this.shadersEnabled);
+				GuiUtil.playButtonClickSound();
+				return true;
+			}
+
+			return false;
+		}
+
+		@Override
+		public boolean keyPressed(int keycode, int scancode, int modifiers) {
+			if (keycode == GLFW.GLFW_KEY_ENTER) {
+				if (this.allowEnableShadersButton) {
+					setShadersEnabled(!this.shadersEnabled);
+					GuiUtil.playButtonClickSound();
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		@Nullable
+		@Override
+		public ComponentPath nextFocusPath(FocusNavigationEvent pGuiEventListener0) {
+			return (!isFocused()) ? ComponentPath.leaf(this) : null;
+		}
+
+
+		public boolean isFocused() {
+			return this.list.getFocused() == this;
+		}
+
+		// Renders the label at an offset as to not look misaligned with the rest of the menu
+		public static class EnableShadersButtonElement extends IrisElementRow.TextButtonElement {
+			private int centerX;
+
+			public EnableShadersButtonElement(Component text, Function<IrisElementRow.TextButtonElement, Boolean> onClick) {
+				super(text, onClick);
+			}
+
+			@Override
+			public void renderLabel(GuiGraphics guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+				int textX = this.centerX - (int) (this.font.width(this.text) * 0.5);
+				int textY = y + (int) ((height - 8) * 0.5);
+
+				guiGraphics.drawString(this.font, this.text, textX, textY, 0xFFFFFF);
+			}
+		}
+	}
+
 	public class ShaderPackEntry extends BaseEntry {
 		private final String packName;
 		private final ShaderPackSelectionList list;
@@ -386,81 +468,6 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		public boolean isFocused() {
 			return this.list.getFocused() == this;
-		}
-	}
-
-	public static class TopButtonRowEntry extends BaseEntry {
-		private static final Component NONE_PRESENT_LABEL = Component.translatable("options.iris.shaders.nonePresent").withStyle(ChatFormatting.GRAY);
-		private static final Component SHADERS_DISABLED_LABEL = Component.translatable("options.iris.shaders.disabled");
-		private static final Component SHADERS_ENABLED_LABEL = Component.translatable("options.iris.shaders.enabled");
-
-		private final ShaderPackSelectionList list;
-
-		public boolean allowEnableShadersButton = true;
-		public boolean shadersEnabled;
-
-		public TopButtonRowEntry(ShaderPackSelectionList list, boolean shadersEnabled) {
-			this.list = list;
-			this.shadersEnabled = shadersEnabled;
-		}
-
-		public void setShadersEnabled(boolean shadersEnabled) {
-			this.shadersEnabled = shadersEnabled;
-			this.list.screen.refreshScreenSwitchButton();
-		}
-
-		@Override
-		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-			guiGraphics.drawCenteredString(Minecraft.getInstance().font, getEnableDisableLabel(), (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
-		}
-
-		private Component getEnableDisableLabel() {
-			return this.allowEnableShadersButton ? this.shadersEnabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL : NONE_PRESENT_LABEL;
-		}
-
-		@Override
-		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (this.allowEnableShadersButton) {
-				setShadersEnabled(!this.shadersEnabled);
-				GuiUtil.playButtonClickSound();
-				return false;
-			}
-
-			return false;
-		}
-
-		@Override
-		public boolean keyPressed(int keycode, int scancode, int modifiers) {
-			if (keycode == GLFW.GLFW_KEY_ENTER) {
-				if (this.allowEnableShadersButton) {
-					setShadersEnabled(!this.shadersEnabled);
-					GuiUtil.playButtonClickSound();
-					return false;
-				}
-			}
-
-			return false;
-		}
-
-		public boolean isFocused() {
-			return this.list.getFocused() == this;
-		}
-
-		// Renders the label at an offset as to not look misaligned with the rest of the menu
-		public static class EnableShadersButtonElement extends IrisElementRow.TextButtonElement {
-			private int centerX;
-
-			public EnableShadersButtonElement(Component text, Function<IrisElementRow.TextButtonElement, Boolean> onClick) {
-				super(text, onClick);
-			}
-
-			@Override
-			public void renderLabel(GuiGraphics guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
-				int textX = this.centerX - (int) (this.font.width(this.text) * 0.5);
-				int textY = y + (int) ((height - 8) * 0.5);
-
-				guiGraphics.drawString(this.font, this.text, textX, textY, 0xFFFFFF);
-			}
 		}
 	}
 

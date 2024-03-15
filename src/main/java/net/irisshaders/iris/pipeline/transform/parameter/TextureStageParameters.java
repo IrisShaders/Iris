@@ -39,8 +39,8 @@ public class TextureStageParameters extends Parameters {
 		if (getClass() != obj.getClass())
 			return false;
 		TextureStageParameters other = (TextureStageParameters) obj;
-        return stage == other.stage;
-    }
+		return stage == other.stage;
+	}
 
 	@Override
 	public AlphaTest getAlphaTest() {

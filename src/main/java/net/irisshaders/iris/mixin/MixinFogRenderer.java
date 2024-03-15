@@ -29,7 +29,7 @@ public class MixinFogRenderer {
 			float density = 0.05F;
 
 			if (entity instanceof LocalPlayer localPlayer) {
-                density -= localPlayer.getWaterVision() * localPlayer.getWaterVision() * 0.03F;
+				density -= localPlayer.getWaterVision() * localPlayer.getWaterVision() * 0.03F;
 				Holder<Biome> biome = localPlayer.level().getBiome(localPlayer.blockPosition());
 
 				if (biome.is(BiomeTags.HAS_CLOSER_WATER_FOG)) {

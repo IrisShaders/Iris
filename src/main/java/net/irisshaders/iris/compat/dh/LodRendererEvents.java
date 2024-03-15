@@ -22,17 +22,15 @@ import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhAp
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
-import net.irisshaders.iris.api.v0.IrisApi;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL46C;
-
-import java.io.IOException;
 
 public class LodRendererEvents {
 	private static boolean eventHandlersBound = false;
@@ -83,7 +81,8 @@ public class LodRendererEvents {
 			@Override
 			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
 
-				DhApi.Delayed.renderProxy.setDeferTransparentRendering(IrisApi.getInstance().isShaderPackInUse());
+				DhApi.Delayed.renderProxy.setDeferTransparentRendering(IrisApi.getInstance().isShaderPackInUse() && getInstance().shouldOverride);
+				DhApi.Delayed.configs.graphics().fog().drawMode().setValue(getInstance().shouldOverride ? EFogDrawMode.FOG_DISABLED : EFogDrawMode.FOG_ENABLED);
 			}
 		};
 
@@ -209,7 +208,7 @@ public class LodRendererEvents {
 			public void beforeSetup(DhApiEventParam<DhApiRenderParam> event) {
 				DHCompatInternal instance = getInstance();
 
-				// doesn't unbind
+				OverrideInjector.INSTANCE.unbind(IDhApiShadowCullingFrustum.class, (IDhApiOverrideable) ShadowRenderer.FRUSTUM);
 				OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getShadowFBWrapper());
 				OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getSolidFBWrapper());
 
@@ -260,7 +259,7 @@ public class LodRendererEvents {
 				}
 
 
-                // opaque
+				// opaque
 				if (event.value.renderPass == EDhApiRenderPass.OPAQUE) {
 					float partialTicks = event.value.partialTicks;
 
@@ -334,7 +333,11 @@ public class LodRendererEvents {
 			@Override
 			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
 				if (IrisApi.getInstance().isShaderPackInUse()) {
+					DHCompatInternal instance = getInstance();
+
 					OverrideInjector.INSTANCE.unbind(IDhApiShadowCullingFrustum.class, (IDhApiOverrideable) ShadowRenderer.FRUSTUM);
+					OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getShadowFBWrapper());
+					OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getSolidFBWrapper());
 
 					event.cancelEvent();
 				}

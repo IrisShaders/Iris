@@ -23,6 +23,7 @@ public class DotAttribute {
 	private final String name;
 	private final String value;
 	private final boolean quotes;
+
 	public DotAttribute(String name, String value) {
 		this.name = name;
 		this.value = value;

@@ -13,15 +13,13 @@ import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(BoxCullingFrustum.class)
 public class MixinBoxCullingFrustum implements Frustum, ViewportProvider {
+	@Unique
+	private final Vector3d position = new Vector3d();
 	@Shadow(remap = false)
 	@Final
 	private BoxCuller boxCuller;
-
 	@Shadow
 	private double x, y, z;
-
-	@Unique
-	private final Vector3d position = new Vector3d();
 
 	@Override
 	public Viewport sodium$createViewport() {

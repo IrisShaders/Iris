@@ -3,6 +3,7 @@ package net.irisshaders.iris.gui.screen;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gui.GuiUtil;
 import net.irisshaders.iris.gui.NavigationController;
 import net.irisshaders.iris.gui.OldImageButton;
@@ -606,7 +607,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			return;
 		}
 
-        this.shaderPackList.setApplied(entry);
+		this.shaderPackList.setApplied(entry);
 
 		String name = entry.getPackName();
 

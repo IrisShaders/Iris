@@ -288,7 +288,7 @@ public final class CommonUniforms {
 
 		if (cameraEntity instanceof LivingEntity livingEntity) {
 
-            try {
+			try {
 				// See MixinGameRenderer#iris$safecheckNightvisionStrength.
 				//
 				// We modify the behavior of getNightVisionScale so that it's safe for us to call it even on entities

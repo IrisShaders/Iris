@@ -15,6 +15,7 @@ import net.irisshaders.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.IrisTimeUniforms;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -24,6 +25,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.TickRateManager;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -64,6 +66,7 @@ public class MixinLevelRenderer {
 
 	@Shadow
 	private @Nullable ClientLevel level;
+	private boolean warned;
 
 	// Begin shader rendering after buffers have been cleared.
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
@@ -111,6 +114,12 @@ public class MixinLevelRenderer {
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
 		pipeline.finalizeLevelRendering();
 		pipeline = null;
+
+		if (!warned) {
+			warned = true;
+			Iris.getUpdateChecker().getBetaInfo().ifPresent(info ->
+				Minecraft.getInstance().gui.getChat().addMessage(Component.literal("A new beta is out for Iris " + info.betaTag + ". Please redownload it.").withStyle(ChatFormatting.BOLD, ChatFormatting.RED)));
+		}
 
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
 			IrisRenderSystem.setPolygonMode(GL43C.GL_FILL);
