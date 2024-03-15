@@ -44,7 +44,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	private ShaderPackEntry applied = null;
 
 	public ShaderPackSelectionList(ShaderPackScreen screen, Minecraft client, int width, int height, int top, int bottom, int left, int right) {
-		super(client, width, bottom, top, bottom, left, right, 20);
+		super(client, width, bottom, top + 4, bottom, left, right, 20);
 		WatchKey key1;
 		WatchService watcher1;
 
@@ -123,7 +123,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		pAbstractSelectionList0.blit(
 			MENU_LIST_BACKGROUND,
 			this.getX(),
-			this.getY() + 3,
+			this.getY() - 2,
 			(float)this.getRight(),
 			(float)(this.getBottom() + (int)this.getScrollAmount()),
 			this.getWidth(),
@@ -140,7 +140,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	protected void renderListSeparators(GuiGraphics pAbstractSelectionList0) {
 		RenderSystem.enableBlend();
 		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, screen.listTransition.getAsFloat());
-		pAbstractSelectionList0.blit(CreateWorldScreen.HEADER_SEPARATOR, this.getX(), this.getY() + 2, 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
+		pAbstractSelectionList0.blit(CreateWorldScreen.HEADER_SEPARATOR, this.getX(), this.getY() - 2, 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
 		pAbstractSelectionList0.blit(CreateWorldScreen.FOOTER_SEPARATOR, this.getX(), this.getBottom(), 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
 		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.disableBlend();

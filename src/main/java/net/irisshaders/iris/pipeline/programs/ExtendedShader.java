@@ -29,6 +29,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceProvider;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -63,12 +64,12 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private final GlFramebuffer writingToBeforeTranslucent;
 	private final GlFramebuffer writingToAfterTranslucent;
 	private final BlendModeOverride blendModeOverride;
-	float alphaTest;
-	boolean usesTessellation;
-	Matrix4f tempMatrix4f = new Matrix4f();
-	Matrix3f tempMatrix3f = new Matrix3f();
-	float[] tempFloats = new float[16];
-	float[] tempFloats2 = new float[9];
+	private final float alphaTest;
+	private final boolean usesTessellation;
+	private final Matrix4f tempMatrix4f = new Matrix4f();
+	private final Matrix3f tempMatrix3f = new Matrix3f();
+	private final float[] tempFloats = new float[16];
+	private final float[] tempFloats2 = new float[9];
 	private Program geometry, tessControl, tessEval;
 
 	public ExtendedShader(ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, boolean usesTessellation,
@@ -198,7 +199,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 
 	@Nullable
 	@Override
-	public Uniform getUniform(String name) {
+	public Uniform getUniform(@NotNull String name) {
 		// Prefix all uniforms with Iris to help avoid conflicts with existing names within the shader.
 		return super.getUniform("iris_" + name);
 	}

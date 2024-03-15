@@ -96,12 +96,6 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		RenderSystem.disableBlend();
 		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
-
-	@Override
-	protected void renderMenuBackground(GuiGraphics pAbstractWidget0, int pInt1, int pInt2, int pInt3, int pInt4) {
-
-	}
-
 	@Override
 	protected void renderListSeparators(GuiGraphics pAbstractSelectionList0) {
 		RenderSystem.enableBlend();
