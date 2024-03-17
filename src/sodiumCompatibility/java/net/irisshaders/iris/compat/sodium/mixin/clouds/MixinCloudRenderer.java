@@ -63,10 +63,10 @@ public abstract class MixinCloudRenderer {
 	protected abstract void applyFogModifiers(ClientLevel world, FogRenderer.FogData fogData, LocalPlayer player, int cloudDistance, float tickDelta);
 
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
-	private void buildIrisVertexBuffer(ClientLevel world, LocalPlayer player, Matrix4f modelMatrix, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
+	private void buildIrisVertexBuffer(ClientLevel world, LocalPlayer player, PoseStack matrices, Matrix4f modelViewMatrix, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			ci.cancel();
-			renderIris(world, player, modelMatrix, projectionMatrix, ticks, tickDelta, cameraX, cameraY, cameraZ);
+			renderIris(world, player, modelViewMatrix, projectionMatrix, ticks, tickDelta, cameraX, cameraY, cameraZ);
 		}
 	}
 

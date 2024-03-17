@@ -2,9 +2,9 @@ import org.ajoberstar.grgit.Grgit
 
 object Constants {
     // https://fabricmc.net/develop/
-    const val MINECRAFT_VERSION: String = "24w10a"
+    const val MINECRAFT_VERSION: String = "24w11a"
     const val FABRIC_LOADER_VERSION: String = "0.15.6"
-    const val FABRIC_API_VERSION: String = "0.96.8+1.20.5"
+    const val FABRIC_API_VERSION: String = "0.96.10+1.20.5"
 
     // https://semver.org/
     const val MOD_VERSION: String = "1.7.0"
