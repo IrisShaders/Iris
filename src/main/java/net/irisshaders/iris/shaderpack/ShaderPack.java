@@ -163,7 +163,12 @@ public class ShaderPack {
 		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
 
-		Iterable<StringPair> finalEnvironmentDefines = environmentDefines;
+		List<StringPair> finalEnvironmentDefines = new ArrayList<>(List.copyOf(environmentDefines));
+		for (FeatureFlags flag : FeatureFlags.values()) {
+			if (flag.isUsable()) {
+				finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_" + flag.name(), ""));
+			}
+		}
 		this.shaderProperties = loadProperties(root, "shaders.properties")
 			.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
 			.orElseGet(ShaderProperties::empty);
@@ -211,7 +216,6 @@ public class ShaderPack {
 		if (!optionalFeatureFlags.isEmpty()) {
 			optionalFeatureFlags.forEach(flag -> Iris.logger.warn("Found flag " + flag));
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
-
 		}
 
 		environmentDefines = ImmutableList.copyOf(newEnvDefines);
