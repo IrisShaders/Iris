@@ -2,7 +2,6 @@
   "iris.shaders.reloaded": "Shaders Recarregados!",
   "iris.keybind.reload": "Recarregar Shaders",
   "iris.shaders.reloaded.failure": "Falha no Reload Shaders! Motivo: %s",
-
   "options.iris.apply": "Aplicar",
   "options.iris.refresh": "Actualizar",
   "options.iris.openShaderPackFolder": "Pasta de Shader Pack Aberto......",
@@ -17,7 +16,6 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" já está na sua pasta Shader Packs!",
   "options.iris.shaders.disabled": "Shaders: Deficientes",
   "options.iris.shaders.enabled": "Shaders: Activados",
-
   "pack.iris.select.title": "Seleccionar",
   "pack.iris.list.label": "+ Trascina e rilascia Shader Pack da aggiungere"
 }

@@ -7,7 +7,6 @@
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Shader neu lade hed ned funktioniert! Grund: %s",
   "iris.shaders.toggled.failure": "Shader i/uschalte hed ned funktioniert! Grund: %s",
-
   "options.iris.apply": "Awende",
   "options.iris.refresh": "Neu lade",
   "options.iris.openShaderPackFolder": "Shader Pack Ordner öffne...",
@@ -22,7 +21,6 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" isch bereits i dim Shader Pack Ordner",
   "options.iris.shaders.disabled": "Shaders: Usgschalte",
   "options.iris.shaders.enabled": "Shaders: Igschalte",
-
   "pack.iris.select.title": "Uswähle",
   "pack.iris.list.label": "+ zum hinzuefüege Shader Packs hie ine zieh"
 }

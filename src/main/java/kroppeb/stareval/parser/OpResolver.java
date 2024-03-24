@@ -7,6 +7,7 @@ import java.util.Map;
 
 /**
  * OpResolver maps the trailing characters identifying an operator to an actual operator.
+ *
  * @param <T>
  */
 abstract class OpResolver<T> {
@@ -27,7 +28,7 @@ abstract class OpResolver<T> {
 		 * Adds a new multi-character operator. Calling this with an empty string is equivalent to calling singleChar.
 		 *
 		 * @param trailing every character after the first character of the operator.
-		 * @param op the operator
+		 * @param op       the operator
 		 */
 		public void multiChar(String trailing, T op) {
 			T previous = map.put(trailing, op);
@@ -40,7 +41,7 @@ abstract class OpResolver<T> {
 		public OpResolver<T> build() {
 			if (map.size() > 2) {
 				throw new RuntimeException("unimplemented: Cannot currently build an optimized operator resolver " +
-						"tree when more than two operators start with the same character");
+					"tree when more than two operators start with the same character");
 			}
 
 			T singleChar = map.get("");
@@ -57,33 +58,33 @@ abstract class OpResolver<T> {
 
 						if (subEntry.getKey().length() != 1) {
 							throw new RuntimeException("unimplemented: Optimized operator resolver trees can " +
-									"currently only be built of operators that contain one or two characters.");
+								"currently only be built of operators that contain one or two characters.");
 						}
 
 						// We can assume that this is the only other entry in the map due to the size check above
 						return new OpResolver.SingleDualChar<>(
-								singleChar,
-								subEntry.getValue(),
-								subEntry.getKey().charAt(0)
+							singleChar,
+							subEntry.getValue(),
+							subEntry.getKey().charAt(0)
 						);
 					}
 				}
 			} else {
 				if (map.size() > 1) {
 					throw new RuntimeException("unimplemented: Optimized operator resolver trees can currently only " +
-							"handle two operators starting with the same character if one operator is a single character");
+						"handle two operators starting with the same character if one operator is a single character");
 				}
 
 				for (Map.Entry<String, T> subEntry : map.entrySet()) {
 					if (subEntry.getKey().length() != 1) {
 						throw new RuntimeException("unimplemented: Optimized operator resolver trees can " +
-								"currently only be built of operators that contain one or two characters.");
+							"currently only be built of operators that contain one or two characters.");
 					}
 
 					// We can assume that this is the only entry in the map due to the size check above.
 					return new OpResolver.DualChar<>(
-							subEntry.getValue(),
-							subEntry.getKey().charAt(0)
+						subEntry.getValue(),
+						subEntry.getKey().charAt(0)
 					);
 				}
 			}

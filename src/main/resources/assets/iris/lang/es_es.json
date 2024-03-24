@@ -9,9 +9,7 @@
   "iris.keybind.reload": "Recargar Shaders",
   "iris.keybind.shaderPackSelection": "Pantalla de Selección de Shaders",
   "iris.keybind.toggleShaders": "Alternar Shaders",
-
   "iris.shaders.reloaded.failure": "¡Error al recargar los Shaders! Razón: %s",
-
   "iris.shaders.toggled.failure": "¡Error al activar shaders! Razón: %s",
   "iris.sodium.failure.title": "¡Iris no pudo iniciarse!",
   "iris.sodium.failure.download": "Descarga Sodium",
@@ -22,7 +20,6 @@
   "iris.unsupported.pc": "tu PC",
   "iris.unsupported.pack": "¡Shader incompatible!",
   "iris.unsupported.pack.description": "El Shader Pack que estás intentando cargar contiene características no soportadas por %s. Por favor, prueba otro pack. Lista %s",
-
   "options.iris.apply": "Aplicar",
   "options.iris.refresh": "Recargar",
   "options.iris.openShaderPackFolder": "Abrir carpeta de Shader Packs...",
@@ -58,7 +55,6 @@
   "options.iris.shadowDistance.disabled": "Tu shader pack ya ha establecido una distáncia de renderizado para las sombreas; no puedes cambiarla.",
   "options.iris.gui.hide": "Ocultar GUI",
   "options.iris.gui.show": "Mostrar GUI",
-
   "pack.iris.select.title": "Seleccionar",
   "pack.iris.configure.title": "Configurar",
   "pack.iris.list.label": "+ Arrastra Shader Packs aquí para añadirlos",

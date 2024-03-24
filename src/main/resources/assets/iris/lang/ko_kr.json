@@ -61,11 +61,9 @@
   "options.iris.shadowDistance.sodium_tooltip": "그림자 렌더링 거리는 잠재적으로 섀도 패스에서 지형을 렌더링할 수 있는 거리를 제어합니다. 이를 낮게 설정하면 지형이 덜 렌더링되지만 프레임레이트를 향상시킬 수 있습니다. 그림자 렌더링 거리를 명시적으로 지정하는 셰이더 팩을 사용하면 이 설정을 바꿀 수 없습니다. 실제로 그림자가 표시되는 범위는 렌더링 거리 설정으로 제한됩니다.",
   "options.iris.gui.hide": "GUI 숨기기",
   "options.iris.gui.show": "GUI 보이기",
-
   "pack.iris.select.title": "선택",
   "pack.iris.configure.title": "설정",
   "pack.iris.list.label": "+ 추가할 셰이더 팩을 끌어다 놓으십시오.",
-
   "label.iris.true": "켜짐",
   "label.iris.false": "꺼짐"
 }

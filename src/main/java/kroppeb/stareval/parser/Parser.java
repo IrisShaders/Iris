@@ -60,6 +60,10 @@ public class Parser {
 	Parser() {
 	}
 
+	public static ExpressionElement parse(String input, ParserOptions options) throws ParseException {
+		return Tokenizer.parse(input, options);
+	}
+
 	private Element peek() {
 		if (!this.stack.isEmpty()) {
 			return this.stack.get(this.stack.size() - 1);
@@ -115,6 +119,8 @@ public class Parser {
 		return token;
 	}
 
+	// visitor methods
+
 	/**
 	 * Executes following reduce step:
 	 * <ul>
@@ -134,8 +140,8 @@ public class Parser {
 
 		if (args == null) {
 			throw new MissingTokenException(
-					"Expected an opening bracket '(' before seeing a comma ',' or closing bracket ')'",
-					index
+				"Expected an opening bracket '(' before seeing a comma ',' or closing bracket ')'",
+				index
 			);
 		}
 
@@ -143,12 +149,10 @@ public class Parser {
 			((UnfinishedArgsExpression) args).tokens.add(expr);
 		} else {
 			throw new UnexpectedTokenException(
-					"Expected to see an opening bracket '(' or a comma ',' right before an expression followed by a " +
-							"closing bracket ')' or a comma ','", index);
+				"Expected to see an opening bracket '(' or a comma ',' right before an expression followed by a " +
+					"closing bracket ')' or a comma ','", index);
 		}
 	}
-
-	// visitor methods
 
 	void visitId(String id) {
 		this.push(new IdToken(id));
@@ -213,8 +217,8 @@ public class Parser {
 
 			if (!(pop instanceof UnfinishedArgsExpression)) {
 				throw new UnexpectedTokenException(
-						"Expected to see an opening bracket '(' or a comma ',' right before an expression followed by a " +
-								"closing bracket ')' or a comma ','", index);
+					"Expected to see an opening bracket '(' or a comma ',' right before an expression followed by a " +
+						"closing bracket ')' or a comma ','", index);
 			}
 			args = (UnfinishedArgsExpression) pop;
 		}
@@ -287,8 +291,8 @@ public class Parser {
 					throw new MissingTokenException("Expected a closing bracket", endIndex);
 				} else {
 					throw new UnexpectedTokenException(
-							"The stack of tokens isn't empty at the end of the expression: " + this.stack +
-									" top: " + result, endIndex);
+						"The stack of tokens isn't empty at the end of the expression: " + this.stack +
+							" top: " + result, endIndex);
 				}
 			} else {
 				Element top = this.peek();
@@ -296,20 +300,16 @@ public class Parser {
 					throw new MissingTokenException("Expected a closing bracket", endIndex);
 				} else if (top instanceof PriorityOperatorElement) {
 					throw new MissingTokenException(
-							"Expected a identifier, constant or subexpression on the right side of the operator",
-							endIndex);
+						"Expected a identifier, constant or subexpression on the right side of the operator",
+						endIndex);
 				} else {
 					throw new UnexpectedTokenException(
-							"The stack of tokens contains an unexpected token at the top: " + this.stack,
-							endIndex);
+						"The stack of tokens contains an unexpected token at the top: " + this.stack,
+						endIndex);
 				}
 			}
 		} else {
 			throw new MissingTokenException("The input seems to be empty", endIndex);
 		}
-	}
-
-	public static ExpressionElement parse(String input, ParserOptions options) throws ParseException {
-		return Tokenizer.parse(input, options);
 	}
 }

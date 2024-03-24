@@ -9,9 +9,9 @@ public final class ParserOptions {
 	private final TokenRules tokenRules;
 
 	private ParserOptions(
-			Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers,
-			Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers,
-			TokenRules tokenRules) {
+		Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers,
+		Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers,
+		TokenRules tokenRules) {
 		this.unaryOpResolvers = unaryOpResolvers;
 		this.binaryOpResolvers = binaryOpResolvers;
 		this.tokenRules = tokenRules;
@@ -29,52 +29,12 @@ public final class ParserOptions {
 		return this.binaryOpResolvers.get(c);
 	}
 
-	public static class Builder {
-		private final Char2ObjectMap<OpResolver.Builder<UnaryOp>> unaryOpResolvers = new Char2ObjectOpenHashMap<>();
-		private final Char2ObjectMap<OpResolver.Builder<BinaryOp>> binaryOpResolvers = new Char2ObjectOpenHashMap<>();
-		private TokenRules tokenRules = TokenRules.DEFAULT;
-
-		public void addUnaryOp(String s, UnaryOp op) {
-			char first = s.charAt(0);
-			String trailing = s.substring(1);
-
-			this.unaryOpResolvers.computeIfAbsent(first, (c) -> new OpResolver.Builder<>()).multiChar(trailing, op);
-		}
-
-		public void addBinaryOp(String s, BinaryOp op) {
-			char first = s.charAt(0);
-			String trailing = s.substring(1);
-
-			this.binaryOpResolvers.computeIfAbsent(first, (c) -> new OpResolver.Builder<>()).multiChar(trailing, op);
-		}
-
-		public void setTokenRules(TokenRules tokenRules) {
-			this.tokenRules = tokenRules;
-		}
-
-		private static <T> Char2ObjectMap<? extends OpResolver<? extends T>> buildOpResolvers(
-				Char2ObjectMap<OpResolver.Builder<T>> ops) {
-			Char2ObjectMap<OpResolver<T>> result = new Char2ObjectOpenHashMap<>();
-
-			ops.char2ObjectEntrySet().forEach(
-					entry -> result.put(entry.getCharKey(), entry.getValue().build()));
-
-			return result;
-		}
-
-		public ParserOptions build() {
-			return new ParserOptions(
-					buildOpResolvers(this.unaryOpResolvers),
-					buildOpResolvers(this.binaryOpResolvers),
-					this.tokenRules);
-		}
-	}
-
 	/**
 	 * Defines a set of rules that allows the tokenizer to identify tokens within a string.
 	 */
 	public interface TokenRules {
-		TokenRules DEFAULT = new TokenRules() {};
+		TokenRules DEFAULT = new TokenRules() {
+		};
 
 		static boolean isNumber(final char c) {
 			return c >= '0' && c <= '9';
@@ -114,6 +74,47 @@ public final class ParserOptions {
 
 		default boolean isAccessPart(final char c) {
 			return this.isAccessStart(c);
+		}
+	}
+
+	public static class Builder {
+		private final Char2ObjectMap<OpResolver.Builder<UnaryOp>> unaryOpResolvers = new Char2ObjectOpenHashMap<>();
+		private final Char2ObjectMap<OpResolver.Builder<BinaryOp>> binaryOpResolvers = new Char2ObjectOpenHashMap<>();
+		private TokenRules tokenRules = TokenRules.DEFAULT;
+
+		private static <T> Char2ObjectMap<? extends OpResolver<? extends T>> buildOpResolvers(
+			Char2ObjectMap<OpResolver.Builder<T>> ops) {
+			Char2ObjectMap<OpResolver<T>> result = new Char2ObjectOpenHashMap<>();
+
+			ops.char2ObjectEntrySet().forEach(
+				entry -> result.put(entry.getCharKey(), entry.getValue().build()));
+
+			return result;
+		}
+
+		public void addUnaryOp(String s, UnaryOp op) {
+			char first = s.charAt(0);
+			String trailing = s.substring(1);
+
+			this.unaryOpResolvers.computeIfAbsent(first, (c) -> new OpResolver.Builder<>()).multiChar(trailing, op);
+		}
+
+		public void addBinaryOp(String s, BinaryOp op) {
+			char first = s.charAt(0);
+			String trailing = s.substring(1);
+
+			this.binaryOpResolvers.computeIfAbsent(first, (c) -> new OpResolver.Builder<>()).multiChar(trailing, op);
+		}
+
+		public void setTokenRules(TokenRules tokenRules) {
+			this.tokenRules = tokenRules;
+		}
+
+		public ParserOptions build() {
+			return new ParserOptions(
+				buildOpResolvers(this.unaryOpResolvers),
+				buildOpResolvers(this.binaryOpResolvers),
+				this.tokenRules);
 		}
 	}
 }

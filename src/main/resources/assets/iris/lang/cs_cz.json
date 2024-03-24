@@ -11,7 +11,6 @@
   "iris.sodium.failure.download": "Stáhnout Sodium",
   "iris.sodium.failure.reason.notFound": "Pro dobrý výkon vyžaduje Iris modifikaci Sodium, která ale není nainstalovaná. Stáhněte si prosím Sodium, vložte jej do vaší složky mods a restartujte hru.",
   "iris.sodium.failure.reason.incompatible": "Pro dobrý výkon vyžaduje Iris modifikaci Sodium, ale byla nalezena její nekompatibilní verze. Stáhněte si prosím správnou verzi Sodia, vložte jej do vaší složky mods, odeberte nesprávnou verzi a restartujte hru.",
-
   "options.iris.apply": "Použít",
   "options.iris.refresh": "Obnovit",
   "options.iris.openShaderPackFolder": "Otevřít složku se shadery...",
@@ -44,11 +43,9 @@
   "options.iris.shadowDistance": "Maximální vzdálenost stínů",
   "options.iris.shadowDistance.enabled": "Umožňuje vám změnit maximální vykreslovací vzdálenost pro stíny. Terén a entity za touto vzdáleností nebudou vrhat stíny. Snížení vzdálenosti stínů může výrazně zvýšit výkon.",
   "options.iris.shadowDistance.disabled": "Váš aktuální balíček shaderů již má nastavenou vykreslovací vzdálenost pro stíny; nemůžete ji změnit.",
-
   "pack.iris.select.title": "Vybrat",
   "pack.iris.configure.title": "Nastavit",
   "pack.iris.list.label": "+ Přetáhněte sem shadery pro jejich přidání",
-
   "label.iris.true": "Zap",
   "label.iris.false": "Vyp"
 }

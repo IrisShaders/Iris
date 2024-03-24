@@ -65,11 +65,9 @@
   "options.iris.colorSpace.sodium_tooltip": "Värviruum, millesse kuva teisendada. Töötab varjutajapakkide peal. Kui ei tea millist valida, kasuta SRGB.",
   "options.iris.gui.hide": "Peida liides",
   "options.iris.gui.show": "Kuva liides",
-
   "pack.iris.select.title": "Vali",
   "pack.iris.configure.title": "Seadista",
   "pack.iris.list.label": "+ Varjutajapakkide lisamiseks sikuta need siia",
-
   "label.iris.true": "Sees",
   "label.iris.false": "Väljas"
 }

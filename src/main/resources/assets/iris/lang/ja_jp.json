@@ -56,11 +56,9 @@
   "options.iris.shadowDistance.disabled": "お使いのシェーダーパックでは既に最大描画距離が設定されているため、ここでは変更できません。",
   "options.iris.gui.hide": "GUIを非表示",
   "options.iris.gui.show": "GUIを表示",
-
   "pack.iris.select.title": "シェーダー選択",
   "pack.iris.configure.title": "シェーダー設定",
   "pack.iris.list.label": "+ ドラッグアンドドロップでシェーダーを追加",
-
   "label.iris.true": "ON",
   "label.iris.false": "OFF"
 }

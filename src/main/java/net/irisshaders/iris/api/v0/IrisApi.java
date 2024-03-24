@@ -1,6 +1,6 @@
 package net.irisshaders.iris.api.v0;
 
-import net.coderbot.iris.apiimpl.IrisApiV0Impl;
+import net.irisshaders.iris.apiimpl.IrisApiV0Impl;
 
 import java.nio.ByteBuffer;
 import java.util.function.IntFunction;
@@ -8,7 +8,7 @@ import java.util.function.IntFunction;
 /**
  * The entry point to the Iris API, major version 0. This is currently the latest
  * version of the API.
- *
+ * <p>
  * To access the API, use {@link #getInstance()}.
  */
 public interface IrisApi {
@@ -68,7 +68,7 @@ public interface IrisApi {
 	 * Opens the main Iris GUI screen. It's up to Iris to decide
 	 * what this screen is, but generally this is the shader selection
 	 * screen.
-	 *
+	 * <p>
 	 * This method takes and returns Objects instead of any concrete
 	 * Minecraft screen class to avoid referencing Minecraft classes.
 	 * Nevertheless, the passed parent must either be null, or an
@@ -87,20 +87,22 @@ public interface IrisApi {
 	 * is "options.iris.shaderPackSelection".
 	 *
 	 * @return the language key, for use with {@code TranslatableText}
-	 *        / {@code TranslatableComponent}
+	 * / {@code TranslatableComponent}
 	 * @since API v0.0
 	 */
 	String getMainScreenLanguageKey();
 
 	/**
 	 * Gets a config object that can edit the Iris configuration.
+	 *
 	 * @since API v0.0
 	 */
 	IrisApiConfig getConfig();
 
 	/**
 	 * Gets a text vertex sink to render into.
-	 * @param maxQuadCount Maximum amount of quads that will be rendered with this sink
+	 *
+	 * @param maxQuadCount   Maximum amount of quads that will be rendered with this sink
 	 * @param bufferProvider An IntFunction that can provide a {@code ByteBuffer} with at minimum the bytes provided by the input parameter
 	 * @since API 0.1
 	 */

@@ -9,17 +9,18 @@ import java.util.Collection;
 public class CallExpression implements Expression {
 	private final TypedFunction function;
 	private final Expression[] arguments;
-	
+
 	public CallExpression(TypedFunction function, Expression[] arguments) {
 		this.function = function;
 		this.arguments = arguments;
 	}
-	
+
 	@Override
 	public void evaluateTo(FunctionContext context, FunctionReturn functionReturn) {
 		this.function.evaluateTo(this.arguments, context, functionReturn);
 	}
-@Override
+
+	@Override
 	public void listVariables(Collection<? super VariableExpression> variables) {
 		for (Expression argument : this.arguments) {
 			argument.listVariables(variables);
@@ -61,7 +62,7 @@ public class CallExpression implements Expression {
 				noneSimplified = false;
 			} else {
 				allFullySimplified = false;
-				if(simplified != this.arguments[i]){
+				if (simplified != this.arguments[i]) {
 					noneSimplified = false;
 				}
 			}

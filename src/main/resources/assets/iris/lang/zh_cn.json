@@ -61,11 +61,9 @@
   "options.iris.shadowDistance.sodium_tooltip": "阴影渲染距离控制在阴影通道中可以渲染到多远的地形。更短的距离意味着将渲染更少的地形，从而提高帧率。在明确指定了阴影渲染距离的光影包上无法更改此选项。实际阴影渲染的距离受“渲染距离”设置的限制。",
   "options.iris.gui.hide": "隐藏 GUI",
   "options.iris.gui.show": "显示 GUI",
-
   "pack.iris.select.title": "选择",
   "pack.iris.configure.title": "配置",
   "pack.iris.list.label": "+ 拖放光影包至此以添加",
-
   "label.iris.true": "开",
   "label.iris.false": "关"
 }

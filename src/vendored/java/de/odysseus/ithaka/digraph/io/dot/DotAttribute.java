@@ -20,18 +20,6 @@ import java.io.IOException;
 import java.io.Writer;
 
 public class DotAttribute {
-	private static boolean isIdentifier(String value) {
-		if (!Character.isJavaIdentifierStart(value.charAt(0))) {
-			return false;
-		}
-		for (char c : value.substring(1).toCharArray()) {
-			if (!Character.isJavaIdentifierPart(c)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	private final String name;
 	private final String value;
 	private final boolean quotes;
@@ -58,6 +46,18 @@ public class DotAttribute {
 		this.name = name;
 		this.value = String.format("#%6X", value.getRGB() & 0x00FFFFFF);
 		this.quotes = true;
+	}
+
+	private static boolean isIdentifier(String value) {
+		if (!Character.isJavaIdentifierStart(value.charAt(0))) {
+			return false;
+		}
+		for (char c : value.substring(1).toCharArray()) {
+			if (!Character.isJavaIdentifierPart(c)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public String getName() {

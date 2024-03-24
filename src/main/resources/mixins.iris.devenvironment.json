@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.coderbot.iris.mixin.devenvironment",
+  "package": "net.irisshaders.iris.mixin.devenvironment",
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinMinecraft_NoAuthInDev",

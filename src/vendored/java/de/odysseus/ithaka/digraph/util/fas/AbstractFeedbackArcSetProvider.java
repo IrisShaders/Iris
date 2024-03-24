@@ -34,34 +34,15 @@ import java.util.concurrent.Future;
  * Abstract feedback arc set provider.
  */
 public abstract class AbstractFeedbackArcSetProvider implements FeedbackArcSetProvider {
-	class FeedbackTask<V> implements Callable<FeedbackArcSet<V>> {
-		final Digraph<V> digraph;
-		final EdgeWeights<? super V> weights;
-		final FeedbackArcSetPolicy policy;
-		final Set<V> scc;
-
-		FeedbackTask(Digraph<V> digraph, EdgeWeights<? super V> weights, FeedbackArcSetPolicy policy, Set<V> scc) {
-			this.digraph = digraph;
-			this.weights = weights;
-			this.policy = policy;
-			this.scc = scc;
-		}
-
-		@Override
-		public FeedbackArcSet<V> call() {
-			return fas(digraph.subgraph(scc), weights, policy);
-		}
-	}
-
 	private final ExecutorService executor;
 
 	/**
 	 * Create provider which calculates a feedback arc set on a de.odysseus.ithaka.digraph (in the
 	 * current thread).
-	 *
+	 * <p>
 	 * The provider decomposes a de.odysseus.ithaka.digraph into strongly connected components and computes
 	 * feedback arc sets on the components and combines the results.
-	 *
+	 * <p>
 	 * The {@link #mfas(Digraph, EdgeWeights)} and {@link #lfas(Digraph, EdgeWeights)}
 	 * implementation methods do not have to handle arbitrary digraphs for this reason.
 	 */
@@ -216,5 +197,24 @@ public abstract class AbstractFeedbackArcSetProvider implements FeedbackArcSetPr
 		}
 
 		return new FeedbackArcSet<>(result, weight, policy, exact);
+	}
+
+	class FeedbackTask<V> implements Callable<FeedbackArcSet<V>> {
+		final Digraph<V> digraph;
+		final EdgeWeights<? super V> weights;
+		final FeedbackArcSetPolicy policy;
+		final Set<V> scc;
+
+		FeedbackTask(Digraph<V> digraph, EdgeWeights<? super V> weights, FeedbackArcSetPolicy policy, Set<V> scc) {
+			this.digraph = digraph;
+			this.weights = weights;
+			this.policy = policy;
+			this.scc = scc;
+		}
+
+		@Override
+		public FeedbackArcSet<V> call() {
+			return fas(digraph.subgraph(scc), weights, policy);
+		}
 	}
 }

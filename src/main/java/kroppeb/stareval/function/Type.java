@@ -2,12 +2,41 @@ package kroppeb.stareval.function;
 
 import kroppeb.stareval.expression.ConstantExpression;
 import kroppeb.stareval.function.TypedFunction.Parameter;
-import net.coderbot.iris.gl.uniform.UniformType;
-import net.coderbot.iris.parsing.MatrixType;
-import net.coderbot.iris.parsing.VectorType;
+import net.irisshaders.iris.gl.uniform.UniformType;
+import net.irisshaders.iris.parsing.MatrixType;
+import net.irisshaders.iris.parsing.VectorType;
 
 public abstract class Type {
+	public static Boolean Boolean = new Boolean();
+	public static Int Int = new Int();
+	public static Float Float = new Float();
+	public static Parameter BooleanParameter = new Parameter(Boolean);
+	public static Parameter IntParameter = new Parameter(Int);
+	public static Parameter FloatParameter = new Parameter(Float);
+	public static Primitive[] AllPrimitives = {Type.Boolean, Type.Int, Type.Float};
+
+	@Deprecated
+	public static UniformType convert(Type type) {
+		if (type == Type.Int || type == Type.Boolean) return UniformType.INT;
+		else if (type == Type.Float) return UniformType.FLOAT;
+		else if (type == VectorType.VEC2) return UniformType.VEC2;
+		else if (type == VectorType.VEC3) return UniformType.VEC3;
+		else if (type == VectorType.VEC4) return UniformType.VEC4;
+		else if (type == VectorType.I_VEC2) return UniformType.VEC2I;
+		else if (type == VectorType.I_VEC3) return UniformType.VEC3I;
+		else if (type == MatrixType.MAT4) return UniformType.MAT4;
+		else throw new IllegalArgumentException("Unsupported custom uniform type: " + type);
+	}
+
 	public abstract ConstantExpression createConstant(FunctionReturn functionReturn);
+
+	public abstract Object createArray(int length);
+
+	public abstract void setValueFromReturn(Object array, int index, FunctionReturn value);
+
+	public abstract void getValueFromArray(Object array, int index, FunctionReturn value);
+
+	public abstract String toString();
 
 	public abstract static class Primitive extends Type {
 	}
@@ -150,36 +179,5 @@ public abstract class Type {
 		public String toString() {
 			return "float";
 		}
-	}
-
-	public static Boolean Boolean = new Boolean();
-	public static Int Int = new Int();
-	public static Float Float = new Float();
-
-	public static Parameter BooleanParameter = new Parameter(Boolean);
-	public static Parameter IntParameter = new Parameter(Int);
-	public static Parameter FloatParameter = new Parameter(Float);
-
-	public static Primitive[] AllPrimitives = {Type.Boolean, Type.Int, Type.Float};
-
-	public abstract Object createArray(int length);
-
-	public abstract void setValueFromReturn(Object array, int index, FunctionReturn value);
-
-	public abstract void getValueFromArray(Object array, int index, FunctionReturn value);
-
-	public abstract String toString();
-
-	@Deprecated
-	public static UniformType convert(Type type) {
-		if (type == Type.Int || type == Type.Boolean) return UniformType.INT;
-		else if (type == Type.Float) return UniformType.FLOAT;
-		else if (type == VectorType.VEC2) return UniformType.VEC2;
-		else if (type == VectorType.VEC3) return UniformType.VEC3;
-		else if (type == VectorType.VEC4) return UniformType.VEC4;
-		else if (type == VectorType.I_VEC2) return UniformType.VEC2I;
-		else if (type == VectorType.I_VEC3) return UniformType.VEC3I;
-		else if (type == MatrixType.MAT4) return UniformType.MAT4;
-		else throw new IllegalArgumentException("Unsupported custom uniform type: " + type);
 	}
 }

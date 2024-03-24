@@ -58,11 +58,9 @@
   "options.iris.shadowDistance.disabled": "A jelenlegi Shader Pack már állított be távolságot az árnyékokhoz; nem változtathatsz rajta.",
   "options.iris.gui.hide": "Grafikus kezelőfelület (GUI) elrejtése",
   "options.iris.gui.show": "Grafikus kezelőfelület (GUI) megjelenítése",
-
   "pack.iris.select.title": "Kiválasztás",
   "pack.iris.configure.title": "Konfigurálás",
   "pack.iris.list.label": "+ Húzz és Dobj Shader Pack-okat ide hogy hozzáadj a listához",
-
   "label.iris.true": "Be-",
   "label.iris.false": "Ki-"
 }

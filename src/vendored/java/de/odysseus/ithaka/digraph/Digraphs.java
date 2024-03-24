@@ -331,9 +331,9 @@ public class Digraphs {
 	 * @return subgraph of the supplied de.odysseus.ithaka.digraph containing the specified vertices.
 	 */
 	public static <V, G extends Digraph<V>> G subgraph(
-			Digraph<V> digraph,
-			Set<V> vertices,
-			DigraphFactory<? extends G> factory) {
+		Digraph<V> digraph,
+		Set<V> vertices,
+		DigraphFactory<? extends G> factory) {
 		G subgraph = factory.create();
 		for (V v : vertices) {
 			if (digraph.contains(v)) {

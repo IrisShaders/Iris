@@ -16,6 +16,7 @@ public interface IrisApiConfig {
 
 	/**
 	 * Sets whether shaders are enabled or not, and then applies the change.
+	 *
 	 * @since API v0.0
 	 */
 	void setShadersEnabledAndApply(boolean enabled);
