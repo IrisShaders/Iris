@@ -13,6 +13,7 @@ import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
@@ -51,6 +52,7 @@ public class DHCompatInternal {
 			incompatible = true;
 			return;
 		}
+		cachedVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion();
 
 		createDepthTex(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height);
 		translucentDepthDirty = true;
@@ -120,8 +122,16 @@ public class DHCompatInternal {
 		return DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getRealTickDelta());
 	}
 
+	private static int guiScale = -1;
+
 	public static boolean checkFrame() {
-		if (dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() && IrisApi.getInstance().isShaderPackInUse()) {
+		if (guiScale == -1) {
+			guiScale = Minecraft.getInstance().options.guiScale().get();
+		}
+
+		if ((dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() || guiScale != Minecraft.getInstance().options.guiScale().get())
+			&& IrisApi.getInstance().isShaderPackInUse()) {
+			guiScale = Minecraft.getInstance().options.guiScale().get();
 			dhEnabled = DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
 			try {
 				Iris.reload();
@@ -137,7 +147,13 @@ public class DHCompatInternal {
 		return incompatible;
 	}
 
+	private int cachedVersion;
+
 	public void reconnectDHTextures(int depthTex) {
+		if (((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion() != cachedVersion) {
+			cachedVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion();
+			createDepthTex(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height);
+		}
 		if (storedDepthTex != depthTex && dhTerrainFramebuffer != null) {
 			storedDepthTex = depthTex;
 			dhTerrainFramebuffer.addDepthAttachment(depthTex);
@@ -172,6 +188,10 @@ public class DHCompatInternal {
 		//	McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
 		//	McObjectConverter.Convert(ShadowRenderer.PROJECTION),
 		//	CapturedRenderingState.INSTANCE.getTickDelta());
+	}
+
+	public void onResolutionChanged() {
+
 	}
 
 	public void clear() {

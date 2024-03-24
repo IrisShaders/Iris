@@ -854,6 +854,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 		Vector4f emptyClearColor = new Vector4f(1.0F);
 
+
 		for (GlImage image : clearImages) {
 			ARBClearTexture.glClearTexImage(image.getId(), 0, image.getFormat().getGlFormat(), image.getPixelType().getGlFormat(), (int[]) null);
 		}
@@ -914,6 +915,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			main.height, depthBufferFormat, packDirectives);
 
 		if (changed) {
+			dhCompat.onResolutionChanged();
 			beginRenderer.recalculateSizes();
 			prepareRenderer.recalculateSizes();
 			deferredRenderer.recalculateSizes();

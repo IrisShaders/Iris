@@ -13,8 +13,9 @@ object Constants {
     const val CUSTOM_SODIUM_NAME: String = ""
 
     const val IS_SHARED_BETA: Boolean = true
+    const val ACTIVATE_RENDERDOC: Boolean = false
     const val BETA_TAG: String = "DH Support"
-    const val BETA_VERSION = 1
+    const val BETA_VERSION = 2
 
     const val SODIUM_VERSION: String = "mc1.20.4-0.5.8"
 }
@@ -113,6 +114,7 @@ buildConfig {
     useJavaOutput()
 
     buildConfigField("IS_SHARED_BETA", Constants.IS_SHARED_BETA)
+    buildConfigField("ACTIVATE_RENDERDOC", Constants.ACTIVATE_RENDERDOC)
     buildConfigField("BETA_TAG", Constants.BETA_TAG)
     buildConfigField("BETA_VERSION", Constants.BETA_VERSION)
 
@@ -166,6 +168,11 @@ dependencies {
 }
 
 tasks {
+    runClient {
+        if (Constants.ACTIVATE_RENDERDOC) {
+            environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
+        }
+    }
     getByName<JavaCompile>("compileDesktopJava") {
         sourceCompatibility = JavaVersion.VERSION_1_8.toString()
         targetCompatibility = JavaVersion.VERSION_1_8.toString()
