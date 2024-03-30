@@ -20,7 +20,7 @@ public class MixinRenderSystem {
 	@Inject(method = "initRenderer", at = @At("RETURN"), remap = false)
 	private static void iris$onRendererInit(int debugVerbosity, boolean alwaysFalse, CallbackInfo ci) {
 		Iris.duringRenderSystemInit();
-		GLDebug.initRenderer();
+		GLDebug.reloadDebugState();
 		IrisRenderSystem.initRenderer();
 		IrisSamplers.initRenderer();
 		Iris.onRenderSystemInit();

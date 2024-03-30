@@ -360,10 +360,18 @@ public class Iris {
 	}
 
 	public static void setDebug(boolean enable) {
+		try {
+			irisConfig.setDebugEnabled(enable);
+			irisConfig.save();
+		} catch (IOException e) {
+			Iris.logger.fatal("Failed to save config!", e);
+		}
+
 		int success;
 		if (enable) {
 			success = GLDebug.setupDebugMessageCallback();
 		} else {
+			GLDebug.reloadDebugState();
 			GlDebug.enableDebugCallback(Minecraft.getInstance().options.glDebugVerbosity, false);
 			success = 1;
 		}
@@ -374,13 +382,6 @@ public class Iris {
 			if (success == 2) {
 				Minecraft.getInstance().player.displayClientMessage(Component.translatable("iris.shaders.debug.restart"), false);
 			}
-		}
-
-		try {
-			irisConfig.setDebugEnabled(enable);
-			irisConfig.save();
-		} catch (IOException e) {
-			Iris.logger.fatal("Failed to save config!", e);
 		}
 	}
 

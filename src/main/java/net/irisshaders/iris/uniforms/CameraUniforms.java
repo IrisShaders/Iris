@@ -29,8 +29,10 @@ public class CameraUniforms {
 			.uniform3d(PER_FRAME, "cameraPosition", tracker::getCurrentCameraPosition)
 			.uniform1f(PER_FRAME, "eyeAltitude", tracker::getCurrentCameraPositionY)
 			.uniform3d(PER_FRAME, "previousCameraPosition", tracker::getPreviousCameraPosition)
-			.uniform3i(PER_FRAME, "cameraPositionInt", CameraUniforms::getCameraPositionInt)
-			.uniform3f(PER_FRAME, "cameraPositionFract", CameraUniforms::getCameraPositionFract);
+			.uniform3i(PER_FRAME, "cameraPositionInt", () -> getCameraPositionInt(getUnshiftedCameraPosition()))
+			.uniform3f(PER_FRAME, "cameraPositionFract", () -> getCameraPositionFract(getUnshiftedCameraPosition()))
+			.uniform3i(PER_FRAME, "previousCameraPositionInt", () -> getCameraPositionInt(tracker.getPreviousCameraPositionUnshifted()))
+			.uniform3f(PER_FRAME, "previousCameraPositionFract", () -> getCameraPositionFract(tracker.getPreviousCameraPositionUnshifted()));
 	}
 
 	private static int getRenderDistanceInBlocks() {
@@ -42,8 +44,7 @@ public class CameraUniforms {
 		return JomlConversions.fromVec3(client.gameRenderer.getMainCamera().getPosition());
 	}
 
-	public static Vector3f getCameraPositionFract() {
-		Vec3 originalPos = client.gameRenderer.getMainCamera().getPosition();
+	public static Vector3f getCameraPositionFract(Vector3d originalPos) {
 		return new Vector3f(
                 (float) (originalPos.x - Math.floor(originalPos.x)),
                 (float) (originalPos.y - Math.floor(originalPos.y)),
@@ -51,8 +52,7 @@ public class CameraUniforms {
         );
 	}
 
-	public static Vector3i getCameraPositionInt() {
-		Vec3 originalPos = client.gameRenderer.getMainCamera().getPosition();
+	public static Vector3i getCameraPositionInt(Vector3d originalPos) {
 		return new Vector3i(
                 (int) Math.floor(originalPos.x),
                 (int) Math.floor(originalPos.y),
@@ -72,6 +72,8 @@ public class CameraUniforms {
 		private final Vector3d shift = new Vector3d();
 		private Vector3d previousCameraPosition = new Vector3d();
 		private Vector3d currentCameraPosition = new Vector3d();
+		private Vector3d previousCameraPositionUnshifted = new Vector3d();
+		private Vector3d currentCameraPositionUnshifted = new Vector3d();
 
 		CameraPositionTracker(FrameUpdateNotifier notifier) {
 			notifier.addListener(this::update);
@@ -88,7 +90,9 @@ public class CameraUniforms {
 
 		private void update() {
 			previousCameraPosition = currentCameraPosition;
+			previousCameraPositionUnshifted = currentCameraPositionUnshifted;
 			currentCameraPosition = getUnshiftedCameraPosition().add(shift);
+			currentCameraPositionUnshifted = getUnshiftedCameraPosition();
 
 			updateShift();
 		}
@@ -128,6 +132,10 @@ public class CameraUniforms {
 
 		public Vector3d getPreviousCameraPosition() {
 			return previousCameraPosition;
+		}
+
+		public Vector3d getPreviousCameraPositionUnshifted() {
+			return previousCameraPositionUnshifted;
 		}
 
 		public double getCurrentCameraPositionY() {
