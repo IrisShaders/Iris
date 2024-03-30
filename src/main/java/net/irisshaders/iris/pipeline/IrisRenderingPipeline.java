@@ -776,17 +776,11 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		IrisSamplers.addCustomImages(samplerHolder, customImages);
 
 		if (IrisSamplers.hasShadowSamplers(samplerHolder)) {
-			if (!isShadowPass) {
-				shadowTargetsSupplier.get();
-			}
-
-			IrisSamplers.addShadowSamplers(samplerHolder, Objects.requireNonNull(shadowRenderTargets), null, separateHardwareSamplers);
+			IrisSamplers.addShadowSamplers(samplerHolder, shadowTargetsSupplier.get(), null, separateHardwareSamplers);
 		}
 
 		if (isShadowPass || IrisImages.hasShadowImages(images)) {
-			// Note: hasShadowSamplers currently queries for shadow images too, so the shadow render targets will be
-			// created by this point... that's sorta ugly, though.
-			IrisImages.addShadowColorImages(images, Objects.requireNonNull(shadowRenderTargets), null);
+			IrisImages.addShadowColorImages(images, shadowTargetsSupplier.get(), null);
 		}
 	}
 

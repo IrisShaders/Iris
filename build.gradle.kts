@@ -1,4 +1,5 @@
 import org.ajoberstar.grgit.Grgit
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 object Constants {
     // https://fabricmc.net/develop/
@@ -169,7 +170,7 @@ dependencies {
 
 tasks {
     runClient {
-        if (Constants.ACTIVATE_RENDERDOC) {
+        if (Constants.ACTIVATE_RENDERDOC && DefaultNativePlatform.getCurrentOperatingSystem().isLinux) {
             environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
         }
     }
