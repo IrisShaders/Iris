@@ -57,8 +57,8 @@ public class MixinChunkBuildBuffers implements ChunkBuildBuffersExt {
 	}
 
 	@Override
-	public void iris$setMaterialId(BlockState state, short renderType) {
-		this.contextHolder.set(state, renderType);
+	public void iris$setMaterialId(BlockState state, short renderType, byte lightValue) {
+		this.contextHolder.set(state, renderType, lightValue);
 	}
 
 	@Override

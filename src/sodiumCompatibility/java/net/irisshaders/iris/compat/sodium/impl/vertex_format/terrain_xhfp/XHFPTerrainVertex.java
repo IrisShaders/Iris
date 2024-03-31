@@ -81,6 +81,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 		MemoryUtil.memPutShort(ptr + 32, contextHolder.blockId);
 		MemoryUtil.memPutShort(ptr + 34, contextHolder.renderType);
 		MemoryUtil.memPutInt(ptr + 36, contextHolder.ignoreMidBlock ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.localPosX, contextHolder.localPosY, contextHolder.localPosZ));
+		MemoryUtil.memPutByte(ptr + 39, contextHolder.lightValue);
 
 		if (vertexCount == 4) {
 			vertexCount = 0;

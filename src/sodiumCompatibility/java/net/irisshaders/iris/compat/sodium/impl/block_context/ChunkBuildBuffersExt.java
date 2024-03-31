@@ -5,7 +5,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public interface ChunkBuildBuffersExt {
 	void iris$setLocalPos(int localPosX, int localPosY, int localPosZ);
 
-	void iris$setMaterialId(BlockState state, short renderType);
+	void iris$setMaterialId(BlockState state, short renderType, byte lightValue);
 
 	void iris$resetBlockContext();
 

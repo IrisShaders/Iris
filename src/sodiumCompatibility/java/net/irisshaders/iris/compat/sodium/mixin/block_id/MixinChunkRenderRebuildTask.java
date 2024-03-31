@@ -49,7 +49,7 @@ public class MixinChunkRenderRebuildTask {
 			ChunkModelBuilder buildBuffers = buffers.get(DefaultMaterials.CUTOUT);
 			((ChunkBuildBuffersExt) buffers).iris$setLocalPos(0, 0, 0);
 			((ChunkBuildBuffersExt) buffers).iris$ignoreMidBlock(true);
-			((ChunkBuildBuffersExt) buffers).iris$setMaterialId(blockState, (short) 0);
+			((ChunkBuildBuffersExt) buffers).iris$setMaterialId(blockState, (short) 0, (byte) blockState.getLightEmission());
 			for (int i = 0; i < 4; i++) {
 				vertices[i].x = (float) ((relX & 15)) + 0.25f;
 				vertices[i].y = (float) ((relY & 15)) + 0.25f;
@@ -79,7 +79,7 @@ public class MixinChunkRenderRebuildTask {
 										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, BlockRenderContext context2,
 										int relY, int relZ, int relX, BlockState blockState) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(blockState, ExtendedDataHelper.BLOCK_RENDER_TYPE);
+			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(blockState, ExtendedDataHelper.BLOCK_RENDER_TYPE, (byte) blockState.getLightEmission());
 		}
 	}
 
@@ -93,7 +93,7 @@ public class MixinChunkRenderRebuildTask {
 										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, BlockRenderContext context2,
 										int relY, int relZ, int relX, BlockState blockState, FluidState fluidState) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
-			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE);
+			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE, (byte) blockState.getLightEmission());
 		}
 	}
 
