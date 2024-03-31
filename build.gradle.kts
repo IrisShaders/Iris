@@ -155,7 +155,7 @@ dependencies {
     modRuntimeOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
     modRuntimeOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
 
-    modCompileOnly(files(projectDir.resolve("custom_sodium").resolve("DistantHorizons-fabric-2.0.2-a-dev-1.20.4.jar")))
+    modCompileOnly(files(projectDir.resolve("DHApi.jar")))
 
     fun addEmbeddedFabricModule(name: String) {
         val module = fabricApi.module(name, Constants.FABRIC_API_VERSION)
