@@ -460,11 +460,15 @@ public class ShadowRenderer {
 		// TODO: Better way of preventing light from leaking into places where it shouldn't
 		RenderSystem.disableCull();
 
+		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
+		// it is set to a fixed value.
+		final float tickDelta = CapturedRenderingState.INSTANCE.getTickDelta();
 		// Render all opaque terrain unless pack requests not to
 		if (shouldRenderTerrain) {
 			levelRenderer.invokeRenderSectionLayer(RenderType.solid(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
 			levelRenderer.invokeRenderSectionLayer(RenderType.cutout(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
 			levelRenderer.invokeRenderSectionLayer(RenderType.cutoutMipped(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
+			levelRenderer.invokeDrawGrids(MODELVIEW, shadowProjection, tickDelta, cameraX, cameraY, cameraZ, terrainFrustumHolder.getFrustum(), false);
 		}
 
 		// Reset our viewport in case Sodium overrode it
@@ -472,9 +476,6 @@ public class ShadowRenderer {
 
 		levelRenderer.getLevel().getProfiler().popPush("entities");
 
-		// Get the current tick delta. Normally this is the same as client.getTickDelta(), but when the game is paused,
-		// it is set to a fixed value.
-		final float tickDelta = CapturedRenderingState.INSTANCE.getTickDelta();
 
 		// Create a constrained shadow frustum for entities to avoid rendering faraway entities in the shadow pass,
 		// if the shader pack has requested it. Otherwise, use the same frustum as for terrain.
@@ -538,6 +539,8 @@ public class ShadowRenderer {
 		// Just something to watch out for, however...
 		if (shouldRenderTranslucent) {
 			levelRenderer.invokeRenderSectionLayer(RenderType.translucent(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
+			levelRenderer.invokeDrawGrids(MODELVIEW, shadowProjection, tickDelta, cameraX, cameraY, cameraZ, terrainFrustumHolder.getFrustum(), true);
+
 		}
 
 		// Note: Apparently tripwire isn't rendered in the shadow pass.

@@ -22,6 +22,8 @@ public interface LevelRendererAccessor {
 
 	@Invoker("renderSectionLayer")
 	void invokeRenderSectionLayer(RenderType terrainLayer, double cameraX, double cameraY, double cameraZ, Matrix4f modelView, Matrix4f projectionMatrix);
+	@Invoker("drawGrids")
+	void invokeDrawGrids(Matrix4f modelView, Matrix4f projection, float f, double x, double y, double z, Frustum frustum, boolean translucent);
 
 	@Invoker("setupRender")
 	void invokeSetupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator);

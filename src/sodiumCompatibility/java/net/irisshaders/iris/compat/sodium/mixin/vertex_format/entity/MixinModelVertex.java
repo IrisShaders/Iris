@@ -3,6 +3,7 @@ package net.irisshaders.iris.compat.sodium.mixin.vertex_format.entity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.render.immediate.model.BakedModelEncoder;
+import me.jellysquid.mods.sodium.mixin.core.matrix.PoseAccessor;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.util.ColorU8;
@@ -43,7 +44,7 @@ public class MixinModelVertex {
 		try {
 			long buffer = stack.nmalloc(144);
 			long ptr = buffer;
-			int normal = MatrixHelper.transformNormal(matNormal, quad.getLightFace());
+			int normal = MatrixHelper.transformNormal(matNormal, quad.getLightFace(), ((PoseAccessor) (Object) matrices).canSkipNormalization());
 
 			for (int i = 0; i < 4; ++i) {
 				float x = quad.getX(i);

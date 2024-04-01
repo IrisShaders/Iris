@@ -10,6 +10,7 @@
     "block_rendering.MixinBufferBuilder_SeparateAo",
     "block_rendering.MixinChunkRebuildTask",
     "block_rendering.MixinClientLevel",
+    "block_rendering.MixinSubGridRendering",
     "immediate.MixinBufferSource",
     "immediate.MixinLevelRenderer"
   ],

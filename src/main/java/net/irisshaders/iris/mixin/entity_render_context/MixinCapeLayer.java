@@ -20,7 +20,7 @@ public class MixinCapeLayer {
 	private static final NamespacedId CAPE_LOCATION = new NamespacedId("minecraft", "player_cape");
 
 	@Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/player/AbstractClientPlayer;FFFFFF)V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void changeId(PoseStack pCapeLayer0, MultiBufferSource pMultiBufferSource1, int pInt2, AbstractClientPlayer pAbstractClientPlayer3, float pFloat4, float pFloat5, float pFloat6, float pFloat7, float pFloat8, float pFloat9, CallbackInfo ci, PlayerSkin lvPlayerSkin11, ItemStack lvItemStack12) {
+	private void changeId(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, AbstractClientPlayer abstractClientPlayer, float f, float g, float h, float j, float k, float l, CallbackInfo ci, PlayerSkin playerSkin) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(CAPE_LOCATION));

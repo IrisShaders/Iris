@@ -6,7 +6,6 @@ import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import org.joml.Math;
-import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -286,7 +285,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShado
 			return false;
 		}
 
-		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ) != 0;
+		return this.isVisibleInternal(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ) != 0;
 	}
 
 	// For Sodium
@@ -295,7 +294,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShado
 			return 0;
 		}
 
-		return isVisible(minX, minY, minZ, maxX, maxY, maxZ);
+		return isVisibleInternal(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
 	// For Immersive Portals
@@ -304,7 +303,12 @@ public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShado
 		return false;
 	}
 
-	protected int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+	@Override
+	public boolean isVisible(double d, double e, double f, double g, double h, double i) {
+		return this.isVisibleInternal(d, e, f, g, h, i) != 0;
+	}
+
+	protected int isVisibleInternal(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		float f = (float) (minX - this.x);
 		float g = (float) (minY - this.y);
 		float h = (float) (minZ - this.z);
@@ -393,6 +397,6 @@ public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShado
 
 	@Override
 	public boolean intersects(int lodBlockPosMinX, int lodBlockPosMinZ, int lodBlockWidth, int lodDetailLevel) {
-		return this.isVisible(lodBlockPosMinX, this.worldMinYDH, lodBlockPosMinZ, lodBlockPosMinX + lodBlockWidth, this.worldMaxYDH, lodBlockPosMinZ + lodBlockWidth) != 0;
+		return this.isVisibleInternal(lodBlockPosMinX, this.worldMinYDH, lodBlockPosMinZ, lodBlockPosMinX + lodBlockWidth, this.worldMaxYDH, lodBlockPosMinZ + lodBlockWidth) != 0;
 	}
 }

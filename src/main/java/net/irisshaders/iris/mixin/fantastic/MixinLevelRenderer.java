@@ -1,5 +1,6 @@
 package net.irisshaders.iris.mixin.fantastic;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.fantastic.ParticleRenderingPhase;
@@ -15,6 +16,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -49,13 +51,19 @@ public class MixinLevelRenderer {
 		MultiBufferSource.BufferSource bufferSource = renderBuffers.bufferSource();
 
 		ParticleRenderingSettings settings = getRenderingSettings();
-
+		Matrix4fStack matrix4fStack = RenderSystem.getModelViewStack();
+		matrix4fStack.pushMatrix();
+		matrix4fStack.mul(matrix4f);
+		RenderSystem.applyModelViewMatrix();
 		if (settings == ParticleRenderingSettings.BEFORE) {
 			minecraft.particleEngine.render(lightTexture, camera, f);
 		} else if (settings == ParticleRenderingSettings.MIXED) {
 			((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.OPAQUE);
 			minecraft.particleEngine.render(lightTexture, camera, f);
 		}
+		matrix4fStack.popMatrix();
+		RenderSystem.applyModelViewMatrix();
+
 	}
 
 	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V"))
