@@ -776,17 +776,11 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		IrisSamplers.addCustomImages(samplerHolder, customImages);
 
 		if (IrisSamplers.hasShadowSamplers(samplerHolder)) {
-			if (!isShadowPass) {
-				shadowTargetsSupplier.get();
-			}
-
-			IrisSamplers.addShadowSamplers(samplerHolder, Objects.requireNonNull(shadowRenderTargets), null, separateHardwareSamplers);
+			IrisSamplers.addShadowSamplers(samplerHolder, shadowTargetsSupplier.get(), null, separateHardwareSamplers);
 		}
 
 		if (isShadowPass || IrisImages.hasShadowImages(images)) {
-			// Note: hasShadowSamplers currently queries for shadow images too, so the shadow render targets will be
-			// created by this point... that's sorta ugly, though.
-			IrisImages.addShadowColorImages(images, Objects.requireNonNull(shadowRenderTargets), null);
+			IrisImages.addShadowColorImages(images, shadowTargetsSupplier.get(), null);
 		}
 	}
 
@@ -854,6 +848,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 		Vector4f emptyClearColor = new Vector4f(1.0F);
 
+
 		for (GlImage image : clearImages) {
 			ARBClearTexture.glClearTexImage(image.getId(), 0, image.getFormat().getGlFormat(), image.getPixelType().getGlFormat(), (int[]) null);
 		}
@@ -914,6 +909,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			main.height, depthBufferFormat, packDirectives);
 
 		if (changed) {
+			dhCompat.onResolutionChanged();
 			beginRenderer.recalculateSizes();
 			prepareRenderer.recalculateSizes();
 			deferredRenderer.recalculateSizes();

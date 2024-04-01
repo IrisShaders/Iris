@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.layer.IsOutlineRenderStateShard;
 import net.irisshaders.iris.layer.OuterWrappedRenderType;
@@ -76,6 +77,8 @@ public class MixinLevelRenderer {
 	private void iris$setupPipeline(float tickDelta, long startTime, boolean renderBlockOutline,
 									Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
 									Matrix4f modelView, Matrix4f projection, CallbackInfo callback) {
+		DHCompat.checkFrame();
+
 		IrisTimeUniforms.updateTime();
 		CapturedRenderingState.INSTANCE.setGbufferModelView(modelView);
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projection);

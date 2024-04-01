@@ -11,6 +11,7 @@ import org.joml.Matrix4f;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.InvocationTargetException;
 
 public class DHCompat {
 	private static boolean dhPresent = true;
@@ -26,6 +27,7 @@ public class DHCompat {
 	private static MethodHandle getRenderDistance;
 	private static MethodHandle renderShadowSolid;
 	private static MethodHandle renderShadowTranslucent;
+	private static MethodHandle onResolutionChanged;
 	private Object compatInternalInstance;
 
 	public DHCompat(IrisRenderingPipeline pipeline, boolean renderDHShadow) {
@@ -38,8 +40,10 @@ public class DHCompat {
 			lastIncompatible = false;
 			if (e.getCause() instanceof ShaderCompileException sce) {
 				throw sce;
+			} else if (e instanceof InvocationTargetException ite) {
+				throw new RuntimeException("Unknown error loading Distant Horizons compatibility.", ite.getCause());
 			} else {
-				throw new RuntimeException(e);
+				throw new RuntimeException("Unknown error loading Distant Horizons compatibility.", e);
 			}
 		}
 
@@ -68,6 +72,7 @@ public class DHCompat {
 				checkFrame = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "checkFrame", MethodType.methodType(boolean.class));
 				renderShadowSolid = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "renderShadowSolid", MethodType.methodType(void.class));
 				renderShadowTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "renderShadowTranslucent", MethodType.methodType(void.class));
+				onResolutionChanged = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "onResolutionChanged", MethodType.methodType(void.class));
 
 				setupEventHandlers.invoke();
 			} else {
@@ -77,7 +82,11 @@ public class DHCompat {
 			dhPresent = false;
 
 			if (FabricLoader.getInstance().isModLoaded("distanthorizons")) {
-				throw new RuntimeException("DH 2.0 not found, yet Fabric claims it's there. Curious.", e);
+				if (e instanceof ExceptionInInitializerError eiie) {
+					throw new RuntimeException("Failure loading DH compat.", eiie.getCause());
+				} else {
+					throw new RuntimeException("DH 2.0 not found, yet Fabric claims it's there. Curious.", e);
+				}
 			} else {
 				Iris.logger.info("DH not found, and classes not found.");
 			}
@@ -119,6 +128,10 @@ public class DHCompat {
 	}
 
 	public static boolean checkFrame() {
+		if (!dhPresent) {
+			return false;
+		}
+		
 		try {
 			return (boolean) checkFrame.invoke();
 		} catch (Throwable e) {
@@ -145,7 +158,7 @@ public class DHCompat {
 	}
 
 	public int getDepthTex() {
-		if (compatInternalInstance == null) throw new IllegalStateException("Couldn't find DH depth texture");
+		if (compatInternalInstance == null) return -1;
 
 		try {
 			return (int) getDepthTex.invoke(compatInternalInstance);
@@ -155,7 +168,7 @@ public class DHCompat {
 	}
 
 	public int getDepthTexNoTranslucent() {
-		if (compatInternalInstance == null) throw new IllegalStateException("Couldn't find DH depth texture");
+		if (compatInternalInstance == null) return -1;
 
 		try {
 			return (int) getDepthTexNoTranslucent.invoke(compatInternalInstance);
@@ -186,5 +199,15 @@ public class DHCompat {
 
 	public Object getInstance() {
 		return compatInternalInstance;
+	}
+
+	public void onResolutionChanged() {
+		if (compatInternalInstance == null) return;
+
+		try {
+			onResolutionChanged.invoke(compatInternalInstance);
+		} catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

@@ -29,6 +29,8 @@ public final class GLDebug {
 	 * @return 0 for failure, 1 for success, 2 for restart required.
 	 */
 	public static int setupDebugMessageCallback() {
+		reloadDebugState();
+
 		return setupDebugMessageCallback(APIUtil.DEBUG_STREAM);
 	}
 
@@ -296,8 +298,8 @@ public final class GLDebug {
 		};
 	}
 
-	public static void initRenderer() {
-		if (GL.getCapabilities().GL_KHR_debug || GL.getCapabilities().OpenGL43) {
+	public static void reloadDebugState() {
+		if (Iris.getIrisConfig().areDebugOptionsEnabled() && (GL.getCapabilities().GL_KHR_debug || GL.getCapabilities().OpenGL43)) {
 			debugState = new KHRDebugState();
 		} else {
 			debugState = new UnsupportedDebugState();

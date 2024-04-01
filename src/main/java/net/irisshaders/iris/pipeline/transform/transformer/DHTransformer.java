@@ -81,8 +81,7 @@ public class DHTransformer {
 				"uniform mat4 iris_ProjectionMatrix;",
 				"uniform mat4 iris_ModelViewMatrix;",
 				// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-				"vec4 getVertexPosition() { return vec4(modelOffset + _vert_position, 1.0); }",
-				"vec4 getPos() { return vPosition; }");
+				"vec4 getVertexPosition() { return vec4(modelOffset + _vert_position, 1.0); }");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 
 			// inject here so that _vert_position is available to the above. (injections

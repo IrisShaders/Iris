@@ -32,8 +32,7 @@
     "mixins.iris.compat.indigo.json",
     "mixins.iris.compat.sodium.json",
     "mixins.iris.compat.indium.json",
-    "mixins.iris.fixes.maxfpscrash.json",
-    "mixins.iris.devenvironment.json"
+    "mixins.iris.fixes.maxfpscrash.json"
   ],
   "accessWidener": "iris.accesswidener",
   "depends": {

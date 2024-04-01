@@ -31,6 +31,7 @@ import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.texture.pbr.PBRTextureManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
+import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -95,7 +96,7 @@ public class Iris {
 	private static boolean fallback;
 
 	static {
-		if (FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims")) {
+		if (!BuildConfig.ACTIVATE_RENDERDOC && FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
 			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
 		}
 	}
@@ -359,10 +360,18 @@ public class Iris {
 	}
 
 	public static void setDebug(boolean enable) {
+		try {
+			irisConfig.setDebugEnabled(enable);
+			irisConfig.save();
+		} catch (IOException e) {
+			Iris.logger.fatal("Failed to save config!", e);
+		}
+
 		int success;
 		if (enable) {
 			success = GLDebug.setupDebugMessageCallback();
 		} else {
+			GLDebug.reloadDebugState();
 			GlDebug.enableDebugCallback(Minecraft.getInstance().options.glDebugVerbosity, false);
 			success = 1;
 		}
@@ -373,13 +382,6 @@ public class Iris {
 			if (success == 2) {
 				Minecraft.getInstance().player.displayClientMessage(Component.translatable("iris.shaders.debug.restart"), false);
 			}
-		}
-
-		try {
-			irisConfig.setDebugEnabled(enable);
-			irisConfig.save();
-		} catch (IOException e) {
-			Iris.logger.fatal("Failed to save config!", e);
 		}
 	}
 
@@ -648,9 +650,9 @@ public class Iris {
 		ChatFormatting color;
 		String version = getVersion();
 
-		if (version.endsWith("-development-environment")) {
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			color = ChatFormatting.GOLD;
-			version = version.replace("-development-environment", " (Development Environment)");
+			version = version + " (Development Environment)";
 		} else if (version.endsWith("-dirty") || version.contains("unknown") || version.endsWith("-nogit")) {
 			color = ChatFormatting.RED;
 		} else if (version.contains("+rev.")) {
