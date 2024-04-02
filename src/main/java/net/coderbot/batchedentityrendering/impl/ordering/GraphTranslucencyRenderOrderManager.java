@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.RenderType;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Comparator;
 
 public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
     private final FeedbackArcSetProvider feedbackArcSetProvider;
@@ -108,14 +109,27 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 		types.put(type, new MapDigraph<>());
 	}
 
+	private class RenderTypeOrderer implements Comparator<RenderType> {
+		@Override
+		public int compare(RenderType o1, RenderType o2) {
+			return Integer.compare(getPriority(o1), getPriority(o2));
+		}
+
+		private int getPriority(RenderType renderType) {
+			String texture = renderType.toString();
+			if (texture.contains("horse") && !texture.contains("armor") && !texture.contains("markings")) {
+				return 1; // Horse without armor or markings
+			} else if (texture.contains("markings")) {
+				return 2; // Horse with markings
+			} else if (texture.contains("armor")) {
+				return 3; // Horse with armor
+			} else {
+				return 4; // Others (fallback)
+			}
+		}
+	}
     public List<RenderType> getRenderOrder() {
-        int layerCount = 0;
-
-        for (Digraph<RenderType> graph : types.values()) {
-            layerCount += graph.getVertexCount();
-        }
-
-        List<RenderType> allLayers = new ArrayList<>(layerCount);
+        List<RenderType> allLayers = new ArrayList<>();
 
         for (Digraph<RenderType> graph : types.values()) {
             // TODO: Make sure that FAS can't become a bottleneck!
@@ -140,6 +154,9 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 
             allLayers.addAll(Digraphs.toposort(graph, false));
         }
+
+		// Sort layers based on custom priority
+		allLayers.sort(new RenderTypeOrderer());
 
         return allLayers;
     }
