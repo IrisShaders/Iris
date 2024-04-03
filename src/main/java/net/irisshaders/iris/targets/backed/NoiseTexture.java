@@ -1,12 +1,14 @@
 package net.irisshaders.iris.targets.backed;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.GlResource;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.TextureUploadHelper;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL43C;
 
 import java.nio.ByteBuffer;
 import java.util.Random;
@@ -33,6 +35,8 @@ public class NoiseTexture extends GlResource {
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MAX_LOD, 0);
 		IrisRenderSystem.texParameterf(texture, GL11C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_LOD_BIAS, 0.0F);
 		resize(texture, width, height);
+
+		GLDebug.nameObject(GL43C.GL_TEXTURE, texture, "noise texture");
 
 		GlStateManager._bindTexture(0);
 	}

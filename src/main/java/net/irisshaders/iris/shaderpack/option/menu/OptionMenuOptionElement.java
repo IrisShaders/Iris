@@ -1,9 +1,9 @@
 package net.irisshaders.iris.shaderpack.option.menu;
 
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
+import net.irisshaders.iris.shaderpack.properties.ShaderProperties;
 
 public abstract class OptionMenuOptionElement extends OptionMenuElement {
 	public final boolean slider;

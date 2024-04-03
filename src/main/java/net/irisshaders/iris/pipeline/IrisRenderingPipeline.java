@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderMap;
 import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
@@ -91,6 +92,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import org.apache.commons.lang3.text.WordUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
@@ -104,6 +106,7 @@ import org.lwjgl.opengl.GL43C;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -122,7 +125,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final ProgramFallbackResolver resolver;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
 	private final Set<ShaderInstance> loadedShaders;
-    private final CompositeRenderer beginRenderer;
+	private final CompositeRenderer beginRenderer;
 	private final CompositeRenderer prepareRenderer;
 	private final CompositeRenderer deferredRenderer;
 	private final CompositeRenderer compositeRenderer;
@@ -146,6 +149,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final boolean oldLighting;
 	private final OptionalInt forcedShadowRenderDistanceChunks;
 	private final boolean frustumCulling;
+	private final boolean occlusionCulling;
 	private final CloudSetting cloudSetting;
 	private final boolean shouldRenderSun;
 	private final boolean shouldRenderMoon;
@@ -176,6 +180,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
 	private ColorSpace currentColorSpace;
+	private int stackSize = 0;
 
 	public IrisRenderingPipeline(ProgramSet programSet) {
 		ShaderPrinter.resetPrintState();
@@ -194,6 +199,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
+		this.occlusionCulling = programSet.getPackDirectives().shouldUseOcclusionCulling();
 		this.resolver = new ProgramFallbackResolver(programSet);
 		this.pack = programSet.getPack();
 
@@ -401,7 +407,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			return builder.build();
 		};
 
-        this.loadedShaders = new HashSet<>();
+		this.loadedShaders = new HashSet<>();
 
 
 		this.shaderMap = new ShaderMap(key -> {
@@ -772,17 +778,11 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		IrisSamplers.addCustomImages(samplerHolder, customImages);
 
 		if (IrisSamplers.hasShadowSamplers(samplerHolder)) {
-			if (!isShadowPass) {
-				shadowTargetsSupplier.get();
-			}
-
-			IrisSamplers.addShadowSamplers(samplerHolder, Objects.requireNonNull(shadowRenderTargets), null, separateHardwareSamplers);
+			IrisSamplers.addShadowSamplers(samplerHolder, shadowTargetsSupplier.get(), null, separateHardwareSamplers);
 		}
 
 		if (isShadowPass || IrisImages.hasShadowImages(images)) {
-			// Note: hasShadowSamplers currently queries for shadow images too, so the shadow render targets will be
-			// created by this point... that's sorta ugly, though.
-			IrisImages.addShadowColorImages(images, Objects.requireNonNull(shadowRenderTargets), null);
+			IrisImages.addShadowColorImages(images, shadowTargetsSupplier.get(), null);
 		}
 	}
 
@@ -797,6 +797,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
+		GLDebug.popGroup();
+		if (phase != WorldRenderingPhase.NONE)
+			GLDebug.pushGroup(phase.ordinal(), WordUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
 		this.phase = phase;
 	}
 
@@ -846,6 +849,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		// Make sure we're using texture unit 0 for this.
 		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
 		Vector4f emptyClearColor = new Vector4f(1.0F);
+
 
 		for (GlImage image : clearImages) {
 			ARBClearTexture.glClearTexImage(image.getId(), 0, image.getFormat().getGlFormat(), image.getPixelType().getGlFormat(), (int[]) null);
@@ -907,6 +911,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			main.height, depthBufferFormat, packDirectives);
 
 		if (changed) {
+			dhCompat.onResolutionChanged();
 			beginRenderer.recalculateSizes();
 			prepareRenderer.recalculateSizes();
 			deferredRenderer.recalculateSizes();
@@ -1129,6 +1134,11 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	@Override
 	public boolean shouldDisableFrustumCulling() {
 		return !frustumCulling;
+	}
+
+	@Override
+	public boolean shouldDisableOcclusionCulling() {
+		return !occlusionCulling;
 	}
 
 	@Override

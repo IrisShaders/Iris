@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.texture.TextureDefinition;
 import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
@@ -35,7 +36,6 @@ import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.irisshaders.iris.shaderpack.texture.TextureFilteringData;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -163,7 +163,12 @@ public class ShaderPack {
 		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
 		graph = this.shaderPackOptions.getIncludes();
 
-		Iterable<StringPair> finalEnvironmentDefines = environmentDefines;
+		List<StringPair> finalEnvironmentDefines = new ArrayList<>(List.copyOf(environmentDefines));
+		for (FeatureFlags flag : FeatureFlags.values()) {
+			if (flag.isUsable()) {
+				finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_" + flag.name(), ""));
+			}
+		}
 		this.shaderProperties = loadProperties(root, "shaders.properties")
 			.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
 			.orElseGet(ShaderProperties::empty);
@@ -198,7 +203,7 @@ public class ShaderPack {
 			}
 			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(false);
 		}
-        List<StringPair> newEnvDefines = new ArrayList<>(environmentDefines);
+		List<StringPair> newEnvDefines = new ArrayList<>(environmentDefines);
 
 		if (shaderProperties.supportsColorCorrection().orElse(false)) {
 			for (ColorSpace space : ColorSpace.values()) {
@@ -211,7 +216,6 @@ public class ShaderPack {
 		if (!optionalFeatureFlags.isEmpty()) {
 			optionalFeatureFlags.forEach(flag -> Iris.logger.warn("Found flag " + flag));
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
-
 		}
 
 		environmentDefines = ImmutableList.copyOf(newEnvDefines);
@@ -496,17 +500,17 @@ public class ShaderPack {
 			if (definition instanceof TextureDefinition.PNGDefinition) {
 				customTextureData = new CustomTextureData.PngData(new TextureFilteringData(blur, clamp), content);
 			} else if (definition instanceof TextureDefinition.RawDefinition rawDefinition) {
-                customTextureData = switch (rawDefinition.getTarget()) {
-                    case TEXTURE_1D ->
-                            new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
-                    case TEXTURE_2D ->
-                            new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
-                    case TEXTURE_3D ->
-                            new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
-                    case TEXTURE_RECTANGLE ->
-                            new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
-                    default -> throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
-                };
+				customTextureData = switch (rawDefinition.getTarget()) {
+					case TEXTURE_1D ->
+						new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
+					case TEXTURE_2D ->
+						new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+					case TEXTURE_3D ->
+						new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
+					case TEXTURE_RECTANGLE ->
+						new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+					default -> throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
+				};
 			} else {
 				customTextureData = null;
 			}

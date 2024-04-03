@@ -35,6 +35,6 @@ public abstract class GeometryInfoParameters extends Parameters {
 		if (getClass() != obj.getClass())
 			return false;
 		GeometryInfoParameters other = (GeometryInfoParameters) obj;
-        return hasGeometry == other.hasGeometry;
-    }
+		return hasGeometry == other.hasGeometry;
+	}
 }

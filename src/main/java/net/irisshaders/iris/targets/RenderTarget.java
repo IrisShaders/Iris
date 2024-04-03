@@ -1,6 +1,7 @@
 package net.irisshaders.iris.targets;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.PixelFormat;
@@ -8,6 +9,7 @@ import net.irisshaders.iris.gl.texture.PixelType;
 import org.joml.Vector2i;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
+import org.lwjgl.opengl.GL43C;
 
 import java.nio.ByteBuffer;
 
@@ -41,6 +43,11 @@ public class RenderTarget {
 		boolean isPixelFormatInteger = builder.internalFormat.getPixelFormat().isInteger();
 		setupTexture(mainTexture, builder.width, builder.height, !isPixelFormatInteger);
 		setupTexture(altTexture, builder.width, builder.height, !isPixelFormatInteger);
+
+		if (builder.name != null) {
+			GLDebug.nameObject(GL43C.GL_TEXTURE, mainTexture, builder.name + " main");
+			GLDebug.nameObject(GL43C.GL_TEXTURE, mainTexture, builder.name + " alt");
+		}
 
 		// Clean up after ourselves
 		// This is strictly defensive to ensure that other buggy code doesn't tamper with our textures
@@ -123,9 +130,16 @@ public class RenderTarget {
 		private int height = 0;
 		private PixelFormat format = PixelFormat.RGBA;
 		private PixelType type = PixelType.UNSIGNED_BYTE;
+		private String name = null;
 
 		private Builder() {
 			// No-op
+		}
+
+		public Builder setName(String name) {
+			this.name = name;
+
+			return this;
 		}
 
 		public Builder setInternalFormat(InternalTextureFormat format) {

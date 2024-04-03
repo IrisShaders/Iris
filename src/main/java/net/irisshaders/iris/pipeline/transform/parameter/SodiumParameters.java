@@ -60,7 +60,7 @@ public class SodiumParameters extends Parameters {
 		} else if (!inputs.equals(other.inputs))
 			return false;
 		if (alpha == null) {
-            return other.alpha == null;
+			return other.alpha == null;
 		} else return alpha.equals(other.alpha);
-    }
+	}
 }

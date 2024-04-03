@@ -69,41 +69,41 @@ public class TransformPatcher {
 	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = new LRUCache<>(400);
 	private static final List<String> internalPrefixes = List.of("iris_", "irisMain", "moj_import");
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
+	private static final EnumASTTransformer<Parameters, PatchShaderType> transformer;
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	// TODO: Only do the NewLines patches if the source code isn't from
 	// gbuffers_lines (what does this mean?)
 	static TokenFilter<Parameters> parseTokenFilter = new ChannelFilter<>(TokenChannel.PREPROCESSOR) {
-        @Override
-        public boolean isTokenAllowed(Token token) {
-            if (!super.isTokenAllowed(token)) {
-                throw new IllegalArgumentException("Unparsed preprocessor directives such as '" + token.getText()
-                        + "' may not be present at this stage of shader processing!");
-            }
-            return true;
-        }
-    };
-	private static final EnumASTTransformer<Parameters, PatchShaderType> transformer;
+		@Override
+		public boolean isTokenAllowed(Token token) {
+			if (!super.isTokenAllowed(token)) {
+				throw new IllegalArgumentException("Unparsed preprocessor directives such as '" + token.getText()
+					+ "' may not be present at this stage of shader processing!");
+			}
+			return true;
+		}
+	};
 
 	static {
 		transformer = new EnumASTTransformer<>(PatchShaderType.class) {
-            {
-                setRootSupplier(RootSupplier.PREFIX_UNORDERED_ED_EXACT);
-            }
+			{
+				setRootSupplier(RootSupplier.PREFIX_UNORDERED_ED_EXACT);
+			}
 
-            @Override
-            public TranslationUnit parseTranslationUnit(Root rootInstance, String input) {
-                // parse #version directive using an efficient regex before parsing so that the
-                // parser can be set to the correct version
-                Matcher matcher = versionPattern.matcher(input);
-                if (!matcher.find()) {
-                    throw new IllegalArgumentException(
-                            "No #version directive found in source code! See debugging.md for more information.");
-                }
-                transformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
+			@Override
+			public TranslationUnit parseTranslationUnit(Root rootInstance, String input) {
+				// parse #version directive using an efficient regex before parsing so that the
+				// parser can be set to the correct version
+				Matcher matcher = versionPattern.matcher(input);
+				if (!matcher.find()) {
+					throw new IllegalArgumentException(
+						"No #version directive found in source code! See debugging.md for more information.");
+				}
+				transformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 
-                return super.parseTranslationUnit(rootInstance, input);
-            }
-        };
+				return super.parseTranslationUnit(rootInstance, input);
+			}
+		};
 		transformer.setTransformation((trees, parameters) -> {
 			for (PatchShaderType type : PatchShaderType.values()) {
 				TranslationUnit tree = trees.get(type);
@@ -132,62 +132,62 @@ public class TransformPatcher {
 					}
 					Profile profile = versionStatement.profile;
 					Version version = versionStatement.version;
-                    if (Objects.requireNonNull(parameters.patch) == Patch.COMPUTE) {// we can assume the version is at least 400 because it's a compute shader
-                        versionStatement.profile = Profile.CORE;
-                        CommonTransformer.transform(transformer, tree, root, parameters, true);
-                    } else {// handling of Optifine's special core profile mode
-                        boolean isLine = (parameters.patch == Patch.VANILLA && ((VanillaParameters) parameters).isLines());
+					if (Objects.requireNonNull(parameters.patch) == Patch.COMPUTE) {// we can assume the version is at least 400 because it's a compute shader
+						versionStatement.profile = Profile.CORE;
+						CommonTransformer.transform(transformer, tree, root, parameters, true);
+					} else {// handling of Optifine's special core profile mode
+						boolean isLine = (parameters.patch == Patch.VANILLA && ((VanillaParameters) parameters).isLines());
 
-                        if (profile == Profile.CORE || version.number >= 150 && profile == null || isLine) {
-                            // patch the version number to at least 330
-                            if (version.number < 330) {
-                                versionStatement.version = Version.GLSL33;
-                            }
+						if (profile == Profile.CORE || version.number >= 150 && profile == null || isLine) {
+							// patch the version number to at least 330
+							if (version.number < 330) {
+								versionStatement.version = Version.GLSL33;
+							}
 
-                            switch (parameters.patch) {
-                                case COMPOSITE:
-                                    CompositeCoreTransformer.transform(transformer, tree, root, parameters);
-                                    break;
-                                case SODIUM:
-                                    SodiumParameters sodiumParameters = (SodiumParameters) parameters;
-                                    SodiumCoreTransformer.transform(transformer, tree, root, sodiumParameters);
-                                    break;
-                                case VANILLA:
-                                    VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
-                                    break;
-                                default:
-                                    throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
-                            }
+							switch (parameters.patch) {
+								case COMPOSITE:
+									CompositeCoreTransformer.transform(transformer, tree, root, parameters);
+									break;
+								case SODIUM:
+									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
+									SodiumCoreTransformer.transform(transformer, tree, root, sodiumParameters);
+									break;
+								case VANILLA:
+									VanillaCoreTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+									break;
+								default:
+									throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
+							}
 
-                            if (parameters.type == PatchShaderType.FRAGMENT) {
-                                CompatibilityTransformer.transformFragmentCore(transformer, tree, root, parameters);
-                            }
-                        } else {
-                            // patch the version number to at least 330
-                            if (version.number < 330) {
-                                versionStatement.version = Version.GLSL33;
-                            }
-                            versionStatement.profile = Profile.CORE;
+							if (parameters.type == PatchShaderType.FRAGMENT) {
+								CompatibilityTransformer.transformFragmentCore(transformer, tree, root, parameters);
+							}
+						} else {
+							// patch the version number to at least 330
+							if (version.number < 330) {
+								versionStatement.version = Version.GLSL33;
+							}
+							versionStatement.profile = Profile.CORE;
 
-                            switch (parameters.patch) {
-                                case COMPOSITE:
-                                    CompositeTransformer.transform(transformer, tree, root, parameters);
-                                    break;
-                                case SODIUM:
-                                    SodiumParameters sodiumParameters = (SodiumParameters) parameters;
-                                    SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
-                                    break;
-                                case VANILLA:
-                                    VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
-                                    break;
-                                case DH:
-                                    DHTransformer.transform(transformer, tree, root, parameters);
-                                    break;
-                                default:
-                                    throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
-                            }
-                        }
-                    }
+							switch (parameters.patch) {
+								case COMPOSITE:
+									CompositeTransformer.transform(transformer, tree, root, parameters);
+									break;
+								case SODIUM:
+									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
+									SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
+									break;
+								case VANILLA:
+									VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+									break;
+								case DH:
+									DHTransformer.transform(transformer, tree, root, parameters);
+									break;
+								default:
+									throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
+							}
+						}
+					}
 					TextureTransformer.transform(transformer, tree, root,
 						parameters.getTextureStage(), parameters.getTextureMap());
 					CompatibilityTransformer.transformEach(transformer, tree, root, parameters);
@@ -406,8 +406,8 @@ public class TransformPatcher {
 			} else if (!fragment.equals(other.fragment))
 				return false;
 			if (compute == null) {
-                return other.compute == null;
+				return other.compute == null;
 			} else return compute.equals(other.compute);
-        }
+		}
 	}
 }

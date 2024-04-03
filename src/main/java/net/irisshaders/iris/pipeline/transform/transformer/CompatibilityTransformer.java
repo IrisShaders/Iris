@@ -76,37 +76,37 @@ public class CompatibilityTransformer {
 	private static final Template<Statement> statementTemplateVector = Template
 		.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
 	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<>(
-            "out float name;",
-            ParseShape.EXTERNAL_DECLARATION) {
-        {
-            markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
-            markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
-            markClassWildcard("name*",
-                    pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
-        }
+		"out float name;",
+		ParseShape.EXTERNAL_DECLARATION) {
+		{
+			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
+			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
+			markClassWildcard("name*",
+				pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+		}
 
-        @Override
-        public boolean matchesExtract(ExternalDeclaration tree) {
-            boolean result = super.matchesExtract(tree);
-            if (!result) {
-                return false;
-            }
+		@Override
+		public boolean matchesExtract(ExternalDeclaration tree) {
+			boolean result = super.matchesExtract(tree);
+			if (!result) {
+				return false;
+			}
 
-            // look for an out qualifier but no layout qualifier
-            TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
-            var hasOutQualifier = false;
-            for (TypeQualifierPart part : qualifier.getParts()) {
-                if (part instanceof StorageQualifier storageQualifier) {
-                    if (storageQualifier.storageType == StorageType.OUT) {
-                        hasOutQualifier = true;
-                    }
-                } else if (part instanceof LayoutQualifier) {
-                    return false;
-                }
-            }
-            return hasOutQualifier;
-        }
-    };
+			// look for an out qualifier but no layout qualifier
+			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
+			var hasOutQualifier = false;
+			for (TypeQualifierPart part : qualifier.getParts()) {
+				if (part instanceof StorageQualifier storageQualifier) {
+					if (storageQualifier.storageType == StorageType.OUT) {
+						hasOutQualifier = true;
+					}
+				} else if (part instanceof LayoutQualifier) {
+					return false;
+				}
+			}
+			return hasOutQualifier;
+		}
+	};
 	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
 		.withExternalDeclaration("out __type __name;");
 	private static final String attachTargetPrefix = "outColor";
@@ -146,7 +146,7 @@ public class CompatibilityTransformer {
 		}
 		for (TypeQualifierPart constQualifier : qualifier.getChildren()) {
 			if (constQualifier instanceof StorageQualifier storageQualifier) {
-                if (storageQualifier.storageType == StorageQualifier.StorageType.CONST) {
+				if (storageQualifier.storageType == StorageQualifier.StorageType.CONST) {
 					return storageQualifier;
 				}
 			}
@@ -361,7 +361,7 @@ public class CompatibilityTransformer {
 	private static TypeQualifier makeQualifierOut(TypeQualifier typeQualifier) {
 		for (TypeQualifierPart qualifierPart : typeQualifier.getParts()) {
 			if (qualifierPart instanceof StorageQualifier storageQualifier) {
-                if (((StorageQualifier) qualifierPart).storageType == StorageType.IN) {
+				if (((StorageQualifier) qualifierPart).storageType == StorageType.IN) {
 					storageQualifier.storageType = StorageType.OUT;
 				}
 			}
@@ -738,7 +738,7 @@ public class CompatibilityTransformer {
 			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
 			for (TypeQualifierPart part : qualifier.getParts()) {
 				if (part instanceof StorageQualifier storageQualifier) {
-                    if (storageQualifier.storageType == storageType) {
+					if (storageQualifier.storageType == storageType) {
 						return true;
 					}
 				}

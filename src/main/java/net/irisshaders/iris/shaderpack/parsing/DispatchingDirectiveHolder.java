@@ -4,8 +4,6 @@ import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.floats.FloatConsumer;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.IrisLogging;
-import net.irisshaders.iris.shaderpack.parsing.ConstDirectiveParser;
-import net.irisshaders.iris.shaderpack.parsing.DirectiveHolder;
 import org.joml.Vector2f;
 import org.joml.Vector3i;
 import org.joml.Vector4f;

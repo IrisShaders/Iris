@@ -31,8 +31,8 @@ import java.nio.IntBuffer;
  * This class is responsible for abstracting calls to OpenGL and asserting that calls are run on the render thread.
  */
 public class IrisRenderSystem {
+	private static final int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
 	private static Matrix4f backupProjection;
-
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
 	private static boolean supportsCompute;
@@ -40,7 +40,6 @@ public class IrisRenderSystem {
 	private static int polygonMode = GL43C.GL_FILL;
 	private static int backupPolygonMode = GL43C.GL_FILL;
 	private static int[] samplers;
-	private static final int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
 
 	public static void initRenderer() {
 		if (GL.getCapabilities().OpenGL45) {
@@ -451,6 +450,10 @@ public class IrisRenderSystem {
 		GL46C.glBindBuffer(target, buffer);
 	}
 
+	public static int createBuffers() {
+		return dsaState.createBuffers();
+	}
+
 	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
 
@@ -479,6 +482,8 @@ public class IrisRenderSystem {
 		int createFramebuffer();
 
 		int createTexture(int target);
+
+		int createBuffers();
 	}
 
 	public static class DSACore extends DSAARB {
@@ -544,6 +549,11 @@ public class IrisRenderSystem {
 			int buffer = GL45C.glCreateBuffers();
 			GL45C.glNamedBufferData(buffer, data, usage);
 			return buffer;
+		}
+
+		@Override
+		public int createBuffers() {
+			return ARBDirectStateAccess.glCreateBuffers();
 		}
 
 		@Override
@@ -661,6 +671,12 @@ public class IrisRenderSystem {
 			int texture = GlStateManager._genTexture();
 			GlStateManager._bindTexture(texture);
 			return texture;
+		}
+
+		@Override
+		public int createBuffers() {
+			int value = GlStateManager._glGenBuffers();
+			return value;
 		}
 	}
 

@@ -11,9 +11,9 @@ public class ComputeSource {
 	private final String name;
 	private final String source;
 	private final ProgramSet parent;
+	private final IndirectPointer indirectPointer;
 	private Vector3i workGroups;
 	private Vector2f workGroupRelative;
-	private final IndirectPointer indirectPointer;
 
 	public ComputeSource(String name, String source, ProgramSet parent, ShaderProperties properties) {
 		this.name = name;

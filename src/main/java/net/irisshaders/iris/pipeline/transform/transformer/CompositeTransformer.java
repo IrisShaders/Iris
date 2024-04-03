@@ -14,20 +14,20 @@ import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 
 public class CompositeTransformer {
 	private static final AutoHintedMatcher<Expression> glTextureMatrix0To7 = new AutoHintedMatcher<>(
-            "gl_TextureMatrix[index]", ParseShape.EXPRESSION) {
-        {
-            markClassedPredicateWildcard("index",
-                    pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
-                    LiteralExpression.class,
-                    literalExpression -> {
-                        if (!literalExpression.isInteger()) {
-                            return false;
-                        }
-                        long index = literalExpression.getInteger();
-                        return index >= 0 && index < 8;
-                    });
-        }
-    };
+		"gl_TextureMatrix[index]", ParseShape.EXPRESSION) {
+		{
+			markClassedPredicateWildcard("index",
+				pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
+				LiteralExpression.class,
+				literalExpression -> {
+					if (!literalExpression.isInteger()) {
+						return false;
+					}
+					long index = literalExpression.getInteger();
+					return index >= 0 && index < 8;
+				});
+		}
+	};
 
 	public static void transform(
 		ASTParser t,

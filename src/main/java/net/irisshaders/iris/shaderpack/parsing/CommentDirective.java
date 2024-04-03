@@ -4,6 +4,7 @@ public class CommentDirective {
 	private final Type type;
 	private final String directive;
 	private final int location;
+
 	CommentDirective(Type type, String directive, int location) {
 		this.type = type;
 		this.directive = directive;

@@ -4,9 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -70,7 +70,7 @@ public class MixinEntityRenderDispatcher {
 	// https://github.com/tr7zw/FirstPersonModel/blob/172ab05368832df82e34ca9f9b06814672f69f59/FPShared/src/main/java/dev/tr7zw/firstperson/mixins/RenderDispatcherMixin.java#L68
 	// The renderBlockShadow injection will handle this, but it's easier to suppress it before all of the other calculations.
 	@SuppressWarnings("all")
-	@Inject(method = "renderOffsetShadow", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
+	@Inject(method = "renderOffsetShadow", at = @At("HEAD"), cancellable = true, require = 0, remap = false, expect = 0)
 	private static void iris$maybeSuppressEntityShadow(PoseStack poseStack, MultiBufferSource bufferSource,
 													   Entity entity, float opacity, float tickDelta, LevelReader level,
 													   float radius, Vec3 offset, CallbackInfo ci) {

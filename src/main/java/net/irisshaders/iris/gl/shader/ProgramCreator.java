@@ -26,6 +26,8 @@ public class ProgramCreator {
 		GlStateManager._glBindAttribLocation(program, 1, "UV0");
 
 		for (GlShader shader : shaders) {
+			GLDebug.nameObject(KHRDebug.GL_SHADER, shader.getHandle(), shader.getName());
+
 			GlStateManager.glAttachShader(program, shader.getHandle());
 		}
 

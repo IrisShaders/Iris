@@ -1,18 +1,21 @@
 package net.irisshaders.iris.targets;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.GlResource;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
+import org.lwjgl.opengl.GL43C;
 
 public class DepthTexture extends GlResource {
-	public DepthTexture(int width, int height, DepthBufferFormat format) {
+	public DepthTexture(String name, int width, int height, DepthBufferFormat format) {
 		super(IrisRenderSystem.createTexture(GL11C.GL_TEXTURE_2D));
 		int texture = getGlId();
 
 		resize(width, height, format);
+		GLDebug.nameObject(GL43C.GL_TEXTURE, texture, name);
 
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_NEAREST);
 		IrisRenderSystem.texParameteri(texture, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_NEAREST);

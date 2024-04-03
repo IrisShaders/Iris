@@ -73,6 +73,6 @@ public class VanillaParameters extends GeometryInfoParameters {
 			return false;
 		if (hasChunkOffset != other.hasChunkOffset)
 			return false;
-        return isLines == other.isLines;
-    }
+		return isLines == other.isLines;
+	}
 }

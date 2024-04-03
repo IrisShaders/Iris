@@ -19,22 +19,16 @@
 
 package com.seibel.distanthorizons.api.interfaces.override.rendering;
 
-import com.seibel.distanthorizons.api.enums.EDhApiDetailLevel;
-import com.seibel.distanthorizons.api.interfaces.override.IDhApiOverrideable;
-import com.seibel.distanthorizons.coreapi.util.math.Mat4f;
-
 /**
  * The culling frustum used during Distant Horizons' shadow pass
  * if another mod has enabled Distant Horizons' shadow
  * pass via the API.
- * 
- * @see IDhApiCullingFrustum
- * 
+ *
  * @author James Seibel
  * @version 2024-2-10
+ * @see IDhApiCullingFrustum
  * @since API 1.1.0
  */
-public interface IDhApiShadowCullingFrustum extends IDhApiCullingFrustum
-{
+public interface IDhApiShadowCullingFrustum extends IDhApiCullingFrustum {
 	// should be identical to the parent culling frustum
 }

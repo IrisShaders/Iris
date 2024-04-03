@@ -28,6 +28,7 @@ import java.util.OptionalInt;
 public class DoubledDigraphAdapter<V> extends DigraphAdapter<V> implements DoubledDigraph<V> {
 	private final DoubledDigraphAdapter<V> reverse;
 	private final DigraphFactory<? extends Digraph<V>> factory;
+
 	public DoubledDigraphAdapter() {
 		this(MapDigraph.getDefaultDigraphFactory());
 	}

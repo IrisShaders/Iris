@@ -3,7 +3,10 @@ package net.irisshaders.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.sun.jna.platform.unix.LibC;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.Version;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.config.IrisConfig;
 import net.irisshaders.iris.gl.GLDebug;
@@ -11,13 +14,12 @@ import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.gui.debug.DebugLoadFailedGridScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
-import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
+import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.PipelineManager;
+import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.DimensionId;
-import net.irisshaders.iris.helpers.OptionalBoolean;
-import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.shaderpack.discovery.ShaderpackDirectoryManager;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
@@ -25,11 +27,8 @@ import net.irisshaders.iris.shaderpack.option.OptionSet;
 import net.irisshaders.iris.shaderpack.option.Profile;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
+import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.texture.pbr.PBRTextureManager;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.api.Version;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
@@ -69,9 +68,10 @@ public class Iris {
 	 * separately in mixin plugin classes & the language files.
 	 */
 	public static final String MODNAME = "Iris";
-
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
+	// Change this for snapshots!
+	private static final String backupVersionNumber = "1.20.3";
 	public static NamespacedId lastDimension = null;
 	public static boolean testing = false;
 	private static Path shaderpacksDirectory;
@@ -94,8 +94,12 @@ public class Iris {
 	private static Version IRIS_VERSION;
 	private static UpdateChecker updateChecker;
 	private static boolean fallback;
-	// Change this for snapshots!
-	private static final String backupVersionNumber = "1.20.3";
+
+	static {
+		if (!BuildConfig.ACTIVATE_RENDERDOC && FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
+			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
+		}
+	}
 
 	/**
 	 * Called once RenderSystem#initRenderer has completed. This means that we can safely access OpenGL.
@@ -356,10 +360,18 @@ public class Iris {
 	}
 
 	public static void setDebug(boolean enable) {
+		try {
+			irisConfig.setDebugEnabled(enable);
+			irisConfig.save();
+		} catch (IOException e) {
+			Iris.logger.fatal("Failed to save config!", e);
+		}
+
 		int success;
 		if (enable) {
 			success = GLDebug.setupDebugMessageCallback();
 		} else {
+			GLDebug.reloadDebugState();
 			GlDebug.enableDebugCallback(Minecraft.getInstance().options.glDebugVerbosity, false);
 			success = 1;
 		}
@@ -370,13 +382,6 @@ public class Iris {
 			if (success == 2) {
 				Minecraft.getInstance().player.displayClientMessage(Component.translatable("iris.shaders.debug.restart"), false);
 			}
-		}
-
-		try {
-			irisConfig.setDebugEnabled(enable);
-			irisConfig.save();
-		} catch (IOException e) {
-			Iris.logger.fatal("Failed to save config!", e);
 		}
 	}
 
@@ -524,6 +529,13 @@ public class Iris {
 		if (Minecraft.getInstance().level != null) {
 			Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 		}
+
+		if (loadedIncompatiblePack() && Minecraft.getInstance().player != null) {
+			Minecraft.getInstance().gui.setTimes(10, 70, 140);
+			Iris.logger.warn("Incompatible pack for DH!");
+			Minecraft.getInstance().gui.setTitle(Component.literal("This pack doesn't have DH support").withStyle(ChatFormatting.BOLD, ChatFormatting.RED));
+			Minecraft.getInstance().gui.setSubtitle(Component.literal("Distant Horizons (DH) chunks won't show up. This isn't a bug, get another shader.").withStyle(ChatFormatting.RED));
+		}
 	}
 
 	/**
@@ -638,9 +650,9 @@ public class Iris {
 		ChatFormatting color;
 		String version = getVersion();
 
-		if (version.endsWith("-development-environment")) {
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
 			color = ChatFormatting.GOLD;
-			version = version.replace("-development-environment", " (Development Environment)");
+			version = version + " (Development Environment)";
 		} else if (version.endsWith("-dirty") || version.contains("unknown") || version.endsWith("-nogit")) {
 			color = ChatFormatting.RED;
 		} else if (version.contains("+rev.")) {
@@ -681,6 +693,10 @@ public class Iris {
 		}
 
 		return shaderpacksDirectoryManager;
+	}
+
+	public static boolean loadedIncompatiblePack() {
+		return DHCompat.lastPackIncompatible();
 	}
 
 	/**

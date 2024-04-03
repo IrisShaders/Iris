@@ -6,15 +6,16 @@ import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFrameb
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
-import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
+import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL20C;
 
@@ -22,6 +23,7 @@ import java.io.IOException;
 
 public class DHCompatInternal {
 	public static final DHCompatInternal SHADERLESS = new DHCompatInternal(null, false);
+	static boolean dhEnabled;
 	private final IrisRenderingPipeline pipeline;
 	public boolean shouldOverrideShadow;
 	public boolean shouldOverride;
@@ -36,6 +38,7 @@ public class DHCompatInternal {
 	private DepthTexture depthTexNoTranslucent;
 	private boolean translucentDepthDirty;
 	private int storedDepthTex;
+	private boolean incompatible = false;
 
 	public DHCompatInternal(IrisRenderingPipeline pipeline, boolean dhShadowEnabled) {
 		this.pipeline = pipeline;
@@ -46,8 +49,10 @@ public class DHCompatInternal {
 
 		if (pipeline.getDHTerrainShader().isEmpty() && pipeline.getDHWaterShader().isEmpty()) {
 			Iris.logger.warn("No DH shader found in this pack.");
+			incompatible = true;
 			return;
 		}
+		cachedVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion();
 
 		createDepthTex(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height);
 		translucentDepthDirty = true;
@@ -92,7 +97,63 @@ public class DHCompatInternal {
 		return DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue() * 16;
 	}
 
+	public static int getRenderDistance() {
+		return getDhBlockRenderDistance();
+	}
+
+	public static float getFarPlane() {
+		if (DhApi.Delayed.configs == null) {
+			// Called before DH has finished setup
+			return 0;
+		}
+
+		int lodChunkDist = DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue();
+		int lodBlockDist = lodChunkDist * 16;
+		// sqrt 2 to prevent the corners from being cut off
+		return (float) ((lodBlockDist + 512) * Math.sqrt(2));
+	}
+
+	public static float getNearPlane() {
+		if (DhApi.Delayed.renderProxy == null) {
+			// Called before DH has finished setup
+			return 0;
+		}
+
+		return DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getRealTickDelta());
+	}
+
+	private static int guiScale = -1;
+
+	public static boolean checkFrame() {
+		if (guiScale == -1) {
+			guiScale = Minecraft.getInstance().options.guiScale().get();
+		}
+
+		if ((dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() || guiScale != Minecraft.getInstance().options.guiScale().get())
+			&& IrisApi.getInstance().isShaderPackInUse()) {
+			guiScale = Minecraft.getInstance().options.guiScale().get();
+			dhEnabled = DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
+			try {
+				Iris.reload();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return dhEnabled;
+	}
+
+	public boolean incompatiblePack() {
+		return incompatible;
+	}
+
+	private int cachedVersion;
+
 	public void reconnectDHTextures(int depthTex) {
+		if (((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion() != cachedVersion) {
+			cachedVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion();
+			createDepthTex(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height);
+		}
 		if (storedDepthTex != depthTex && dhTerrainFramebuffer != null) {
 			storedDepthTex = depthTex;
 			dhTerrainFramebuffer.addDepthAttachment(depthTex);
@@ -110,7 +171,7 @@ public class DHCompatInternal {
 
 		translucentDepthDirty = true;
 
-		depthTexNoTranslucent = new DepthTexture(width, height, DepthBufferFormat.DEPTH32F);
+		depthTexNoTranslucent = new DepthTexture("DH depth tex", width, height, DepthBufferFormat.DEPTH32F);
 	}
 
 	public void renderShadowSolid() {
@@ -127,6 +188,10 @@ public class DHCompatInternal {
 		//	McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
 		//	McObjectConverter.Convert(ShadowRenderer.PROJECTION),
 		//	CapturedRenderingState.INSTANCE.getTickDelta());
+	}
+
+	public void onResolutionChanged() {
+
 	}
 
 	public void clear() {
@@ -199,10 +264,6 @@ public class DHCompatInternal {
 		return storedDepthTex;
 	}
 
-	public static int getRenderDistance() {
-		return getDhBlockRenderDistance();
-	}
-
 	public void copyTranslucents(int width, int height) {
 		if (translucentDepthDirty) {
 			translucentDepthDirty = false;
@@ -214,27 +275,6 @@ public class DHCompatInternal {
 		}
 	}
 
-	public static float getFarPlane() {
-		if (DhApi.Delayed.configs == null) {
-			// Called before DH has finished setup
-			return 0;
-		}
-
-		int lodChunkDist = DhApi.Delayed.configs.graphics().chunkRenderDistance().getValue();
-		int lodBlockDist = lodChunkDist * 16;
-		// sqrt 2 to prevent the corners from being cut off
-		return (float) ((lodBlockDist +  512) * Math.sqrt(2));
-	}
-
-	public static float getNearPlane() {
-		if (DhApi.Delayed.renderProxy == null) {
-			// Called before DH has finished setup
-			return 0;
-		}
-
-		return DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getRealTickDelta());
-	}
-
 	public GlFramebuffer getTranslucentFB() {
 		return dhWaterFramebuffer;
 	}
@@ -243,19 +283,5 @@ public class DHCompatInternal {
 		if (depthTexNoTranslucent == null) return 0;
 
 		return depthTexNoTranslucent.getTextureId();
-	}
-	static boolean dhEnabled;
-
-	public static boolean checkFrame() {
-		if (dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() && IrisApi.getInstance().isShaderPackInUse()) {
-			dhEnabled = DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
-			try {
-				Iris.reload();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		return dhEnabled;
 	}
 }

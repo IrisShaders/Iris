@@ -15,48 +15,48 @@ public class IrisVideoSettings {
 	public static int shadowDistance = 32;
 	public static ColorSpace colorSpace = ColorSpace.SRGB;
 	public static final OptionInstance<Integer> RENDER_DISTANCE = new ShadowDistanceOption<>("options.iris.shadowDistance",
-            mc -> {
-                WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+		mc -> {
+			WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-                Tooltip tooltip;
+			Tooltip tooltip;
 
-                if (pipeline != null) {
-                    if (pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent()) {
-                        tooltip = DISABLED_TOOLTIP;
-                    } else {
-                        tooltip = ENABLED_TOOLTIP;
-                    }
-                } else {
-                    tooltip = ENABLED_TOOLTIP;
-                }
+			if (pipeline != null) {
+				if (pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent()) {
+					tooltip = DISABLED_TOOLTIP;
+				} else {
+					tooltip = ENABLED_TOOLTIP;
+				}
+			} else {
+				tooltip = ENABLED_TOOLTIP;
+			}
 
-                return tooltip;
-            },
-            (arg, d) -> {
-                WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+			return tooltip;
+		},
+		(arg, d) -> {
+			WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
-                if (pipeline != null) {
-                    d = pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(d);
-                }
+			if (pipeline != null) {
+				d = pipeline.getForcedShadowRenderDistanceChunksForDisplay().orElse(d);
+			}
 
-                if (d <= 0.0) {
-                    return Component.translatable("options.generic_value", Component.translatable("options.iris.shadowDistance"), "0 (disabled)");
-                } else {
-                    return Component.translatable("options.generic_value",
-                            Component.translatable("options.iris.shadowDistance"),
-                            Component.translatable("options.chunks", d));
-                }
-            },
-            new OptionInstance.IntRange(0, 32),
-            getOverriddenShadowDistance(shadowDistance),
-            integer -> {
-                shadowDistance = integer;
-                try {
-                    Iris.getIrisConfig().save();
-                } catch (IOException e) {
-					Iris.logger.fatal("Failed to save config!", e);
-                }
-            });
+			if (d <= 0.0) {
+				return Component.translatable("options.generic_value", Component.translatable("options.iris.shadowDistance"), "0 (disabled)");
+			} else {
+				return Component.translatable("options.generic_value",
+					Component.translatable("options.iris.shadowDistance"),
+					Component.translatable("options.chunks", d));
+			}
+		},
+		new OptionInstance.IntRange(0, 32),
+		getOverriddenShadowDistance(shadowDistance),
+		integer -> {
+			shadowDistance = integer;
+			try {
+				Iris.getIrisConfig().save();
+			} catch (IOException e) {
+				Iris.logger.fatal("Failed to save config!", e);
+			}
+		});
 
 	public static int getOverriddenShadowDistance(int base) {
 		return Iris.getPipelineManager().getPipeline()

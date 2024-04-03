@@ -60,6 +60,7 @@ public interface WorldRenderingPipeline {
 	boolean shouldDisableDirectionalShading();
 
 	boolean shouldDisableFrustumCulling();
+	boolean shouldDisableOcclusionCulling();
 
 	CloudSetting getCloudSetting();
 

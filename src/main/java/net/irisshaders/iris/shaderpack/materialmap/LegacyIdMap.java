@@ -3,8 +3,6 @@ package net.irisshaders.iris.shaderpack.materialmap;
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.irisshaders.iris.shaderpack.materialmap.BlockEntry;
-import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 
 import java.util.ArrayList;
 import java.util.Arrays;

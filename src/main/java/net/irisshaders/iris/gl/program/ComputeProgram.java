@@ -16,9 +16,9 @@ public final class ComputeProgram extends GlResource {
 	private final ProgramUniforms uniforms;
 	private final ProgramSamplers samplers;
 	private final ProgramImages images;
+	private final int[] localSize;
 	private Vector3i absoluteWorkGroups;
 	private Vector2f relativeWorkGroups;
-	private final int[] localSize;
 	private float cachedWidth;
 	private float cachedHeight;
 	private Vector3i cachedWorkGroups;

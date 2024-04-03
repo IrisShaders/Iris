@@ -17,6 +17,7 @@ public enum FeatureFlags {
 	TESSELATION_SHADERS(() -> true, IrisRenderSystem::supportsTesselation),
 	ENTITY_TRANSLUCENT(() -> true, () -> true),
 	REVERSED_CULLING(() -> true, () -> true),
+	BLOCK_EMISSION_ATTRIBUTE(() -> true, () -> true),
 	SSBO(() -> true, IrisRenderSystem::supportsSSBO),
 	UNKNOWN(() -> false, () -> false);
 

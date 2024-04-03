@@ -29,6 +29,7 @@ import java.util.Map;
 public class DotExporter {
 	private final String indent;
 	private final String lineSpeparator;
+
 	public DotExporter() {
 		this("  ", System.getProperty("line.separator"));
 	}

@@ -52,7 +52,9 @@ public class ShaderStorageBufferHolder {
 			cachedWidth = width;
 			cachedHeight = height;
 			for (ShaderStorageBuffer buffer : buffers) {
-				buffer.resizeIfRelative(width, height);
+				if (buffer != null) {
+					buffer.resizeIfRelative(width, height);
+				}
 			}
 		}
 	}
@@ -63,7 +65,9 @@ public class ShaderStorageBufferHolder {
 		}
 
 		for (ShaderStorageBuffer buffer : buffers) {
-			buffer.bind();
+			if (buffer != null) {
+				buffer.bind();
+			}
 		}
 	}
 
@@ -76,7 +80,9 @@ public class ShaderStorageBufferHolder {
 
 	public void destroyBuffers() {
 		for (ShaderStorageBuffer buffer : buffers) {
-			buffer.destroy();
+			if (buffer != null) {
+				buffer.destroy();
+			}
 		}
 		buffers = null;
 		destroyed = true;

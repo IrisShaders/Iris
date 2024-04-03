@@ -7,6 +7,7 @@ import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
@@ -35,6 +36,7 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.ARBTextureSwizzle;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.KHRDebug;
 
 import java.io.IOException;
 import java.util.List;
@@ -79,7 +81,12 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 						  IrisRenderingPipeline parent, @Nullable List<BufferBlendOverride> bufferBlendOverrides, CustomUniforms customUniforms) throws IOException {
 		super(resourceFactory, string, vertexFormat);
 
+		GLDebug.nameObject(KHRDebug.GL_SHADER, this.getVertexProgram().getId(), string + "_vertex.vsh");
+		GLDebug.nameObject(KHRDebug.GL_SHADER, this.getFragmentProgram().getId(), string + "_fragment.fsh");
+
 		int programId = this.getId();
+
+		GLDebug.nameObject(KHRDebug.GL_PROGRAM, programId, string);
 
 		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
 		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
@@ -240,6 +247,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 						return null;
 					}
 				});
+				GLDebug.nameObject(KHRDebug.GL_SHADER, this.geometry.getId(), name + "_geometry.gsh");
 			} catch (IOException e) {
 				Iris.logger.error("Failed to create shader program", e);
 			}
@@ -253,6 +261,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 						return null;
 					}
 				});
+				GLDebug.nameObject(KHRDebug.GL_SHADER, this.tessControl.getId(), name + "_tessControl.tcs");
 			} catch (IOException e) {
 				Iris.logger.error("Failed to create shader program", e);
 			}
@@ -266,6 +275,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 						return null;
 					}
 				});
+				GLDebug.nameObject(KHRDebug.GL_SHADER, this.tessEval.getId(), name + "_tessEval.tes");
 			} catch (IOException e) {
 				Iris.logger.error("Failed to create shader program", e);
 			}

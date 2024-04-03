@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.AlphaTest;
@@ -23,15 +24,14 @@ import net.irisshaders.iris.gl.texture.TextureDefinition;
 import net.irisshaders.iris.gl.texture.TextureScaleOverride;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.OptionalBoolean;
+import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.shaderpack.ImageInformation;
-import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
-import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -72,6 +72,7 @@ public class ShaderProperties {
 	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
 	private final Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects = new Int2ObjectArrayMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
@@ -84,6 +85,7 @@ public class ShaderProperties {
 	private OptionalBoolean shadowEntities = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowPlayer = OptionalBoolean.DEFAULT;
 	private OptionalBoolean shadowBlockEntities = OptionalBoolean.DEFAULT;
+	private OptionalBoolean shadowLightBlockEntities = OptionalBoolean.DEFAULT;
 	private OptionalBoolean underwaterOverlay = OptionalBoolean.DEFAULT;
 	private OptionalBoolean sun = OptionalBoolean.DEFAULT;
 	private OptionalBoolean moon = OptionalBoolean.DEFAULT;
@@ -99,6 +101,7 @@ public class ShaderProperties {
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateEntityDraws = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
+	private OptionalBoolean occlusionCulling = OptionalBoolean.DEFAULT;
 	private ShadowCullState shadowCulling = ShadowCullState.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dhShadowEnabled = OptionalBoolean.DEFAULT;
@@ -108,7 +111,6 @@ public class ShaderProperties {
 	private List<String> mainScreenOptions = null;
 	private Integer mainScreenColumnCount = null;
 	private String noiseTexturePath = null;
-	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
 	private List<String> requiredFeatureFlags = new ArrayList<>();
 	private List<String> optionalFeatureFlags = new ArrayList<>();
 
@@ -179,6 +181,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "shadowEntities", bool -> shadowEntities = bool);
 			handleBooleanDirective(key, value, "shadowPlayer", bool -> shadowPlayer = bool);
 			handleBooleanDirective(key, value, "shadowBlockEntities", bool -> shadowBlockEntities = bool);
+			handleBooleanDirective(key, value, "shadowLightBlockEntities", bool -> shadowLightBlockEntities = bool);
 			handleBooleanDirective(key, value, "underwaterOverlay", bool -> underwaterOverlay = bool);
 			handleBooleanDirective(key, value, "sun", bool -> sun = bool);
 			handleBooleanDirective(key, value, "moon", bool -> moon = bool);
@@ -194,6 +197,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
 			handleBooleanDirective(key, value, "separateEntityDraws", bool -> separateEntityDraws = bool);
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
+			handleBooleanDirective(key, value, "occlusion.culling", bool -> occlusionCulling = bool);
 			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
 			handleBooleanDirective(key, value, "dhShadow.enabled", bool -> dhShadowEnabled = bool);
 			handleBooleanDirective(key, value, "particles.before.deferred", bool -> {
@@ -592,10 +596,6 @@ public class ShaderProperties {
 		});
 	}
 
-	public OptionalBoolean getDhShadowEnabled() {
-		return dhShadowEnabled;
-	}
-
 	private static void handleBooleanValue(String key, String value, BooleanConsumer handler) {
 		if ("true".equals(value)) {
 			handler.accept(true);
@@ -710,6 +710,10 @@ public class ShaderProperties {
 		return new ShaderProperties();
 	}
 
+	public OptionalBoolean getDhShadowEnabled() {
+		return dhShadowEnabled;
+	}
+
 	public CloudSetting getCloudSetting() {
 		return cloudSetting;
 	}
@@ -744,6 +748,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getShadowBlockEntities() {
 		return shadowBlockEntities;
+	}
+
+	public OptionalBoolean getShadowLightBlockEntities() {
+		return shadowLightBlockEntities;
 	}
 
 	public OptionalBoolean getUnderwaterOverlay() {
@@ -800,6 +808,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getFrustumCulling() {
 		return frustumCulling;
+	}
+
+	public OptionalBoolean getOcclusionCulling() {
+		return occlusionCulling;
 	}
 
 	public ShadowCullState getShadowCulling() {

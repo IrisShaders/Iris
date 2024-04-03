@@ -54,7 +54,7 @@ public abstract class Parameters implements JobParameters {
 		if (type != other.type)
 			return false;
 		if (textureMap == null) {
-            return other.textureMap == null;
+			return other.textureMap == null;
 		} else return textureMap.equals(other.textureMap);
-    }
+	}
 }
