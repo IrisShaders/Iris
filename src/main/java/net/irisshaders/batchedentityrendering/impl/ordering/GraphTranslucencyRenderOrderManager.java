@@ -20,7 +20,9 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 	private final FeedbackArcSetProvider feedbackArcSetProvider;
 	private final EnumMap<TransparencyType, Digraph<RenderType>> types;
 	private final EnumMap<TransparencyType, RenderType> currentTypes;
+	private final List<RenderType> processedRenderTypes = new ArrayList<>();
 	private boolean inGroup = false;
+	private boolean translucentRendered = false;
 
 	public GraphTranslucencyRenderOrderManager() {
 		feedbackArcSetProvider = new SimpleFeedbackArcSetProvider();
@@ -46,9 +48,20 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 	}
 
 	public void begin(RenderType renderType) {
-		TransparencyType transparencyType = getTransparencyType(renderType);
+
+		if (processedRenderTypes.contains(renderType)) {
+			return;
+		}
+
+		TransparencyType transparencyType = translucentRendered ? TransparencyType.GENERAL_TRANSPARENT : getTransparencyType(renderType);
 		Digraph<RenderType> graph = types.get(transparencyType);
 		graph.add(renderType);
+
+		if (transparencyType == TransparencyType.GENERAL_TRANSPARENT) {
+			translucentRendered = true;
+		}
+
+		processedRenderTypes.add(renderType);
 
 		if (inGroup) {
 			RenderType previous = currentTypes.put(transparencyType, renderType);
@@ -89,6 +102,8 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 
 		currentTypes.clear();
 		inGroup = false;
+		translucentRendered = false;
+		processedRenderTypes.clear();
 	}
 
 	@Override
@@ -99,6 +114,8 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 		for (TransparencyType type : TransparencyType.values()) {
 			types.put(type, new MapDigraph<>());
 		}
+		translucentRendered = false;
+		processedRenderTypes.clear();
 	}
 
 	@Override
