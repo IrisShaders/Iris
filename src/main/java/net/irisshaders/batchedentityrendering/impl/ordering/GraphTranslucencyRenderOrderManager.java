@@ -14,13 +14,15 @@ import net.minecraft.client.renderer.RenderType;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 	private final FeedbackArcSetProvider feedbackArcSetProvider;
 	private final EnumMap<TransparencyType, Digraph<RenderType>> types;
 	private final EnumMap<TransparencyType, RenderType> currentTypes;
-	private final List<RenderType> processedRenderTypes = new ArrayList<>();
+	private final Set<RenderType> processedRenderTypes = new HashSet<>();
 	private boolean inGroup = false;
 	private boolean translucentRendered = false;
 
@@ -53,7 +55,11 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 			return;
 		}
 
-		TransparencyType transparencyType = translucentRendered ? TransparencyType.GENERAL_TRANSPARENT : getTransparencyType(renderType);
+		// Some layers in vanilla are not actually translucent, but are rendered after translucent layers.
+		// This considers everything else after the first translucent layer as also translucent,
+		// so the proper order is maintained.
+		TransparencyType transparencyType =
+			translucentRendered ? TransparencyType.GENERAL_TRANSPARENT : getTransparencyType(renderType);
 		Digraph<RenderType> graph = types.get(transparencyType);
 		graph.add(renderType);
 
