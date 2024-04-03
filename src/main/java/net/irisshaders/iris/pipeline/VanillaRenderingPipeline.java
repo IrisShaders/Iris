@@ -151,6 +151,11 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public boolean shouldDisableOcclusionCulling() {
+		return false;
+	}
+
+	@Override
 	public CloudSetting getCloudSetting() {
 		return CloudSetting.DEFAULT;
 	}

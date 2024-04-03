@@ -39,6 +39,7 @@ public class PackDirectives {
 	private boolean voxelizeLightBlocks;
 	private boolean separateEntityDraws;
 	private boolean frustumCulling;
+	private boolean occlusionCulling;
 	private boolean oldLighting;
 	private boolean concurrentCompute;
 	private boolean oldHandLight;
@@ -75,6 +76,7 @@ public class PackDirectives {
 		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
 		frustumCulling = properties.getFrustumCulling().orElse(true);
+		occlusionCulling = properties.getOcclusionCulling().orElse(true);
 		oldLighting = properties.getOldLighting().orElse(false);
 		supportsColorCorrection = properties.supportsColorCorrection().orElse(false);
 		concurrentCompute = properties.getConcurrentCompute().orElse(false);
@@ -178,6 +180,10 @@ public class PackDirectives {
 
 	public boolean shouldUseFrustumCulling() {
 		return frustumCulling;
+	}
+
+	public boolean shouldUseOcclusionCulling() {
+		return occlusionCulling;
 	}
 
 	public boolean isOldLighting() {
