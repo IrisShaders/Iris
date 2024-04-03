@@ -230,7 +230,11 @@ public final class CommonUniforms {
 			if (blindness != null) {
 				// Guessing that this is what OF uses, based on how vanilla calculates the fog value in FogRenderer
 				// TODO: Add this to ShaderDoc
-				return Math.clamp(0.0F, 1.0F, blindness.getDuration() / 20.0F);
+				if (blindness.isInfiniteDuration()) {
+					return 1.0f;
+				} else {
+					return Math.clamp(0.0F, 1.0F, blindness.getDuration() / 20.0F);
+				}
 			}
 		}
 
