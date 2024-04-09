@@ -49,8 +49,6 @@ public class MixinLevelRenderer {
 	private void iris$renderOpaqueParticles(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		minecraft.getProfiler().popPush("opaque_particles");
 
-		MultiBufferSource.BufferSource bufferSource = renderBuffers.bufferSource();
-
 		ParticleRenderingSettings settings = getRenderingSettings();
 
 		if (settings == ParticleRenderingSettings.BEFORE) {

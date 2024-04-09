@@ -43,7 +43,7 @@ public class MixinModelVertex {
 		try {
 			long buffer = stack.nmalloc(144);
 			long ptr = buffer;
-			int normal = MatrixHelper.transformNormal(matNormal, quad.getLightFace());
+			int normal = MatrixHelper.transformNormal(matNormal, matrices.trustedNormals, quad.getLightFace());
 
 			for (int i = 0; i < 4; ++i) {
 				float x = quad.getX(i);

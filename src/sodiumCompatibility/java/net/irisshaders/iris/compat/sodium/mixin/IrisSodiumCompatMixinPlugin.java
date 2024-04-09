@@ -5,6 +5,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +19,14 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public void onLoad(String mixinPackage) {
+		try {
+			Object obj= Class.forName("jdk.incubator.vector.ByteVector").getDeclaredConstructor(byte[].class).newInstance(new byte[0]);
+			System.out.println(obj);
+
+		} catch (IllegalAccessException | NoSuchMethodException | ClassNotFoundException | InvocationTargetException |
+				 InstantiationException e) {
+			throw new RuntimeException(e);
+		}
 		validSodiumVersion = FabricLoader.getInstance().isModLoaded("sodium");
 
 		if (!validSodiumVersion) {

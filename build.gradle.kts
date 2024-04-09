@@ -3,20 +3,20 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 object Constants {
     // https://fabricmc.net/develop/
-    const val MINECRAFT_VERSION: String = "24w11a"
-    const val FABRIC_LOADER_VERSION: String = "0.15.6"
-    const val FABRIC_API_VERSION: String = "0.96.8+1.20.5"
+    const val MINECRAFT_VERSION: String = "24w14a"
+    const val FABRIC_LOADER_VERSION: String = "0.15.9"
+    const val FABRIC_API_VERSION: String = "0.96.14+1.20.5"
 
     // https://semver.org/
     const val MOD_VERSION: String = "1.7.0"
 
     const val CUSTOM_SODIUM: Boolean = true
-    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshot+mc24w09a-local.jar"
+    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshot+mc24w14a-local.jar"
 
     const val IS_SHARED_BETA: Boolean = true
     const val ACTIVATE_RENDERDOC: Boolean = false
     const val BETA_TAG: String = "DH Support"
-    const val BETA_VERSION = 2
+    const val BETA_VERSION = 3
 
     const val SODIUM_VERSION: String = "mc1.20.4-0.5.8"
 }
@@ -40,7 +40,7 @@ plugins {
     // This prevents a lot of issues where the build script can fail randomly because the Fabric Maven server
     // is not reachable for some reason, and it makes builds much more reproducible. Observation also shows that it
     // really helps to improve startup times on slow connections.
-    id("fabric-loom") version "1.5.7"
+    id("fabric-loom") version "1.6.5"
     id("org.ajoberstar.grgit") version "5.2.2"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
@@ -61,8 +61,8 @@ loom {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 sourceSets {
