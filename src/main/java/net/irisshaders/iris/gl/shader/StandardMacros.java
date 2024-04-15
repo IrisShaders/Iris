@@ -68,6 +68,7 @@ public class StandardMacros {
 		define(standardDefines, "DH_BLOCK_TERRACOTTA", String.valueOf(10));
 		define(standardDefines, "DH_BLOCK_NETHER_STONE", String.valueOf(11));
 		define(standardDefines, "DH_BLOCK_WATER", String.valueOf(12));
+		define(standardDefines, "DH_BLOCK_GRASS", String.valueOf(13));
 		define(standardDefines, "DH_BLOCK_AIR", String.valueOf(14));
 		define(standardDefines, "DH_BLOCK_ILLUMINATED", String.valueOf(15));
 
