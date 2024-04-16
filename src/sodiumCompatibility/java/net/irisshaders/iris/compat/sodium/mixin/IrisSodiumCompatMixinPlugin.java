@@ -19,14 +19,7 @@ public class IrisSodiumCompatMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public void onLoad(String mixinPackage) {
-		try {
-			Object obj= Class.forName("jdk.incubator.vector.ByteVector").getDeclaredConstructor(byte[].class).newInstance(new byte[0]);
-			System.out.println(obj);
 
-		} catch (IllegalAccessException | NoSuchMethodException | ClassNotFoundException | InvocationTargetException |
-				 InstantiationException e) {
-			throw new RuntimeException(e);
-		}
 		validSodiumVersion = FabricLoader.getInstance().isModLoaded("sodium");
 
 		if (!validSodiumVersion) {
