@@ -8,8 +8,10 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.helpers.StringPair;
+import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.shaderpack.materialmap.BlockEntry;
 import net.irisshaders.iris.shaderpack.materialmap.BlockRenderType;
 import net.irisshaders.iris.shaderpack.materialmap.LegacyIdMap;
@@ -19,6 +21,8 @@ import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -92,7 +96,7 @@ public class IdMap {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines);
+		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines).replaceAll("(?m)^[ \\t]*\\r?\\n", "");
 
 		StringReader propertiesReader = new StringReader(processed);
 
@@ -106,6 +110,15 @@ public class IdMap {
 			Iris.logger.error("Error loading " + name + " at " + shaderPath, e);
 
 			return Optional.empty();
+		}
+
+		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
+			ShaderPrinter.deleteIfClearing();
+			try (OutputStream os = Files.newOutputStream(FabricLoader.getInstance().getGameDir().resolve("patched_shaders").resolve(name))) {
+				properties.store(new OutputStreamWriter(os, StandardCharsets.UTF_8), "Patched version of properties");
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 
 		return Optional.of(properties);
