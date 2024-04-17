@@ -158,7 +158,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		}
 
 		ResourceLocation pbrSpriteName = new ResourceLocation(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
-		PBRSpriteContents pbrSpriteContents = new PBRSpriteContents(pbrSpriteName, new FrameSize(frameWidth, frameHeight), nativeImage, animationMetadata, pbrType);
+		PBRSpriteContents pbrSpriteContents = new PBRSpriteContents(pbrSpriteName, new FrameSize(frameWidth, frameHeight), nativeImage, metadataSection, pbrType);
 		pbrSpriteContents.increaseMipLevel(mipLevel);
 		return new PBRTextureAtlasSprite(pbrSpriteName, pbrSpriteContents, atlasWidth, atlasHeight, sprite.getX(), sprite.getY(), sprite);
 	}
@@ -175,7 +175,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	protected static class PBRSpriteContents extends SpriteContents implements CustomMipmapGenerator.Provider {
 		protected final PBRType pbrType;
 
-		public PBRSpriteContents(ResourceLocation name, FrameSize size, NativeImage image, ResourceMetadata metadata, PBRType pbrType) {
+		public PBRSpriteContents(ResourceLocation name, FrameSize size, NativeImage image, AnimationMetadataSection metadata, PBRType pbrType) {
 			super(name, size, image, metadata);
 			this.pbrType = pbrType;
 		}

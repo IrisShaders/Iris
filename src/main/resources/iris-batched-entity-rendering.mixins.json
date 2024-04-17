@@ -20,7 +20,7 @@
     "OutlineBufferSourceAccessor",
     "RenderStateShardAccessor",
     "RenderTypeAccessor",
-    "SectionBufferBuilderPackAccessor"
+    "ChunkBufferBuilderPackAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

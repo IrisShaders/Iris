@@ -17,9 +17,9 @@ accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
 accessible class net/minecraft/client/renderer/texture/SpriteContents$Ticker
 accessible  class   net/minecraft/client/OptionInstance$ValueSet
 extendable  class   net/minecraft/client/OptionInstance
-accessible  class   net/minecraft/client/renderer/chunk/SectionRenderDispatcher$RenderSection$RebuildTask
+accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask
 extendable  class   net/minecraft/core/RegistryAccess$RegistryEntry
-accessible  class   net/minecraft/client/renderer/chunk/SectionRenderDispatcher$RenderSection$RebuildTask$CompileResults
+accessible  class   net/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask$CompileResults
 accessible method net/minecraft/client/renderer/RenderType create (Ljava/lang/String;Lcom/mojang/blaze3d/vertex/VertexFormat;Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;IZZLnet/minecraft/client/renderer/RenderType$CompositeState;)Lnet/minecraft/client/renderer/RenderType$CompositeRenderType;
 accessible field com/mojang/blaze3d/platform/NativeImage pixels J
 mutable field net/minecraft/client/renderer/ShaderInstance PROJECTION_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
