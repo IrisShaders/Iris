@@ -3,7 +3,6 @@ package net.irisshaders.iris.uniforms;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.helpers.JomlConversions;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
@@ -46,18 +45,18 @@ public class CameraUniforms {
 
 	public static Vector3f getCameraPositionFract(Vector3d originalPos) {
 		return new Vector3f(
-                (float) (originalPos.x - Math.floor(originalPos.x)),
-                (float) (originalPos.y - Math.floor(originalPos.y)),
-                (float) (originalPos.z - Math.floor(originalPos.z))
-        );
+			(float) (originalPos.x - Math.floor(originalPos.x)),
+			(float) (originalPos.y - Math.floor(originalPos.y)),
+			(float) (originalPos.z - Math.floor(originalPos.z))
+		);
 	}
 
 	public static Vector3i getCameraPositionInt(Vector3d originalPos) {
 		return new Vector3i(
-                (int) Math.floor(originalPos.x),
-                (int) Math.floor(originalPos.y),
-                (int) Math.floor(originalPos.z)
-        );
+			(int) Math.floor(originalPos.x),
+			(int) Math.floor(originalPos.y),
+			(int) Math.floor(originalPos.z)
+		);
 	}
 
 	static class CameraPositionTracker {

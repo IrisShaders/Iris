@@ -107,6 +107,7 @@ public class GbufferPrograms {
 		}
 	}
 
+	@SuppressWarnings("all")
 	public static void init() {
 		// Empty initializer to run static
 	}

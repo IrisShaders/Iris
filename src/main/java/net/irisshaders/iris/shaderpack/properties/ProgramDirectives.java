@@ -155,10 +155,8 @@ public class ProgramDirectives {
 			}
 		} else if (optionalDrawbuffersDirective.isPresent()) {
 			return optionalDrawbuffersDirective;
-		} else if (optionalRendertargetsDirective.isPresent()) {
-			return optionalRendertargetsDirective;
 		} else {
-			return Optional.empty();
+			return optionalRendertargetsDirective;
 		}
 	}
 

@@ -4,6 +4,8 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
 
+import java.util.Objects;
+
 public enum DepthBufferFormat {
 	DEPTH(false),
 	DEPTH16(false),
@@ -37,11 +39,8 @@ public enum DepthBufferFormat {
 
 	public static DepthBufferFormat fromGlEnumOrDefault(int glenum) {
 		DepthBufferFormat format = fromGlEnum(glenum);
-		if (format == null) {
-			// yolo, just assume it's GL_DEPTH_COMPONENT
-			return DepthBufferFormat.DEPTH;
-		}
-		return format;
+		// yolo, just assume it's GL_DEPTH_COMPONENT
+		return Objects.requireNonNullElse(format, DepthBufferFormat.DEPTH);
 	}
 
 	public int getGlInternalFormat() {

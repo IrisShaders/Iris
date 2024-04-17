@@ -80,7 +80,7 @@ public class PropertiesPreprocessor {
 		// Not super efficient, but this removes trailing whitespace on lines, fixing an issue with whitespace after
 		// line continuations (see PreprocessorTest#testWeirdPropertiesLineContinuation)
 		// Required for Voyager Shader
-		source = Arrays.stream(source.split("\\R")).map(String::trim)
+		source = Arrays.stream(source.split("\\R")).map(String::trim).filter(s -> !s.isBlank())
 			.map(line -> {
 				if (line.startsWith("#")) {
 					for (PreprocessorCommand command : PreprocessorCommand.values()) {

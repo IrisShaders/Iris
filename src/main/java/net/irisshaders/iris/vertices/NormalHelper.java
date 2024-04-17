@@ -44,14 +44,6 @@ public abstract class NormalHelper {
 	 * Expects convex quads with all points co-planar.
 	 */
 	public static void computeFaceNormal(@NotNull Vector3f saveTo, QuadView q) {
-//		final Direction nominalFace = q.nominalFace();
-//
-//		if (GeometryHelper.isQuadParallelToFace(nominalFace, q)) {
-//			Vec3i vec = nominalFace.getVector();
-//			saveTo.set(vec.getX(), vec.getY(), vec.getZ());
-//			return;
-//		}
-
 		final float x0 = q.x(0);
 		final float y0 = q.y(0);
 		final float z0 = q.z(0);
@@ -94,14 +86,6 @@ public abstract class NormalHelper {
 	 * Expects convex quads with all points co-planar.
 	 */
 	public static void computeFaceNormalFlipped(@NotNull Vector3f saveTo, QuadView q) {
-//		final Direction nominalFace = q.nominalFace();
-//
-//		if (GeometryHelper.isQuadParallelToFace(nominalFace, q)) {
-//			Vec3i vec = nominalFace.getVector();
-//			saveTo.set(vec.getX(), vec.getY(), vec.getZ());
-//			return;
-//		}
-
 		final float x0 = q.x(3);
 		final float y0 = q.y(3);
 		final float z0 = q.z(3);
@@ -143,14 +127,6 @@ public abstract class NormalHelper {
 	 * <p>Assumes counter-clockwise winding order, which is the norm.
 	 */
 	public static void computeFaceNormalTri(@NotNull Vector3f saveTo, TriView t) {
-//		final Direction nominalFace = q.nominalFace();
-//
-//		if (GeometryHelper.isQuadParallelToFace(nominalFace, q)) {
-//			Vec3i vec = nominalFace.getVector();
-//			saveTo.set(vec.getX(), vec.getY(), vec.getZ());
-//			return;
-//		}
-
 		final float x0 = t.x(0);
 		final float y0 = t.y(0);
 		final float z0 = t.z(0);

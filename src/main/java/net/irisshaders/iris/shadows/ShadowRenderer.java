@@ -83,7 +83,6 @@ public class ShadowRenderer {
 	private final RenderBuffersExt renderBuffersExt;
 	private final List<MipmapPass> mipmapPasses = new ArrayList<>();
 	private final String debugStringOverall;
-	private final CustomUniforms customUniforms;
 	private final boolean separateHardwareSamplers;
 	private final boolean shouldRenderLightBlockEntities;
 	private boolean packHasVoxelization;
@@ -95,8 +94,6 @@ public class ShadowRenderer {
 
 	public ShadowRenderer(ProgramSource shadow, PackDirectives directives,
 						  ShadowRenderTargets shadowRenderTargets, ShadowCompositeRenderer compositeRenderer, CustomUniforms customUniforms, boolean separateHardwareSamplers) {
-
-		this.customUniforms = customUniforms;
 
 		this.separateHardwareSamplers = separateHardwareSamplers;
 

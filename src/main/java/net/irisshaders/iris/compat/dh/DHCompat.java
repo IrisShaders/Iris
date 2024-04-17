@@ -25,9 +25,6 @@ public class DHCompat {
 	private static MethodHandle getDepthTexNoTranslucent;
 	private static MethodHandle checkFrame;
 	private static MethodHandle getRenderDistance;
-	private static MethodHandle renderShadowSolid;
-	private static MethodHandle renderShadowTranslucent;
-	private static MethodHandle onResolutionChanged;
 	private Object compatInternalInstance;
 
 	public DHCompat(IrisRenderingPipeline pipeline, boolean renderDHShadow) {
@@ -70,9 +67,6 @@ public class DHCompat {
 				getNearPlane = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getNearPlane", MethodType.methodType(float.class));
 				getDepthTexNoTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getDepthTexNoTranslucent", MethodType.methodType(int.class));
 				checkFrame = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "checkFrame", MethodType.methodType(boolean.class));
-				renderShadowSolid = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "renderShadowSolid", MethodType.methodType(void.class));
-				renderShadowTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "renderShadowTranslucent", MethodType.methodType(void.class));
-				onResolutionChanged = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "onResolutionChanged", MethodType.methodType(void.class));
 
 				setupEventHandlers.invoke();
 			} else {
@@ -131,7 +125,7 @@ public class DHCompat {
 		if (!dhPresent) {
 			return false;
 		}
-		
+
 		try {
 			return (boolean) checkFrame.invoke();
 		} catch (Throwable e) {
@@ -177,37 +171,7 @@ public class DHCompat {
 		}
 	}
 
-	public void renderShadowSolid() {
-		if (compatInternalInstance == null) return;
-
-		try {
-			renderShadowSolid.invoke(compatInternalInstance);
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public void renderShadowTranslucent() {
-		if (compatInternalInstance == null) return;
-
-		try {
-			renderShadowTranslucent.invoke(compatInternalInstance);
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public Object getInstance() {
 		return compatInternalInstance;
-	}
-
-	public void onResolutionChanged() {
-		if (compatInternalInstance == null) return;
-
-		try {
-			onResolutionChanged.invoke(compatInternalInstance);
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
 	}
 }

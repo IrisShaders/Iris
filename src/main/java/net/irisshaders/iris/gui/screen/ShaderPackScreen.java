@@ -397,7 +397,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	public void onPackListFilesDrop(List<Path> paths) {
-		List<Path> packs = paths.stream().filter(Iris::isValidShaderpack).collect(Collectors.toList());
+		List<Path> packs = paths.stream().filter(Iris::isValidShaderpack).toList();
 
 		for (Path pack : packs) {
 			String fileName = pack.getFileName().toString();
@@ -432,7 +432,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		// After copying the relevant files over to the folder, make sure to refresh the shader pack list.
 		this.shaderPackList.refresh();
 
-		if (packs.size() == 0) {
+		if (packs.isEmpty()) {
 			// If zero packs were added, then notify the user that the files that they added weren't actually shader
 			// packs.
 
@@ -611,7 +611,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 						rawCommentBody = rawCommentBody.substring(0, rawCommentBody.length() - 1);
 					}
 					// Split comment body into lines by separator ". "
-					List<MutableComponent> splitByPeriods = Arrays.stream(rawCommentBody.split("\\. [ ]*")).map(Component::literal).collect(Collectors.toList());
+					List<MutableComponent> splitByPeriods = Arrays.stream(rawCommentBody.split("\\. [ ]*")).map(Component::literal).toList();
 					// Line wrap
 					this.hoveredElementCommentBody = new ArrayList<>();
 					for (MutableComponent text : splitByPeriods) {

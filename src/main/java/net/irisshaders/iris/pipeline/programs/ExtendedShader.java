@@ -217,11 +217,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	}
 
 	@Override
-	public void close() {
-		super.close();
-	}
-
-	@Override
 	public void attachToProgram() {
 		super.attachToProgram();
 		if (this.geometry != null) {

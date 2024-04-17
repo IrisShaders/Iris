@@ -24,6 +24,7 @@ import java.io.IOException;
 public class DHCompatInternal {
 	public static final DHCompatInternal SHADERLESS = new DHCompatInternal(null, false);
 	static boolean dhEnabled;
+	private static int guiScale = -1;
 	private final IrisRenderingPipeline pipeline;
 	public boolean shouldOverrideShadow;
 	public boolean shouldOverride;
@@ -39,6 +40,7 @@ public class DHCompatInternal {
 	private boolean translucentDepthDirty;
 	private int storedDepthTex;
 	private boolean incompatible = false;
+	private int cachedVersion;
 
 	public DHCompatInternal(IrisRenderingPipeline pipeline, boolean dhShadowEnabled) {
 		this.pipeline = pipeline;
@@ -122,8 +124,6 @@ public class DHCompatInternal {
 		return DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getRealTickDelta());
 	}
 
-	private static int guiScale = -1;
-
 	public static boolean checkFrame() {
 		if (guiScale == -1) {
 			guiScale = Minecraft.getInstance().options.guiScale().get();
@@ -146,8 +146,6 @@ public class DHCompatInternal {
 	public boolean incompatiblePack() {
 		return incompatible;
 	}
-
-	private int cachedVersion;
 
 	public void reconnectDHTextures(int depthTex) {
 		if (((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion() != cachedVersion) {
@@ -172,26 +170,6 @@ public class DHCompatInternal {
 		translucentDepthDirty = true;
 
 		depthTexNoTranslucent = new DepthTexture("DH depth tex", width, height, DepthBufferFormat.DEPTH32F);
-	}
-
-	public void renderShadowSolid() {
-		// FIXME doesn't appear to do anything
-		//ClientApi.INSTANCE.renderLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
-		//	McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
-		//	McObjectConverter.Convert(ShadowRenderer.PROJECTION),
-		//	CapturedRenderingState.INSTANCE.getTickDelta());
-	}
-
-	public void renderShadowTranslucent() {
-		// FIXME doesn't appear to do anything
-		//ClientApi.INSTANCE.renderDeferredLods(ClientLevelWrapper.getWrapper(Minecraft.getInstance().level),
-		//	McObjectConverter.Convert(ShadowRenderer.MODELVIEW),
-		//	McObjectConverter.Convert(ShadowRenderer.PROJECTION),
-		//	CapturedRenderingState.INSTANCE.getTickDelta());
-	}
-
-	public void onResolutionChanged() {
-
 	}
 
 	public void clear() {

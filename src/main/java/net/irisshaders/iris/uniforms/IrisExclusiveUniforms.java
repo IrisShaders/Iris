@@ -39,9 +39,7 @@ public class IrisExclusiveUniforms {
 		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isSpectator", IrisExclusiveUniforms::isSpectator);
 		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "eyePosition", IrisExclusiveUniforms::getEyePosition);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "cloudTime", CapturedRenderingState.INSTANCE::getCloudTime);
-		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "relativeEyePosition", () -> {
-			return CameraUniforms.getUnshiftedCameraPosition().sub(getEyePosition());
-		});
+		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "relativeEyePosition", () -> CameraUniforms.getUnshiftedCameraPosition().sub(getEyePosition()));
 		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "playerLookVector", () -> {
 			if (Minecraft.getInstance().cameraEntity instanceof LivingEntity livingEntity) {
 				return JomlConversions.fromVec3(livingEntity.getViewVector(CapturedRenderingState.INSTANCE.getTickDelta()));
@@ -49,9 +47,7 @@ public class IrisExclusiveUniforms {
 				return ZERO;
 			}
 		});
-		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "playerBodyVector", () -> {
-			return JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getForward());
-		});
+		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "playerBodyVector", () -> JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getForward()));
 		Vector4f zero = new Vector4f(0, 0, 0, 0);
 		uniforms.uniform4f(UniformUpdateFrequency.PER_TICK, "lightningBoltPosition", () -> {
 			if (Minecraft.getInstance().level != null) {

@@ -2,7 +2,7 @@ package net.irisshaders.iris.features;
 
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.minecraft.client.resources.language.I18n;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -67,7 +67,7 @@ public enum FeatureFlags {
 	}
 
 	public String getHumanReadableName() {
-		return WordUtils.capitalize(name().replace("_", " ").toLowerCase());
+		return StringUtils.capitalize(name().replace("_", " ").toLowerCase());
 	}
 
 	public boolean isUsable() {

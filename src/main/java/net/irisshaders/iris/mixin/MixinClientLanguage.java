@@ -61,9 +61,7 @@ public class MixinClientLanguage {
 		languageCodes.clear();
 
 		// Reverse order due to how minecraft has English and then the primary language in the language definitions list
-		new LinkedList<>(definitions).descendingIterator().forEachRemaining(languageDefinition -> {
-			languageCodes.add(languageDefinition);
-		});
+		new LinkedList<>(definitions).descendingIterator().forEachRemaining(languageCodes::add);
 	}
 
 	@Inject(method = "getOrDefault", at = @At("HEAD"), cancellable = true)

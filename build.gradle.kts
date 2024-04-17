@@ -13,7 +13,7 @@ object Constants {
     const val CUSTOM_SODIUM: Boolean = false
     const val CUSTOM_SODIUM_NAME: String = ""
 
-    const val IS_SHARED_BETA: Boolean = true
+    const val IS_SHARED_BETA: Boolean = false
     const val ACTIVATE_RENDERDOC: Boolean = false
     const val BETA_TAG: String = "DH Support"
     const val BETA_VERSION = 2

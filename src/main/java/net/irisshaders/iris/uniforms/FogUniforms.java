@@ -42,13 +42,9 @@ public class FogUniforms {
 		}, notifier -> {
 		});
 
-		uniforms.uniform1f("fogStart", RenderSystem::getShaderFogStart, listener -> {
-			StateUpdateNotifiers.fogStartNotifier.setListener(listener);
-		});
+		uniforms.uniform1f("fogStart", RenderSystem::getShaderFogStart, listener -> StateUpdateNotifiers.fogStartNotifier.setListener(listener));
 
-		uniforms.uniform1f("fogEnd", RenderSystem::getShaderFogEnd, listener -> {
-			StateUpdateNotifiers.fogEndNotifier.setListener(listener);
-		});
+		uniforms.uniform1f("fogEnd", RenderSystem::getShaderFogEnd, listener -> StateUpdateNotifiers.fogEndNotifier.setListener(listener));
 
 		uniforms
 			// TODO: Update frequency of continuous?

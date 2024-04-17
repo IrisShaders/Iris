@@ -184,14 +184,11 @@ public class HardcodedCustomUniforms {
 			return 0;
 		}
 		Biome.Precipitation precipitation = storedBiome.value().getPrecipitationAt(Minecraft.getInstance().cameraEntity.blockPosition());
-		switch (precipitation) {
-			case RAIN:
-				return 1;
-			case SNOW:
-				return 2;
-			default:
-				return 0;
-		}
+		return switch (precipitation) {
+			case RAIN -> 1;
+			case SNOW -> 2;
+			default -> 0;
+		};
 	}
 
 	private static float getBlindFactor() {

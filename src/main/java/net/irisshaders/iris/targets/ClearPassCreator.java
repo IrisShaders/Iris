@@ -51,30 +51,28 @@ public class ClearPassCreator {
 
 		List<ClearPass> clearPasses = new ArrayList<>();
 
-		clearByColor.forEach((passSize, vector4fIntListMap) -> {
-			vector4fIntListMap.forEach((clearInfo, buffers) -> {
-				int startIndex = 0;
+		clearByColor.forEach((passSize, vector4fIntListMap) -> vector4fIntListMap.forEach((clearInfo, buffers) -> {
+			int startIndex = 0;
 
-				while (startIndex < buffers.size()) {
-					// clear up to the maximum number of draw buffers per each clear pass.
-					// This allows us to handle having more than 8 buffers with the same clear color on systems with
-					// a max draw buffers of 8 (ie, most systems).
-					int[] clearBuffers = new int[Math.min(buffers.size() - startIndex, maxDrawBuffers)];
+			while (startIndex < buffers.size()) {
+				// clear up to the maximum number of draw buffers per each clear pass.
+				// This allows us to handle having more than 8 buffers with the same clear color on systems with
+				// a max draw buffers of 8 (ie, most systems).
+				int[] clearBuffers = new int[Math.min(buffers.size() - startIndex, maxDrawBuffers)];
 
-					for (int i = 0; i < clearBuffers.length; i++) {
-						clearBuffers[i] = buffers.getInt(startIndex);
-						startIndex++;
-					}
-
-					// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
-					clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
-						renderTargets.createClearFramebuffer(true, clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
-
-					clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
-						renderTargets.createClearFramebuffer(false, clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+				for (int i = 0; i < clearBuffers.length; i++) {
+					clearBuffers[i] = buffers.getInt(startIndex);
+					startIndex++;
 				}
-			});
-		});
+
+				// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
+				clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
+					renderTargets.createClearFramebuffer(true, clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+
+				clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
+					renderTargets.createClearFramebuffer(false, clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+			}
+		}));
 
 		return ImmutableList.copyOf(clearPasses);
 	}

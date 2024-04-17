@@ -1,12 +1,10 @@
 package net.irisshaders.iris.compat.sodium.mixin.shadow_map;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -34,13 +32,7 @@ import java.util.SortedSet;
  */
 @Mixin(SodiumWorldRenderer.class)
 public abstract class MixinSodiumWorldRenderer {
-	@Shadow
-	private static void renderBlockEntity(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity) {
-		throw new IllegalStateException("maybe get Mixin?");
-	}
-
 	private static int beList = 0;
-
 	private static boolean renderLightsOnly;
 
 	static {
@@ -56,6 +48,11 @@ public abstract class MixinSodiumWorldRenderer {
 
 			return beList;
 		});
+	}
+
+	@Shadow
+	private static void renderBlockEntity(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity) {
+		throw new IllegalStateException("maybe get Mixin?");
 	}
 
 	@Inject(method = "renderBlockEntities(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/RenderBuffers;Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;FLnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDDLnet/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher;)V", at = @At("HEAD"))

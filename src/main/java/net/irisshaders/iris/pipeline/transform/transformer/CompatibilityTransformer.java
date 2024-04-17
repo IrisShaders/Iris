@@ -390,8 +390,7 @@ public class CompatibilityTransformer {
 		  - improved geometry shader support? They use funky declarations
 		 */
 		ShaderType prevType = null;
-		for (int i = 0; i < pipeline.length; i++) {
-			ShaderType type = pipeline[i];
+		for (ShaderType type : pipeline) {
 			PatchShaderType[] patchTypes = PatchShaderType.fromGlShaderType(type);
 
 			// check if the patch types have sources and continue if not

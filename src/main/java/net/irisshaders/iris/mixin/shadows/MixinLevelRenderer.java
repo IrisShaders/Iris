@@ -3,6 +3,7 @@ package net.irisshaders.iris.mixin.shadows;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.irisshaders.iris.shadows.CullingDataCache;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -14,10 +15,10 @@ public class MixinLevelRenderer implements CullingDataCache {
 	@Shadow
 	@Final
 	@Mutable
-	private ObjectArrayList visibleSections;
+	private ObjectArrayList<SectionRenderDispatcher.RenderSection> visibleSections;
 
 	@Unique
-	private ObjectArrayList savedRenderChunks = new ObjectArrayList(69696);
+	private ObjectArrayList<SectionRenderDispatcher.RenderSection> savedRenderChunks = new ObjectArrayList<>(69696);
 
 
 	@Shadow
@@ -53,7 +54,7 @@ public class MixinLevelRenderer implements CullingDataCache {
 
 	@Unique
 	private void swap() {
-		ObjectArrayList tmpList = visibleSections;
+		ObjectArrayList<SectionRenderDispatcher.RenderSection> tmpList = visibleSections;
 		visibleSections = savedRenderChunks;
 		savedRenderChunks = tmpList;
 		double tmp;

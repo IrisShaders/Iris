@@ -8,13 +8,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
-import net.irisshaders.iris.gl.GLDebug;
-import net.irisshaders.iris.pipeline.programs.ShaderKey;
-import net.irisshaders.iris.pipeline.programs.ShaderMap;
-import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
-import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.features.FeatureFlags;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
@@ -35,9 +31,11 @@ import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.helpers.FakeChainedJsonException;
+import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
+import net.irisshaders.iris.pathways.CenterDepthSampler;
 import net.irisshaders.iris.pathways.HorizonRenderer;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
 import net.irisshaders.iris.pathways.colorspace.ColorSpaceConverter;
@@ -45,31 +43,33 @@ import net.irisshaders.iris.pathways.colorspace.ColorSpaceFragmentConverter;
 import net.irisshaders.iris.pipeline.programs.ExtendedShader;
 import net.irisshaders.iris.pipeline.programs.FallbackShader;
 import net.irisshaders.iris.pipeline.programs.ShaderCreator;
+import net.irisshaders.iris.pipeline.programs.ShaderKey;
+import net.irisshaders.iris.pipeline.programs.ShaderMap;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
-import net.irisshaders.iris.targets.BufferFlipper;
-import net.irisshaders.iris.pathways.CenterDepthSampler;
 import net.irisshaders.iris.samplers.IrisImages;
 import net.irisshaders.iris.samplers.IrisSamplers;
-import net.irisshaders.iris.shaderpack.properties.CloudSetting;
-import net.irisshaders.iris.shaderpack.programs.ComputeSource;
 import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
 import net.irisshaders.iris.shaderpack.ImageInformation;
-import net.irisshaders.iris.helpers.OptionalBoolean;
-import net.irisshaders.iris.shaderpack.properties.PackDirectives;
-import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
-import net.irisshaders.iris.shaderpack.properties.ParticleRenderingSettings;
+import net.irisshaders.iris.shaderpack.ShaderPack;
+import net.irisshaders.iris.shaderpack.loading.ProgramId;
+import net.irisshaders.iris.shaderpack.materialmap.BlockMaterialMapping;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
+import net.irisshaders.iris.shaderpack.programs.ComputeSource;
 import net.irisshaders.iris.shaderpack.programs.ProgramFallbackResolver;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
-import net.irisshaders.iris.shaderpack.ShaderPack;
-import net.irisshaders.iris.shaderpack.loading.ProgramId;
+import net.irisshaders.iris.shaderpack.properties.CloudSetting;
+import net.irisshaders.iris.shaderpack.properties.PackDirectives;
+import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
+import net.irisshaders.iris.shaderpack.properties.ParticleRenderingSettings;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.shadows.ShadowCompositeRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
+import net.irisshaders.iris.targets.BufferFlipper;
 import net.irisshaders.iris.targets.ClearPass;
 import net.irisshaders.iris.targets.ClearPassCreator;
 import net.irisshaders.iris.targets.RenderTargetStateListener;
@@ -92,7 +92,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
@@ -164,6 +164,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final ShaderPack pack;
 	private final PackShadowDirectives shadowDirectives;
 	private final DHCompat dhCompat;
+	private final int stackSize = 0;
 	public boolean isBeforeTranslucent;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
 	private ShadowRenderTargets shadowRenderTargets;
@@ -180,7 +181,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private int currentNormalTexture;
 	private int currentSpecularTexture;
 	private ColorSpace currentColorSpace;
-	private int stackSize = 0;
 
 	public IrisRenderingPipeline(ProgramSet programSet) {
 		ShaderPrinter.resetPrintState();
@@ -799,7 +799,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	public void setPhase(WorldRenderingPhase phase) {
 		GLDebug.popGroup();
 		if (phase != WorldRenderingPhase.NONE)
-			GLDebug.pushGroup(phase.ordinal(), WordUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
+			GLDebug.pushGroup(phase.ordinal(), StringUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
 		this.phase = phase;
 	}
 
@@ -827,14 +827,14 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	public void onSetShaderTexture(int id) {
 		if (shouldBindPBR && isRenderingWorld) {
 			PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
-			currentNormalTexture = pbrHolder.getNormalTexture().getId();
-			currentSpecularTexture = pbrHolder.getSpecularTexture().getId();
+			currentNormalTexture = pbrHolder.normalTexture().getId();
+			currentSpecularTexture = pbrHolder.specularTexture().getId();
 
 			TextureFormat textureFormat = TextureFormatLoader.getFormat();
 			if (textureFormat != null) {
 				int previousBinding = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
-				textureFormat.setupTextureParameters(PBRType.NORMAL, pbrHolder.getNormalTexture());
-				textureFormat.setupTextureParameters(PBRType.SPECULAR, pbrHolder.getSpecularTexture());
+				textureFormat.setupTextureParameters(PBRType.NORMAL, pbrHolder.normalTexture());
+				textureFormat.setupTextureParameters(PBRType.SPECULAR, pbrHolder.specularTexture());
 				GlStateManager._bindTexture(previousBinding);
 			}
 
@@ -911,7 +911,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			main.height, depthBufferFormat, packDirectives);
 
 		if (changed) {
-			dhCompat.onResolutionChanged();
 			beginRenderer.recalculateSizes();
 			prepareRenderer.recalculateSizes();
 			deferredRenderer.recalculateSizes();
@@ -1249,16 +1248,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	protected AbstractTexture getWhitePixel() {
 		return whitePixel;
-	}
-
-	@Override
-	public void beginPostChain() {
-
-	}
-
-	@Override
-	public void endPostChain() {
-
 	}
 
 	@Override

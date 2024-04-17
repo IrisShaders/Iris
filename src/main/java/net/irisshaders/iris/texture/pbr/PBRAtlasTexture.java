@@ -59,8 +59,8 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 
 		int cycleTime = 0;
 		int frameCount = targetFrames.size();
-		for (int f = 0; f < frameCount; f++) {
-			cycleTime += ((SpriteContentsFrameInfoAccessor) targetFrames.get(f)).getTime();
+		for (FrameInfo frame : targetFrames) {
+			cycleTime += ((SpriteContentsFrameInfoAccessor) frame).getTime();
 		}
 		ticks %= cycleTime;
 

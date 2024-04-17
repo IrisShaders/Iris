@@ -53,7 +53,7 @@ public class ShaderpackDirectoryManager {
 
 			// Copy all sub folders, collected as a list in order to prevent issues with non-ordered sets
 			try (Stream<Path> stream = Files.walk(source)) {
-				for (Path p : stream.filter(Files::isDirectory).collect(Collectors.toList())) {
+				for (Path p : stream.filter(Files::isDirectory).toList()) {
 					Path folder = source.relativize(p);
 
 					if (Files.exists(folder)) {
