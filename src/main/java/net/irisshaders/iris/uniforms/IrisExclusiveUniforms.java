@@ -7,6 +7,7 @@ import net.irisshaders.iris.helpers.JomlConversions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Math;
@@ -17,6 +18,8 @@ import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 public class IrisExclusiveUniforms {
+	private static final Vector3d ZERO = new Vector3d(0);
+
 	public static void addIrisExclusiveUniforms(UniformHolder uniforms) {
 		WorldInfoUniforms.addWorldInfoUniforms(uniforms);
 
@@ -40,7 +43,11 @@ public class IrisExclusiveUniforms {
 			return CameraUniforms.getUnshiftedCameraPosition().sub(getEyePosition());
 		});
 		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "playerLookVector", () -> {
-			return JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getLookAngle());
+			if (Minecraft.getInstance().cameraEntity instanceof LivingEntity livingEntity) {
+				return JomlConversions.fromVec3(livingEntity.getViewVector(CapturedRenderingState.INSTANCE.getTickDelta()));
+			} else {
+				return ZERO;
+			}
 		});
 		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "playerBodyVector", () -> {
 			return JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getForward());
