@@ -544,7 +544,7 @@ public class ShadowRenderer {
 
 		IrisRenderSystem.restorePlayerProjection();
 
-		debugStringTerrain = ((LevelRenderer) levelRenderer).getSectionStatistics();
+		debugStringTerrain = ((LevelRenderer) levelRenderer).getChunkStatistics();
 
 		levelRenderer.getLevel().getProfiler().popPush("generate mipmaps");
 
@@ -631,7 +631,7 @@ public class ShadowRenderer {
 		levelRenderer.getLevel().getProfiler().popPush("build entity geometry");
 
 		for (Entity entity : renderedEntities) {
-			float realTickDelta = Minecraft.getInstance().level.tickRateManager().isEntityFrozen(entity) ? tickDelta : CapturedRenderingState.INSTANCE.getRealTickDelta();
+			float realTickDelta = CapturedRenderingState.INSTANCE.getRealTickDelta();
 			levelRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, realTickDelta, modelView, bufferSource);
 		}
 
@@ -656,19 +656,19 @@ public class ShadowRenderer {
 
 		if (!player.getPassengers().isEmpty()) {
 			for (int i = 0; i < player.getPassengers().size(); i++) {
-				float realTickDelta = Minecraft.getInstance().level.tickRateManager().isEntityFrozen(player.getPassengers().get(i)) ? tickDelta : CapturedRenderingState.INSTANCE.getRealTickDelta();
+				float realTickDelta = CapturedRenderingState.INSTANCE.getRealTickDelta();
 				levelRenderer.invokeRenderEntity(player.getPassengers().get(i), cameraX, cameraY, cameraZ, realTickDelta, modelView, bufferSource);
 				shadowEntities++;
 			}
 		}
 
 		if (player.getVehicle() != null) {
-			float realTickDelta = Minecraft.getInstance().level.tickRateManager().isEntityFrozen(player.getVehicle()) ? tickDelta : CapturedRenderingState.INSTANCE.getRealTickDelta();
+			float realTickDelta = CapturedRenderingState.INSTANCE.getRealTickDelta();
 			levelRenderer.invokeRenderEntity(player.getVehicle(), cameraX, cameraY, cameraZ, realTickDelta, modelView, bufferSource);
 			shadowEntities++;
 		}
 
-		float realTickDelta = Minecraft.getInstance().level.tickRateManager().isEntityFrozen(player) ? tickDelta : CapturedRenderingState.INSTANCE.getRealTickDelta();
+		float realTickDelta = CapturedRenderingState.INSTANCE.getRealTickDelta();
 		levelRenderer.invokeRenderEntity(player, cameraX, cameraY, cameraZ, realTickDelta, modelView, bufferSource);
 
 		shadowEntities++;

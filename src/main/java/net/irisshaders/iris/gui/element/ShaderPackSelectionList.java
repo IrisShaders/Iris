@@ -39,7 +39,6 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		super(client, width, height, top, bottom, left, right, 20);
 		WatchKey key1;
 		WatchService watcher1;
-		this.setRenderBackground(false);
 
 		this.screen = screen;
 		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
@@ -72,7 +71,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	}
 
 	@Override
-	public void renderWidget(GuiGraphics pAbstractSelectionList0, int pInt1, int pInt2, float pFloat3) {
+	public void render(GuiGraphics pAbstractSelectionList0, int pInt1, int pInt2, float pFloat3) {
 		if (keyValid) {
 			for (WatchEvent<?> event : key.pollEvents()) {
 				if (event.kind() == StandardWatchEventKinds.OVERFLOW) continue;
@@ -84,7 +83,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			keyValid = key.reset();
 		}
 
-		super.renderWidget(pAbstractSelectionList0, pInt1, pInt2, pFloat3);
+		super.render(pAbstractSelectionList0, pInt1, pInt2, pFloat3);
 	}
 
 	public void close() throws IOException {
