@@ -168,9 +168,7 @@ public class IrisLodRenderProgram {
 	// Noise Uniforms
 
 	public int tryGetUniformLocation2(CharSequence name) {
-		int i = GL32.glGetUniformLocation(this.id, name);
-		if (i == -1) Iris.logger.warn("Couldn't find " + name);
-		return i;
+		return GL32.glGetUniformLocation(this.id, name);
 	}
 
 	public void setUniform(int index, Matrix4f matrix) {

@@ -122,8 +122,6 @@ public class ShaderPrinter {
 								return !FilenameUtils.getExtension(s.toString()).contains("properties");
 							})) {
 								stream.forEach(path -> {
-									Iris.logger.warn(path.toString());
-
 									try {
 										Files.delete(path);
 									} catch (IOException e) {
