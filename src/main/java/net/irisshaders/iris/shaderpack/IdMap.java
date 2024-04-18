@@ -96,7 +96,8 @@ public class IdMap {
 			return Optional.empty();
 		}
 
-		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines).replaceAll("(?m)^[ \\t]*\\r?\\n", "");
+		// TODO: This is the worst code I have ever made. Do not do this.
+			String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines).replaceAll("\\\\\\n\\s*\\n", " ").replaceAll("\\S\s*block.", "\nblock.");
 
 		StringReader propertiesReader = new StringReader(processed);
 

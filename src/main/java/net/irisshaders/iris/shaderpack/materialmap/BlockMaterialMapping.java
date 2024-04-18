@@ -60,7 +60,12 @@ public class BlockMaterialMapping {
 
 	private static void addBlockStates(BlockEntry entry, Object2IntMap<BlockState> idMap, int intId) {
 		NamespacedId id = entry.id();
-		ResourceLocation resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
+		ResourceLocation resourceLocation;
+		try {
+			resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
+		} catch (Exception exception) {
+			throw new IllegalStateException("Failed to get entry for " + intId, exception);
+		}
 
 		Block block = BuiltInRegistries.BLOCK.get(resourceLocation);
 
