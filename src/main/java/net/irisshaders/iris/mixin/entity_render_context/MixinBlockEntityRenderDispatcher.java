@@ -37,7 +37,7 @@ public class MixinBlockEntityRenderDispatcher {
 	// captured by the lambda shortly afterwards, and therefore our ModifyVariable call becomes ineffective!
 	@ModifyVariable(method = "render", at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/world/level/block/entity/BlockEntityType;isValid(Lnet/minecraft/world/level/block/state/BlockState;)Z"),
-		allow = 1, require = 1)
+		allow = 1, require = 1, argsOnly = true)
 	private MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource, BlockEntity blockEntity) {
 		if (!(bufferSource instanceof Groupable)) {
 			// Fully batched entity rendering is not being used, do not use this wrapper!!!

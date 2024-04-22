@@ -161,8 +161,8 @@ public class CustomTextureManager {
 						int id = texture.getId();
 						PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id);
 						AbstractTexture pbrTexture = switch (pbrType) {
-							case NORMAL -> pbrHolder.getNormalTexture();
-							case SPECULAR -> pbrHolder.getSpecularTexture();
+							case NORMAL -> pbrHolder.normalTexture();
+							case SPECULAR -> pbrHolder.specularTexture();
 							default -> throw new IllegalArgumentException("Unknown PBRType '" + pbrType + "'");
 						};
 

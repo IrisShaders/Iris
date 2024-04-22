@@ -189,8 +189,11 @@ public class IncludeGraph {
 				}
 
 				error.append(
-					"\n  = note: #include directives are resolved before any other preprocessor directives, any form of #include guard will not work" +
-						"\n  = note: other cycles may still exist, only the first detected non-trivial cycle will be reported");
+					"""
+						  note: #include directives are resolved before any other preprocessor directives, any form of #include guard will not work
+
+						  note: other cycles may still exist, only the first detected non-trivial cycle will be reported
+						""");
 
 				// TODO: Expose this to the caller (more semantic error handling)
 				Iris.logger.error(error.toString());

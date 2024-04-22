@@ -225,6 +225,7 @@ public class Iris {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private static boolean loadExternalShaderpack(String name) {
 		Path shaderPackRoot;
 		Path shaderPackConfigTxt;
@@ -287,7 +288,7 @@ public class Iris {
 		}
 
 		Map<String, String> changedConfigs = tryReadConfigProperties(shaderPackConfigTxt)
-			.map(properties -> (Map<String, String>) (Map) properties)
+			.map(properties -> (Map<String, String>) (Object) properties)
 			.orElse(new HashMap<>());
 
 		changedConfigs.putAll(shaderPackOptionQueue);
@@ -529,13 +530,6 @@ public class Iris {
 		if (Minecraft.getInstance().level != null) {
 			Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 		}
-
-		if (loadedIncompatiblePack() && Minecraft.getInstance().player != null) {
-			Minecraft.getInstance().gui.setTimes(10, 70, 140);
-			Iris.logger.warn("Incompatible pack for DH!");
-			Minecraft.getInstance().gui.setTitle(Component.literal("This pack doesn't have DH support").withStyle(ChatFormatting.BOLD, ChatFormatting.RED));
-			Minecraft.getInstance().gui.setSubtitle(Component.literal("Distant Horizons (DH) chunks won't show up. This isn't a bug, get another shader.").withStyle(ChatFormatting.RED));
-		}
 	}
 
 	/**
@@ -743,42 +737,6 @@ public class Iris {
 
 		updateChecker.checkForUpdates(irisConfig);
 
-		setupCommands(Minecraft.getInstance());
-
 		initialized = true;
-	}
-
-	private void setupCommands(Minecraft instance) {
-		// TODO: Add back commands when Fabric Maven stops dying
-		/*ClientCommandManager.DISPATCHER.register(ClientCommandManager.literal("iris").then(ClientCommandManager.literal("debug").then(
-			ClientCommandManager.argument("enabled", BoolArgumentType.bool()).executes(context -> {
-				boolean enable = BoolArgumentType.getBool(context, "enabled");
-
-				Iris.setDebug(enable);
-
-				return 0;
-			})
-		)).then(ClientCommandManager.literal("enabled").then(ClientCommandManager.argument("option", BoolArgumentType.bool()).executes(context -> {
-			try {
-				toggleShaders(instance, BoolArgumentType.getBool(context, "option"));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			return 0;
-		}))).then(ClientCommandManager.literal("reload").executes(context -> {
-			try {
-				reload();
-
-				if (instance.player != null) {
-					instance.player.displayClientMessage(Component.translatable("iris.shaders.reloaded"), false);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-				return -1;
-			}
-
-			return 0;
-		})));*/
 	}
 }

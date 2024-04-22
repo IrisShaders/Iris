@@ -86,7 +86,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		ResourceLocation pbrImageLocation = getPBRImageLocation(spriteName, pbrType);
 
 		Optional<Resource> optionalResource = resourceManager.getResource(pbrImageLocation);
-		if (!optionalResource.isPresent()) {
+		if (optionalResource.isEmpty()) {
 			return null;
 		}
 		Resource resource = optionalResource.get();

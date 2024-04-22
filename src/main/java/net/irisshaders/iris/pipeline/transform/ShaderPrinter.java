@@ -2,6 +2,7 @@ package net.irisshaders.iris.pipeline.transform;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,6 +23,29 @@ public class ShaderPrinter {
 	public static void resetPrintState() {
 		outputLocationCleared = false;
 		programCounter = 0;
+	}
+
+	public static void deleteIfClearing() {
+		if (!outputLocationCleared) {
+			try {
+				if (Files.exists(debugOutDir)) {
+					try (Stream<Path> stream = Files.list(debugOutDir)) {
+						stream.forEach(path -> {
+							try {
+								Files.delete(path);
+							} catch (IOException e) {
+								throw new RuntimeException(e);
+							}
+						});
+					}
+				}
+
+				Files.createDirectories(debugOutDir);
+			} catch (IOException e) {
+				Iris.logger.warn("Failed to initialize debug patched shader source location", e);
+			}
+			outputLocationCleared = true;
+		}
 	}
 
 	public static ProgramPrintBuilder printProgram(String name) {
@@ -94,7 +118,9 @@ public class ShaderPrinter {
 				if (!outputLocationCleared) {
 					try {
 						if (Files.exists(debugOutDir)) {
-							try (Stream<Path> stream = Files.list(debugOutDir)) {
+							try (Stream<Path> stream = Files.list(debugOutDir).filter(s -> {
+								return !FilenameUtils.getExtension(s.toString()).contains("properties");
+							})) {
 								stream.forEach(path -> {
 									try {
 										Files.delete(path);

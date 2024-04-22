@@ -13,10 +13,10 @@ object Constants {
     const val CUSTOM_SODIUM: Boolean = true
     const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshot+mc24w14a-local.jar"
 
-    const val IS_SHARED_BETA: Boolean = true
+    const val IS_SHARED_BETA: Boolean = false
     const val ACTIVATE_RENDERDOC: Boolean = false
     const val BETA_TAG: String = "DH Support"
-    const val BETA_VERSION = 3
+    const val BETA_VERSION = 4
 
     const val SODIUM_VERSION: String = "mc1.20.4-0.5.8"
 }
@@ -152,7 +152,6 @@ dependencies {
     modRuntimeOnly(fabricApi.module("fabric-rendering-fluids-v1", Constants.FABRIC_API_VERSION))
     modRuntimeOnly(fabricApi.module("fabric-rendering-data-attachment-v1", Constants.FABRIC_API_VERSION))
     modRuntimeOnly(fabricApi.module("fabric-resource-loader-v0", Constants.FABRIC_API_VERSION))
-    modRuntimeOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
     modRuntimeOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
 
     modCompileOnly(files(projectDir.resolve("DHApi.jar")))

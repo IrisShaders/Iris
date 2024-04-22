@@ -18,9 +18,7 @@ public class FullScreenQuadRenderer {
 	private final VertexBuffer quad;
 
 	private FullScreenQuadRenderer() {
-		// 1 quad * vertex size in bytes * 6 vertices per quad (2 triangles) = initial allocation
-		// TODO: We don't do a full initial allocation?
-		BufferBuilder bufferBuilder = new BufferBuilder(DefaultVertexFormat.POSITION_TEX.getVertexSize());
+		BufferBuilder bufferBuilder = new BufferBuilder(DefaultVertexFormat.POSITION_TEX.getVertexSize() * 4);
 		bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 		bufferBuilder.vertex(0.0F, 0.0F, 0.0F).uv(0.0F, 0.0F).endVertex();
 		bufferBuilder.vertex(1.0F, 0.0F, 0.0F).uv(1.0F, 0.0F).endVertex();

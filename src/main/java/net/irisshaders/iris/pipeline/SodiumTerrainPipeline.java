@@ -16,9 +16,9 @@ import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
+import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
-import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.builtin.BuiltinReplacementUniforms;
@@ -637,14 +637,6 @@ public class SodiumTerrainPipeline {
 	public ProgramImages initTerrainImages(int programId) {
 		return createTerrainImages.apply(programId);
 	}
-
-	/*public void bindFramebuffer() {
-		this.framebuffer.bind();
-	}
-
-	public void unbindFramebuffer() {
-		GlStateManager.bindFramebuffer(GL30C.GL_FRAMEBUFFER, 0);
-	}*/
 
 	public ProgramImages initShadowImages(int programId) {
 		return createShadowImages.apply(programId);

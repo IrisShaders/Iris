@@ -1,8 +1,8 @@
 package net.irisshaders.iris.compat.dh;
 
 import com.seibel.distanthorizons.api.DhApi;
+import com.seibel.distanthorizons.api.enums.rendering.EDhApiFogDrawMode;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiRenderPass;
-import com.seibel.distanthorizons.api.enums.rendering.EFogDrawMode;
 import com.seibel.distanthorizons.api.interfaces.override.IDhApiOverrideable;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
@@ -15,7 +15,7 @@ import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeR
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderPassEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderSetupEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeTextureClearEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiScreenResizeEvent;
+import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiColorDepthTextureCreatedEvent;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam;
@@ -82,7 +82,7 @@ public class LodRendererEvents {
 			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
 
 				DhApi.Delayed.renderProxy.setDeferTransparentRendering(IrisApi.getInstance().isShaderPackInUse() && getInstance().shouldOverride);
-				DhApi.Delayed.configs.graphics().fog().drawMode().setValue(getInstance().shouldOverride ? EFogDrawMode.FOG_DISABLED : EFogDrawMode.FOG_ENABLED);
+				DhApi.Delayed.configs.graphics().fog().drawMode().setValue(getInstance().shouldOverride ? EDhApiFogDrawMode.FOG_DISABLED : EDhApiFogDrawMode.FOG_ENABLED);
 			}
 		};
 
@@ -109,16 +109,15 @@ public class LodRendererEvents {
 	}
 
 	private static void setupCreateDepthTextureEvent() {
-		DhApiScreenResizeEvent beforeRenderEvent = new DhApiScreenResizeEvent() {
+		DhApiColorDepthTextureCreatedEvent beforeRenderEvent = new DhApiColorDepthTextureCreatedEvent() {
 			@Override
 			public void onResize(DhApiEventParam<EventParam> input) {
 				textureWidth = input.value.newWidth;
 				textureHeight = input.value.newHeight;
-				getInstance().createDepthTex(textureWidth, textureHeight);
 			}
 		};
 
-		DhApi.events.bind(DhApiScreenResizeEvent.class, beforeRenderEvent);
+		DhApi.events.bind(DhApiColorDepthTextureCreatedEvent.class, beforeRenderEvent);
 	}
 
 	private static void setupTransparentRendererEventCancling() {
@@ -235,7 +234,7 @@ public class LodRendererEvents {
 				// config overrides
 				if (instance.shouldOverride) {
 					DhApi.Delayed.configs.graphics().ambientOcclusion().enabled().setValue(false);
-					DhApi.Delayed.configs.graphics().fog().drawMode().setValue(EFogDrawMode.FOG_DISABLED);
+					DhApi.Delayed.configs.graphics().fog().drawMode().setValue(EDhApiFogDrawMode.FOG_DISABLED);
 
 					if (event.value.renderPass == EDhApiRenderPass.OPAQUE_AND_TRANSPARENT) {
 						Iris.logger.error("Unexpected; somehow the Opaque + Translucent pass ran with shaders on.");

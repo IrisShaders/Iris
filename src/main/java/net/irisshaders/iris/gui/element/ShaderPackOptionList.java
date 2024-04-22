@@ -123,7 +123,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 			}
 		}
 
-		if (row.size() > 0) {
+		if (!row.isEmpty()) {
 			while (row.size() < columns) {
 				row.add(AbstractElementWidget.EMPTY);
 			}

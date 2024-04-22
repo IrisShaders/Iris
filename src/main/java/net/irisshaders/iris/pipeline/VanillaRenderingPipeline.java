@@ -73,11 +73,6 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 
 	}
 
-	//@Override
-	public void syncProgram() {
-
-	}
-
 	@Override
 	public RenderTargetStateListener getRenderTargetStateListener() {
 		return RenderTargetStateListener.NOP;

@@ -132,8 +132,10 @@ public class CommentDirectiveParser {
 
 			test("multi-line", Optional.of("It works"), () -> {
 				String lines =
-					"/* Here's a random comment line */\n" +
-						"/* RENDERTARGETS:Duplicate handling? */\n" +
+					"""
+						/* Here's a random comment line */
+						/* RENDERTARGETS:Duplicate handling? */
+						""" +
 						"uniform sampler2D test;\n" +
 						"/* RENDERTARGETS:Duplicate handling within a line? */ Let's see /* RENDERTARGETS:It works */\n";
 

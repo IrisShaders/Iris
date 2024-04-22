@@ -24,10 +24,6 @@ public class IrisDefines {
 
 	public static ImmutableList<StringPair> createIrisReplacements() {
 		ArrayList<StringPair> s = new ArrayList<>(StandardMacros.createStandardEnvironmentDefines());
-		define(s, "PPT_NONE", "0");
-		define(s, "PPT_RAIN", "1");
-		define(s, "PPT_SNOW", "2");
-		define(s, "BIOME_SWAMP_HILLS", "-1");
 
 		BiomeUniforms.getBiomeMap().forEach((biome, id) -> define(s, "BIOME_" + biome.location().getPath().toUpperCase(Locale.ROOT), String.valueOf(id)));
 

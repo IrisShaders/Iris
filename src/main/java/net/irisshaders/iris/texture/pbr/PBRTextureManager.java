@@ -40,12 +40,12 @@ public class PBRTextureManager {
 	// Not PBRTextureHolderImpl to directly reference fields
 	private final PBRTextureHolder defaultHolder = new PBRTextureHolder() {
 		@Override
-		public @NotNull AbstractTexture getNormalTexture() {
+		public @NotNull AbstractTexture normalTexture() {
 			return defaultNormalTexture;
 		}
 
 		@Override
-		public @NotNull AbstractTexture getSpecularTexture() {
+		public @NotNull AbstractTexture specularTexture() {
 			return defaultSpecularTexture;
 		}
 	};
@@ -140,8 +140,8 @@ public class PBRTextureManager {
 	}
 
 	private void dumpHolder(PBRTextureHolder holder, Path path) {
-		AbstractTexture normalTexture = holder.getNormalTexture();
-		AbstractTexture specularTexture = holder.getSpecularTexture();
+		AbstractTexture normalTexture = holder.normalTexture();
+		AbstractTexture specularTexture = holder.specularTexture();
 		if (normalTexture != defaultNormalTexture && normalTexture instanceof PBRDumpable dumpable) {
 			dumpTexture(dumpable, dumpable.getDefaultDumpLocation(), path);
 		}
@@ -166,8 +166,8 @@ public class PBRTextureManager {
 	}
 
 	private void closeHolder(PBRTextureHolder holder) {
-		AbstractTexture normalTexture = holder.getNormalTexture();
-		AbstractTexture specularTexture = holder.getSpecularTexture();
+		AbstractTexture normalTexture = holder.normalTexture();
+		AbstractTexture specularTexture = holder.specularTexture();
 		if (normalTexture != defaultNormalTexture) {
 			closeTexture(normalTexture);
 		}
@@ -176,24 +176,17 @@ public class PBRTextureManager {
 		}
 	}
 
-	private static class PBRTextureHolderImpl implements PBRTextureHolder {
-		private final AbstractTexture normalTexture;
-		private final AbstractTexture specularTexture;
+	private record PBRTextureHolderImpl(AbstractTexture normalTexture,
+										AbstractTexture specularTexture) implements PBRTextureHolder {
+			@Override
+			public @NotNull AbstractTexture normalTexture() {
+				return normalTexture;
+			}
 
-		public PBRTextureHolderImpl(AbstractTexture normalTexture, AbstractTexture specularTexture) {
-			this.normalTexture = normalTexture;
-			this.specularTexture = specularTexture;
-		}
-
-		@Override
-		public @NotNull AbstractTexture getNormalTexture() {
-			return normalTexture;
-		}
-
-		@Override
-		public @NotNull AbstractTexture getSpecularTexture() {
-			return specularTexture;
-		}
+			@Override
+			public @NotNull AbstractTexture specularTexture() {
+				return specularTexture;
+			}
 	}
 
 	private class PBRTextureConsumerImpl implements PBRTextureConsumer {

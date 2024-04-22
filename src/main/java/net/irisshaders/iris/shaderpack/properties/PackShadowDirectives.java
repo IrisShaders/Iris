@@ -154,7 +154,7 @@ public class PackShadowDirectives {
 		// Find any per-sampler overrides for the shadow depth mipmap setting
 
 		// Legacy override option: shadowtexMipmap, an alias for shadowtex0Mipmap
-		if (samplers.size() >= 1) {
+		if (!samplers.isEmpty()) {
 			directives.acceptConstBooleanDirective("shadowtexMipmap", samplers.get(0)::setMipmap);
 		}
 
@@ -183,7 +183,7 @@ public class PackShadowDirectives {
 	}
 
 	private static void acceptDepthFilteringSettings(DirectiveHolder directives, ImmutableList<DepthSamplingSettings> samplers) {
-		if (samplers.size() >= 1) {
+		if (!samplers.isEmpty()) {
 			directives.acceptConstBooleanDirective("shadowtexNearest", samplers.get(0)::setNearest);
 		}
 

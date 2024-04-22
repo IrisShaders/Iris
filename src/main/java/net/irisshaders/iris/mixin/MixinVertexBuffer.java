@@ -19,7 +19,7 @@ public class MixinVertexBuffer implements VertexBufferHelper {
 	}
 
 	@Shadow
-	private void bind() {
+	public void bind() {
 		throw new IllegalStateException("not shadowed");
 	}
 

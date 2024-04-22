@@ -17,10 +17,10 @@ public class NavigationController {
 	}
 
 	public void back() {
-		if (history.size() > 0) {
+		if (!history.isEmpty()) {
 			history.removeLast();
 
-			if (history.size() > 0) {
+			if (!history.isEmpty()) {
 				currentScreen = history.getLast();
 			} else {
 				currentScreen = null;
@@ -52,7 +52,7 @@ public class NavigationController {
 	}
 
 	public boolean hasHistory() {
-		return this.history.size() > 0;
+		return !this.history.isEmpty();
 	}
 
 	public void setActiveOptionList(ShaderPackOptionList optionList) {
