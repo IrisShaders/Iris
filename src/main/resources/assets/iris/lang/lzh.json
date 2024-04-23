@@ -7,7 +7,6 @@
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "以%s故，弗能重載影！",
   "iris.shaders.toggled.failure": "以%s故，弗能用影！",
-
   "options.iris.apply": "然",
   "options.iris.refresh": "重整",
   "options.iris.openShaderPackFolder": "啟影囊之資料夾……",
@@ -22,7 +21,6 @@
   "options.iris.shaderPackSelection.copyErrorAlreadyExists": "\"%s\" 旣存於影囊資料夾中！",
   "options.iris.shaders.disabled": "影：關",
   "options.iris.shaders.enabled": "影：開",
-
   "pack.iris.select.title": "擇",
   "pack.iris.list.label": "曳影囊於此"
 }

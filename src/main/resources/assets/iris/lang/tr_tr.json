@@ -11,7 +11,6 @@
   "iris.sodium.failure.download": "Sodium'u İndir",
   "iris.sodium.failure.reason.notFound": "İyi performans için Iris'e Sodium gerek, ancak kurulu değil. Lütfen Sodium'u indir ve modlar klasörüne yerleştirip oyunu yeniden başlat.",
   "iris.sodium.failure.reason.incompatible": "İyi performans için Iris'e Sodium gerek, ancak uyumsuz bir sürüm bulundu. Lütfen Sodium'un uygun sürümünü indir, modlar klasörüne yerleştir, uyumsuz sürümü kaldır ve oyunu yeniden başlat.",
-
   "options.iris.apply": "Uygula",
   "options.iris.refresh": "Yenile",
   "options.iris.openShaderPackFolder": "Shader Paket Klasörünü Aç...",
@@ -44,11 +43,9 @@
   "options.iris.shadowDistance": "Mak. Gölge Uzaklığı",
   "options.iris.shadowDistance.enabled": "Gölgeler için maksimum ucaklığı değiştirmeye yarar. Bu uzaklığın ötesindeki araziye ve varlıklara gölge uygulanmaz. Gölge uzaklığını azaltmak, performansı önemli ölçüde arttırabilir.",
   "options.iris.shadowDistance.disabled": "Mevcut shader paketiniz, zaten gölgeler için ayarlı bir görüntüleme uzaklığına sahip; bunu değiştiremezsin.",
-
   "pack.iris.select.title": "Seç",
   "pack.iris.configure.title": "Ayarla",
   "pack.iris.list.label": "+ Eklemek için Shader Paketlerini Sürükle ve Bırak",
-
   "label.iris.true": "Açık",
   "label.iris.false": "Kapalı"
 }

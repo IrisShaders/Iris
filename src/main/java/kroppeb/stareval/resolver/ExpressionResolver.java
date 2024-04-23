@@ -12,10 +12,18 @@ import kroppeb.stareval.expression.CallExpression;
 import kroppeb.stareval.expression.ConstantExpression;
 import kroppeb.stareval.expression.Expression;
 import kroppeb.stareval.expression.VariableExpression;
-import kroppeb.stareval.function.*;
+import kroppeb.stareval.function.FunctionContext;
+import kroppeb.stareval.function.FunctionResolver;
+import kroppeb.stareval.function.FunctionReturn;
+import kroppeb.stareval.function.Type;
+import kroppeb.stareval.function.TypedFunction;
 import kroppeb.stareval.function.TypedFunction.Parameter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -23,19 +31,19 @@ public class ExpressionResolver {
 	private final FunctionResolver functionResolver;
 	private final Function<String, Type> variableTypeMap;
 	private final boolean enableDebugging;
-
+	private final Map<String, ConstantExpression> numbers = new Object2ObjectOpenHashMap<>();
 	private List<String> logs;
 
 	public ExpressionResolver(FunctionResolver functionResolver, Function<String, Type> variableTypeMap) {
 		this(functionResolver, variableTypeMap, false);
 	}
 
+
 	public ExpressionResolver(FunctionResolver functionResolver, Function<String, Type> variableTypeMap, boolean enableDebugging) {
 		this.functionResolver = functionResolver;
 		this.variableTypeMap = variableTypeMap;
 		this.enableDebugging = enableDebugging;
 	}
-
 
 	public Expression resolveExpression(Type targetType, ExpressionElement expression) {
 		this.clearLogs();
@@ -47,10 +55,10 @@ public class ExpressionResolver {
 	}
 
 	Expression resolveCallExpressionInternal(
-			Type targetType,
-			String name,
-			List<? extends ExpressionElement> inner,
-			boolean implicit
+		Type targetType,
+		String name,
+		List<? extends ExpressionElement> inner,
+		boolean implicit
 	) {
 		int innerLength = inner.size();
 		Expression result = null;
@@ -71,7 +79,7 @@ public class ExpressionResolver {
 				}
 
 				Expression expression = this.resolveExpressionInternal(param.type(), paramExpression,
-							!implicit || innerLength > 1, implicit);
+					!implicit || innerLength > 1, implicit);
 				if (expression == null)
 					continue functions;
 				params[i] = expression;
@@ -87,16 +95,15 @@ public class ExpressionResolver {
 		return result;
 	}
 
-
 	private Expression resolveCallExpression(
-			Type targetType,
-			String name,
-			List<? extends ExpressionElement> inner,
-			boolean allowNonImplicit,
-			boolean allowImplicit) {
+		Type targetType,
+		String name,
+		List<? extends ExpressionElement> inner,
+		boolean allowNonImplicit,
+		boolean allowImplicit) {
 
 		this.log("[DEBUG] resolving function %s with args %s to type %s",
-				name, inner, targetType);
+			name, inner, targetType);
 
 		Expression result = null;
 
@@ -106,11 +113,11 @@ public class ExpressionResolver {
 
 		if (result != null) {
 			this.log("[DEBUG] resolved function %s with args %s to type %s directly",
-					name, inner, targetType);
+				name, inner, targetType);
 			return result;
 		} else if (!allowImplicit) {
 			this.log("[DEBUG] Failed to resolve function %s with args %s to type %s directly",
-					name, inner, targetType);
+				name, inner, targetType);
 			return null;
 		}
 
@@ -126,17 +133,17 @@ public class ExpressionResolver {
 		}
 		if (result != null) {
 			this.log("[DEBUG] resolved function %s with args %s to type %s using only final cast",
-					name, inner, targetType);
+				name, inner, targetType);
 			return result;
 		}
 
 		result = this.resolveCallExpressionInternal(targetType, name, inner, true);
 		if (result != null) {
 			this.log("[DEBUG] resolved function %s with args %s to type %s using implicit inner casts",
-					name, inner, targetType);
+				name, inner, targetType);
 		} else {
 			this.log("[DEBUG] failed to resolve function %s with args %s to type %s",
-					name, inner, targetType);
+				name, inner, targetType);
 		}
 		return result;
 	}
@@ -167,35 +174,30 @@ public class ExpressionResolver {
 	}
 
 	private Expression resolveExpressionInternal(
-			Type targetType,
-			ExpressionElement expression,
-			boolean allowNonImplicit,
-			boolean allowImplicit) {
+		Type targetType,
+		ExpressionElement expression,
+		boolean allowNonImplicit,
+		boolean allowImplicit) {
 		Expression castable;
 		Type innerType;
 
 		this.log("[DEBUG] resolving %s to type %s (%d%d)",
-				expression, targetType, allowNonImplicit ? 1 : 0, allowImplicit ? 1 : 0);
-		if (expression instanceof UnaryExpressionElement) {
+			expression, targetType, allowNonImplicit ? 1 : 0, allowImplicit ? 1 : 0);
+		if (expression instanceof UnaryExpressionElement token) {
 			// I want my pattern matching =(
-			UnaryExpressionElement token = (UnaryExpressionElement) expression;
 			return this.resolveCallExpression(targetType, token.getOp().getName(), Collections.singletonList(token.getInner()),
-					allowNonImplicit, allowImplicit);
-		} else if (expression instanceof BinaryExpressionElement) {
-			BinaryExpressionElement token = (BinaryExpressionElement) expression;
+				allowNonImplicit, allowImplicit);
+		} else if (expression instanceof BinaryExpressionElement token) {
 			return this.resolveCallExpression(targetType, token.getOp().getName(), Arrays.asList(token.getLeft(), token.getRight()),
-					allowNonImplicit, allowImplicit);
-		} else if (expression instanceof FunctionCall) {
-			FunctionCall token = (FunctionCall) expression;
+				allowNonImplicit, allowImplicit);
+		} else if (expression instanceof FunctionCall token) {
 			return this.resolveCallExpression(targetType, token.getId(), token.getArgs(),
-					allowNonImplicit, allowImplicit);
-		} else if (expression instanceof AccessExpressionElement) {
-			AccessExpressionElement token = (AccessExpressionElement) expression;
+				allowNonImplicit, allowImplicit);
+		} else if (expression instanceof AccessExpressionElement token) {
 			return this.resolveCallExpression(targetType, "<access$" + token.getIndex() + ">",
-					Collections.singletonList(token.getBase()),
-					allowNonImplicit, allowImplicit);
-		} else if (expression instanceof NumberToken) {
-			NumberToken token = (NumberToken) expression;
+				Collections.singletonList(token.getBase()),
+				allowNonImplicit, allowImplicit);
+		} else if (expression instanceof NumberToken token) {
 			ConstantExpression exp = this.resolveNumber(token.getNumber());
 			if (exp.getType().equals(targetType)) {
 				this.log("[DEBUG] resolved constant %s to type %s", token.getNumber(), targetType);
@@ -204,15 +206,14 @@ public class ExpressionResolver {
 			// TODO: implicit casting is split up too much
 			if (!allowImplicit) {
 				this.log("[DEBUG] failed to resolve constant %s (of type %s) to type %s without implicit casts",
-						token.getNumber(), exp.getType(), targetType);
+					token.getNumber(), exp.getType(), targetType);
 				return null;
 			}
 			this.log("[DEBUG] trying implicit casts to resolve constant %s (of type %s) to type %s",
-					token.getNumber(), exp.getType(), targetType);
+				token.getNumber(), exp.getType(), targetType);
 			castable = exp;
 			innerType = exp.getType();
-		} else if (expression instanceof IdToken) {
-			IdToken token = (IdToken) expression;
+		} else if (expression instanceof IdToken token) {
 			final String name = token.getId();
 			Type type = this.variableTypeMap.apply(name);
 			if (type == null)
@@ -229,13 +230,13 @@ public class ExpressionResolver {
 
 					@Override
 					public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
-						return context.hasVariable(name)?context.getVariable(name):this;
+						return context.hasVariable(name) ? context.getVariable(name) : this;
 					}
 				};
 			}
 			if (!allowImplicit) {
 				log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",
-						name, type, targetType);
+					name, type, targetType);
 				return null;
 			}
 			// TODO duplicate of above
@@ -247,7 +248,7 @@ public class ExpressionResolver {
 
 				@Override
 				public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
-					return context.hasVariable(name)?context.getVariable(name):this;
+					return context.hasVariable(name) ? context.getVariable(name) : this;
 				}
 			};
 			innerType = type;
@@ -260,15 +261,13 @@ public class ExpressionResolver {
 		for (TypedFunction f : casts) {
 			if (f.getParameters()[0].type().equals(innerType)) {
 				this.log("[DEBUG] resolved %s to type %s using implicit casts",
-						expression, targetType);
+					expression, targetType);
 				return new CallExpression(f, new Expression[]{castable});
 			}
 		}
 		this.log("[DEBUG] failed to resolved %s to type %s, even using implicit casts", expression, targetType);
 		return null;
 	}
-
-	private final Map<String, ConstantExpression> numbers = new Object2ObjectOpenHashMap<>();
 
 	private ConstantExpression resolveNumber(String s) {
 		return this.numbers.computeIfAbsent(s, str -> {

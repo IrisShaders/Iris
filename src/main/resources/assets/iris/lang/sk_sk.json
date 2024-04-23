@@ -15,7 +15,6 @@
   "iris.sodium.failure.download": "Stiahnuť Sodium",
   "iris.sodium.failure.reason.notFound": "Iris potrebuje Sodium pre dobrý výkon, ale Sodium nie je nainštalovaný. Prosím, stiahnite si Sodium, dajte ho do priečinka módov a reštartujte hru.",
   "iris.sodium.failure.reason.incompatible": "Iris potrebuje Sodium pre dobrý výkon, ale máte zlú verziu Sodium. Prosím, stiahnite si správnu verziu Sodium, dajte ho do priečinka módov, odstráňte zlú verziu a reštartujte hru.",
-
   "options.iris.apply": "Aplikovať",
   "options.iris.refresh": "Obnoviť",
   "options.iris.openShaderPackFolder": "Otvoriť priečinok s tieňovačmi...",
@@ -48,11 +47,9 @@
   "options.iris.shadowDistance": "Dohľadnosť tieňov",
   "options.iris.shadowDistance.enabled": "Mení maximálnu vzdialenosť vykreslenia tieňov. Terén a entity nebudú vrhať žiadne tiene. Toto nastavenie má veľký vplyv na výkon.",
   "options.iris.shadowDistance.disabled": "Tento tieňovač už nastavil dohľadnosť tieňov, už to nemôžeš nastavovať.",
-
   "pack.iris.select.title": "Vybrať",
   "pack.iris.configure.title": "Nastavovať",
   "pack.iris.list.label": "+ Potiahni a pusti tieňovače pre pridanie",
-
   "label.iris.true": "ZAP",
   "label.iris.false": "VYP"
 }
