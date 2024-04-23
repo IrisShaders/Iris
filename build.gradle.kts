@@ -216,7 +216,7 @@ tasks.withType<JavaCompile> {
 fun createVersionString(): String {
     val builder = StringBuilder()
 
-    val isReleaseBuild = project.hasProperty("build.release")
+    val isReleaseBuild = System.getProperty("build.release") != null
     val buildId = System.getenv("GITHUB_RUN_NUMBER")
 
     if (isReleaseBuild) {
@@ -226,13 +226,13 @@ fun createVersionString(): String {
         builder.append("-snapshot")
     }
 
-    val open = Grgit.open {
-        dir = rootDir
-    }
-
     builder.append("+mc").append(Constants.MINECRAFT_VERSION)
 
     if (!isReleaseBuild) {
+        val open = Grgit.open {
+            dir = rootDir
+        }
+
         if (buildId != null) {
             builder.append("-build.${buildId}")
         } else if (open == null) {
