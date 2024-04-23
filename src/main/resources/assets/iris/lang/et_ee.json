@@ -6,6 +6,8 @@
   "iris.shaders.debug.disabled": "Silumine on nüüd keelatud.",
   "iris.shaders.debug.failure": "Silumist ei saa lubada, sinu arvuti ei toeta silumisfunktsioone.",
   "iris.shaders.debug.restart": "Sul puudub silumiskontekst, silumiseks palun taaskäivita.",
+  "iris.load.failure.shader": "Varjutajapaki laadimine ebaõnnestus! Palun teata veast varjutaja arendajale. ",
+  "iris.load.failure.generic": "Irisel esines varjutaja laadmisel tõrge, palun teata sellest Irise arendajatele. ",
   "iris.shaders.ssbofailure": "Varjutaja taotles konkreetset funktsiooni (SSBO), mis ei ole sinu videokaardi poolt toetatud, see ei pruugi korrektselt töötada.",
   "iris.keybind.reload": "Laadi varjutajad uuesti",
   "iris.keybind.shaderPackSelection": "Varjutajapaki valikukuva",
@@ -64,11 +66,9 @@
   "options.iris.colorSpace.sodium_tooltip": "Värviruum, millesse ekraan teisendada. Töötab varjutajapakkide kohal. Kui pole kindel, kasuta SRGB.",
   "options.iris.gui.hide": "Peida liides",
   "options.iris.gui.show": "Kuva liides",
-
   "pack.iris.select.title": "Vali",
   "pack.iris.configure.title": "Seadista",
   "pack.iris.list.label": "+ Varjutajapakkide lisamiseks sikuta need siia",
-
   "label.iris.true": "Sees",
   "label.iris.false": "Väljas"
 }
