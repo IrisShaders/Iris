@@ -8,13 +8,14 @@
 - Added an attribute that allows you to see the emission value of a block. It is stored in `at_midBlock.w` and ranges
   from 0-15.
 - Added `cameraPositionInt` and `cameraPositionFract` for better precision, along with their respective previous
-  uniforms.
+  uniforms. *These values are unshifted, unlike the normal ones.*
 - Added `occlusion.culling` option.
 - Added support for Distant Horizons 2.0.3. This version is not officially released yet.
 - Added debug groups. This groups together information in RenderDoc for easy viewing.
 - Added support for Indirect Compute shaders. This allows you to dispatch a compute shader with the work group amount
   specified from a SSBO.
-    - To use this, you must use `indirect.pass = bufferObjectNumber` in shaders.properties, and the first object in the
+    - To use this, you must use `indirect.pass = bufferObjectNumber offsetInBuffer` in shaders.properties, and the
+      object at offset in the
       SSBO must be an `uvec3`.
         - ***If you do not do this, your PC will most likely crash trying to dispatch 2147483647^3 work groups. Don't do
           that.***
