@@ -28,9 +28,11 @@ public class IrisButton extends Button {
 		RenderSystem.enableDepthTest();
 		GuiUtil.bindIrisWidgetsTexture();
 		GuiUtil.drawButton(guiGraphics, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.isHoveredOrFocused(), this.active);
-		guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+		guiGraphics.setColor(1.0F, 1.0F, 1.0F, this.alphaSupplier.getAsFloat());
 		int lvInt6 = this.active ? 16777215 : 10526880;
 		this.renderString(guiGraphics, lvMinecraft5.font, lvInt6 | Mth.ceil(this.alphaSupplier.getAsFloat() * 255.0F) << 24);
+		guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+
 	}
 
 	public static IrisButton.Builder iris$builder(Component pComponent0, Button.OnPress pButton$OnPress1, FloatSupplier alpha) {
