@@ -131,46 +131,42 @@ public class ShaderCreator {
 		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex, isLeash);
 
 
-		String shaderJsonString = """
-			{
-			"    "blend": {
-			"        "func": "add",
-			"        "srcrgb": "srcalpha",
-			"        "dstrgb": "1-srcalpha"
-			"    },
-			"    "vertex": "" + name + "",
-			"    "fragment": "" + name + "",
-			"    "attributes": [
-			"        "Position",
-			"        "Color",
-			(inputs.hasTex() ? "        "UV0",
-   " : "") +
-			(inputs.hasOverlay() ? "        "UV1",
-   " : "") +
-			(inputs.hasLight() ? "        "UV2",
-   " : "") +
-			"        "Normal"
-			"    ],
-			"    "uniforms": [
-			"        { "name": "TextureMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
-			"        { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
-			"        { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
-			"        { "name": "ChunkOffset", "type": "float", "count": 3, "values": [ 0.0, 0.0, 0.0 ] },
-			"        { "name": "ColorModulator", "type": "float", "count": 4, "values": [ 1.0, 1.0, 1.0, 1.0 ] },
-			"        { "name": "GlintAlpha", "type": "float", "count": 1, "values": [ 1.0 ] },
-			"        { "name": "Light0_Direction", "type": "float", "count": 3, "values": [0.0, 0.0, 0.0] },
-			"        { "name": "Light1_Direction", "type": "float", "count": 3, "values": [0.0, 0.0, 0.0] },
-			"        { "name": "FogStart", "type": "float", "count": 1, "values": [ 0.0 ] },
-			"        { "name": "FogEnd", "type": "float", "count": 1, "values": [ 1.0 ] },
-			"        { "name": "FogDensity", "type": "float", "count": 1, "values": [ 1.0 ] },
-			"        { "name": "FogIsExp2", "type": "int", "count": 1, "values": [ 0 ] },
-			"        { "name": "AlphaTestValue", "type": "float", "count": 1, "values": [ 0.0 ] },
-			"        { "name": "LineWidth", "type": "float", "count": 1, "values": [ 1.0 ] },
-			"        { "name": "ScreenSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
-			"        { "name": "FogColor", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] }
-			"    ]
-			"}""";
-
+		String shaderJsonString = String.format("""
+			    {
+			    "blend": {
+			        "func": "add",
+			        "srcrgb": "srcalpha",
+			        "dstrgb": "1-srcalpha"
+			    },
+			    "vertex": "%s",
+			    "fragment": "%s",
+			    "attributes": [
+			        "Position",
+			        "Color",
+			        "UV0",
+			        "UV1",
+			        "UV2",
+			        "Normal"
+			    ],
+			    "uniforms": [
+			        		{ "name": "TextureMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+			        		{ "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+			        		{ "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+			        		{ "name": "ChunkOffset", "type": "float", "count": 3, "values": [ 0.0, 0.0, 0.0 ] },
+			        		{ "name": "ColorModulator", "type": "float", "count": 4, "values": [ 1.0, 1.0, 1.0, 1.0 ] },
+			        		{ "name": "GlintAlpha", "type": "float", "count": 1, "values": [ 1.0 ] },
+			        		{ "name": "Light0_Direction", "type": "float", "count": 3, "values": [0.0, 0.0, 0.0] },
+			        		{ "name": "Light1_Direction", "type": "float", "count": 3, "values": [0.0, 0.0, 0.0] },
+			        		{ "name": "FogStart", "type": "float", "count": 1, "values": [ 0.0 ] },
+			        		{ "name": "FogEnd", "type": "float", "count": 1, "values": [ 1.0 ] },
+			        		{ "name": "FogDensity", "type": "float", "count": 1, "values": [ 1.0 ] },
+			        		{ "name": "FogIsExp2", "type": "int", "count": 1, "values": [ 0 ] },
+			        		{ "name": "AlphaTestValue", "type": "float", "count": 1, "values": [ 0.0 ] },
+			        		{ "name": "LineWidth", "type": "float", "count": 1, "values": [ 1.0 ] },
+			        		{ "name": "ScreenSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
+			        		{ "name": "FogColor", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] }
+			    ]
+			}""", name, name);
 		ShaderPrinter.printProgram(name)
 			.addSource(PatchShaderType.VERTEX, vertex)
 			.addSource(PatchShaderType.FRAGMENT, fragment)
