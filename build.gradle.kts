@@ -183,16 +183,13 @@ tasks {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
         val sodiumCompatibility = sourceSets.getByName("sodiumCompatibility")
-        from(sodiumCompatibility.output.classesDirs)
-        from(sodiumCompatibility.output.resourcesDir)
+        from(sodiumCompatibility.output)
 
         val vendored = sourceSets.getByName("vendored")
-        from(vendored.output.classesDirs)
-        from(vendored.output.resourcesDir)
+        from(vendored.output)
 
         val desktop = sourceSets.getByName("desktop")
-        from(desktop.output.classesDirs)
-        from(desktop.output.resourcesDir)
+        from(desktop.output)
 
         manifest.attributes["Main-Class"] = "net.irisshaders.iris.LaunchWarn"
     }
