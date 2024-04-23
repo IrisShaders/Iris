@@ -14,7 +14,8 @@
 - Added debug groups. This groups together information in RenderDoc for easy viewing.
 - Added support for Indirect Compute shaders. This allows you to dispatch a compute shader with the work group amount
   specified from a SSBO.
-    - To use this, you must use `indirect.pass = bufferObjectNumber` in shaders.properties, and the first object in the
+    - To use this, you must use `indirect.pass = bufferObjectNumber offsetInBuffer` in shaders.properties, and the
+      object at offset in the
       SSBO must be an `uvec3`.
         - ***If you do not do this, your PC will most likely crash trying to dispatch 2147483647^3 work groups. Don't do
           that.***
