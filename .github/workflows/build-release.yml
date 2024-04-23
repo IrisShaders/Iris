@@ -1,9 +1,12 @@
 # This workflow will build a Java project with Brachyra
 # For more information see: docs/development/brachyura.md
 
-name: Java CI with Gradle
+name: Release script
 
-on: [ push, pull_request ]
+on:
+  release:
+    types:
+      - published
 
 jobs:
   build:
