@@ -5,7 +5,9 @@
   "iris.shaders.debug.enabled": "Debugging has been enabled, debug logging will be more verbose!",
   "iris.shaders.debug.disabled": "Debugging has been disabled.",
   "iris.shaders.debug.failure": "Cannot enable debugging, your computer does not support debug features.",
-  "iris.shaders.debug.restart": "You do not have a debug context, please restart to enable debugging.",
+  "iris.shaders.debug.restart": "You do not have a debug context, please restart to enable OpenGL client debugging.",
+  "iris.load.failure.shader": "The shaderpack failed to load! Please report the error to the shader developer. ",
+  "iris.load.failure.generic": "Iris encountered an issue trying to load the shader; please report this to Iris developers. ",
   "iris.shaders.ssbofailure": "The shader requested a specific feature (SSBO) that is not supported by your GPU, it may not work correctly.",
   "iris.keybind.reload": "Reload Shaders",
   "iris.keybind.shaderPackSelection": "Shaderpack Selection Screen",
@@ -64,11 +66,9 @@
   "options.iris.colorSpace.sodium_tooltip": "The color space to transform the screen to. Works on top of shader packs. Use SRGB if unsure.",
   "options.iris.gui.hide": "Hide GUI",
   "options.iris.gui.show": "Show GUI",
-
   "pack.iris.select.title": "Select",
   "pack.iris.configure.title": "Configure",
   "pack.iris.list.label": "+ Drag and Drop Shader Packs to add",
-
   "label.iris.true": "On",
   "label.iris.false": "Off"
 }

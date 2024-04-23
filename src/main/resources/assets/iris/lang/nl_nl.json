@@ -65,11 +65,9 @@
   "options.iris.colorSpace.sodium_tooltip": "De kleurruimte waarnaar het scherm moet worden getransformeerd. Werkt bovenop shader-packs. Gebruik SRGB als u het niet zeker weet.",
   "options.iris.gui.hide": "Verberg GUI",
   "options.iris.gui.show": "Toon GUI",
-
   "pack.iris.select.title": "Selecteren",
   "pack.iris.configure.title": "Configureer",
   "pack.iris.list.label": "+ Voeg Shader Packs toe door te slepen en neer te zetten",
-
   "label.iris.true": "Aan",
   "label.iris.false": "Uit"
 }

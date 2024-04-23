@@ -1,11 +1,11 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "plugin": "net.coderbot.iris.compat.indium.mixin.IrisIndiumCompatMixinPlugin",
-  "package": "net.coderbot.iris.compat.indium.mixin",
+  "plugin": "net.irisshaders.iris.compat.indium.mixin.IrisIndiumCompatMixinPlugin",
+  "package": "net.irisshaders.iris.compat.indium.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinBaseQuadRenderer"
+    "MixinAbstractBlockRenderContext"
   ],
   "injectors": {
     "defaultRequire": 1

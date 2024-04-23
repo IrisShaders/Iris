@@ -58,11 +58,9 @@
   "options.iris.shadowDistance.disabled": "Tu paquete de shaders actual ya estableció una distancia de renderizado para las sombras; no podés cambiarla.",
   "options.iris.gui.hide": "Esconder GUI",
   "options.iris.gui.show": "Mostrar GUI",
-
   "pack.iris.select.title": "Seleccionar",
   "pack.iris.configure.title": "Configurar",
   "pack.iris.list.label": "+ Arrastrá y soltá Shader Packs para agregar",
-
   "label.iris.true": "Activado",
   "label.iris.false": "Desactivado"
 }

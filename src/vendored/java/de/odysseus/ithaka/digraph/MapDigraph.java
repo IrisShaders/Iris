@@ -37,83 +37,9 @@ import java.util.TreeMap;
  */
 public class MapDigraph<V> implements Digraph<V> {
 	private static final int INVALID_WEIGHT = Integer.MIN_VALUE;
-
-	/**
-	 * Factory creating default <code>MapDigraph</code>.
-	 *
-	 * @return map de.odysseus.ithaka.digraph factory
-	 */
-	public static <V> DigraphFactory<MapDigraph<V>> getDefaultDigraphFactory() {
-		return getMapDigraphFactory(MapDigraph.getDefaultVertexMapFactory(null), MapDigraph.getDefaultEdgeMapFactory(null));
-	}
-
-	/**
-	 * Factory creating <code>MapDigraph</code>.
-	 *
-	 * @param vertexMapFactory factory to create vertex --> edge-map maps
-	 * @param edgeMapFactory   factory to create edge-target --> edge-value maps
-	 * @return map de.odysseus.ithaka.digraph factory
-	 */
-	public static <V> DigraphFactory<MapDigraph<V>> getMapDigraphFactory(
-			final VertexMapFactory<V> vertexMapFactory,
-			final EdgeMapFactory<V> edgeMapFactory) {
-		return () -> new MapDigraph<>(vertexMapFactory, edgeMapFactory);
-	}
-
-	/**
-	 * Vertex map factory (vertex to edge map).
-	 */
-	public interface VertexMapFactory<V> {
-		Map<V, Object2IntMap<V>> create();
-	}
-
-	/**
-	 * Edge map factory (edge target to edge value).
-	 */
-	public interface EdgeMapFactory<V> {
-		Object2IntMap<V> create(V source);
-	}
-
-	private static <V> VertexMapFactory<V> getDefaultVertexMapFactory(final Comparator<? super V> comparator) {
-		return new VertexMapFactory<V>() {
-			@Override
-			public Map<V, Object2IntMap<V>> create() {
-				if (comparator == null) {
-					return new LinkedHashMap<>(16);
-				} else {
-					return new TreeMap<>(comparator);
-				}
-			}
-		};
-	}
-
-	private static <V> EdgeMapFactory<V> getDefaultEdgeMapFactory(final Comparator<? super V> comparator) {
-		return new EdgeMapFactory<V>() {
-			@Override
-			public Object2IntMap<V> create(V ignore) {
-				Object2IntMap<V> map;
-
-				if (comparator == null) {
-					map = new Object2IntLinkedOpenHashMap<>(16);
-				} else {
-					map = new Object2IntAVLTreeMap<>(comparator);
-				}
-
-				map.defaultReturnValue(INVALID_WEIGHT);
-
-				return map;
-			}
-		};
-	}
-	
-	private static <V> Object2IntMap<V> createEmptyMap() {
-		return Object2IntMaps.emptyMap();
-	}
-
 	private final VertexMapFactory<V> vertexMapFactory;
 	private final EdgeMapFactory<V> edgeMapFactory;
 	private final Map<V, Object2IntMap<V>> vertexMap;
-
 	private int edgeCount;
 
 	/**
@@ -158,6 +84,64 @@ public class MapDigraph<V> implements Digraph<V> {
 		this.edgeMapFactory = edgeMapFactory;
 
 		vertexMap = vertexMapFactory.create();
+	}
+
+	/**
+	 * Factory creating default <code>MapDigraph</code>.
+	 *
+	 * @return map de.odysseus.ithaka.digraph factory
+	 */
+	public static <V> DigraphFactory<MapDigraph<V>> getDefaultDigraphFactory() {
+		return getMapDigraphFactory(MapDigraph.getDefaultVertexMapFactory(null), MapDigraph.getDefaultEdgeMapFactory(null));
+	}
+
+	/**
+	 * Factory creating <code>MapDigraph</code>.
+	 *
+	 * @param vertexMapFactory factory to create vertex --> edge-map maps
+	 * @param edgeMapFactory   factory to create edge-target --> edge-value maps
+	 * @return map de.odysseus.ithaka.digraph factory
+	 */
+	public static <V> DigraphFactory<MapDigraph<V>> getMapDigraphFactory(
+		final VertexMapFactory<V> vertexMapFactory,
+		final EdgeMapFactory<V> edgeMapFactory) {
+		return () -> new MapDigraph<>(vertexMapFactory, edgeMapFactory);
+	}
+
+	private static <V> VertexMapFactory<V> getDefaultVertexMapFactory(final Comparator<? super V> comparator) {
+		return new VertexMapFactory<V>() {
+			@Override
+			public Map<V, Object2IntMap<V>> create() {
+				if (comparator == null) {
+					return new LinkedHashMap<>(16);
+				} else {
+					return new TreeMap<>(comparator);
+				}
+			}
+		};
+	}
+
+	private static <V> EdgeMapFactory<V> getDefaultEdgeMapFactory(final Comparator<? super V> comparator) {
+		return new EdgeMapFactory<V>() {
+			@Override
+			public Object2IntMap<V> create(V ignore) {
+				Object2IntMap<V> map;
+
+				if (comparator == null) {
+					map = new Object2IntLinkedOpenHashMap<>(16);
+				} else {
+					map = new Object2IntAVLTreeMap<>(comparator);
+				}
+
+				map.defaultReturnValue(INVALID_WEIGHT);
+
+				return map;
+			}
+		};
+	}
+
+	private static <V> Object2IntMap<V> createEmptyMap() {
+		return Object2IntMaps.emptyMap();
 	}
 
 	@Override
@@ -429,5 +413,19 @@ public class MapDigraph<V> implements Digraph<V> {
 		}
 		b.append(")");
 		return b.toString();
+	}
+
+	/**
+	 * Vertex map factory (vertex to edge map).
+	 */
+	public interface VertexMapFactory<V> {
+		Map<V, Object2IntMap<V>> create();
+	}
+
+	/**
+	 * Edge map factory (edge target to edge value).
+	 */
+	public interface EdgeMapFactory<V> {
+		Object2IntMap<V> create(V source);
 	}
 }

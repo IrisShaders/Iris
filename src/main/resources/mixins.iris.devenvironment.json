@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.irisshaders.iris.mixin.devenvironment",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinMinecraft_NoAuthInDev",
+    "MixinProfileKeyPairManager",
+    "MixinSharedConstants_LazyDfu"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

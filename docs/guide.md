@@ -80,9 +80,9 @@ Make sure to check the [**Compatibility with other Fabric mods**](#compatibility
 7. You should get the following prompt:
    ![fabricsuccess](guide-resources/fabricsuccess.png)
    Click OK and close the installer.
-8. Download Iris and Sodium from your website of choice:
-    - Iris Shaders: [Modrinth](https://modrinth.com/mod/iris) or [Curseforge](https://www.curseforge.com/minecraft/mc-mods/irisshaders) (Old, pre 1.20 versions only)
-    - Sodium: [Modrinth](https://modrinth.com/mod/sodium), [Curseforge](https://www.curseforge.com/minecraft/mc-mods/sodium)
+8. Download Iris and Sodium from the following website:
+    - Iris Shaders: [Modrinth](https://modrinth.com/mod/iris)
+    - Sodium: [Modrinth](https://modrinth.com/mod/sodium)
 
    The following table shows which version of Sodium you need based on your Minecraft version:
 
@@ -178,7 +178,7 @@ If you are using **ANY** of the following mods:
 
 ... and many others which could possibly utilize the Fabric Rendering API, **you will experience issues when playing the game**.
 
-**Solution**: Download **Indium** ([Curseforge](https://www.curseforge.com/minecraft/mc-mods/indium), [Modrinth](https://modrinth.com/mod/indium)) and add it to your mods folder.
+**Solution**: Download **Indium** ([Modrinth](https://modrinth.com/mod/indium)) and add it to your mods folder.
 
 Make sure to download the version that supports your current version of Sodium:
 
@@ -198,7 +198,7 @@ ReplayMod provides builds of Sodium that are compatible with a specific version 
 
 ### Immersive Portals
 
-Check the [Immersive Portals Curseforge page](https://www.curseforge.com/minecraft/mc-mods/immersive-portals-mod) for notes on compatibility with Iris and Sodium.
+Check the [Immersive Portals Wiki](https://qouteall.fun/immptl/wiki/#sodium-compatibility) for notes on compatibility with Iris and Sodium.
 
 ## Support and useful links
 

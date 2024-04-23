@@ -59,11 +59,9 @@
   "options.iris.shadowDistance.sodium_tooltip": "Odległość renderowania cieni określa, jak daleko mogą być potencjalnie renderowane cienie. Mniejsza odległość oznacza, że mniejsza liczba cieni będzie renderowane, co poprawia liczbę klatek na sekundę. Opcja ta nie może być zmieniona w Shaderach, które jawnie określają odległość renderowania cieni. Rzeczywista odległość renderowania cieni jest ograniczona przez ustawienie Odległość widzenia.",
   "options.iris.gui.hide": "Ukryj GUI",
   "options.iris.gui.show": "Pokaż GUI",
-
   "pack.iris.select.title": "Wybierz",
   "pack.iris.configure.title": "Konfiguracja",
   "pack.iris.list.label": "+ Przeciągnij i upuść pakiety Shaderów, aby dodać",
-
   "label.iris.true": "Włączone",
   "label.iris.false": "Wyłączone"
 }

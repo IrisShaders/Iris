@@ -1,4 +1,7 @@
-name: build-release
+# This workflow will build a Java project with Brachyra
+# For more information see: docs/development/brachyura.md
+
+name: Release script
 
 on:
   release:
@@ -8,32 +11,32 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'temurin'
-          java-version: 17
-      - name: Cache Brachyura directory
-        uses: actions/cache@v2
-        with:
-          path: |
-            .brachyura
-            ~/.brachyura
-          key: ${{ runner.os }}-brachyura-${{ hashFiles('**/Buildscript.java') }}
-          restore-keys: ${{ runner.os }}-brachyura
+      - uses: actions/checkout@v2
 
-      - name: Build with Brachyura
-        run: java -Diris.release=true -jar brachyura-bootstrap-0.jar build
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
 
-      - name: Upload artifacts to Modrinth, Curseforge and GitHub
-        uses: Kir-Antipov/mc-publish@v3.2
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-read-only: false
+
+      - name: Run build with Gradle Wrapper
+        run: ./gradlew build -Dbuild.release=true
+
+      - name: Upload artifacts to Modrinth and GitHub
+        uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: YL57xq9U
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          modrinth-featured: false
+          modrinth-featured: true
+
+          curseforge-id: 455508
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
 
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -43,6 +46,6 @@ jobs:
 
           loaders: fabric quilt
 
-          dependencies: sodium | depends | *
+          dependencies: sodium
 
           version-resolver: latest # Defaults to selecting the latest compatible version of Minecraft, using the tag from the fabric.mod.json

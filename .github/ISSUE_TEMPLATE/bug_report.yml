@@ -29,7 +29,7 @@ body:
     id: logs
     attributes:
       label: Log output
-      description: 'Please upload a client log file by dragging and dropping it into this section. Usually this is found at `.minecraft/logs/latest.log`. If you are not sure how to find `.minecraft`, please see this article: https://minecraft.fandom.com/wiki/.minecraft#Locating_.minecraft. Please do not upload a compressed (`.log.gz`) file, they are very difficult for us to read when viewing issue reports. The log file instantly tells us important information like the versions of any other installed mods or if there are errors so it is very very important that you include it in your report.'
+      description: 'Please upload a client log file by dragging and dropping it into this section. Usually this is found at `.minecraft/logs/latest.log`. If you are not sure how to find `.minecraft`, please see this article: https://minecraft.wiki/w/.minecraft#Locating_.minecraft. Please do not upload a compressed (`.log.gz`) file, they are very difficult for us to read when viewing issue reports. The log file instantly tells us important information like the versions of any other installed mods or if there are errors so it is very very important that you include it in your report.'
   - type: input
     id: minecraft-version
     attributes:

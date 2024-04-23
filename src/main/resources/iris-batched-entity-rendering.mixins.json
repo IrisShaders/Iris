@@ -1,24 +1,26 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.coderbot.batchedentityrendering.mixin",
+  "package": "net.irisshaders.batchedentityrendering.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "ChunkBufferBuilderPackAccessor",
-    "OutlineBufferSourceAccessor",
+    "BufferSourceAccessor",
+    "CompositeStateAccessor",
     "MixinBufferBuilder",
     "MixinBufferBuilder_SegmentRendering",
-    "MixinRenderBuffers",
-    "MixinRenderType",
-    "MixinDebugScreenOverlay",
-    "MixinFishingHookRenderer",
     "MixinBufferSource",
     "MixinCompositeRenderType",
+    "MixinDebugScreenOverlay",
+    "MixinFishingHookRenderer",
     "MixinLevelRenderer",
     "MixinLevelRenderer_EntityListSorting",
-    "CompositeStateAccessor",
+    "MixinRenderBuffers",
+    "MixinRenderType",
+    "MixinSheets",
+    "OutlineBufferSourceAccessor",
+    "RenderStateShardAccessor",
     "RenderTypeAccessor",
-    "RenderStateShardAccessor"
+    "SectionBufferBuilderPackAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

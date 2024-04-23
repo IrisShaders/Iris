@@ -16,7 +16,6 @@
   "iris.sodium.failure.download": "Download Sodium",
   "iris.sodium.failure.reason.notFound": "˙ǝɯɐƃ ǝɥʇ ɥɔunɐן-ǝɹ puɐ ´ɹǝpןoɟ spoɯ ɹnoʎ uᴉ ʇᴉ ǝɔɐןd ´ɯnᴉpoS pɐoןuʍop ǝsɐǝןԀ ˙pǝןןɐʇsuᴉ ʇou sᴉ ɯnᴉpoS ʇnq ´ǝɔuɐɯɹoɟɹǝd pooƃ ɹoɟ ɯnᴉpoS sǝɹᴉnbǝɹ sᴉɹI",
   "iris.sodium.failure.reason.incompatible": "˙ǝɯɐƃ ǝɥʇ ɥɔunɐן-ǝɹ puɐ ´uoᴉsɹǝʌ ʇɔǝɹɹoɔuᴉ ǝɥʇ ǝʌoɯǝɹ ´ɹǝpןoɟ spoɯ ɹnoʎ uᴉ ʇᴉ ǝɔɐןd ´ɯnᴉpoS ɟo uoᴉsɹǝʌ ʇɔǝɹɹoɔ ǝɥʇ pɐoןuʍop ǝsɐǝןԀ ˙punoɟ sɐʍ uoᴉsɹǝʌ ǝןqᴉʇɐdɯoɔuᴉ uɐ ʇnq ´ǝɔuɐɯɹoɟɹǝd pooƃ ɹoɟ ɯnᴉpoS sǝɹᴉnbǝɹ sᴉɹI",
-
   "options.iris.apply": "ʎןdd∀",
   "options.iris.refresh": "ɥsǝɹɟǝᴚ",
   "options.iris.openShaderPackFolder": "˙˙˙ɹǝpןoℲ ʞɔɐԀ ɹǝpɐɥS uǝdO",
@@ -49,11 +48,9 @@
   "options.iris.shadowDistance": "ǝɔuɐʇsᴉᗡ ʍopɐɥS xɐW",
   "options.iris.shadowDistance.enabled": "˙ǝɔuɐɯɹoɟɹǝd ǝsɐǝɹɔuᴉ ʎןʇuɐɔᴉɟᴉuƃᴉs uɐɔ ǝɔuɐʇsᴉp ʍopɐɥs ǝɥʇ ƃuᴉɹǝʍoꞀ ˙sʍopɐɥs ʇsɐɔ ʇou ןןᴉʍ ǝɔuɐʇsᴉp sᴉɥʇ puoʎǝq sǝᴉʇᴉʇuǝ puɐ uᴉɐɹɹǝ⊥ ˙sʍopɐɥs ɹoɟ ǝɔuɐʇsᴉp ɯnɯᴉxɐɯ ǝɥʇ ǝƃuɐɥɔ oʇ noʎ sʍoןן∀",
   "options.iris.shadowDistance.disabled": "˙ʇᴉ ǝƃuɐɥɔ ʇouuɐɔ noʎ ؛sʍopɐɥs ɹoɟ ǝɔuɐʇsᴉp ɹǝpuǝɹ ɐ ʇǝs ʎpɐǝɹןɐ sɐɥ ʞɔɐd ɹǝpɐɥs ʇuǝɹɹnɔ ɹno⅄",
-
   "pack.iris.select.title": "ʇɔǝןǝS",
   "pack.iris.configure.title": "ǝɹnƃᴉɟuoϽ",
   "pack.iris.list.label": "ppɐ oʇ sʞɔɐԀ ɹǝpɐɥS doɹᗡ puɐ ƃɐɹᗡ +",
-
   "label.iris.true": "uO",
   "label.iris.false": "ɟɟO"
 }
