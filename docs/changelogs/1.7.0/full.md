@@ -8,7 +8,7 @@
 - Added an attribute that allows you to see the emission value of a block. It is stored in `at_midBlock.w` and ranges
   from 0-15.
 - Added `cameraPositionInt` and `cameraPositionFract` for better precision, along with their respective previous
-  uniforms.
+  uniforms. *These values are unshifted, unlike the normal ones.*
 - Added `occlusion.culling` option.
 - Added support for Distant Horizons 2.0.3. This version is not officially released yet.
 - Added debug groups. This groups together information in RenderDoc for easy viewing.
