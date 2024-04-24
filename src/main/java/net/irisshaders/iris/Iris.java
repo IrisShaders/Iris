@@ -14,6 +14,7 @@ import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.gui.debug.DebugLoadFailedGridScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
+import net.irisshaders.iris.helpers.CooldownKeyMapping;
 import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.PipelineManager;
@@ -710,11 +711,6 @@ public class Iris {
 
 		updateChecker = new UpdateChecker(IRIS_VERSION);
 
-		reloadKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
-		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
-		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
-		wireframeKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("iris.keybind.wireframe", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), "iris.keybinds"));
-
 		DHCompat.run();
 
 		try {
@@ -734,6 +730,11 @@ public class Iris {
 			logger.error("Failed to initialize Iris configuration, default values will be used instead");
 			logger.error("", e);
 		}
+
+		reloadKeybind = KeyBindingHelper.registerKeyBinding(new CooldownKeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds"));
+		toggleShadersKeybind = KeyBindingHelper.registerKeyBinding(new CooldownKeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds"));
+		shaderpackScreenKeybind = KeyBindingHelper.registerKeyBinding(new CooldownKeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "iris.keybinds"));
+		wireframeKeybind = KeyBindingHelper.registerKeyBinding(new CooldownKeyMapping("iris.keybind.wireframe", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), "iris.keybinds"));
 
 		updateChecker.checkForUpdates(irisConfig);
 

@@ -35,12 +35,17 @@ public class IrisConfig {
 	 * If the update notification should be disabled or not.
 	 */
 	private boolean disableUpdateMessage;
+	/**
+	 * The cooldown amount (in ticks) after a key press to prevent spamming.
+	 */
+	private int keyPressCooldown;
 
 	public IrisConfig(Path propertiesPath) {
 		shaderPackName = null;
 		enableShaders = true;
 		enableDebugOptions = false;
 		disableUpdateMessage = false;
+		keyPressCooldown = 20;
 		this.propertiesPath = propertiesPath;
 	}
 
@@ -102,6 +107,13 @@ public class IrisConfig {
 		return disableUpdateMessage;
 	}
 
+	/**
+	 * Returns the cooldown amount (in ticks) after a key press to prevent spamming.
+	 */
+	public int getKeyPressCooldown() {
+		return keyPressCooldown;
+	}
+
 	public void setDebugEnabled(boolean enabled) {
 		enableDebugOptions = enabled;
 	}
@@ -134,6 +146,14 @@ public class IrisConfig {
 		enableDebugOptions = "true".equals(properties.getProperty("enableDebugOptions"));
 		disableUpdateMessage = "true".equals(properties.getProperty("disableUpdateMessage"));
 		try {
+			keyPressCooldown = Integer.parseInt(properties.getProperty("keyPressCooldown", "20"));
+		} catch (NumberFormatException e) {
+			Iris.logger.error("Key press cooldown setting reset; value is invalid.");
+			keyPressCooldown = 20;
+			save();
+		}
+
+		try {
 			IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("maxShadowRenderDistance", "32"));
 			IrisVideoSettings.colorSpace = ColorSpace.valueOf(properties.getProperty("colorSpace", "SRGB"));
 		} catch (IllegalArgumentException e) {
@@ -161,6 +181,7 @@ public class IrisConfig {
 		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
 		properties.setProperty("enableDebugOptions", enableDebugOptions ? "true" : "false");
 		properties.setProperty("disableUpdateMessage", disableUpdateMessage ? "true" : "false");
+		properties.setProperty("keyPressCooldown", String.valueOf(keyPressCooldown));
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
 		properties.setProperty("colorSpace", IrisVideoSettings.colorSpace.name());
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding
