@@ -23,4 +23,7 @@ public interface GameRendererAccessor {
 
 	@Invoker
 	double invokeGetFov(Camera camera, float tickDelta, boolean b);
+
+	@Invoker("shouldRenderBlockOutline")
+	boolean shouldRenderBlockOutlineA();
 }
