@@ -55,6 +55,10 @@ public class StandardMacros {
 			define(standardDefines, "DISTANT_HORIZONS");
 		}
 
+		if (FabricLoader.getInstance().isModLoaded("continuity")) {
+			define(standardDefines, "IRIS_HAS_CONNECTED_TEXTURES");
+		}
+
 		define(standardDefines, "DH_BLOCK_UNKNOWN", String.valueOf(0));
 		define(standardDefines, "DH_BLOCK_LEAVES", String.valueOf(1));
 		define(standardDefines, "DH_BLOCK_STONE", String.valueOf(2));
