@@ -137,8 +137,8 @@ dependencies {
 
     include("org.antlr:antlr4-runtime:4.11.1")
     modImplementation("org.antlr:antlr4-runtime:4.11.1")
-    include("io.github.douira:glsl-transformer:2.0.0-pre13")
-    modImplementation("io.github.douira:glsl-transformer:2.0.0-pre13")
+    include("io.github.douira:glsl-transformer:2.0.0")
+    modImplementation("io.github.douira:glsl-transformer:2.0.0")
     include("org.anarres:jcpp:1.4.14")
     modImplementation("org.anarres:jcpp:1.4.14")
 
