@@ -11,7 +11,7 @@
   "iris.shaders.ssbofailure": "Запрашиваемая шейдером функция (SSBO) не поддерживается вашим ГП, шейдер может работать неправильно.",
   "iris.keybind.reload": "Перезагрузить шейдеры",
   "iris.keybind.shaderPackSelection": "Список наборов шейдеров",
-  "iris.keybind.wireframe": "Вайрфрейм (только SP)",
+  "iris.keybind.wireframe": "Полигональная сетка (только локальные миры)",
   "iris.keybind.toggleShaders": "Переключить шейдеры",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Не удалось перезагрузить шейдеры. Причина: %s",
