@@ -135,10 +135,10 @@ dependencies {
     mappings(loom.officialMojangMappings())
     modImplementation(group = "net.fabricmc", name = "fabric-loader", version = Constants.FABRIC_LOADER_VERSION)
 
-    include("org.antlr:antlr4-runtime:4.11.1")
-    modImplementation("org.antlr:antlr4-runtime:4.11.1")
-    include("io.github.douira:glsl-transformer:2.0.0-pre13")
-    modImplementation("io.github.douira:glsl-transformer:2.0.0-pre13")
+    include("org.antlr:antlr4-runtime:4.13.1")
+    modImplementation("org.antlr:antlr4-runtime:4.13.1")
+    include("io.github.douira:glsl-transformer:2.0.1")
+    modImplementation("io.github.douira:glsl-transformer:2.0.1")
     include("org.anarres:jcpp:1.4.14")
     modImplementation("org.anarres:jcpp:1.4.14")
 
