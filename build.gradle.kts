@@ -47,7 +47,7 @@ plugins {
     // This prevents a lot of issues where the build script can fail randomly because the Fabric Maven server
     // is not reachable for some reason, and it makes builds much more reproducible. Observation also shows that it
     // really helps to improve startup times on slow connections.
-    id("fabric-loom") version "1.6.5"
+    id("fabric-loom") version "1.6.6"
     id("org.ajoberstar.grgit") version "5.2.2"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
@@ -160,6 +160,7 @@ dependencies {
     modCompileOnly(fabricApi.module("fabric-rendering-data-attachment-v1", Constants.FABRIC_API_VERSION))
     modCompileOnly(fabricApi.module("fabric-resource-loader-v0", Constants.FABRIC_API_VERSION))
     modCompileOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
+    modRuntimeOnly(group = "com.lodborg", name = "interval-tree", version = "1.0.0")
 
     modCompileOnly(files(projectDir.resolve("DHApi.jar")))
 

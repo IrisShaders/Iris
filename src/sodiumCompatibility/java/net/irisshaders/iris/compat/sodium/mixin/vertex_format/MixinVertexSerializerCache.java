@@ -2,7 +2,7 @@ package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
-import me.jellysquid.mods.sodium.client.render.vertex.serializers.VertexSerializerRegistryImpl;
+import net.caffeinemc.mods.sodium.client.render.vertex.serializers.VertexSerializerRegistryImpl;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;

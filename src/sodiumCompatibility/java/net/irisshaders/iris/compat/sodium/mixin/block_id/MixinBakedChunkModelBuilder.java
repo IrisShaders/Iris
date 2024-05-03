@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.sodium.mixin.block_id;
 
-import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.BakedChunkModelBuilder;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.buffers.BakedChunkModelBuilder;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
 import net.irisshaders.iris.compat.sodium.impl.block_context.BlockContextHolder;
 import net.irisshaders.iris.compat.sodium.impl.block_context.ContextAwareVertexWriter;
 import org.spongepowered.asm.mixin.Final;

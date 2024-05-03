@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexFormatDescriptionImpl;
+import net.caffeinemc.mods.sodium.client.render.vertex.VertexFormatDescriptionImpl;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

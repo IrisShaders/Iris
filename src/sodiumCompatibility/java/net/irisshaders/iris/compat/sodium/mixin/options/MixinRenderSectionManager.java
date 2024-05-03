@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.sodium.mixin.options;
 
-import me.jellysquid.mods.sodium.client.gui.SodiumGameOptions;
-import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
+import net.caffeinemc.mods.sodium.client.gui.SodiumGameOptions;
+import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.irisshaders.iris.Iris;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinRenderSectionManager {
 	@Redirect(method = "getSearchDistance", remap = false,
 		at = @At(value = "FIELD",
-			target = "Lme/jellysquid/mods/sodium/client/gui/SodiumGameOptions$PerformanceSettings;useFogOcclusion:Z",
+			target = "Lnet/caffeinemc/mods/sodium/client/gui/SodiumGameOptions$PerformanceSettings;useFogOcclusion:Z",
 			remap = false))
 	private boolean iris$disableFogOcclusion(SodiumGameOptions.PerformanceSettings settings) {
 		if (Iris.getCurrentPack().isPresent()) {

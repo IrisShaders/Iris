@@ -1,8 +1,8 @@
 package net.irisshaders.iris.compat.sodium.mixin.vertex_format;
 
-import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttribute;
-import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeFormat;
-import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
+import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexAttribute;
+import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexAttributeFormat;
+import net.caffeinemc.mods.sodium.client.gl.attribute.GlVertexFormat;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
