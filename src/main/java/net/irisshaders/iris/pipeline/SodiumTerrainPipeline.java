@@ -2,7 +2,7 @@ package net.irisshaders.iris.pipeline;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.AlphaTests;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;

@@ -10,8 +10,8 @@ object Constants {
     // https://semver.org/
     const val MOD_VERSION: String = "1.7.0"
 
-    const val CUSTOM_SODIUM: Boolean = false
-    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshot+mc24w14a-local.jar"
+    const val CUSTOM_SODIUM: Boolean = true
+    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-1.20.5-0.6.0-snapshot+mc1.20.5-local.jar"
 
     const val IS_SHARED_BETA: Boolean = false
     const val ACTIVATE_RENDERDOC: Boolean = false
@@ -40,7 +40,7 @@ plugins {
     // This prevents a lot of issues where the build script can fail randomly because the Fabric Maven server
     // is not reachable for some reason, and it makes builds much more reproducible. Observation also shows that it
     // really helps to improve startup times on slow connections.
-    id("fabric-loom") version "1.6.5"
+    id("fabric-loom") version "1.6.6"
     id("org.ajoberstar.grgit") version "5.2.2"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
@@ -153,6 +153,8 @@ dependencies {
     modRuntimeOnly(fabricApi.module("fabric-rendering-data-attachment-v1", Constants.FABRIC_API_VERSION))
     modRuntimeOnly(fabricApi.module("fabric-resource-loader-v0", Constants.FABRIC_API_VERSION))
     modRuntimeOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
+    modRuntimeOnly(fabricApi.module("fabric-renderer-api-v1", Constants.FABRIC_API_VERSION))
+    modRuntimeOnly(group = "com.lodborg", name = "interval-tree", version = "1.0.0")
 
     modCompileOnly(files(projectDir.resolve("DHApi.jar")))
 

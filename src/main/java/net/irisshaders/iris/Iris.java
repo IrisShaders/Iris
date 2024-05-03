@@ -3,6 +3,7 @@ package net.irisshaders.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.sun.jna.platform.linux.LibC;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
@@ -99,6 +100,7 @@ public class Iris {
 	static {
 		if (!BuildConfig.ACTIVATE_RENDERDOC && FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
 			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
+			LibC.INSTANCE.setenv("__GL_THREADED_OPTIMIZATIONS", "0", 1);
 		}
 	}
 

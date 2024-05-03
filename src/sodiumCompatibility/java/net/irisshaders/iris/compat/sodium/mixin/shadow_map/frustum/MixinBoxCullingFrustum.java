@@ -1,8 +1,8 @@
 package net.irisshaders.iris.compat.sodium.mixin.shadow_map.frustum;
 
-import me.jellysquid.mods.sodium.client.render.viewport.Viewport;
-import me.jellysquid.mods.sodium.client.render.viewport.ViewportProvider;
-import me.jellysquid.mods.sodium.client.render.viewport.frustum.Frustum;
+import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
+import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
+import net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.irisshaders.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import org.joml.Vector3d;

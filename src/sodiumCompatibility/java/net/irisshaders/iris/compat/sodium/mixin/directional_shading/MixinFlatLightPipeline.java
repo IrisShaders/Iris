@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.mixin.directional_shading;
 
-import me.jellysquid.mods.sodium.client.model.light.flat.FlatLightPipeline;
+import net.caffeinemc.mods.sodium.client.model.light.flat.FlatLightPipeline;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockAndTintGetter;

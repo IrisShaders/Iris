@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.impl.shader_overrides;
 
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniform;
 import org.joml.Matrix3f;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.system.MemoryStack;

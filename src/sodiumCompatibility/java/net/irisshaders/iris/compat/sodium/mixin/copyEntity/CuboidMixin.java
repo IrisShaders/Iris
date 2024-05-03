@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.sodium.mixin.copyEntity;
 
-import me.jellysquid.mods.sodium.client.model.ModelCuboidAccessor;
-import me.jellysquid.mods.sodium.client.render.immediate.model.ModelCuboid;
+import net.caffeinemc.mods.sodium.client.model.ModelCuboidAccessor;
+import net.caffeinemc.mods.sodium.client.render.immediate.model.ModelCuboid;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.core.Direction;
 import org.objectweb.asm.Opcodes;

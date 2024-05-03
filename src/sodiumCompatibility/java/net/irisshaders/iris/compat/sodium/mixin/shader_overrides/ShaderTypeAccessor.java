@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.mixin.shader_overrides;
 
-import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
+import net.caffeinemc.mods.sodium.client.gl.shader.ShaderType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 

@@ -2,11 +2,11 @@ package net.irisshaders.iris.compat.sodium.mixin.copyEntity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import me.jellysquid.mods.sodium.client.model.ModelCuboidAccessor;
-import me.jellysquid.mods.sodium.client.render.immediate.model.EntityRenderer;
-import me.jellysquid.mods.sodium.client.render.immediate.model.ModelCuboid;
-import me.jellysquid.mods.sodium.client.render.immediate.model.ModelPartData;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexConsumerUtils;
+import net.caffeinemc.mods.sodium.client.model.ModelCuboidAccessor;
+import net.caffeinemc.mods.sodium.client.render.immediate.model.EntityRenderer;
+import net.caffeinemc.mods.sodium.client.render.immediate.model.ModelCuboid;
+import net.caffeinemc.mods.sodium.client.render.immediate.model.ModelPartData;
+import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;

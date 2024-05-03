@@ -1,18 +1,20 @@
 package net.irisshaders.iris.compat.sodium.mixin.block_id;
 
-import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFacing;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderCache;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderContext;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderMeshingTask;
-import me.jellysquid.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
-import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
-import me.jellysquid.mods.sodium.client.util.task.CancellationToken;
-import me.jellysquid.mods.sodium.client.world.WorldSlice;
+import net.caffeinemc.mods.sodium.client.model.quad.properties.ModelQuadFacing;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildOutput;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuilder;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderCache;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderContext;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderMeshingTask;
+import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
+import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import net.caffeinemc.mods.sodium.client.util.task.CancellationToken;
+import net.caffeinemc.mods.sodium.client.world.LevelSlice;
 import net.irisshaders.iris.compat.sodium.impl.block_context.ChunkBuildBuffersExt;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.vertices.ExtendedDataHelper;
@@ -34,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class MixinChunkRenderRebuildTask {
 	private final ChunkVertexEncoder.Vertex[] vertices = ChunkVertexEncoder.Vertex.uninitializedQuad();
 
-	@Inject(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
+	@Inject(method = "execute(Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lnet/caffeinemc/mods/sodium/client/util/task/CancellationToken;)Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
 		target = "net/minecraft/world/level/block/state/BlockState.getRenderShape()" +
 			"Lnet/minecraft/world/level/block/RenderShape;"),
 		locals = LocalCapture.CAPTURE_FAILHARD)
@@ -42,8 +44,8 @@ public class MixinChunkRenderRebuildTask {
 								  CancellationToken cancellationSource, CallbackInfoReturnable<ChunkBuildOutput> cir,
 								  BuiltSectionInfo.Builder renderData, VisGraph occluder, ChunkBuildBuffers buffers,
 								  BlockRenderCache cacheLocal,
-								  WorldSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
-								  BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, BlockRenderContext context2,
+								  LevelSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
+								  BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, TranslucentGeometryCollector collector, BlockRenderer context2,
 								  int relY, int relZ, int relX, BlockState blockState) {
 		if (WorldRenderingSettings.INSTANCE.shouldVoxelizeLightBlocks() && blockState.getBlock() instanceof LightBlock) {
 			ChunkModelBuilder buildBuffers = buffers.get(DefaultMaterials.CUTOUT);
@@ -69,35 +71,35 @@ public class MixinChunkRenderRebuildTask {
 		}
 	}
 
-	@Inject(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
+	@Inject(method = "execute(Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lnet/caffeinemc/mods/sodium/client/util/task/CancellationToken;)Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/renderer/block/BlockModelShaper;getBlockModel(Lnet/minecraft/world/level/block/state/BlockState;)Lnet/minecraft/client/resources/model/BakedModel;"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void iris$wrapGetBlockLayer(ChunkBuildContext context,
 										CancellationToken cancellationSource, CallbackInfoReturnable<ChunkBuildOutput> cir,
 										BuiltSectionInfo.Builder renderData, VisGraph occluder, ChunkBuildBuffers buffers,
 										BlockRenderCache cacheLocal,
-										WorldSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
-										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, BlockRenderContext context2,
+										LevelSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
+										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, TranslucentGeometryCollector collector, BlockRenderer context2,
 										int relY, int relZ, int relX, BlockState blockState) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(blockState, ExtendedDataHelper.BLOCK_RENDER_TYPE, (byte) blockState.getLightEmission());
 		}
 	}
 
-	@Inject(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
-		target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/pipeline/FluidRenderer;render(Lme/jellysquid/mods/sodium/client/world/WorldSlice;Lnet/minecraft/world/level/material/FluidState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildBuffers;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject(method = "execute(Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lnet/caffeinemc/mods/sodium/client/util/task/CancellationToken;)Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;", at = @At(value = "INVOKE",
+		target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/pipeline/FluidRenderer;render(Lnet/caffeinemc/mods/sodium/client/world/LevelSlice;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/material/FluidState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;Lnet/caffeinemc/mods/sodium/client/render/chunk/translucent_sorting/TranslucentGeometryCollector;Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/ChunkBuildBuffers;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void iris$wrapGetFluidLayer(ChunkBuildContext context,
 										CancellationToken cancellationSource, CallbackInfoReturnable<ChunkBuildOutput> cir,
 										BuiltSectionInfo.Builder renderData, VisGraph occluder, ChunkBuildBuffers buffers,
 										BlockRenderCache cacheLocal,
-										WorldSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
-										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, BlockRenderContext context2,
+										LevelSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
+										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, TranslucentGeometryCollector collector, BlockRenderer context2,
 										int relY, int relZ, int relX, BlockState blockState, FluidState fluidState) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE, (byte) blockState.getLightEmission());
 		}
 	}
 
-	@Inject(method = "execute(Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lme/jellysquid/mods/sodium/client/util/task/CancellationToken;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;",
+	@Inject(method = "execute(Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/ChunkBuildContext;Lnet/caffeinemc/mods/sodium/client/util/task/CancellationToken;)Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/ChunkBuildOutput;",
 		at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;hasBlockEntity()Z"))
 	private void iris$resetContext(ChunkBuildContext buildContext, CancellationToken cancellationSource, CallbackInfoReturnable<ChunkBuildOutput> cir) {
 		if (buildContext.buffers instanceof ChunkBuildBuffersExt) {

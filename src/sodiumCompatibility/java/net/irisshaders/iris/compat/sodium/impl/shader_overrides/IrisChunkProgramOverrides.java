@@ -1,13 +1,14 @@
 package net.irisshaders.iris.compat.sodium.impl.shader_overrides;
 
-import me.jellysquid.mods.sodium.client.gl.GlObject;
-import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
-import me.jellysquid.mods.sodium.client.gl.shader.GlShader;
-import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
-import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkFogMode;
-import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
-import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import net.caffeinemc.mods.sodium.client.gl.GlObject;
+import net.caffeinemc.mods.sodium.client.gl.shader.GlProgram;
+import net.caffeinemc.mods.sodium.client.gl.shader.GlShader;
+import net.caffeinemc.mods.sodium.client.gl.shader.ShaderType;
+import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkFogMode;
+import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
+import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.sodium.impl.IrisChunkShaderBindingPoints;
 import net.irisshaders.iris.gl.GLDebug;
@@ -242,10 +243,11 @@ public class IrisChunkProgramOverrides {
 			return builder.attachShader(vertShader)
 				.attachShader(fragShader)
 				// The following 4 attributes are part of Sodium.
-				.bindAttribute("a_PosId", IrisChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID)
-				.bindAttribute("a_Color", IrisChunkShaderBindingPoints.ATTRIBUTE_COLOR)
-				.bindAttribute("a_TexCoord", IrisChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE)
-				.bindAttribute("a_LightCoord", IrisChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE)
+				.bindAttribute("a_PositionHi", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_HI)
+				.bindAttribute("a_PositionLo", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_LO)
+				.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
+				.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_TEXTURE)
+				.bindAttribute("a_LightAndData", ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_MATERIAL_INDEX)
 				.bindAttribute("mc_Entity", IrisChunkShaderBindingPoints.BLOCK_ID)
 				.bindAttribute("mc_midTexCoord", IrisChunkShaderBindingPoints.MID_TEX_COORD)
 				.bindAttribute("at_tangent", IrisChunkShaderBindingPoints.TANGENT)

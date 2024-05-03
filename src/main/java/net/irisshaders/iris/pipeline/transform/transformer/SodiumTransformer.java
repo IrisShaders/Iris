@@ -27,8 +27,7 @@ public class SodiumTransformer {
 		replaceMidTexCoord(t, tree, root, 1.0f / 32768.0f);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
-		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "mat4(1.0)");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
@@ -136,20 +135,53 @@ public class SodiumTransformer {
 			// translated from sodium's chunk_vertex.glsl
 			"vec3 _vert_position;",
 			"vec2 _vert_tex_diffuse_coord;",
-			"ivec2 _vert_tex_light_coord;",
+			"vec2 _vert_tex_light_coord;",
 			"vec4 _vert_color;",
+			"const float POSITION_MAX_COORD   = 1 << 20;",
+			"const float TEXTURE_MAX_COORD    = 1 << 15;",
+			"const float VERTEX_SCALE = 32.0 / POSITION_MAX_COORD;",
+			"const float VERTEX_OFFSET = -8.0;",
+			"const float TEXTURE_BIAS_VALUE = (1.0 - (1.0 / 64.0)) / TEXTURE_MAX_COORD;",
+			"const float LIGHT_MAX_COORD      = 1 << 8;",
 			"uint _draw_id;",
 			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
+			"""
+				vec3 _decode_position(vec3 hi, vec3 lo) {
+				    // The 2.10.10.10 vertex formats do not support being interpreted as integer data within the shader.
+				    // Because of this, we need to emulate the bitwise ops with floating-point arithmetic. There is probably no
+				    // performance penalty to doing this (other than making things uglier) since GPUs typically have the same
+				    // throughput for Fp32 mul/add and Int32 shl/or operations.
+				   \s
+				    vec3 interleaved = (hi * (1 << 10)) + lo; // (hi << 10) | lo
+				    vec3 normalized = (interleaved * VERTEX_SCALE) + VERTEX_OFFSET;
+				   \s
+				    return normalized;
+				}
+			\t""",
+			"""
+				vec2 _decode_texcoord(vec2 value) {
+				    // Magnitude is within range (0, 32768)
+				    // Sign bit encodes bias direction
+				    vec2 texcoord = abs(value) / TEXTURE_MAX_COORD;
+				    vec2 bias = sign(value) * TEXTURE_BIAS_VALUE;
+				   \s
+				    return texcoord - bias;
+				}
+			""",
+			"""
+				vec2 _decode_light(uvec2 value) {
+				    return vec2(value) / LIGHT_MAX_COORD;
+				}
+				""",
 			"float _material_mip_bias(uint material) {\n" +
 				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
 				"}",
 			"void _vert_init() {" +
-				"_vert_position = (vec3(a_PosId.xyz) * 0.00048828125 + -8.0"
-				+ ");" +
-				"_vert_tex_diffuse_coord = (a_TexCoord * " + (1.0f / 32768.0f) + ");" +
-				"_vert_tex_light_coord = a_LightCoord;" +
+				"_vert_position = _decode_position(a_PositionHi, a_PositionLo);" +
+				"_vert_tex_diffuse_coord = _decode_texcoord(a_TexCoord);" +
+				"_vert_tex_light_coord = _decode_light(a_LightAndData.xy);" +
 				"_vert_color = " + separateAo + ";" +
-				"_draw_id = (a_PosId.w >> 8u) & 0xFFu; }",
+				"_draw_id = a_LightAndData[3]; }",
 
 			"uvec3 _get_relative_chunk_coord(uint pos) {\n" +
 				"    // Packing scheme is defined by LocalSectionIndex\n" +
@@ -158,10 +190,11 @@ public class SodiumTransformer {
 			"vec3 _get_draw_translation(uint pos) {\n" +
 				"    return _get_relative_chunk_coord(pos) * vec3(16.0f);\n" +
 				"}\n");
-		addIfNotExists(root, t, tree, "a_PosId", Type.U32VEC4, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "a_PositionHi", Type.F32VEC3, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "a_PositionLo", Type.F32VEC3, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_TexCoord", Type.F32VEC2, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_Color", Type.F32VEC4, StorageQualifier.StorageType.IN);
-		addIfNotExists(root, t, tree, "a_LightCoord", Type.I32VEC2, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "a_LightAndData", Type.U32VEC4, StorageQualifier.StorageType.IN);
 		tree.prependMainFunctionBody(t, "_vert_init();");
 	}
 

@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.sodium.impl.shader_overrides;
 
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniform;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 
 import java.util.function.IntFunction;
 
