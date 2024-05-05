@@ -286,6 +286,10 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			return shadowRenderTargets;
 		};
 
+		if (shadowDirectives.isShadowEnabled() == OptionalBoolean.TRUE) {
+			shadowTargetsSupplier.get();
+		}
+
 		this.shadowComputes = createShadowComputes(programSet.getShadowCompute(), programSet);
 
 		this.beginRenderer = new CompositeRenderer(this, programSet.getPackDirectives(), programSet.getBegin(), programSet.getBeginCompute(), renderTargets, shaderStorageBufferHolder,
@@ -444,10 +448,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		WorldRenderingSettings.INSTANCE.setVoxelizeLightBlocks(programSet.getPackDirectives().shouldVoxelizeLightBlocks());
 		WorldRenderingSettings.INSTANCE.setSeparateEntityDraws(programSet.getPackDirectives().shouldUseSeparateEntityDraws());
 		WorldRenderingSettings.INSTANCE.setUseExtendedVertexFormat(true);
-
-		if (shadowRenderTargets == null && shadowDirectives.isShadowEnabled() == OptionalBoolean.TRUE) {
-			shadowRenderTargets = new ShadowRenderTargets(this, shadowMapResolution, shadowDirectives);
-		}
 
 		if (shadowRenderTargets != null) {
 			ShaderInstance shader = shaderMap.getShader(ShaderKey.SHADOW_TERRAIN_CUTOUT);
