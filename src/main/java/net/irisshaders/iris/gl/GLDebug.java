@@ -311,11 +311,11 @@ public final class GLDebug {
 	}
 
 	public static void pushGroup(int id, String name) {
-		debugState.pushGroup(id, name);
+		//debugState.pushGroup(id, name);
 	}
 
 	public static void popGroup() {
-		debugState.popGroup();
+		//debugState.popGroup();
 	}
 
 	private interface DebugState {

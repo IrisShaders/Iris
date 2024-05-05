@@ -49,10 +49,15 @@ public class StandardMacros {
 		define(standardDefines, getVendor());
 		define(standardDefines, getRenderer());
 		define(standardDefines, "IS_IRIS");
+		define(standardDefines, "IRIS_TAG_SUPPORT");
 
 
 		if (FabricLoader.getInstance().isModLoaded("distanthorizons") && DHCompat.hasRenderingEnabled()) {
 			define(standardDefines, "DISTANT_HORIZONS");
+		}
+
+		if (FabricLoader.getInstance().isModLoaded("continuity")) {
+			define(standardDefines, "IRIS_HAS_CONNECTED_TEXTURES");
 		}
 
 		define(standardDefines, "DH_BLOCK_UNKNOWN", String.valueOf(0));
