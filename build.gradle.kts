@@ -3,9 +3,9 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 object Constants {
     // https://fabricmc.net/develop/
-    const val MINECRAFT_VERSION: String = "1.20.5"
+    const val MINECRAFT_VERSION: String = "1.20.6"
     const val FABRIC_LOADER_VERSION: String = "0.15.10"
-    const val FABRIC_API_VERSION: String = "0.97.5+1.20.5"
+    const val FABRIC_API_VERSION: String = "0.97.8+1.20.5"
 
     // https://semver.org/
     const val MOD_VERSION: String = "1.7.0"
@@ -18,7 +18,7 @@ object Constants {
     const val BETA_TAG: String = "DH Support"
     const val BETA_VERSION = 4
 
-    const val SODIUM_VERSION: String = "mc1.20.5-0.5.8"
+    const val SODIUM_VERSION: String = "mc1.20.6-0.5.8"
 }
 
 repositories {
