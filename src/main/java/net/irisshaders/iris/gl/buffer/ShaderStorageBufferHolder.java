@@ -97,6 +97,7 @@ public class ShaderStorageBufferHolder {
 	public void destroyBuffers() {
 		for (ShaderStorageBuffer buffer : buffers) {
 			if (buffer != null) {
+				ACTIVE_BUFFERS.remove(buffer);
 				buffer.destroy();
 			}
 		}
