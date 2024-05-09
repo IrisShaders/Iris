@@ -44,9 +44,9 @@ public class ShaderStorageBuffer {
 		GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, newId);
 
 		// Calculation time
-		int newWidth = (int) (width * info.scaleX());
-		int newHeight = (int) (height * info.scaleY());
-		int finalSize = (newHeight * newWidth) * info.size();
+		long newWidth = (long) (width * info.scaleX());
+		long newHeight = (long) (height * info.scaleY());
+		long finalSize = (newHeight * newWidth) * info.size();
 		IrisRenderSystem.bufferStorage(GL43C.GL_SHADER_STORAGE_BUFFER, finalSize, 0);
 		IrisRenderSystem.clearBufferSubData(GL43C.GL_SHADER_STORAGE_BUFFER, GL43C.GL_R8, 0, finalSize, GL43C.GL_RED, GL43C.GL_BYTE, new int[]{0});
 		IrisRenderSystem.bindBufferBase(GL43C.GL_SHADER_STORAGE_BUFFER, index, newId);

@@ -16,6 +16,7 @@ import io.github.douira.glsl_transformer.token_filter.TokenFilter;
 import io.github.douira.glsl_transformer.util.LRUCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.IrisLimits;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
@@ -31,6 +32,7 @@ import net.irisshaders.iris.pipeline.transform.transformer.CompatibilityTransfor
 import net.irisshaders.iris.pipeline.transform.transformer.CompositeCoreTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.CompositeTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DHTransformer;
+import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumCoreTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.TextureTransformer;
@@ -140,8 +142,8 @@ public class TransformPatcher {
 
 						if (profile == Profile.CORE || version.number >= 150 && profile == null || isLine) {
 							// patch the version number to at least 330
-							if (version.number < 330) {
-								versionStatement.version = Version.GLSL33;
+							if (version.number < 410) {
+								versionStatement.version = Version.GLSL41;
 							}
 
 							switch (parameters.patch) {
@@ -164,8 +166,8 @@ public class TransformPatcher {
 							}
 						} else {
 							// patch the version number to at least 330
-							if (version.number < 330) {
-								versionStatement.version = Version.GLSL33;
+							if (version.number < 410) {
+								versionStatement.version = Version.GLSL41;
 							}
 							versionStatement.profile = Profile.CORE;
 
@@ -196,6 +198,10 @@ public class TransformPatcher {
 
 			// the compatibility transformer does a grouped transformation
 			CompatibilityTransformer.transformGrouped(transformer, trees, parameters);
+
+			if (IrisLimits.VK_CONFORMANCE) {
+				LayoutTransformer.transformGrouped(transformer, trees, parameters);
+			}
 		});
 		transformer.setTokenFilter(parseTokenFilter);
 	}

@@ -360,14 +360,14 @@ public class ShaderProperties {
 
 			handlePassDirective("bufferObject.", key, value, index -> {
 				int trueIndex;
-				int trueSize;
+				long trueSize;
 				boolean isRelative;
 				float scaleX, scaleY;
 				String[] parts = value.split(" ");
 				if (parts.length == 1) {
 					try {
 						trueIndex = Integer.parseInt(index);
-						trueSize = Integer.parseInt(value);
+						trueSize = Long.parseLong(value);
 					} catch (NumberFormatException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size!", e);
 						return;
@@ -388,7 +388,7 @@ public class ShaderProperties {
 					// Assume it's a long one
 					try {
 						trueIndex = Integer.parseInt(index);
-						trueSize = Integer.parseInt(parts[0]);
+						trueSize = Long.parseLong(parts[0]);
 						isRelative = Boolean.parseBoolean(parts[1]);
 						scaleX = Float.parseFloat(parts[2]);
 						scaleY = Float.parseFloat(parts[3]);
