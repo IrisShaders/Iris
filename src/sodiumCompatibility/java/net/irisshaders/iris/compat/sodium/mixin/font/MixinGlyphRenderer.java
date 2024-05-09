@@ -1,10 +1,10 @@
 package net.irisshaders.iris.compat.sodium.mixin.font;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.GlyphVertex;
+import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.GlyphVertexExt;
 import net.irisshaders.iris.vertices.ImmediateState;

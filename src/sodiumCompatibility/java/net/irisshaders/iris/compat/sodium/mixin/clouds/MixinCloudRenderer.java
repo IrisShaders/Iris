@@ -63,14 +63,14 @@ public abstract class MixinCloudRenderer {
 	protected abstract void applyFogModifiers(ClientLevel world, FogRenderer.FogData fogData, LocalPlayer player, int cloudDistance, float tickDelta);
 
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
-	private void buildIrisVertexBuffer(ClientLevel world, LocalPlayer player, PoseStack matrices, Matrix4f modelView, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
+	private void buildIrisVertexBuffer(ClientLevel level, LocalPlayer player, PoseStack matrices, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			ci.cancel();
-			renderIris(world, player, matrices, modelView, projectionMatrix, ticks, tickDelta, cameraX, cameraY, cameraZ);
+			renderIris(level, player, matrices, projectionMatrix, ticks, tickDelta, cameraX, cameraY, cameraZ);
 		}
 	}
 
-	public void renderIris(@Nullable ClientLevel world, LocalPlayer player, PoseStack poseStack, Matrix4f modelMatrix, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ) {
+	public void renderIris(@Nullable ClientLevel world, LocalPlayer player, PoseStack poseStack, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ) {
 		if (world == null) {
 			return;
 		}
@@ -139,7 +139,6 @@ public abstract class MixinCloudRenderer {
 		RenderSystem.setShaderColor((float) color.x, (float) color.y, (float) color.z, 0.8f);
 
 		poseStack.pushPose();
-		poseStack.mulPose(modelMatrix);
 
 		Matrix4f modelViewMatrix = new Matrix4f(poseStack.last().pose());
 		modelViewMatrix.translate(-translateX, cloudHeight - (float) cameraY + 0.33F, -translateZ);

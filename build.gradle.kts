@@ -11,7 +11,7 @@ object Constants {
     const val MOD_VERSION: String = "1.7.0"
 
     const val CUSTOM_SODIUM: Boolean = true
-    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-1.20.5-0.6.0-snapshot+mc1.20.5-local.jar"
+    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-1.20.6-0.6.0-snapshot+mc1.20.6-local.jar"
 
     const val IS_SHARED_BETA: Boolean = false
     const val ACTIVATE_RENDERDOC: Boolean = false
