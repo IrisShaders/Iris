@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.irisshaders.iris.mixin.forge",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinItemBlockRenderTypes",
+    "MixinShaderInstance"
+  ],
+  "injectors": {
+    "defaultRequire": 1,
+    "maxShiftBy": 2
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.irisshaders.iris.mixin.devenvironment",
+  "plugin": "net.irisshaders.iris.mixin.devenvironment.DevEnvPlugin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinMinecraft_NoAuthInDev",
+    "MixinSodiumSpriteCache"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

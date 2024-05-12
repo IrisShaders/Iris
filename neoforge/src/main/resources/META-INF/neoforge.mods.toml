@@ -1,0 +1,42 @@
+modLoader = "javafml"
+loaderVersion = "*"
+license = "Polyform-Shield-1.0"
+
+[[mods]]
+modId = "iris"
+
+version = "1.7.1"
+displayName = "Sodium"
+
+logoFile="sodium-icon.png" #optional
+
+authors="JellySquid"
+
+description = '''
+Sodium is a powerful rendering engine for Minecraft which improves frame rates and reduces lag spikes.
+'''
+
+[[dependencies.sodium]]
+modId="minecraft"
+type="required"
+versionRange="[1.20.4,1.21)"
+ordering="NONE"
+side="CLIENT"
+
+[[mixins]]
+config = "mixins.iris.json"
+
+[[mixins]]
+config = "mixins.iris.fantastic.json"
+
+[[mixins]]
+config = "mixins.iris.vertexformat.json"
+
+[[mixins]]
+config = "iris-batched-entity-rendering.mixins.json"
+
+[[mixins]]
+config = "mixins.iris.compat.sodium.json"
+
+[[mixins]]
+config = "mixins.iris.forge.json"
