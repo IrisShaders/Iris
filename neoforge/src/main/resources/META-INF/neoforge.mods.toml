@@ -1,19 +1,19 @@
 modLoader = "javafml"
 loaderVersion = "*"
-license = "Polyform-Shield-1.0"
+license = "LGPL-3.0-only"
 
 [[mods]]
 modId = "iris"
 
 version = "1.7.1"
-displayName = "Sodium"
+displayName = "Iris"
 
-logoFile="sodium-icon.png" #optional
+logoFile="iris-logo.png" #optional
 
-authors="JellySquid"
+authors="coderbot, IMS212"
 
 description = '''
-Sodium is a powerful rendering engine for Minecraft which improves frame rates and reduces lag spikes.
+Iris is a modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs.
 '''
 
 [[dependencies.sodium]]
