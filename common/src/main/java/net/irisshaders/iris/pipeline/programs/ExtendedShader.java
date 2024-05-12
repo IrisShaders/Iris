@@ -204,11 +204,19 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		}
 	}
 
+	private static Uniform FAKE_UNIFORM = new Uniform("", 1, 2, null);
+
 	@Nullable
 	@Override
 	public Uniform getUniform(@NotNull String name) {
 		// Prefix all uniforms with Iris to help avoid conflicts with existing names within the shader.
-		return super.getUniform("iris_" + name);
+		Uniform uniform = super.getUniform("iris_" + name);
+
+		if (uniform == null && (name.equalsIgnoreCase("OverlayUV") || name.equalsIgnoreCase("LightUV"))) {
+			return FAKE_UNIFORM;
+		} else {
+			return uniform;
+		}
 	}
 
 	private void uploadIfNotNull(Uniform uniform) {

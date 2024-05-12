@@ -97,8 +97,15 @@ dependencies {
     runtimeOnly("com.lodborg:interval-tree:1.0.0")
     runtimeOnly("net.caffeinemc.new2:fabric_block_view_api_v2:1.0.1")
     implementation("org.antlr:antlr4-runtime:4.13.1")
+
     implementation("io.github.douira:glsl-transformer:2.0.1")
+    jarJar("io.github.douira:glsl-transformer:[2.0.1,2.0.2]") {
+        isTransitive = false
+    }
     implementation("org.anarres:jcpp:1.4.14")
+    jarJar("org.anarres:jcpp:[1.4.14,1.4.15]") {
+        isTransitive = false
+    }
     implementation(files(rootDir.resolve("custom_sodium").resolve("sodium-neoforge-1.20.6-0.6.0-snapshot+mc1.20.6-local-modonly.jar")))
 
     compileOnly(files(rootDir.resolve("DHApi.jar")))

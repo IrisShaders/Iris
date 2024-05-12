@@ -30,7 +30,7 @@ public class EntityPatcher {
 		ASTParser t,
 		TranslationUnit tree,
 		Root root,
-		GeometryInfoParameters parameters) {
+		VanillaParameters parameters) {
 		// delete original declaration
 		root.processMatches(t, uniformVec4EntityColor, ASTNode::detachAndDelete);
 
@@ -42,13 +42,13 @@ public class EntityPatcher {
 				"uniform sampler2D iris_overlay;",
 				"out vec4 entityColor;",
 				"out vec4 iris_vertexColor;",
-				"in ivec2 iris_UV1;");
+				parameters.inputs.isIE() ? "uniform ivec2 iris_OverlayUV;" : "in ivec2 iris_UV1;");
 
 			// Create our own main function to wrap the existing main function, so that we
 			// can pass through the overlay color at the end to the geometry or fragment
 			// stage.
 			tree.prependMainFunctionBody(t,
-				"vec4 overlayColor = texelFetch(iris_overlay, iris_UV1, 0);",
+				"vec4 overlayColor = texelFetch(iris_overlay, " + (parameters.inputs.isIE() ? "iris_OverlayUV" : "iris_UV1") + ", 0);",
 				"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);",
 				"iris_vertexColor = iris_Color;",
 				// Workaround for a shader pack bug:

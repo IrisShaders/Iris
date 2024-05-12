@@ -97,7 +97,25 @@ public class ShaderCreator {
 			        { "name": "iris_GlintAlpha", "type": "float", "count": 1, "values": [ 1.0 ] },
 			        { "name": "iris_FogStart", "type": "float", "count": 1, "values": [ 0.0 ] },
 			        { "name": "iris_FogEnd", "type": "float", "count": 1, "values": [ 1.0 ] },
-			        { "name": "iris_FogColor", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] }
+			        { "name": "iris_FogColor", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+			        {
+			                    "name": "iris_OverlayUV",
+			                    "type": "int",
+			                    "count": 2,
+			                    "values": [
+			                        0,
+			                        0
+			                    ]
+			                },
+			                {
+			                    "name": "iris_LightUV",
+			                    "type": "int",
+			                    "count": 2,
+			                    "values": [
+			                        0,
+			                        0
+			                    ]
+			                }
 			    ]
 			}""", name, name);
 
@@ -128,7 +146,7 @@ public class ShaderCreator {
 												VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
 												IrisRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
 												boolean isGlint, boolean isText, boolean intensityTex, boolean isFullbright) throws IOException {
-		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, false, isGlint, isText);
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, false, isGlint, isText, false);
 
 		// TODO: Is this check sound in newer versions?
 		boolean isLeash = vertexFormat == DefaultVertexFormat.POSITION_COLOR_LIGHTMAP;

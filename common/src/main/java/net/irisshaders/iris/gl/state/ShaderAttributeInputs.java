@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 public class ShaderAttributeInputs {
+	private boolean ie;
 	private boolean color;
 	private boolean tex;
 	private boolean overlay;
@@ -14,11 +15,12 @@ public class ShaderAttributeInputs {
 	private boolean text;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines, boolean glint, boolean text) {
+	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines, boolean glint, boolean text, boolean ie) {
 		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL && !isLines) {
 			newLines = true;
 		}
 
+		this.ie = ie;
 		this.text = text;
 		this.glint = glint;
 
@@ -124,5 +126,9 @@ public class ShaderAttributeInputs {
 
 	public boolean isText() {
 		return text;
+	}
+
+	public boolean isIE() {
+		return ie;
 	}
 }

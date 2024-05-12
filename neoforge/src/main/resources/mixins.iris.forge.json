@@ -5,7 +5,10 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinItemBlockRenderTypes",
-    "MixinShaderInstance"
+    "MixinShaderInstance",
+    "MixinRenderFlame",
+    "MixinShadowRenderer",
+    "MixinVBOIE"
   ],
   "injectors": {
     "defaultRequire": 1,

@@ -40,3 +40,8 @@ config = "mixins.iris.compat.sodium.json"
 
 [[mixins]]
 config = "mixins.iris.forge.json"
+
+[mods."sodium:options"]
+"mixin.features.render.world.sky"=false
+"mixin.features.render.entity"=false
+"mixin.features.render.gui.font"=false

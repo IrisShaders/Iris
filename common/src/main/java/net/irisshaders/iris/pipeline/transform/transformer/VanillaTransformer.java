@@ -41,9 +41,16 @@ public class VanillaTransformer {
 					"vec4(0.5, 0.5, 0.0, 1.0)");
 			}
 
-			if (parameters.inputs.hasLight()) {
+			if (parameters.inputs.isIE()) {
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
+					"vec4(iris_LightUV, 0.0, 1.0)");
+
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+					"uniform ivec2 iris_LightUV;");
+			} else if (parameters.inputs.hasLight()) {
 				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
 					"vec4(iris_UV2, 0.0, 1.0)");
+
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in ivec2 iris_UV2;");
 			} else {

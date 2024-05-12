@@ -1,7 +1,9 @@
 package net.irisshaders.iris.pipeline.programs;
 
+import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.AlphaTests;
 import net.irisshaders.iris.gl.state.FogMode;
@@ -62,6 +64,8 @@ public enum ShaderKey {
 	BEACON(ProgramId.BeaconBeam, AlphaTests.OFF, DefaultVertexFormat.BLOCK, FogMode.PER_FRAGMENT, LightingModel.FULLBRIGHT),
 	GLINT(ProgramId.ArmorGlint, AlphaTests.NON_ZERO_ALPHA, DefaultVertexFormat.POSITION_TEX, FogMode.PER_VERTEX, LightingModel.LIGHTMAP),
 	LINES(ProgramId.Line, AlphaTests.OFF, DefaultVertexFormat.POSITION_COLOR_NORMAL, FogMode.PER_VERTEX, LightingModel.LIGHTMAP),
+	IE_COMPAT(ProgramId.Block, AlphaTests.ONE_TENTH_ALPHA, ShaderAccess.IE_FORMAT, FogMode.PER_VERTEX, LightingModel.LIGHTMAP),
+	MEKANISM_FLAME(ProgramId.SpiderEyes, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_COLOR_TEX, FogMode.PER_VERTEX, LightingModel.LIGHTMAP),
 
 	// Note: These must be at the very end (NewWorldRenderingPipeline implementation details)
 	SHADOW_TERRAIN_CUTOUT(ProgramId.Shadow, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN, FogMode.OFF, LightingModel.LIGHTMAP),
@@ -78,7 +82,9 @@ public enum ShaderKey {
 	SHADOW_PARTICLES(ProgramId.Shadow, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.PARTICLE, FogMode.OFF, LightingModel.LIGHTMAP),
 	SHADOW_TEXT(ProgramId.Shadow, AlphaTests.NON_ZERO_ALPHA, IrisVertexFormats.GLYPH, FogMode.OFF, LightingModel.LIGHTMAP),
 	SHADOW_TEXT_BG(ProgramId.Shadow, AlphaTests.NON_ZERO_ALPHA, DefaultVertexFormat.POSITION_COLOR_LIGHTMAP, FogMode.OFF, LightingModel.LIGHTMAP),
-	SHADOW_TEXT_INTENSITY(ProgramId.Shadow, AlphaTests.NON_ZERO_ALPHA, IrisVertexFormats.GLYPH, FogMode.OFF, LightingModel.LIGHTMAP);
+	SHADOW_TEXT_INTENSITY(ProgramId.Shadow, AlphaTests.NON_ZERO_ALPHA, IrisVertexFormats.GLYPH, FogMode.OFF, LightingModel.LIGHTMAP),
+	IE_COMPAT_SHADOW(ProgramId.Shadow, AlphaTests.ONE_TENTH_ALPHA, ShaderAccess.IE_FORMAT, FogMode.OFF, LightingModel.LIGHTMAP),
+	MEKANISM_FLAME_SHADOW(ProgramId.Shadow, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_COLOR_TEX, FogMode.OFF, LightingModel.LIGHTMAP);
 
 	private final ProgramId program;
 	private final AlphaTest alphaTest;
