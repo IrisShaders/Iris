@@ -2,6 +2,7 @@ package net.irisshaders.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
@@ -19,7 +20,8 @@ public class SodiumCoreTransformer {
 		root.rename("projectionMatrixInverse", "iris_ProjectionMatrixInverse");
 		root.rename("normalMatrix", "iris_NormalMatrix");
 		root.rename("chunkOffset", "u_RegionOffset");
-
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+			"uniform mat4 iris_LightmapTextureMatrix;");
 		if (parameters.type == PatchShaderType.VERTEX) {
 			// _draw_translation replaced with Chunks[_draw_id].offset.xyz
 			root.replaceReferenceExpressions(t, "vaPosition", "_vert_position + _get_draw_translation(_draw_id)");
@@ -27,7 +29,7 @@ public class SodiumCoreTransformer {
 			root.rename("vaNormal", "iris_Normal");
 			root.replaceReferenceExpressions(t, "vaUV0", "_vert_tex_diffuse_coord");
 			root.replaceReferenceExpressions(t, "vaUV1", "ivec2(0, 10)");
-			root.rename("vaUV2", "a_LightCoord");
+			root.replaceReferenceExpressions(t, "vaUV2", "(vec4(_decode_light(a_LightAndData.xy), 0.0, 1.0) * inverse(iris_LightmapTextureMatrix)).xy");
 
 			root.replaceReferenceExpressions(t, "textureMatrix", "mat4(1.0)");
 
