@@ -1,6 +1,8 @@
 package net.irisshaders.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -35,6 +37,9 @@ public abstract class MixinModelViewBobbing {
 	@Shadow
 	@Final
 	private Minecraft minecraft;
+	@Shadow
+	@Final
+	private Camera mainCamera;
 	@Unique
 	private Matrix4fc bobbingEffectsModel;
 
@@ -42,7 +47,7 @@ public abstract class MixinModelViewBobbing {
 	private boolean areShadersOn;
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void iris$saveShadersOn(float pGameRenderer0, long pLong1, CallbackInfo ci) {
+	private void iris$saveShadersOn(DeltaTracker deltaTracker, CallbackInfo ci) {
 		areShadersOn = IrisApi.getInstance().isShaderPackInUse();
 	}
 
@@ -76,7 +81,7 @@ public abstract class MixinModelViewBobbing {
 	@Redirect(method = "renderLevel",
 		at = @At(value = "INVOKE",
 			target = "Lorg/joml/Matrix4f;rotationXYZ(FFF)Lorg/joml/Matrix4f;"))
-	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, float angleX, float angleY, float angleZ, float tickDelta) {
+	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, float angleX, float angleY, float angleZ) {
 		if (!areShadersOn) {
 			instance.rotateXYZ(angleX, angleY, angleZ);
 
@@ -85,6 +90,8 @@ public abstract class MixinModelViewBobbing {
 
 		PoseStack stack = new PoseStack();
 		stack.last().pose().set(instance);
+
+		float tickDelta = this.mainCamera.getPartialTickTime();
 
 		this.bobHurt(stack, tickDelta);
 		if (this.minecraft.options.bobView().get()) {

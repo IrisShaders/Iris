@@ -36,15 +36,7 @@
   ],
   "accessWidener": "iris.accesswidener",
   "depends": {
-    "fabricloader": ">=0.12.3",
-    "minecraft": [
-      "1.20.5",
-      "1.20.6"
-    ],
-    "sodium": [
-      "0.5.8",
-      "0.5.9"
-    ]
+    "fabricloader": ">=0.12.3"
   },
   "breaks": {
     "iris-explorer": "*",

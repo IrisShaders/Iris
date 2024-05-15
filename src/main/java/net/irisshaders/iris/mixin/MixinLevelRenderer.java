@@ -18,6 +18,7 @@ import net.irisshaders.iris.uniforms.IrisTimeUniforms;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
@@ -74,7 +75,7 @@ public class MixinLevelRenderer {
 	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
 	// all pixels.
 	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void iris$setupPipeline(float tickDelta, long startTime, boolean renderBlockOutline,
+	private void iris$setupPipeline(DeltaTracker deltaTracker, boolean renderBlockOutline,
 									Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
 									Matrix4f modelView, Matrix4f projection, CallbackInfo callback) {
 		DHCompat.checkFrame();
@@ -82,8 +83,7 @@ public class MixinLevelRenderer {
 		IrisTimeUniforms.updateTime();
 		CapturedRenderingState.INSTANCE.setGbufferModelView(modelView);
 		CapturedRenderingState.INSTANCE.setGbufferProjection(projection);
-		TickRateManager lvTickRateManager10 = this.minecraft.level.tickRateManager();
-		float fakeTickDelta = lvTickRateManager10.runsNormally() ? tickDelta : 1.0F;
+		float fakeTickDelta = deltaTracker.getGameTimeDeltaPartialTick(false);
 		CapturedRenderingState.INSTANCE.setTickDelta(fakeTickDelta);
 		CapturedRenderingState.INSTANCE.setCloudTime((ticks + fakeTickDelta) * 0.03F);
 
@@ -105,7 +105,7 @@ public class MixinLevelRenderer {
 	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
 	// all pixels.
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = CLEAR, shift = At.Shift.AFTER, remap = false))
-	private void iris$beginLevelRender(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$beginLevelRender(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.beginLevelRendering();
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
@@ -114,8 +114,8 @@ public class MixinLevelRenderer {
 	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
 	// render their waypoint beams.
 	@Inject(method = "renderLevel", at = @At(value = "RETURN", shift = At.Shift.BEFORE))
-	private void iris$endLevelRender(float tickDelta, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f modelMatrix, Matrix4f matrix4f2, CallbackInfo ci) {
-		HandRenderer.INSTANCE.renderTranslucent(modelMatrix, tickDelta, camera, gameRenderer, pipeline);
+	private void iris$endLevelRender(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f modelMatrix, Matrix4f matrix4f2, CallbackInfo ci) {
+		HandRenderer.INSTANCE.renderTranslucent(modelMatrix, deltaTracker.getGameTimeDeltaPartialTick(true), camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
 		pipeline.finalizeLevelRendering();
 		pipeline = null;
@@ -136,7 +136,7 @@ public class MixinLevelRenderer {
 
 	// Do this before sky rendering so it's ready before the sky render starts.
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V"))
-	private void iris$renderTerrainShadows(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$renderTerrainShadows(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.renderShadows((LevelRendererAccessor) this, camera);
 	}
 
@@ -146,7 +146,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V"))
-	private void iris$beginSky(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$beginSky(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		// Use CUSTOM_SKY until levelFogColor is called as a heuristic to catch FabricSkyboxes.
 		pipeline.setPhase(WorldRenderingPhase.CUSTOM_SKY);
 
@@ -196,17 +196,17 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V", shift = At.Shift.AFTER))
-	private void iris$endSky(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$endSky(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FDDD)V"))
-	private void iris$beginClouds(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$beginClouds(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.CLOUDS);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FDDD)V", shift = At.Shift.AFTER))
-	private void iris$endClouds(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$endClouds(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
@@ -222,7 +222,7 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WEATHER))
-	private void iris$beginWeather(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$beginWeather(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.RAIN_SNOW);
 	}
 
@@ -236,27 +236,27 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_WEATHER, shift = At.Shift.AFTER))
-	private void iris$endWeather(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$endWeather(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderWorldBorder(Lnet/minecraft/client/Camera;)V"))
-	private void iris$beginWorldBorder(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$beginWorldBorder(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.WORLD_BORDER);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderWorldBorder(Lnet/minecraft/client/Camera;)V", shift = At.Shift.AFTER))
-	private void iris$endWorldBorder(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$endWorldBorder(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/debug/DebugRenderer;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDD)V"))
-	private void iris$setDebugRenderStage(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$setDebugRenderStage(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.DEBUG);
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/debug/DebugRenderer;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDD)V", shift = At.Shift.AFTER))
-	private void iris$resetDebugRenderStage(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$resetDebugRenderStage(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
@@ -271,9 +271,9 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
-	private void iris$beginTranslucents(float tickDelta, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f modelMatrix, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$beginTranslucents(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f modelMatrix, Matrix4f matrix4f2, CallbackInfo ci) {
 		pipeline.beginHand();
-		HandRenderer.INSTANCE.renderSolid(modelMatrix, tickDelta, camera, gameRenderer, pipeline);
+		HandRenderer.INSTANCE.renderSolid(modelMatrix, deltaTracker.getGameTimeDeltaPartialTick(true), camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 	}
