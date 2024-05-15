@@ -1,4 +1,4 @@
-package net.irisshaders.iris.parsing;
+package net.irisshaders.iris.mixinterface;
 
 public interface ExtendedBiome {
 	int getBiomeCategory();

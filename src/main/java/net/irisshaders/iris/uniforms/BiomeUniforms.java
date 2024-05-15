@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.irisshaders.iris.gl.uniform.FloatSupplier;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.parsing.BiomeCategories;
-import net.irisshaders.iris.parsing.ExtendedBiome;
+import net.irisshaders.iris.mixinterface.ExtendedBiome;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
