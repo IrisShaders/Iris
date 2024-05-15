@@ -7,16 +7,16 @@ import java.util.EmptyStackException;
 import java.util.Stack;
 
 public class BooleanParser {
-	private enum OPERATION {
+	private enum Operation {
 		AND {
 			@Override
 			boolean compute(boolean value, Stack<Boolean> valueStack) {
-				return value & valueStack.pop();
+				return valueStack.pop() && value;
 			}
 		}, OR {
 			@Override
 			boolean compute(boolean value, Stack<Boolean> valueStack) {
-				return value | valueStack.pop();
+				return valueStack.pop() || value;
 			}
 		}, NOT {
 			@Override
@@ -39,12 +39,12 @@ public class BooleanParser {
 	public static boolean parse(String expression, OptionValues valueLookup) {
 		try {
 			String option = "";
-			Stack<OPERATION> operationStack = new Stack<>();
+			Stack<Operation> operationStack = new Stack<>();
 			Stack<Boolean> valueStack = new Stack<>();
 			for (int i = 0; i < expression.length(); i++) {
 				char c = expression.charAt(i);
 				switch (c) {
-					case '!' -> operationStack.push(OPERATION.NOT);
+					case '!' -> operationStack.push(Operation.NOT);
 					case '&' -> {
 						// add value first, because this checks for preceding NOTs
 						if (!option.isEmpty()) {
@@ -52,11 +52,11 @@ public class BooleanParser {
 							option = "";
 						}
 						// AND operators have priority, so add a bracket if it's the first AND
-						if (operationStack.isEmpty() || !operationStack.peek().equals(OPERATION.AND)) {
-							operationStack.push(OPERATION.OPEN);
+						if (operationStack.isEmpty() || !operationStack.peek().equals(Operation.AND)) {
+							operationStack.push(Operation.OPEN);
 						}
 						i++;
-						operationStack.push(OPERATION.AND);
+						operationStack.push(Operation.AND);
 					}
 					case '|' -> {
 						// add value first, because this checks for preceding NOTs
@@ -65,13 +65,13 @@ public class BooleanParser {
 							option = "";
 						}
 						// if there was an AND before, that needs to be evaluated because it takes priority
-						if (!operationStack.isEmpty() && operationStack.peek().equals(OPERATION.AND)) {
+						if (!operationStack.isEmpty() && operationStack.peek().equals(Operation.AND)) {
 							evaluate(operationStack, valueStack, true);
 						}
 						i++;
-						operationStack.push(OPERATION.OR);
+						operationStack.push(Operation.OR);
 					}
-					case '(' -> operationStack.push(OPERATION.OPEN);
+					case '(' -> operationStack.push(Operation.OPEN);
 					case ')' -> {
 						// add value first, because this checks for preceding NOTs
 						if (!option.isEmpty()) {
@@ -79,7 +79,7 @@ public class BooleanParser {
 							option = "";
 						}
 						// if there was an AND before, that needs to be evaluated because it added its own bracket
-						if (!operationStack.isEmpty() && operationStack.peek().equals(OPERATION.AND)) {
+						if (!operationStack.isEmpty() && operationStack.peek().equals(Operation.AND)) {
 							evaluate(operationStack, valueStack, true);
 						}
 						evaluate(operationStack, valueStack, true);
@@ -111,13 +111,13 @@ public class BooleanParser {
 	/**
 	 * gets the value for the given string and negates it if there is a NOT in the operationStack
 	 */
-	private static boolean processValue(String value, OptionValues valueLookup, Stack<OPERATION> operationStack) {
+	private static boolean processValue(String value, OptionValues valueLookup, Stack<Operation> operationStack) {
 		boolean booleanValue = switch (value) {
 			case "true", "1" -> true;
-			case "false" -> false;
+			case "false", "0" -> false;
 			default -> valueLookup != null && valueLookup.getBooleanValueOrDefault(value);
 		};
-		if (!operationStack.isEmpty() && operationStack.peek() == OPERATION.NOT) {
+		if (!operationStack.isEmpty() && operationStack.peek() == Operation.NOT) {
 			// if there is a NOT, that needs to be handled immediately
 			operationStack.pop();
 			return !booleanValue;
@@ -132,16 +132,16 @@ public class BooleanParser {
 	 * @param valueStack Stack with values
 	 * @param currentBracket only evaluates the current bracket
 	 */
-	private static void evaluate(Stack<OPERATION> operationStack, Stack<Boolean> valueStack, boolean currentBracket) {
+	private static void evaluate(Stack<Operation> operationStack, Stack<Boolean> valueStack, boolean currentBracket) {
 		boolean value = valueStack.pop();
-		while (!operationStack.isEmpty() && (!currentBracket || operationStack.peek() != OPERATION.OPEN)) {
+		while (!operationStack.isEmpty() && (!currentBracket || operationStack.peek() != Operation.OPEN)) {
 			value = operationStack.pop().compute(value, valueStack);
 		}
 
 		// if there is a bracket check if the whole bracket should be negated
-		if (!operationStack.isEmpty() && operationStack.peek() == OPERATION.OPEN) {
+		if (!operationStack.isEmpty() && operationStack.peek() == Operation.OPEN) {
 			operationStack.pop();
-			if (!operationStack.isEmpty() && operationStack.peek() == OPERATION.NOT) {
+			if (!operationStack.isEmpty() && operationStack.peek() == Operation.NOT) {
 				value = operationStack.pop().compute(value, valueStack);
 			}
 		}
