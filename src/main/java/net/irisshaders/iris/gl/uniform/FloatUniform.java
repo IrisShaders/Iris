@@ -7,12 +7,12 @@ public class FloatUniform extends Uniform {
 	private final FloatSupplier value;
 	private float cachedValue;
 
-	FloatUniform(int location, FloatSupplier value) {
-		this(location, value, null);
+	FloatUniform(String name, int location, FloatSupplier value) {
+		this(name, location, value, null);
 	}
 
-	FloatUniform(int location, FloatSupplier value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	FloatUniform(String name, int location, FloatSupplier value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = 0;
 		this.value = value;
@@ -25,6 +25,11 @@ public class FloatUniform extends Uniform {
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.FLOAT;
 	}
 
 	private void updateValue() {

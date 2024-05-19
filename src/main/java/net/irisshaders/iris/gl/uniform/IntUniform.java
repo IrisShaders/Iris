@@ -9,12 +9,12 @@ public class IntUniform extends Uniform {
 	private final IntSupplier value;
 	private int cachedValue;
 
-	IntUniform(int location, IntSupplier value) {
-		this(location, value, null);
+	IntUniform(String name, int location, IntSupplier value) {
+		this(name, location, value, null);
 	}
 
-	IntUniform(int location, IntSupplier value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	IntUniform(String name, int location, IntSupplier value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = 0;
 		this.value = value;
@@ -27,6 +27,11 @@ public class IntUniform extends Uniform {
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.INT;
 	}
 
 	private void updateValue() {

@@ -4,6 +4,7 @@ import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.parsing.VectorType;
 import org.joml.Vector2f;
 import org.lwjgl.opengl.GL21;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.function.Supplier;
 
@@ -21,6 +22,13 @@ public class Float2VectorCachedUniform extends VectorCachedUniform<Vector2f> {
 	@Override
 	public void push(int location) {
 		GL21.glUniform2f(location, this.cached.x, this.cached.y);
+	}
+
+	@Override
+	public long writeTo(long buffer) {
+		MemoryUtil.memPutFloat(buffer, cached.x);
+		MemoryUtil.memPutFloat(buffer + 4L, cached.y);
+		return buffer + 8L;
 	}
 
 	@Override

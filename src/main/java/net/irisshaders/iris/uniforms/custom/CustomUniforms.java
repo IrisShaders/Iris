@@ -18,12 +18,15 @@ import kroppeb.stareval.resolver.ExpressionResolver;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.uniform.LocationalUniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
+import net.irisshaders.iris.gl.uniform.UniformType;
 import net.irisshaders.iris.parsing.IrisFunctions;
 import net.irisshaders.iris.parsing.IrisOptions;
 import net.irisshaders.iris.parsing.VectorType;
+import net.irisshaders.iris.ubo.UBOPacker;
 import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -41,6 +44,7 @@ public class CustomUniforms implements FunctionContext {
 	private final Map<Object, Object2IntMap<CachedUniform>> locationMap = new Object2ObjectOpenHashMap<>();
 	private final Map<CachedUniform, List<CachedUniform>> dependsOn;
 	private final Map<CachedUniform, List<CachedUniform>> requiredBy;
+	private final UBOPacker packer;
 
 	private CustomUniforms(CustomUniformFixedInputUniformsHolder inputHolder, Map<String, Builder.Variable> variables) {
 		this.inputHolder = inputHolder;
@@ -173,6 +177,15 @@ public class CustomUniforms implements FunctionContext {
 			}
 
 			this.uniformOrder = ordered;
+
+			EnumMap<UniformType, List<CachedUniform>> uniforms = new EnumMap<>(UniformType.class);
+
+			this.uniformOrder.forEach(uniform -> {
+				uniforms.computeIfAbsent(Type.convert(uniform.getType()), u -> new ArrayList<>()).add(uniform);
+			});
+
+			this.packer = new UBOPacker(uniforms);
+
 		}
 	}
 
@@ -198,8 +211,7 @@ public class CustomUniforms implements FunctionContext {
 			} catch (Exception e) {
 				throw new RuntimeException(uniform.getName(), e);
 			}
-		}
-		this.locationMap.put(targetHolder, locations);
+		}		this.locationMap.put(targetHolder, locations);
 	}
 
 	public void mapholderToPass(LocationalUniformHolder holder, Object pass) {
@@ -208,16 +220,20 @@ public class CustomUniforms implements FunctionContext {
 
 
 	public void update() {
+		// TODO: This is almost certainly wrong. - IMS
+		for (CachedUniform value : this.inputHolder.getAll()) {
+			value.update();
+		}
 		for (CachedUniform value : this.uniformOrder) {
 			value.update();
 		}
+		for (CachedUniform value : this.uniforms) {
+			value.update();
+		}
+		packer.update();
 	}
 
 	public void push(Object pass) {
-		Object2IntMap<CachedUniform> uniforms = this.locationMap.get(pass);
-		if (uniforms != null) {
-			uniforms.forEach(CachedUniform::pushIfChanged);
-		}
 	}
 
 	/**
@@ -240,7 +256,6 @@ public class CustomUniforms implements FunctionContext {
 	 * </ul>
 	 */
 	public void optimise() {
-
 		Object2IntMap<CachedUniform> dependedByCount = new Object2IntOpenHashMap<>();
 
 		// Count the times a uniform is depended on

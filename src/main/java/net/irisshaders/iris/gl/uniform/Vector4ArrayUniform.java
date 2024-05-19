@@ -10,12 +10,12 @@ public class Vector4ArrayUniform extends Uniform {
 	private final Supplier<float[]> value;
 	private float[] cachedValue;
 
-	Vector4ArrayUniform(int location, Supplier<float[]> value) {
-		this(location, value, null);
+	Vector4ArrayUniform(String name, int location, Supplier<float[]> value) {
+		this(name, location, value, null);
 	}
 
-	Vector4ArrayUniform(int location, Supplier<float[]> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	Vector4ArrayUniform(String name, int location, Supplier<float[]> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = new float[4];
 		this.value = value;
@@ -28,6 +28,11 @@ public class Vector4ArrayUniform extends Uniform {
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC4;
 	}
 
 	private void updateValue() {

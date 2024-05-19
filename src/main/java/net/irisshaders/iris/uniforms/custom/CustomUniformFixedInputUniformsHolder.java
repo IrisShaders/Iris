@@ -8,6 +8,7 @@ import net.irisshaders.iris.gl.uniform.FloatSupplier;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformType;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
+import net.irisshaders.iris.ubo.UBOPacker;
 import net.irisshaders.iris.uniforms.custom.cached.BooleanCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Float2VectorCachedUniform;
@@ -26,7 +27,10 @@ import org.joml.Vector3f;
 import org.joml.Vector3i;
 import org.joml.Vector4f;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -68,12 +72,14 @@ public class CustomUniformFixedInputUniformsHolder {
 
 	public static class Builder implements UniformHolder {
 		final private Map<String, CachedUniform> inputVariables = new Object2ObjectOpenHashMap<>();
+		private final EnumMap<UniformType, List<CachedUniform>> allUniforms = new EnumMap<>(UniformType.class);
 
 		private Builder put(String name, CachedUniform uniform) {
 			if (inputVariables.containsKey(name)) {
 				Iris.logger.warn("Duplicated fixed uniform supplied as inputs to the Custom uniform holder: " + name);
 				return this;
 			}
+			allUniforms.computeIfAbsent(Type.convert(uniform.getType()), (a) -> new ArrayList<>()).add(uniform);
 			inputVariables.put(name, uniform);
 			return this;
 		}

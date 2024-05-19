@@ -98,6 +98,7 @@ public class Iris {
 
 	static {
 		if (!BuildConfig.ACTIVATE_RENDERDOC && FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
+			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
 		}
 	}
 

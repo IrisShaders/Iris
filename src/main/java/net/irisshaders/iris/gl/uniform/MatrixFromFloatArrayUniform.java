@@ -12,8 +12,8 @@ public class MatrixFromFloatArrayUniform extends Uniform {
 	private final Supplier<float[]> value;
 	private float[] cachedValue;
 
-	MatrixFromFloatArrayUniform(int location, Supplier<float[]> value) {
-		super(location);
+	MatrixFromFloatArrayUniform(String name, int location, Supplier<float[]> value) {
+		super(name, location);
 
 		this.cachedValue = null;
 		this.value = value;
@@ -31,5 +31,10 @@ public class MatrixFromFloatArrayUniform extends Uniform {
 
 			RenderSystem.glUniformMatrix4(location, false, buffer);
 		}
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.MAT4;
 	}
 }

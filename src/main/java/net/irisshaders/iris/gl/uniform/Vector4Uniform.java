@@ -10,12 +10,12 @@ public class Vector4Uniform extends Uniform {
 	private final Vector4f cachedValue;
 	private final Supplier<Vector4f> value;
 
-	Vector4Uniform(int location, Supplier<Vector4f> value) {
-		this(location, value, null);
+	Vector4Uniform(String name, int location, Supplier<Vector4f> value) {
+		this(name, location, value, null);
 	}
 
-	Vector4Uniform(int location, Supplier<Vector4f> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	Vector4Uniform(String name, int location, Supplier<Vector4f> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = new Vector4f();
 		this.value = value;
@@ -28,6 +28,11 @@ public class Vector4Uniform extends Uniform {
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC4;
 	}
 
 	private void updateValue() {

@@ -4,6 +4,7 @@ import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import org.lwjgl.opengl.GL21;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.function.IntSupplier;
 
@@ -32,6 +33,12 @@ public class IntCachedUniform extends CachedUniform {
 	@Override
 	public void writeTo(FunctionReturn functionReturn) {
 		functionReturn.intReturn = this.cached;
+	}
+
+	@Override
+	public long writeTo(long buffer) {
+		MemoryUtil.memPutInt(buffer, cached);
+		return buffer + 4L;
 	}
 
 	@Override

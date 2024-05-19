@@ -37,8 +37,10 @@ public class IrisChunkProgramOverrides {
 	private GlShader createVertexShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
 		Optional<String> irisVertexShader;
 
-		if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
+		if (pass == IrisTerrainPass.SHADOW) {
 			irisVertexShader = pipeline.getShadowVertexShaderSource();
+		} else if (pass == IrisTerrainPass.SHADOW_CUTOUT) {
+			irisVertexShader = pipeline.getShadowCutoutVertexShaderSource();
 		} else if (pass == IrisTerrainPass.GBUFFER_SOLID) {
 			irisVertexShader = pipeline.getTerrainSolidVertexShaderSource();
 		} else if (pass == IrisTerrainPass.GBUFFER_CUTOUT) {

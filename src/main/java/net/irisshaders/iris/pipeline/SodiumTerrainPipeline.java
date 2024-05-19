@@ -223,6 +223,7 @@ public class SodiumTerrainPipeline {
 	Optional<String> shadowTessEval;
 	Optional<String> shadowFragment;
 	Optional<String> shadowCutoutFragment;
+	Optional<String> shadowCutoutVertex;
 	GlFramebuffer shadowFramebuffer;
 	BlendModeOverride shadowBlendOverride = BlendModeOverride.OFF;
 	List<BufferBlendOverride> shadowBufferOverrides;
@@ -447,12 +448,14 @@ public class SodiumTerrainPipeline {
 			shadowTessControl = Optional.ofNullable(transformed.get(PatchShaderType.TESS_CONTROL));
 			shadowTessEval = Optional.ofNullable(transformed.get(PatchShaderType.TESS_EVAL));
 			shadowCutoutFragment = Optional.ofNullable(transformedCutout.get(PatchShaderType.FRAGMENT));
+			shadowCutoutVertex = Optional.ofNullable(transformedCutout.get(PatchShaderType.VERTEX));
 			shadowFragment = Optional.ofNullable(transformed.get(PatchShaderType.FRAGMENT));
 
 			ShaderPrinter.printProgram(sources.getName() + "_sodium")
 				.addSources(transformed)
 				.setName(sources.getName() + "_sodium_cutout")
 				.addSource(PatchShaderType.FRAGMENT, shadowCutoutFragment.orElse(null))
+				.addSource(PatchShaderType.VERTEX, shadowCutoutVertex.orElse(null))
 				.print();
 		}, () -> {
 			shadowBlendOverride = null;
@@ -463,6 +466,7 @@ public class SodiumTerrainPipeline {
 			shadowTessControl = Optional.empty();
 			shadowTessEval = Optional.empty();
 			shadowCutoutFragment = Optional.empty();
+			shadowCutoutVertex = Optional.empty();
 			shadowFragment = Optional.empty();
 		});
 	}
@@ -593,6 +597,10 @@ public class SodiumTerrainPipeline {
 
 	public Optional<String> getShadowCutoutFragmentShaderSource() {
 		return shadowCutoutFragment;
+	}
+
+	public Optional<String> getShadowCutoutVertexShaderSource() {
+		return shadowCutoutVertex;
 	}
 
 	public GlFramebuffer getShadowFramebuffer() {

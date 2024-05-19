@@ -29,11 +29,14 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
+import net.irisshaders.iris.ubo.UBOPacker;
+import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 public class CommonTransformer {
@@ -139,7 +142,16 @@ public class CommonTransformer {
 			}
 		}
 	}
-
+	public static final AutoHintedMatcher<ExternalDeclaration> uniform = new AutoHintedMatcher<>(
+		"uniform Type name;", ParseShape.EXTERNAL_DECLARATION) {
+		{
+			markClassedPredicateWildcard("type",
+				pattern.getRoot().identifierIndex.getOne("Type").getAncestor(TypeSpecifier.class),
+				BuiltinNumericTypeSpecifier.class,
+				specifier -> specifier.type != null);
+			markClassWildcard("name*", pattern.getRoot().identifierIndex.getOne("name").getAncestor(DeclarationMember.class));
+		}
+	};
 	public static void transform(
 		ASTParser t,
 		TranslationUnit tree,
@@ -149,6 +161,38 @@ public class CommonTransformer {
 		// TODO: What if the shader does gl_PerVertex.gl_FogFragCoord ?
 
 		root.rename("gl_FogFragCoord", "iris_FogFragCoord");
+
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_ALL, "#extension GL_ARB_shading_language_420pack : enable\n");
+		for (CachedUniform name : UBOPacker.INSTANCE.uniforms.keySet()) {
+			List<Identifier> uniformNames = new ArrayList<>();
+			AtomicBoolean hadName = new AtomicBoolean(false);
+			root.process(name.getName(), id -> {
+				DeclarationExternalDeclaration declaration = (DeclarationExternalDeclaration) id.getAncestor(
+					3, 0, DeclarationExternalDeclaration.class::isInstance);
+				if (uniform.matchesExtract(declaration)) {
+					DeclarationMember secondDeclarationMember = id.getAncestor(DeclarationMember.class);
+					if (((TypeAndInitDeclaration) secondDeclarationMember.getParent()).getMembers().size() == 1) {
+						declaration.detachAndDelete();
+					} else {
+						secondDeclarationMember.detachAndDelete();
+					}
+					hadName.set(true);
+				} else {
+					uniformNames.add(id);
+				}
+			});
+
+			uniformNames.forEach(name2 -> {
+				if (!hadName.get()) {
+					name2.setName("nonUniform_" + name.getName());
+				} else {
+					root.replaceReferenceExpressions(t, name.getName(), "uboValues." + name.getName());
+				}
+			});
+		}
+
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, UBOPacker.INSTANCE.constructUsage());
+
 
 		// TODO: This doesn't handle geometry shaders... How do we do that?
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {

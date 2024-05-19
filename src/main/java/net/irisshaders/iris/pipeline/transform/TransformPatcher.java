@@ -143,7 +143,7 @@ public class TransformPatcher {
 						if (profile == Profile.CORE || version.number >= 150 && profile == null || isLine) {
 							// patch the version number to at least 330
 							if (version.number < 410) {
-								versionStatement.version = Version.GLSL41;
+								versionStatement.version = Version.GLSL46;
 							}
 
 							switch (parameters.patch) {
@@ -167,7 +167,7 @@ public class TransformPatcher {
 						} else {
 							// patch the version number to at least 330
 							if (version.number < 410) {
-								versionStatement.version = Version.GLSL41;
+								versionStatement.version = Version.GLSL46;
 							}
 							versionStatement.profile = Profile.CORE;
 

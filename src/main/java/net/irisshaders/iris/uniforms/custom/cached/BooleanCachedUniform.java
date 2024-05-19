@@ -4,6 +4,7 @@ import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import org.lwjgl.opengl.GL21;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.function.BooleanSupplier;
 
@@ -32,6 +33,12 @@ public class BooleanCachedUniform extends CachedUniform {
 	@Override
 	public void writeTo(FunctionReturn functionReturn) {
 		functionReturn.booleanReturn = this.cached;
+	}
+
+	@Override
+	public long writeTo(long buffer) {
+		MemoryUtil.memPutInt(buffer, cached ? 1 : 0);
+		return buffer;
 	}
 
 	@Override

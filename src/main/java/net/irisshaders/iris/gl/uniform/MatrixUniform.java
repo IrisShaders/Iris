@@ -13,15 +13,15 @@ public class MatrixUniform extends Uniform {
 	private final Supplier<Matrix4f> value;
 	private Matrix4f cachedValue;
 
-	MatrixUniform(int location, Supplier<Matrix4f> value) {
-		super(location);
+	MatrixUniform(String name, int location, Supplier<Matrix4f> value) {
+		super(name, location);
 
 		this.cachedValue = null;
 		this.value = value;
 	}
 
-	MatrixUniform(int location, Supplier<Matrix4f> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	MatrixUniform(String name, int location, Supplier<Matrix4f> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = null;
 		this.value = value;
@@ -34,6 +34,11 @@ public class MatrixUniform extends Uniform {
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.MAT4;
 	}
 
 	public void updateValue() {

@@ -10,15 +10,15 @@ public class Vector3IntegerUniform extends Uniform {
 	private final Vector3i cachedValue;
 	private final Supplier<Vector3i> value;
 
-	Vector3IntegerUniform(int location, Supplier<Vector3i> value) {
-		super(location);
+	Vector3IntegerUniform(String name, int location, Supplier<Vector3i> value) {
+		super(name, location);
 
 		this.cachedValue = new Vector3i();
 		this.value = value;
 	}
 
-	Vector3IntegerUniform(int location, Supplier<Vector3i> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	Vector3IntegerUniform(String name, int location, Supplier<Vector3i> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = new Vector3i();
 		this.value = value;
@@ -31,6 +31,11 @@ public class Vector3IntegerUniform extends Uniform {
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC3I;
 	}
 
 	private void updateValue() {

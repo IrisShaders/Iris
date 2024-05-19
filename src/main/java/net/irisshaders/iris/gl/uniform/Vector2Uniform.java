@@ -10,15 +10,15 @@ public class Vector2Uniform extends Uniform {
 	private final Supplier<Vector2f> value;
 	private Vector2f cachedValue;
 
-	Vector2Uniform(int location, Supplier<Vector2f> value) {
-		super(location);
+	Vector2Uniform(String name, int location, Supplier<Vector2f> value) {
+		super(name, location);
 
 		this.cachedValue = null;
 		this.value = value;
 	}
 
-	Vector2Uniform(int location, Supplier<Vector2f> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	Vector2Uniform(String name, int location, Supplier<Vector2f> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = null;
 		this.value = value;
@@ -32,6 +32,11 @@ public class Vector2Uniform extends Uniform {
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC2;
 	}
 
 	private void updateValue() {

@@ -261,8 +261,9 @@ public class LayoutTransformer {
 
 				map.put(name, location);
 
-				Iris.logger.warn("Found a declaration named " + name);
-				newDeclarationData.add(new NewDeclarationData(typeQualifier, typeSpecifier, member, location++, name));
+				newDeclarationData.add(new NewDeclarationData(typeQualifier, typeSpecifier, member, location, name));
+				location += usageAmount(typeSpecifier);
+
 				addedDeclarations++;
 			}
 
@@ -300,6 +301,15 @@ public class LayoutTransformer {
 		return map;
 	}
 
+	private static int usageAmount(BuiltinNumericTypeSpecifier typeSpecifier) {
+		return switch (typeSpecifier.type) {
+			case F32MAT2X2 -> 2;
+			case F32MAT3X3, F32MAT2X3 -> 3;
+			case F32MAT4X4, F32MAT4X3 -> 4;
+			default -> 1;
+		};
+	}
+
 	public static void transformIn(Object2IntMap<String> map, ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
 		// do layout attachment (attaches a location(layout = 4) to the out declaration
 		// outColor4 for example)
@@ -324,7 +334,6 @@ public class LayoutTransformer {
 			int addedDeclarations = 0;
 			for (DeclarationMember member : members) {
 				String name = member.getName().getName();
-				Iris.logger.warn("Found a member with name " + name);
 
 				if (!map.containsKey(name)) {
 					continue;

@@ -38,6 +38,18 @@ public abstract class Type {
 
 	public abstract String toString();
 
+	public String getGLSLName() {
+		if (this == Type.Int || this == Type.Boolean) return "int";
+		else if (this == Type.Float) return "float";
+		else if (this == VectorType.VEC2) return "vec2";
+		else if (this == VectorType.VEC3) return "vec3";
+		else if (this == VectorType.VEC4) return "vec4";
+		else if (this == VectorType.I_VEC2) return "ivec2";
+		else if (this == VectorType.I_VEC3) return "ivec3";
+		else if (this == MatrixType.MAT4) return "mat4";
+		else throw new IllegalArgumentException();
+	}
+
 	public abstract static class Primitive extends Type {
 	}
 

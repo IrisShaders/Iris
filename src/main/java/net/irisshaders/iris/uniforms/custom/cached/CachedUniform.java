@@ -76,8 +76,6 @@ public abstract class CachedUniform implements VariableExpression {
 	public abstract void push(int location);
 
 	public void pushIfChanged(int location) {
-		if (this.changed)
-			push(location);
 	}
 
 	@Override
@@ -86,6 +84,14 @@ public abstract class CachedUniform implements VariableExpression {
 	}
 
 	public abstract void writeTo(FunctionReturn functionReturn);
+
+	/**
+	 * Extremely unsafe.
+	 *
+	 * @param buffer the raw memory address to write to.
+	 * @return
+	 */
+	public abstract long writeTo(long buffer);
 
 	public abstract Type getType();
 

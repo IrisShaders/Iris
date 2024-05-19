@@ -5,6 +5,7 @@ import kroppeb.stareval.function.Type;
 import net.irisshaders.iris.gl.uniform.FloatSupplier;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import org.lwjgl.opengl.GL21;
+import org.lwjgl.system.MemoryUtil;
 
 public class FloatCachedUniform extends CachedUniform {
 
@@ -31,6 +32,12 @@ public class FloatCachedUniform extends CachedUniform {
 	@Override
 	public void writeTo(FunctionReturn functionReturn) {
 		functionReturn.floatReturn = this.cached;
+	}
+
+	@Override
+	public long writeTo(long buffer) {
+		MemoryUtil.memPutFloat(buffer, cached);
+		return buffer + 4L;
 	}
 
 	@Override

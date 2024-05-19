@@ -5,12 +5,14 @@ import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
 public abstract class Uniform {
 	protected final int location;
 	protected final ValueUpdateNotifier notifier;
+	protected final String name;
 
-	Uniform(int location) {
-		this(location, null);
+	Uniform(String name, int location) {
+		this(name, location, null);
 	}
 
-	Uniform(int location, ValueUpdateNotifier notifier) {
+	Uniform(String name, int location, ValueUpdateNotifier notifier) {
+		this.name = name;
 		this.location = location;
 		this.notifier = notifier;
 	}
@@ -24,4 +26,10 @@ public abstract class Uniform {
 	public final ValueUpdateNotifier getNotifier() {
 		return notifier;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public abstract UniformType getType();
 }

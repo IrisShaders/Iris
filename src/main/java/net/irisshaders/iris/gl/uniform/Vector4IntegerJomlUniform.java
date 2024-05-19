@@ -10,12 +10,12 @@ public class Vector4IntegerJomlUniform extends Uniform {
 	private final Supplier<Vector4i> value;
 	private Vector4i cachedValue;
 
-	Vector4IntegerJomlUniform(int location, Supplier<Vector4i> value) {
-		this(location, value, null);
+	Vector4IntegerJomlUniform(String name, int location, Supplier<Vector4i> value) {
+		this(name, location, value, null);
 	}
 
-	Vector4IntegerJomlUniform(int location, Supplier<Vector4i> value, ValueUpdateNotifier notifier) {
-		super(location, notifier);
+	Vector4IntegerJomlUniform(String name, int location, Supplier<Vector4i> value, ValueUpdateNotifier notifier) {
+		super(name, location, notifier);
 
 		this.cachedValue = null;
 		this.value = value;
@@ -28,6 +28,11 @@ public class Vector4IntegerJomlUniform extends Uniform {
 		if (notifier != null) {
 			notifier.setListener(this::updateValue);
 		}
+	}
+
+	@Override
+	public UniformType getType() {
+		return UniformType.VEC4I;
 	}
 
 	private void updateValue() {

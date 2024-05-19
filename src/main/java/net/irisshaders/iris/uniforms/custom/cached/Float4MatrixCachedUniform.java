@@ -27,6 +27,12 @@ public class Float4MatrixCachedUniform extends VectorCachedUniform<Matrix4f> {
 	}
 
 	@Override
+	public long writeTo(long buffer) {
+		this.cached.getToAddress(buffer);
+		return buffer + 64L;
+	}
+
+	@Override
 	public MatrixType<Matrix4f> getType() {
 		return MatrixType.MAT4;
 	}
