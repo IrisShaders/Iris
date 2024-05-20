@@ -9,7 +9,7 @@ import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.ExtendedShader;
 import net.irisshaders.iris.pipeline.programs.FallbackShader;
-import net.irisshaders.iris.pipeline.programs.ShaderInstanceInterface;
+import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.slf4j.Logger;

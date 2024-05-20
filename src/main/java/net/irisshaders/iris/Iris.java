@@ -10,6 +10,7 @@ import net.fabricmc.loader.api.Version;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.config.IrisConfig;
 import net.irisshaders.iris.gl.GLDebug;
+import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.gui.debug.DebugLoadFailedGridScreen;
@@ -97,7 +98,6 @@ public class Iris {
 
 	static {
 		if (!BuildConfig.ACTIVATE_RENDERDOC && FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
-			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
 		}
 	}
 
@@ -588,6 +588,8 @@ public class Iris {
 					storedError = Optional.of(e);
 				}
 			}
+
+			ShaderStorageBufferHolder.forceDeleteBuffers();
 			logger.error("Failed to create shader rendering pipeline, disabling shaders!", e);
 			// TODO: This should be reverted if a dimension change causes shaders to compile again
 			fallback = true;
