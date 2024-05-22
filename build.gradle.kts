@@ -3,15 +3,15 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 object Constants {
     // https://fabricmc.net/develop/
-    const val MINECRAFT_VERSION: String = "24w20a"
+    const val MINECRAFT_VERSION: String = "24w21b"
     const val FABRIC_LOADER_VERSION: String = "0.15.11"
-    const val FABRIC_API_VERSION: String = "0.97.5+1.20.5"
+    const val FABRIC_API_VERSION: String = "0.99.0+1.21"
 
     // https://semver.org/
     const val MOD_VERSION: String = "1.7.0"
 
     const val CUSTOM_SODIUM: Boolean = true
-    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshotmc24w20a-local.jar"
+    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.6.0-snapshot+mc24w21a-local.jar"
 
     const val IS_SHARED_BETA: Boolean = false
     const val ACTIVATE_RENDERDOC: Boolean = false
@@ -20,7 +20,14 @@ object Constants {
 
     const val SODIUM_VERSION: String = "mc1.20.5-0.5.8"
 }
-
+allprojects {
+    gradle.projectsEvaluated {
+        tasks.withType<JavaCompile> {
+            options.compilerArgs.add("-Xmaxerrs")
+            options.compilerArgs.add("1000")
+        }
+    }
+}
 repositories {
     exclusiveContent {
         forRepository {
@@ -149,10 +156,10 @@ dependencies {
     }
 
     // Sodium dependencies
-    modRuntimeOnly(fabricApi.module("fabric-rendering-fluids-v1", Constants.FABRIC_API_VERSION))
-    modRuntimeOnly(fabricApi.module("fabric-rendering-data-attachment-v1", Constants.FABRIC_API_VERSION))
-    modRuntimeOnly(fabricApi.module("fabric-resource-loader-v0", Constants.FABRIC_API_VERSION))
-    modRuntimeOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
+    modImplementation(fabricApi.module("fabric-rendering-fluids-v1", Constants.FABRIC_API_VERSION))
+    modCompileOnly(fabricApi.module("fabric-rendering-data-attachment-v1", Constants.FABRIC_API_VERSION))
+    modCompileOnly(fabricApi.module("fabric-resource-loader-v0", Constants.FABRIC_API_VERSION))
+    modCompileOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
 
     modCompileOnly(files(projectDir.resolve("DHApi.jar")))
 

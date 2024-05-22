@@ -55,7 +55,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(ShaderType.VERTEX, new ResourceLocation("iris",
+		return new GlShader(ShaderType.VERTEX, ResourceLocation.tryBuild("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".vsh"), source);
 	}
 
@@ -80,7 +80,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(IrisShaderTypes.GEOMETRY, new ResourceLocation("iris",
+		return new GlShader(IrisShaderTypes.GEOMETRY, ResourceLocation.tryBuild("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".gsh"), source);
 	}
 
@@ -105,7 +105,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(IrisShaderTypes.TESS_CONTROL, new ResourceLocation("iris",
+		return new GlShader(IrisShaderTypes.TESS_CONTROL, ResourceLocation.tryBuild("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".tcs"), source);
 	}
 
@@ -130,7 +130,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(IrisShaderTypes.TESS_EVAL, new ResourceLocation("iris",
+		return new GlShader(IrisShaderTypes.TESS_EVAL, ResourceLocation.tryBuild("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".tes"), source);
 	}
 
@@ -157,7 +157,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(ShaderType.FRAGMENT, new ResourceLocation("iris",
+		return new GlShader(ShaderType.FRAGMENT, ResourceLocation.tryBuild("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".fsh"), source);
 	}
 
@@ -226,7 +226,7 @@ public class IrisChunkProgramOverrides {
 		}
 
 		try {
-			GlProgram.Builder builder = GlProgram.builder(new ResourceLocation("sodium", "chunk_shader_for_"
+			GlProgram.Builder builder = GlProgram.builder(ResourceLocation.tryBuild("sodium", "chunk_shader_for_"
 				+ pass.getName()));
 
 			if (geomShader != null) {

@@ -1,10 +1,11 @@
 package net.irisshaders.iris.mixin.vertices.block_rendering;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.util.FastColor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -23,7 +24,7 @@ import java.util.Arrays;
  * behavior, though conditionally controlled by the current shader pack of course.
  */
 @Mixin(value = BufferBuilder.class, priority = 999)
-public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsumer {
+public abstract class MixinBufferBuilder_SeparateAo implements VertexConsumer {
 	private float[] brightnesses;
 
 	private int brightnessIndex;
@@ -39,19 +40,19 @@ public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsu
 			Arrays.fill(brightnesses, 1.0f);
 		}
 
-		super.putBulkData(matrixEntry, quad, brightnesses, red, green, blue, alpha, lights, overlay, useQuadColorData);
+		VertexConsumer.super.putBulkData(matrixEntry, quad, brightnesses, red, green, blue, alpha, lights, overlay, useQuadColorData);
 	}
 
-	@ModifyVariable(method = "vertex", at = @At("HEAD"), index = 7, argsOnly = true)
-	public float vertex(float alpha) {
+	@ModifyVariable(method = "addVertex(FFFIFFIIFFF)V", at = @At("HEAD"), index = 4, argsOnly = true)
+	public int vertex(int color) {
 		if (brightnesses != null && WorldRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
 			if (brightnessIndex < brightnesses.length) {
-				alpha = brightnesses[brightnessIndex++];
+				color = FastColor.ARGB32.color(FastColor.as8BitChannel(brightnesses[brightnessIndex++]), color);
 			} else {
 				brightnesses = null;
 			}
 		}
 
-		return alpha;
+		return color;
 	}
 }

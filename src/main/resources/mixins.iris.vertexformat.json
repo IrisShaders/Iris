@@ -4,8 +4,6 @@
   "package": "net.irisshaders.iris.mixin.vertices",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinBufferBuilder",
-    "MixinVertexFormat",
     "MixinVertexFormatElement",
     "block_rendering.MixinBufferBuilder_SeparateAo",
     "block_rendering.MixinChunkRebuildTask",

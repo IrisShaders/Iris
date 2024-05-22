@@ -102,7 +102,7 @@ public class BlockMaterialMapping {
 		Map<Block, RenderType> blockTypeIds = new Reference2ReferenceLinkedOpenHashMap<>();
 
 		blockPropertiesMap.forEach((id, blockType) -> {
-			ResourceLocation resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
+			ResourceLocation resourceLocation = ResourceLocation.tryBuild(id.getNamespace(), id.getName());
 
 			Block block = BuiltInRegistries.BLOCK.get(resourceLocation);
 
@@ -129,7 +129,7 @@ public class BlockMaterialMapping {
 		NamespacedId id = entry.id();
 		ResourceLocation resourceLocation;
 		try {
-			resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
+			resourceLocation = ResourceLocation.tryBuild(id.getNamespace(), id.getName());
 		} catch (Exception exception) {
 			throw new IllegalStateException("Failed to get entry for " + intId, exception);
 		}

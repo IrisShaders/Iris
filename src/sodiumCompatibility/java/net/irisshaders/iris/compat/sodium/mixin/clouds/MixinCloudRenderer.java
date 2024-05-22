@@ -90,8 +90,7 @@ public abstract class MixinCloudRenderer {
 		int centerCellZ = (int) (Math.floor(cloudCenterZ / 12));
 
 		if (this.vertexBufferWithNormals == null || this.prevCenterCellXIris != centerCellX || this.prevCenterCellYIris != centerCellZ || this.cachedRenderDistanceIris != renderDistance) {
-			BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-			bufferBuilder.begin(VertexFormat.Mode.QUADS, IrisVertexFormats.CLOUDS);
+			BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, IrisVertexFormats.CLOUDS);
 
 			// Give some space for shaders
 			this.rebuildGeometry(bufferBuilder, cloudDistance + 4, centerCellX, centerCellZ);
@@ -101,7 +100,7 @@ public abstract class MixinCloudRenderer {
 			}
 
 			this.vertexBufferWithNormals.bind();
-			this.vertexBufferWithNormals.upload(bufferBuilder.end());
+			this.vertexBufferWithNormals.upload(bufferBuilder.build());
 
 			VertexBuffer.unbind();
 

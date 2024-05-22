@@ -8,6 +8,7 @@ import org.joml.Matrix4f;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.renderer.GameRenderer;
 import org.joml.Matrix4fc;
+import org.joml.Quaternionfc;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -80,10 +81,10 @@ public abstract class MixinModelViewBobbing {
 
 	@Redirect(method = "renderLevel",
 		at = @At(value = "INVOKE",
-			target = "Lorg/joml/Matrix4f;rotationXYZ(FFF)Lorg/joml/Matrix4f;"))
-	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, float angleX, float angleY, float angleZ) {
+			target = "Lorg/joml/Matrix4f;rotation(Lorg/joml/Quaternionfc;)Lorg/joml/Matrix4f;"))
+	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, Quaternionfc quat) {
 		if (!areShadersOn) {
-			instance.rotateXYZ(angleX, angleY, angleZ);
+			instance.rotation(quat);
 
 			return instance;
 		}
@@ -99,7 +100,7 @@ public abstract class MixinModelViewBobbing {
 		}
 
 		instance.set(stack.last().pose());
-		instance.rotateXYZ(angleX, angleY, angleZ);
+		instance.rotate(quat);
 
 		return instance;
 	}

@@ -74,7 +74,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		return Math.min(400, width - 12);
 	}
 
-	private static final ResourceLocation MENU_LIST_BACKGROUND = new ResourceLocation("textures/gui/menu_background.png");
+	private static final ResourceLocation MENU_LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/menu_background.png");
 
 	@Override
 	protected void renderListBackground(GuiGraphics pAbstractSelectionList0) {

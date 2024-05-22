@@ -1,6 +1,6 @@
 package net.irisshaders.batchedentityrendering.mixin;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,5 +11,5 @@ import java.util.Map;
 @Mixin(SectionBufferBuilderPack.class)
 public interface SectionBufferBuilderPackAccessor {
 	@Accessor
-	Map<RenderType, BufferBuilder> getBuilders();
+	Map<RenderType, ByteBufferBuilder> getBuffers();
 }

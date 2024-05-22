@@ -10,7 +10,7 @@ public class BufferSegmentRenderer {
 	 * Sets up the render type, draws the buffer, and then tears down the render type.
 	 */
 	public void draw(BufferSegment segment) {
-		if (segment.renderedBuffer() != null) {
+		if (segment.meshData() != null) {
 			segment.type().setupRenderState();
 			drawInner(segment);
 			segment.type().clearRenderState();
@@ -21,6 +21,6 @@ public class BufferSegmentRenderer {
 	 * Like draw(), but it doesn't setup / tear down the render type.
 	 */
 	public void drawInner(BufferSegment segment) {
-		BufferUploader.drawWithShader(segment.renderedBuffer());
+		BufferUploader.drawWithShader(segment.meshData());
 	}
 }

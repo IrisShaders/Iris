@@ -2,6 +2,7 @@ package net.irisshaders.iris.pathways;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -36,12 +37,12 @@ public class HorizonRenderer {
 	/**
 	 * Cosine of 22.5 degrees.
 	 */
-	private static final double COS_22_5 = Math.cos(Math.toRadians(22.5));
+	private static final float COS_22_5 = (float) Math.cos(Math.toRadians(22.5));
 
 	/**
 	 * Sine of 22.5 degrees.
 	 */
-	private static final double SIN_22_5 = Math.sin(Math.toRadians(22.5));
+	private static final float SIN_22_5 = (float) Math.sin(Math.toRadians(22.5));
 	private VertexBuffer buffer;
 	private int currentRenderDistance;
 
@@ -56,12 +57,11 @@ public class HorizonRenderer {
 			this.buffer.close();
 		}
 
-		BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+		BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 
 		// Build the horizon quads into a buffer
-		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 		buildHorizon(currentRenderDistance * 16, buffer);
-		BufferBuilder.RenderedBuffer renderedBuffer = buffer.end();
+		MeshData renderedBuffer = buffer.build();
 
 		this.buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 		this.buffer.bind();
@@ -69,18 +69,14 @@ public class HorizonRenderer {
 		VertexBuffer.unbind();
 	}
 
-	private void buildQuad(VertexConsumer consumer, double x1, double z1, double x2, double z2) {
-		consumer.vertex(x1, BOTTOM, z1);
-		consumer.endVertex();
-		consumer.vertex(x1, TOP, z1);
-		consumer.endVertex();
-		consumer.vertex(x2, TOP, z2);
-		consumer.endVertex();
-		consumer.vertex(x2, BOTTOM, z2);
-		consumer.endVertex();
+	private void buildQuad(VertexConsumer consumer, float x1, float z1, float x2, float z2) {
+		consumer.addVertex(x1, BOTTOM, z1);
+		consumer.addVertex(x1, TOP, z1);
+		consumer.addVertex(x2, TOP, z2);
+		consumer.addVertex(x2, BOTTOM, z2);
 	}
 
-	private void buildHalf(VertexConsumer consumer, double adjacent, double opposite, boolean invert) {
+	private void buildHalf(VertexConsumer consumer, float adjacent, float opposite, boolean invert) {
 		if (invert) {
 			adjacent = -adjacent;
 			opposite = -opposite;
@@ -106,26 +102,22 @@ public class HorizonRenderer {
 	 * @param opposite the opposite side length of the a triangle with a hypotenuse extending from the center of the
 	 *                 octagon to a given vertex on the perimeter.
 	 */
-	private void buildOctagonalPrism(VertexConsumer consumer, double adjacent, double opposite) {
+	private void buildOctagonalPrism(VertexConsumer consumer, float adjacent, float opposite) {
 		buildHalf(consumer, adjacent, opposite, false);
 		buildHalf(consumer, adjacent, opposite, true);
 	}
 
-	private void buildRegularOctagonalPrism(VertexConsumer consumer, double radius) {
+	private void buildRegularOctagonalPrism(VertexConsumer consumer, float radius) {
 		buildOctagonalPrism(consumer, radius * COS_22_5, radius * SIN_22_5);
 	}
 
 	private void buildBottomPlane(VertexConsumer consumer, int radius) {
 		for (int x = -radius; x <= radius; x += 64) {
 			for (int z = -radius; z <= radius; z += 64) {
-				consumer.vertex(x + 64, BOTTOM, z);
-				consumer.endVertex();
-				consumer.vertex(x, BOTTOM, z);
-				consumer.endVertex();
-				consumer.vertex(x, BOTTOM, z + 64);
-				consumer.endVertex();
-				consumer.vertex(x + 64, BOTTOM, z + 64);
-				consumer.endVertex();
+				consumer.addVertex(x + 64, BOTTOM, z);
+				consumer.addVertex(x, BOTTOM, z);
+				consumer.addVertex(x, BOTTOM, z + 64);
+				consumer.addVertex(x + 64, BOTTOM, z + 64);
 			}
 		}
 	}
@@ -136,14 +128,10 @@ public class HorizonRenderer {
 		// discarded by back face culling.
 		for (int x = -radius; x <= radius; x += 64) {
 			for (int z = -radius; z <= radius; z += 64) {
-				consumer.vertex(x + 64, TOP, z);
-				consumer.endVertex();
-				consumer.vertex(x + 64, TOP, z + 64);
-				consumer.endVertex();
-				consumer.vertex(x, TOP, z + 64);
-				consumer.endVertex();
-				consumer.vertex(x, TOP, z);
-				consumer.endVertex();
+				consumer.addVertex(x + 64, TOP, z);
+				consumer.addVertex(x + 64, TOP, z + 64);
+				consumer.addVertex(x, TOP, z + 64);
+				consumer.addVertex(x, TOP, z);
 			}
 		}
 	}

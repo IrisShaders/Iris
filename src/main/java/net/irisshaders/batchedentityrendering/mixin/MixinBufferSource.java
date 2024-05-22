@@ -1,6 +1,7 @@
 package net.irisshaders.batchedentityrendering.mixin;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingBuffer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -14,17 +15,17 @@ import java.util.Map;
 public class MixinBufferSource implements MemoryTrackingBuffer {
 	@Shadow
 	@Final
-	protected BufferBuilder builder;
+	protected Map<RenderType, ByteBufferBuilder> fixedBuffers;
 
 	@Shadow
 	@Final
-	protected Map<RenderType, BufferBuilder> fixedBuffers;
+	protected ByteBufferBuilder sharedBuffer;
 
 	@Override
 	public int getAllocatedSize() {
-		int allocatedSize = ((MemoryTrackingBuffer) builder).getAllocatedSize();
+		int allocatedSize = ((MemoryTrackingBuffer) sharedBuffer).getAllocatedSize();
 
-		for (BufferBuilder builder : fixedBuffers.values()) {
+		for (ByteBufferBuilder builder : fixedBuffers.values()) {
 			allocatedSize += ((MemoryTrackingBuffer) builder).getAllocatedSize();
 		}
 
@@ -33,9 +34,9 @@ public class MixinBufferSource implements MemoryTrackingBuffer {
 
 	@Override
 	public int getUsedSize() {
-		int allocatedSize = ((MemoryTrackingBuffer) builder).getUsedSize();
+		int allocatedSize = ((MemoryTrackingBuffer) sharedBuffer).getUsedSize();
 
-		for (BufferBuilder builder : fixedBuffers.values()) {
+		for (ByteBufferBuilder builder : fixedBuffers.values()) {
 			allocatedSize += ((MemoryTrackingBuffer) builder).getUsedSize();
 		}
 
@@ -44,9 +45,9 @@ public class MixinBufferSource implements MemoryTrackingBuffer {
 
 	@Override
 	public void freeAndDeleteBuffer() {
-		((MemoryTrackingBuffer) builder).freeAndDeleteBuffer();
+		((MemoryTrackingBuffer) sharedBuffer).freeAndDeleteBuffer();
 
-		for (BufferBuilder builder : fixedBuffers.values()) {
+		for (ByteBufferBuilder builder : fixedBuffers.values()) {
 			((MemoryTrackingBuffer) builder).freeAndDeleteBuffer();
 		}
 	}

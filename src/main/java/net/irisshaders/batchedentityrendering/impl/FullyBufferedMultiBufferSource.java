@@ -1,9 +1,8 @@
 package net.irisshaders.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import me.jellysquid.mods.sodium.client.render.vertex.buffer.ExtendedBufferBuilder;
-import me.jellysquid.mods.sodium.client.render.vertex.buffer.SodiumBufferBuilder;
 import net.irisshaders.batchedentityrendering.impl.ordering.GraphTranslucencyRenderOrderManager;
 import net.irisshaders.batchedentityrendering.impl.ordering.RenderOrderManager;
 import net.irisshaders.iris.layer.WrappingMultiBufferSource;
@@ -41,7 +40,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	private List<RenderType> renderOrder = new ArrayList<>();
 
 	public FullyBufferedMultiBufferSource() {
-		super(new BufferBuilder(0), Collections.emptyMap());
+		super(new ByteBufferBuilder(0), Collections.emptyMap());
 
 		this.renderOrderManager = new GraphTranslucencyRenderOrderManager();
 		this.builders = new SegmentedBufferBuilder[NUM_BUFFERS];
@@ -91,14 +90,6 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		}
 
 		VertexConsumer buffer = builders[affinity].getBuffer(renderType);
-
-		if (buffer instanceof ExtendedBufferBuilder bufferBuilder) {
-			SodiumBufferBuilder replacement = bufferBuilder.sodium$getDelegate();
-			if (replacement != null) {
-				return replacement;
-			}
-		}
-
 		return buffer;
 	}
 
@@ -296,7 +287,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		private final FullyBufferedMultiBufferSource wrapped;
 
 		UnflushableWrapper(FullyBufferedMultiBufferSource wrapped) {
-			super(new BufferBuilder(0), Collections.emptyMap());
+			super(new ByteBufferBuilder(0), Collections.emptyMap());
 
 			this.wrapped = wrapped;
 		}

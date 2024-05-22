@@ -293,7 +293,7 @@ public class SodiumTerrainPipeline {
 		String namespace = matcher.group("namespace");
 		String path = matcher.group("path");
 
-		ResourceLocation identifier = new ResourceLocation(namespace, path);
+		ResourceLocation identifier = ResourceLocation.tryBuild(namespace, path);
 		return "";
 	}
 

@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 public class TextureFormatLoader {
-	public static final ResourceLocation LOCATION = new ResourceLocation("optifine/texture.properties");
+	public static final ResourceLocation LOCATION = ResourceLocation.withDefaultNamespace("optifine/texture.properties");
 
 	private static TextureFormat format;
 
