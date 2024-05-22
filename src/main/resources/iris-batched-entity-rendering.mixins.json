@@ -12,6 +12,7 @@
     "MixinCompositeRenderType",
     "MixinDebugScreenOverlay",
     "MixinFishingHookRenderer",
+    "MixinHorseMarkingLayer",
     "MixinLevelRenderer",
     "MixinLevelRenderer_EntityListSorting",
     "MixinRenderBuffers",

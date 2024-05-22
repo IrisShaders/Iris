@@ -15,6 +15,7 @@ import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.gui.debug.DebugLoadFailedGridScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
+import net.irisshaders.iris.hdr.GLFWHDRConfig;
 import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.PipelineManager;
@@ -73,6 +74,7 @@ public class Iris {
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!
 	private static final String backupVersionNumber = "1.20.3";
+	public static GLFWHDRConfig HDRCONFIG;
 	public static NamespacedId lastDimension = null;
 	public static boolean testing = false;
 	private static Path shaderpacksDirectory;
@@ -98,6 +100,7 @@ public class Iris {
 
 	static {
 		if (!BuildConfig.ACTIVATE_RENDERDOC && FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
+			Configuration.GLFW_LIBRARY_NAME.set("/home/ims/glfw/build/src/libglfw.so.3.5");
 		}
 	}
 
@@ -131,6 +134,8 @@ public class Iris {
 			return;
 		}
 
+		HDRCONFIG = GLFWHDRConfig.glfwGetHDRConfig(Minecraft.getInstance().getWindow().getWindow());
+		Iris.logger.warn(String.valueOf(HDRCONFIG));
 		// Initialize the pipeline now so that we don't increase world loading time. Just going to guess that
 		// the player is in the overworld.
 		// See: https://github.com/IrisShaders/Iris/issues/323

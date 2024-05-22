@@ -2,12 +2,15 @@ package net.irisshaders.iris.mixin;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
+import org.lwjgl.opengl.GL30;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 /**
  * Allows Iris to detect when the depth texture was re-created, so we can re-attach it
@@ -27,6 +30,14 @@ public class MixinRenderTarget implements Blaze3dRenderTargetExt {
 	private void iris$onDestroyBuffers(CallbackInfo ci) {
 		iris$depthBufferVersion++;
 		iris$colorBufferVersion++;
+	}
+
+	@ModifyArgs(method = "createBuffers",
+		at = @At(value = "INVOKE",
+			target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V",
+			ordinal = 1))
+	public void init(Args args) {
+		args.set(2, GL30.GL_RGBA16F);
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package net.irisshaders.iris.uniforms;
 
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
@@ -24,6 +25,7 @@ import org.joml.Vector4f;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
+import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.ONCE;
 import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 public class IrisExclusiveUniforms {
@@ -71,6 +73,15 @@ public class IrisExclusiveUniforms {
 				return zero;
 			}
 		});
+
+		// HDR!!!
+
+		uniforms.uniform1i(ONCE, "maxLuminance", () -> Iris.HDRCONFIG.getMaxLuminance());
+		uniforms.uniform1i(ONCE, "minLuminance", () -> Iris.HDRCONFIG.getMinLuminance());
+		uniforms.uniform2f(ONCE, "redPrimary", () -> Iris.HDRCONFIG.getPrimaryRedCoord());
+		uniforms.uniform2f(ONCE, "bluePrimary", () -> Iris.HDRCONFIG.getPrimaryBlueCoord());
+		uniforms.uniform2f(ONCE, "greenPrimary", () -> Iris.HDRCONFIG.getPrimaryGreenCoord());
+		uniforms.uniform2f(ONCE, "whitePoint", () -> Iris.HDRCONFIG.getWhitePoint());
 	}
 
 	private static int getCurrentSelectedBlockId() {
