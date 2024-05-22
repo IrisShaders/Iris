@@ -45,7 +45,7 @@ public class MixinChunkRenderRebuildTask {
 								  BuiltSectionInfo.Builder renderData, VisGraph occluder, ChunkBuildBuffers buffers,
 								  BlockRenderCache cacheLocal,
 								  LevelSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
-								  BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, TranslucentGeometryCollector collector, BlockRenderer context2,
+								  BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, TranslucentGeometryCollector collector, BlockRenderContext context2,
 								  int relY, int relZ, int relX, BlockState blockState) {
 		if (WorldRenderingSettings.INSTANCE.shouldVoxelizeLightBlocks() && blockState.getBlock() instanceof LightBlock) {
 			ChunkModelBuilder buildBuffers = buffers.get(DefaultMaterials.CUTOUT);
@@ -78,7 +78,7 @@ public class MixinChunkRenderRebuildTask {
 										BuiltSectionInfo.Builder renderData, VisGraph occluder, ChunkBuildBuffers buffers,
 										BlockRenderCache cacheLocal,
 										LevelSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
-										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, TranslucentGeometryCollector collector, BlockRenderer context2,
+										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, TranslucentGeometryCollector collector, BlockRenderContext context2,
 										int relY, int relZ, int relX, BlockState blockState) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(blockState, ExtendedDataHelper.BLOCK_RENDER_TYPE, (byte) blockState.getLightEmission());
@@ -92,7 +92,7 @@ public class MixinChunkRenderRebuildTask {
 										BuiltSectionInfo.Builder renderData, VisGraph occluder, ChunkBuildBuffers buffers,
 										BlockRenderCache cacheLocal,
 										LevelSlice slice, int baseX, int baseY, int baseZ, int maxX, int maxY, int maxZ,
-										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, TranslucentGeometryCollector collector, BlockRenderer context2,
+										BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos renderOffset, TranslucentGeometryCollector collector, BlockRenderContext context2,
 										int relY, int relZ, int relX, BlockState blockState, FluidState fluidState) {
 		if (context.buffers instanceof ChunkBuildBuffersExt) {
 			((ChunkBuildBuffersExt) context.buffers).iris$setMaterialId(fluidState.createLegacyBlock(), ExtendedDataHelper.FLUID_RENDER_TYPE, (byte) blockState.getLightEmission());

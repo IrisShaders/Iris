@@ -1,10 +1,10 @@
 package net.irisshaders.iris.compat.sodium.mixin.font;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import me.jellysquid.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.GlyphVertex;
+import net.caffeinemc.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.entity_xhfp.GlyphVertexExt;
 import net.irisshaders.iris.vertices.ImmediateState;
@@ -58,7 +58,8 @@ public class MixinGlyphRenderer {
 	 * @reason Use intrinsics
 	 * @author JellySquid
 	 */
-	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
+	// TODO IMS
+	//@Inject(method = "render", at = @At("HEAD"), cancellable = true)
 	public void render2(boolean italic, float x, float y, Matrix4f matrix, VertexConsumer vertexConsumer, float red, float green, float blue, float alpha, int light, CallbackInfo ci) {
 		var writer = VertexConsumerUtils.convertOrLog(vertexConsumer);
 

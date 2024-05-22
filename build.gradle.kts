@@ -14,7 +14,7 @@ object Constants {
     const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.6.0-snapshot+mc24w21a-local.jar"
 
     const val IS_SHARED_BETA: Boolean = false
-    const val ACTIVATE_RENDERDOC: Boolean = false
+    const val ACTIVATE_RENDERDOC: Boolean = true
     const val BETA_TAG: String = "DH Support"
     const val BETA_VERSION = 4
 
@@ -180,6 +180,7 @@ tasks {
         if (Constants.ACTIVATE_RENDERDOC && DefaultNativePlatform.getCurrentOperatingSystem().isLinux) {
             environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
         }
+        jvmArgs("-Dmixin.debug.export=true")
     }
     getByName<JavaCompile>("compileDesktopJava") {
         sourceCompatibility = JavaVersion.VERSION_1_8.toString()

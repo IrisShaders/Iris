@@ -15,5 +15,41 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(VertexFormat.class)
 public class MixinVertexFormat {
+	@Inject(method = "setupBufferState", at = @At("HEAD"), cancellable = true)
+	private void iris$onSetupBufferState(CallbackInfo ci) {
+		if (WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
+			if ((Object) this == DefaultVertexFormat.BLOCK) {
+				IrisVertexFormats.TERRAIN.setupBufferState();
 
+				ci.cancel();
+			} else if ((Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
+				IrisVertexFormats.GLYPH.setupBufferState();
+
+				ci.cancel();
+			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
+				IrisVertexFormats.ENTITY.setupBufferState();
+
+				ci.cancel();
+			}
+		}
+	}
+
+	@Inject(method = "clearBufferState", at = @At("HEAD"), cancellable = true)
+	private void iris$onClearBufferState(CallbackInfo ci) {
+		if (WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
+			if ((Object) this == DefaultVertexFormat.BLOCK) {
+				IrisVertexFormats.TERRAIN.clearBufferState();
+
+				ci.cancel();
+			} else if ((Object) this == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP) {
+				IrisVertexFormats.GLYPH.clearBufferState();
+
+				ci.cancel();
+			} else if ((Object) this == DefaultVertexFormat.NEW_ENTITY) {
+				IrisVertexFormats.ENTITY.clearBufferState();
+
+				ci.cancel();
+			}
+		}
+	}
 }

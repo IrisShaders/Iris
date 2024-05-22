@@ -24,7 +24,7 @@ public class MixinBufferSource {
 		at = @At(value = "NEW",
 			target = "(Lcom/mojang/blaze3d/vertex/ByteBufferBuilder;Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)Lcom/mojang/blaze3d/vertex/BufferBuilder;"))
 	private BufferBuilder iris$redirectBegin(ByteBufferBuilder byteBufferBuilder, VertexFormat.Mode mode, VertexFormat vertexFormat, Operation<BufferBuilder> original) {
-		ImmediateState.skipExtend = true;
+		ImmediateState.skipExtend = iris$notRenderingLevel();
 
 		BufferBuilder bufferBuilder = original.call(byteBufferBuilder, mode, vertexFormat);
 

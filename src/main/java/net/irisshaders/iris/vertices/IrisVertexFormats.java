@@ -20,10 +20,10 @@ public class IrisVertexFormats {
 
 	static {
 		ENTITY_ELEMENT = VertexFormatElement.register(11, 11, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
-		ENTITY_ID_ELEMENT = new VertexFormatElement(10, 10, VertexFormatElement.Type.USHORT, VertexFormatElement.Usage.UV, 3);
-		MID_TEXTURE_ELEMENT = new VertexFormatElement(12, 12, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
-		TANGENT_ELEMENT = new VertexFormatElement(13, 13, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
-		MID_BLOCK_ELEMENT = new VertexFormatElement(14, 14, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
+		ENTITY_ID_ELEMENT = VertexFormatElement.register(10, 10, VertexFormatElement.Type.USHORT, VertexFormatElement.Usage.UV, 3);
+		MID_TEXTURE_ELEMENT = VertexFormatElement.register(12, 12, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
+		TANGENT_ELEMENT = VertexFormatElement.register(13, 13, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
+		MID_BLOCK_ELEMENT = VertexFormatElement.register(14, 14, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
 
 		TERRAIN = VertexFormat.builder().add("Position", VertexFormatElement.POSITION)
 			.add("Color", VertexFormatElement.COLOR)

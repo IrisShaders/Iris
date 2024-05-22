@@ -6,6 +6,8 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
+import net.fabricmc.loader.api.FabricLoader;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.BlockSensitiveBufferBuilder;
@@ -15,6 +17,8 @@ import net.irisshaders.iris.vertices.ExtendingBufferBuilder;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.irisshaders.iris.vertices.IrisExtendedBufferBuilder;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
+import net.irisshaders.iris.vertices.NormI8;
+import net.irisshaders.iris.vertices.NormalHelper;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Final;
@@ -24,6 +28,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -94,8 +100,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	@Final
 	private int[] offsetsByElement;
 
-	@Inject(method = "<init>", at = @At(value = "TAIL"))
-	private void iris$extendFormat(ByteBufferBuilder byteBufferBuilder, VertexFormat.Mode mode, VertexFormat vertexFormat, CallbackInfo ci) {
+	@ModifyVariable(method = "<init>", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/VertexFormatElement;POSITION:Lcom/mojang/blaze3d/vertex/VertexFormatElement;"), index = 3, argsOnly = true)
+	private VertexFormat iris$extendFormat(VertexFormat vertexFormat) {
 		extending = false;
 		iris$isTerrain = false;
 		injectNormalAndUV1 = false;
@@ -104,7 +110,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 
 		if (ImmediateState.skipExtend || !WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()) {
 			format = vertexFormat;
-			return;
+			return format;
 		}
 
 		if (format == DefaultVertexFormat.BLOCK) {
@@ -124,10 +130,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			format = IrisVertexFormats.GLYPH;
 		}
 
-		this.format = format;
-		this.vertexSize = vertexFormat.getVertexSize();
-		this.initialElementsToFill = vertexFormat.getElementsMask() & ~VertexFormatElement.POSITION.mask();
-		this.offsetsByElement = vertexFormat.getOffsetsByElement();
+		return format;
 	}
 
 	//@Inject(method = "reset()V", at = @At("HEAD"))
@@ -141,7 +144,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			return;
 		}
 
-		if (injectNormalAndUV1 && this.elementsToFill == (this.elementsToFill & ~VertexFormatElement.NORMAL.mask())) {
+		if (injectNormalAndUV1 && this.elementsToFill != (this.elementsToFill & ~VertexFormatElement.NORMAL.mask())) {
 			this.setNormal(0, 0, 0);
 		}
 
@@ -155,11 +158,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			long offset = this.vertexPointer + offsetsByElement[IrisVertexFormats.ENTITY_ID_ELEMENT.id()];
 			MemoryUtil.memPutShort(offset, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 			MemoryUtil.memPutShort(offset + 2, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
-			MemoryUtil.memPutShort(offset +4, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+			MemoryUtil.memPutShort(offset + 4, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 		}
-
-		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.MID_TEXTURE_ELEMENT.mask();
-		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.TANGENT_ELEMENT.mask();
 
 		if (iris$isTerrain) {
 			// MID_BLOCK_ELEMENT
@@ -200,35 +200,24 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		midU /= vertexAmount;
 		midV /= vertexAmount;
 
-		int midUOffset;
-		int midVOffset;
-		int normalOffset;
-		int tangentOffset;
-		if (iris$isTerrain) {
-			midUOffset = 16;
-			midVOffset = 12;
-			normalOffset = 24;
-			tangentOffset = 8;
-		} else {
-			midUOffset = 14;
-			midVOffset = 10;
-			normalOffset = 24;
-			tangentOffset = 6;
-		}
 
+		long nextElementByte = vertexPointer;
+		long normalOffset = offsetsByElement[VertexFormatElement.NORMAL.id()];
+		long tangentOffset = offsetsByElement[IrisVertexFormats.TANGENT_ELEMENT.id()];
+		long midUOffset = offsetsByElement[IrisVertexFormats.MID_TEXTURE_ELEMENT.id()];
+		long midVOffset = midUOffset + 4;
 		// TODO 24w21a
-		/*
 		if (vertexAmount == 3) {
 			// NormalHelper.computeFaceNormalTri(normal, polygon);	// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
-				int packedNormal = buffer.getInt(nextElementByte - normalOffset - stride * vertex); // retrieve per-vertex normal
+				int packedNormal = MemoryUtil.memGetInt(nextElementByte + normalOffset - stride * vertex); // retrieve per-vertex normal
 
 				int tangent = NormalHelper.computeTangentSmooth(NormI8.unpackX(packedNormal), NormI8.unpackY(packedNormal), NormI8.unpackZ(packedNormal), polygon);
 
-				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
-				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
-				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+				MemoryUtil.memPutFloat(nextElementByte + midUOffset - stride * vertex, midU);
+				MemoryUtil.memPutFloat(nextElementByte + midVOffset - stride * vertex, midV);
+				MemoryUtil.memPutInt(nextElementByte + tangentOffset - stride * vertex, tangent);
 			}
 		} else {
 			NormalHelper.computeFaceNormal(normal, polygon);
@@ -236,12 +225,12 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
-				buffer.putFloat(nextElementByte - midUOffset - stride * vertex, midU);
-				buffer.putFloat(nextElementByte - midVOffset - stride * vertex, midV);
-				buffer.putInt(nextElementByte - normalOffset - stride * vertex, packedNormal);
-				buffer.putInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+				MemoryUtil.memPutFloat(nextElementByte + midUOffset - stride * vertex, midU);
+				MemoryUtil.memPutFloat(nextElementByte + midVOffset - stride * vertex, midV);
+				MemoryUtil.memPutInt(nextElementByte + normalOffset - stride * vertex, packedNormal);
+				MemoryUtil.memPutInt(nextElementByte + tangentOffset - stride * vertex, tangent);
 			}
-		}*/
+		}
 	}
 
 	@Override
