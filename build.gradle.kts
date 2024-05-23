@@ -5,7 +5,7 @@ object Constants {
     // https://fabricmc.net/develop/
     const val MINECRAFT_VERSION: String = "24w21b"
     const val FABRIC_LOADER_VERSION: String = "0.15.11"
-    const val FABRIC_API_VERSION: String = "0.97.5+1.20.5"
+    const val FABRIC_API_VERSION: String = "0.99.1+1.21"
 
     // https://semver.org/
     const val MOD_VERSION: String = "1.7.0"
@@ -14,7 +14,7 @@ object Constants {
     const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshot+mc24w21b-local.jar"
 
     const val IS_SHARED_BETA: Boolean = false
-    const val ACTIVATE_RENDERDOC: Boolean = false
+    const val ACTIVATE_RENDERDOC: Boolean = true
     const val BETA_TAG: String = "DH Support"
     const val BETA_VERSION = 4
 
@@ -172,6 +172,7 @@ tasks {
         if (Constants.ACTIVATE_RENDERDOC && DefaultNativePlatform.getCurrentOperatingSystem().isLinux) {
             environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
         }
+        jvmArgs("-Dmixin.debug.export=true")
     }
     getByName<JavaCompile>("compileDesktopJava") {
         sourceCompatibility = JavaVersion.VERSION_1_8.toString()

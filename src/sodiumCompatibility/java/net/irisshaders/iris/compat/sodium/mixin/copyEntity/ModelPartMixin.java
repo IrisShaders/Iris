@@ -9,6 +9,7 @@ import me.jellysquid.mods.sodium.client.render.immediate.model.ModelPartData;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
+import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.minecraft.client.model.geom.ModelPart;
 import org.spongepowered.asm.mixin.Final;
@@ -97,7 +98,7 @@ public class ModelPartMixin implements ModelPartData {
 
 		ci.cancel();
 
-		EntityRenderer.render(matrices, writer, (ModelPart) (Object) this, light, overlay, color);
+		EntityRenderer.render(matrices, writer, (ModelPart) (Object) this, light, overlay, ColorARGB.toABGR(color));
 	}
 
 	/**
