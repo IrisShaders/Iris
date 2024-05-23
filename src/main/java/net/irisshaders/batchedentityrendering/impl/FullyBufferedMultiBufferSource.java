@@ -134,6 +134,8 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		profiler.push("draw buffers");
 
 		for (RenderType type : renderOrder) {
+			if (!typeToSegment.containsKey(type)) continue;
+
 			type.setupRenderState();
 
 			renderTypes += 1;
@@ -144,6 +146,10 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			}
 
 			type.clearRenderState();
+		}
+
+		for (SegmentedBufferBuilder builder : builders) {
+			builder.clearBuffers();
 		}
 
 		profiler.popPush("reset");

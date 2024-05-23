@@ -109,20 +109,6 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		return format;
 	}
 
-	// TODO: why is this needed?
-	@Inject(method = "<init>", at = @At("TAIL"))
-	private void ensureInit(ByteBufferBuilder byteBufferBuilder, VertexFormat.Mode mode, VertexFormat vertexFormat, CallbackInfo ci) {
-		if (this.format == IrisVertexFormats.TERRAIN || this.format == IrisVertexFormats.ENTITY || this.format == IrisVertexFormats.GLYPH) {
-			if (!this.extending) {
-				throw new IllegalStateException("wtf (again)?");
-			} else if (this.format == IrisVertexFormats.TERRAIN && !iris$isTerrain) {
-				throw new IllegalStateException("wtf (again x2)");
-			} else if (this.format != IrisVertexFormats.TERRAIN && iris$isTerrain) {
-				throw new IllegalStateException("wtf (again x3)");
-			}
-		}
-	}
-
 	@Redirect(method = "addVertex(FFFIFFIIFFF)V", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;fastFormat:Z"))
 	private boolean fastFormat(BufferBuilder instance) {
 		return this.fastFormat && !extending;
