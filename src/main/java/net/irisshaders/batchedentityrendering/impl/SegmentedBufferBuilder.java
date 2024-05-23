@@ -2,7 +2,10 @@ package net.irisshaders.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.batchedentityrendering.mixin.RenderTypeAccessor;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -10,18 +13,19 @@ import net.minecraft.client.renderer.RenderType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTrackingBuffer {
-	private final BufferBuilder buffer;
+	private final ByteBufferBuilder buffer;
+	private final Map<RenderType, BufferBuilder> builders;
 	private final List<BufferSegment> buffers;
-	private RenderType currentType;
 
 	public SegmentedBufferBuilder() {
 		// 2 MB initial allocation
-		this.buffer = new BufferBuilder(512 * 1024);
+		this.buffer = new ByteBufferBuilder(512 * 1024);
+		this.builders = new Object2ObjectOpenHashMap<>();
 		this.buffers = new ArrayList<>();
-		this.currentType = null;
 	}
 
 	private static boolean shouldSortOnUpload(RenderType type) {
@@ -30,69 +34,37 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
 
 	@Override
 	public VertexConsumer getBuffer(RenderType renderType) {
-		if (!Objects.equals(currentType, renderType)) {
-			if (currentType != null) {
-				if (shouldSortOnUpload(currentType)) {
-					buffer.setQuadSorting(RenderSystem.getVertexSorting());
-				}
-
-				buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
-			}
-
-			buffer.begin(renderType.mode(), renderType.format());
-
-			currentType = renderType;
-		}
+		BufferBuilder builder = builders.computeIfAbsent(renderType, (t) -> new BufferBuilder(buffer, renderType.mode(), renderType.format()));
 
 		// Use duplicate vertices to break up triangle strips
 		// https://developer.apple.com/library/archive/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/Art/degenerate_triangle_strip_2x.png
 		// This works by generating zero-area triangles that don't end up getting rendered.
 		// TODO: How do we handle DEBUG_LINE_STRIP?
-		if (RenderTypeUtil.isTriangleStripDrawMode(currentType)) {
-			((BufferBuilderExt) buffer).splitStrip();
+		if (RenderTypeUtil.isTriangleStripDrawMode(renderType)) {
+			((BufferBuilderExt) builder).splitStrip();
 		}
 
-		return buffer;
+		return builder;
 	}
 
 	public List<BufferSegment> getSegments() {
-		if (currentType == null) {
-			return Collections.emptyList();
-		}
+		builders.forEach(((renderType, bufferBuilder) -> {
+			MeshData meshData = bufferBuilder.build();
 
-		if (shouldSortOnUpload(currentType)) {
-			buffer.setQuadSorting(RenderSystem.getVertexSorting());
-		}
+			if (meshData == null) return;
 
-		buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
+			if (shouldSortOnUpload(renderType)) {
+				meshData.sortQuads(buffer, RenderSystem.getVertexSorting());
+			}
 
-		currentType = null;
+			buffers.add(new BufferSegment(meshData, renderType));
+		}));
+
+		builders.clear();
 
 		List<BufferSegment> finalSegments = new ArrayList<>(buffers);
 
 		buffers.clear();
-
-		return finalSegments;
-	}
-
-	public List<BufferSegment> getSegmentsForType(TransparencyType transparencyType) {
-		if (currentType == null) {
-			return Collections.emptyList();
-		}
-
-		if (((BlendingStateHolder) currentType).getTransparencyType() == transparencyType) {
-			if (shouldSortOnUpload(currentType)) {
-				buffer.setQuadSorting(RenderSystem.getVertexSorting());
-			}
-
-			buffers.add(new BufferSegment(Objects.requireNonNull(buffer.end()), currentType));
-
-			currentType = null;
-		}
-
-		List<BufferSegment> finalSegments = buffers.stream().filter(segment -> ((BlendingStateHolder) segment.type()).getTransparencyType() == transparencyType).toList();
-
-		buffers.removeAll(finalSegments);
 
 		return finalSegments;
 	}

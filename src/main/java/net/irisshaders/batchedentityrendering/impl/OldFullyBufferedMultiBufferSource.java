@@ -1,6 +1,7 @@
 package net.irisshaders.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -26,7 +27,7 @@ public class OldFullyBufferedMultiBufferSource extends MultiBufferSource.BufferS
 	private boolean flushed;
 
 	public OldFullyBufferedMultiBufferSource() {
-		super(new BufferBuilder(0), Collections.emptyMap());
+		super(new ByteBufferBuilder(0), Collections.emptyMap());
 
 		this.bufferBuilders = new HashMap<>();
 		this.unused = new Object2IntOpenHashMap<>();
@@ -54,10 +55,9 @@ public class OldFullyBufferedMultiBufferSource extends MultiBufferSource.BufferS
 	public VertexConsumer getBuffer(RenderType renderType) {
 		flushed = false;
 
-		BufferBuilder buffer = bufferBuilders.computeIfAbsent(renderType, type -> new BufferBuilder(type.bufferSize()));
+		BufferBuilder buffer = bufferBuilders.computeIfAbsent(renderType, type -> new BufferBuilder(new ByteBufferBuilder(type.bufferSize()), renderType.mode(), renderType.format()));
 
 		if (activeBuffers.add(buffer)) {
-			buffer.begin(renderType.mode(), renderType.format());
 		}
 
 		if (this.typesThisFrame.add(renderType)) {
@@ -131,8 +131,7 @@ public class OldFullyBufferedMultiBufferSource extends MultiBufferSource.BufferS
 		}
 
 		if (activeBuffers.remove(buffer)) {
-			type.end(buffer, VertexSorting.DISTANCE_TO_ORIGIN);
-			buffer.clear();
+			type.draw(buffer.build());
 		} else {
 			// Schedule the buffer for removal next frame if it isn't used this frame.
 			int unusedCount = unused.getOrDefault(type, 0);

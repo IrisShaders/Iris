@@ -1,8 +1,8 @@
 package net.irisshaders.iris.mixin.vertices.block_rendering;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +23,7 @@ import java.util.Arrays;
  * behavior, though conditionally controlled by the current shader pack of course.
  */
 @Mixin(value = BufferBuilder.class, priority = 999)
-public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsumer {
+public abstract class MixinBufferBuilder_SeparateAo implements VertexConsumer {
 	private float[] brightnesses;
 
 	private int brightnessIndex;
@@ -39,19 +39,6 @@ public abstract class MixinBufferBuilder_SeparateAo extends DefaultedVertexConsu
 			Arrays.fill(brightnesses, 1.0f);
 		}
 
-		super.putBulkData(matrixEntry, quad, brightnesses, red, green, blue, alpha, lights, overlay, useQuadColorData);
-	}
-
-	@ModifyVariable(method = "vertex", at = @At("HEAD"), index = 7, argsOnly = true)
-	public float vertex(float alpha) {
-		if (brightnesses != null && WorldRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
-			if (brightnessIndex < brightnesses.length) {
-				alpha = brightnesses[brightnessIndex++];
-			} else {
-				brightnesses = null;
-			}
-		}
-
-		return alpha;
+		VertexConsumer.super.putBulkData(matrixEntry, quad, brightnesses, red, green, blue, alpha, lights, overlay, useQuadColorData);
 	}
 }

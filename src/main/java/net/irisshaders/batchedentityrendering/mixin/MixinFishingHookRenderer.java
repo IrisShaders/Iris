@@ -17,6 +17,6 @@ public class MixinFishingHookRenderer {
 	private void capture(FishingHook arg, float f, float g, PoseStack arg2, MultiBufferSource arg3, int i, CallbackInfo ci) {
 		VertexConsumer consumer = arg3.getBuffer(RenderType.lineStrip());
 		// Create an "invisible vertex" with zero area. TODO: Find a proper fix, this isn't guaranteed under the spec but work on most drivers.
-		consumer.vertex(0, 0, 0).color(0, 0, 0, 255).normal(0, 0, 0).endVertex();
+		consumer.addVertex(0, 0, 0).setColor(0, 0, 0, 255).setNormal(0, 0, 0);
 	}
 }

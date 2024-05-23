@@ -4,6 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.gl.IrisRenderSystem;
@@ -18,17 +20,17 @@ public class FullScreenQuadRenderer {
 	private final VertexBuffer quad;
 
 	private FullScreenQuadRenderer() {
-		BufferBuilder bufferBuilder = new BufferBuilder(DefaultVertexFormat.POSITION_TEX.getVertexSize() * 4);
-		bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-		bufferBuilder.vertex(0.0F, 0.0F, 0.0F).uv(0.0F, 0.0F).endVertex();
-		bufferBuilder.vertex(1.0F, 0.0F, 0.0F).uv(1.0F, 0.0F).endVertex();
-		bufferBuilder.vertex(1.0F, 1.0F, 0.0F).uv(1.0F, 1.0F).endVertex();
-		bufferBuilder.vertex(0.0F, 1.0F, 0.0F).uv(0.0F, 1.0F).endVertex();
-		BufferBuilder.RenderedBuffer renderedBuffer = bufferBuilder.end();
+		BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+		bufferBuilder.addVertex(0.0F, 0.0F, 0.0F).setUv(0.0F, 0.0F);
+		bufferBuilder.addVertex(1.0F, 0.0F, 0.0F).setUv(1.0F, 0.0F);
+		bufferBuilder.addVertex(1.0F, 1.0F, 0.0F).setUv(1.0F, 1.0F);
+		bufferBuilder.addVertex(0.0F, 1.0F, 0.0F).setUv(0.0F, 1.0F);
+		MeshData meshData = bufferBuilder.build();
 
 		quad = new VertexBuffer(VertexBuffer.Usage.STATIC);
 		quad.bind();
-		quad.upload(renderedBuffer);
+		quad.upload(meshData);
+		Tesselator.getInstance().clear();
 		VertexBuffer.unbind();
 	}
 

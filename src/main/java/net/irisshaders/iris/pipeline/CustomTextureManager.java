@@ -139,7 +139,7 @@ public class CustomTextureManager {
 			TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
 			if (pbrType == null) {
-				ResourceLocation textureLocation = new ResourceLocation(namespace, location);
+				ResourceLocation textureLocation = ResourceLocation.fromNamespaceAndPath(namespace, location);
 
 				// NB: We have to re-query the TextureManager for the texture object every time. This is because the
 				//     AbstractTexture object could be removed / deleted from the TextureManager on resource reloads,
@@ -152,7 +152,7 @@ public class CustomTextureManager {
 				}, TextureType.TEXTURE_2D);
 			} else {
 				location = location.substring(0, extensionIndex - pbrType.getSuffix().length()) + location.substring(extensionIndex);
-				ResourceLocation textureLocation = new ResourceLocation(namespace, location);
+				ResourceLocation textureLocation = ResourceLocation.fromNamespaceAndPath(namespace, location);
 
 				return new TextureWrapper(() -> {
 					AbstractTexture texture = textureManager.getTexture(textureLocation);
