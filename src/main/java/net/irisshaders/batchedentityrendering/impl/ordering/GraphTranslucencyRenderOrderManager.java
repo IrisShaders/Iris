@@ -82,6 +82,11 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 		return true;
 	}
 
+	@Override
+	public boolean isInGroup() {
+		return inGroup;
+	}
+
 	public void endGroup() {
 		if (!inGroup) {
 			throw new IllegalStateException("Not in a group");

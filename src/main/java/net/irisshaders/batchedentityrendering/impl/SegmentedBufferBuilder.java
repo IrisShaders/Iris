@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTrackingBuffer {
+public class SegmentedBufferBuilder implements MemoryTrackingBuffer {
 	private final Map<RenderType, ByteBufferBuilderHolder> buffers;
 	private final Map<RenderType, BufferBuilder> builders;
 	private final List<BufferSegment> segments;
@@ -30,7 +30,6 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
 		return ((RenderTypeAccessor) type).shouldSortOnUpload();
 	}
 
-	@Override
 	public VertexConsumer getBuffer(RenderType renderType) {
 		ByteBufferBuilderHolder buffer = buffers.computeIfAbsent(renderType, (r) -> new ByteBufferBuilderHolder(new ByteBufferBuilder(512*2024)));
 
@@ -100,6 +99,6 @@ public class SegmentedBufferBuilder implements MultiBufferSource, MemoryTracking
 	}
 
 	public void clearBuffers() {
-		buffers.values().removeIf(ByteBufferBuilderHolder::deleteOrClear);
+		//buffers.values().removeIf(ByteBufferBuilderHolder::deleteOrClear);
 	}
 }

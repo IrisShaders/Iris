@@ -47,6 +47,14 @@ public class TranslucencyRenderOrderManager implements RenderOrderManager {
 		return false;
 	}
 
+	public boolean isInGroup() {
+		return false;
+	}
+
+	public int getGroupId() {
+		return 0;
+	}
+
 	public void endGroup() {
 		// no-op
 	}

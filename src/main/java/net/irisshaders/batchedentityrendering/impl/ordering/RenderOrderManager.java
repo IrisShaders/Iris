@@ -12,6 +12,8 @@ public interface RenderOrderManager {
 
 	boolean maybeStartGroup();
 
+	boolean isInGroup();
+
 	void endGroup();
 
 	void reset();

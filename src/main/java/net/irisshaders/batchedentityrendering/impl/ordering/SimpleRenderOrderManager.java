@@ -26,6 +26,11 @@ public class SimpleRenderOrderManager implements RenderOrderManager {
 		return false;
 	}
 
+	@Override
+	public boolean isInGroup() {
+		return false;
+	}
+
 	public void endGroup() {
 		// no-op
 	}

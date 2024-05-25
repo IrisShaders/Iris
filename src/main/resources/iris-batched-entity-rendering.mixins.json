@@ -7,6 +7,7 @@
     "BufferSourceAccessor",
     "CompositeStateAccessor",
     "MixinByteBufferBuilder",
+    "MixinBannerRenderer",
     "MixinBufferBuilder_SegmentRendering",
     "MixinBufferSource",
     "MixinCompositeRenderType",
