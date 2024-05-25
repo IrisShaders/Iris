@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.BlockSensitiveBufferBuilder;
@@ -26,6 +27,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Arrays;
 
 /**
  * Dynamically and transparently extends the vanilla vertex formats with additional data
@@ -80,6 +84,9 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	@Unique
 	private int currentLocalPosZ;
 
+	@Unique
+	private long[] vertexPointers = new long[4];
+
 	@ModifyVariable(method = "<init>", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/VertexFormatElement;POSITION:Lcom/mojang/blaze3d/vertex/VertexFormatElement;", ordinal = 0), argsOnly = true)
 	private VertexFormat iris$extendFormat(VertexFormat format) {
 		iris$isTerrain = false;
@@ -114,18 +121,21 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		return this.fastFormat && !extending;
 	}
 
+	@Inject(method = "addVertex(FFF)Lcom/mojang/blaze3d/vertex/VertexConsumer;", at = @At("RETURN"))
+	private void injectMidBlock(float x, float y, float z, CallbackInfoReturnable<VertexConsumer> cir) {
+		if ((this.elementsToFill & IrisVertexFormats.MID_BLOCK_ELEMENT.mask()) != 0) {
+			long midBlockOffset = this.beginElement(IrisVertexFormats.MID_BLOCK_ELEMENT);
+			MemoryUtil.memPutInt(midBlockOffset, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
+		}
+	}
+
 	@Inject(method = "endLastVertex", at = @At("HEAD"))
 	private void iris$beforeNext(CallbackInfo ci) {
-		if (this.vertices == 0) {
+		if (this.vertices == 0 || !extending) {
 			return;
 		}
 
-		if (!extending) {
-			if (this.format.contains(IrisVertexFormats.TANGENT_ELEMENT)) {
-				throw new IllegalStateException("wtf? " + format);
-			}
-			return;
-		}
+		vertexPointers[vertexCount] = vertexPointer;
 
 		if (injectNormalAndUV1 && this.elementsToFill != (this.elementsToFill & ~VertexFormatElement.NORMAL.mask())) {
 			this.setNormal(0, 0, 0);
@@ -142,7 +152,6 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			long offset = this.beginElement(IrisVertexFormats.ENTITY_ID_ELEMENT);
 			// ENTITY_ID_ELEMENT
 			if (offset > 0) {
-
 				MemoryUtil.memPutShort(offset, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
 				MemoryUtil.memPutShort(offset + 2, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
 				MemoryUtil.memPutShort(offset + 4, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
@@ -152,16 +161,6 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		// We can't fill these yet.
 		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.MID_TEXTURE_ELEMENT.mask();
 		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.TANGENT_ELEMENT.mask();
-
-		if (iris$isTerrain) {
-			// MID_BLOCK_ELEMENT
-			int posIndex = this.offsetsByElement[VertexFormatElement.POSITION.id()];
-			float x = MemoryUtil.memGetFloat(vertexPointer + posIndex);
-			float y = MemoryUtil.memGetFloat(vertexPointer + posIndex + 4);
-			float z = MemoryUtil.memGetFloat(vertexPointer + posIndex + 8);
-			long midBlockOffset = this.beginElement(IrisVertexFormats.MID_BLOCK_ELEMENT);
-			MemoryUtil.memPutInt(midBlockOffset, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
-		}
 
 		vertexCount++;
 
@@ -194,7 +193,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 
 		int stride = format.getVertexSize();
 
-		polygon.setup(vertexPointer + stride, stride, vertexAmount);
+		polygon.setup(vertexPointers, stride, vertexAmount);
 
 		float midU = 0;
 		float midV = 0;
@@ -228,11 +227,13 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
-				MemoryUtil.memPutFloat((vertexPointer - (stride * vertex)) + midTexOffset, midU);
-				MemoryUtil.memPutFloat((vertexPointer - (stride * vertex)) + midTexOffset + 4, midV);
-				MemoryUtil.memPutInt((vertexPointer - (stride * vertex)) + normalOffset, packedNormal);
-				MemoryUtil.memPutInt((vertexPointer - (stride * vertex)) + tangentOffset, tangent);
+				MemoryUtil.memPutFloat(vertexPointers[vertex] + midTexOffset, midU);
+				MemoryUtil.memPutFloat(vertexPointers[vertex] + midTexOffset + 4, midV);
+				MemoryUtil.memPutInt(vertexPointers[vertex] + normalOffset, packedNormal);
+				MemoryUtil.memPutInt(vertexPointers[vertex] + tangentOffset, tangent);
 			}
 		}
+
+		Arrays.fill(vertexPointers, 0);
 	}
 }
