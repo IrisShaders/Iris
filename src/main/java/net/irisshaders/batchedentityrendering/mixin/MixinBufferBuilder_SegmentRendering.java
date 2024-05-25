@@ -34,6 +34,7 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
 	private int vertexSize;
 	@Unique
 	private boolean dupeNextVertex;
+	private boolean dupeNextVertexAfter;
 
 	@Override
 	public void splitStrip() {
@@ -43,7 +44,8 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
 		}
 
 		duplicateLastVertex();
-		dupeNextVertex = true;
+		dupeNextVertexAfter = true;
+		dupeNextVertex = false;
 	}
 
 	private void duplicateLastVertex() {
@@ -54,6 +56,12 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
 
 	@Inject(method = "endLastVertex", at = @At("RETURN"))
 	private void batchedentityrendering$onNext(CallbackInfo ci) {
+		if (dupeNextVertexAfter) {
+			dupeNextVertexAfter = false;
+			dupeNextVertex = true;
+			return;
+		}
+
 		if (dupeNextVertex) {
 			dupeNextVertex = false;
 			duplicateLastVertex();
