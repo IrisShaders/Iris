@@ -127,6 +127,19 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			long midBlockOffset = this.beginElement(IrisVertexFormats.MID_BLOCK_ELEMENT);
 			MemoryUtil.memPutInt(midBlockOffset, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
 		}
+
+		if ((this.elementsToFill & IrisVertexFormats.ENTITY_ELEMENT.mask()) != 0) {
+			long offset = this.beginElement(IrisVertexFormats.ENTITY_ELEMENT);
+			// ENTITY_ELEMENT
+			MemoryUtil.memPutShort(offset, currentBlock);
+			MemoryUtil.memPutShort(offset + 2, currentRenderType);
+		} else if ((this.elementsToFill & IrisVertexFormats.ENTITY_ID_ELEMENT.mask()) != 0) {
+			long offset = this.beginElement(IrisVertexFormats.ENTITY_ID_ELEMENT);
+			// ENTITY_ID_ELEMENT
+			MemoryUtil.memPutShort(offset, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+			MemoryUtil.memPutShort(offset + 2, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+			MemoryUtil.memPutShort(offset + 4, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+		}
 	}
 
 	@Inject(method = "endLastVertex", at = @At("HEAD"))
@@ -135,27 +148,11 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			return;
 		}
 
+
 		vertexPointers[vertexCount] = vertexPointer;
 
 		if (injectNormalAndUV1 && this.elementsToFill != (this.elementsToFill & ~VertexFormatElement.NORMAL.mask())) {
 			this.setNormal(0, 0, 0);
-		}
-
-		if (iris$isTerrain) {
-			long offset = this.beginElement(IrisVertexFormats.ENTITY_ELEMENT);
-			if (offset > 0) {
-				// ENTITY_ELEMENT
-				MemoryUtil.memPutShort(offset, currentBlock);
-				MemoryUtil.memPutShort(offset + 2, currentRenderType);
-			}
-		} else {
-			long offset = this.beginElement(IrisVertexFormats.ENTITY_ID_ELEMENT);
-			// ENTITY_ID_ELEMENT
-			if (offset > 0) {
-				MemoryUtil.memPutShort(offset, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
-				MemoryUtil.memPutShort(offset + 2, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
-				MemoryUtil.memPutShort(offset + 4, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
-			}
 		}
 
 		// We can't fill these yet.
