@@ -206,19 +206,19 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		int midTexOffset = this.offsetsByElement[IrisVertexFormats.MID_TEXTURE_ELEMENT.id()];
 		int normalOffset = this.offsetsByElement[VertexFormatElement.NORMAL.id()];
 		int tangentOffset = this.offsetsByElement[IrisVertexFormats.TANGENT_ELEMENT.id()];
-		/*if (vertexAmount == 3) {
+		if (vertexAmount == 3) {
 			// NormalHelper.computeFaceNormalTri(normal, polygon);	// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
-				int packedNormal = buffer.getInt(nextElementByte - normalOffset - stride * vertex); // retrieve per-vertex normal
+				int vertexNormal = MemoryUtil.memGetInt(vertexPointers[vertex] + normalOffset); // retrieve per-vertex normal
 
-				int tangent = NormalHelper.computeTangentSmooth(NormI8.unpackX(packedNormal), NormI8.unpackY(packedNormal), NormI8.unpackZ(packedNormal), polygon);
+				int tangent = NormalHelper.computeTangentSmooth(NormI8.unpackX(vertexNormal), NormI8.unpackY(vertexNormal), NormI8.unpackZ(vertexNormal), polygon);
 
-				MemoryUtil.memPutFloat(nextElementByte - midUOffset - stride * vertex, midU);
-				MemoryUtil.memPutFloat(nextElementByte - midVOffset - stride * vertex, midV);
-				MemoryUtil.memPutInt(nextElementByte - tangentOffset - stride * vertex, tangent);
+				MemoryUtil.memPutFloat(vertexPointers[vertex] + midTexOffset, midU);
+				MemoryUtil.memPutFloat(vertexPointers[vertex] + midTexOffset + 4, midV);
+				MemoryUtil.memPutInt(vertexPointers[vertex] + tangentOffset, tangent);
 			}
-		} else*/ {
+		} else {
 			NormalHelper.computeFaceNormal(normal, polygon);
 			int packedNormal = NormI8.pack(normal.x, normal.y, normal.z, 0.0f);
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
