@@ -96,12 +96,12 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 	}
 
 	@Override
-	public int getEntityBufferAllocatedSize() {
+	public long getEntityBufferAllocatedSize() {
 		return ((MemoryTrackingBuffer) buffered).getAllocatedSize();
 	}
 
 	@Override
-	public int getMiscBufferAllocatedSize() {
+	public long getMiscBufferAllocatedSize() {
 		return ((MemoryTrackingBuffer) bufferSource).getAllocatedSize();
 	}
 

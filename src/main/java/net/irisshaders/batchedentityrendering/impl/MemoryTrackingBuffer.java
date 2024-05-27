@@ -1,9 +1,9 @@
 package net.irisshaders.batchedentityrendering.impl;
 
 public interface MemoryTrackingBuffer {
-	int getAllocatedSize();
+	long getAllocatedSize();
 
-	int getUsedSize();
+	long getUsedSize();
 
 	void freeAndDeleteBuffer();
 }

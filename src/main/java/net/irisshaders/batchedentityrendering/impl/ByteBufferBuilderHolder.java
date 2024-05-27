@@ -1,6 +1,7 @@
 package net.irisshaders.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import net.irisshaders.iris.Iris;
 
 public class ByteBufferBuilderHolder implements MemoryTrackingBuffer {
 	private final ByteBufferBuilder builder;
@@ -12,18 +13,26 @@ public class ByteBufferBuilderHolder implements MemoryTrackingBuffer {
 	}
 
 	public ByteBufferBuilder getBuffer() {
-		this.lastUse = System.currentTimeMillis();
-
 		return builder;
 	}
 
-	public boolean deleteOrClear() {
+	public boolean deleteOrClear(int clearTime) {
 		// If it's been 10 seconds since the last use, delete the buffer.
-		if (lastUse - System.currentTimeMillis() > 10000) {
+		if (System.currentTimeMillis() - lastUse > clearTime) {
 			this.builder.close();
 			return true;
 		} else {
 			this.builder.clear();
+			return false;
+		}
+	}
+
+	public boolean delete(int clearTime) {
+		// If it's been 10 seconds since the last use, delete the buffer.
+		if (System.currentTimeMillis() - lastUse > clearTime) {
+			this.builder.close();
+			return true;
+		} else {
 			return false;
 		}
 	}
@@ -33,12 +42,12 @@ public class ByteBufferBuilderHolder implements MemoryTrackingBuffer {
 	}
 
 	@Override
-	public int getAllocatedSize() {
+	public long getAllocatedSize() {
 		return ((MemoryTrackingBuffer) builder).getAllocatedSize();
 	}
 
 	@Override
-	public int getUsedSize() {
+	public long getUsedSize() {
 		return ((MemoryTrackingBuffer) builder).getUsedSize();
 	}
 

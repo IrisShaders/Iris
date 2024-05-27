@@ -18,9 +18,11 @@ public class SegmentedBufferBuilder implements MemoryTrackingBuffer {
 	private final Map<RenderType, ByteBufferBuilderHolder> buffers;
 	private final Map<RenderType, BufferBuilder> builders;
 	private final List<BufferSegment> segments;
+	private final FullyBufferedMultiBufferSource parent;
 
-	public SegmentedBufferBuilder() {
+	public SegmentedBufferBuilder(FullyBufferedMultiBufferSource parent) {
 		// 2 MB initial allocation
+		this.parent = parent;
 		this.buffers = new Object2ObjectOpenHashMap<>();
 		this.builders = new Object2ObjectOpenHashMap<>();
 		this.segments = new ArrayList<>();
@@ -31,33 +33,50 @@ public class SegmentedBufferBuilder implements MemoryTrackingBuffer {
 	}
 
 	public VertexConsumer getBuffer(RenderType renderType) {
-		ByteBufferBuilderHolder buffer = buffers.computeIfAbsent(renderType, (r) -> new ByteBufferBuilderHolder(new ByteBufferBuilder(512*2024)));
+		try {
+			ByteBufferBuilderHolder buffer = buffers.computeIfAbsent(renderType, (r) -> new ByteBufferBuilderHolder(new ByteBufferBuilder(512*2024)));
 
-		buffer.wasUsed();
-		BufferBuilder builder = builders.computeIfAbsent(renderType, (t) -> new BufferBuilder(buffer.getBuffer(), renderType.mode(), renderType.format()));
+			buffer.wasUsed();
+			BufferBuilder builder = builders.computeIfAbsent(renderType, (t) -> new BufferBuilder(buffer.getBuffer(), renderType.mode(), renderType.format()));
 
-		// Use duplicate vertices to break up triangle strips
-		// https://developer.apple.com/library/archive/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/Art/degenerate_triangle_strip_2x.png
-		// This works by generating zero-area triangles that don't end up getting rendered.
-		// TODO: How do we handle DEBUG_LINE_STRIP?
-		if (RenderTypeUtil.isTriangleStripDrawMode(renderType)) {
-			((BufferBuilderExt) builder).splitStrip();
+			// Use duplicate vertices to break up triangle strips
+			// https://developer.apple.com/library/archive/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/Art/degenerate_triangle_strip_2x.png
+			// This works by generating zero-area triangles that don't end up getting rendered.
+			// TODO: How do we handle DEBUG_LINE_STRIP?
+			if (RenderTypeUtil.isTriangleStripDrawMode(renderType)) {
+				((BufferBuilderExt) builder).splitStrip();
+			}
+
+			return builder;
+		} catch (OutOfMemoryError e) {
+			weAreOutOfMemory();
+
+			// uhhh try again
+			return getBuffer(renderType);
 		}
+	}
 
-		return builder;
+	private void weAreOutOfMemory() {
+		parent.weAreOutOfMemory();
 	}
 
 	public List<BufferSegment> getSegments() {
 		builders.forEach(((renderType, bufferBuilder) -> {
-			MeshData meshData = bufferBuilder.build();
+			try {
+				MeshData meshData = bufferBuilder.build();
 
-			if (meshData == null) return;
+				if (meshData == null) return;
 
-			if (shouldSortOnUpload(renderType)) {
-				meshData.sortQuads(buffers.get(renderType).getBuffer(), RenderSystem.getVertexSorting());
+				if (shouldSortOnUpload(renderType)) {
+					meshData.sortQuads(buffers.get(renderType).getBuffer(), RenderSystem.getVertexSorting());
+				}
+
+				segments.add(new BufferSegment(meshData, renderType));
+			} catch (OutOfMemoryError e) {
+				// we're fucked. try to clear memory for the next one, but don't bother about this one.
+
+				weAreOutOfMemory();
 			}
-
-			segments.add(new BufferSegment(meshData, renderType));
 		}));
 
 		builders.clear();
@@ -70,8 +89,8 @@ public class SegmentedBufferBuilder implements MemoryTrackingBuffer {
 	}
 
 	@Override
-	public int getAllocatedSize() {
-		int usedSize = 0;
+	public long getAllocatedSize() {
+		long usedSize = 0;
 		for (ByteBufferBuilderHolder buffer : buffers.values()) {
 			usedSize += ((MemoryTrackingBuffer) buffer).getAllocatedSize();
 		}
@@ -80,8 +99,8 @@ public class SegmentedBufferBuilder implements MemoryTrackingBuffer {
 	}
 
 	@Override
-	public int getUsedSize() {
-		int usedSize = 0;
+	public long getUsedSize() {
+		long usedSize = 0;
 		for (ByteBufferBuilderHolder buffer : buffers.values()) {
 			usedSize += ((MemoryTrackingBuffer) buffer).getUsedSize();
 		}
@@ -98,7 +117,12 @@ public class SegmentedBufferBuilder implements MemoryTrackingBuffer {
 		buffers.clear();
 	}
 
-	public void clearBuffers() {
-		//buffers.values().removeIf(ByteBufferBuilderHolder::deleteOrClear);
+	public void clearBuffers(int clearTime) {
+		buffers.values().removeIf(b -> b.deleteOrClear(clearTime));
+	}
+
+	public void lastDitchAttempt() {
+		// JUST REMOVE ANYTHING UNDER 500MS
+		buffers.values().removeIf(b -> b.delete(500));
 	}
 }

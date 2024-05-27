@@ -46,7 +46,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		this.builders = new SegmentedBufferBuilder[NUM_BUFFERS];
 
 		for (int i = 0; i < this.builders.length; i++) {
-			this.builders[i] = new SegmentedBufferBuilder();
+			this.builders[i] = new SegmentedBufferBuilder(this);
 		}
 
 		// use accessOrder=true so our LinkedHashMap works as an LRU cache.
@@ -149,7 +149,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		}
 
 		for (SegmentedBufferBuilder builder : builders) {
-			builder.clearBuffers();
+			builder.clearBuffers(getTargetClearTime());
 		}
 
 		profiler.popPush("reset");
@@ -189,11 +189,31 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			type.clearRenderState();
 		}
 
+		for (SegmentedBufferBuilder builder : builders) {
+			builder.clearBuffers(getTargetClearTime());
+		}
+
 		profiler.popPush("reset type " + transparencyType);
 
 		renderOrder.removeAll(types);
 
 		profiler.pop();
+	}
+
+	private static long toMib(long x) {
+		return x / 1024L / 1024L;
+	}
+
+	private int getTargetClearTime() {
+		long sizeInMiB = toMib(getAllocatedSize());
+
+		if (sizeInMiB > 5000) { // Over 5GB of RAM used.
+			return 1000; // Be extremely aggressive; 1 second per buffer.
+		} else if (sizeInMiB > 1000) { // Over 1GB of RAM used.
+			return 5000; // Wait 5 seconds.
+		} else {
+			return 10000; // we chillin; 10 seconds.
+		}
 	}
 
 	public int getDrawCalls() {
@@ -219,8 +239,8 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	}
 
 	@Override
-	public int getAllocatedSize() {
-		int size = 0;
+	public long getAllocatedSize() {
+		long size = 0;
 
 		for (SegmentedBufferBuilder builder : builders) {
 			size += builder.getAllocatedSize();
@@ -230,8 +250,8 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	}
 
 	@Override
-	public int getUsedSize() {
-		int size = 0;
+	public long getUsedSize() {
+		long size = 0;
 
 		for (SegmentedBufferBuilder builder : builders) {
 			size += builder.getUsedSize();
@@ -284,6 +304,12 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	public void assertWrapStackEmpty() {
 		if (!this.wrappingFunctionStack.isEmpty() || this.wrappingFunction != null) {
 			throw new IllegalStateException("Wrapping function stack not empty!");
+		}
+	}
+
+	public void weAreOutOfMemory() {
+		for (SegmentedBufferBuilder builder : builders) {
+			builder.lastDitchAttempt();
 		}
 	}
 

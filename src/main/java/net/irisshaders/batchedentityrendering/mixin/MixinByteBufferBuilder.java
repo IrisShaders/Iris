@@ -1,13 +1,12 @@
 package net.irisshaders.batchedentityrendering.mixin;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingBuffer;
-import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.system.Configuration;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-
-import java.nio.ByteBuffer;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @Mixin(ByteBufferBuilder.class)
 public abstract class MixinByteBufferBuilder implements MemoryTrackingBuffer {
@@ -21,12 +20,12 @@ public abstract class MixinByteBufferBuilder implements MemoryTrackingBuffer {
 	public abstract void close();
 
 	@Override
-	public int getAllocatedSize() {
+	public long getAllocatedSize() {
 		return this.capacity;
 	}
 
 	@Override
-	public int getUsedSize() {
+	public long getUsedSize() {
 		return this.writeOffset;
 	}
 

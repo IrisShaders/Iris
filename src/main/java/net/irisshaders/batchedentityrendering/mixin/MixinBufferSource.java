@@ -22,8 +22,8 @@ public class MixinBufferSource implements MemoryTrackingBuffer {
 	protected Map<RenderType, ByteBufferBuilder> fixedBuffers;
 
 	@Override
-	public int getAllocatedSize() {
-		int allocatedSize = ((MemoryTrackingBuffer) sharedBuffer).getAllocatedSize();
+	public long getAllocatedSize() {
+		long allocatedSize = ((MemoryTrackingBuffer) sharedBuffer).getAllocatedSize();
 
 		for (ByteBufferBuilder builder : fixedBuffers.values()) {
 			allocatedSize += ((MemoryTrackingBuffer) builder).getAllocatedSize();
@@ -33,8 +33,8 @@ public class MixinBufferSource implements MemoryTrackingBuffer {
 	}
 
 	@Override
-	public int getUsedSize() {
-		int allocatedSize = ((MemoryTrackingBuffer) sharedBuffer).getUsedSize();
+	public long getUsedSize() {
+		long allocatedSize = ((MemoryTrackingBuffer) sharedBuffer).getUsedSize();
 
 		for (ByteBufferBuilder builder : fixedBuffers.values()) {
 			allocatedSize += ((MemoryTrackingBuffer) builder).getUsedSize();
