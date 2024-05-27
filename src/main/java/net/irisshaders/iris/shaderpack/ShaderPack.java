@@ -215,7 +215,6 @@ public class ShaderPack {
 		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream().filter(flag -> !FeatureFlags.isInvalid(flag)).toList();
 
 		if (!optionalFeatureFlags.isEmpty()) {
-			optionalFeatureFlags.forEach(flag -> Iris.logger.warn("Found flag " + flag));
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
 		}
 

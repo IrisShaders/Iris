@@ -174,8 +174,6 @@ public class CommonTransformer {
 			// TODO: Find a way to properly support gl_FragColor, see TransformPatcherOld
 			// which implements this
 			if (root.identifierIndex.has("gl_FragColor")) {
-				Iris.logger.warn(
-					"[Patcher] gl_FragColor is not supported yet, please use gl_FragData! Assuming that the shaderpack author intended to use gl_FragData[0]...");
 				root.replaceReferenceExpressions(t, "gl_FragColor", "gl_FragData[0]");
 			}
 
