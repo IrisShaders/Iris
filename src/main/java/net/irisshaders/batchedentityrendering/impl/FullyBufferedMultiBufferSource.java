@@ -189,10 +189,6 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			type.clearRenderState();
 		}
 
-		for (SegmentedBufferBuilder builder : builders) {
-			builder.clearBuffers(getTargetClearTime());
-		}
-
 		profiler.popPush("reset type " + transparencyType);
 
 		renderOrder.removeAll(types);
