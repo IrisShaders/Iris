@@ -45,8 +45,6 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 	private void iris$begin(TerrainRenderPass pass, CallbackInfo ci) {
 		this.override = irisChunkProgramOverrides.getProgramOverride(pass, this.vertexType);
 
-		irisChunkProgramOverrides.bindFramebuffer(pass);
-
 		if (this.override == null) {
 			return;
 		}
@@ -56,6 +54,8 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 
 		// Set a sentinel value here, so we can catch it in RegionChunkRenderer and handle it appropriately.
 		activeProgram = null;
+
+		irisChunkProgramOverrides.bindFramebuffer(pass);
 
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			// No back face culling during the shadow pass
@@ -73,9 +73,10 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 	private void iris$onEnd(TerrainRenderPass pass, CallbackInfo ci) {
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
-		irisChunkProgramOverrides.unbindFramebuffer();
 
 		if (override != null) {
+			irisChunkProgramOverrides.unbindFramebuffer();
+
 			override.getInterface().restore();
 			override.unbind();
 			pass.endDrawing();

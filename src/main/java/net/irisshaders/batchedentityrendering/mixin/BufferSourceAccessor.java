@@ -8,9 +8,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
+import java.util.SequencedMap;
 
 @Mixin(MultiBufferSource.BufferSource.class)
 public interface BufferSourceAccessor {
 	@Accessor
-	Map<RenderType, ByteBufferBuilder> getFixedBuffers();
+	SequencedMap<RenderType, ByteBufferBuilder> getFixedBuffers();
 }

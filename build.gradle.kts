@@ -3,7 +3,7 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 object Constants {
     // https://fabricmc.net/develop/
-    const val MINECRAFT_VERSION: String = "24w21b"
+    const val MINECRAFT_VERSION: String = "1.21-pre2"
     const val FABRIC_LOADER_VERSION: String = "0.15.11"
     const val FABRIC_API_VERSION: String = "0.99.1+1.21"
 
@@ -11,10 +11,10 @@ object Constants {
     const val MOD_VERSION: String = "1.7.0"
 
     const val CUSTOM_SODIUM: Boolean = true
-    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshot+mc24w21b-local.jar"
+    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshotmc1.21-pre1-local.jar"
 
     const val IS_SHARED_BETA: Boolean = false
-    const val ACTIVATE_RENDERDOC: Boolean = false
+    const val ACTIVATE_RENDERDOC: Boolean = true
     const val BETA_TAG: String = "DH Support"
     const val BETA_VERSION = 4
 
@@ -126,8 +126,8 @@ buildConfig {
 
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 dependencies {

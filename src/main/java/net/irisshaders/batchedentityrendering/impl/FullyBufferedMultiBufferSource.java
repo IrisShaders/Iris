@@ -3,6 +3,7 @@ package net.irisshaders.batchedentityrendering.impl;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
 import net.irisshaders.batchedentityrendering.impl.ordering.GraphTranslucencyRenderOrderManager;
 import net.irisshaders.batchedentityrendering.impl.ordering.RenderOrderManager;
 import net.irisshaders.iris.layer.WrappingMultiBufferSource;
@@ -40,7 +41,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	private List<RenderType> renderOrder = new ArrayList<>();
 
 	public FullyBufferedMultiBufferSource() {
-		super(new ByteBufferBuilder(0), Collections.emptyMap());
+		super(new ByteBufferBuilder(0), Object2ObjectSortedMaps.emptyMap());
 
 		this.renderOrderManager = new GraphTranslucencyRenderOrderManager();
 		this.builders = new SegmentedBufferBuilder[NUM_BUFFERS];
@@ -316,7 +317,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		private final FullyBufferedMultiBufferSource wrapped;
 
 		UnflushableWrapper(FullyBufferedMultiBufferSource wrapped) {
-			super(new ByteBufferBuilder(0), Collections.emptyMap());
+			super(new ByteBufferBuilder(0), Object2ObjectSortedMaps.emptyMap());
 
 			this.wrapped = wrapped;
 		}

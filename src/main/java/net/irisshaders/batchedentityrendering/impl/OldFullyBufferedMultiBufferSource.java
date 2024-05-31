@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
@@ -27,7 +28,7 @@ public class OldFullyBufferedMultiBufferSource extends MultiBufferSource.BufferS
 	private boolean flushed;
 
 	public OldFullyBufferedMultiBufferSource() {
-		super(new ByteBufferBuilder(0), Collections.emptyMap());
+		super(new ByteBufferBuilder(0), Object2ObjectSortedMaps.emptyMap());
 
 		this.bufferBuilders = new HashMap<>();
 		this.unused = new Object2IntOpenHashMap<>();

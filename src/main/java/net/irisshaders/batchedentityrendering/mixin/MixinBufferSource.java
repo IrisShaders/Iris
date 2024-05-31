@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Map;
+import java.util.SequencedMap;
 
 @Mixin(MultiBufferSource.BufferSource.class)
 public class MixinBufferSource implements MemoryTrackingBuffer {
@@ -19,7 +20,7 @@ public class MixinBufferSource implements MemoryTrackingBuffer {
 
 	@Shadow
 	@Final
-	protected Map<RenderType, ByteBufferBuilder> fixedBuffers;
+	protected SequencedMap<RenderType, ByteBufferBuilder> fixedBuffers;
 
 	@Override
 	public long getAllocatedSize() {
