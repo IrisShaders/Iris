@@ -30,6 +30,7 @@
     "MixinItemBlockRenderTypes",
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
+    "MixinLevelRenderer_SkipRendering",
     "MixinLightningBoltRenderer",
     "MixinLightTexture",
     "MixinLocalPlayer",
