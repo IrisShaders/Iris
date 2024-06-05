@@ -11,8 +11,8 @@ public class ComputeParameters extends TextureStageParameters {
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public ComputeParameters(Patch patch, TextureStage stage,
-							 Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, String name) {
-		super(patch, stage, textureMap, name);
+							 Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		super(patch, stage, textureMap);
 	}
 
 	@Override

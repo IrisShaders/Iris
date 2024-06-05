@@ -211,6 +211,8 @@ public class TransformPatcher {
 		Map<PatchShaderType, String> inputs,
 		Parameters parameters) {
 		try {
+			// set shader name
+			parameters.name = name;
 			return transformer.transform(inputs, parameters);
 		} catch (TransformationException | ParsingException | IllegalStateException | IllegalArgumentException e) {
 			// print the offending programs and rethrow to stop the loading process
@@ -291,7 +293,7 @@ public class TransformPatcher {
 		ShaderAttributeInputs inputs,
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new VanillaParameters(Patch.VANILLA, textureMap, name, alpha, isLines, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
+			new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
 	}
 
 
@@ -299,7 +301,7 @@ public class TransformPatcher {
 		String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new Parameters(Patch.DH, textureMap, name) {
+			new Parameters(Patch.DH, textureMap) {
 				@Override
 				public TextureStage getTextureStage() {
 					return TextureStage.GBUFFERS_AND_SHADOW;
@@ -311,21 +313,21 @@ public class TransformPatcher {
 														   AlphaTest alpha, ShaderAttributeInputs inputs,
 														   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new SodiumParameters(Patch.SODIUM, textureMap, name, alpha, inputs));
+			new SodiumParameters(Patch.SODIUM, textureMap, alpha, inputs));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(
 		String name, String vertex, String geometry, String fragment,
 		TextureStage stage,
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(name, vertex, geometry, null, null, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap, name));
+		return transform(name, vertex, geometry, null, null, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap));
 	}
 
 	public static String patchCompute(
 		String name, String compute,
 		TextureStage stage,
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transformCompute(name, compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap, name))
+		return transformCompute(name, compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap))
 			.getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 
