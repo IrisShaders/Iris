@@ -17,10 +17,10 @@ public class SodiumParameters extends Parameters {
 	public AlphaTest alpha;
 
 	public SodiumParameters(Patch patch,
-							Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+							Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, String name,
 							AlphaTest alpha,
 							ShaderAttributeInputs inputs) {
-		super(patch, textureMap);
+		super(patch, textureMap, name);
 		this.inputs = inputs;
 
 		this.alpha = alpha;
