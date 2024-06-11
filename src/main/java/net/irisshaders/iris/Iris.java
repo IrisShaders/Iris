@@ -356,8 +356,6 @@ public class Iris {
 		currentPack = null;
 		fallback = false;
 		currentPackName = "(off)";
-
-		logger.info("Shaders are disabled");
 	}
 
 	public static void setDebug(boolean enable) {

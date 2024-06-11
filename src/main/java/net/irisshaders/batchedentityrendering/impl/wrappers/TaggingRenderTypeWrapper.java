@@ -1,5 +1,7 @@
 package net.irisshaders.batchedentityrendering.impl.wrappers;
 
+import net.irisshaders.batchedentityrendering.impl.BlendingStateHolder;
+import net.irisshaders.batchedentityrendering.impl.TransparencyType;
 import net.irisshaders.batchedentityrendering.impl.WrappableRenderType;
 import net.irisshaders.batchedentityrendering.mixin.RenderTypeAccessor;
 import net.minecraft.client.renderer.RenderType;
@@ -8,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 
-public class TaggingRenderTypeWrapper extends RenderType implements WrappableRenderType {
+public class TaggingRenderTypeWrapper extends RenderType implements WrappableRenderType, BlendingStateHolder {
 	private final int tag;
 	private final RenderType wrapped;
 
@@ -58,11 +60,21 @@ public class TaggingRenderTypeWrapper extends RenderType implements WrappableRen
 	public int hashCode() {
 		// Add one so that we don't have the exact same hash as the wrapped object.
 		// This means that we won't have a guaranteed collision if we're inserted to a map alongside the unwrapped object.
-		return this.wrapped.hashCode() + 1;
+		return this.wrapped.hashCode() + this.tag + 1;
 	}
 
 	@Override
 	public String toString() {
 		return "tagged(" + tag + "):" + this.wrapped.toString();
+	}
+
+	@Override
+	public TransparencyType getTransparencyType() {
+		return ((BlendingStateHolder) wrapped).getTransparencyType();
+	}
+
+	@Override
+	public void setTransparencyType(TransparencyType transparencyType) {
+		((BlendingStateHolder) wrapped).setTransparencyType(transparencyType);
 	}
 }

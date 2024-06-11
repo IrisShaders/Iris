@@ -8,7 +8,7 @@ object Constants {
     const val FABRIC_API_VERSION: String = "0.97.8+1.20.5"
 
     // https://semver.org/
-    const val MOD_VERSION: String = "1.7.0"
+    const val MOD_VERSION: String = "1.7.1"
 
     const val CUSTOM_SODIUM: Boolean = false
     const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshot+mc24w14a-local.jar"

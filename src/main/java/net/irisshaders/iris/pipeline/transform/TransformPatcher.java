@@ -211,6 +211,8 @@ public class TransformPatcher {
 		Map<PatchShaderType, String> inputs,
 		Parameters parameters) {
 		try {
+			// set shader name
+			parameters.name = name;
 			return transformer.transform(inputs, parameters);
 		} catch (TransformationException | ParsingException | IllegalStateException | IllegalArgumentException e) {
 			// print the offending programs and rethrow to stop the loading process

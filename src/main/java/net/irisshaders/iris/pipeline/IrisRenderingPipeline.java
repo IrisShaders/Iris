@@ -165,6 +165,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final PackShadowDirectives shadowDirectives;
 	private final DHCompat dhCompat;
 	private final int stackSize = 0;
+	private final boolean skipAllRendering;
 	private boolean initializedBlockIds;
 	public boolean isBeforeTranslucent;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
@@ -199,6 +200,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
+		this.skipAllRendering = programSet.getPackDirectives().skipAllRendering();
 		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
 		this.occlusionCulling = programSet.getPackDirectives().shouldUseOcclusionCulling();
 		this.resolver = new ProgramFallbackResolver(programSet);
@@ -1302,5 +1304,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	public boolean hasShadowRenderTargets() {
 		return shadowRenderTargets != null;
+	}
+
+	public boolean skipAllRendering() {
+		return skipAllRendering;
 	}
 }
