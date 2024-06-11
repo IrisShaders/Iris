@@ -98,7 +98,6 @@ public class Iris {
 
 	static {
 		if (!BuildConfig.ACTIVATE_RENDERDOC && FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
-			//Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
 		}
 	}
 
@@ -357,8 +356,6 @@ public class Iris {
 		currentPack = null;
 		fallback = false;
 		currentPackName = "(off)";
-
-		logger.info("Shaders are disabled");
 	}
 
 	public static void setDebug(boolean enable) {

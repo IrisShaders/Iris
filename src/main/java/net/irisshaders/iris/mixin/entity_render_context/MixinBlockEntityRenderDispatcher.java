@@ -45,11 +45,6 @@ public class MixinBlockEntityRenderDispatcher {
 		target = "Lnet/minecraft/world/level/block/entity/BlockEntityType;isValid(Lnet/minecraft/world/level/block/state/BlockState;)Z"),
 		allow = 1, require = 1, argsOnly = true)
 	private MultiBufferSource iris$wrapBufferSource(MultiBufferSource bufferSource, BlockEntity blockEntity) {
-		if (!(bufferSource instanceof Groupable)) {
-			// Fully batched entity rendering is not being used, do not use this wrapper!!!
-			return bufferSource;
-		}
-
 		BlockState state = blockEntity.getBlockState();
 
 		Object2IntMap<BlockState> blockStateIds = WorldRenderingSettings.INSTANCE.getBlockStateIds();
