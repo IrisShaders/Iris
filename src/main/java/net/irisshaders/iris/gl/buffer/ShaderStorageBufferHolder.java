@@ -2,17 +2,24 @@ package net.irisshaders.iris.gl.buffer;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.sampler.SamplerLimits;
 import org.lwjgl.opengl.GL43C;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ShaderStorageBufferHolder {
 	private int cachedWidth;
 	private int cachedHeight;
 	private ShaderStorageBuffer[] buffers;
 	private boolean destroyed;
+
+	private static List<ShaderStorageBuffer> ACTIVE_BUFFERS = new ArrayList<>();
+
 
 	public ShaderStorageBufferHolder(Int2ObjectArrayMap<ShaderStorageInfo> overrides, int width, int height) {
 		destroyed = false;
@@ -29,6 +36,7 @@ public class ShaderStorageBufferHolder {
 			}
 
 			buffers[index] = new ShaderStorageBuffer(index, bufferInfo);
+			ACTIVE_BUFFERS.add(buffers[index]);
 			int buffer = buffers[index].getId();
 
 			if (bufferInfo.relative()) {
@@ -59,6 +67,14 @@ public class ShaderStorageBufferHolder {
 		}
 	}
 
+	public static void forceDeleteBuffers() {
+		if (!ACTIVE_BUFFERS.isEmpty()) {
+			Iris.logger.warn("Found " + ACTIVE_BUFFERS.size() + " stored buffers with a total size of " + ACTIVE_BUFFERS.stream().map(ShaderStorageBuffer::getSize).reduce(0L, Long::sum) + ", forcing them to be deleted.");
+			ACTIVE_BUFFERS.forEach(ShaderStorageBuffer::destroy);
+			ACTIVE_BUFFERS.clear();
+		}
+	}
+
 	public void setupBuffers() {
 		if (destroyed) {
 			throw new IllegalStateException("Tried to use destroyed buffer objects");
@@ -81,6 +97,7 @@ public class ShaderStorageBufferHolder {
 	public void destroyBuffers() {
 		for (ShaderStorageBuffer buffer : buffers) {
 			if (buffer != null) {
+				ACTIVE_BUFFERS.remove(buffer);
 				buffer.destroy();
 			}
 		}

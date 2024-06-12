@@ -472,7 +472,7 @@ public class CompatibilityTransformer {
 
 							if (inTypeSpecifier == null) {
 								LOGGER.warn(
-									"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
+									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
 										+ " shader that has a missing corresponding out declaration in the previous stage "
 										+ prevType.name()
 										+ " has a non-numeric type and could not be compatibility-patched. See debugging.md for more information.");
@@ -497,7 +497,7 @@ public class CompatibilityTransformer {
 							outDeclarations.put(name, null);
 
 							LOGGER.warn(
-								"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
+								"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
 									+ " shader is missing a corresponding out declaration in the previous stage "
 									+ prevType.name()
 									+ " and has been compatibility-patched. See debugging.md for more information.");
@@ -523,7 +523,7 @@ public class CompatibilityTransformer {
 							// declaration is not
 							if (outTypeSpecifier.getArraySpecifier() != null) {
 								LOGGER.warn(
-									"The out declaration '" + name + "' in the " + prevPatchTypes.glShaderType.name()
+									"The out declaration '" + name + "' in the " + parameters.name + " " + prevPatchTypes.glShaderType.name()
 										+ " shader that has a missing corresponding in declaration in the next stage "
 										+ type.name()
 										+ " has an array type and could not be compatibility-patched. See debugging.md for more information.");
@@ -543,7 +543,7 @@ public class CompatibilityTransformer {
 								outDeclarations.put(name, null);
 
 								LOGGER.warn(
-									"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
+									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
 										+ " shader that is never assigned to in the previous stage "
 										+ prevType.name()
 										+ " has been compatibility-patched by adding an initialization for it. See debugging.md for more information.");
@@ -553,7 +553,7 @@ public class CompatibilityTransformer {
 							// bail and warn on mismatching dimensionality
 							if (outType.getDimension() != inType.getDimension()) {
 								LOGGER.warn(
-									"The in declaration '" + name + "' in the " + currentType.glShaderType.name()
+									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
 										+ " shader has a mismatching dimensionality (scalar/vector/matrix) with the out declaration in the previous stage "
 										+ prevType.name()
 										+ " and could not be compatibility-patched. See debugging.md for more information.");
@@ -619,7 +619,7 @@ public class CompatibilityTransformer {
 							outDeclarations.put(name, null);
 
 							LOGGER.warn(
-								"The out declaration '" + name + "' in the " + prevType.name()
+								"The out declaration '" + name + "' in the " + parameters.name + " " + prevType.name()
 									+ " shader has a different type " + outType.getMostCompactName()
 									+ " than the corresponding in declaration of type " + inType.getMostCompactName()
 									+ " in the following stage " + currentType.glShaderType.name()

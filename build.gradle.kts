@@ -8,7 +8,7 @@ object Constants {
     const val FABRIC_API_VERSION: String = "0.92.0+1.20.1"
 
     // https://semver.org/
-    const val MOD_VERSION: String = "1.7.0"
+    const val MOD_VERSION: String = "1.7.1"
 
     const val CUSTOM_SODIUM: Boolean = false
     const val CUSTOM_SODIUM_NAME: String = ""
@@ -135,10 +135,10 @@ dependencies {
     mappings(loom.officialMojangMappings())
     modImplementation(group = "net.fabricmc", name = "fabric-loader", version = Constants.FABRIC_LOADER_VERSION)
 
-    include("org.antlr:antlr4-runtime:4.11.1")
-    modImplementation("org.antlr:antlr4-runtime:4.11.1")
-    include("io.github.douira:glsl-transformer:2.0.0-pre13")
-    modImplementation("io.github.douira:glsl-transformer:2.0.0-pre13")
+    include("org.antlr:antlr4-runtime:4.13.1")
+    modImplementation("org.antlr:antlr4-runtime:4.13.1")
+    include("io.github.douira:glsl-transformer:2.0.1")
+    modImplementation("io.github.douira:glsl-transformer:2.0.1")
     include("org.anarres:jcpp:1.4.14")
     modImplementation("org.anarres:jcpp:1.4.14")
 

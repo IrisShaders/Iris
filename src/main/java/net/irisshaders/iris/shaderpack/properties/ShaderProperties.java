@@ -100,6 +100,7 @@ public class ShaderProperties {
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateEntityDraws = OptionalBoolean.DEFAULT;
+	private OptionalBoolean skipAllRendering = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private OptionalBoolean occlusionCulling = OptionalBoolean.DEFAULT;
 	private ShadowCullState shadowCulling = ShadowCullState.DEFAULT;
@@ -199,6 +200,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "occlusion.culling", bool -> occlusionCulling = bool);
 			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
+			handleBooleanDirective(key, value, "skipAllRendering", bool -> skipAllRendering = bool);
 			handleBooleanDirective(key, value, "dhShadow.enabled", bool -> dhShadowEnabled = bool);
 			handleBooleanDirective(key, value, "particles.before.deferred", bool -> {
 				if (bool.orElse(false) && particleRenderingSettings.isEmpty()) {
@@ -360,14 +362,14 @@ public class ShaderProperties {
 
 			handlePassDirective("bufferObject.", key, value, index -> {
 				int trueIndex;
-				int trueSize;
+				long trueSize;
 				boolean isRelative;
 				float scaleX, scaleY;
 				String[] parts = value.split(" ");
 				if (parts.length == 1) {
 					try {
 						trueIndex = Integer.parseInt(index);
-						trueSize = Integer.parseInt(value);
+						trueSize = Long.parseLong(value);
 					} catch (NumberFormatException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size!", e);
 						return;
@@ -388,7 +390,7 @@ public class ShaderProperties {
 					// Assume it's a long one
 					try {
 						trueIndex = Integer.parseInt(index);
-						trueSize = Integer.parseInt(parts[0]);
+						trueSize = Long.parseLong(parts[0]);
 						isRelative = Boolean.parseBoolean(parts[1]);
 						scaleX = Float.parseFloat(parts[2]);
 						scaleY = Float.parseFloat(parts[3]);
@@ -804,6 +806,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getSeparateEntityDraws() {
 		return separateEntityDraws;
+	}
+
+	public OptionalBoolean skipAllRendering() {
+		return skipAllRendering;
 	}
 
 	public OptionalBoolean getFrustumCulling() {

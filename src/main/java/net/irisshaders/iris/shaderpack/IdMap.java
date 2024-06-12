@@ -1,5 +1,6 @@
 package net.irisshaders.iris.shaderpack;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -14,6 +15,7 @@ import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.shaderpack.materialmap.BlockEntry;
 import net.irisshaders.iris.shaderpack.materialmap.BlockRenderType;
+import net.irisshaders.iris.shaderpack.materialmap.Entry;
 import net.irisshaders.iris.shaderpack.materialmap.LegacyIdMap;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
@@ -54,7 +56,7 @@ public class IdMap {
 	/**
 	 * Maps block states to block ids defined in block.properties
 	 */
-	private Int2ObjectMap<List<BlockEntry>> blockPropertiesMap;
+	private Int2ObjectLinkedOpenHashMap<List<Entry>> blockPropertiesMap;
 
 	/**
 	 * A set of render type overrides for specific blocks. Allows shader packs to move blocks to different render types.
@@ -77,7 +79,7 @@ public class IdMap {
 
 		if (blockPropertiesMap == null) {
 			// Fill in with default values...
-			blockPropertiesMap = new Int2ObjectOpenHashMap<>();
+			blockPropertiesMap = new Int2ObjectLinkedOpenHashMap<>();
 			LegacyIdMap.addLegacyValues(blockPropertiesMap);
 		}
 
@@ -191,8 +193,8 @@ public class IdMap {
 		return Object2IntMaps.unmodifiable(idMap);
 	}
 
-	private static Int2ObjectMap<List<BlockEntry>> parseBlockMap(Properties properties, String keyPrefix, String fileName) {
-		Int2ObjectMap<List<BlockEntry>> entriesById = new Int2ObjectOpenHashMap<>();
+	private static Int2ObjectLinkedOpenHashMap<List<Entry>> parseBlockMap(Properties properties, String keyPrefix, String fileName) {
+		Int2ObjectLinkedOpenHashMap<List<Entry>> entriesById = new Int2ObjectLinkedOpenHashMap<>();
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -213,7 +215,7 @@ public class IdMap {
 				return;
 			}
 
-			List<BlockEntry> entries = new ArrayList<>();
+			List<Entry> entries = new ArrayList<>();
 
 			// Split on whitespace groups, not just single spaces
 			for (String part : value.split("\\s+")) {
@@ -231,7 +233,7 @@ public class IdMap {
 			entriesById.put(intId, Collections.unmodifiableList(entries));
 		});
 
-		return Int2ObjectMaps.unmodifiable(entriesById);
+		return entriesById;
 	}
 
 	/**
@@ -294,7 +296,7 @@ public class IdMap {
 		return overrides;
 	}
 
-	public Int2ObjectMap<List<BlockEntry>> getBlockProperties() {
+	public Int2ObjectLinkedOpenHashMap<List<Entry>> getBlockProperties() {
 		return blockPropertiesMap;
 	}
 

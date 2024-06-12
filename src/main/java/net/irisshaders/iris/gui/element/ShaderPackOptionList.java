@@ -27,6 +27,7 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,6 +69,11 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 	@Override
 	public int getRowWidth() {
 		return Math.min(400, width - 12);
+	}
+
+	@Override
+	protected boolean isValidMouseClick(int i) {
+		return i == GLFW.GLFW_MOUSE_BUTTON_1 || i == GLFW.GLFW_MOUSE_BUTTON_2;
 	}
 
 	public void addHeader(Component text, boolean backButton) {

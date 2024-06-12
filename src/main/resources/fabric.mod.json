@@ -40,7 +40,10 @@
     "minecraft": [
       "1.20.1"
     ],
-    "sodium": "0.5.8"
+    "sodium": [
+      "0.5.8",
+      "0.5.9"
+    ]
   },
   "breaks": {
     "iris-explorer": "*",
