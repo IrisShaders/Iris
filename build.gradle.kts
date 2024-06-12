@@ -3,15 +3,15 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 object Constants {
     // https://fabricmc.net/develop/
-    const val MINECRAFT_VERSION: String = "1.21-pre2"
+    const val MINECRAFT_VERSION: String = "1.21-rc1"
     const val FABRIC_LOADER_VERSION: String = "0.15.11"
-    const val FABRIC_API_VERSION: String = "0.99.1+1.21"
+    const val FABRIC_API_VERSION: String = "0.100.0+1.21"
 
     // https://semver.org/
     const val MOD_VERSION: String = "1.7.1"
 
     const val CUSTOM_SODIUM: Boolean = true
-    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshotmc1.21-pre1-local.jar"
+    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.9-snapshotmc1.21-pre3-local.jar"
 
     const val IS_SHARED_BETA: Boolean = false
     const val ACTIVATE_RENDERDOC: Boolean = true
