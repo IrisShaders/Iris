@@ -10,6 +10,7 @@ accessible  class   net/minecraft/client/renderer/RenderType$CompositeRenderType
 accessible  class   net/minecraft/client/renderer/RenderType$CompositeState
 accessible  class   net/minecraft/client/renderer/FogRenderer$FogData
 accessible  class   net/minecraft/client/renderer/texture/Stitcher$Holder
+accessible class net/minecraft/client/renderer/LevelRenderer$RenderChunkInfo
 accessible  class   net/minecraft/world/level/biome/Biome$ClimateSettings
 accessible  class   net/minecraft/client/Options$FieldAccess
 accessible class net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture

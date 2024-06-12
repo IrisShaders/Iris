@@ -71,11 +71,6 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		return Math.min(400, width - 12);
 	}
 
-	@Override
-	protected boolean isValidMouseClick(int i) {
-		return i == GLFW.GLFW_MOUSE_BUTTON_1 || i == GLFW.GLFW_MOUSE_BUTTON_2;
-	}
-
 	public void addHeader(Component text, boolean backButton) {
 		this.addEntry(new HeaderEntry(this.screen, this.navigation, text, backButton));
 	}
