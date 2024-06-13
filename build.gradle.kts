@@ -11,14 +11,14 @@ object Constants {
     const val MOD_VERSION: String = "1.7.1"
 
     const val CUSTOM_SODIUM: Boolean = false
-    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.8-snapshot+mc24w14a-local.jar"
+    const val CUSTOM_SODIUM_NAME: String = "sodium-fabric-0.5.9-snapshotmc1.20.6-local.jar"
 
     const val IS_SHARED_BETA: Boolean = false
     const val ACTIVATE_RENDERDOC: Boolean = false
     const val BETA_TAG: String = "DH Support"
     const val BETA_VERSION = 4
 
-    const val SODIUM_VERSION: String = "mc1.20.6-0.5.8"
+    const val SODIUM_VERSION: String = "mc1.20.6-0.5.9"
 }
 
 repositories {
