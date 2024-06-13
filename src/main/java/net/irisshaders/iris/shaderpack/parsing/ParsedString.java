@@ -104,8 +104,15 @@ public class ParsedString {
 				if (!Character.isDigit(text.charAt(position)) && !Character.isDigit(text.charAt(position + 1))) {
 					break;
 				}
+			} else if (!Character.isDigit(text.charAt(position))) {
+				break;
 			}
 
+			position++;
+		}
+
+		// take any f float suffixes, if we have a number
+		if (position > 0 && position + 1 < text.length() && (text.charAt(position) == 'f' || text.charAt(position) == 'F')) {
 			position++;
 		}
 
