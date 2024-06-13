@@ -18,7 +18,7 @@ object Constants {
     const val BETA_TAG: String = "DH Support"
     const val BETA_VERSION = 4
 
-    const val SODIUM_VERSION: String = "mc1.20.1-0.5.8"
+    const val SODIUM_VERSION: String = "mc1.20.1-0.5.9"
 }
 
 repositories {
