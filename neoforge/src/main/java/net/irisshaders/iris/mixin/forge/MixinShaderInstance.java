@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin.forge;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.irisshaders.iris.pipeline.programs.ShaderInstanceInterface;
+import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceProvider;

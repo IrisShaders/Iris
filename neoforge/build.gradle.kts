@@ -1,7 +1,7 @@
 plugins {
     id("idea")
     id("maven-publish")
-    id("net.neoforged.gradle.userdev") version "7.0.105"
+    id("net.neoforged.gradle.userdev") version "7.0.142"
     id("java-library")
 }
 
@@ -32,19 +32,12 @@ sourceSets {
 }
 
 repositories {
-    exclusiveContent {
-        forRepository {
-            maven {
-                url = uri("https://maven.pkg.github.com/ims212/forge-frapi")
-                credentials {
-                    username = "IMS212"
-                    // Read only token
-                    password = "ghp_" + "DEuGv0Z56vnSOYKLCXdsS9svK4nb9K39C1Hn"
-                }
-            }
-        }
-        filter {
-            includeGroup("net.caffeinemc.new2")
+    maven {
+        url = uri("https://maven.pkg.github.com/ims212/Forge_Fabric_API")
+        credentials {
+            username = "IMS212"
+            // Read only token
+            password = "ghp_" + "DEuGv0Z56vnSOYKLCXdsS9svK4nb9K39C1Hn"
         }
     }
     exclusiveContent {
@@ -75,10 +68,13 @@ runs {
     }
     create("client") {
         dependencies {
-            runtime("com.lodborg:interval-tree:1.0.0")
-            runtime("org.antlr:antlr4-runtime:4.13.1")
-            runtime("io.github.douira:glsl-transformer:2.0.1")
-            runtime("org.anarres:jcpp:1.4.14")
+
+            runtime("io.github.douira:glsl-transformer:2.0.1") {
+                isTransitive = false
+            }
+            runtime("org.anarres:jcpp:1.4.14") {
+                isTransitive = false
+            }
             //runtime(project(":common").sourceSets.getByName("").output)
         }
     }
@@ -91,11 +87,11 @@ runs {
 dependencies {
     implementation("net.neoforged:neoforge:${NEOFORGE_VERSION}")
     compileOnly(project(":common"))
-    runtimeOnly("net.caffeinemc.new2:fabric_api_base:0.4.31")
-    runtimeOnly("net.caffeinemc.new2:fabric_renderer_api_v1:3.2.1")
-    runtimeOnly("net.caffeinemc.new2:fabric_rendering_data_attachment_v1:0.3.37")
+    runtimeOnly("net.fabricmc:fabric_api_base:0.4.40+${MINECRAFT_VERSION}")
+    runtimeOnly("net.fabricmc:fabric_renderer_api_v1:3.2.12+${MINECRAFT_VERSION}")
+    runtimeOnly("net.fabricmc:fabric_rendering_data_attachment_v1:0.3.46+${MINECRAFT_VERSION}")
     runtimeOnly("com.lodborg:interval-tree:1.0.0")
-    runtimeOnly("net.caffeinemc.new2:fabric_block_view_api_v2:1.0.1")
+    runtimeOnly("net.fabricmc:fabric_block_view_api_v2:1.0.8+${MINECRAFT_VERSION}")
     implementation("org.antlr:antlr4-runtime:4.13.1")
 
     implementation("io.github.douira:glsl-transformer:2.0.1")
@@ -106,7 +102,7 @@ dependencies {
     jarJar("org.anarres:jcpp:[1.4.14,1.4.15]") {
         isTransitive = false
     }
-    implementation(files(rootDir.resolve("custom_sodium").resolve("sodium-neoforge-1.20.6-0.6.0-snapshot+mc1.20.6-local-modonly.jar")))
+    implementation(files(rootDir.resolve("custom_sodium").resolve("sodium-neoforge-1.21-0.6.0-snapshot+mc1.21-local-jarJar.jar")))
 
     compileOnly(files(rootDir.resolve("DHApi.jar")))
     compileOnly("maven.modrinth:immersiveengineering:11mMmtHT")

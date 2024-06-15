@@ -6,7 +6,7 @@ plugins {
 
 val MINECRAFT_VERSION by extra { "1.21" }
 val NEOFORGE_VERSION by extra { "21.0.6-beta" }
-val FABRIC_LOADER_VERSION by extra { "0.15.10" }
+val FABRIC_LOADER_VERSION by extra { "0.15.11" }
 val FABRIC_API_VERSION by extra { "0.100.1+1.21" }
 
 // https://semver.org/

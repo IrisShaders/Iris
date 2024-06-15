@@ -53,6 +53,16 @@ public class ShaderAccess {
 			return ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.MEKANISM_FLAME_SHADOW : ShaderKey.MEKANISM_FLAME);
 		}
 
-		return GameRenderer.getPositionColorTexShader();
+		return GameRenderer.getPositionTexColorShader();
+    }
+
+    public static ShaderInstance getMekasuitShader() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline instanceof ShaderRenderingPipeline) {
+			return ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_ENTITIES_CUTOUT : ShaderKey.ENTITIES_TRANSLUCENT);
+		}
+
+		return GameRenderer.getRendertypeEntityCutoutShader();
     }
 }

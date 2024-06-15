@@ -7,6 +7,7 @@
     "MixinItemBlockRenderTypes",
     "MixinShaderInstance",
     "MixinRenderFlame",
+    "MixinRenderMekasuit",
     "MixinShadowRenderer",
     "MixinVBOIE"
   ],
