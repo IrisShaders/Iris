@@ -5,10 +5,10 @@ import net.irisshaders.batchedentityrendering.impl.FullyBufferedMultiBufferSourc
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingBuffer;
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.irisshaders.batchedentityrendering.impl.RenderBuffersExt;
+import net.minecraft.client.renderer.ChunkBufferBuilderPack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
-import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,7 +37,7 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 
 	@Shadow
 	@Final
-	private SectionBufferBuilderPack fixedBufferPack;
+	private ChunkBufferBuilderPack fixedBufferPack;
 
 	@Inject(method = "bufferSource", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceBufferSource(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {
@@ -113,7 +113,7 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 	@Override
 	public void freeAndDeleteBuffers() {
 		buffered.freeAndDeleteBuffer();
-		((SectionBufferBuilderPackAccessor) this.fixedBufferPack).getBuilders().values().forEach(bufferBuilder -> ((MemoryTrackingBuffer) bufferBuilder).freeAndDeleteBuffer());
+		((ChunkBufferBuilderPackAccessor) this.fixedBufferPack).getBuilders().values().forEach(bufferBuilder -> ((MemoryTrackingBuffer) bufferBuilder).freeAndDeleteBuffer());
 		((BufferSourceAccessor) bufferSource).getFixedBuffers().forEach((renderType, bufferBuilder) -> ((MemoryTrackingBuffer) bufferBuilder).freeAndDeleteBuffer());
 		((BufferSourceAccessor) bufferSource).getFixedBuffers().clear();
 		((MemoryTrackingBuffer) ((OutlineBufferSourceAccessor) outlineBufferSource).getOutlineBufferSource()).freeAndDeleteBuffer();

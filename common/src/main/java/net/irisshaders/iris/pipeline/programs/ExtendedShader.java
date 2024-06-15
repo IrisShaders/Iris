@@ -21,6 +21,7 @@ import net.irisshaders.iris.gl.program.ProgramUniforms;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.gl.uniform.DynamicLocationalUniformHolder;
+import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;

@@ -138,8 +138,7 @@ public class ShadowRenderer {
 
 		this.sunPathRotation = directives.getSunPathRotation();
 
-		int processors = Runtime.getRuntime().availableProcessors();
-		this.buffers = new RenderBuffers(processors);
+		this.buffers = new RenderBuffers();
 
 		if (this.buffers instanceof RenderBuffersExt) {
 			this.renderBuffersExt = (RenderBuffersExt) buffers;
@@ -458,9 +457,9 @@ public class ShadowRenderer {
 
 		// Render all opaque terrain unless pack requests not to
 		if (shouldRenderTerrain) {
-			levelRenderer.invokeRenderSectionLayer(RenderType.solid(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
-			levelRenderer.invokeRenderSectionLayer(RenderType.cutout(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
-			levelRenderer.invokeRenderSectionLayer(RenderType.cutoutMipped(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
+			levelRenderer.invokeRenderChunkLayer(RenderType.solid(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+			levelRenderer.invokeRenderChunkLayer(RenderType.cutout(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
+			levelRenderer.invokeRenderChunkLayer(RenderType.cutoutMipped(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
 		}
 
 		// Reset our viewport in case Sodium overrode it
@@ -533,7 +532,7 @@ public class ShadowRenderer {
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
 		if (shouldRenderTranslucent) {
-			levelRenderer.invokeRenderSectionLayer(RenderType.translucent(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
+			levelRenderer.invokeRenderChunkLayer(RenderType.translucent(), modelView, cameraX, cameraY, cameraZ, shadowProjection);
 		}
 
 		// Note: Apparently tripwire isn't rendered in the shadow pass.
@@ -545,7 +544,7 @@ public class ShadowRenderer {
 
 		IrisRenderSystem.restorePlayerProjection();
 
-		debugStringTerrain = ((LevelRenderer) levelRenderer).getSectionStatistics();
+		debugStringTerrain = ((LevelRenderer) levelRenderer).getChunkStatistics();
 
 		levelRenderer.getLevel().getProfiler().popPush("generate mipmaps");
 
@@ -632,7 +631,7 @@ public class ShadowRenderer {
 		levelRenderer.getLevel().getProfiler().popPush("build entity geometry");
 
 		for (Entity entity : renderedEntities) {
-			float realTickDelta = Minecraft.getInstance().level.tickRateManager().isEntityFrozen(entity) ? tickDelta : CapturedRenderingState.INSTANCE.getRealTickDelta();
+			float realTickDelta = CapturedRenderingState.INSTANCE.getRealTickDelta();
 			levelRenderer.invokeRenderEntity(entity, cameraX, cameraY, cameraZ, realTickDelta, modelView, bufferSource);
 		}
 
@@ -657,19 +656,19 @@ public class ShadowRenderer {
 
 		if (!player.getPassengers().isEmpty()) {
 			for (int i = 0; i < player.getPassengers().size(); i++) {
-				float realTickDelta = Minecraft.getInstance().level.tickRateManager().isEntityFrozen(player.getPassengers().get(i)) ? tickDelta : CapturedRenderingState.INSTANCE.getRealTickDelta();
+				float realTickDelta = CapturedRenderingState.INSTANCE.getRealTickDelta();
 				levelRenderer.invokeRenderEntity(player.getPassengers().get(i), cameraX, cameraY, cameraZ, realTickDelta, modelView, bufferSource);
 				shadowEntities++;
 			}
 		}
 
 		if (player.getVehicle() != null) {
-			float realTickDelta = Minecraft.getInstance().level.tickRateManager().isEntityFrozen(player.getVehicle()) ? tickDelta : CapturedRenderingState.INSTANCE.getRealTickDelta();
+			float realTickDelta = CapturedRenderingState.INSTANCE.getRealTickDelta();
 			levelRenderer.invokeRenderEntity(player.getVehicle(), cameraX, cameraY, cameraZ, realTickDelta, modelView, bufferSource);
 			shadowEntities++;
 		}
 
-		float realTickDelta = Minecraft.getInstance().level.tickRateManager().isEntityFrozen(player) ? tickDelta : CapturedRenderingState.INSTANCE.getRealTickDelta();
+		float realTickDelta = CapturedRenderingState.INSTANCE.getRealTickDelta();
 		levelRenderer.invokeRenderEntity(player, cameraX, cameraY, cameraZ, realTickDelta, modelView, bufferSource);
 
 		shadowEntities++;

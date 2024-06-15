@@ -57,9 +57,6 @@ public class NamespacedId {
 
 	@Override
 	public String toString() {
-		return "NamespacedId{" +
-			"namespace='" + namespace + '\'' +
-			", name='" + name + '\'' +
-			'}';
+		return namespace + ":" + name;
 	}
 }

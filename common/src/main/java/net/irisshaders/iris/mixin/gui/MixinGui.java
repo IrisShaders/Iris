@@ -23,10 +23,6 @@ public class MixinGui {
 	@Final
 	private Minecraft minecraft;
 
-	@Shadow
-	@Final
-	private DebugScreenOverlay debugOverlay;
-
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
 	public void iris$handleHudHidingScreens(GuiGraphics pGui0, float pFloat1, CallbackInfo ci) {
 		Screen screen = this.minecraft.screen;
