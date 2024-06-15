@@ -6,7 +6,8 @@
   "client": [
     "BufferSourceAccessor",
     "CompositeStateAccessor",
-    "MixinBufferBuilder",
+    "MixinByteBufferBuilder",
+    "MixinBannerRenderer",
     "MixinBufferBuilder_SegmentRendering",
     "MixinBufferSource",
     "MixinCompositeRenderType",

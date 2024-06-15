@@ -112,20 +112,20 @@ public class MixinTheEndPortalRenderer {
 		float ny = direction.getStepY();
 		float nz = direction.getStepZ();
 
-		vertexConsumer.vertex(pose, x1, y1, z1).color(RED, GREEN, BLUE, 1.0f)
-			.uv(0.0F + progress, 0.0F + progress).overlayCoords(overlay).uv2(light)
-			.normal(pose, nx, ny, nz).endVertex();
+		vertexConsumer.addVertex(pose, x1, y1, z1).setColor(RED, GREEN, BLUE, 1.0f)
+			.setUv(0.0F + progress, 0.0F + progress).setOverlay(overlay).setLight(light)
+			.setNormal(pose, nx, ny, nz);
 
-		vertexConsumer.vertex(pose, x2, y2, z2).color(RED, GREEN, BLUE, 1.0f)
-			.uv(0.0F + progress, 0.2F + progress).overlayCoords(overlay).uv2(light)
-			.normal(pose, nx, ny, nz).endVertex();
+		vertexConsumer.addVertex(pose, x2, y2, z2).setColor(RED, GREEN, BLUE, 1.0f)
+			.setUv(0.0F + progress, 0.2F + progress).setOverlay(overlay).setLight(light)
+			.setNormal(pose, nx, ny, nz);
 
-		vertexConsumer.vertex(pose, x3, y3, z3).color(RED, GREEN, BLUE, 1.0f)
-			.uv(0.2F + progress, 0.2F + progress).overlayCoords(overlay).uv2(light)
-			.normal(pose, nx, ny, nz).endVertex();
+		vertexConsumer.addVertex(pose, x3, y3, z3).setColor(RED, GREEN, BLUE, 1.0f)
+			.setUv(0.2F + progress, 0.2F + progress).setOverlay(overlay).setLight(light)
+			.setNormal(pose, nx, ny, nz);
 
-		vertexConsumer.vertex(pose, x4, y4, z4).color(RED, GREEN, BLUE, 1.0f)
-			.uv(0.2F + progress, 0.0F + progress).overlayCoords(overlay).uv2(light)
-			.normal(pose, nx, ny, nz).endVertex();
+		vertexConsumer.addVertex(pose, x4, y4, z4).setColor(RED, GREEN, BLUE, 1.0f)
+			.setUv(0.2F + progress, 0.0F + progress).setOverlay(overlay).setLight(light)
+			.setNormal(pose, nx, ny, nz);
 	}
 }

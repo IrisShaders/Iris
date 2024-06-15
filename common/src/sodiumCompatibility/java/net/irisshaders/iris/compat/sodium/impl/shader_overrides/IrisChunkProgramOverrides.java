@@ -56,7 +56,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(ShaderType.VERTEX, new ResourceLocation("iris",
+		return new GlShader(ShaderType.VERTEX, ResourceLocation.fromNamespaceAndPath("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".vsh"), source);
 	}
 
@@ -81,7 +81,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(IrisShaderTypes.GEOMETRY, new ResourceLocation("iris",
+		return new GlShader(IrisShaderTypes.GEOMETRY, ResourceLocation.fromNamespaceAndPath("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".gsh"), source);
 	}
 
@@ -106,7 +106,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(IrisShaderTypes.TESS_CONTROL, new ResourceLocation("iris",
+		return new GlShader(IrisShaderTypes.TESS_CONTROL, ResourceLocation.fromNamespaceAndPath("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".tcs"), source);
 	}
 
@@ -131,7 +131,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(IrisShaderTypes.TESS_EVAL, new ResourceLocation("iris",
+		return new GlShader(IrisShaderTypes.TESS_EVAL, ResourceLocation.fromNamespaceAndPath("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".tes"), source);
 	}
 
@@ -158,7 +158,7 @@ public class IrisChunkProgramOverrides {
 			return null;
 		}
 
-		return new GlShader(ShaderType.FRAGMENT, new ResourceLocation("iris",
+		return new GlShader(ShaderType.FRAGMENT, ResourceLocation.fromNamespaceAndPath("iris",
 			"sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT) + ".fsh"), source);
 	}
 
@@ -227,7 +227,7 @@ public class IrisChunkProgramOverrides {
 		}
 
 		try {
-			GlProgram.Builder builder = GlProgram.builder(new ResourceLocation("sodium", "chunk_shader_for_"
+			GlProgram.Builder builder = GlProgram.builder(ResourceLocation.fromNamespaceAndPath("sodium", "chunk_shader_for_"
 				+ pass.getName()));
 
 			if (geomShader != null) {

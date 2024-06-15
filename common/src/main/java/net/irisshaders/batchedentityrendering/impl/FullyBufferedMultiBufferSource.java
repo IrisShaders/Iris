@@ -1,9 +1,9 @@
 package net.irisshaders.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.caffeinemc.mods.sodium.client.render.vertex.buffer.BufferBuilderExtension;
-import net.caffeinemc.mods.sodium.client.render.vertex.buffer.DirectBufferBuilder;
+import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
 import net.irisshaders.batchedentityrendering.impl.ordering.GraphTranslucencyRenderOrderManager;
 import net.irisshaders.batchedentityrendering.impl.ordering.RenderOrderManager;
 import net.irisshaders.iris.layer.WrappingMultiBufferSource;
@@ -41,13 +41,13 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	private List<RenderType> renderOrder = new ArrayList<>();
 
 	public FullyBufferedMultiBufferSource() {
-		super(new BufferBuilder(0), Collections.emptyMap());
+		super(new ByteBufferBuilder(0), Object2ObjectSortedMaps.emptyMap());
 
 		this.renderOrderManager = new GraphTranslucencyRenderOrderManager();
 		this.builders = new SegmentedBufferBuilder[NUM_BUFFERS];
 
 		for (int i = 0; i < this.builders.length; i++) {
-			this.builders[i] = new SegmentedBufferBuilder();
+			this.builders[i] = new SegmentedBufferBuilder(this);
 		}
 
 		// use accessOrder=true so our LinkedHashMap works as an LRU cache.
@@ -92,13 +92,6 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 		VertexConsumer buffer = builders[affinity].getBuffer(renderType);
 
-		if (buffer instanceof BufferBuilderExtension bufferBuilder) {
-			DirectBufferBuilder replacement = bufferBuilder.sodium$getDelegate();
-			if (replacement != null) {
-				return replacement;
-			}
-		}
-
 		return buffer;
 	}
 
@@ -142,6 +135,8 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		profiler.push("draw buffers");
 
 		for (RenderType type : renderOrder) {
+			if (!typeToSegment.containsKey(type)) continue;
+
 			type.setupRenderState();
 
 			renderTypes += 1;
@@ -152,6 +147,10 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			}
 
 			type.clearRenderState();
+		}
+
+		for (SegmentedBufferBuilder builder : builders) {
+			builder.clearBuffers(getTargetClearTime());
 		}
 
 		profiler.popPush("reset");
@@ -198,6 +197,22 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		profiler.pop();
 	}
 
+	private static long toMib(long x) {
+		return x / 1024L / 1024L;
+	}
+
+	private int getTargetClearTime() {
+		long sizeInMiB = toMib(getAllocatedSize());
+
+		if (sizeInMiB > 5000) { // Over 5GB of RAM used.
+			return 1000; // Be extremely aggressive; 1 second per buffer.
+		} else if (sizeInMiB > 1000) { // Over 1GB of RAM used.
+			return 5000; // Wait 5 seconds.
+		} else {
+			return 10000; // we chillin; 10 seconds.
+		}
+	}
+
 	public int getDrawCalls() {
 		return drawCalls;
 	}
@@ -221,8 +236,8 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	}
 
 	@Override
-	public int getAllocatedSize() {
-		int size = 0;
+	public long getAllocatedSize() {
+		long size = 0;
 
 		for (SegmentedBufferBuilder builder : builders) {
 			size += builder.getAllocatedSize();
@@ -232,8 +247,8 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	}
 
 	@Override
-	public int getUsedSize() {
-		int size = 0;
+	public long getUsedSize() {
+		long size = 0;
 
 		for (SegmentedBufferBuilder builder : builders) {
 			size += builder.getUsedSize();
@@ -289,6 +304,12 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		}
 	}
 
+	public void weAreOutOfMemory() {
+		for (SegmentedBufferBuilder builder : builders) {
+			builder.lastDitchAttempt();
+		}
+	}
+
 	/**
 	 * A wrapper that prevents callers from explicitly flushing anything.
 	 */
@@ -296,7 +317,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		private final FullyBufferedMultiBufferSource wrapped;
 
 		UnflushableWrapper(FullyBufferedMultiBufferSource wrapped) {
-			super(new BufferBuilder(0), Collections.emptyMap());
+			super(new ByteBufferBuilder(0), Object2ObjectSortedMaps.emptyMap());
 
 			this.wrapped = wrapped;
 		}

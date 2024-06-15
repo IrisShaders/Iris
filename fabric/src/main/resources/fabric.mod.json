@@ -16,7 +16,7 @@
     "issues": "https://github.com/IrisShaders/Iris/issues"
   },
   "license": "LGPL-3.0-only",
-  "icon": "iris-logo.png",
+  "icon": "assets/iris/iris-logo.png",
   "environment": "client",
   "entrypoints": {
     "modmenu": [
@@ -29,7 +29,6 @@
     "mixins.iris.fantastic.json",
     "mixins.iris.vertexformat.json",
     "mixins.iris.bettermipmaps.json",
-    "mixins.iris.devenvironment.json",
     "mixins.iris.compat.indigo.json",
     "mixins.iris.compat.sodium.json",
     "mixins.iris.compat.indium.json",
@@ -39,8 +38,10 @@
   "depends": {
     "fabricloader": ">=0.12.3",
     "minecraft": [
-      "1.20.5",
-      "1.20.6"
+      "1.21.x"
+    ],
+    "sodium": [
+      "0.5.x"
     ]
   },
   "breaks": {

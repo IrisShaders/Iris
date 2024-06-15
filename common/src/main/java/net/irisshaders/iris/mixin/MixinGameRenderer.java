@@ -16,6 +16,8 @@ import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
+import net.minecraft.Util;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -328,11 +330,11 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = "render", at = @At("HEAD"))
-	private void iris$startFrame(float tickDelta, long startTime, boolean pBoolean2, CallbackInfo ci) {
+	private void iris$startFrame(DeltaTracker deltaTracker, boolean bl, CallbackInfo ci) {
 		// This allows certain functions like float smoothing to function outside a world.
-		CapturedRenderingState.INSTANCE.setRealTickDelta(tickDelta);
+		CapturedRenderingState.INSTANCE.setRealTickDelta(deltaTracker.getGameTimeDeltaPartialTick(true));
 		SystemTimeUniforms.COUNTER.beginFrame();
-		SystemTimeUniforms.TIMER.beginFrame(startTime);
+		SystemTimeUniforms.TIMER.beginFrame(Util.getNanos());
 	}
 
 	@Inject(method = {
@@ -469,7 +471,7 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At("TAIL"))
-	private void iris$runColorSpace(float f, long l, CallbackInfo ci) {
+	private void iris$runColorSpace(DeltaTracker deltaTracker, CallbackInfo ci) {
 		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::finalizeGameRendering);
 	}
 

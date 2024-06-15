@@ -17,14 +17,14 @@ public class MixinRenderSystem {
 		StateUpdateNotifiers.fogEndNotifier = listener -> fogEndListener = listener;
 	}
 
-	@Inject(method = "_setShaderFogStart", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderSystem;shaderFogStart:F", shift = At.Shift.AFTER))
+	@Inject(method = "setShaderFogStart", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderSystem;shaderFogStart:F", shift = At.Shift.AFTER))
 	private static void iris$onFogStart(float start, CallbackInfo ci) {
 		if (fogStartListener != null) {
 			fogStartListener.run();
 		}
 	}
 
-	@Inject(method = "_setShaderFogEnd", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderSystem;shaderFogEnd:F", shift = At.Shift.AFTER))
+	@Inject(method = "setShaderFogEnd", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderSystem;shaderFogEnd:F", shift = At.Shift.AFTER))
 	private static void iris$onFogEnd(float end, CallbackInfo ci) {
 		if (fogEndListener != null) {
 			fogEndListener.run();

@@ -12,6 +12,12 @@ public interface OptionValues {
 	Optional<String> getStringValue(String name);
 
 	default boolean getBooleanValueOrDefault(String name) {
+		if ("0".equals(name)) {
+			return false;
+		} else if ("1".equals(name)) {
+			return true;
+		}
+
 		return getBooleanValue(name).orElseGet(() -> {
 			if (!getOptionSet().getBooleanOptions().containsKey(name)) {
 				Iris.logger.warn("Tried to get boolean value for unknown option: " + name + ", defaulting to true!");

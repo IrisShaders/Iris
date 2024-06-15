@@ -1,18 +1,22 @@
 package net.irisshaders.iris.mixin;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.ExtendedShader;
 import net.irisshaders.iris.pipeline.programs.FallbackShader;
-import net.irisshaders.iris.pipeline.programs.ShaderInstanceInterface;
+import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceProvider;
+import org.lwjgl.opengl.KHRDebug;
 import org.slf4j.Logger;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -39,6 +43,18 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 	@Shadow
 	public abstract int getId();
 
+	@Shadow
+	@Final
+	private int programId;
+
+	@Shadow
+	@Final
+	private Program vertexProgram;
+
+	@Shadow
+	@Final
+	private Program fragmentProgram;
+
 	@Redirect(method = "updateLocations",
 		at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", remap = false))
 	private void iris$redirectLogSpam(Logger logger, String message, Object arg1, Object arg2) {
@@ -56,6 +72,13 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 		} else {
 			Uniform.glBindAttribLocation(i, j, charSequence);
 		}
+	}
+
+	@Inject(method = "<init>", at = @At("RETURN"))
+	private void name(ResourceProvider resourceProvider, String string, VertexFormat vertexFormat, CallbackInfo ci) {
+		GLDebug.nameObject(KHRDebug.GL_PROGRAM, this.programId, string);
+		GLDebug.nameObject(KHRDebug.GL_SHADER, this.vertexProgram.getId(), string);
+		GLDebug.nameObject(KHRDebug.GL_SHADER, this.fragmentProgram.getId(), string);
 	}
 
 	@Inject(method = "apply", at = @At("TAIL"))

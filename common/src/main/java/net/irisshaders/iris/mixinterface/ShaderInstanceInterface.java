@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pipeline.programs;
+package net.irisshaders.iris.mixinterface;
 
 import net.minecraft.server.packs.resources.ResourceProvider;
 

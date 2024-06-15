@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.screen.HudHideable;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
@@ -28,7 +29,7 @@ public class MixinGui {
 	private DebugScreenOverlay debugOverlay;
 
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
-	public void iris$handleHudHidingScreens(GuiGraphics pGui0, float pFloat1, CallbackInfo ci) {
+	public void iris$handleHudHidingScreens(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 		Screen screen = this.minecraft.screen;
 
 		if (screen instanceof HudHideable) {

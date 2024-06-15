@@ -3,8 +3,6 @@ package net.irisshaders.iris;
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.sun.jna.platform.linux.LibC;
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.config.IrisConfig;
 import net.irisshaders.iris.gl.GLDebug;
@@ -18,6 +16,7 @@ import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.shaderpack.DimensionId;
 import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.shaderpack.discovery.ShaderpackDirectoryManager;
@@ -70,7 +69,7 @@ public class Iris {
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!
-	private static final String backupVersionNumber = "1.20.3";
+	private static final String backupVersionNumber = "1.21";
 	public static NamespacedId lastDimension = null;
 	public static boolean testing = false;
 	private static Path shaderpacksDirectory;
@@ -96,8 +95,6 @@ public class Iris {
 
 	static {
 		if (!BuildConfig.ACTIVATE_RENDERDOC && IrisPlatformHelpers.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
-			Configuration.GLFW_LIBRARY_NAME.set("/usr/lib/libglfw.so");
-			LibC.INSTANCE.setenv("__GL_THREADED_OPTIMIZATIONS", "0", 1);
 		}
 	}
 
@@ -356,8 +353,6 @@ public class Iris {
 		currentPack = null;
 		fallback = false;
 		currentPackName = "(off)";
-
-		logger.info("Shaders are disabled");
 	}
 
 	public static void setDebug(boolean enable) {

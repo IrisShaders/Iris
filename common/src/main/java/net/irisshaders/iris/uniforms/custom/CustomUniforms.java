@@ -330,7 +330,6 @@ public class CustomUniforms implements FunctionContext {
 		public CustomUniforms build(
 			CustomUniformFixedInputUniformsHolder inputHolder
 		) {
-			Iris.logger.info("Starting custom uniform resolving");
 			return new CustomUniforms(inputHolder, this.variables);
 		}
 

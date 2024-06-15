@@ -12,7 +12,13 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 
 public class ShaderAccess {
-	public static final VertexFormat IE_FORMAT = new VertexFormat(ImmutableMap.<String, VertexFormatElement>builder().put("Position", DefaultVertexFormat.ELEMENT_POSITION).put("Color", DefaultVertexFormat.ELEMENT_COLOR).put("UV0", DefaultVertexFormat.ELEMENT_UV0).put("Normal", DefaultVertexFormat.ELEMENT_NORMAL).put("Padding", DefaultVertexFormat.ELEMENT_PADDING).build());
+	public static VertexFormat IE_FORMAT = VertexFormat.builder()
+		.add("Position", VertexFormatElement.POSITION)
+		.add("Color", VertexFormatElement.COLOR)
+		.add("UV0", VertexFormatElement.UV0)
+		.add("Normal", VertexFormatElement.NORMAL)
+		.padding(1)
+		.build();
 
 	public static ShaderInstance getParticleTranslucentShader() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();

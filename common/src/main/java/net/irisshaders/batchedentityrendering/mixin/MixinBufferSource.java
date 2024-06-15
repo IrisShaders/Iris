@@ -1,6 +1,7 @@
 package net.irisshaders.batchedentityrendering.mixin;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingBuffer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -9,22 +10,23 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Map;
+import java.util.SequencedMap;
 
 @Mixin(MultiBufferSource.BufferSource.class)
 public class MixinBufferSource implements MemoryTrackingBuffer {
 	@Shadow
 	@Final
-	protected BufferBuilder builder;
+	protected ByteBufferBuilder sharedBuffer;
 
 	@Shadow
 	@Final
-	protected Map<RenderType, BufferBuilder> fixedBuffers;
+	protected SequencedMap<RenderType, ByteBufferBuilder> fixedBuffers;
 
 	@Override
-	public int getAllocatedSize() {
-		int allocatedSize = ((MemoryTrackingBuffer) builder).getAllocatedSize();
+	public long getAllocatedSize() {
+		long allocatedSize = ((MemoryTrackingBuffer) sharedBuffer).getAllocatedSize();
 
-		for (BufferBuilder builder : fixedBuffers.values()) {
+		for (ByteBufferBuilder builder : fixedBuffers.values()) {
 			allocatedSize += ((MemoryTrackingBuffer) builder).getAllocatedSize();
 		}
 
@@ -32,10 +34,10 @@ public class MixinBufferSource implements MemoryTrackingBuffer {
 	}
 
 	@Override
-	public int getUsedSize() {
-		int allocatedSize = ((MemoryTrackingBuffer) builder).getUsedSize();
+	public long getUsedSize() {
+		long allocatedSize = ((MemoryTrackingBuffer) sharedBuffer).getUsedSize();
 
-		for (BufferBuilder builder : fixedBuffers.values()) {
+		for (ByteBufferBuilder builder : fixedBuffers.values()) {
 			allocatedSize += ((MemoryTrackingBuffer) builder).getUsedSize();
 		}
 
@@ -44,9 +46,9 @@ public class MixinBufferSource implements MemoryTrackingBuffer {
 
 	@Override
 	public void freeAndDeleteBuffer() {
-		((MemoryTrackingBuffer) builder).freeAndDeleteBuffer();
+		((MemoryTrackingBuffer) sharedBuffer).freeAndDeleteBuffer();
 
-		for (BufferBuilder builder : fixedBuffers.values()) {
+		for (ByteBufferBuilder builder : fixedBuffers.values()) {
 			((MemoryTrackingBuffer) builder).freeAndDeleteBuffer();
 		}
 	}

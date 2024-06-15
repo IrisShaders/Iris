@@ -7,6 +7,7 @@ import net.irisshaders.iris.fantastic.PhasedParticleEngine;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.properties.ParticleRenderingSettings;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.renderer.GameRenderer;
@@ -39,15 +40,17 @@ public abstract class MixinLevelRenderer {
 	private RenderBuffers renderBuffers;
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void iris$resetParticleManagerPhase(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void iris$resetParticleManagerPhase(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		((PhasedParticleEngine) minecraft.particleEngine).setParticleRenderingPhase(ParticleRenderingPhase.EVERYTHING);
 	}
 
-	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=entities"))
-	private void iris$renderOpaqueParticles(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;entitiesForRendering()Ljava/lang/Iterable;"))
+	private void iris$renderOpaqueParticles(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		minecraft.getProfiler().popPush("opaque_particles");
 
 		ParticleRenderingSettings settings = getRenderingSettings();
+
+		float f = deltaTracker.getGameTimeDeltaPartialTick(false);
 
 		if (settings == ParticleRenderingSettings.BEFORE) {
 			minecraft.particleEngine.render(lightTexture, camera, f);

@@ -8,6 +8,7 @@ import net.irisshaders.batchedentityrendering.impl.RenderBuffersExt;
 import net.irisshaders.batchedentityrendering.impl.TransparencyType;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -40,7 +41,7 @@ public class MixinLevelRenderer {
 	private Groupable groupable;
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
-	private void batchedentityrendering$beginLevelRender(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void batchedentityrendering$beginLevelRender(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		if (renderBuffers instanceof DrawCallTrackingRenderBuffers) {
 			((DrawCallTrackingRenderBuffers) renderBuffers).resetDrawCounts();
 		}
@@ -54,21 +55,21 @@ public class MixinLevelRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_ENTITY))
-	private void batchedentityrendering$preRenderEntity(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void batchedentityrendering$preRenderEntity(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		if (groupable != null) {
 			groupable.startGroup();
 		}
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = RENDER_ENTITY, shift = At.Shift.AFTER))
-	private void batchedentityrendering$postRenderEntity(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void batchedentityrendering$postRenderEntity(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		if (groupable != null) {
 			groupable.endGroup();
 		}
 	}
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void batchedentityrendering$beginTranslucents(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void batchedentityrendering$beginTranslucents(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource fullyBufferedMultiBufferSource) {
 			fullyBufferedMultiBufferSource.readyUp();
 		}
@@ -89,14 +90,14 @@ public class MixinLevelRenderer {
 
 
 	@Inject(method = "renderLevel", at = @At(value = "CONSTANT", args = "stringValue=translucent", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void batchedentityrendering$endTranslucents(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void batchedentityrendering$endTranslucents(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
 			this.renderBuffers.bufferSource().endBatch();
 		}
 	}
 
 	@Inject(method = "renderLevel", at = @At("RETURN"))
-	private void batchedentityrendering$endLevelRender(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+	private void batchedentityrendering$endLevelRender(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
 		((RenderBuffersExt) renderBuffers).endLevelRendering();
 		groupable = null;
 	}

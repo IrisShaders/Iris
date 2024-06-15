@@ -26,7 +26,7 @@ public class MixinMinecraft_Images {
 	private void iris$setupImages(GameConfig arg, CallbackInfo ci) {
 		if (!IrisPlatformHelpers.getInstance().isModLoaded("fabric-resource-loader-v0")) {
 			try {
-				Minecraft.getInstance().getTextureManager().register(new ResourceLocation("iris", "textures/gui/widgets.png"), new NativeImageBackedCustomTexture(new CustomTextureData.PngData(new TextureFilteringData(false, false), IOUtils.toByteArray(Iris.class.getResourceAsStream("/assets/iris/textures/gui/widgets.png")))));
+				Minecraft.getInstance().getTextureManager().register(ResourceLocation.fromNamespaceAndPath("iris", "textures/gui/widgets.png"), new NativeImageBackedCustomTexture(new CustomTextureData.PngData(new TextureFilteringData(false, false), IOUtils.toByteArray(Iris.class.getResourceAsStream("/assets/iris/textures/gui/widgets.png")))));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

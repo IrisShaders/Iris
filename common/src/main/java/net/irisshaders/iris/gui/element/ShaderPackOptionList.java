@@ -31,6 +31,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,7 +75,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		return Math.min(400, width - 12);
 	}
 
-	private static final ResourceLocation MENU_LIST_BACKGROUND = new ResourceLocation("textures/gui/menu_background.png");
+	private static final ResourceLocation MENU_LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/menu_background.png");
 
 	@Override
 	protected void renderListBackground(GuiGraphics pAbstractSelectionList0) {
@@ -104,6 +105,11 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		pAbstractSelectionList0.blit(CreateWorldScreen.FOOTER_SEPARATOR, this.getX(), this.getBottom(), 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
 		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.disableBlend();
+	}
+
+	@Override
+	protected boolean isValidMouseClick(int i) {
+		return i == GLFW.GLFW_MOUSE_BUTTON_1 || i == GLFW.GLFW_MOUSE_BUTTON_2;
 	}
 
 	public void addHeader(Component text, boolean backButton) {

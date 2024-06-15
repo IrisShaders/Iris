@@ -1,9 +1,9 @@
 package net.irisshaders.batchedentityrendering.impl;
 
 public interface MemoryTrackingRenderBuffers {
-	int getEntityBufferAllocatedSize();
+	long getEntityBufferAllocatedSize();
 
-	int getMiscBufferAllocatedSize();
+	long getMiscBufferAllocatedSize();
 
 	int getMaxBegins();
 

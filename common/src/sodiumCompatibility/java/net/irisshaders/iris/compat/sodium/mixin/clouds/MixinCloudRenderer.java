@@ -3,11 +3,12 @@ package net.irisshaders.iris.compat.sodium.mixin.clouds;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.caffeinemc.mods.sodium.client.render.immediate.CloudRenderer;
+import me.jellysquid.mods.sodium.client.render.immediate.CloudRenderer;
 import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.ColorVertex;
 import net.irisshaders.iris.Iris;
@@ -17,6 +18,7 @@ import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
+import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -62,6 +64,9 @@ public abstract class MixinCloudRenderer {
 	@Shadow
 	protected abstract void applyFogModifiers(ClientLevel world, FogRenderer.FogData fogData, LocalPlayer player, int cloudDistance, float tickDelta);
 
+	@Shadow
+	private CloudStatus cloudRenderMode;
+
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
 	private void buildIrisVertexBuffer(ClientLevel level, LocalPlayer player, PoseStack matrices, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
@@ -70,107 +75,87 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	public void renderIris(@Nullable ClientLevel world, LocalPlayer player, PoseStack poseStack, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ) {
-		if (world == null) {
-			return;
-		}
+	public void renderIris(@Nullable ClientLevel level, LocalPlayer player, PoseStack matrices, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ) {
+		if (level != null) {
+			float cloudHeight = level.effects().getCloudHeight();
+			if (!Float.isNaN(cloudHeight)) {
+				Vec3 color = level.getCloudColor(tickDelta);
+				double cloudTime = (double)((ticks + tickDelta) * 0.03F);
+				double cloudCenterX = cameraX + cloudTime;
+				double cloudCenterZ = cameraZ + 0.33;
+				int renderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+				int cloudDistance = Math.max(32, renderDistance * 2 + 9);
+				int centerCellX = (int)Math.floor(cloudCenterX / 12.0);
+				int centerCellZ = (int)Math.floor(cloudCenterZ / 12.0);
+				if (this.vertexBufferWithNormals == null || this.prevCenterCellXIris != centerCellX || this.prevCenterCellYIris != centerCellZ || this.cachedRenderDistanceIris != renderDistance || this.cloudRenderMode != Minecraft.getInstance().options.getCloudsType()) {
+					BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+					this.cloudRenderMode = Minecraft.getInstance().options.getCloudsType();
+					this.rebuildGeometry(bufferBuilder, cloudDistance, centerCellX, centerCellZ);
+					if (this.vertexBufferWithNormals == null) {
+						this.vertexBufferWithNormals = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
+					}
 
-		Vec3 color = world.getCloudColor(tickDelta);
+					this.vertexBufferWithNormals.bind();
+					this.vertexBufferWithNormals.upload(bufferBuilder.buildOrThrow());
+					Tesselator.getInstance().clear();
+					VertexBuffer.unbind();
+					this.prevCenterCellXIris = centerCellX;
+					this.prevCenterCellYIris = centerCellZ;
+					this.cachedRenderDistanceIris = renderDistance;
+				}
 
-		float cloudHeight = world.effects().getCloudHeight();
+				float previousEnd = RenderSystem.getShaderFogEnd();
+				float previousStart = RenderSystem.getShaderFogStart();
+				this.fogData.end = (float)(cloudDistance * 8);
+				this.fogData.start = (float)(cloudDistance * 8 - 16);
+				this.applyFogModifiers(level, this.fogData, player, cloudDistance * 8, tickDelta);
+				RenderSystem.setShaderFogEnd(this.fogData.end);
+				RenderSystem.setShaderFogStart(this.fogData.start);
+				float translateX = (float)(cloudCenterX - (double)(centerCellX * 12));
+				float translateZ = (float)(cloudCenterZ - (double)(centerCellZ * 12));
+				RenderSystem.enableDepthTest();
+				this.vertexBufferWithNormals.bind();
+				boolean insideClouds = cameraY < (double)(cloudHeight + 4.5F) && cameraY > (double)(cloudHeight - 0.5F);
+				boolean fastClouds = this.cloudRenderMode == CloudStatus.FAST;
+				if (!insideClouds && !fastClouds) {
+					RenderSystem.enableCull();
+				} else {
+					RenderSystem.disableCull();
+				}
 
-		double cloudTime = (ticks + tickDelta) * 0.03F;
-		double cloudCenterX = (cameraX + cloudTime);
-		double cloudCenterZ = (cameraZ) + 0.33D;
+				if (Minecraft.useShaderTransparency()) {
+					Minecraft.getInstance().levelRenderer.getCloudsTarget().bindWrite(false);
+				}
 
-		int renderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-		int cloudDistance = Math.max(32, (renderDistance * 2) + 9);
+				RenderSystem.setShaderColor((float)color.x, (float)color.y, (float)color.z, 0.8F);
+				matrices.pushPose();
+				Matrix4f modelViewMatrix = matrices.last().pose();
+				modelViewMatrix.translate(-translateX, cloudHeight - (float)cameraY + 0.33F, -translateZ);
+				RenderSystem.disableBlend();
+				RenderSystem.depthMask(true);
+				RenderSystem.colorMask(false, false, false, false);
+				this.vertexBufferWithNormals.drawWithShader(modelViewMatrix, projectionMatrix, getClouds());
+				RenderSystem.enableBlend();
+				RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+				RenderSystem.depthMask(false);
+				RenderSystem.enableDepthTest();
+				RenderSystem.depthFunc(514);
+				RenderSystem.colorMask(true, true, true, true);
+				this.vertexBufferWithNormals.drawWithShader(modelViewMatrix, projectionMatrix, getClouds());
+				matrices.popPose();
+				VertexBuffer.unbind();
+				RenderSystem.disableBlend();
+				RenderSystem.depthFunc(515);
+				RenderSystem.enableCull();
+				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+				if (Minecraft.useShaderTransparency()) {
+					Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+				}
 
-		int centerCellX = (int) (Math.floor(cloudCenterX / 12));
-		int centerCellZ = (int) (Math.floor(cloudCenterZ / 12));
-
-		if (this.vertexBufferWithNormals == null || this.prevCenterCellXIris != centerCellX || this.prevCenterCellYIris != centerCellZ || this.cachedRenderDistanceIris != renderDistance) {
-			BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-			bufferBuilder.begin(VertexFormat.Mode.QUADS, IrisVertexFormats.CLOUDS);
-
-			// Give some space for shaders
-			this.rebuildGeometry(bufferBuilder, cloudDistance + 4, centerCellX, centerCellZ);
-
-			if (this.vertexBufferWithNormals == null) {
-				this.vertexBufferWithNormals = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
+				RenderSystem.setShaderFogEnd(previousEnd);
+				RenderSystem.setShaderFogStart(previousStart);
 			}
-
-			this.vertexBufferWithNormals.bind();
-			this.vertexBufferWithNormals.upload(bufferBuilder.end());
-
-			VertexBuffer.unbind();
-
-			this.prevCenterCellXIris = centerCellX;
-			this.prevCenterCellYIris = centerCellZ;
-			this.cachedRenderDistanceIris = renderDistance;
 		}
-
-		float previousEnd = RenderSystem.getShaderFogEnd();
-		float previousStart = RenderSystem.getShaderFogStart();
-		fogData.end = cloudDistance * 8;
-		fogData.start = (cloudDistance * 8) - 16;
-
-		applyFogModifiers(world, fogData, player, cloudDistance * 8, tickDelta);
-
-
-		RenderSystem.setShaderFogEnd(fogData.end);
-		RenderSystem.setShaderFogStart(fogData.start);
-
-		float translateX = (float) (cloudCenterX - (centerCellX * 12));
-		float translateZ = (float) (cloudCenterZ - (centerCellZ * 12));
-
-		RenderSystem.enableDepthTest();
-
-		this.vertexBufferWithNormals.bind();
-
-		boolean insideClouds = cameraY < cloudHeight + 4.5f && cameraY > cloudHeight - 0.5f;
-
-		if (insideClouds) {
-			RenderSystem.disableCull();
-		} else {
-			RenderSystem.enableCull();
-		}
-
-		RenderSystem.setShaderColor((float) color.x, (float) color.y, (float) color.z, 0.8f);
-
-		poseStack.pushPose();
-
-		Matrix4f modelViewMatrix = new Matrix4f(poseStack.last().pose());
-		modelViewMatrix.translate(-translateX, cloudHeight - (float) cameraY + 0.33F, -translateZ);
-
-		// PASS 1: Set up depth buffer
-		RenderSystem.disableBlend();
-		RenderSystem.depthMask(true);
-		RenderSystem.colorMask(false, false, false, false);
-
-		this.vertexBufferWithNormals.drawWithShader(modelViewMatrix, projectionMatrix, getClouds());
-
-		// PASS 2: Render geometry
-		RenderSystem.enableBlend();
-		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-		RenderSystem.depthMask(false);
-		RenderSystem.enableDepthTest();
-		RenderSystem.depthFunc(GL30C.GL_EQUAL);
-		RenderSystem.colorMask(true, true, true, true);
-
-		this.vertexBufferWithNormals.drawWithShader(modelViewMatrix, projectionMatrix, getClouds());
-
-		VertexBuffer.unbind();
-
-		RenderSystem.disableBlend();
-		RenderSystem.depthFunc(GL30C.GL_LEQUAL);
-
-		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-		RenderSystem.enableCull();
-		poseStack.popPose();
-		RenderSystem.setShaderFogEnd(previousEnd);
-		RenderSystem.setShaderFogStart(previousStart);
 	}
 
 	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lorg/lwjgl/system/MemoryStack;nmalloc(I)J"))
