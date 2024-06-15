@@ -45,7 +45,7 @@ dependencies {
     modCompileOnly("io.github.douira:glsl-transformer:2.0.1")
     modCompileOnly("org.anarres:jcpp:1.4.14")
 
-    modCompileOnly(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-1.20.6-0.6.0-snapshot+mc1.20.6-local.jar")))
+    modCompileOnly(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-1.20.1-0.6.0-snapshot+mc1.20.1-local.jar")))
 
     modCompileOnly(files(rootDir.resolve("DHApi.jar")))
 }

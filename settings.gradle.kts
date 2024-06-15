@@ -5,11 +5,14 @@ pluginManagement {
         maven("https://maven.fabricmc.net/") {
             name = "Fabric"
         }
-        maven { url = uri("https://maven.neoforged.net/releases/") }
+        maven("https://maven.minecraftforge.net/") {
+            name = "MinecraftForge"
+        }
+        maven("https://repo.spongepowered.org/repository/maven-public/") { name = "Sponge Snapshots" }
 
         mavenCentral()
         gradlePluginPortal()
     }
 }
 
-include("common", "fabric", "neoforge")
+include("common", "neoforge")

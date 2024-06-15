@@ -4,9 +4,9 @@ plugins {
     id("fabric-loom") version("1.6.6") apply(false)
 }
 
-val MINECRAFT_VERSION by extra { "1.20.6" }
-val NEOFORGE_VERSION by extra { "20.6.61-beta" }
-val FABRIC_LOADER_VERSION by extra { "0.15.10" }
+val MINECRAFT_VERSION by extra { "1.20.1" }
+val NEOFORGE_VERSION by extra { "47.1.3" }
+val FABRIC_LOADER_VERSION by extra { "0.15.11" }
 val FABRIC_API_VERSION by extra { "0.97.5+1.20.5" }
 
 // https://semver.org/
@@ -24,7 +24,7 @@ tasks.withType<JavaCompile> {
 subprojects {
     apply(plugin = "maven-publish")
 
-    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+    java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 
     fun createVersionString(): String {
@@ -64,7 +64,7 @@ subprojects {
 
     tasks.withType<JavaCompile> {
         options.encoding = "UTF-8"
-        options.release.set(21)
+        options.release.set(17)
     }
 
     // Disables Gradle's custom module metadata from being published to maven. The

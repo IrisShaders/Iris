@@ -1,7 +1,8 @@
 plugins {
     id("idea")
     id("maven-publish")
-    id("net.neoforged.gradle.userdev") version "7.0.105"
+    id("net.minecraftforge.gradle") version "[6.0,6.2)"
+    id("org.spongepowered.mixin") version "0.7-SNAPSHOT"
     id("java-library")
 }
 
@@ -17,12 +18,6 @@ base {
     archivesName = "iris-neoforge-${MINECRAFT_VERSION}"
 }
 
-if (file("src/main/resources/META-INF/accesstransformer.cfg").exists()) {
-    minecraft.accessTransformers {
-        file("src/main/resources/META-INF/accesstransformer.cfg")
-    }
-}
-
 jarJar.enable()
 
 sourceSets {
@@ -32,20 +27,8 @@ sourceSets {
 }
 
 repositories {
-    exclusiveContent {
-        forRepository {
-            maven {
-                url = uri("https://maven.pkg.github.com/ims212/forge-frapi")
-                credentials {
-                    username = "IMS212"
-                    // Read only token
-                    password = "ghp_" + "DEuGv0Z56vnSOYKLCXdsS9svK4nb9K39C1Hn"
-                }
-            }
-        }
-        filter {
-            includeGroup("net.caffeinemc.new2")
-        }
+    flatDir {
+        dir(rootDir.resolve("custom_sodium"))
     }
     exclusiveContent {
         forRepository {
@@ -69,33 +52,81 @@ tasks.jar {
 
 }
 
-runs {
-    configureEach {
-        modSource(project.sourceSets.main.get())
-    }
-    create("client") {
-        dependencies {
-            runtime("com.lodborg:interval-tree:1.0.0")
-            runtime("org.antlr:antlr4-runtime:4.13.1")
-            runtime("io.github.douira:glsl-transformer:2.0.1")
-            runtime("org.anarres:jcpp:1.4.14")
-            //runtime(project(":common").sourceSets.getByName("").output)
-        }
-    }
+mixin {
+    add(sourceSets.main.get(), "iris.refmap.json")
+    config("iris.mixins.json")
+    config("iris.forge.mixins.json")
+}
 
-    create("data") {
-        programArguments.addAll("--mod", "iris", "--all", "--output", file("src/generated/resources/").getAbsolutePath(), "--existing", file("src/main/resources/").getAbsolutePath())
+minecraft {
+    mappings("official", MINECRAFT_VERSION)
+
+    copyIdeResources = true //Calls processResources when in dev
+
+    // Automatically enable forge AccessTransformers if the file exists
+    // This location is hardcoded in Forge and can not be changed.
+    // https://github.com/MinecraftForge/MinecraftForge/blob/be1698bb1554f9c8fa2f58e32b9ab70bc4385e60/fmlloader/src/main/java/net/minecraftforge/fml/loading/moddiscovery/ModFile.java#L123
+    val transformerFile = file("src/main/resources/META-INF/accesstransformer.cfg")
+    if (transformerFile.exists())
+        accessTransformer(transformerFile)
+
+    runs {
+        create("client") {
+            workingDirectory(project.file("run"))
+            ideaModule("${rootProject.name}.${project.name}.main")
+            taskName("Client")
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
+            mods {
+                create("modRun") {
+                    source(sourceSets.main.get())
+                    source(project(":common").sourceSets.main.get())
+                }
+            }
+        }
+
+        create("server") {
+            workingDirectory(project.file("run"))
+            ideaModule("${rootProject.name}.${project.name}.main")
+            taskName("Server")
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
+            mods {
+                create("modServerRun") {
+                    source(sourceSets.main.get())
+                    source(project(":common").sourceSets.main.get())
+                }
+            }
+        }
+
+        create("data") {
+            workingDirectory(project.file("run"))
+            ideaModule("${rootProject.name}.${project.name}.main")
+            args(
+                "--mod", "iris",
+                "--all",
+                "--output", file("src/generated/resources").absolutePath,
+                "--existing", file("src/main/resources/").absolutePath
+            )
+            taskName("Data")
+            property("mixin.env.remapRefMap", "true")
+            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
+            mods {
+                create("modDataRun") {
+                    source(sourceSets.main.get())
+                    source(project(":common").sourceSets.main.get())
+                }
+            }
+        }
     }
 }
 
+
 dependencies {
-    implementation("net.neoforged:neoforge:${NEOFORGE_VERSION}")
+    minecraft("net.minecraftforge:forge:${MINECRAFT_VERSION}-${NEOFORGE_VERSION}")
+    annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     compileOnly(project(":common"))
-    runtimeOnly("net.caffeinemc.new2:fabric_api_base:0.4.31")
-    runtimeOnly("net.caffeinemc.new2:fabric_renderer_api_v1:3.2.1")
-    runtimeOnly("net.caffeinemc.new2:fabric_rendering_data_attachment_v1:0.3.37")
     runtimeOnly("com.lodborg:interval-tree:1.0.0")
-    runtimeOnly("net.caffeinemc.new2:fabric_block_view_api_v2:1.0.1")
     implementation("org.antlr:antlr4-runtime:4.13.1")
 
     implementation("io.github.douira:glsl-transformer:2.0.1")
@@ -106,7 +137,7 @@ dependencies {
     jarJar("org.anarres:jcpp:[1.4.14,1.4.15]") {
         isTransitive = false
     }
-    implementation(files(rootDir.resolve("custom_sodium").resolve("sodium-neoforge-1.20.6-0.6.0-snapshot+mc1.20.6-local-modonly.jar")))
+    implementation(fg.deobf("net.caffeinemc:sodium-forge:0.6.0"))
 
     compileOnly(files(rootDir.resolve("DHApi.jar")))
     compileOnly("maven.modrinth:immersiveengineering:11mMmtHT")
@@ -136,7 +167,7 @@ tasks.withType<ProcessResources>().matching(notNeoTask).configureEach {
     from(project(":common").sourceSets.getByName("sodiumCompatibility").resources)
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 publishing {
     publications {
