@@ -1,6 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
+  "refmap": "iris.refmap.json",
   "package": "net.irisshaders.iris.mixin.integrationtest",
   "compatibilityLevel": "JAVA_8",
   "client": [

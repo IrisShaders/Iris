@@ -353,7 +353,7 @@ public class IrisChunkProgramOverrides {
 		} else {
 			if (pass.supportsFragmentDiscard()) {
 				return this.programs.get(IrisTerrainPass.GBUFFER_CUTOUT);
-			} else if (pass.isReverseOrder()) {
+			} else if (pass.isTranslucent()) {
 				return this.programs.get(IrisTerrainPass.GBUFFER_TRANSLUCENT);
 			} else {
 				return this.programs.get(IrisTerrainPass.GBUFFER_SOLID);
@@ -370,7 +370,7 @@ public class IrisChunkProgramOverrides {
 
 			if (isShadowPass) {
 				framebuffer = pipeline.getShadowFramebuffer();
-			} else if (pass.isReverseOrder()) {
+			} else if (pass.isTranslucent()) {
 				framebuffer = pipeline.getTranslucentFramebuffer();
 			} else {
 				framebuffer = pipeline.getTerrainSolidFramebuffer();

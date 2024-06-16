@@ -3,6 +3,7 @@
   "plugin": "net.irisshaders.iris.compat.sodium.mixin.IrisSodiumCompatMixinPlugin",
   "required": true,
   "compatibilityLevel": "JAVA_8",
+  "refmap": "iris.refmap.json",
   "injectors": {
     "defaultRequire": 1
   },

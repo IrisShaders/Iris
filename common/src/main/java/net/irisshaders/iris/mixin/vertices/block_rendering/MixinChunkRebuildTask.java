@@ -33,59 +33,5 @@ import java.util.Set;
  */
 @Mixin(targets = "net.minecraft.client.renderer.chunk.ChunkRenderDispatcher$RenderChunk$RebuildTask", priority = 999)
 public class MixinChunkRebuildTask {
-	@Unique
-	private static final String RENDER = "Lnet/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask;compile(FFFLnet/minecraft/client/renderer/ChunkBufferBuilderPack;)Lnet/minecraft/client/renderer/chunk/ChunkRenderDispatcher$RenderChunk$RebuildTask$CompileResults;";
-	// Resolve the ID map on the main thread to avoid thread safety issues
-	@Unique
-	private final Object2IntMap<BlockState> blockStateIds = getBlockStateIds();
-	@Unique
-	private BlockSensitiveBufferBuilder lastBufferBuilder;
 
-	@Unique
-	private Object2IntMap<BlockState> getBlockStateIds() {
-		return WorldRenderingSettings.INSTANCE.getBlockStateIds();
-	}
-
-	@Unique
-	private short resolveBlockId(BlockState state) {
-		if (blockStateIds == null) {
-			return -1;
-		}
-
-		return (short) blockStateIds.getOrDefault(state, -1);
-	}
-
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/block/BlockRenderDispatcher;renderLiquid(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/BlockAndTintGetter;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/material/FluidState;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$onRenderLiquid(float cameraX, float cameraY, float cameraZ, ChunkBufferBuilderPack buffers, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk.RebuildTask.CompileResults> cir, ChunkRenderDispatcher.RenderChunk.RebuildTask.CompileResults results, int i, BlockPos blockPos, BlockPos blockPos2, VisGraph chunkOcclusionDataBuilder, RenderChunkRegion chunkRendererRegion, PoseStack poseStack, Set<?> set2, RandomSource random, BlockRenderDispatcher blockRenderManager, Iterator<BlockPos> var15, BlockPos blockPos3, BlockState blockState, BlockState blockState2, FluidState fluidState, RenderType renderType, BufferBuilder bufferBuilder2) {
-		if (bufferBuilder2 instanceof BlockSensitiveBufferBuilder) {
-			lastBufferBuilder = ((BlockSensitiveBufferBuilder) bufferBuilder2);
-			// All fluids have a ShadersMod render type of 1, to match behavior of Minecraft 1.7 and earlier.
-			lastBufferBuilder.beginBlock(resolveBlockId(fluidState.createLegacyBlock()), ExtendedDataHelper.FLUID_RENDER_TYPE, blockPos3.getX() & 0xF, blockPos3.getY() & 0xF, blockPos3.getZ() & 0xF);
-		}
-	}
-
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/block/BlockRenderDispatcher;renderLiquid(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/BlockAndTintGetter;Lcom/mojang/blaze3d/vertex/VertexConsumer;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/material/FluidState;)V", shift = At.Shift.AFTER))
-	private void iris$finishRenderingLiquid(float cameraX, float cameraY, float cameraZ, ChunkBufferBuilderPack buffers, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk.RebuildTask.CompileResults> cir) {
-		if (lastBufferBuilder != null) {
-			lastBufferBuilder.endBlock();
-			lastBufferBuilder = null;
-		}
-	}
-
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/block/BlockRenderDispatcher;renderBatched(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/BlockAndTintGetter;Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;ZLnet/minecraft/util/RandomSource;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void iris$onRenderBlock(float cameraX, float cameraY, float cameraZ, ChunkBufferBuilderPack buffers, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk.RebuildTask.CompileResults> cir, ChunkRenderDispatcher.RenderChunk.RebuildTask.CompileResults results, int i, BlockPos blockPos, BlockPos blockPos2, VisGraph chunkOcclusionDataBuilder, RenderChunkRegion chunkRendererRegion, PoseStack poseStack, Set<?> set2, RandomSource random, BlockRenderDispatcher blockRenderManager, Iterator<BlockPos> var15, BlockPos blockPos3, BlockState blockState, BlockState blockState2, FluidState fluidState, RenderType renderType2, BufferBuilder bufferBuilder2) {
-		if (bufferBuilder2 instanceof BlockSensitiveBufferBuilder) {
-			lastBufferBuilder = ((BlockSensitiveBufferBuilder) bufferBuilder2);
-			// TODO: Resolve render types for normal blocks?
-			lastBufferBuilder.beginBlock(resolveBlockId(blockState), ExtendedDataHelper.BLOCK_RENDER_TYPE, blockPos3.getX() & 0xF, blockPos3.getY() & 0xF, blockPos3.getZ() & 0xF);
-		}
-	}
-
-	@Inject(method = RENDER, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/block/BlockRenderDispatcher;renderBatched(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/BlockAndTintGetter;Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;ZLnet/minecraft/util/RandomSource;)V", shift = At.Shift.AFTER))
-	private void iris$finishRenderingBlock(float cameraX, float cameraY, float cameraZ, ChunkBufferBuilderPack buffers, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk.RebuildTask.CompileResults> cir) {
-		if (lastBufferBuilder != null) {
-			lastBufferBuilder.endBlock();
-			lastBufferBuilder = null;
-		}
-	}
 }

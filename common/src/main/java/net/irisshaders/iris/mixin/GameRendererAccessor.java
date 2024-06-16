@@ -11,9 +11,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(GameRenderer.class)
 public interface GameRendererAccessor {
 	@Accessor
-	PostChain getBlurEffect();
-
-	@Accessor
 	boolean getRenderHand();
 
 	@Accessor

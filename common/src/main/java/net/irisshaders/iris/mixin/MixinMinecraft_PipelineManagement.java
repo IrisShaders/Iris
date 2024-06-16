@@ -26,7 +26,7 @@ public class MixinMinecraft_PipelineManagement {
 	 * NB: Not on leave, another inject is used for that
 	 */
 	@Inject(method = "setLevel", at = @At("HEAD"))
-	private void iris$trackLastDimensionOnLevelChange(ClientLevel clientLevel, ReceivingLevelScreen.Reason reason, CallbackInfo ci) {
+	private void iris$trackLastDimensionOnLevelChange(ClientLevel clientLevel, CallbackInfo ci) {
 		Iris.lastDimension = Iris.getCurrentDimension();
 	}
 

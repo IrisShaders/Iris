@@ -18,12 +18,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ParticleEngine.class)
 public class MixinParticleEngine {
 	@Inject(method = "render", at = @At("HEAD"))
-	private void iris$beginDrawingParticles(LightTexture lightTexture, Camera camera, float f, CallbackInfo ci) {
+	private void iris$beginDrawingParticles(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LightTexture lightTexture, Camera camera, float f, CallbackInfo ci) {
 		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setPhase(WorldRenderingPhase.PARTICLES));
 	}
 
 	@Inject(method = "render", at = @At("RETURN"))
-	private void iris$finishDrawingParticles(LightTexture lightTexture, Camera camera, float f, CallbackInfo ci) {
+	private void iris$finishDrawingParticles(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, LightTexture lightTexture, Camera camera, float f, CallbackInfo ci) {
 		Iris.getPipelineManager().getPipeline().ifPresent(pipeline -> pipeline.setPhase(WorldRenderingPhase.NONE));
 	}
 }

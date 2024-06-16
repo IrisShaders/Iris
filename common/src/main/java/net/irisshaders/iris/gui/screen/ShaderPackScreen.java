@@ -1,7 +1,6 @@
 package net.irisshaders.iris.gui.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gui.GuiUtil;
@@ -11,6 +10,7 @@ import net.irisshaders.iris.gui.element.ShaderPackOptionList;
 import net.irisshaders.iris.gui.element.ShaderPackSelectionList;
 import net.irisshaders.iris.gui.element.widget.AbstractElementWidget;
 import net.irisshaders.iris.gui.element.widget.CommentedElementWidget;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
@@ -81,7 +81,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		String irisName = Iris.MODNAME + " " + Iris.getVersion();
 
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisPlatformHelpers.getInstance().isDevelopmentEnvironment()) {
 			this.developmentComponent = Component.literal("Development Environment").withStyle(ChatFormatting.GOLD);
 		}
 

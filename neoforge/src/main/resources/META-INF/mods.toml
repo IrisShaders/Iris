@@ -1,0 +1,22 @@
+modLoader = "javafml"
+loaderVersion = "*"
+license = "LGPLv3"
+
+[[mods]]
+modId = "iris"
+
+version = "${version}"
+displayName = "Iris"
+
+logoFile="iris.png" #optional
+
+authors="coderbot, IMS212, Justsnoopy30, FoundationGames"
+
+description = '''
+A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs.
+'''
+
+[mods."sodium:options"]
+"mixin.features.render.world.sky"=false
+"mixin.features.render.entity"=false
+"mixin.features.render.gui.font"=false

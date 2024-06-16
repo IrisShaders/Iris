@@ -70,10 +70,13 @@ public class MixinGlyphRenderer {
 
 		float x1 = x + this.left;
 		float x2 = x + this.right;
-		float y1 = y + this.up;
-		float y2 = y + this.down;
-		float w1 = italic ? 1.0F - 0.25F * this.up : 0.0F;
-		float w2 = italic ? 1.0F - 0.25F * this.down : 0.0F;
+		float y1 = this.up - 3.0F;
+		float y2 = this.down - 3.0F;
+		float h1 = y + y1;
+		float h2 = y + y2;
+		float w1 = italic ? 1.0F - 0.25F * y1 : 0.0F;
+		float w2 = italic ? 1.0F - 0.25F * y2 : 0.0F;
+
 
 		int color = ColorABGR.pack(red, green, blue, alpha);
 
@@ -83,16 +86,16 @@ public class MixinGlyphRenderer {
 			long buffer = stack.nmalloc(4 * stride);
 			long ptr = buffer;
 
-			write(ext, ptr, matrix, x1 + w1, y1, 0.0F, color, this.u0, this.v0, light);
+			write(ext, ptr, matrix, x1 + w1, h1, 0.0F, color, this.u0, this.v0, light);
 			ptr += stride;
 
-			write(ext, ptr, matrix, x1 + w2, y2, 0.0F, color, this.u0, this.v1, light);
+			write(ext, ptr, matrix, x1 + w2, h2, 0.0F, color, this.u0, this.v1, light);
 			ptr += stride;
 
-			write(ext, ptr, matrix, x2 + w2, y2, 0.0F, color, this.u1, this.v1, light);
+			write(ext, ptr, matrix, x2 + w2, h2, 0.0F, color, this.u1, this.v1, light);
 			ptr += stride;
 
-			write(ext, ptr, matrix, x2 + w1, y1, 0.0F, color, this.u1, this.v0, light);
+			write(ext, ptr, matrix, x2 + w1, h1, 0.0F, color, this.u1, this.v0, light);
 			ptr += stride;
 
 			writer.push(stack, buffer, 4, ext ? GlyphVertexExt.FORMAT : GlyphVertex.FORMAT);

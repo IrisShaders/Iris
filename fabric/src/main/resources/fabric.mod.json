@@ -16,7 +16,7 @@
     "issues": "https://github.com/IrisShaders/Iris/issues"
   },
   "license": "LGPL-3.0-only",
-  "icon": "assets/iris/iris-logo.png",
+  "icon": "iris.png",
   "environment": "client",
   "entrypoints": {
     "modmenu": [
@@ -39,10 +39,6 @@
     "fabricloader": ">=0.12.3",
     "minecraft": [
       "1.20.1"
-    ],
-    "sodium": [
-      "0.5.8",
-      "0.5.9"
     ]
   },
   "breaks": {

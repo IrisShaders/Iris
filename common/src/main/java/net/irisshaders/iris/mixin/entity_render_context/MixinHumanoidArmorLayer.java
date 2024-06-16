@@ -33,17 +33,17 @@ public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends 
 		super(pRenderLayer0);
 	}
 
-	@Inject(method = "renderArmorPiece", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/HumanoidModel;copyPropertiesTo(Lnet/minecraft/client/model/HumanoidModel;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void changeId(PoseStack pHumanoidArmorLayer0, MultiBufferSource pMultiBufferSource1, T pLivingEntity2, EquipmentSlot pEquipmentSlot3, int pInt4, A pHumanoidModel5, CallbackInfo ci, ItemStack lvItemStack7, ArmorItem lvArmorItem8) {
+	@Inject(method = "renderArmorPiece", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/HumanoidModel;copyPropertiesTo(Lnet/minecraft/client/model/HumanoidModel;)V"))
+	private void changeId(PoseStack poseStack, MultiBufferSource multiBufferSource, T livingEntity, EquipmentSlot equipmentSlot, int i, A humanoidModel, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
-		ResourceLocation location = BuiltInRegistries.ITEM.getKey(lvArmorItem8);
+		ResourceLocation location = BuiltInRegistries.ITEM.getKey(livingEntity.getItemBySlot(equipmentSlot).getItem());
 
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
 	}
 
 	@Inject(method = "renderTrim", at = @At(value = "HEAD"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void changeTrimTemp(Holder<ArmorMaterial> holder, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, ArmorTrim armorTrim, A humanoidModel, boolean bl, CallbackInfo ci) {
+	private void changeTrimTemp(ArmorMaterial armorMaterial, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, ArmorTrim armorTrim, A humanoidModel, boolean bl, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		backupValue = CapturedRenderingState.INSTANCE.getCurrentRenderedItem();
@@ -51,7 +51,7 @@ public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends 
 	}
 
 	@Inject(method = "renderTrim", at = @At(value = "TAIL"))
-	private void changeTrimTemp2(Holder<ArmorMaterial> holder, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, ArmorTrim armorTrim, A humanoidModel, boolean bl, CallbackInfo ci) {
+	private void changeTrimTemp2(ArmorMaterial armorMaterial, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, ArmorTrim armorTrim, A humanoidModel, boolean bl, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(backupValue);
 		backupValue = 0;

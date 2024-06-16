@@ -84,8 +84,6 @@ public class MixinLevelRenderer {
 		CapturedRenderingState.INSTANCE.setTickDelta(tickDelta);
 		CapturedRenderingState.INSTANCE.setRealTickDelta(tickDelta);
 		CapturedRenderingState.INSTANCE.setCloudTime((ticks + tickDelta) * 0.03F);
-		SystemTimeUniforms.COUNTER.beginFrame();
-		SystemTimeUniforms.TIMER.beginFrame(startTime);
 
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 

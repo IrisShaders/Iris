@@ -98,7 +98,7 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "getRendertypeCloudsShader", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "getPositionTexColorNormalShader", at = @At("HEAD"), cancellable = true)
 	private static void iris$overridePositionTexColorNormalShader(CallbackInfoReturnable<ShaderInstance> cir) {
 		if (ShadowRenderer.ACTIVE) {
 			override(ShaderKey.SHADOW_CLOUDS, cir);
@@ -469,7 +469,7 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = "renderLevel", at = @At("TAIL"))
-	private void iris$runColorSpace(float f, long l, CallbackInfo ci) {
+	private void iris$runColorSpace(float f, long l, PoseStack poseStack, CallbackInfo ci) {
 		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::finalizeGameRendering);
 	}
 

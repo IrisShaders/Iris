@@ -1,32 +1,50 @@
+import net.minecraftforge.artifactural.api.artifact.ArtifactIdentifier
+
 plugins {
     id("idea")
     id("maven-publish")
     id("net.minecraftforge.gradle") version "[6.0,6.2)"
-    id("org.spongepowered.mixin") version "0.7-SNAPSHOT"
     id("java-library")
+    id("org.spongepowered.mixin") version "0.7-SNAPSHOT"
 }
 
 base {
-    archivesName = "iris-neoforge-1.20.5"
+    archivesName = "iris-forge-1.20.1"
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
 val NEOFORGE_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
-base {
-    archivesName = "iris-neoforge-${MINECRAFT_VERSION}"
-}
-
 jarJar.enable()
 
+mixin {
+    add(sourceSets.main.get(), "iris.refmap.json")
+    //add(project(":common").sourceSets.getByName("sodiumCompatibility"), "iris.refmap.json")
+    config("mixins.iris.json")
+    config("mixins.iris.compat.sodium.json")
+    config("mixins.iris.vertexformat.json")
+    config("iris-batched-entity-rendering.mixins.json")
+    config("mixins.iris.fantastic.json")
+    config("mixins.iris.forge.json")
+}
+
 sourceSets {
+
+
     main.get().apply {
+        compileClasspath += project(":common").sourceSets.getByName("headers").output
+    }
+
+    test.get().apply {
+        compileClasspath += main.get().compileClasspath
         compileClasspath += project(":common").sourceSets.getByName("headers").output
     }
 }
 
 repositories {
+    mavenCentral()
+
     flatDir {
         dir(rootDir.resolve("custom_sodium"))
     }
@@ -37,44 +55,51 @@ repositories {
                 url = uri("https://api.modrinth.com/maven")
             }
         }
-        //forRepositories(fg.repository) // Only add this if you're using ForgeGradle, otherwise remove this line
+        forRepositories(fg.repository) // Only add this if you're using ForgeGradle, otherwise remove this line
         filter {
             includeGroup("maven.modrinth")
         }
     }
-}
 
-tasks.build {
-}
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = uri("https://maven.pkg.github.com/ims212/forge-frapi")
+                credentials {
+                    username = "IMS212"
+                    // Read only token
+                    password = "ghp_" + "DEuGv0Z56vnSOYKLCXdsS9svK4nb9K39C1Hn"
+                }
+            }
+        }
+        filter {
+            includeGroup("net.caffeinemc.lts")
+        }
+    }
+    maven { url = uri("https://maven.fabricmc.net/") }
+    maven { url = uri("https://maven.architectury.dev/") }
+    maven { url = uri("https://files.minecraftforge.net/maven/") }
+    maven { url = uri("https://maven.neoforged.net/releases/") }
+    maven { url = uri("https://maven.su5ed.dev/releases") }
+    mavenLocal()
+    maven("https://repo.spongepowered.org/repository/maven-public/") { name = "Sponge Snapshots" }
 
-tasks.jar {
-    from(rootDir.resolve("LICENSE.md"))
-
-}
-
-mixin {
-    add(sourceSets.main.get(), "iris.refmap.json")
-    config("iris.mixins.json")
-    config("iris.forge.mixins.json")
 }
 
 minecraft {
-    mappings("official", MINECRAFT_VERSION)
-
+    mappings("official", "1.20.1")
     copyIdeResources = true //Calls processResources when in dev
 
-    // Automatically enable forge AccessTransformers if the file exists
-    // This location is hardcoded in Forge and can not be changed.
-    // https://github.com/MinecraftForge/MinecraftForge/blob/be1698bb1554f9c8fa2f58e32b9ab70bc4385e60/fmlloader/src/main/java/net/minecraftforge/fml/loading/moddiscovery/ModFile.java#L123
     val transformerFile = file("src/main/resources/META-INF/accesstransformer.cfg")
-    if (transformerFile.exists())
+    if (transformerFile.exists()) {
         accessTransformer(transformerFile)
+    }
 
     runs {
         create("client") {
+            environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
             workingDirectory(project.file("run"))
             ideaModule("${rootProject.name}.${project.name}.main")
-            taskName("Client")
             property("mixin.env.remapRefMap", "true")
             property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
             mods {
@@ -85,97 +110,101 @@ minecraft {
             }
         }
 
-        create("server") {
-            workingDirectory(project.file("run"))
-            ideaModule("${rootProject.name}.${project.name}.main")
-            taskName("Server")
-            property("mixin.env.remapRefMap", "true")
-            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
-            mods {
-                create("modServerRun") {
-                    source(sourceSets.main.get())
-                    source(project(":common").sourceSets.main.get())
-                }
-            }
-        }
-
         create("data") {
-            workingDirectory(project.file("run"))
-            ideaModule("${rootProject.name}.${project.name}.main")
-            args(
-                "--mod", "iris",
-                "--all",
-                "--output", file("src/generated/resources").absolutePath,
-                "--existing", file("src/main/resources/").absolutePath
-            )
-            taskName("Data")
-            property("mixin.env.remapRefMap", "true")
-            property("mixin.env.refMapRemappingFile", "${projectDir}/build/createSrgToMcp/output.srg")
-            mods {
-                create("modDataRun") {
-                    source(sourceSets.main.get())
-                    source(project(":common").sourceSets.main.get())
-                }
-            }
+            //programArguments.addAll("--mod", "sodium", "--all", "--output", file("src/generated/resources/").getAbsolutePath(), "--existing", file("src/main/resources/").getAbsolutePath())
         }
     }
 }
-
 
 dependencies {
     minecraft("net.minecraftforge:forge:${MINECRAFT_VERSION}-${NEOFORGE_VERSION}")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
-    compileOnly(project(":common"))
-    runtimeOnly("com.lodborg:interval-tree:1.0.0")
+
+    compileOnly("io.github.llamalad7:mixinextras-common:0.3.5")
+    annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5")
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.5")) {
+        jarJar.ranged(this, "[0.3.5,)")
+    }
     implementation("org.antlr:antlr4-runtime:4.13.1")
 
-    implementation("io.github.douira:glsl-transformer:2.0.1")
-    jarJar("io.github.douira:glsl-transformer:[2.0.1,2.0.2]") {
+    minecraftLibrary("io.github.douira:glsl-transformer2:2.0.1") {
         isTransitive = false
     }
-    implementation("org.anarres:jcpp:1.4.14")
+    jarJar("io.github.douira:glsl-transformer2:[2.0.1,2.0.2)") {
+        jarJar.pin(this, "2.0.1")
+        isTransitive = false
+    }
+    minecraftLibrary("org.anarres:jcpp:1.4.14") {
+        isTransitive = false
+    }
     jarJar("org.anarres:jcpp:[1.4.14,1.4.15]") {
         isTransitive = false
     }
+    runtimeOnly(fg.deobf("dev.su5ed.sinytra.fabric-api:fabric-api-base:0.4.31+ef105b4977"))
+    runtimeOnly(fg.deobf("dev.su5ed.sinytra.fabric-api:fabric-renderer-api-v1:3.2.1+1d29b44577"))
+    runtimeOnly(fg.deobf("dev.su5ed.sinytra.fabric-api:fabric-rendering-data-attachment-v1:0.3.37+a6081afc77"))
+    minecraftLibrary("com.lodborg:interval-tree:1.0.0")
+    runtimeOnly(fg.deobf("dev.su5ed.sinytra.fabric-api:fabric-block-view-api-v2:1.0.1+0767707077"))
     implementation(fg.deobf("net.caffeinemc:sodium-forge:0.6.0"))
-
     compileOnly(files(rootDir.resolve("DHApi.jar")))
-    compileOnly("maven.modrinth:immersiveengineering:11mMmtHT")
 }
+
 
 tasks.jarJar {
-    archiveClassifier = "jarJar"
+    dependsOn("reobfJar")
+    archiveClassifier = ""
 }
 
-// NeoGradle compiles the game, but we don't want to add our common code to the game's code
-val notNeoTask: (Task) -> Boolean = { it: Task -> !it.name.startsWith("neo") && !it.name.startsWith("compileService") }
-
-tasks.withType<JavaCompile>().matching(notNeoTask).configureEach {
-    source(project(":common").sourceSets.main.get().allSource)
-    source(project(":common").sourceSets.getByName("sodiumCompatibility").allSource)
-    source(project(":common").sourceSets.getByName("vendored").allSource)
+tasks.jar {
+    archiveClassifier = "std"
 }
 
-tasks.withType<Javadoc>().matching(notNeoTask).configureEach {
-    source(project(":common").sourceSets.main.get().allJava)
-    source(project(":common").sourceSets.getByName("sodiumCompatibility").allJava)
-    source(project(":common").sourceSets.getByName("vendored").allJava)
+val notNeoTask: (Task) -> Boolean = { it: Task ->
+    !it.name.startsWith("compileService")
 }
 
-tasks.withType<ProcessResources>().matching(notNeoTask).configureEach {
-    from(project(":common").sourceSets.main.get().resources)
-    from(project(":common").sourceSets.getByName("sodiumCompatibility").resources)
+tasks {
+    withType<JavaCompile>().matching(notNeoTask).configureEach {
+        source(project(":common").sourceSets.main.get().allSource)
+        source(project(":common").sourceSets.getByName("sodiumCompatibility").allSource)
+        source(project(":common").sourceSets.getByName("vendored").allSource)
+    }
+
+    javadoc { source(project(":common").sourceSets.main.get().allJava) }
+
+    processResources {
+        inputs.property("version", project.version)
+
+        from(project(":common").sourceSets.main.get().resources) {
+            filesMatching("META-INF/mods.toml") {
+                expand(mapOf("version" to project.version))
+            }
+        }
+        from(project(":common").sourceSets.getByName("sodiumCompatibility").resources)
+    }
+
+    jar { finalizedBy("reobfJar") }
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 publishing {
     publications {
-
-    }
-    repositories {
-        maven {
-            url = uri("file://" + System.getenv("local_maven"))
+        register("mavenJava", MavenPublication::class) {
+            artifactId = base.archivesName.get()
+            artifact(tasks.jar)
+            fg.component(this)
         }
     }
+
+    repositories {
+        maven("file://${System.getenv("local_maven")}")
+    }
+}
+
+
+sourceSets.forEach {
+    val dir = layout.buildDirectory.dir("sourceSets/${it.name}")
+    it.output.setResourcesDir(dir)
+    it.java.destinationDirectory.set(dir)
 }
