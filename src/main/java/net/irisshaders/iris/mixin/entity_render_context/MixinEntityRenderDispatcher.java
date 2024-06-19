@@ -10,6 +10,7 @@ import net.irisshaders.iris.layer.OuterWrappedRenderType;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
+import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -35,7 +36,7 @@ public class MixinEntityRenderDispatcher {
 	private MultiBufferSource iris$beginEntityRender(MultiBufferSource bufferSource, Entity entity) {
 		Object2IntFunction<NamespacedId> entityIds = WorldRenderingSettings.INSTANCE.getEntityIds();
 
-		if (entityIds == null) {
+		if (entityIds == null || !ImmediateState.isRenderingLevel) {
 			return bufferSource;
 		}
 
