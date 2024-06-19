@@ -6,7 +6,7 @@
   "iris.shaders.debug.disabled": "已停用除錯。",
   "iris.shaders.debug.failure": "無法啟用除錯，您的電腦不支援除錯功能。",
   "iris.shaders.debug.restart": "您沒有除錯內容，請重新啟動後啟用除錯。",
-  "iris.load.failure.shader": "光影包加載失敗！請向光影開發者報告此錯誤。",
+  "iris.load.failure.shader": "光影包載入失敗！請向光影開發者回報此錯誤",
   "iris.load.failure.generic": "Iris 嘗試加載光影時遇到了問題，請將此問題報告給 Iris 開發者。",
   "iris.shaders.ssbofailure": "光影要求特定功能（SSBO），但您的 GPU 不支援，因此它可能無法正常運作。",
   "iris.keybind.reload": "重新載入光影",
