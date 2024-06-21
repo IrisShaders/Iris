@@ -33,6 +33,7 @@ public enum ProgramId {
 
 	Entities(ProgramGroup.Gbuffers, "entities", TexturedLit),
 	EntitiesTrans(ProgramGroup.Gbuffers, "entities_translucent", Entities),
+	Lightning(ProgramGroup.Gbuffers, "lightning", Entities),
 	Particles(ProgramGroup.Gbuffers, "particles", TexturedLit),
 	ParticlesTrans(ProgramGroup.Gbuffers, "particles_translucent", Particles),
 	EntitiesGlowing(ProgramGroup.Gbuffers, "entities_glowing", Entities),

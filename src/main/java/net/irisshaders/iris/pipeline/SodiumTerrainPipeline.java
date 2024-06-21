@@ -17,6 +17,7 @@ import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
+import net.irisshaders.iris.shaderpack.programs.ProgramFallbackResolver;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.targets.RenderTargets;
@@ -191,6 +192,7 @@ public class SodiumTerrainPipeline {
 	private final IntFunction<ProgramSamplers> createShadowSamplers;
 	private final IntFunction<ProgramImages> createTerrainImages;
 	private final IntFunction<ProgramImages> createShadowImages;
+	private final ProgramFallbackResolver resolver;
 	Optional<String> terrainSolidVertex;
 	Optional<String> terrainSolidGeometry;
 	Optional<String> terrainSolidTessControl;
@@ -229,17 +231,18 @@ public class SodiumTerrainPipeline {
 	Optional<AlphaTest> shadowAlpha;
 	ProgramSet programSet;
 
-	public SodiumTerrainPipeline(WorldRenderingPipeline parent, ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
+	public SodiumTerrainPipeline(WorldRenderingPipeline parent, ProgramFallbackResolver resolver, ProgramSet programSet, IntFunction<ProgramSamplers> createTerrainSamplers,
 								 IntFunction<ProgramSamplers> createShadowSamplers, IntFunction<ProgramImages> createTerrainImages, IntFunction<ProgramImages> createShadowImages,
 								 RenderTargets targets,
 								 ImmutableSet<Integer> flippedAfterPrepare,
 								 ImmutableSet<Integer> flippedAfterTranslucent, GlFramebuffer shadowFramebuffer, CustomUniforms customUniforms) {
 		this.parent = Objects.requireNonNull(parent);
 		this.customUniforms = customUniforms;
+		this.resolver = resolver;
 
-		Optional<ProgramSource> terrainSolidSource = first(programSet.getGbuffersTerrainSolid(), programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> terrainCutoutSource = first(programSet.getGbuffersTerrainCutout(), programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainCutoutSource);
+		Optional<ProgramSource> terrainSolidSource = resolver.resolve(ProgramId.TerrainSolid);
+		Optional<ProgramSource> terrainCutoutSource = resolver.resolve(ProgramId.TerrainCutout);
+		Optional<ProgramSource> translucentSource = resolver.resolve(ProgramId.Water);
 
 		this.programSet = programSet;
 		this.shadowFramebuffer = shadowFramebuffer;
@@ -300,9 +303,9 @@ public class SodiumTerrainPipeline {
 	public void patchShaders(ChunkVertexType vertexType) {
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(true, true, false, true, true);
 
-		Optional<ProgramSource> terrainSolidSource = first(programSet.getGbuffersTerrainSolid(), programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> terrainCutoutSource = first(programSet.getGbuffersTerrainCutout(), programSet.getGbuffersTerrain(), programSet.getGbuffersTexturedLit(), programSet.getGbuffersTextured(), programSet.getGbuffersBasic());
-		Optional<ProgramSource> translucentSource = first(programSet.getGbuffersWater(), terrainCutoutSource);
+		Optional<ProgramSource> terrainSolidSource = resolver.resolve(ProgramId.TerrainSolid);
+		Optional<ProgramSource> terrainCutoutSource = resolver.resolve(ProgramId.TerrainCutout);
+		Optional<ProgramSource> translucentSource = resolver.resolve(ProgramId.Water);
 
 
 		terrainSolidSource.ifPresentOrElse(sources -> {
