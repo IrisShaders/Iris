@@ -5,6 +5,7 @@ import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
+import net.irisshaders.iris.shaderpack.loading.ProgramArrayId;
 import net.irisshaders.iris.shaderpack.loading.ProgramGroup;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.parsing.ComputeDirectiveParser;
@@ -27,24 +28,15 @@ public class ProgramSet implements ProgramSetInterface {
 	private final PackDirectives packDirectives;
 
 	private final ComputeSource[] shadowCompute;
+	private final ComputeSource[] finalCompute;
 
-	private final ProgramSource[] shadowcomp;
-	private final ComputeSource[][] shadowCompCompute;
-	private final ProgramSource[] begin;
-	private final ComputeSource[][] beginCompute;
-	private final ProgramSource[] prepare;
-	private final ComputeSource[][] prepareCompute;
 	private final ComputeSource[] setup;
 
-	private final ProgramSource[] deferred;
-	private final ComputeSource[][] deferredCompute;
-	private final ProgramSource[] composite;
-	private final ComputeSource[][] compositeCompute;
-	private final ProgramSource compositeFinal;
-	private final ComputeSource[] finalCompute;
 	private final ShaderPack pack;
 
 	private final EnumMap<ProgramId, ProgramSource> gbufferPrograms = new EnumMap<>(ProgramId.class);
+	private final EnumMap<ProgramArrayId, ProgramSource[]> compositePrograms = new EnumMap<>(ProgramArrayId.class);
+	private final EnumMap<ProgramArrayId, ComputeSource[][]> computePrograms = new EnumMap<>(ProgramArrayId.class);
 
 	public ProgramSet(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
 					  ShaderProperties shaderProperties, ShaderPack pack) {
@@ -64,44 +56,22 @@ public class ProgramSet implements ProgramSetInterface {
 		boolean readTesselation = pack.hasFeature(FeatureFlags.TESSELATION_SHADERS);
 
 		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow", shaderProperties);
-
-		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", shaderProperties, readTesselation);
-
-		this.shadowCompCompute = new ComputeSource[shadowcomp.length][];
-		for (int i = 0; i < shadowcomp.length; i++) {
-			this.shadowCompCompute[i] = readComputeArray(directory, sourceProvider, "shadowcomp" + ((i == 0) ? "" : i), shaderProperties);
-		}
-
 		this.setup = readProgramArray(directory, sourceProvider, "setup", shaderProperties);
 
-		this.begin = readProgramArray(directory, sourceProvider, "begin", shaderProperties, readTesselation);
-		this.beginCompute = new ComputeSource[begin.length][];
-		for (int i = 0; i < begin.length; i++) {
-			this.beginCompute[i] = readComputeArray(directory, sourceProvider, "begin" + ((i == 0) ? "" : i), shaderProperties);
-		}
-
-		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties, readTesselation);
-		this.prepareCompute = new ComputeSource[prepare.length][];
-		for (int i = 0; i < prepare.length; i++) {
-			this.prepareCompute[i] = readComputeArray(directory, sourceProvider, "prepare" + ((i == 0) ? "" : i), shaderProperties);
+		for (ProgramArrayId id : ProgramArrayId.values()) {
+			ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation);
+			compositePrograms.put(id, sources);
+			ComputeSource[][] computes = new ComputeSource[id.getNumPrograms()][];
+			for (int i = 0; i < id.getNumPrograms(); i++) {
+				computes[i] = readComputeArray(directory, sourceProvider, id.getSourcePrefix() + (i == 0 ? "" : i), shaderProperties);
+			}
+			computePrograms.put(id, computes);
 		}
 
 		for (ProgramId programId : ProgramId.values()) {
 			gbufferPrograms.put(programId, readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties, programId.getBlendModeOverride(), readTesselation));
 		}
 
-		this.deferred = readProgramArray(directory, sourceProvider, "deferred", shaderProperties, readTesselation);
-		this.deferredCompute = new ComputeSource[deferred.length][];
-		for (int i = 0; i < deferred.length; i++) {
-			this.deferredCompute[i] = readComputeArray(directory, sourceProvider, "deferred" + ((i == 0) ? "" : i), shaderProperties);
-		}
-
-		this.composite = readProgramArray(directory, sourceProvider, "composite", shaderProperties, readTesselation);
-		this.compositeCompute = new ComputeSource[composite.length][];
-		for (int i = 0; i < deferred.length; i++) {
-			this.compositeCompute[i] = readComputeArray(directory, sourceProvider, "composite" + ((i == 0) ? "" : i), shaderProperties);
-		}
-		this.compositeFinal = readProgramSource(directory, sourceProvider, "final", this, shaderProperties, readTesselation);
 		this.finalCompute = readComputeArray(directory, sourceProvider, "final", shaderProperties);
 
 		locateDirectives();
@@ -223,9 +193,15 @@ public class ProgramSet implements ProgramSetInterface {
 		List<ProgramSource> programs = new ArrayList<>();
 		List<ComputeSource> computes = new ArrayList<>();
 
-		programs.addAll(Arrays.asList(shadowcomp));
-		programs.addAll(Arrays.asList(begin));
-		programs.addAll(Arrays.asList(prepare));
+		for (ProgramSource[] sources : compositePrograms.values()) {
+			programs.addAll(Arrays.asList(sources));
+		}
+
+		for (ComputeSource[][] sources : computePrograms.values()) {
+			for (ComputeSource[] source : sources) {
+				computes.addAll(Arrays.asList(source));
+			}
+		}
 
 		programs.addAll(gbufferPrograms.values());
 
@@ -233,26 +209,6 @@ public class ProgramSet implements ProgramSetInterface {
 			if (computeSource != null) {
 				computes.add(computeSource);
 			}
-		}
-
-		for (ComputeSource[] computeSources : beginCompute) {
-			computes.addAll(Arrays.asList(computeSources));
-		}
-
-		for (ComputeSource[] computeSources : compositeCompute) {
-			computes.addAll(Arrays.asList(computeSources));
-		}
-
-		for (ComputeSource[] computeSources : deferredCompute) {
-			computes.addAll(Arrays.asList(computeSources));
-		}
-
-		for (ComputeSource[] computeSources : prepareCompute) {
-			computes.addAll(Arrays.asList(computeSources));
-		}
-
-		for (ComputeSource[] computeSources : shadowCompCompute) {
-			computes.addAll(Arrays.asList(computeSources));
 		}
 
 		Collections.addAll(computes, finalCompute);
@@ -271,10 +227,6 @@ public class ProgramSet implements ProgramSetInterface {
 				});
 			}
 		}
-
-		programs.addAll(Arrays.asList(deferred));
-		programs.addAll(Arrays.asList(composite));
-		programs.add(compositeFinal);
 
 		DispatchingDirectiveHolder packDirectiveHolder = new DispatchingDirectiveHolder();
 
@@ -296,18 +248,6 @@ public class ProgramSet implements ProgramSetInterface {
 			Iris.logger.debug("Render target settings for colortex" + index + ": " + settings));
 	}
 
-	public ProgramSource[] getShadowComposite() {
-		return shadowcomp;
-	}
-
-	public ProgramSource[] getBegin() {
-		return begin;
-	}
-
-	public ProgramSource[] getPrepare() {
-		return prepare;
-	}
-
 	public ComputeSource[] getSetup() {
 		return setup;
 	}
@@ -321,40 +261,8 @@ public class ProgramSet implements ProgramSetInterface {
 		}
 	}
 
-	public ProgramSource[] getDeferred() {
-		return deferred;
-	}
-
-	public ProgramSource[] getComposite() {
-		return composite;
-	}
-
-	public Optional<ProgramSource> getCompositeFinal() {
-		return compositeFinal.requireValid();
-	}
-
 	public ComputeSource[] getShadowCompute() {
 		return shadowCompute;
-	}
-
-	public ComputeSource[][] getShadowCompCompute() {
-		return shadowCompCompute;
-	}
-
-	public ComputeSource[][] getBeginCompute() {
-		return beginCompute;
-	}
-
-	public ComputeSource[][] getPrepareCompute() {
-		return prepareCompute;
-	}
-
-	public ComputeSource[][] getDeferredCompute() {
-		return deferredCompute;
-	}
-
-	public ComputeSource[][] getCompositeCompute() {
-		return compositeCompute;
 	}
 
 	public ComputeSource[] getFinalCompute() {
@@ -367,5 +275,13 @@ public class ProgramSet implements ProgramSetInterface {
 
 	public ShaderPack getPack() {
 		return pack;
+	}
+
+	public ProgramSource[] getComposite(ProgramArrayId programArrayId) {
+		return compositePrograms.getOrDefault(programArrayId, new ProgramSource[programArrayId.getNumPrograms()]);
+	}
+
+	public ComputeSource[][] getCompute(ProgramArrayId programArrayId) {
+		return computePrograms.getOrDefault(programArrayId, new ComputeSource[programArrayId.getNumPrograms()][27]);
 	}
 }
