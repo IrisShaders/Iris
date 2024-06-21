@@ -418,7 +418,7 @@ public class SodiumTerrainPipeline {
 			translucentFragment = Optional.of(defaultFragment);
 		});
 
-		programSet.getShadow().ifPresentOrElse(sources -> {
+		resolver.resolve(ProgramId.Shadow).ifPresentOrElse(sources -> {
 			shadowBlendOverride = sources.getDirectives().getBlendModeOverride().orElse(ProgramId.Shadow.getBlendModeOverride());
 			shadowBufferOverrides = new ArrayList<>();
 			sources.getDirectives().getBufferBlendOverrides().forEach(information -> {

@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 public class ProgramSet implements ProgramSetInterface {
 	private final PackDirectives packDirectives;
 
-	private final ProgramSource shadow;
 	private final ComputeSource[] shadowCompute;
 
 	private final ProgramSource[] shadowcomp;
@@ -64,8 +63,6 @@ public class ProgramSet implements ProgramSetInterface {
 		// - https://github.com/IrisShaders/Iris/issues/987
 		boolean readTesselation = pack.hasFeature(FeatureFlags.TESSELATION_SHADERS);
 
-		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, shaderProperties,
-			BlendModeOverride.OFF, readTesselation);
 		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow", shaderProperties);
 
 		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", shaderProperties, readTesselation);
@@ -90,7 +87,7 @@ public class ProgramSet implements ProgramSetInterface {
 		}
 
 		for (ProgramId programId : ProgramId.values()) {
-			gbufferPrograms.put(programId, readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties, programId.getGroup() == ProgramGroup.Shadow ? BlendModeOverride.OFF : null, readTesselation));
+			gbufferPrograms.put(programId, readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties, programId.getBlendModeOverride(), readTesselation));
 		}
 
 		this.deferred = readProgramArray(directory, sourceProvider, "deferred", shaderProperties, readTesselation);
@@ -226,7 +223,6 @@ public class ProgramSet implements ProgramSetInterface {
 		List<ProgramSource> programs = new ArrayList<>();
 		List<ComputeSource> computes = new ArrayList<>();
 
-		programs.add(shadow);
 		programs.addAll(Arrays.asList(shadowcomp));
 		programs.addAll(Arrays.asList(begin));
 		programs.addAll(Arrays.asList(prepare));
@@ -298,10 +294,6 @@ public class ProgramSet implements ProgramSetInterface {
 
 		packDirectives.getRenderTargetDirectives().getRenderTargetSettings().forEach((index, settings) ->
 			Iris.logger.debug("Render target settings for colortex" + index + ": " + settings));
-	}
-
-	public Optional<ProgramSource> getShadow() {
-		return shadow.requireValid();
 	}
 
 	public ProgramSource[] getShadowComposite() {

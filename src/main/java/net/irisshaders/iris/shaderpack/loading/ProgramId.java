@@ -8,9 +8,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 public enum ProgramId {
-	Shadow(ProgramGroup.Shadow, ""),
-	ShadowSolid(ProgramGroup.Shadow, "solid", Shadow),
-	ShadowCutout(ProgramGroup.Shadow, "cutout", Shadow),
+	Shadow(ProgramGroup.Shadow, "", BlendModeOverride.OFF),
+	ShadowSolid(ProgramGroup.Shadow, "solid", Shadow, BlendModeOverride.OFF),
+	ShadowCutout(ProgramGroup.Shadow, "cutout", Shadow, BlendModeOverride.OFF),
 
 	Basic(ProgramGroup.Gbuffers, "basic"),
 	Line(ProgramGroup.Gbuffers, "line", Basic),
@@ -62,6 +62,13 @@ public enum ProgramId {
 		this.sourceName = name.isEmpty() ? group.getBaseName() : group.getBaseName() + "_" + name;
 		this.fallback = null;
 		this.defaultBlendOverride = null;
+	}
+
+	ProgramId(ProgramGroup group, String name, BlendModeOverride defaultBlendOverride) {
+		this.group = group;
+		this.sourceName = name.isEmpty() ? group.getBaseName() : group.getBaseName() + "_" + name;
+		this.fallback = null;
+		this.defaultBlendOverride = defaultBlendOverride;
 	}
 
 	ProgramId(ProgramGroup group, String name, ProgramId fallback) {
