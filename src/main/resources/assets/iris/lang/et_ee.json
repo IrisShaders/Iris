@@ -11,6 +11,7 @@
   "iris.shaders.ssbofailure": "Varjutaja taotles konkreetset funktsiooni (SSBO), mis ei ole sinu videokaardi poolt toetatud, see ei pruugi korrektselt töötada.",
   "iris.keybind.reload": "Laadi varjutajad uuesti",
   "iris.keybind.shaderPackSelection": "Varjutajapaki valikukuva",
+  "iris.keybind.wireframe": "Traatraam (ainult üksikmäng)",
   "iris.keybind.toggleShaders": "Lülita varjutajad sisse/välja",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Varjutajate taaslaadimine ebaõnnestus! Põhjus: %s",
