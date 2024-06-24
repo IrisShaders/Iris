@@ -33,11 +33,11 @@ public class BufferBuilderPolygonView implements QuadView {
 
 	@Override
 	public float u(int index) {
-		return MemoryUtil.memGetFloat(writePointers[index] + 12);
+		return MemoryUtil.memGetFloat(writePointers[index] + 16);
 	}
 
 	@Override
 	public float v(int index) {
-		return MemoryUtil.memGetFloat(writePointers[index] + 16);
+		return MemoryUtil.memGetFloat(writePointers[index] + 20);
 	}
 }
