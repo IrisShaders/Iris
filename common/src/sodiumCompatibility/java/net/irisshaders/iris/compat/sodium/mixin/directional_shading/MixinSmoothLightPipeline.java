@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SmoothLightPipeline.class)
 public class MixinSmoothLightPipeline {
 	@Inject(method = "applySidedBrightness", at = @At("HEAD"), cancellable = true)
-	private void iris$disableDirectionalShading(QuadLightData out, Direction face, boolean shade, CallbackInfo ci) {
+	private void iris$disableDirectionalShading(CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.shouldDisableDirectionalShading()) {
 			ci.cancel();
 		}

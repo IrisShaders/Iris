@@ -1,34 +1,20 @@
 plugins {
     id("idea")
     id("maven-publish")
-    id("net.neoforged.gradle.userdev") version "7.0.142"
+    id("net.neoforged.moddev") version "0.1.110"
     id("java-library")
 }
 
-base {
-    archivesName = "iris-neoforge-1.20.5"
-}
 
 val MINECRAFT_VERSION: String by rootProject.extra
 val NEOFORGE_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 base {
-    archivesName = "iris-neoforge-${MINECRAFT_VERSION}"
+    archivesName = "iris-neoforge"
 }
-
-if (file("src/main/resources/META-INF/accesstransformer.cfg").exists()) {
-    minecraft.accessTransformers {
-        file("src/main/resources/META-INF/accesstransformer.cfg")
-    }
-}
-
-jarJar.enable()
 
 sourceSets {
-    main.get().apply {
-        compileClasspath += project(":common").sourceSets.getByName("headers").output
-    }
 }
 
 repositories {
@@ -47,52 +33,42 @@ repositories {
                 url = uri("https://api.modrinth.com/maven")
             }
         }
-        //forRepositories(fg.repository) // Only add this if you're using ForgeGradle, otherwise remove this line
         filter {
             includeGroup("maven.modrinth")
         }
     }
-}
+    maven { url = uri("https://maven.neoforged.net/releases/") }
 
-tasks.build {
 }
 
 tasks.jar {
-    from(rootDir.resolve("LICENSE.md"))
+    from(rootDir.resolve("LICENSE")) }
 
-}
+neoForge {
+    // Specify the version of NeoForge to use.
+    version = NEOFORGE_VERSION
 
-runs {
-    configureEach {
-        modSource(project.sourceSets.main.get())
-    }
-    create("client") {
-        dependencies {
-
-            runtime("io.github.douira:glsl-transformer:2.0.1") {
-                isTransitive = false
-            }
-            runtime("org.anarres:jcpp:1.4.14") {
-                isTransitive = false
-            }
-            //runtime(project(":common").sourceSets.getByName("").output)
+    runs {
+        create("client") {
+            additionalRuntimeClasspath.add("io.github.douira:glsl-transformer:2.0.1")
+            additionalRuntimeClasspath.add("org.anarres:jcpp:1.4.14")
+            client()
         }
     }
 
-    create("data") {
-        programArguments.addAll("--mod", "iris", "--all", "--output", file("src/generated/resources/").getAbsolutePath(), "--existing", file("src/main/resources/").getAbsolutePath())
+    mods {
+        create("sodium") {
+            sourceSet(sourceSets.main.get())
+        }
     }
 }
 
+val localRuntime = configurations.create("localRuntime")
+
+val SODIUM_PATH = "sodium-neoforge-0.6.0-snapshot+mc1.21-local-modonly.jar"
+
 dependencies {
-    implementation("net.neoforged:neoforge:${NEOFORGE_VERSION}")
     compileOnly(project(":common"))
-    runtimeOnly("net.fabricmc:fabric_api_base:0.4.40+${MINECRAFT_VERSION}")
-    runtimeOnly("net.fabricmc:fabric_renderer_api_v1:3.2.12+${MINECRAFT_VERSION}")
-    runtimeOnly("net.fabricmc:fabric_rendering_data_attachment_v1:0.3.46+${MINECRAFT_VERSION}")
-    runtimeOnly("com.lodborg:interval-tree:1.0.0")
-    runtimeOnly("net.fabricmc:fabric_block_view_api_v2:1.0.8+${MINECRAFT_VERSION}")
-    implementation("org.antlr:antlr4-runtime:4.13.1")
 
     implementation("io.github.douira:glsl-transformer:2.0.1")
     jarJar("io.github.douira:glsl-transformer:[2.0.1,2.0.2]") {
@@ -102,14 +78,20 @@ dependencies {
     jarJar("org.anarres:jcpp:[1.4.14,1.4.15]") {
         isTransitive = false
     }
-    implementation(files(rootDir.resolve("custom_sodium").resolve("sodium-neoforge-1.21-0.6.0-snapshot+mc1.21-local-jarJar.jar")))
+    if (!rootDir.resolve("custom_sodium").resolve(SODIUM_PATH).exists()) {
+        throw IllegalStateException("Sodium jar doesn't exist!!! It needs to be at $SODIUM_PATH")
+    }
+    implementation(files(rootDir.resolve("custom_sodium").resolve(SODIUM_PATH)))
 
     compileOnly(files(rootDir.resolve("DHApi.jar")))
-    compileOnly("maven.modrinth:immersiveengineering:11mMmtHT")
 }
 
-tasks.jarJar {
-    archiveClassifier = "jarJar"
+// Sets up a dependency configuration called 'localRuntime'.
+// This configuration should be used instead of 'runtimeOnly' to declare
+// a dependency that will be present for runtime testing but that is
+// "optional", meaning it will not be pulled by dependents of this mod.
+configurations {
+    runtimeClasspath.get().extendsFrom(localRuntime)
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code
@@ -117,14 +99,12 @@ val notNeoTask: (Task) -> Boolean = { it: Task -> !it.name.startsWith("neo") && 
 
 tasks.withType<JavaCompile>().matching(notNeoTask).configureEach {
     source(project(":common").sourceSets.main.get().allSource)
-    source(project(":common").sourceSets.getByName("sodiumCompatibility").allSource)
     source(project(":common").sourceSets.getByName("vendored").allSource)
+    source(project(":common").sourceSets.getByName("sodiumCompatibility").allSource)
 }
 
 tasks.withType<Javadoc>().matching(notNeoTask).configureEach {
     source(project(":common").sourceSets.main.get().allJava)
-    source(project(":common").sourceSets.getByName("sodiumCompatibility").allJava)
-    source(project(":common").sourceSets.getByName("vendored").allJava)
 }
 
 tasks.withType<ProcessResources>().matching(notNeoTask).configureEach {
