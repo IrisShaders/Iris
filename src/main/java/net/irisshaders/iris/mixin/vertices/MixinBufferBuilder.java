@@ -74,7 +74,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	@Unique
 	private boolean injectNormalAndUV1;
 	@Unique
-	private int vertexCount;
+	private int iris$vertexCount;
 	@Unique
 	private short currentBlock = -1;
 	@Unique
@@ -172,10 +172,10 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.MID_TEXTURE_ELEMENT.mask();
 		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.TANGENT_ELEMENT.mask();
 
-		vertexCount++;
+		iris$vertexCount++;
 
-		if (mode == VertexFormat.Mode.QUADS && vertexCount == 4 || mode == VertexFormat.Mode.TRIANGLES && vertexCount == 3) {
-			fillExtendedData(vertexCount);
+		if (mode == VertexFormat.Mode.QUADS && iris$vertexCount == 4 || mode == VertexFormat.Mode.TRIANGLES && iris$vertexCount == 3) {
+			fillExtendedData(iris$vertexCount);
 		}
 	}
 
@@ -199,7 +199,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 
 	@Unique
 	private void fillExtendedData(int vertexAmount) {
-		vertexCount = 0;
+		iris$vertexCount = 0;
 
 		int stride = format.getVertexSize();
 

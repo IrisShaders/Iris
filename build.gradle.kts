@@ -33,6 +33,7 @@ repositories {
             includeGroup("maven.modrinth")
         }
     }
+    maven("https://maven.covers1624.net/")
 }
 
 plugins {
@@ -53,6 +54,21 @@ base {
 }
 
 loom {
+    runs {
+        create("clientWithQuickplay") {
+            client()
+            isIdeConfigGenerated = true
+            programArgs("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient")
+            mainClass.set("net.covers1624.devlogin.DevLogin")
+            projectDir.resolve("run").resolve("mods").resolve(Constants.MINECRAFT_VERSION).mkdirs()
+            vmArgs("-Dfabric.modsFolder=" + projectDir.resolve("run").resolve("mods").resolve(Constants.MINECRAFT_VERSION).absolutePath)
+            programArgs("--quickPlaySingleplayer", "World For " + Constants.MINECRAFT_VERSION)
+            if (Constants.ACTIVATE_RENDERDOC && DefaultNativePlatform.getCurrentOperatingSystem().isLinux) {
+                environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
+            }
+        }
+    }
+
     mixin {
         useLegacyMixinAp = false
     }
@@ -134,6 +150,7 @@ dependencies {
     minecraft(group = "com.mojang", name = "minecraft", version = Constants.MINECRAFT_VERSION)
     mappings(loom.officialMojangMappings())
     modImplementation(group = "net.fabricmc", name = "fabric-loader", version = Constants.FABRIC_LOADER_VERSION)
+    localRuntime("net.covers1624:DevLogin:0.1.0.5")
 
     include("org.antlr:antlr4-runtime:4.13.1")
     modImplementation("org.antlr:antlr4-runtime:4.13.1")
@@ -174,6 +191,7 @@ tasks {
         }
         jvmArgs("-Dmixin.debug.export=true")
     }
+
     getByName<JavaCompile>("compileDesktopJava") {
         sourceCompatibility = JavaVersion.VERSION_1_8.toString()
         targetCompatibility = JavaVersion.VERSION_1_8.toString()
