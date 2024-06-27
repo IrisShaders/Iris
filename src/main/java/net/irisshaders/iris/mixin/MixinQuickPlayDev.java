@@ -30,7 +30,7 @@ public class MixinQuickPlayDev {
 				minecraft.createWorldOpenFlows().createFreshLevel(string, new LevelSettings(string, GameType.CREATIVE, false, Difficulty.HARD, true, new GameRules(), WorldDataConfiguration.DEFAULT),
 					WorldOptions.defaultWithRandomSeed(), WorldPresets::createNormalWorldDimensions, Minecraft.getInstance().screen);
 			} else {
-				minecraft.createWorldOpenFlows().checkForBackupAndLoad(string, () -> minecraft.setScreen(new TitleScreen()));
+				minecraft.createWorldOpenFlows().openWorld(string, () -> minecraft.setScreen(new TitleScreen()));
 			}
 		}
 	}
