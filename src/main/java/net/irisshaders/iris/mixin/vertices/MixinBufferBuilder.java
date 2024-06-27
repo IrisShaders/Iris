@@ -162,7 +162,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		}
 
 
-		vertexPointers[vertexCount] = vertexPointer;
+		vertexPointers[iris$vertexCount] = vertexPointer;
 
 		if (injectNormalAndUV1 && this.elementsToFill != (this.elementsToFill & ~VertexFormatElement.NORMAL.mask())) {
 			this.setNormal(0, 0, 0);
