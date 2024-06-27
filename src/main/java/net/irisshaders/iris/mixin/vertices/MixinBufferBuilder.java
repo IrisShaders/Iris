@@ -48,7 +48,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 	@Unique
 	private boolean injectNormalAndUV1;
 	@Unique
-	private int vertexCount;
+	private int iris$vertexCount;
 	@Unique
 	private short currentBlock = -1;
 	@Unique
@@ -127,7 +127,7 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 
 	@Inject(method = "reset()V", at = @At("HEAD"))
 	private void iris$onReset(CallbackInfo ci) {
-		vertexCount = 0;
+		iris$vertexCount = 0;
 	}
 
 	@Inject(method = "endVertex", at = @At("HEAD"))
@@ -171,16 +171,16 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 			this.nextElement();
 		}
 
-		vertexCount++;
+		iris$vertexCount++;
 
-		if (mode == VertexFormat.Mode.QUADS && vertexCount == 4 || mode == VertexFormat.Mode.TRIANGLES && vertexCount == 3) {
-			fillExtendedData(vertexCount);
+		if (mode == VertexFormat.Mode.QUADS && iris$vertexCount == 4 || mode == VertexFormat.Mode.TRIANGLES && iris$vertexCount == 3) {
+			fillExtendedData(iris$vertexCount);
 		}
 	}
 
 	@Unique
 	private void fillExtendedData(int vertexAmount) {
-		vertexCount = 0;
+		iris$vertexCount = 0;
 
 		int stride = format.getVertexSize();
 
@@ -289,17 +289,17 @@ public abstract class MixinBufferBuilder extends DefaultedVertexConsumer impleme
 
 	@Override
 	public int iris$vertexCount() {
-		return vertexCount;
+		return iris$vertexCount;
 	}
 
 	@Override
 	public void iris$incrementVertexCount() {
-		vertexCount++;
+		iris$vertexCount++;
 	}
 
 	@Override
 	public void iris$resetVertexCount() {
-		vertexCount = 0;
+		iris$vertexCount = 0;
 	}
 
 	@Override
