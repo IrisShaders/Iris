@@ -55,21 +55,21 @@ public class MixinLevelRenderer_SkipRendering {
 		}
 	}
 
-	@Redirect(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;entitiesForRendering()Ljava/lang/Iterable;"))
-	private Iterable<Entity> skipRenderEntities(ClientLevel instance) {
+	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;entitiesForRendering()Ljava/lang/Iterable;"))
+	private Iterable<Entity> skipRenderEntities(ClientLevel instance, Operation<Iterable<Entity>> original) {
 		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline pipeline && pipeline.skipAllRendering()) {
 			return Collections.emptyList();
 		} else {
-			return instance.entitiesForRendering();
+			return original.call(instance);
 		}
 	}
 
-	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;visibleSections:Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"))
-	private ObjectArrayList<SectionRenderDispatcher.RenderSection> skipLocalBlockEntities(LevelRenderer instance) {
+	@WrapOperation(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;visibleSections:Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"))
+	private ObjectArrayList<SectionRenderDispatcher.RenderSection> skipLocalBlockEntities(LevelRenderer instance, Operation<ObjectArrayList<SectionRenderDispatcher.RenderSection>> original) {
 		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline pipeline && pipeline.skipAllRendering()) {
 			return EMPTY_LIST;
 		} else {
-			return this.visibleSections;
+			return original.call(instance);
 		}
 	}
 
