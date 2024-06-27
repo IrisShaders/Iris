@@ -43,6 +43,7 @@
     "MixinProgram",
     "MixinProgramManager",
     "MixinProgramType",
+    "MixinQuickPlayDev",
     "MixinRenderSystem",
     "MixinRenderTarget",
     "MixinScreenEffectRenderer",
