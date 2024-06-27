@@ -35,7 +35,11 @@ public class PropertiesPreprocessor {
 			}
 
 			for (StringPair envDefine : environmentDefines) {
-				pp.addMacro(envDefine.key(), envDefine.value());
+				if (envDefine.value().isEmpty()) {
+					pp.addMacro(envDefine.key());
+				} else {
+					pp.addMacro(envDefine.key(), envDefine.value());
+				}
 			}
 
 			stringValues.forEach((name, value) -> {
