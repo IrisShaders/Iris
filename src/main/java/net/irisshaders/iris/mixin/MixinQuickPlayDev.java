@@ -3,10 +3,12 @@ package net.irisshaders.iris.mixin;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
+import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.quickplay.QuickPlay;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
@@ -28,9 +30,10 @@ public class MixinQuickPlayDev {
 
 			if (!minecraft.getLevelSource().levelExists(string)) {
 				minecraft.createWorldOpenFlows().createFreshLevel(string, new LevelSettings(string, GameType.CREATIVE, false, Difficulty.HARD, true, new GameRules(), WorldDataConfiguration.DEFAULT),
-					WorldOptions.defaultWithRandomSeed(), WorldPresets::createNormalWorldDimensions, Minecraft.getInstance().screen);
+					WorldOptions.defaultWithRandomSeed(), WorldPresets::createNormalWorldDimensions);
 			} else {
-				minecraft.createWorldOpenFlows().checkForBackupAndLoad(string, () -> minecraft.setScreen(new TitleScreen()));
+				minecraft.forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
+				minecraft.createWorldOpenFlows().loadLevel(new TitleScreen(), string);
 			}
 		}
 	}
