@@ -23,8 +23,8 @@ public class MixinEntityRenderer<T extends Entity> {
 	@Unique
 	private int lastId = -100;
 
-	@Inject(method = "renderNameTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getNameTagOffsetY()F"))
-	private void setNameTagId(T entity, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, CallbackInfo ci) {
+	@Inject(method = "renderNameTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewYRot(F)F"))
+	private void setNameTagId(T entity, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, float f, CallbackInfo ci) {
 		Object2IntFunction<NamespacedId> entityIds = WorldRenderingSettings.INSTANCE.getEntityIds();
 
 		if (entityIds == null) {
@@ -39,7 +39,7 @@ public class MixinEntityRenderer<T extends Entity> {
 	}
 
 	@Inject(method = "renderNameTag", at = @At("RETURN"))
-	private void resetId(T entity, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, CallbackInfo ci) {
+	private void resetId(T entity, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, float f, CallbackInfo ci) {
 		if (lastId != -100) {
 			CapturedRenderingState.INSTANCE.setCurrentEntity(lastId);
 			lastId = -100	;
