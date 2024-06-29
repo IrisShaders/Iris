@@ -66,20 +66,20 @@ public class MixinLevelRenderer_SkipRendering {
 	}
 
 	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderChunksInFrustum:Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"))
-	private ObjectArrayList<LevelRenderer.RenderChunkInfo> skipLocalBlockEntities(LevelRenderer instance) {
+	private ObjectArrayList<LevelRenderer.RenderChunkInfo> skipLocalBlockEntities(LevelRenderer instance, Operation<ObjectArrayList<SectionRenderDispatcher.RenderSection>> original) {
 		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline pipeline && pipeline.skipAllRendering()) {
 			return EMPTY_LIST;
 		} else {
-			return this.renderChunksInFrustum;
+			return original.call(instance);
 		}
 	}
 
-	@Redirect(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;globalBlockEntities:Ljava/util/Set;"))
-	private Set<BlockEntity> skipGlobalBlockEntities(LevelRenderer instance) {
+	@WrapOperation(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LevelRenderer;globalBlockEntities:Ljava/util/Set;"))
+	private Set<BlockEntity> skipGlobalBlockEntities(LevelRenderer instance, Operation<Set<BlockEntity>> original) {
 		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline pipeline && pipeline.skipAllRendering()) {
 			return Collections.emptySet();
 		} else {
-			return this.globalBlockEntities;
+			return original.call(instance);
 		}
 	}
 }
