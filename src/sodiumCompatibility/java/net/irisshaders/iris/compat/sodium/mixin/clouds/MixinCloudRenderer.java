@@ -67,7 +67,7 @@ public abstract class MixinCloudRenderer {
 	@Shadow
 	private CloudStatus cloudRenderMode;
 
-	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/DimensionSpecialEffects;getCloudHeight()F"), cancellable = true)
 	private void buildIrisVertexBuffer(ClientLevel level, LocalPlayer player, PoseStack matrices, Matrix4f projectionMatrix, float ticks, float tickDelta, double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			ci.cancel();
