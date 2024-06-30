@@ -3,6 +3,7 @@ package net.irisshaders.iris.mixin.forge;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.pathways.LightningHandler;
+import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,7 +31,7 @@ public class MixinRenderMekasuit {
 		"Lmekanism/client/render/armor/MekaSuitArmor;render(Lnet/minecraft/client/model/HumanoidModel;Lnet/minecraft/client/renderer/MultiBufferSource;Lcom/mojang/blaze3d/vertex/PoseStack;IILmekanism/common/lib/Color;ZLnet/minecraft/world/entity/LivingEntity;Ljava/util/Map;Z)V"
 	}, at = @At(value = "FIELD", target = "Lmekanism/client/render/MekanismRenderType;MEKASUIT:Lnet/minecraft/client/renderer/RenderType;"))
 	private RenderType doNotSwitchShaders() {
-		if (IrisApi.getInstance().isShaderPackInUse()) {
+		if (IrisApi.getInstance().isShaderPackInUse() && ImmediateState.isRenderingLevel) {
 			return LightningHandler.MEKASUIT;
 		} else {
 			return (RenderType) MEKASUIT;

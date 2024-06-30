@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import net.fabricmc.loader.api.FabricLoader;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinQuickPlayDev {
 	@Inject(method = "joinSingleplayerWorld", at = @At("HEAD"), cancellable = true)
 	private static void iris$createWorldIfDev(Minecraft minecraft, String string, CallbackInfo ci) {
-		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+		if (IrisPlatformHelpers.getInstance().isDevelopmentEnvironment()) {
 			ci.cancel();
 
 			if (!minecraft.getLevelSource().levelExists(string)) {
