@@ -22,5 +22,6 @@ public class MixinSheets {
 		((BlendingStateHolder) ARMOR_TRIMS_SHEET_TYPE).setTransparencyType(TransparencyType.OPAQUE_DECAL);
 		((BlendingStateHolder) RenderType.textBackground()).setTransparencyType(TransparencyType.OPAQUE);
 		((BlendingStateHolder) RenderType.textBackgroundSeeThrough()).setTransparencyType(TransparencyType.OPAQUE);
+		((BlendingStateHolder) RenderType.dragonRaysDepth()).setTransparencyType(TransparencyType.DECAL);
 	}
 }
