@@ -143,7 +143,6 @@ dependencies {
     runtimeOnly(fg.deobf("dev.su5ed.sinytra.fabric-api:fabric-api-base:0.4.31+ef105b4977"))
     runtimeOnly(fg.deobf("dev.su5ed.sinytra.fabric-api:fabric-renderer-api-v1:3.2.1+1d29b44577"))
     runtimeOnly(fg.deobf("dev.su5ed.sinytra.fabric-api:fabric-rendering-data-attachment-v1:0.3.37+a6081afc77"))
-    minecraftLibrary("com.lodborg:interval-tree:1.0.0")
     runtimeOnly(fg.deobf("dev.su5ed.sinytra.fabric-api:fabric-block-view-api-v2:1.0.1+0767707077"))
     implementation(fg.deobf("net.caffeinemc:sodium-forge:0.6.0"))
     compileOnly(files(rootDir.resolve("DHApi.jar")))

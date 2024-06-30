@@ -33,4 +33,3 @@ mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/min
 accessible class net/minecraft/client/gui/components/AbstractSelectionList$Entry
 accessible field com/mojang/blaze3d/platform/GlStateManager$BooleanState enabled Z
 accessible method com/mojang/blaze3d/shaders/Program getId ()I
-accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z

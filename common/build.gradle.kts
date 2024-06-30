@@ -3,7 +3,7 @@ import net.fabricmc.loom.task.AbstractRemapJarTask
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.6.6"
+    id("fabric-loom") version "1.7.1"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
@@ -31,8 +31,8 @@ buildConfig {
 }
 
 // This trick hides common tasks in the IDEA list.
-tasks.forEach {
-    it.group = null
+tasks.configureEach {
+    this.group = null
 }
 
 dependencies {
@@ -50,8 +50,8 @@ dependencies {
     modCompileOnly(files(rootDir.resolve("DHApi.jar")))
 }
 
-tasks.withType<AbstractRemapJarTask>().forEach {
-    it.targetNamespace = "named"
+tasks.withType<AbstractRemapJarTask>().configureEach {
+    this.targetNamespace = "named"
 }
 
 sourceSets {
