@@ -193,9 +193,9 @@ public class ProgramSet implements ProgramSetInterface {
 		List<ProgramSource> programs = new ArrayList<>();
 		List<ComputeSource> computes = new ArrayList<>();
 
-		for (ProgramSource[] sources : compositePrograms.values()) {
-			programs.addAll(Arrays.asList(sources));
-		}
+		programs.addAll(Arrays.asList(getComposite(ProgramArrayId.ShadowComposite)));
+		programs.addAll(Arrays.asList(getComposite(ProgramArrayId.Begin)));
+		programs.addAll(Arrays.asList(getComposite(ProgramArrayId.Prepare)));
 
 		for (ComputeSource[][] sources : computePrograms.values()) {
 			for (ComputeSource[] source : sources) {
@@ -210,6 +210,9 @@ public class ProgramSet implements ProgramSetInterface {
 				computes.add(computeSource);
 			}
 		}
+
+		programs.addAll(Arrays.asList(getComposite(ProgramArrayId.Deferred)));
+		programs.addAll(Arrays.asList(getComposite(ProgramArrayId.Composite)));
 
 		Collections.addAll(computes, finalCompute);
 		Collections.addAll(computes, shadowCompute);
