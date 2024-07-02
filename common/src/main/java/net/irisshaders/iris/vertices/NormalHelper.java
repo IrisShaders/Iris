@@ -426,6 +426,10 @@ public abstract class NormalHelper {
 		tangenty *= tcoeff;
 		tangentz *= tcoeff;
 
+		if (tangentx == 0.0f && tangenty == 0.0f && tangentz == 0.0f) {
+			return -1;
+		}
+
 		float bitangentx = f * (-deltaU2 * edge1x + deltaU1 * edge2x);
 		float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
 		float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
