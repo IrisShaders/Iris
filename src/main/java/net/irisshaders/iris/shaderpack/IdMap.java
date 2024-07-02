@@ -1,9 +1,6 @@
 package net.irisshaders.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
@@ -18,6 +15,7 @@ import net.irisshaders.iris.shaderpack.materialmap.BlockRenderType;
 import net.irisshaders.iris.shaderpack.materialmap.Entry;
 import net.irisshaders.iris.shaderpack.materialmap.LegacyIdMap;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
+import net.irisshaders.iris.shaderpack.materialmap.TagEntry;
 import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
@@ -56,7 +54,12 @@ public class IdMap {
 	/**
 	 * Maps block states to block ids defined in block.properties
 	 */
-	private Int2ObjectLinkedOpenHashMap<List<Entry>> blockPropertiesMap;
+	private Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockPropertiesMap;
+
+	/**
+	 * Maps tags to block ids defined in block.properties
+	 */
+	private Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap;
 
 	/**
 	 * A set of render type overrides for specific blocks. Allows shader packs to move blocks to different render types.
@@ -71,7 +74,8 @@ public class IdMap {
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
 
 		loadProperties(shaderPath, "block.properties", shaderPackOptions, environmentDefines).ifPresent(blockProperties -> {
-			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
+			blockTagMap = new Int2ObjectLinkedOpenHashMap<>();
+			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties", blockTagMap);
 			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});
 
@@ -193,8 +197,9 @@ public class IdMap {
 		return Object2IntMaps.unmodifiable(idMap);
 	}
 
-	private static Int2ObjectLinkedOpenHashMap<List<Entry>> parseBlockMap(Properties properties, String keyPrefix, String fileName) {
-		Int2ObjectLinkedOpenHashMap<List<Entry>> entriesById = new Int2ObjectLinkedOpenHashMap<>();
+	private static Int2ObjectLinkedOpenHashMap<List<BlockEntry>> parseBlockMap(Properties properties, String keyPrefix, String fileName, Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap) {
+		Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockEntriesById = new Int2ObjectLinkedOpenHashMap<>();
+		Int2ObjectLinkedOpenHashMap<List<TagEntry>> tagEntriesById = new Int2ObjectLinkedOpenHashMap<>();
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -215,7 +220,8 @@ public class IdMap {
 				return;
 			}
 
-			List<Entry> entries = new ArrayList<>();
+			List<BlockEntry> blockEntries = new ArrayList<>();
+			List<TagEntry> tagEntries = new ArrayList<>();
 
 			// Split on whitespace groups, not just single spaces
 			for (String part : value.split("\\s+")) {
@@ -224,16 +230,24 @@ public class IdMap {
 				}
 
 				try {
-					entries.add(BlockEntry.parse(part));
+					Entry entry = BlockEntry.parse(part);
+					if (entry instanceof BlockEntry be) {
+						blockEntries.add(be);
+					} else if (entry instanceof TagEntry te) {
+						tagEntries.add(te);
+					}
 				} catch (Exception e) {
 					Iris.logger.warn("Unexpected error while parsing an entry from " + fileName + " for the key " + key + ":", e);
 				}
 			}
 
-			entriesById.put(intId, Collections.unmodifiableList(entries));
+			blockEntriesById.put(intId, Collections.unmodifiableList(blockEntries));
+			tagEntriesById.put(intId, Collections.unmodifiableList(tagEntries));
 		});
 
-		return entriesById;
+		blockTagMap.putAll(tagEntriesById);
+
+		return blockEntriesById;
 	}
 
 	/**
@@ -296,8 +310,12 @@ public class IdMap {
 		return overrides;
 	}
 
-	public Int2ObjectLinkedOpenHashMap<List<Entry>> getBlockProperties() {
+	public Int2ObjectLinkedOpenHashMap<List<BlockEntry>> getBlockProperties() {
 		return blockPropertiesMap;
+	}
+
+	public Int2ObjectLinkedOpenHashMap<List<TagEntry>> getTagEntries() {
+		return blockTagMap;
 	}
 
 	public Object2IntFunction<NamespacedId> getItemIdMap() {
@@ -327,11 +345,12 @@ public class IdMap {
 		return Objects.equals(itemIdMap, idMap.itemIdMap)
 			&& Objects.equals(entityIdMap, idMap.entityIdMap)
 			&& Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap)
+			&& Objects.equals(blockTagMap, idMap.blockTagMap)
 			&& Objects.equals(blockRenderTypeMap, idMap.blockRenderTypeMap);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockRenderTypeMap);
+		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockTagMap, blockRenderTypeMap);
 	}
 }
