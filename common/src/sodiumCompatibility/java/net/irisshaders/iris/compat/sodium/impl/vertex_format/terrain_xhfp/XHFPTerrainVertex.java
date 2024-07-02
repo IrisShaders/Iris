@@ -85,6 +85,14 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, ContextAwareVertex
 			vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v,
 			vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v);
 
+		if (tangent == -1) {
+			// Try calculating the second triangle
+			tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z,
+				vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v,
+				vertices[3].x, vertices[3].y, vertices[3].z, vertices[3].u, vertices[3].v,
+				vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v);
+		}
+
 		for (int i = 0; i < 4; i++) {
 			var vertex = vertices[i];
 
