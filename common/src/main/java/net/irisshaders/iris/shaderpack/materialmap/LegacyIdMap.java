@@ -18,7 +18,7 @@ public class LegacyIdMap {
 	private static final ImmutableList<String> WOOD_TYPES =
 		ImmutableList.of("oak", "birch", "jungle", "spruce", "acacia", "dark_oak");
 
-	public static void addLegacyValues(Int2ObjectLinkedOpenHashMap<List<Entry>> blockIdMap) {
+	public static void addLegacyValues(Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockIdMap) {
 		add(blockIdMap, 1, block("stone"), block("granite"), block("diorite"), block("andesite"));
 		add(blockIdMap, 2, block("grass_block"));
 		add(blockIdMap, 4, block("cobblestone"));
@@ -81,8 +81,8 @@ public class LegacyIdMap {
 		return new BlockEntry(new NamespacedId("minecraft", name), Collections.emptyMap());
 	}
 
-	private static void addMany(Int2ObjectLinkedOpenHashMap<List<Entry>> blockIdMap, int id, List<String> prefixes, Function<String, BlockEntry> toId) {
-		List<Entry> entries = new ArrayList<>();
+	private static void addMany(Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockIdMap, int id, List<String> prefixes, Function<String, BlockEntry> toId) {
+		List<BlockEntry> entries = new ArrayList<>();
 
 		for (String prefix : prefixes) {
 			entries.add(toId.apply(prefix));
@@ -91,7 +91,7 @@ public class LegacyIdMap {
 		blockIdMap.put(id, entries);
 	}
 
-	private static void add(Int2ObjectMap<List<Entry>> blockIdMap, int id, BlockEntry... entries) {
+	private static void add(Int2ObjectMap<List<BlockEntry>> blockIdMap, int id, BlockEntry... entries) {
 		blockIdMap.put(id, Arrays.asList(entries));
 	}
 }

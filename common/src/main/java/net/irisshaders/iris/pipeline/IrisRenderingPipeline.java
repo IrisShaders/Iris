@@ -850,7 +850,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		if (!initializedBlockIds) {
 			WorldRenderingSettings.INSTANCE.setBlockStateIds(
-				BlockMaterialMapping.createBlockStateIdMap(pack.getIdMap().getBlockProperties()));
+				BlockMaterialMapping.createBlockStateIdMap(pack.getIdMap().getBlockProperties(), pack.getIdMap().getTagEntries()));
 			WorldRenderingSettings.INSTANCE.setBlockTypeIds(BlockMaterialMapping.createBlockTypeMap(pack.getIdMap().getBlockRenderTypeMap()));
 			Minecraft.getInstance().levelRenderer.allChanged();
 			initializedBlockIds = true;
