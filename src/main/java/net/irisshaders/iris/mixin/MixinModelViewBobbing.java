@@ -117,6 +117,7 @@ public abstract class MixinModelViewBobbing {
 
 		instance.set(stack.last().pose());
 
+		float f = deltaTracker.getGameTimeDeltaPartialTick(false);
 		float h = this.minecraft.options.screenEffectScale().get().floatValue();
 		float i = Mth.lerp(f, this.minecraft.player.oSpinningEffectIntensity, this.minecraft.player.spinningEffectIntensity) * h * h;
 		if (i > 0.0F) {
