@@ -32,6 +32,10 @@ public class IrisDefines {
 			define(s, "CAT_" + categories[i].name().toUpperCase(Locale.ROOT), String.valueOf(i));
 		}
 
+		define(s, "PPT_NONE", "0");
+		define(s, "PPT_RAIN", "1");
+		define(s, "PPT_SNOW", "2");
+
 		return ImmutableList.copyOf(s);
 	}
 }

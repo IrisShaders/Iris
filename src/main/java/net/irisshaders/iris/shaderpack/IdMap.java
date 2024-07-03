@@ -72,9 +72,9 @@ public class IdMap {
 
 		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions, environmentDefines)
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
+		blockTagMap = new Int2ObjectLinkedOpenHashMap<>();
 
 		loadProperties(shaderPath, "block.properties", shaderPackOptions, environmentDefines).ifPresent(blockProperties -> {
-			blockTagMap = new Int2ObjectLinkedOpenHashMap<>();
 			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties", blockTagMap);
 			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});

@@ -3,6 +3,7 @@ package kroppeb.stareval.function;
 import kroppeb.stareval.expression.Expression;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public interface TypedFunction {
@@ -52,6 +53,19 @@ public interface TypedFunction {
 
 		public boolean constant() {
 			return this.isConstant;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Parameter p) {
+				return Objects.equals(type, p.type) && Objects.equals(isConstant, p.isConstant);
+			}
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hashCode(type) + 3192 + Objects.hashCode(isConstant);
 		}
 	}
 }

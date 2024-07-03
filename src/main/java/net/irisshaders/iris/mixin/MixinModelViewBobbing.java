@@ -3,12 +3,18 @@ package net.irisshaders.iris.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.OptionInstance;
+import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffects;
 import org.joml.Matrix4f;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.renderer.GameRenderer;
 import org.joml.Matrix4fc;
 import org.joml.Quaternionfc;
+import org.joml.Quaternionfc;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,6 +47,8 @@ public abstract class MixinModelViewBobbing {
 	@Shadow
 	@Final
 	private Camera mainCamera;
+	@Shadow
+	private int confusionAnimationTick;
 	@Unique
 	private Matrix4fc bobbingEffectsModel;
 
@@ -79,10 +87,18 @@ public abstract class MixinModelViewBobbing {
 		if (!areShadersOn) this.bobHurt(pGameRenderer0, pFloat1);
 	}
 
+
+	@Redirect(method = "renderLevel",
+		at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/OptionInstance;get()Ljava/lang/Object;", ordinal = 1))
+	private<T> T iris$disableConfusionWithShaders(OptionInstance<T> instance) {
+		return areShadersOn ? (T) (Object) 0.0 : instance.get();
+	}
+
 	@Redirect(method = "renderLevel",
 		at = @At(value = "INVOKE",
 			target = "Lorg/joml/Matrix4f;rotation(Lorg/joml/Quaternionfc;)Lorg/joml/Matrix4f;"))
-	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, Quaternionfc quat) {
+	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, Quaternionfc quat, DeltaTracker deltaTracker) {
 		if (!areShadersOn) {
 			instance.rotation(quat);
 
@@ -100,6 +116,20 @@ public abstract class MixinModelViewBobbing {
 		}
 
 		instance.set(stack.last().pose());
+
+		float h = this.minecraft.options.screenEffectScale().get().floatValue();
+		float i = Mth.lerp(f, this.minecraft.player.oSpinningEffectIntensity, this.minecraft.player.spinningEffectIntensity) * h * h;
+		if (i > 0.0F) {
+			int j = this.minecraft.player.hasEffect(MobEffects.CONFUSION) ? 7 : 20;
+			float k = 5.0F / (i * i + 5.0F) - i * 0.04F;
+			k *= k;
+			Vector3f vector3f = new Vector3f(0.0F, Mth.SQRT_OF_TWO / 2.0F, Mth.SQRT_OF_TWO / 2.0F);
+			float l = ((float)this.confusionAnimationTick + f) * (float)j * (float) (Math.PI / 180.0);
+			instance.rotate(l, vector3f);
+			instance.scale(1.0F / k, 1.0F, 1.0F);
+			instance.rotate(-l, vector3f);
+		}
+
 		instance.rotate(quat);
 
 		return instance;
