@@ -1,6 +1,7 @@
 package kroppeb.stareval.function;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public abstract class AbstractTypedFunction implements TypedFunction {
 	private final Type returnType;
@@ -40,5 +41,27 @@ public abstract class AbstractTypedFunction implements TypedFunction {
 	@Override
 	public int priority() {
 		return this.priority;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof AbstractTypedFunction func) {
+			return Objects.equals(returnType, func.returnType) &&
+				Arrays.equals(parameters, func.parameters) &&
+			priority == func.priority &&
+			isPure == func.isPure;
+		}
+
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(returnType, Arrays.hashCode(parameters), priority, isPure);
+	}
+
+	@Override
+	public String toString() {
+		return TypedFunction.format(this, "unknown");
 	}
 }
