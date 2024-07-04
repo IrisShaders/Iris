@@ -129,6 +129,8 @@ public class DHCompatInternal {
 			guiScale = Minecraft.getInstance().options.guiScale().get();
 		}
 
+		if (DhApi.Delayed.configs == null) return dhEnabled;
+
 		if ((dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() || guiScale != Minecraft.getInstance().options.guiScale().get())
 			&& IrisApi.getInstance().isShaderPackInUse()) {
 			guiScale = Minecraft.getInstance().options.guiScale().get();

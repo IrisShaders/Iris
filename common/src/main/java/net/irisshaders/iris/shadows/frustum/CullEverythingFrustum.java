@@ -6,7 +6,7 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import org.joml.Matrix4f;
 
-public class CullEverythingFrustum extends Frustum implements IDhApiShadowCullingFrustum {
+public class CullEverythingFrustum extends Frustum {
 	public CullEverythingFrustum() {
 		super(new Matrix4f(), new Matrix4f());
 	}
@@ -18,16 +18,6 @@ public class CullEverythingFrustum extends Frustum implements IDhApiShadowCullin
 	}
 
 	public boolean isVisible(AABB box) {
-		return false;
-	}
-
-	@Override
-	public void update(int worldMinBlockY, int worldMaxBlockY, Mat4f worldViewProjection) {
-
-	}
-
-	@Override
-	public boolean intersects(int lodBlockPosMinX, int lodBlockPosMinZ, int lodBlockWidth, int lodDetailLevel) {
 		return false;
 	}
 }

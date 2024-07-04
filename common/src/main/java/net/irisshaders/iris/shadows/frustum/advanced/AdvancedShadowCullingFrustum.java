@@ -31,7 +31,7 @@ import org.joml.Vector4f;
  * are not sensitive to the specific internal ordering of planes and corners, in order to avoid potential bugs at the
  * cost of slightly more computations.</p>
  */
-public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShadowCullingFrustum {
+public class AdvancedShadowCullingFrustum extends Frustum {
 	private static final int MAX_CLIPPING_PLANES = 13;
 	protected final BoxCuller boxCuller;
 	/**
@@ -68,8 +68,6 @@ public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShado
 	public double x;
 	public double y;
 	public double z;
-	private int worldMinYDH;
-	private int worldMaxYDH;
 	private int planeCount = 0;
 
 	public AdvancedShadowCullingFrustum(Matrix4fc playerView, Matrix4fc playerProjection, Vector3f shadowLightVectorFromOrigin,
@@ -383,16 +381,5 @@ public class AdvancedShadowCullingFrustum extends Frustum implements IDhApiShado
 		}
 
 		return true;
-	}
-
-	@Override
-	public void update(int worldMinBlockY, int worldMaxBlockY, Mat4f worldViewProjection) {
-		this.worldMinYDH = worldMinBlockY;
-		this.worldMaxYDH = worldMaxBlockY;
-	}
-
-	@Override
-	public boolean intersects(int lodBlockPosMinX, int lodBlockPosMinZ, int lodBlockWidth, int lodDetailLevel) {
-		return this.isVisible(lodBlockPosMinX, this.worldMinYDH, lodBlockPosMinZ, lodBlockPosMinX + lodBlockWidth, this.worldMaxYDH, lodBlockPosMinZ + lodBlockWidth) != 0;
 	}
 }
