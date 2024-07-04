@@ -49,4 +49,14 @@ public class ShaderAccess {
 
 		return GameRenderer.getPositionColorTexShader();
     }
+
+	public static ShaderInstance getMekasuitShader() {
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+
+		if (pipeline instanceof ShaderRenderingPipeline) {
+			return ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_ENTITIES_CUTOUT : ShaderKey.ENTITIES_TRANSLUCENT);
+		}
+
+		return GameRenderer.getRendertypeEntityCutoutShader();
+	}
 }
