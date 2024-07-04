@@ -599,9 +599,9 @@ public class ShaderProperties {
 	}
 
 	private static void handleBooleanValue(String key, String value, BooleanConsumer handler) {
-		if ("true".equals(value)) {
+		if ("true".equals(value) || "1".equals(value)) {
 			handler.accept(true);
-		} else if ("false".equals(value)) {
+		} else if ("false".equals(value) || "0".equals(value)) {
 			handler.accept(false);
 		} else {
 			Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
@@ -613,9 +613,9 @@ public class ShaderProperties {
 			return;
 		}
 
-		if ("true".equals(value)) {
+		if ("true".equals(value) || "1".equals(value)) {
 			handler.accept(OptionalBoolean.TRUE);
-		} else if ("false".equals(value)) {
+		} else if ("false".equals(value) || "0".equals(value)) {
 			handler.accept(OptionalBoolean.FALSE);
 		} else {
 			Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
