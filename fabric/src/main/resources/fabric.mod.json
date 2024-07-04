@@ -30,6 +30,7 @@
     "mixins.iris.vertexformat.json",
     "mixins.iris.bettermipmaps.json",
     "mixins.iris.compat.sodium.json",
+    "mixins.iris.compat.dh.json",
     "mixins.iris.fixes.maxfpscrash.json"
   ],
   "accessWidener": "iris.accesswidener",

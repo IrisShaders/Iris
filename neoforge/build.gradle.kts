@@ -23,6 +23,7 @@ mixin {
     //add(project(":common").sourceSets.getByName("sodiumCompatibility"), "iris.refmap.json")
     setIgnoreConstraints(true)
     config("mixins.iris.json")
+    config("mixins.iris.compat.dh.json")
     config("mixins.iris.compat.sodium.json")
     config("mixins.iris.vertexformat.json")
     config("iris-batched-entity-rendering.mixins.json")
