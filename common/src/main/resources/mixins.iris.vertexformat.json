@@ -4,6 +4,7 @@
   "package": "net.irisshaders.iris.mixin.vertices",
   "refmap": "iris.refmap.json",
   "compatibilityLevel": "JAVA_8",
+  "refmap": "iris.refmap.json",
   "client": [
     "MixinBufferBuilder",
     "MixinVertexFormat",

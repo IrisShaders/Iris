@@ -39,6 +39,21 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 	@Shadow
 	public abstract int getId();
 
+	@Shadow
+	@Final
+	private int programId;
+
+	@Shadow
+	@Final
+	private Program vertexProgram;
+
+	@Shadow
+	@Final
+	private Program fragmentProgram;
+
+	@Shadow
+	private static ShaderInstance lastAppliedShader;
+
 	@Redirect(method = "updateLocations",
 		at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", remap = false))
 	private void iris$redirectLogSpam(Logger logger, String message, Object arg1, Object arg2) {
@@ -58,9 +73,25 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 		}
 	}
 
-	@Inject(method = "apply", at = @At("TAIL"))
+	@Inject(method = "<init>", at = @At("RETURN"))
+	private void name(ResourceProvider resourceProvider, String string, VertexFormat vertexFormat, CallbackInfo ci) {
+		GLDebug.nameObject(KHRDebug.GL_PROGRAM, this.programId, string);
+		GLDebug.nameObject(KHRDebug.GL_SHADER, this.vertexProgram.getId(), string);
+		GLDebug.nameObject(KHRDebug.GL_SHADER, this.fragmentProgram.getId(), string);
+	}
+
+	@Inject(method = "apply", at = @At("HEAD"))
 	private void iris$lockDepthColorState(CallbackInfo ci) {
+		if (lastAppliedShader != null) {
+			lastAppliedShader.clear();
+			lastAppliedShader = null;
+		}
+	}
+
+	@Inject(method = "apply", at = @At("TAIL"))
+	private void onTail(CallbackInfo ci) {
 		if (((Object) this) instanceof ExtendedShader || ((Object) this) instanceof FallbackShader || !shouldOverrideShaders()) {
+			DepthColorStorage.unlockDepthColor();
 			return;
 		}
 
