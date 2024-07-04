@@ -39,6 +39,9 @@ config = "iris-batched-entity-rendering.mixins.json"
 config = "mixins.iris.compat.sodium.json"
 
 [[mixins]]
+config = "mixins.iris.compat.dh.json"
+
+[[mixins]]
 config = "mixins.iris.forge.json"
 
 [mods."sodium:options"]
