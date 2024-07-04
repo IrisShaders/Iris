@@ -4,6 +4,7 @@
   "package": "net.irisshaders.iris.mixin.forge",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "MixinInstancedIcosphere",
     "MixinItemBlockRenderTypes",
     "MixinShaderInstance",
     "MixinRenderFlame",

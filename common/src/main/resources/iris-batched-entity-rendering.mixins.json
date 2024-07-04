@@ -2,6 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.irisshaders.batchedentityrendering.mixin",
+  "refmap": "iris.refmap.json",
   "compatibilityLevel": "JAVA_8",
   "client": [
     "BufferSourceAccessor",

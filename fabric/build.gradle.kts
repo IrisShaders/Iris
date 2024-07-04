@@ -46,8 +46,11 @@ dependencies {
     addEmbeddedFabricModule("fabric-key-binding-api-v1")
 
     modImplementation("org.antlr:antlr4-runtime:4.13.1")
+    include("org.antlr:antlr4-runtime:4.13.1")
     modImplementation("io.github.douira:glsl-transformer:2.0.1")
+    include("io.github.douira:glsl-transformer:2.0.1")
     modImplementation("org.anarres:jcpp:1.4.14")
+    include("org.anarres:jcpp:1.4.14")
 
     modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-1.21-0.6.0-snapshot+mc1.21-local.jar")))
 

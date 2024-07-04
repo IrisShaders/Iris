@@ -16,7 +16,7 @@
     "issues": "https://github.com/IrisShaders/Iris/issues"
   },
   "license": "LGPL-3.0-only",
-  "icon": "assets/iris/iris-logo.png",
+  "icon": "iris-logo.png",
   "environment": "client",
   "entrypoints": {
     "modmenu": [
@@ -29,9 +29,7 @@
     "mixins.iris.fantastic.json",
     "mixins.iris.vertexformat.json",
     "mixins.iris.bettermipmaps.json",
-    "mixins.iris.compat.indigo.json",
     "mixins.iris.compat.sodium.json",
-    "mixins.iris.compat.indium.json",
     "mixins.iris.fixes.maxfpscrash.json"
   ],
   "accessWidener": "iris.accesswidener",

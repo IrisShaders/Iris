@@ -55,6 +55,9 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 	@Final
 	private Program fragmentProgram;
 
+	@Shadow
+	private static ShaderInstance lastAppliedShader;
+
 	@Redirect(method = "updateLocations",
 		at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", remap = false))
 	private void iris$redirectLogSpam(Logger logger, String message, Object arg1, Object arg2) {
@@ -81,9 +84,18 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 		GLDebug.nameObject(KHRDebug.GL_SHADER, this.fragmentProgram.getId(), string);
 	}
 
-	@Inject(method = "apply", at = @At("TAIL"))
+	@Inject(method = "apply", at = @At("HEAD"))
 	private void iris$lockDepthColorState(CallbackInfo ci) {
+		if (lastAppliedShader != null) {
+			lastAppliedShader.clear();
+			lastAppliedShader = null;
+		}
+	}
+
+	@Inject(method = "apply", at = @At("TAIL"))
+	private void onTail(CallbackInfo ci) {
 		if (((Object) this) instanceof ExtendedShader || ((Object) this) instanceof FallbackShader || !shouldOverrideShaders()) {
+			DepthColorStorage.unlockDepthColor();
 			return;
 		}
 
