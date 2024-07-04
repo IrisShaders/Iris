@@ -21,6 +21,7 @@ jarJar.enable()
 mixin {
     add(sourceSets.main.get(), "iris.refmap.json")
     //add(project(":common").sourceSets.getByName("sodiumCompatibility"), "iris.refmap.json")
+    setIgnoreConstraints(true)
     config("mixins.iris.json")
     config("mixins.iris.compat.sodium.json")
     config("mixins.iris.vertexformat.json")

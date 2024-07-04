@@ -1,9 +1,11 @@
 package net.irisshaders.iris.mixin;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
@@ -12,7 +14,9 @@ import net.irisshaders.iris.pipeline.programs.FallbackShader;
 import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceProvider;
+import org.lwjgl.opengl.KHRDebug;
 import org.slf4j.Logger;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
