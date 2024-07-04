@@ -27,7 +27,8 @@ public class SodiumTransformer {
 		replaceMidTexCoord(t, tree, root, 1.0f / 32768.0f);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
-		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "mat4(1.0)");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
 		root.rename("gl_ProjectionMatrix", "iris_ProjectionMatrix");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
@@ -179,7 +180,7 @@ public class SodiumTransformer {
 			"void _vert_init() {" +
 				"_vert_position = _decode_position(a_PositionHi, a_PositionLo);" +
 				"_vert_tex_diffuse_coord = _decode_texcoord(a_TexCoord);" +
-				"_vert_tex_light_coord = _decode_light(a_LightAndData.xy);" +
+				"_vert_tex_light_coord = vec2(a_LightAndData.xy);" +
 				"_vert_color = " + separateAo + ";" +
 				"_draw_id = a_LightAndData[3]; }",
 
