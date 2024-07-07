@@ -6,6 +6,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshAtt
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisChunkMeshAttributes;
+import net.irisshaders.iris.compat.sodium.impl.vertex_format.IrisGlVertexAttributeFormat;
 
 /**
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
@@ -14,16 +15,16 @@ public class XHFPModelVertexType implements ChunkVertexType {
 	public static final int STRIDE = 40;
 
 	public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, STRIDE)
-		.addElement(ChunkMeshAttribute.POSITION_HI, 0, GlVertexAttributeFormat.UNSIGNED_2_10_10_10_REV, 4, false, false)
-		.addElement(ChunkMeshAttribute.POSITION_LO, 4, GlVertexAttributeFormat.UNSIGNED_2_10_10_10_REV, 4, false, false)
+		.addElement(ChunkMeshAttribute.POSITION_HI, 0, GlVertexAttributeFormat.UNSIGNED_INT, 1, false, true)
+		.addElement(ChunkMeshAttribute.POSITION_LO, 4, GlVertexAttributeFormat.UNSIGNED_INT, 1, false, true)
 		.addElement(ChunkMeshAttribute.COLOR, 8, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, true, false)
-		.addElement(ChunkMeshAttribute.TEXTURE, 12, GlVertexAttributeFormat.SHORT, 2, false, false)
+		.addElement(ChunkMeshAttribute.TEXTURE, 12, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false, true)
 		.addElement(ChunkMeshAttribute.LIGHT_MATERIAL_INDEX, 16, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, false, true)
 		.addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 20, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false, false)
-		.addElement(IrisChunkMeshAttributes.TANGENT, 24, GlVertexAttributeFormat.BYTE, 4, true, false)
-		.addElement(IrisChunkMeshAttributes.NORMAL, 28, GlVertexAttributeFormat.BYTE, 3, true, false)
-		.addElement(IrisChunkMeshAttributes.BLOCK_ID, 32, GlVertexAttributeFormat.SHORT, 2, false, false)
-		.addElement(IrisChunkMeshAttributes.MID_BLOCK, 36, GlVertexAttributeFormat.BYTE, 4, false, false)
+		.addElement(IrisChunkMeshAttributes.TANGENT, 24, IrisGlVertexAttributeFormat.BYTE, 4, true, false)
+		.addElement(IrisChunkMeshAttributes.NORMAL, 28, IrisGlVertexAttributeFormat.BYTE, 3, true, false)
+		.addElement(IrisChunkMeshAttributes.BLOCK_ID, 32, IrisGlVertexAttributeFormat.SHORT, 2, false, false)
+		.addElement(IrisChunkMeshAttributes.MID_BLOCK, 36, IrisGlVertexAttributeFormat.BYTE, 4, false, false)
 		.build();
 
 	private static final int POSITION_MAX_VALUE = 65536;
