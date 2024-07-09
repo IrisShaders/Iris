@@ -3,7 +3,7 @@ import net.fabricmc.loom.task.AbstractRemapJarTask
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.6.6"
+    id("fabric-loom") version "1.7.2"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
@@ -31,8 +31,8 @@ buildConfig {
 }
 
 // This trick hides common tasks in the IDEA list.
-tasks.forEach {
-    it.group = null
+tasks.configureEach {
+    group = null
 }
 
 dependencies {
@@ -45,7 +45,7 @@ dependencies {
     modCompileOnly("io.github.douira:glsl-transformer:2.0.1")
     modCompileOnly("org.anarres:jcpp:1.4.14")
 
-    modCompileOnly(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-1.21-0.6.0-snapshot+mc1.21-local.jar")))
+    modCompileOnly(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc1.21-local.jar")))
 
     modCompileOnly(files(rootDir.resolve("DHApi.jar")))
 }

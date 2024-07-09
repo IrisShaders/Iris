@@ -1,7 +1,7 @@
 plugins {
     id("idea")
     id("maven-publish")
-    id("net.neoforged.moddev") version "0.1.110"
+    id("net.neoforged.moddev") version "0.1.126"
     id("java-library")
 }
 
@@ -50,8 +50,6 @@ neoForge {
 
     runs {
         create("client") {
-            additionalRuntimeClasspath.add("io.github.douira:glsl-transformer:2.0.1")
-            additionalRuntimeClasspath.add("org.anarres:jcpp:1.4.14")
             client()
         }
     }
@@ -65,16 +63,18 @@ neoForge {
 
 val localRuntime = configurations.create("localRuntime")
 
-val SODIUM_PATH = "sodium-neoforge-0.6.0-snapshot+mc1.21-local-modonly.jar"
+val SODIUM_PATH = "sodium-neoforge-0.6.0-snapshot+mc1.21-local.jar"
 
 dependencies {
     compileOnly(project(":common"))
 
     implementation("io.github.douira:glsl-transformer:2.0.1")
+    additionalRuntimeClasspath("io.github.douira:glsl-transformer:2.0.1")
     jarJar("io.github.douira:glsl-transformer:[2.0.1,2.0.2]") {
         isTransitive = false
     }
     implementation("org.anarres:jcpp:1.4.14")
+    additionalRuntimeClasspath("org.anarres:jcpp:1.4.14")
     jarJar("org.anarres:jcpp:[1.4.14,1.4.15]") {
         isTransitive = false
     }
@@ -114,13 +114,6 @@ tasks.withType<ProcessResources>().matching(notNeoTask).configureEach {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-publishing {
-    publications {
-
-    }
-    repositories {
-        maven {
-            url = uri("file://" + System.getenv("local_maven"))
-        }
-    }
+tasks.named("compileTestJava").configure {
+    enabled = false
 }

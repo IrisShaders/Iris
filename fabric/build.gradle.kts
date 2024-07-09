@@ -2,7 +2,7 @@ plugins {
     java
     idea
     `maven-publish`
-    id("fabric-loom") version("1.6.6")
+    id("fabric-loom") version("1.7.2")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -52,7 +52,7 @@ dependencies {
     modImplementation("org.anarres:jcpp:1.4.14")
     include("org.anarres:jcpp:1.4.14")
 
-    modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-1.21-0.6.0-snapshot+mc1.21-local.jar")))
+    modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc1.21-local.jar")))
 
     modCompileOnly(files(rootDir.resolve("DHApi.jar")))
 
