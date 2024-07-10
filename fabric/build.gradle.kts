@@ -9,6 +9,7 @@ val MINECRAFT_VERSION: String by rootProject.extra
 val FABRIC_LOADER_VERSION: String by rootProject.extra
 val FABRIC_API_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
+val SODIUM_FILE: String by rootProject.extra
 
 
 base {
@@ -52,7 +53,7 @@ dependencies {
     modImplementation("org.anarres:jcpp:1.4.14")
     include("org.anarres:jcpp:1.4.14")
 
-    modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc1.21-local.jar")))
+    modImplementation(files(rootDir.resolve("custom_sodium").resolve(SODIUM_FILE)))
 
     modCompileOnly(files(rootDir.resolve("DHApi.jar")))
 

@@ -11,6 +11,7 @@ val MINECRAFT_VERSION: String by rootProject.extra
 val FABRIC_LOADER_VERSION: String by rootProject.extra
 val FABRIC_API_VERSION: String by rootProject.extra
 val SODIUM_VERSION: String by rootProject.extra
+val SODIUM_FILE: String by rootProject.extra
 
 sourceSets.create("desktop")
 
@@ -45,7 +46,7 @@ dependencies {
     modCompileOnly("io.github.douira:glsl-transformer:2.0.1")
     modCompileOnly("org.anarres:jcpp:1.4.14")
 
-    modCompileOnly(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc1.21-local.jar")))
+    modCompileOnly(files(rootDir.resolve("custom_sodium").resolve(SODIUM_FILE)))
 
     modCompileOnly(files(rootDir.resolve("DHApi.jar")))
 }
