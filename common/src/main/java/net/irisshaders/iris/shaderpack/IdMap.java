@@ -253,7 +253,6 @@ public class IdMap {
 	/**
 	 * Parses a render layer map.
 	 * <p>
-	 * This feature is used by Chocapic v9 and Wisdom Shaders. Otherwise, it is a rarely-used feature.
 	 */
 	private static Map<NamespacedId, BlockRenderType> parseRenderTypeMap(Properties properties, String keyPrefix, String fileName) {
 		Map<NamespacedId, BlockRenderType> overrides = new HashMap<>();
@@ -278,6 +277,10 @@ public class IdMap {
 			}
 
 			for (String part : value.split("\\s+")) {
+				if (part.startsWith("%")) {
+					Iris.logger.fatal("Cannot use a tag in the render type map: " + key + " = " + value);
+					continue;
+				}
 				// Note: NamespacedId performs no validation on the content. That will need to be done by whatever is
 				//       converting these things to ResourceLocations.
 				overrides.put(new NamespacedId(part), renderType);
