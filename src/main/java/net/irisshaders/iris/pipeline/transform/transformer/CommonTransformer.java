@@ -11,6 +11,8 @@ import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessE
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
@@ -71,6 +73,8 @@ public class CommonTransformer {
 	private static final List<Long> replaceIndexes = new ArrayList<>();
 	private static final Template<ExternalDeclaration> inputDeclarationTemplate = Template.withExternalDeclaration(
 		"uniform int __name;");
+	private static final Template<ExternalDeclaration> inputDeclarationTemplateLayout = Template.withExternalDeclaration(
+		"layout (location = __index) uniform int __name;");
 
 	static {
 		fragDataDeclaration.markLocalReplacement("__index", ReferenceExpression.class);
@@ -83,6 +87,13 @@ public class CommonTransformer {
 		inputDeclarationTemplate.markLocalReplacement(
 			inputDeclarationTemplate.getSourceRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
 		inputDeclarationTemplate.markIdentifierReplacement("__name");
+
+		inputDeclarationTemplateLayout.markLocalReplacement("__index", ReferenceExpression.class);
+		inputDeclarationTemplateLayout.markLocalReplacement(
+			inputDeclarationTemplateLayout.getSourceRoot().nodeIndex.getOne(StorageQualifier.class));
+		inputDeclarationTemplateLayout.markLocalReplacement(
+			inputDeclarationTemplateLayout.getSourceRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
+		inputDeclarationTemplateLayout.markIdentifierReplacement("__name");
 	}
 
 	static void renameFunctionCall(Root root, String oldName, String newName) {
@@ -383,6 +394,18 @@ public class CommonTransformer {
 		if (root.externalDeclarationIndex.getStream(name)
 			.noneMatch((entry) -> entry.declaration() instanceof DeclarationExternalDeclaration)) {
 			tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inputDeclarationTemplate.getInstanceFor(root,
+				new StorageQualifier(storageType),
+				new BuiltinNumericTypeSpecifier(type),
+				new Identifier(name)));
+		}
+	}
+
+	public static void addIfNotExists(Root root, ASTParser t, TranslationUnit tree, String name, Type type,
+									  StorageType storageType, int location) {
+		if (root.externalDeclarationIndex.getStream(name)
+			.noneMatch((entry) -> entry.declaration() instanceof DeclarationExternalDeclaration)) {
+			tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, inputDeclarationTemplateLayout.getInstanceFor(root,
+				new LiteralExpression(Type.INT32, location),
 				new StorageQualifier(storageType),
 				new BuiltinNumericTypeSpecifier(type),
 				new Identifier(name)));
