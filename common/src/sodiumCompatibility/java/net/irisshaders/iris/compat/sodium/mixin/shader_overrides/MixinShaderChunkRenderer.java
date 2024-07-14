@@ -7,6 +7,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.ShaderChunkRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.compat.sodium.impl.shader_overrides.IrisChunkProgramOverrides;
 import net.irisshaders.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
 import net.irisshaders.iris.compat.sodium.impl.shader_overrides.ShaderChunkRendererExt;
@@ -45,7 +46,12 @@ public class MixinShaderChunkRenderer implements ShaderChunkRendererExt {
 	private void iris$begin(TerrainRenderPass pass, CallbackInfo ci) {
 		this.override = irisChunkProgramOverrides.getProgramOverride(pass, this.vertexType);
 
+
 		if (this.override == null) {
+			if (IrisApi.getInstance().isShaderPackInUse()) {
+				irisChunkProgramOverrides.bindFramebuffer(pass);
+			}
+
 			return;
 		}
 
