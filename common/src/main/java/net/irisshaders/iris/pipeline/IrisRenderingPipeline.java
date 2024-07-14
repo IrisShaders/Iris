@@ -1001,7 +1001,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
-		if (skyType == DimensionSpecialEffects.SkyType.NORMAL) {
+		if (skyType == DimensionSpecialEffects.SkyType.NORMAL || Minecraft.getInstance().level.dimensionType().hasSkyLight()) {
 			RenderSystem.depthMask(false);
 
 			RenderSystem.setShaderColor(fogColor.x, fogColor.y, fogColor.z, fogColor.w);
