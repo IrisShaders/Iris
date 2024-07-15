@@ -25,6 +25,7 @@
   },
   "mixins": [
     "mixins.iris.json",
+    "mixins.iris.fabric.json",
     "iris-batched-entity-rendering.mixins.json",
     "mixins.iris.fantastic.json",
     "mixins.iris.vertexformat.json",

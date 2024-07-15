@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.irisshaders.iris.mixin.fabric",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinDHCrashFix"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
