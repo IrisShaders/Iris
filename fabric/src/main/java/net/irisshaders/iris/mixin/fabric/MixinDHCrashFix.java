@@ -29,7 +29,7 @@ public class MixinDHCrashFix {
 	 * @author IMS
 	 * @reason see above
 	 */
-	@Overwrite
+	@Overwrite(remap = false)
 	public HashSet<DhChunkPos> getNormalRenderedChunks() {
 		SodiumWorldRenderer renderer = SodiumWorldRenderer.instance();
 		LevelHeightAccessor height = Minecraft.getInstance().level;
@@ -38,7 +38,7 @@ public class MixinDHCrashFix {
 		}).collect(Collectors.toCollection(HashSet::new));
 	}
 
-	@Overwrite
+	@Overwrite(remap = false)
 	public void setFogOcclusion(boolean b) {
 		SodiumClientMod.options().performance.useFogOcclusion = b;
 	}
