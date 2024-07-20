@@ -258,6 +258,8 @@ public class StandardMacros {
 			return "MC_GL_RENDERER_QUADRO";
 		} else if (renderer.startsWith("mesa")) {
 			return "MC_GL_RENDERER_MESA";
+		} else if (renderer.startsWith("apple")) {
+			return "MC_GL_RENDERER_APPLE";
 		}
 		return "MC_GL_RENDERER_OTHER";
 	}
