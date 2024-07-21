@@ -23,6 +23,7 @@ import kroppeb.stareval.function.TypedFunction;
 import kroppeb.stareval.function.TypedFunction.Parameter;
 import kroppeb.stareval.function.V2FFunction;
 import kroppeb.stareval.function.V2IFunction;
+import net.irisshaders.iris.Iris;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -490,20 +491,6 @@ public class IrisFunctions {
 											}
 											params[finalLength].evaluateTo(context, functionReturn);
 										}
-									}
-								});
-							}
-
-							for (Type type : VectorType.AllVectorTypes) {
-								add("if", new AbstractTypedFunction(type, new Type[]{Type.Boolean, type, type}) {
-									@Override
-									public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
-										params[0].evaluateTo(context, functionReturn);
-
-										params[
-											functionReturn.booleanReturn ? 1 : 2
-											].evaluateTo(context, functionReturn);
-
 									}
 								});
 							}

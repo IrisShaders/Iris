@@ -14,7 +14,7 @@ public enum FeatureFlags {
 	CUSTOM_IMAGES(() -> true, IrisRenderSystem::supportsImageLoadStore),
 	PER_BUFFER_BLENDING(() -> true, IrisRenderSystem::supportsBufferBlending),
 	COMPUTE_SHADERS(() -> true, IrisRenderSystem::supportsCompute),
-	TESSELATION_SHADERS(() -> true, IrisRenderSystem::supportsTesselation),
+	TESSELLATION_SHADERS(() -> true, IrisRenderSystem::supportsTesselation),
 	ENTITY_TRANSLUCENT(() -> true, () -> true),
 	REVERSED_CULLING(() -> true, () -> true),
 	BLOCK_EMISSION_ATTRIBUTE(() -> true, () -> true),
@@ -59,6 +59,11 @@ public enum FeatureFlags {
 	}
 
 	public static FeatureFlags getValue(String value) {
+		if (value.equalsIgnoreCase("TESSELATION_SHADERS")) {
+			// fix the sins of the past
+			value = "TESSELLATION_SHADERS";
+		}
+
 		try {
 			return FeatureFlags.valueOf(value.toUpperCase(Locale.US));
 		} catch (IllegalArgumentException e) {

@@ -24,16 +24,18 @@ import java.util.List;
 import java.util.Map;
 
 public class BlockMaterialMapping {
-	public static Object2IntMap<BlockState> createBlockStateIdMap(Int2ObjectLinkedOpenHashMap<List<Entry>> blockPropertiesMap) {
+	public static Object2IntMap<BlockState> createBlockStateIdMap(Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockPropertiesMap, Int2ObjectLinkedOpenHashMap<List<TagEntry>> tagPropertiesMap) {
 		Object2IntMap<BlockState> blockStateIds = new Object2IntLinkedOpenHashMap<>();
 
 		blockPropertiesMap.forEach((intId, entries) -> {
-			for (Entry entry : entries) {
-				if (entry instanceof BlockEntry blockEntry) {
-					addBlockStates(blockEntry, blockStateIds, intId);
-				} else if (entry instanceof TagEntry tagEntry) {
-					addTag(tagEntry, blockStateIds, intId);
-				}
+			for (BlockEntry entry : entries) {
+				addBlockStates(entry, blockStateIds, intId);
+			}
+		});
+
+		tagPropertiesMap.forEach((intId, entries) -> {
+			for (TagEntry entry : entries) {
+				addTag(entry, blockStateIds, intId);
 			}
 		});
 
