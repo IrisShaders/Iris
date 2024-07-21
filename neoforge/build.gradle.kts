@@ -1,4 +1,4 @@
-import net.minecraftforge.artifactural.api.artifact.ArtifactIdentifier
+plugins {
 
 plugins {
     id("idea")
