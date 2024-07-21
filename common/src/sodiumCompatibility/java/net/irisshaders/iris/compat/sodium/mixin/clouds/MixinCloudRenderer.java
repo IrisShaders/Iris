@@ -68,7 +68,7 @@ public abstract class MixinCloudRenderer {
 		return IrisApi.getInstance().isShaderPackInUse() ? 480 : size;
 	}
 
-	@ModifyArg(remap = false, method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;begin(Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 1)
+	@ModifyArg(method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;begin(Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 1)
 	private static VertexFormat rebuild(VertexFormat p_350837_) {
 		return IrisApi.getInstance().isShaderPackInUse() ? IrisVertexFormats.CLOUDS : p_350837_;
 	}
