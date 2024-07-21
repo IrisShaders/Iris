@@ -12,6 +12,7 @@ import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.texture.format.TextureFormat;
 import net.irisshaders.iris.texture.format.TextureFormatLoader;
 import net.minecraft.Util;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
@@ -43,6 +44,7 @@ public class StandardMacros {
 		ArrayList<StringPair> standardDefines = new ArrayList<>();
 
 		define(standardDefines, "MC_VERSION", getMcVersion());
+		define(standardDefines, "IRIS_VERSION", getFormattedIrisVersion());
 		define(standardDefines, "MC_GL_VERSION", getGlVersion(GL20C.GL_VERSION));
 		define(standardDefines, "MC_GLSL_VERSION", getGlVersion(GL20C.GL_SHADING_LANGUAGE_VERSION));
 		define(standardDefines, getOsString());
@@ -103,6 +105,7 @@ public class StandardMacros {
 		return ImmutableList.copyOf(standardDefines);
 	}
 
+
 	/**
 	 * Gets the current mc version String in a 5 digit format
 	 *
@@ -111,36 +114,78 @@ public class StandardMacros {
 	 */
 	public static String getMcVersion() {
 		String version = Iris.getReleaseTarget();
-
 		if (version == null) {
-			throw new IllegalStateException("Could not get the current minecraft version!");
+			throw new IllegalStateException("Could not get the current Minecraft version!");
 		}
-
-		String[] splitVersion = version.split("\\.");
-
-		if (splitVersion.length < 2) {
+		String formattedVersion = formatVersionString(version);
+		if (formattedVersion == null) {
 			Iris.logger.error("Could not parse game version \"" + version + "\"");
-			splitVersion = Iris.getBackupVersionNumber().split("\\.");
-		}
-
-		String major = splitVersion[0];
-		String minor = splitVersion[1];
-		String bugfix;
-
-		if (splitVersion.length < 3) {
-			bugfix = "00";
 		} else {
-			bugfix = splitVersion[2];
+			return formattedVersion;
 		}
+		String backupVersion = Iris.getBackupVersionNumber();
+		String formattedBackupVersion = formatVersionString(backupVersion);
+		if (formattedBackupVersion == null) {
+			throw new IllegalArgumentException("Could not parse backup game version \"" + version + "\"");
+		} else {
+			return formattedBackupVersion;
+		}
+	}
 
-		if (minor.length() == 1) {
-			minor = 0 + minor;
-		}
-		if (bugfix.length() == 1) {
-			bugfix = 0 + bugfix;
-		}
 
-		return major + minor + bugfix;
+	/**
+	 * Gets the current Iris version String in a 5 digit format
+	 *
+	 * @return The Iris version string
+	 *
+	 */
+	public static String getFormattedIrisVersion() {
+		String rawVersion = Iris.getVersion();
+		if (rawVersion == null) {
+			throw new IllegalArgumentException("Could not get current Iris version!");
+		}
+		Matcher matcher = SEMVER_PATTERN.matcher(rawVersion);
+		if (!matcher.matches()) {
+			throw new IllegalArgumentException("Could not parse semantic Iris version from \"" + rawVersion + "\"");
+		}
+		String major = matcher.group("major");
+		String minor = matcher.group("minor");
+		String bugFix = matcher.group("bugfix");
+		if (bugFix == null) {
+			bugFix = "0";
+		}
+		if (major == null || minor == null) {
+			throw new IllegalArgumentException("Could not parse semantic Iris version from \"" + rawVersion + "\"");
+		}
+		String irisSemver = "%s.%s.%s".formatted(major, minor, bugFix);
+		String formattedSemver = formatVersionString(irisSemver);
+		if (formattedSemver == null) {
+			throw new IllegalArgumentException("Could not get a valid semantic version string for Iris version \"" + irisSemver + "\"");
+		} else {
+			return formattedSemver;
+		}
+	}
+
+	/**
+	 *
+	 * Formats a semver string into a 122 format
+	 *
+	 * @param version The string version to format
+	 * @return the formatted version in a 122 format, or <b>null</b> if the string is not a valid semver string.
+	 */
+	@Nullable
+	public static String formatVersionString(String version) {
+		String[] splitVersion = version.split("\\.");
+		if (splitVersion.length < 2) {
+			return null;
+		}
+		String major = splitVersion[0];
+		String minor = splitVersion[1].length() == 1 ? 0 + splitVersion[1] : splitVersion[1];
+		String bugFix = splitVersion.length < 3 ? "00" : splitVersion[2];
+		if (bugFix.length() == 1) {
+			bugFix = 0 + bugFix;
+		}
+		return major + minor + bugFix;
 	}
 
 	/**
@@ -258,6 +303,8 @@ public class StandardMacros {
 			return "MC_GL_RENDERER_QUADRO";
 		} else if (renderer.startsWith("mesa")) {
 			return "MC_GL_RENDERER_MESA";
+		} else if (renderer.startsWith("apple")) {
+			return "MC_GL_RENDERER_APPLE";
 		}
 		return "MC_GL_RENDERER_OTHER";
 	}
