@@ -40,7 +40,7 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;cachedGeometry:Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer$CloudGeometry;", ordinal = 0))
+	@Redirect(remap = false, method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;cachedGeometry:Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer$CloudGeometry;", ordinal = 0))
 	private CloudRenderer.@Nullable CloudGeometry changeGeometry(CloudRenderer instance) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return cachedGeometryIris;
@@ -49,7 +49,7 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;cachedGeometry:Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer$CloudGeometry;", ordinal = 1))
+	@Redirect(remap = false, method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;cachedGeometry:Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer$CloudGeometry;", ordinal = 1))
 	private void changeGeometry2(CloudRenderer instance, CloudRenderer.CloudGeometry value) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			cachedGeometryIris = value;
@@ -58,7 +58,7 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;shaderProgram:Lnet/minecraft/client/renderer/ShaderInstance;"))
+	@Redirect(remap = false, method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;shaderProgram:Lnet/minecraft/client/renderer/ShaderInstance;"))
 	private ShaderInstance changeShader(CloudRenderer instance) {
 		return getClouds();
 	}
@@ -68,7 +68,7 @@ public abstract class MixinCloudRenderer {
 		return IrisApi.getInstance().isShaderPackInUse() ? 480 : size;
 	}
 
-	@ModifyArg(remap = false, method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/Tesselator;begin(Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)Lcom/mojang/blaze3d/vertex/BufferBuilder;"), index = 1)
+	@ModifyArg(remap = false, method = "rebuildGeometry", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;begin(Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 1)
 	private static VertexFormat rebuild(VertexFormat p_350837_) {
 		return IrisApi.getInstance().isShaderPackInUse() ? IrisVertexFormats.CLOUDS : p_350837_;
 	}

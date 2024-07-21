@@ -1,6 +1,4 @@
 plugins {
-
-plugins {
     id("idea")
     id("maven-publish")
     id("net.minecraftforge.gradle") version "[6.0,6.2)"
@@ -32,8 +30,6 @@ mixin {
 }
 
 sourceSets {
-
-
     main.get().apply {
         compileClasspath += project(":common").sourceSets.getByName("headers").output
     }
@@ -111,12 +107,12 @@ minecraft {
                 }
             }
         }
-
-        create("data") {
-            //programArguments.addAll("--mod", "sodium", "--all", "--output", file("src/generated/resources/").getAbsolutePath(), "--existing", file("src/main/resources/").getAbsolutePath())
-        }
     }
 }
+
+val localRuntime = configurations.create("localRuntime")
+
+val SODIUM_PATH = "sodium-neoforge-0.6.0-alpha.2.jar"
 
 dependencies {
     minecraft("net.minecraftforge:forge:${MINECRAFT_VERSION}-${NEOFORGE_VERSION}")
