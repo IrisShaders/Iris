@@ -63,7 +63,7 @@ neoForge {
 
 val localRuntime = configurations.create("localRuntime")
 
-val SODIUM_PATH = "sodium-neoforge-0.6.0-alpha.2.jar"
+val SODIUM_PATH = "sodium-neoforge-0.6.0-snapshot+mc1.21-local.jar"
 
 dependencies {
     compileOnly(project(":common"))
