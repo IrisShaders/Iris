@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.regex.Matcher;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
@@ -107,8 +108,8 @@ public class IdMap {
 
 		// TODO: This is the worst code I have ever made. Do not do this.
 		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines).replaceAll("\\\\\\n\\s*\\n", " ").replaceAll("\\S\s*block\\.", "\nblock.");
-
 		StringReader propertiesReader = new StringReader(processed);
+		warnMissingBackslashInPropertiesFile(processed, name);
 
 		// Note: ordering of properties is significant
 		// See https://github.com/IrisShaders/Iris/issues/1327 and the relevant putIfAbsent calls in
@@ -314,6 +315,28 @@ public class IdMap {
 		});
 
 		return overrides;
+	}
+
+	private static void warnMissingBackslashInPropertiesFile(String processedSource, String propertiesFileName) {
+		if (propertiesFileName.equals("shader.properties")) {
+			return;
+		}
+		String[] fileNameSections = propertiesFileName.split("\\.");
+		String entryName = "entry";
+		if (fileNameSections.length >= 2) {
+			entryName = fileNameSections[0] + " entry";
+		}
+		Matcher matcher = PropertiesPreprocessor.BACKSLASH_MATCHER.matcher(processedSource);
+		while (matcher.find()) {
+			Iris.logger.warn("Found missing \"\\\" in file \"{}\" in {}: \"{}\"", propertiesFileName, entryName, matcher.group(0));
+			for (int i = 1; i <= matcher.groupCount(); i++) {
+				String match = matcher.group(i);
+				if (match == null) {
+					continue;
+				}
+				Iris.logger.warn("At ID: \"{}\"", match);
+			}
+		}
 	}
 
 	public Int2ObjectLinkedOpenHashMap<List<BlockEntry>> getBlockProperties() {
