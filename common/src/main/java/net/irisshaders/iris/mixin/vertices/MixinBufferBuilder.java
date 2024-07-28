@@ -169,6 +169,10 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			return;
 		}
 
+		if (mode != VertexFormat.Mode.QUADS && mode != VertexFormat.Mode.TRIANGLES) {
+			return;
+		}
+
 		vertexPointers[iris$vertexCount] = vertexPointer;
 
 		iris$vertexCount++;

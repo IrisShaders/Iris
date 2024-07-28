@@ -149,8 +149,10 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			type.clearRenderState();
 		}
 
+		int targetClearTime = getTargetClearTime();
+
 		for (SegmentedBufferBuilder builder : builders) {
-			builder.clearBuffers(getTargetClearTime());
+			builder.clearBuffers(targetClearTime);
 		}
 
 		profiler.popPush("reset");
