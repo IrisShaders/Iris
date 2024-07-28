@@ -315,7 +315,7 @@ public class IdMap {
 	}
 
 	private static void warnMissingBackslashInPropertiesFile(String processedSource, String propertiesFileName) {
-		if (propertiesFileName.equals("shader.properties")) {
+		if (propertiesFileName.equals("shaders.properties")) {
 			return;
 		}
 		String[] fileNameSections = propertiesFileName.split("\\.");
