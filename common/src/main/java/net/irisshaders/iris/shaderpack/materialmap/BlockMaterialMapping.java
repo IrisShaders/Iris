@@ -101,7 +101,7 @@ public class BlockMaterialMapping {
 	}
 
 	public static Map<Block, BlockRenderType> createBlockTypeMap(Map<NamespacedId, BlockRenderType> blockPropertiesMap) {
-		Map<Block, BlockRenderType> blockTypeIds = new Reference2ReferenceLinkedOpenHashMap<>();
+		Map<Block, BlockRenderType> blockTypeIds = new Reference2ReferenceOpenHashMap<>();
 
 		blockPropertiesMap.forEach((id, blockType) -> {
 			ResourceLocation resourceLocation = new ResourceLocation(id.getNamespace(), id.getName());
