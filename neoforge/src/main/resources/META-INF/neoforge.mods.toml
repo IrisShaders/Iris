@@ -46,5 +46,12 @@ config = "mixins.iris.forge.json"
 
 [mods."sodium:options"]
 "mixin.features.render.world.sky"=false
-"mixin.features.render.entity"=false
 "mixin.features.render.gui.font"=false
+
+[[dependencies.iris]]
+modId = "embeddium"
+type = "incompatible"
+reason = "Iris and Embeddium cannot be used together. Please use Sodium 0.6 instead."
+versionRange = "[0.0.1,)"
+ordering = "NONE"
+side = "CLIENT"

@@ -5,9 +5,9 @@ plugins {
 }
 
 val MINECRAFT_VERSION by extra { "1.21" }
-val NEOFORGE_VERSION by extra { "21.0.57-beta" }
+val NEOFORGE_VERSION by extra { "21.0.143" }
 val FABRIC_LOADER_VERSION by extra { "0.15.11" }
-val FABRIC_API_VERSION by extra { "0.100.1+1.21" }
+val FABRIC_API_VERSION by extra { "0.100.4+1.21" }
 val SODIUM_FILE by extra { "sodium-fabric-0.6.0-snapshot+mc1.21-local.jar" }
 
 // https://semver.org/

@@ -12,6 +12,7 @@
   },
   "client": [
     "block_id.MixinBakedChunkModelBuilder",
+    "block_id.MixinBlockRenderer",
     "block_id.MixinChunkBuildBuffers",
     "block_id.MixinChunkRenderRebuildTask",
     "block_id.MixinChunkVertexBufferBuilder",
