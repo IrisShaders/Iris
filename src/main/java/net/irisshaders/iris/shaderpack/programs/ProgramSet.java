@@ -6,7 +6,6 @@ import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.loading.ProgramArrayId;
-import net.irisshaders.iris.shaderpack.loading.ProgramGroup;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.parsing.ComputeDirectiveParser;
 import net.irisshaders.iris.shaderpack.parsing.ConstDirectiveParser;
@@ -22,7 +21,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class ProgramSet implements ProgramSetInterface {
 	private final PackDirectives packDirectives;
@@ -53,7 +51,7 @@ public class ProgramSet implements ProgramSetInterface {
 		//
 		// - https://github.com/IrisShaders/Iris/issues/483
 		// - https://github.com/IrisShaders/Iris/issues/987
-		boolean readTesselation = pack.hasFeature(FeatureFlags.TESSELATION_SHADERS);
+		boolean readTesselation = pack.hasFeature(FeatureFlags.TESSELLATION_SHADERS);
 
 		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow", shaderProperties);
 		this.setup = readProgramArray(directory, sourceProvider, "setup", shaderProperties);
