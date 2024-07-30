@@ -215,7 +215,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 	}
 
 	// Override ShaderProgram.bind()
-	public void bind() {
+	public void bind(DhApiRenderParam renderParam) {
 		GlStateManager._glBindVertexArray(va);
 		GL32C.glUseProgram(id);
 		if (blend != null) blend.apply();
@@ -223,10 +223,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 		for (BufferBlendOverride override : bufferBlendOverrides) {
 			override.apply();
 		}
-	}
 
-	public void setup(DhApiRenderParam renderParam) {
-		bind();
 		setUniform(modelViewUniform, toJOML(renderParam.dhModelViewMatrix));
 		setUniform(modelViewInverseUniform, toJOML(renderParam.dhModelViewMatrix).invert());
 		setUniform(projectionUniform, toJOML(renderParam.dhProjectionMatrix));
@@ -235,7 +232,6 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 		Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
 		this.setUniform(this.instancedShaderProjectionModelViewMatrixUniform, toJOML(renderParam.dhProjectionMatrix).mul(toJOML(renderParam.dhModelViewMatrix)));
-
 
 		samplers.update();
 		uniforms.update();
@@ -281,7 +277,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 	}
 
 	public void fillIndirectUniformData(DhApiRenderParam dhApiRenderParam, DhApiRenderableBoxGroupShading dhApiRenderableBoxGroupShading, IDhApiRenderableBoxGroup boxGroup, DhApiVec3d camPos) {
-		bind();
+		bind(dhApiRenderParam);
 
 		this.setUniform(this.instancedShaderOffsetChunkUniform,
 			new DhApiVec3i(

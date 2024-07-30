@@ -110,7 +110,9 @@ public class LodRendererEvents {
 		DhApiBeforeGenericRenderSetupEvent beforeRenderEvent = new DhApiBeforeGenericRenderSetupEvent() {
 			@Override
 			public void beforeSetup(DhApiEventParam<DhApiRenderParam> dhApiEventParam) {
-				getInstance().setupGeneric(dhApiEventParam.value);
+				if (getInstance().getGenericFB() != null) {
+					getInstance().getGenericFB().bind();
+				}
 			}
 		};
 

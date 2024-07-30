@@ -268,17 +268,14 @@ public class DHCompatInternal {
 		return dhWaterFramebuffer;
 	}
 
+	public GlFramebuffer getGenericFB() {
+		return dhGenericFramebuffer;
+	}
+
 	public int getDepthTexNoTranslucent() {
 		if (depthTexNoTranslucent == null) return 0;
 
 		return depthTexNoTranslucent.getTextureId();
-	}
-
-	public void setupGeneric(DhApiRenderParam value) {
-		if (genericShader != null) {
-			genericShader.setup(value);
-			dhGenericFramebuffer.bind();
-		}
 	}
 
 	public IDhApiGenericObjectShaderProgram getGenericShader() {
