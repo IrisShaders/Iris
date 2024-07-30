@@ -11,6 +11,7 @@ import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiAfterDh
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeApplyShaderRenderEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeBufferRenderEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeDeferredRenderEvent;
+import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericObjectRenderEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericRenderSetupEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderCleanupEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderEvent;
@@ -116,7 +117,19 @@ public class LodRendererEvents {
 			}
 		};
 
+		DhApiBeforeGenericObjectRenderEvent beforeDrawEvent = new DhApiBeforeGenericObjectRenderEvent() {
+			@Override
+			public void beforeRender(DhApiCancelableEventParam<EventParam> dhApiCancelableEventParam) {
+				if (dhApiCancelableEventParam.value.resourceLocationPath.equalsIgnoreCase("Clouds")) {
+					if (getInstance().avoidRenderingClouds()) {
+						dhApiCancelableEventParam.cancelEvent();
+					}
+				}
+			}
+		};
+
 		DhApi.events.bind(DhApiBeforeGenericRenderSetupEvent.class, beforeRenderEvent);
+		DhApi.events.bind(DhApiBeforeGenericObjectRenderEvent.class, beforeDrawEvent);
 	}
 
 	private static DHCompatInternal getInstance() {

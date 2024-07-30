@@ -167,6 +167,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final DHCompat dhCompat;
 	private final int stackSize = 0;
 	private final boolean skipAllRendering;
+	private final CloudSetting dhCloudSetting;
 	private boolean initializedBlockIds;
 	public boolean isBeforeTranslucent;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
@@ -198,6 +199,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.separateHardwareSamplers = programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS);
 		this.shadowDirectives = packDirectives.getShadowDirectives();
 		this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
+		this.dhCloudSetting = programSet.getPackDirectives().getDHCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
@@ -1313,5 +1315,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	public boolean skipAllRendering() {
 		return skipAllRendering;
+	}
+
+	public CloudSetting getDHCloudSetting() {
+		return dhCloudSetting;
 	}
 }

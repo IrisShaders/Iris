@@ -36,6 +36,7 @@ import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL43;
@@ -69,6 +70,8 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 	private final int instancedShaderCameraSubChunkPosUniform;
 	private final int instancedShaderProjectionModelViewMatrixUniform;
 	private final int va;
+	private final int uBlockLight;
+	private final int uSkyLight;
 
 	// This will bind  AbstractVertexAttribute
 	private IrisGenericRenderProgram(String name, boolean isShadowPass, boolean translucent, BlendModeOverride override, BufferBlendOverride[] bufferBlendOverrides, String vertex, String tessControl, String tessEval, String geometry, String fragment, CustomUniforms customUniforms, IrisRenderingPipeline pipeline) {
@@ -151,6 +154,8 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 		this.instancedShaderCameraChunkPosUniform = this.tryGetUniformLocation2("uCameraPosChunk");
 		this.instancedShaderCameraSubChunkPosUniform = this.tryGetUniformLocation2("uCameraPosSubChunk");
 		this.instancedShaderProjectionModelViewMatrixUniform = this.tryGetUniformLocation2("uProjectionMvm");
+		this.uBlockLight = this.tryGetUniformLocation2("uBlockLight");
+		this.uSkyLight = this.tryGetUniformLocation2("uSkyLight");
 	}
 
 	public static IrisGenericRenderProgram createProgram(String name, boolean isShadowPass, boolean translucent, ProgramSource source, CustomUniforms uniforms, IrisRenderingPipeline pipeline) {
@@ -278,7 +283,8 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 	public void fillIndirectUniformData(DhApiRenderParam dhApiRenderParam, DhApiRenderableBoxGroupShading dhApiRenderableBoxGroupShading, IDhApiRenderableBoxGroup boxGroup, DhApiVec3d camPos) {
 		bind(dhApiRenderParam);
-
+		RenderSystem.enableDepthTest();
+		RenderSystem.depthFunc(GL30C.GL_LEQUAL);
 		this.setUniform(this.instancedShaderOffsetChunkUniform,
 			new DhApiVec3i(
 				getChunkPosFromDouble(boxGroup.getOriginBlockPos().x),
@@ -304,6 +310,11 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 				getSubChunkPosFromDouble(camPos.y),
 				getSubChunkPosFromDouble(camPos.z)
 			));
+		this.setUniform(this.uBlockLight,
+			boxGroup.getBlockLight());
+		this.setUniform(this.uSkyLight,
+			boxGroup.getSkyLight());
+
 	}
 
 	@Override
@@ -318,6 +329,10 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 	private Matrix4f toJOML(DhApiMat4f mat4f) {
 		return new Matrix4f().setTransposed(mat4f.getValuesAsArray());
+	}
+
+	private void setUniform(int index, int value) {
+		GL43C.glUniform1i(index, value);
 	}
 
 	private void setUniform(int index, float value) {

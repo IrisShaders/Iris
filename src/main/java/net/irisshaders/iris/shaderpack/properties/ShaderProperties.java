@@ -76,6 +76,7 @@ public class ShaderProperties {
 	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
+	private CloudSetting dhCloudSetting = CloudSetting.DEFAULT;
 	private OptionalBoolean oldHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dynamicHandLight = OptionalBoolean.DEFAULT;
 	private OptionalBoolean supportsColorCorrection = OptionalBoolean.DEFAULT;
@@ -159,6 +160,16 @@ public class ShaderProperties {
 					cloudSetting = CloudSetting.FANCY;
 				} else {
 					Iris.logger.error("Unrecognized clouds setting: " + value);
+				}
+			}
+
+			if ("dhClouds".equals(key)) {
+				if ("off".equals(value)) {
+					dhCloudSetting = CloudSetting.OFF;
+				} else if ("on".equals(value) || "fancy".equals(value)) {
+					dhCloudSetting = CloudSetting.FANCY;
+				} else {
+					Iris.logger.error("Unrecognized DH clouds setting (need off, on): " + value);
 				}
 			}
 
@@ -718,6 +729,10 @@ public class ShaderProperties {
 
 	public CloudSetting getCloudSetting() {
 		return cloudSetting;
+	}
+
+	public CloudSetting getDHCloudSetting() {
+		return dhCloudSetting;
 	}
 
 	public OptionalBoolean getOldHandLight() {
