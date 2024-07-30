@@ -2,9 +2,12 @@ package net.irisshaders.iris.compat.dh;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
+import com.seibel.distanthorizons.api.interfaces.override.IDhApiOverrideable;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
+import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiGenericObjectShaderProgram;
+import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam;
+import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
-import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gl.IrisRenderSystem;
@@ -26,9 +29,11 @@ public class DHCompatInternal {
 	static boolean dhEnabled;
 	private static int guiScale = -1;
 	private final IrisRenderingPipeline pipeline;
+	private GlFramebuffer dhGenericFramebuffer;
 	public boolean shouldOverrideShadow;
 	public boolean shouldOverride;
 	private IrisLodRenderProgram solidProgram;
+	private IrisGenericRenderProgram genericShader;
 	private IrisLodRenderProgram translucentProgram;
 	private IrisLodRenderProgram shadowProgram;
 	private GlFramebuffer dhTerrainFramebuffer;
@@ -54,6 +59,7 @@ public class DHCompatInternal {
 			incompatible = true;
 			return;
 		}
+
 		cachedVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getDepthBufferVersion();
 
 		createDepthTex(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height);
@@ -61,6 +67,10 @@ public class DHCompatInternal {
 
 		ProgramSource terrain = pipeline.getDHTerrainShader().get();
 		solidProgram = IrisLodRenderProgram.createProgram(terrain.getName(), false, false, terrain, pipeline.getCustomUniforms(), pipeline);
+
+		ProgramSource generic = pipeline.getDHGenericShader().get();
+		genericShader = IrisGenericRenderProgram.createProgram(generic.getName() + "_g", false, false, generic, pipeline.getCustomUniforms(), pipeline);
+		dhGenericFramebuffer = pipeline.createDHFramebuffer(generic, false);
 
 		if (pipeline.getDHWaterShader().isPresent()) {
 			ProgramSource water = pipeline.getDHWaterShader().get();
@@ -129,8 +139,6 @@ public class DHCompatInternal {
 			guiScale = Minecraft.getInstance().options.guiScale().get();
 		}
 
-		if (DhApi.Delayed.configs == null) return dhEnabled;
-
 		if ((dhEnabled != DhApi.Delayed.configs.graphics().renderingEnabled().getValue() || guiScale != Minecraft.getInstance().options.guiScale().get())
 			&& IrisApi.getInstance().isShaderPackInUse()) {
 			guiScale = Minecraft.getInstance().options.guiScale().get();
@@ -196,12 +204,13 @@ public class DHCompatInternal {
 		translucentDepthDirty = true;
 
 		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhTerrainFramebufferWrapper);
+		OverrideInjector.INSTANCE.unbind(IDhApiGenericObjectShaderProgram.class, genericShader);
 		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, dhShadowFramebufferWrapper);
 		dhTerrainFramebufferWrapper = null;
 		dhShadowFramebufferWrapper = null;
 	}
 
-	public void setModelPos(Vec3f modelPos) {
+	public void setModelPos(DhApiVec3f modelPos) {
 		solidProgram.bind();
 		solidProgram.setModelPos(modelPos);
 		translucentProgram.bind();
@@ -259,9 +268,17 @@ public class DHCompatInternal {
 		return dhWaterFramebuffer;
 	}
 
+	public GlFramebuffer getGenericFB() {
+		return dhGenericFramebuffer;
+	}
+
 	public int getDepthTexNoTranslucent() {
 		if (depthTexNoTranslucent == null) return 0;
 
 		return depthTexNoTranslucent.getTextureId();
+	}
+
+	public IDhApiGenericObjectShaderProgram getGenericShader() {
+		return genericShader;
 	}
 }
