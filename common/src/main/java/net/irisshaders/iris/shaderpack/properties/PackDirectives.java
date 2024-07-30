@@ -30,6 +30,7 @@ public class PackDirectives {
 	private float eyeBrightnessHalfLife;
 	private float centerDepthHalfLife;
 	private CloudSetting cloudSetting;
+	private CloudSetting dhCloudSetting;
 	private boolean underwaterOverlay;
 	private boolean vignette;
 	private boolean sun;
@@ -68,6 +69,7 @@ public class PackDirectives {
 	public PackDirectives(Set<Integer> supportedRenderTargets, ShaderProperties properties) {
 		this(supportedRenderTargets, new PackShadowDirectives(properties));
 		cloudSetting = properties.getCloudSetting();
+		dhCloudSetting = properties.getDHCloudSetting();
 		underwaterOverlay = properties.getUnderwaterOverlay().orElse(false);
 		vignette = properties.getVignette().orElse(false);
 		sun = properties.getSun().orElse(true);
@@ -94,6 +96,7 @@ public class PackDirectives {
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
 		this(supportedRenderTargets, new PackShadowDirectives(directives.getShadowDirectives()));
 		cloudSetting = directives.cloudSetting;
+		dhCloudSetting = directives.dhCloudSetting;
 		separateAo = directives.separateAo;
 		voxelizeLightBlocks = directives.voxelizeLightBlocks;
 		separateEntityDraws = directives.separateEntityDraws;
@@ -142,6 +145,10 @@ public class PackDirectives {
 
 	public CloudSetting getCloudSetting() {
 		return cloudSetting;
+	}
+
+	public CloudSetting getDHCloudSetting() {
+		return dhCloudSetting;
 	}
 
 	public boolean underwaterOverlay() {

@@ -16,6 +16,7 @@ import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.shaderpack.properties.CloudSetting;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -168,6 +169,9 @@ public class DHCompatInternal {
 			if (dhWaterFramebuffer != null) {
 				dhWaterFramebuffer.addDepthAttachment(depthTex);
 			}
+			if (dhGenericFramebuffer != null) {
+				dhGenericFramebuffer.addDepthAttachment(depthTex);
+			}
 		}
 	}
 
@@ -280,5 +284,9 @@ public class DHCompatInternal {
 
 	public IDhApiGenericObjectShaderProgram getGenericShader() {
 		return genericShader;
+	}
+
+	public boolean avoidRenderingClouds() {
+		return pipeline.getDHCloudSetting() == CloudSetting.OFF || (pipeline.getDHCloudSetting() == CloudSetting.DEFAULT && pipeline.getCloudSetting() == CloudSetting.OFF);
 	}
 }
