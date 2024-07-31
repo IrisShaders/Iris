@@ -3,8 +3,7 @@ package net.irisshaders.iris.compat.dh;
 import com.google.common.primitives.Ints;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
-import com.seibel.distanthorizons.coreapi.util.math.Vec3f;
-import net.irisshaders.iris.Iris;
+import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
@@ -136,7 +135,7 @@ public class IrisLodRenderProgram {
 	}
 
 	public static IrisLodRenderProgram createProgram(String name, boolean isShadowPass, boolean translucent, ProgramSource source, CustomUniforms uniforms, IrisRenderingPipeline pipeline) {
-		Map<PatchShaderType, String> transformed = TransformPatcher.patchDH(
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchDHTerrain(
 			name,
 			source.getVertexSource().orElseThrow(RuntimeException::new),
 			source.getTessControlSource().orElse(null),
@@ -250,11 +249,11 @@ public class IrisLodRenderProgram {
 		GL43C.glUniform1f(index, value);
 	}
 
-	public void setModelPos(Vec3f modelPos) {
+	public void setModelPos(DhApiVec3f modelPos) {
 		setUniform(modelOffsetUniform, modelPos);
 	}
 
-	private void setUniform(int index, Vec3f pos) {
+	private void setUniform(int index, DhApiVec3f pos) {
 		GL43C.glUniform3f(index, pos.x, pos.y, pos.z);
 	}
 

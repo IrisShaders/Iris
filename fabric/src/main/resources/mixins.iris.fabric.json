@@ -4,7 +4,6 @@
   "package": "net.irisshaders.iris.mixin.fabric",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinDHCrashFix"
   ],
   "injectors": {
     "defaultRequire": 1

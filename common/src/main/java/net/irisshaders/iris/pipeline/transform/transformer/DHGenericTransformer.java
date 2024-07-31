@@ -12,7 +12,7 @@ import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 
 import static net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
-public class DHTransformer {
+public class DHGenericTransformer {
 	public static void transform(
 		ASTParser t,
 		TranslationUnit tree,
@@ -81,7 +81,7 @@ public class DHTransformer {
 				"uniform mat4 iris_ProjectionMatrix;",
 				"uniform mat4 iris_ModelViewMatrix;",
 				// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-				"vec4 getVertexPosition() { return vec4(modelOffset + _vert_position, 1.0); }");
+				"vec4 getVertexPosition() { return vec4(_vert_position, 1.0); }");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 
 			// inject here so that _vert_position is available to the above. (injections
@@ -112,31 +112,38 @@ public class DHTransformer {
 			"int dhMaterialId;",
 			"vec4 _vert_color;",
 			"vec3 _vert_normal;",
-			"uniform float mircoOffset;",
-			"uniform vec3 modelOffset;",
-			"const vec3 irisNormals[6] = vec3[](vec3(0,-1,0),vec3(0,1,0),vec3(0,0,-1),vec3(0,0,1),vec3(-1,0,0),vec3(1,0,0));",
-			"void _vert_init() {" +
-				"    uint meta = vPosition.a;\n" +
-				"uint mirco = (meta & 0xFF00u) >> 8u; // mirco offset which is a xyz 2bit value\n" +
-				"    // 0b00 = no offset\n" +
-				"    // 0b01 = positive offset\n" +
-				"    // 0b11 = negative offset\n" +
-				"    // format is: 0b00zzyyxx\n" +
-				"    float mx = (mirco & 1u)!=0u ? mircoOffset : 0.0;\n" +
-				"    mx = (mirco & 2u)!=0u ? -mx : mx;\n" +
-				"    float my = (mirco & 4u)!=0u ? mircoOffset : 0.0;\n" +
-				"    my = (mirco & 8u)!=0u ? -my : my;\n" +
-				"    float mz = (mirco & 16u)!=0u ? mircoOffset : 0.0;\n" +
-				"    mz = (mirco & 32u)!=0u ? -mz : mz;\n" +
-				"        uint lights = meta & 0xFFu;\n" +
-				"_vert_position = (vPosition.xyz + vec3(mx, 0, mz));" +
-				"_vert_normal = irisNormals[irisExtra.y];" +
-				"dhMaterialId = int(irisExtra.x);" +
-				"_vert_tex_light_coord = vec2((float(lights/16u)+0.5) / 16.0, (mod(float(lights), 16.0)+0.5) / 16.0);" +
-				"_vert_color = iris_color; }");
-		addIfNotExists(root, t, tree, "iris_color", Type.F32VEC4, StorageQualifier.StorageType.IN);
-		addIfNotExists(root, t, tree, "vPosition", Type.U32VEC4, StorageQualifier.StorageType.IN);
-		addIfNotExists(root, t, tree, "irisExtra", Type.U32VEC4, StorageQualifier.StorageType.IN);
+			"uniform ivec3 uOffsetChunk;",
+			"uniform vec3 uOffsetSubChunk;",
+			"uniform ivec3 uCameraPosChunk;",
+			"uniform vec3 uCameraPosSubChunk;",
+			"uniform int uSkyLight;",
+			"uniform int uBlockLight;",
+			"const vec3 irisNormals[6] = vec3[](vec3(0,0,-1),vec3(0,0,1),vec3(-1,0,0),vec3(1,0,0),vec3(0,-1,0),vec3(0,1,0));",
+			"""
+				void _vert_init() {
+					vec3 trans = (aTranslateChunk + uOffsetChunk - uCameraPosChunk) * 16.0f;
+					trans += (aTranslateSubChunk + uOffsetSubChunk - uCameraPosSubChunk);
+					mat4 transform = mat4(
+				         aScale.x, 0.0,      0.0,      0.0,
+				         0.0,      aScale.y, 0.0,      0.0,
+				         0.0,      0.0,      aScale.z, 0.0,
+				         trans.x,  trans.y,  trans.z,  1.0
+				     );
+				     _vert_position = (transform * vec4(vPosition, 1.0)).xyz;
+					_vert_normal = irisNormals[int(floor(float(gl_VertexID) / 4))];
+    				float blockLight = (float(uBlockLight)+0.5) / 16.0;
+    				float skyLight = (float(uSkyLight)+0.5) / 16.0;
+				     _vert_tex_light_coord = vec2(blockLight, skyLight);
+				     dhMaterialId = aMaterial;
+				     _vert_color = iris_color;
+				     }
+				""");
+		addIfNotExists(root, t, tree, "iris_color", Type.F32VEC4, StorageQualifier.StorageType.IN, 1);
+		addIfNotExists(root, t, tree, "aScale", Type.F32VEC3, StorageQualifier.StorageType.IN, 2);
+		addIfNotExists(root, t, tree, "aTranslateChunk", Type.I32VEC3, StorageQualifier.StorageType.IN, 3);
+		addIfNotExists(root, t, tree, "aTranslateSubChunk", Type.F32VEC3, StorageQualifier.StorageType.IN, 4);
+		addIfNotExists(root, t, tree, "aMaterial", Type.INT32, StorageQualifier.StorageType.IN, 5);
+		addIfNotExists(root, t, tree, "vPosition", Type.F32VEC3, StorageQualifier.StorageType.IN, 0);
 		tree.prependMainFunctionBody(t, "_vert_init();");
 	}
 }
