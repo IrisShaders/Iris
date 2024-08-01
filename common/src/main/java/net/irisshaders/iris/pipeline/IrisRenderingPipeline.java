@@ -1271,6 +1271,10 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return resolver.resolve(ProgramId.DhTerrain);
 	}
 
+	public Optional<ProgramSource> getDHGenericShader() {
+		return resolver.resolve(ProgramId.DhGeneric);
+	}
+
 	public Optional<ProgramSource> getDHWaterShader() {
 		return resolver.resolve(ProgramId.DhWater);
 	}

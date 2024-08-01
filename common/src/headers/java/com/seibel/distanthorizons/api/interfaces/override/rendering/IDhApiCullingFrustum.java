@@ -21,7 +21,7 @@ package com.seibel.distanthorizons.api.interfaces.override.rendering;
 
 import com.seibel.distanthorizons.api.enums.EDhApiDetailLevel;
 import com.seibel.distanthorizons.api.interfaces.override.IDhApiOverrideable;
-import com.seibel.distanthorizons.coreapi.util.math.Mat4f;
+import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
 
 /**
  * Used to determine if a LOD should be rendered or is outside the
@@ -40,7 +40,7 @@ public interface IDhApiCullingFrustum extends IDhApiOverrideable {
 	 * @param worldMaxBlockY      the highest block position this level allows.
 	 * @param worldViewProjection the projection matrix used in this render pass.
 	 */
-	void update(int worldMinBlockY, int worldMaxBlockY, Mat4f worldViewProjection);
+	void update(int worldMinBlockY, int worldMaxBlockY, DhApiMat4f worldViewProjection);
 
 	/**
 	 * returns true if the LOD bounds intersect this frustum

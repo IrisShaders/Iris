@@ -35,7 +35,7 @@ public class MixinBlockRenderer {
 	}
 
 
-	@Redirect(method = "renderModel", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/services/PlatformModelAccess;getModelRenderTypes(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/client/resources/model/BakedModel;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;Lnet/caffeinemc/mods/sodium/client/services/SodiumModelData;)Ljava/lang/Iterable;"))
+	@Redirect(remap = false, method = "renderModel", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/services/PlatformModelAccess;getModelRenderTypes(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/client/resources/model/BakedModel;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/util/RandomSource;Lnet/caffeinemc/mods/sodium/client/services/SodiumModelData;)Ljava/lang/Iterable;"))
 	private Iterable<RenderType> iris$redirectRenderTypes(PlatformModelAccess instance, BlockAndTintGetter blockAndTintGetter, BakedModel bakedModel, BlockState blockState, BlockPos blockPos, RandomSource randomSource, SodiumModelData sodiumModelData) {
 		Map<Block, BlockRenderType> idMap = WorldRenderingSettings.INSTANCE.getBlockTypeIds();
 		if (idMap != null) {

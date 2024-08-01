@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.dh.mixin;
 
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
-import com.seibel.distanthorizons.coreapi.util.math.Mat4f;
+import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.irisshaders.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import org.spongepowered.asm.mixin.Final;
@@ -18,7 +18,7 @@ public class MixinBoxCullingFrustum implements IDhApiShadowCullingFrustum {
 	private BoxCuller boxCuller;
 
 	@Override
-	public void update(int worldMinBlockY, int worldMaxBlockY, Mat4f worldViewProjection) {
+	public void update(int worldMinBlockY, int worldMaxBlockY, DhApiMat4f worldViewProjection) {
 		this.worldMinYDH = worldMinBlockY;
 		this.worldMaxYDH = worldMaxBlockY;
 	}
