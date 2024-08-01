@@ -53,7 +53,7 @@ dependencies {
     modImplementation("org.anarres:jcpp:1.4.14")
     include("org.anarres:jcpp:1.4.14")
 
-    modImplementation(files(rootDir.resolve("custom_sodium").resolve(SODIUM_FILE)))
+    modImplementation(files(rootDir.resolve("custom_sodium").resolve(SODIUM_FILE.replace("LOADER", "fabric"))))
 
     modCompileOnly(files(rootDir.resolve("DHApi.jar")))
 

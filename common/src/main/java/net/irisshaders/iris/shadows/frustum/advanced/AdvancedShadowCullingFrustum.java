@@ -4,7 +4,6 @@ import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadow
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
-import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
@@ -324,34 +323,17 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 	 * @return 0 if nothing is visible, 1 if everything is visible, 2 if only some corners are visible.
 	 */
 	protected int checkCornerVisibility(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		float outsideBoundX;
-		float outsideBoundY;
-		float outsideBoundZ;
-
 		for (int i = 0; i < planeCount; ++i) {
 			Vector4f plane = this.planes[i];
 
 			// Check if plane is inside or intersecting.
 			// This is ported from JOML's FrustumIntersection.
 
-			if (plane.x() < 0) {
-				outsideBoundX = minX;
-			} else {
-				outsideBoundX = maxX;
-			}
+			float outsideBoundX = (plane.x() < 0) ? minX : maxX;
+			float outsideBoundY = (plane.y() < 0) ? minY : maxY;
+			float outsideBoundZ = (plane.z() < 0) ? minZ : maxZ;
 
-			if (plane.y() < 0) {
-				outsideBoundY = minY;
-			} else {
-				outsideBoundY = maxY;
-			}
-
-			if (plane.z() < 0) {
-				outsideBoundZ = minZ;
-			} else {
-				outsideBoundZ = maxZ;
-			}
-
+			// Use Math.fma for the dot product calculation to get vectorization (sorry old Intel users)
 			if (Math.fma(plane.x(), outsideBoundX, Math.fma(plane.y(), outsideBoundY, plane.z() * outsideBoundZ)) < -plane.w()) {
 				return 0;
 			}

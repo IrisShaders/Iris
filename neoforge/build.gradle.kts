@@ -9,6 +9,7 @@ plugins {
 val MINECRAFT_VERSION: String by rootProject.extra
 val NEOFORGE_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
+val SODIUM_FILE: String by rootProject.extra
 
 base {
     archivesName = "iris-neoforge"
@@ -63,8 +64,6 @@ neoForge {
 
 val localRuntime = configurations.create("localRuntime")
 
-val SODIUM_PATH = "sodium-neoforge-0.6.0-snapshot+mc1.21-local.jar"
-
 dependencies {
     compileOnly(project(":common"))
 
@@ -78,10 +77,12 @@ dependencies {
     jarJar("org.anarres:jcpp:[1.4.14,1.4.15]") {
         isTransitive = false
     }
-    if (!rootDir.resolve("custom_sodium").resolve(SODIUM_PATH).exists()) {
-        throw IllegalStateException("Sodium jar doesn't exist!!! It needs to be at $SODIUM_PATH")
+
+    if (!rootDir.resolve("custom_sodium").resolve(SODIUM_FILE.replace("LOADER", "neoforge")).exists()) {
+        throw IllegalStateException("Sodium jar doesn't exist!!! It needs to be at $SODIUM_FILE")
     }
-    implementation(files(rootDir.resolve("custom_sodium").resolve(SODIUM_PATH)))
+
+    implementation(files(rootDir.resolve("custom_sodium").resolve(SODIUM_FILE.replace("LOADER", "neoforge"))))
 
     compileOnly(files(rootDir.resolve("DHApi.jar")))
 }

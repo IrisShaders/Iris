@@ -8,7 +8,7 @@ val MINECRAFT_VERSION by extra { "1.21" }
 val NEOFORGE_VERSION by extra { "21.0.143" }
 val FABRIC_LOADER_VERSION by extra { "0.15.11" }
 val FABRIC_API_VERSION by extra { "0.100.4+1.21" }
-val SODIUM_FILE by extra { "sodium-fabric-0.6.0-snapshot+mc1.21-local.jar" }
+val SODIUM_FILE by extra { "sodium-LOADER-0.6.0-alpha.3+mc1.21.jar" }
 
 // https://semver.org/
 val MOD_VERSION by extra { "1.8.0" }
