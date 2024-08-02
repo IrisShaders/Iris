@@ -58,7 +58,7 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@Redirect(remap = false, method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;shaderProgram:Lnet/minecraft/client/renderer/ShaderInstance;"))
+	@Redirect(remap = false, method = "render", at = @At(remap = true, value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;shaderProgram:Lnet/minecraft/client/renderer/ShaderInstance;"))
 	private ShaderInstance changeShader(CloudRenderer instance) {
 		return getClouds();
 	}

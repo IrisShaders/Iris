@@ -24,6 +24,14 @@ description = '''
 stub for oculus
 '''
 
+[[dependencies.iris]]
+modId="sodium"
+mandatory=true
+versionRange="[0.6.0,0.6.1)"
+ordering="NONE"
+side="BOTH"
+
+
 [mods."sodium:options"]
 "mixin.features.render.world.sky"=false
 "mixin.features.render.entity"=false

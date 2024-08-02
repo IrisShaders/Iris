@@ -48,6 +48,7 @@
     "bedrockwaters": "<=1.6.0",
     "batchedentityrendering": "*",
     "canvas": "*",
+    "embeddium": "*",
     "optifabric": "*",
     "worldeditcui": "<1.18.1",
     "physicsmod": "<=3.0.13",
