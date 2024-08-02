@@ -125,10 +125,10 @@ dependencies {
     }
     implementation("org.antlr:antlr4-runtime:4.13.1")
 
-    minecraftLibrary("io.github.douira:glsl-transformer2:2.0.1") {
+    minecraftLibrary("trans:glsl-trans:2.0.1") {
         isTransitive = false
     }
-    jarJar("io.github.douira:glsl-transformer2:[2.0.1,2.0.2)") {
+    jarJar("trans:glsl-trans:[0.0.1,9.9.9)") {
         jarJar.pin(this, "2.0.1")
         isTransitive = false
     }
