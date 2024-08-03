@@ -1,6 +1,7 @@
 package net.irisshaders.iris.mixin.entity_render_context;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.irisshaders.iris.helpers.EntityState;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -27,7 +28,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(HumanoidArmorLayer.class)
 public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends HumanoidModel<T>, A extends HumanoidModel<T>>
 	extends RenderLayer<T, M> {
-	private int backupValue = 0;
 
 	public MixinHumanoidArmorLayer(RenderLayerParent<T, M> pRenderLayer0) {
 		super(pRenderLayer0);
@@ -42,19 +42,16 @@ public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends 
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
 	}
 
-	@Inject(method = "renderTrim", at = @At(value = "HEAD"), locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject(method = "renderTrim(Lnet/minecraft/core/Holder;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/item/armortrim/ArmorTrim;Lnet/minecraft/client/model/HumanoidModel;Z)V", at = @At(value = "HEAD"))
 	private void changeTrimTemp(Holder<ArmorMaterial> holder, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, ArmorTrim armorTrim, A humanoidModel, boolean bl, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
-		backupValue = CapturedRenderingState.INSTANCE.getCurrentRenderedItem();
-		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId("minecraft", "trim_" + armorTrim.material().value().assetName())));
+		EntityState.interposeItemId(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId("minecraft", "trim_" + armorTrim.material().value().assetName())));
 	}
 
-	@Inject(method = "renderTrim", at = @At(value = "TAIL"))
+	@Inject(method = "renderTrim(Lnet/minecraft/core/Holder;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/item/armortrim/ArmorTrim;Lnet/minecraft/client/model/HumanoidModel;Z)V", at = @At(value = "TAIL"))
 	private void changeTrimTemp2(Holder<ArmorMaterial> holder, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, ArmorTrim armorTrim, A humanoidModel, boolean bl, CallbackInfo ci) {
-		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
-		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(backupValue);
-		backupValue = 0;
+		EntityState.restoreItemId();
 	}
 
 	@Inject(method = "renderArmorPiece", at = @At(value = "TAIL"))
