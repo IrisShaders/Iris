@@ -289,6 +289,6 @@ public class DHCompatInternal {
 	}
 
 	public boolean avoidRenderingClouds() {
-		return pipeline.getDHCloudSetting() == CloudSetting.OFF || (pipeline.getDHCloudSetting() == CloudSetting.DEFAULT && pipeline.getCloudSetting() == CloudSetting.OFF);
+		return pipeline != null && (pipeline.getDHCloudSetting() == CloudSetting.OFF || (pipeline.getDHCloudSetting() == CloudSetting.DEFAULT && pipeline.getCloudSetting() == CloudSetting.OFF));
 	}
 }
