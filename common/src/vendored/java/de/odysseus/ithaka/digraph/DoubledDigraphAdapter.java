@@ -116,10 +116,10 @@ public class DoubledDigraphAdapter<V> extends DigraphAdapter<V> implements Doubl
 		if (!delegate.hasNext()) {
 			return Collections.emptySet();
 		}
-		return new Iterable<V>() {
+		return new Iterable<>() {
 			@Override
 			public Iterator<V> iterator() {
-				return new Iterator<V>() {
+				return new Iterator<>() {
 					V vertex;
 
 					@Override
@@ -156,10 +156,10 @@ public class DoubledDigraphAdapter<V> extends DigraphAdapter<V> implements Doubl
 		if (!delegate.hasNext()) {
 			return Collections.emptySet();
 		}
-		return new Iterable<V>() {
+		return new Iterable<>() {
 			@Override
 			public Iterator<V> iterator() {
-				return new Iterator<V>() {
+				return new Iterator<>() {
 					V target;
 
 					@Override

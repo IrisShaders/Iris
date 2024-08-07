@@ -29,7 +29,7 @@ public class SodiumCoreTransformer {
 			root.rename("vaNormal", "iris_Normal");
 			root.replaceReferenceExpressions(t, "vaUV0", "_vert_tex_diffuse_coord");
 			root.replaceReferenceExpressions(t, "vaUV1", "ivec2(0, 10)");
-			root.replaceReferenceExpressions(t, "vaUV2", "(vec4(_decode_light(a_LightAndData.xy), 0.0, 1.0) * inverse(iris_LightmapTextureMatrix)).xy");
+			root.replaceReferenceExpressions(t, "vaUV2", "(vec4(a_LightAndData.xy, 0.0, 1.0) * inverse(iris_LightmapTextureMatrix)).xy");
 
 			root.replaceReferenceExpressions(t, "textureMatrix", "mat4(1.0)");
 

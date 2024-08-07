@@ -106,8 +106,8 @@ public class ProfileSet {
 		}
 
 		// Default return if no profiles matched
-		Profile next = sortedProfiles.get(0);
-		Profile prev = sortedProfiles.get(sortedProfiles.size() - 1);
+		Profile next = sortedProfiles.getFirst();
+		Profile prev = sortedProfiles.getLast();
 
 		return new ProfileResult(null, next, prev);
 	}

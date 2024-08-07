@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin.texture;
 
-import net.irisshaders.iris.texture.TextureTracker;
+import net.irisshaders.iris.pbr.TextureTracker;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

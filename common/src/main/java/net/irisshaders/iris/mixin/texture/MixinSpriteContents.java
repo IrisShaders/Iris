@@ -2,8 +2,8 @@ package net.irisshaders.iris.mixin.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.texture.SpriteContentsExtension;
-import net.irisshaders.iris.texture.mipmap.CustomMipmapGenerator;
+import net.irisshaders.iris.pbr.SpriteContentsExtension;
+import net.irisshaders.iris.pbr.mipmap.CustomMipmapGenerator;
 import net.minecraft.client.renderer.texture.MipmapGenerator;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.SpriteTicker;

@@ -51,7 +51,7 @@ public class BlockMaterialMapping {
 		} else if (compatibleTags.size() > 1) {
 			Iris.logger.fatal("You've broke the system; congrats. More than one tag matched " + tagEntry.id());
 		} else {
-			BuiltInRegistries.BLOCK.getTag(compatibleTags.get(0)).get().forEach((block) -> {
+			BuiltInRegistries.BLOCK.getTag(compatibleTags.getFirst()).get().forEach((block) -> {
 					Map<String, String> propertyPredicates = tagEntry.propertyPredicates();
 
 					if (propertyPredicates.isEmpty()) {

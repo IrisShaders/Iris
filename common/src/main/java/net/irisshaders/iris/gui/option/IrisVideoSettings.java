@@ -66,7 +66,7 @@ public class IrisVideoSettings {
 
 	public static boolean isShadowDistanceSliderEnabled() {
 		return Iris.getPipelineManager().getPipeline()
-			.map(pipeline -> !pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent())
+			.map(pipeline -> pipeline.getForcedShadowRenderDistanceChunksForDisplay().isEmpty())
 			.orElse(true);
 	}
 }

@@ -9,7 +9,6 @@ import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 import net.irisshaders.iris.gl.shader.ShaderType;
-import net.irisshaders.iris.pipeline.transform.parameter.GeometryInfoParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
 
 public class EntityPatcher {

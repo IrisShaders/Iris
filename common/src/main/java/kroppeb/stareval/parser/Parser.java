@@ -66,7 +66,7 @@ public class Parser {
 
 	private Element peek() {
 		if (!this.stack.isEmpty()) {
-			return this.stack.get(this.stack.size() - 1);
+			return this.stack.getLast();
 		}
 
 		return null;
@@ -77,7 +77,7 @@ public class Parser {
 			throw new IllegalStateException("Internal token stack is empty");
 		}
 
-		return this.stack.remove(this.stack.size() - 1);
+		return this.stack.removeLast();
 	}
 
 	private void push(Element element) {
@@ -236,7 +236,7 @@ public class Parser {
 			} else if (!expressionOnTop) {
 				throw new UnexpectedTokenException("Encountered a trailing comma in brackets that aren't a call", index);
 			} else {
-				this.push(args.tokens.get(0));
+				this.push(args.tokens.getFirst());
 			}
 		}
 	}

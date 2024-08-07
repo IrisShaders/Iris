@@ -47,23 +47,17 @@ public final class MatrixUniforms {
 			.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
 	}
 
-	private static class Inverted implements Supplier<Matrix4fc> {
-		private final Supplier<Matrix4fc> parent;
+	private record Inverted(Supplier<Matrix4fc> parent) implements Supplier<Matrix4fc> {
+			@Override
+			public Matrix4fc get() {
+				// PERF: Don't copy + allocate this matrix every time?
+				Matrix4f copy = new Matrix4f(parent.get());
 
-		Inverted(Supplier<Matrix4fc> parent) {
-			this.parent = parent;
+				copy.invert();
+
+				return copy;
+			}
 		}
-
-		@Override
-		public Matrix4fc get() {
-			// PERF: Don't copy + allocate this matrix every time?
-			Matrix4f copy = new Matrix4f(parent.get());
-
-			copy.invert();
-
-			return copy;
-		}
-	}
 
 	private static class Previous implements Supplier<Matrix4fc> {
 		private final Supplier<Matrix4fc> parent;

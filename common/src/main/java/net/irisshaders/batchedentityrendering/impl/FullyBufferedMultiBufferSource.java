@@ -295,7 +295,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		if (this.wrappingFunctionStack.isEmpty()) {
 			this.wrappingFunction = null;
 		} else {
-			this.wrappingFunction = this.wrappingFunctionStack.remove(this.wrappingFunctionStack.size() - 1);
+			this.wrappingFunction = this.wrappingFunctionStack.removeLast();
 		}
 	}
 

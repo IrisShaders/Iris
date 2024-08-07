@@ -1,11 +1,14 @@
 package net.irisshaders.iris.shadows.frustum.fallback;
 
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
+import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
+import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
 import org.joml.Matrix4f;
+import org.joml.Vector3d;
 
-public class NonCullingFrustum extends Frustum {
+public class NonCullingFrustum extends Frustum implements ViewportProvider, net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum {
 	public NonCullingFrustum() {
 		super(new Matrix4f(), new Matrix4f());
 	}
@@ -19,6 +22,23 @@ public class NonCullingFrustum extends Frustum {
 	}
 
 	public boolean isVisible(AABB box) {
+		return true;
+	}
+
+	@Override
+	public void prepare(double d, double e, double f) {
+		this.position.set(d, e, f);
+	}
+
+	private final Vector3d position = new Vector3d();
+
+	@Override
+	public Viewport sodium$createViewport() {
+		return new Viewport(this, position);
+	}
+
+	@Override
+	public boolean testAab(float v, float v1, float v2, float v3, float v4, float v5) {
 		return true;
 	}
 }

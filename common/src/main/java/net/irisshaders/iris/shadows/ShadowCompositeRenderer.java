@@ -293,7 +293,7 @@ public class ShadowCompositeRenderer {
 		ComputeProgram[] programs = new ComputeProgram[sources.length];
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = sources[i];
-			if (source == null || !source.getSource().isPresent()) {
+			if (source == null || source.getSource().isEmpty()) {
 				continue;
 			} else {
 				Objects.requireNonNull(flipped);

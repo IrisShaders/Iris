@@ -34,7 +34,7 @@ public class AbsolutePackPath {
 
 			if (segment.equals("..")) {
 				if (!parsedSegments.isEmpty()) {
-					parsedSegments.remove(parsedSegments.size() - 1);
+					parsedSegments.removeLast();
 				}
 			} else {
 				parsedSegments.add(segment);

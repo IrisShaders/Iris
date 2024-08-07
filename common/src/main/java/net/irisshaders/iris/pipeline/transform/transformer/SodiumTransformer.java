@@ -36,21 +36,11 @@ public class SodiumTransformer {
 			// See https://github.com/IrisShaders/Iris/issues/1149
 			root.rename("gl_MultiTexCoord2", "gl_MultiTexCoord1");
 
-			if (parameters.inputs.hasTex()) {
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
-					"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
-			} else {
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
-					"vec4(0.0, 0.0, 0.0, 1.0)");
-			}
+			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
+				"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
 
-			if (parameters.inputs.hasLight()) {
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
-					"vec4(_vert_tex_light_coord, 0.0, 1.0)");
-			} else {
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
-					"vec4(240.0, 240.0, 0.0, 1.0)");
-			}
+			root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
+				"vec4(_vert_tex_light_coord, 0.0, 1.0)");
 
 			CommonTransformer.patchMultiTexCoord3(t, tree, root, parameters);
 
@@ -60,20 +50,11 @@ public class SodiumTransformer {
 			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
 		}
 
-		if (parameters.inputs.hasColor()) {
-			// TODO: Handle the fragment shader here
-			root.rename("gl_Color", "_vert_color");
-		} else {
-			root.replaceReferenceExpressions(t, "gl_Color", "vec4(1.0)");
-		}
+		root.rename("gl_Color", "_vert_color");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
-			if (parameters.inputs.hasNormal()) {
-				root.rename("gl_Normal", "iris_Normal");
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
-			} else {
-				root.replaceReferenceExpressions(t, "gl_Normal", "vec3(0.0, 0.0, 1.0)");
-			}
+			root.rename("gl_Normal", "iris_Normal");
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
 		}
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's
@@ -131,7 +112,6 @@ public class SodiumTransformer {
 		TranslationUnit tree,
 		Root root,
 		SodiumParameters parameters) {
-		String separateAo = WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? "a_Color" : "vec4(a_Color.rgb * a_Color.a, 1.0)";
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 			// translated from sodium's chunk_vertex.glsl
 			"vec3 _vert_position;",
@@ -153,31 +133,31 @@ public class SodiumTransformer {
 			"uint _draw_id;",
 			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
 			"""
-				uvec3 _deinterleave_u20x3(uint packed_hi, uint packed_lo) {
-				     uvec3 hi = (uvec3(packed_hi) >> uvec3(0u, 10u, 20u)) & 0x3FFu;
-				     uvec3 lo = (uvec3(packed_lo) >> uvec3(0u, 10u, 20u)) & 0x3FFu;
+					uvec3 _deinterleave_u20x3(uint packed_hi, uint packed_lo) {
+					     uvec3 hi = (uvec3(packed_hi) >> uvec3(0u, 10u, 20u)) & 0x3FFu;
+					     uvec3 lo = (uvec3(packed_lo) >> uvec3(0u, 10u, 20u)) & 0x3FFu;
 
-				     return (hi << 10u) | lo;
-				 }
-			\t""",
+					     return (hi << 10u) | lo;
+					 }
+				\t""",
 			"""
-				vec2 _get_texcoord() {
-				     return vec2(a_TexCoord & TEXTURE_MAX_VALUE) / float(TEXTURE_MAX_COORD);
-				 }
-			""",
+					vec2 _get_texcoord() {
+					     return vec2(a_TexCoord & TEXTURE_MAX_VALUE) / float(TEXTURE_MAX_COORD);
+					 }
+				""",
 			"""
-				vec2 _get_texcoord_bias() {
-				     return mix(vec2(-TEXTURE_GROW_FACTOR), vec2(TEXTURE_GROW_FACTOR), bvec2(a_TexCoord >> TEXTURE_BITS));
-				 }
-			""",
+					vec2 _get_texcoord_bias() {
+					     return mix(vec2(-TEXTURE_GROW_FACTOR), vec2(TEXTURE_GROW_FACTOR), bvec2(a_TexCoord >> TEXTURE_BITS));
+					 }
+				""",
 			"float _material_mip_bias(uint material) {\n" +
 				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
 				"}",
 			"void _vert_init() {" +
 				"_vert_position = ((_deinterleave_u20x3(a_PositionHi, a_PositionLo) * VERTEX_SCALE) + VERTEX_OFFSET);" +
-					"_vert_tex_diffuse_coord = _get_texcoord() + _get_texcoord_bias();" +
+				"_vert_tex_diffuse_coord = _get_texcoord() + _get_texcoord_bias();" +
 				"_vert_tex_light_coord = vec2(a_LightAndData.xy);" +
-				"_vert_color = " + separateAo + ";" +
+				"_vert_color = a_Color;" +
 				"_draw_id = a_LightAndData[3]; }",
 
 			"uvec3 _get_relative_chunk_coord(uint pos) {\n" +

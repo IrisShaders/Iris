@@ -11,8 +11,6 @@ import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessE
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
@@ -27,7 +25,6 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
@@ -338,7 +335,7 @@ public class CommonTransformer {
 				samplerDeclarationMember = id.getAncestor(DeclarationMember.class);
 
 				// remove since we are treating the declaration specially
-				gtextureTargets.remove(gtextureTargets.size() - 1);
+				gtextureTargets.removeLast();
 				continue;
 			}
 			// we found a declaration using this name, but it's not a sampler,

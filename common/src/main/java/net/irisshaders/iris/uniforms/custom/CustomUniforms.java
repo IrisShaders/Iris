@@ -139,7 +139,7 @@ public class CustomUniforms implements FunctionContext {
 			}
 
 			while (!free.isEmpty()) {
-				CachedUniform pop = free.remove(free.size() - 1);
+				CachedUniform pop = free.removeLast();
 				if (!brokenUniforms.contains(pop)) {
 					// only add those that aren't broken
 					ordered.add(pop);

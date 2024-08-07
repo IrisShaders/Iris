@@ -300,7 +300,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 			GuiUtil.playButtonClickSound();
 
 			// Invalid state to be in
-			if (!Iris.getCurrentPack().isPresent()) {
+			if (Iris.getCurrentPack().isEmpty()) {
 				return false;
 			}
 
@@ -338,7 +338,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 			GuiUtil.playButtonClickSound();
 
 			// Invalid state to be in
-			if (!Iris.getCurrentPack().isPresent()) {
+			if (Iris.getCurrentPack().isEmpty()) {
 				return false;
 			}
 

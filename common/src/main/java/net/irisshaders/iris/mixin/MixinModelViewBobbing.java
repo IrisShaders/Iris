@@ -3,16 +3,13 @@ package net.irisshaders.iris.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.OptionInstance;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import org.joml.Matrix4f;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.renderer.GameRenderer;
 import org.joml.Matrix4fc;
-import org.joml.Quaternionfc;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
@@ -90,9 +87,9 @@ public abstract class MixinModelViewBobbing {
 
 	@Redirect(method = "renderLevel",
 		at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/OptionInstance;get()Ljava/lang/Object;", ordinal = 1))
-	private<T> T iris$disableConfusionWithShaders(OptionInstance<T> instance) {
-		return areShadersOn ? (T) (Object) 0.0 : instance.get();
+			target = "Ljava/lang/Double;floatValue()F"))
+	private float iris$disableConfusionWithShaders(Double instance) {
+		return areShadersOn ? 0.0f : instance.floatValue();
 	}
 
 	@Redirect(method = "renderLevel",

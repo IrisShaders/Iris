@@ -32,6 +32,7 @@
     "MixinItemInHandRenderer",
     "MixinLevelRenderer",
     "MixinLevelRenderer_SkipRendering",
+    "MixinLevelRenderer_Sky",
     "MixinLightningBoltRenderer",
     "MixinLightTexture",
     "MixinLocalPlayer",

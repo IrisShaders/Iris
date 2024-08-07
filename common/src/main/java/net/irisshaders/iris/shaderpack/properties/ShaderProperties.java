@@ -152,14 +152,11 @@ public class ShaderProperties {
 			}
 
 			if ("clouds".equals(key)) {
-				if ("off".equals(value)) {
-					cloudSetting = CloudSetting.OFF;
-				} else if ("fast".equals(value)) {
-					cloudSetting = CloudSetting.FAST;
-				} else if ("fancy".equals(value)) {
-					cloudSetting = CloudSetting.FANCY;
-				} else {
-					Iris.logger.error("Unrecognized clouds setting: " + value);
+				switch (value) {
+					case "off" -> cloudSetting = CloudSetting.OFF;
+					case "fast" -> cloudSetting = CloudSetting.FAST;
+					case "fancy" -> cloudSetting = CloudSetting.FANCY;
+					case null, default -> Iris.logger.error("Unrecognized clouds setting: " + value);
 				}
 			}
 
@@ -174,14 +171,11 @@ public class ShaderProperties {
 			}
 
 			if ("shadow.culling".equals(key)) {
-				if ("false".equals(value)) {
-					shadowCulling = ShadowCullState.DISTANCE;
-				} else if ("true".equals(value)) {
-					shadowCulling = ShadowCullState.ADVANCED;
-				} else if ("reversed".equals(value)) {
-					shadowCulling = ShadowCullState.REVERSED;
-				} else {
-					Iris.logger.error("Unrecognized shadow culling setting: " + value);
+				switch (value) {
+					case "false" -> shadowCulling = ShadowCullState.DISTANCE;
+					case "true" -> shadowCulling = ShadowCullState.ADVANCED;
+					case "reversed" -> shadowCulling = ShadowCullState.REVERSED;
+					case null, default -> Iris.logger.error("Unrecognized shadow culling setting: " + value);
 				}
 			}
 
@@ -280,7 +274,7 @@ public class ShaderProperties {
 
 				Optional<AlphaTestFunction> function = AlphaTestFunction.fromString(parts[0]);
 
-				if (!function.isPresent()) {
+				if (function.isEmpty()) {
 					Iris.logger.error("Unable to parse alpha test directive for " + pass + ", unknown alpha test function " + parts[0] + ": " + value);
 					return;
 				}
@@ -431,7 +425,7 @@ public class ShaderProperties {
 
 				Optional<TextureStage> optionalTextureStage = TextureStage.parse(stageName);
 
-				if (!optionalTextureStage.isPresent()) {
+				if (optionalTextureStage.isEmpty()) {
 					Iris.logger.warn("Unknown texture stage " + "\"" + stageName + "\"," + " ignoring custom texture directive for " + key);
 					return;
 				}

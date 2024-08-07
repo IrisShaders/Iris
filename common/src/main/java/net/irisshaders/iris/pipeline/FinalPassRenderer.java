@@ -385,7 +385,7 @@ public class FinalPassRenderer {
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
-			if (source == null || !source.getSource().isPresent()) {
+			if (source == null || source.getSource().isEmpty()) {
 				continue;
 			} else {
 				// TODO: Properly handle empty shaders

@@ -1,7 +1,6 @@
 package net.irisshaders.iris.pipeline.transform.parameter;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.Patch;
@@ -40,10 +39,5 @@ public class TextureStageParameters extends Parameters {
 			return false;
 		TextureStageParameters other = (TextureStageParameters) obj;
 		return stage == other.stage;
-	}
-
-	@Override
-	public AlphaTest getAlphaTest() {
-		return AlphaTest.ALWAYS;
 	}
 }

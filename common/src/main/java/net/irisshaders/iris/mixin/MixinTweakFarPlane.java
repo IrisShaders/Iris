@@ -45,7 +45,7 @@ public class MixinTweakFarPlane {
 
 	@Redirect(method = "getProjectionMatrix", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;getDepthFar()F"))
 	private float iris$tweakViewDistanceToMatchOptiFine(GameRenderer renderer) {
-		if (!Iris.getCurrentPack().isPresent()) {
+		if (Iris.getCurrentPack().isEmpty()) {
 			// Don't mess with the far plane if no shaderpack is loaded
 			return this.getDepthFar();
 		}
@@ -70,7 +70,7 @@ public class MixinTweakFarPlane {
 	// Seemingly, this should not be activated on 1.17.
 	//@Inject(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderDistance:F", shift = At.Shift.AFTER))
 	private void iris$tweakViewDistanceBasedOnFog(float f, long l, PoseStack poseStack, CallbackInfo ci) {
-		if (!Iris.getCurrentPack().isPresent()) {
+		if (Iris.getCurrentPack().isEmpty()) {
 			// Don't mess with the far plane if no shaderpack is loaded
 			return;
 		}

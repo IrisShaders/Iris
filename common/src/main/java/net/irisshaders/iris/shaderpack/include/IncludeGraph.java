@@ -75,7 +75,7 @@ public class IncludeGraph {
 		Set<AbsolutePackPath> seen = new HashSet<>(startingPaths);
 
 		while (!queue.isEmpty()) {
-			AbsolutePackPath next = queue.remove(queue.size() - 1);
+			AbsolutePackPath next = queue.removeLast();
 
 			String source;
 
@@ -223,7 +223,7 @@ public class IncludeGraph {
 			}
 		}
 
-		path.remove(path.size() - 1);
+		path.removeLast();
 		visited.remove(frontier);
 
 		return false;

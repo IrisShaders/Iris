@@ -2,38 +2,24 @@ package net.irisshaders.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.abstract_node.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
-import io.github.douira.glsl_transformer.ast.node.declaration.FunctionParameter;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
-import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
-import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
-import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.EmptyDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
-import io.github.douira.glsl_transformer.ast.node.statement.Statement;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
-import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
-import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
-import io.github.douira.glsl_transformer.ast.node.type.struct.StructDeclarator;
-import io.github.douira.glsl_transformer.ast.node.type.struct.StructMember;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
-import io.github.douira.glsl_transformer.ast.transform.TransformationException;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
@@ -45,16 +31,9 @@ import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LayoutTransformer {
@@ -164,7 +143,7 @@ public class LayoutTransformer {
 	private static TypeQualifier makeQualifierOut(TypeQualifier typeQualifier) {
 		for (TypeQualifierPart qualifierPart : typeQualifier.getParts()) {
 			if (qualifierPart instanceof StorageQualifier storageQualifier) {
-				if (((StorageQualifier) qualifierPart).storageType == StorageType.IN) {
+				if (storageQualifier.storageType == StorageType.IN) {
 					storageQualifier.storageType = StorageType.OUT;
 				}
 			}
@@ -210,13 +189,11 @@ public class LayoutTransformer {
 			}
 
 
-
 			TranslationUnit currentTree = trees.get(patchTypes[0]);
 			if (currentTree == null) {
 				continue;
 			}
 			Root currentRoot = currentTree.getRoot();
-
 
 
 			currentRoot.indexBuildSession((root) -> {
@@ -399,6 +376,7 @@ public class LayoutTransformer {
 		}
 	}
 
-	record NewDeclarationData(TypeQualifier qualifier, TypeSpecifier type, DeclarationMember member, int location, String name) {
+	record NewDeclarationData(TypeQualifier qualifier, TypeSpecifier type, DeclarationMember member, int location,
+							  String name) {
 	}
 }

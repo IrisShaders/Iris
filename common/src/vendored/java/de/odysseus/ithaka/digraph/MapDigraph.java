@@ -109,7 +109,7 @@ public class MapDigraph<V> implements Digraph<V> {
 	}
 
 	private static <V> VertexMapFactory<V> getDefaultVertexMapFactory(final Comparator<? super V> comparator) {
-		return new VertexMapFactory<V>() {
+		return new VertexMapFactory<>() {
 			@Override
 			public Map<V, Object2IntMap<V>> create() {
 				if (comparator == null) {
@@ -122,7 +122,7 @@ public class MapDigraph<V> implements Digraph<V> {
 	}
 
 	private static <V> EdgeMapFactory<V> getDefaultEdgeMapFactory(final Comparator<? super V> comparator) {
-		return new EdgeMapFactory<V>() {
+		return new EdgeMapFactory<>() {
 			@Override
 			public Object2IntMap<V> create(V ignore) {
 				Object2IntMap<V> map;
@@ -266,10 +266,10 @@ public class MapDigraph<V> implements Digraph<V> {
 		if (vertexMap.isEmpty()) {
 			return Collections.emptySet();
 		}
-		return new Iterable<V>() {
+		return new Iterable<>() {
 			@Override
 			public Iterator<V> iterator() {
-				return new Iterator<V>() {
+				return new Iterator<>() {
 					private final Iterator<V> delegate = vertexMap.keySet().iterator();
 					V vertex = null;
 
@@ -308,10 +308,10 @@ public class MapDigraph<V> implements Digraph<V> {
 		if (edgeMap == null || edgeMap.isEmpty()) {
 			return Collections.emptySet();
 		}
-		return new Iterable<V>() {
+		return new Iterable<>() {
 			@Override
 			public Iterator<V> iterator() {
-				return new Iterator<V>() {
+				return new Iterator<>() {
 					private final Iterator<V> delegate = edgeMap.keySet().iterator();
 
 					@Override

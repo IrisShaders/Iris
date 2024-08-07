@@ -6,10 +6,10 @@ import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
+import net.irisshaders.iris.pipeline.programs.SodiumPrograms;
 import net.irisshaders.iris.shaderpack.properties.CloudSetting;
 import net.irisshaders.iris.shaderpack.properties.ParticleRenderingSettings;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
-import net.irisshaders.iris.targets.RenderTargetStateListener;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 
@@ -33,8 +33,6 @@ public interface WorldRenderingPipeline {
 
 	void setOverridePhase(WorldRenderingPhase phase);
 
-	RenderTargetStateListener getRenderTargetStateListener();
-
 	int getCurrentNormalTexture();
 
 	int getCurrentSpecularTexture();
@@ -51,7 +49,7 @@ public interface WorldRenderingPipeline {
 
 	void destroy();
 
-	SodiumTerrainPipeline getSodiumTerrainPipeline();
+	SodiumPrograms getSodiumPrograms();
 
 	FrameUpdateNotifier getFrameUpdateNotifier();
 
@@ -84,4 +82,6 @@ public interface WorldRenderingPipeline {
 	float getSunPathRotation();
 
 	DHCompat getDHCompat();
+
+	void setIsMainBound(boolean mainBound);
 }

@@ -148,7 +148,7 @@ public class Digraphs {
 			for (V target : first.targets(source)) {
 				OptionalInt secondEdge = second.get(source, target);
 
-				if (!secondEdge.isPresent()) {
+				if (secondEdge.isEmpty()) {
 					return false;
 				}
 

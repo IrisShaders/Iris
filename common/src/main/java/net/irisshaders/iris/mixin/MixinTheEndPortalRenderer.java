@@ -41,7 +41,7 @@ public class MixinTheEndPortalRenderer {
 
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
 	public void iris$onRender(TheEndPortalBlockEntity entity, float tickDelta, PoseStack poseStack, MultiBufferSource multiBufferSource, int light, int overlay, CallbackInfo ci) {
-		if (!Iris.getCurrentPack().isPresent()) {
+		if (Iris.getCurrentPack().isEmpty()) {
 			return;
 		}
 

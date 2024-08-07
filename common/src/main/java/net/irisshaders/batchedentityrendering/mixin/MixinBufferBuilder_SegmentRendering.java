@@ -50,7 +50,7 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
 
 	private void duplicateLastVertex() {
 		long l = this.buffer.reserve(this.vertexSize);
-		MemoryUtil.memCopy(l - (long)this.vertexSize, l, this.vertexSize);
+		MemoryIntrinsics.copyMemory(l - (long)this.vertexSize, l, this.vertexSize);
 		++this.vertices;
 	}
 

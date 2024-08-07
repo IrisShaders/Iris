@@ -83,6 +83,7 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
+           environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
         }
         named("server") {
             server()
@@ -97,14 +98,12 @@ tasks {
     withType<JavaCompile> {
         source(project(":common").sourceSets.main.get().allSource)
         source(project(":common").sourceSets.getByName("vendored").allSource)
-        source(project(":common").sourceSets.getByName("sodiumCompatibility").allSource)
     }
 
     javadoc { source(project(":common").sourceSets.main.get().allJava) }
 
     processResources {
         from(project(":common").sourceSets.main.get().resources)
-        from(project(":common").sourceSets.getByName("sodiumCompatibility").resources)
 
         inputs.property("version", project.version)
 

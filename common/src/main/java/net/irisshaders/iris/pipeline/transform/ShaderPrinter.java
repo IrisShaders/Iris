@@ -1,7 +1,7 @@
 package net.irisshaders.iris.pipeline.transform;
 
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;

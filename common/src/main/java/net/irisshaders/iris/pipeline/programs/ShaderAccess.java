@@ -1,7 +1,5 @@
 package net.irisshaders.iris.pipeline.programs;
 
-import com.google.common.collect.ImmutableMap;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.irisshaders.iris.Iris;
@@ -45,7 +43,7 @@ public class ShaderAccess {
 		return null;
 	}
 
-    public static ShaderInstance getMekanismFlameShader() {
+	public static ShaderInstance getMekanismFlameShader() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof ShaderRenderingPipeline) {
@@ -54,9 +52,9 @@ public class ShaderAccess {
 		}
 
 		return GameRenderer.getPositionTexColorShader();
-    }
+	}
 
-    public static ShaderInstance getMekasuitShader() {
+	public static ShaderInstance getMekasuitShader() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof ShaderRenderingPipeline) {
@@ -64,5 +62,5 @@ public class ShaderAccess {
 		}
 
 		return GameRenderer.getRendertypeEntityCutoutShader();
-    }
+	}
 }

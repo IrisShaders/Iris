@@ -361,7 +361,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 	private void processFixedBlur(float tick) {
 		PostChain blurEffect = ((GameRendererAccessor) this.minecraft.gameRenderer).getBlurEffect();
-		float g = (float) Math.min(this.minecraft.options.getMenuBackgroundBlurriness(), this.blurTransition.getAsFloat());
+		float g = Math.min(this.minecraft.options.getMenuBackgroundBlurriness(), this.blurTransition.getAsFloat());
 		if (blurEffect != null && g >= 1.0F) {
 			blurEffect.setUniform("Radius", g);
 			blurEffect.process(tick);
@@ -483,7 +483,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 			if (paths.size() == 1) {
 				// If a single pack could not be added, provide a message with that pack in the file name
-				String fileName = paths.get(0).getFileName().toString();
+				String fileName = paths.getFirst().getFileName().toString();
 
 				this.notificationDialog = Component.translatable(
 					"options.iris.shaderPackSelection.failedAddSingle",
@@ -499,7 +499,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		} else if (packs.size() == 1) {
 			// In most cases, users will drag a single pack into the selection menu. So, let's special case it.
-			String packName = packs.get(0).getFileName().toString();
+			String packName = packs.getFirst().getFileName().toString();
 
 			this.notificationDialog = Component.translatable(
 				"options.iris.shaderPackSelection.addedPack",
@@ -539,7 +539,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			return;
 		}
 
-		this.importPackOptions(paths.get(0));
+		this.importPackOptions(paths.getFirst());
 	}
 
 	public void importPackOptions(Path settingFile) {
@@ -646,7 +646,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				this.hoveredElementCommentTitle = ((CommentedElementWidget<?>) widget).getCommentTitle();
 
 				Optional<Component> commentBody = ((CommentedElementWidget<?>) widget).getCommentBody();
-				if (!commentBody.isPresent()) {
+				if (commentBody.isEmpty()) {
 					this.hoveredElementCommentBody.clear();
 				} else {
 					String rawCommentBody = commentBody.get().getString();

@@ -40,11 +40,18 @@ import net.irisshaders.iris.pathways.HorizonRenderer;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
 import net.irisshaders.iris.pathways.colorspace.ColorSpaceConverter;
 import net.irisshaders.iris.pathways.colorspace.ColorSpaceFragmentConverter;
+import net.irisshaders.iris.pbr.TextureInfoCache;
+import net.irisshaders.iris.pbr.format.TextureFormat;
+import net.irisshaders.iris.pbr.format.TextureFormatLoader;
+import net.irisshaders.iris.pbr.pbr.PBRTextureHolder;
+import net.irisshaders.iris.pbr.pbr.PBRTextureManager;
+import net.irisshaders.iris.pbr.pbr.PBRType;
 import net.irisshaders.iris.pipeline.programs.ExtendedShader;
 import net.irisshaders.iris.pipeline.programs.FallbackShader;
 import net.irisshaders.iris.pipeline.programs.ShaderCreator;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderMap;
+import net.irisshaders.iris.pipeline.programs.SodiumPrograms;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
@@ -73,15 +80,8 @@ import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import net.irisshaders.iris.targets.BufferFlipper;
 import net.irisshaders.iris.targets.ClearPass;
 import net.irisshaders.iris.targets.ClearPassCreator;
-import net.irisshaders.iris.targets.RenderTargetStateListener;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.targets.backed.NativeImageBackedSingleColorTexture;
-import net.irisshaders.iris.texture.TextureInfoCache;
-import net.irisshaders.iris.texture.format.TextureFormat;
-import net.irisshaders.iris.texture.format.TextureFormatLoader;
-import net.irisshaders.iris.texture.pbr.PBRTextureHolder;
-import net.irisshaders.iris.texture.pbr.PBRTextureManager;
-import net.irisshaders.iris.texture.pbr.PBRType;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
@@ -115,7 +115,7 @@ import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRenderingPipeline, RenderTargetStateListener {
+public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRenderingPipeline {
 	private final RenderTargets renderTargets;
 	private final ShaderMap shaderMap;
 	private final CustomUniforms customUniforms;
@@ -135,7 +135,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final DynamicTexture whitePixel;
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
-	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 	private final ColorSpaceConverter colorSpaceConverter;
 	private final ImmutableSet<Integer> flippedBeforeShadow;
 	private final ImmutableSet<Integer> flippedAfterPrepare;
@@ -168,8 +167,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final int stackSize = 0;
 	private final boolean skipAllRendering;
 	private final CloudSetting dhCloudSetting;
-	private boolean initializedBlockIds;
+	private final SodiumPrograms sodiumPrograms;
 	public boolean isBeforeTranslucent;
+	private boolean initializedBlockIds;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
 	private ShadowRenderTargets shadowRenderTargets;
 	private WorldRenderingPhase overridePhase = null;
@@ -373,50 +373,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		this.dhCompat = new DHCompat(this, shadowDirectives.isDhShadowEnabled().orElse(true));
 
-		IntFunction<ProgramSamplers> createShadowTerrainSamplers = (programId) -> {
-			ProgramSamplers.Builder builder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-
-			ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.GBUFFERS_AND_SHADOW, Object2ObjectMaps.emptyMap()));
-
-			IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flippedBeforeShadow, renderTargets, false, this);
-			IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
-
-			if (!shouldBindPBR) {
-				shouldBindPBR = IrisSamplers.hasPBRSamplers(customTextureSamplerInterceptor);
-			}
-
-			IrisSamplers.addLevelSamplers(customTextureSamplerInterceptor, this, whitePixel, true, true, false);
-			IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, customTextureManager.getNoiseTexture());
-			IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
-
-			// Only initialize these samplers if the shadow map renderer exists.
-			// Otherwise, this program shouldn't be used at all?
-			if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-				// We don't compile Sodium shadow programs unless there's a shadow pass... And a shadow pass
-				// can only exist if the shadow render targets have been created by detecting their
-				// usage in a different program. So this null-check makes sense here.
-				IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, Objects.requireNonNull(shadowRenderTargets), null, separateHardwareSamplers);
-			}
-
-			return builder.build();
-		};
-
-		IntFunction<ProgramImages> createShadowTerrainImages = (programId) -> {
-			ProgramImages.Builder builder = ProgramImages.builder(programId);
-
-			IrisImages.addRenderTargetImages(builder, () -> flippedBeforeShadow, renderTargets);
-			IrisImages.addCustomImages(builder, customImages);
-
-			if (IrisImages.hasShadowImages(builder)) {
-				// We don't compile Sodium shadow programs unless there's a shadow pass... And a shadow pass
-				// can only exist if the shadow render targets have been created by detecting their
-				// usage in a different program. So this null-check makes sense here.
-				IrisImages.addShadowColorImages(builder, Objects.requireNonNull(shadowRenderTargets), null);
-			}
-
-			return builder.build();
-		};
-
 		this.loadedShaders = new HashSet<>();
 
 
@@ -483,10 +439,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		// TODO: Create fallback Sodium shaders if the pack doesn't provide terrain shaders
 		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
-		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, resolver, programSet, createTerrainSamplers,
-			shadowRenderTargets == null ? null : createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedAfterPrepare, flippedAfterTranslucent,
-			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), resolver.resolve(ProgramId.ShadowSolid).filter(source -> !source.getDirectives().hasUnknownDrawBuffers()).map(source -> source.getDirectives().getDrawBuffers()).orElse(new int[]{0, 1})) : null, customUniforms);
-
+		this.sodiumPrograms = new SodiumPrograms(this, programSet, resolver, renderTargets, shadowTargetsSupplier, customUniforms);
 
 		this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
 
@@ -549,7 +502,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
-			if (source == null || !source.getSource().isPresent()) {
+			if (source == null || source.getSource().isEmpty()) {
 				continue;
 			} else {
 				ProgramBuilder builder;
@@ -613,7 +566,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
-			if (source == null || !source.getSource().isPresent()) {
+			if (source == null || source.getSource().isEmpty()) {
 				continue;
 			} else {
 				ProgramBuilder builder;
@@ -673,7 +626,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	}
 
 	private ShaderInstance createShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
-		if (!source.isPresent()) {
+		if (source.isEmpty()) {
 			return createFallbackShader(name, key);
 		}
 
@@ -722,7 +675,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	}
 
 	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
-		if (!source.isPresent()) {
+		if (source.isEmpty()) {
 			return createFallbackShadowShader(name, key);
 		}
 
@@ -810,11 +763,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	@Override
 	public void setOverridePhase(WorldRenderingPhase phase) {
 		this.overridePhase = phase;
-	}
-
-	@Override
-	public RenderTargetStateListener getRenderTargetStateListener() {
-		return this;
 	}
 
 	@Override
@@ -1239,8 +1187,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	}
 
 	@Override
-	public SodiumTerrainPipeline getSodiumTerrainPipeline() {
-		return sodiumTerrainPipeline;
+	public SodiumPrograms getSodiumPrograms() {
+		return sodiumPrograms;
 	}
 
 	@Override

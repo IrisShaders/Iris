@@ -361,7 +361,7 @@ public class CompatibilityTransformer {
 	private static TypeQualifier makeQualifierOut(TypeQualifier typeQualifier) {
 		for (TypeQualifierPart qualifierPart : typeQualifier.getParts()) {
 			if (qualifierPart instanceof StorageQualifier storageQualifier) {
-				if (((StorageQualifier) qualifierPart).storageType == StorageType.IN) {
+				if (storageQualifier.storageType == StorageType.IN) {
 					storageQualifier.storageType = StorageType.OUT;
 				}
 			}
@@ -466,7 +466,7 @@ public class CompatibilityTransformer {
 						// patch missing declarations with an initialization
 						if (!outDeclarations.containsKey(name)) {
 							// make sure the declared in is actually used
-							if (!currentRoot.identifierIndex.getAncestors(name, ReferenceExpression.class).findAny().isPresent()) {
+							if (currentRoot.identifierIndex.getAncestors(name, ReferenceExpression.class).findAny().isEmpty()) {
 								continue;
 							}
 

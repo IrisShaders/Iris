@@ -44,6 +44,6 @@ public class MixinRenderTarget {
 		boolean mainBound = this == (Object) Minecraft.getInstance().getMainRenderTarget();
 
 		Iris.getPipelineManager().getPipeline()
-			.ifPresent(pipeline -> pipeline.getRenderTargetStateListener().setIsMainBound(mainBound));
+			.ifPresent(pipeline -> pipeline.setIsMainBound(mainBound));
 	}
 }

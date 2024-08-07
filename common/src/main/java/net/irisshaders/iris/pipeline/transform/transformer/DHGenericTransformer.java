@@ -131,8 +131,8 @@ public class DHGenericTransformer {
 				     );
 				     _vert_position = (transform * vec4(vPosition, 1.0)).xyz;
 					_vert_normal = irisNormals[int(floor(float(gl_VertexID) / 4))];
-    				float blockLight = (float(uBlockLight)+0.5) / 16.0;
-    				float skyLight = (float(uSkyLight)+0.5) / 16.0;
+								float blockLight = (float(uBlockLight)+0.5) / 16.0;
+								float skyLight = (float(uSkyLight)+0.5) / 16.0;
 				     _vert_tex_light_coord = vec2(blockLight, skyLight);
 				     dhMaterialId = aMaterial;
 				     _vert_color = iris_color;

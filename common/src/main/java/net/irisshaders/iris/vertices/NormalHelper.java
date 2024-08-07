@@ -57,26 +57,7 @@ public abstract class NormalHelper {
 		final float y3 = q.y(3);
 		final float z3 = q.z(3);
 
-		final float dx0 = x2 - x0;
-		final float dy0 = y2 - y0;
-		final float dz0 = z2 - z0;
-		final float dx1 = x3 - x1;
-		final float dy1 = y3 - y1;
-		final float dz1 = z3 - z1;
-
-		float normX = dy0 * dz1 - dz0 * dy1;
-		float normY = dz0 * dx1 - dx0 * dz1;
-		float normZ = dx0 * dy1 - dy0 * dx1;
-
-		float l = (float) Math.sqrt(normX * normX + normY * normY + normZ * normZ);
-
-		if (l != 0) {
-			normX /= l;
-			normY /= l;
-			normZ /= l;
-		}
-
-		saveTo.set(normX, normY, normZ);
+		computeFaceNormalManual(saveTo, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
 	}
 
 
@@ -133,26 +114,7 @@ public abstract class NormalHelper {
 		final float y3 = q.y(0);
 		final float z3 = q.z(0);
 
-		final float dx0 = x2 - x0;
-		final float dy0 = y2 - y0;
-		final float dz0 = z2 - z0;
-		final float dx1 = x3 - x1;
-		final float dy1 = y3 - y1;
-		final float dz1 = z3 - z1;
-
-		float normX = dy0 * dz1 - dz0 * dy1;
-		float normY = dz0 * dx1 - dx0 * dz1;
-		float normZ = dx0 * dy1 - dy0 * dx1;
-
-		float l = (float) Math.sqrt(normX * normX + normY * normY + normZ * normZ);
-
-		if (l != 0) {
-			normX /= l;
-			normY /= l;
-			normZ /= l;
-		}
-
-		saveTo.set(normX, normY, normZ);
+		computeFaceNormalManual(saveTo, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
 	}
 
 	/**
@@ -174,26 +136,7 @@ public abstract class NormalHelper {
 		// note: subtraction order is significant here because of how the cross product works.
 		// If we're wrong our calculated normal will be pointing in the opposite direction of how it should.
 		// This current order is similar enough to the order in the quad variant.
-		final float dx0 = x2 - x0;
-		final float dy0 = y2 - y0;
-		final float dz0 = z2 - z0;
-		final float dx1 = x0 - x1;
-		final float dy1 = y0 - y1;
-		final float dz1 = z0 - z1;
-
-		float normX = dy0 * dz1 - dz0 * dy1;
-		float normY = dz0 * dx1 - dx0 * dz1;
-		float normZ = dx0 * dy1 - dy0 * dx1;
-
-		float l = (float) Math.sqrt(normX * normX + normY * normY + normZ * normZ);
-
-		if (l != 0) {
-			normX /= l;
-			normY /= l;
-			normZ /= l;
-		}
-
-		saveTo.set(normX, normY, normZ);
+		computeFaceNormalManual(saveTo, x0, y0, z0, x1, y1, z1, x2, y2, z2, x0, y0, z0);
 	}
 
 	public static int computeTangentSmooth(float normalX, float normalY, float normalZ, TriView t) {

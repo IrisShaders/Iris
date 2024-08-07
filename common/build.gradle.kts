@@ -93,7 +93,6 @@ sourceSets {
             compileClasspath += headers.output
             compileClasspath += vendored.output
             runtimeClasspath += vendored.output
-            runtimeClasspath += sodiumCompatibility.output
         }
     }
 }

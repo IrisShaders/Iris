@@ -9,8 +9,8 @@ import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
-import net.irisshaders.iris.texture.format.TextureFormat;
-import net.irisshaders.iris.texture.format.TextureFormatLoader;
+import net.irisshaders.iris.pbr.format.TextureFormat;
+import net.irisshaders.iris.pbr.format.TextureFormatLoader;
 import net.minecraft.Util;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
@@ -51,6 +51,7 @@ public class StandardMacros {
 		define(standardDefines, getVendor());
 		define(standardDefines, getRenderer());
 		define(standardDefines, "IS_IRIS");
+		define(standardDefines, "IRIS_HAS_TRANSLUCENCY_SORTING");
 		define(standardDefines, "IRIS_TAG_SUPPORT", "2");
 
 

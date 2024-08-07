@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import net.irisshaders.iris.gl.GlResource;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
-import net.irisshaders.iris.texture.TextureInfoCache;
+import net.irisshaders.iris.pbr.TextureInfoCache;
 import org.lwjgl.opengl.GL30C;
 
 public class GlFramebuffer extends GlResource {

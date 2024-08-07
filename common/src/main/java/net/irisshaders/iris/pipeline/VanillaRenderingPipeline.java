@@ -8,11 +8,11 @@ import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
+import net.irisshaders.iris.pipeline.programs.SodiumPrograms;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.properties.CloudSetting;
 import net.irisshaders.iris.shaderpack.properties.ParticleRenderingSettings;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
-import net.irisshaders.iris.targets.RenderTargetStateListener;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -74,11 +74,6 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
-	public RenderTargetStateListener getRenderTargetStateListener() {
-		return RenderTargetStateListener.NOP;
-	}
-
-	@Override
 	public int getCurrentNormalTexture() {
 		return 0;
 	}
@@ -119,7 +114,7 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
-	public SodiumTerrainPipeline getSodiumTerrainPipeline() {
+	public SodiumPrograms getSodiumPrograms() {
 		// no shaders to override
 		return null;
 	}
@@ -204,5 +199,10 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public DHCompat getDHCompat() {
 		return null;
+	}
+
+	@Override
+	public void setIsMainBound(boolean mainBound) {
+
 	}
 }

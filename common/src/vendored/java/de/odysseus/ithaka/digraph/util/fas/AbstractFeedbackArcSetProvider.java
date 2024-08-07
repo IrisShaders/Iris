@@ -98,7 +98,7 @@ public abstract class AbstractFeedbackArcSetProvider implements FeedbackArcSetPr
 			 */
 			final EdgeWeights<? super V> origWeights = weights;
 			final int delta = totalWeight(digraph, origWeights);
-			filteredWeights = new EdgeWeights<V>() {
+			filteredWeights = new EdgeWeights<>() {
 				@Override
 				public OptionalInt get(V source, V target) {
 					OptionalInt original = origWeights.get(source, target);
