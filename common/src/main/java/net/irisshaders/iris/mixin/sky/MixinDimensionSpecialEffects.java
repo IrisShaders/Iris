@@ -1,5 +1,6 @@
 package net.irisshaders.iris.mixin.sky;
 
+import net.irisshaders.iris.mixin.LevelRendererAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.world.effect.MobEffects;
@@ -22,9 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinDimensionSpecialEffects {
 	@Inject(method = "getSunriseColor", at = @At("HEAD"), cancellable = true)
 	private void iris$getSunriseColor(float timeOfDay, float partialTicks, CallbackInfoReturnable<float[]> cir) {
-		Entity cameraEntity = Minecraft.getInstance().getCameraEntity();
-		boolean hasBlindness = cameraEntity instanceof LivingEntity
-			&& ((LivingEntity) cameraEntity).hasEffect(MobEffects.BLINDNESS);
+		boolean hasBlindness = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).invokeDoesMobEffectBlockSky(Minecraft.getInstance().gameRenderer.getMainCamera());
 
 		if (hasBlindness) {
 			cir.setReturnValue(null);
