@@ -100,6 +100,7 @@ tasks {
 
     withType<JavaCompile> {
         source(project(":common").sourceSets.main.get().allSource)
+        source(project(":common").sourceSets.getByName("desktop").allSource)
         source(project(":common").sourceSets.getByName("vendored").allSource)
     }
 
@@ -117,6 +118,8 @@ tasks {
 
     jar {
         from(rootDir.resolve("LICENSE.md"))
+
+        manifest.attributes["Main-Class"] = "net.irisshaders.iris.LaunchWarn"
     }
 }
 

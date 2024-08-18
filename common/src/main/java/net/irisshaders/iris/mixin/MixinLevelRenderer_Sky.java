@@ -51,11 +51,11 @@ public class MixinLevelRenderer_Sky {
 			Entity cameraEntity = camera.getEntity();
 
 			boolean isSubmersed = camera.getFluidInCamera() != FogType.NONE;
-			boolean hasBlindness = cameraEntity instanceof LivingEntity && ((LivingEntity) cameraEntity).hasEffect(MobEffects.BLINDNESS);
+			boolean blockSky = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).invokeDoesMobEffectBlockSky(camera);
 			boolean useThickFog = this.minecraft.level.effects().isFoggyAt(Mth.floor(cameraPosition.x()),
 				Mth.floor(cameraPosition.y())) || this.minecraft.gui.getBossOverlay().shouldCreateWorldFog();
 
-			if (isSubmersed || hasBlindness || useThickFog) {
+			if (isSubmersed || blockSky || useThickFog) {
 				ci.cancel();
 			}
 		}

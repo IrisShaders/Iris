@@ -19,14 +19,6 @@ sourceSets {
 }
 
 repositories {
-    maven {
-        url = uri("https://maven.pkg.github.com/ims212/Forge_Fabric_API")
-        credentials {
-            username = "IMS212"
-            // Read only token
-            password = "ghp_" + "DEuGv0Z56vnSOYKLCXdsS9svK4nb9K39C1Hn"
-        }
-    }
     exclusiveContent {
         forRepository {
             maven {
@@ -43,7 +35,9 @@ repositories {
 }
 
 tasks.jar {
-    from(rootDir.resolve("LICENSE")) }
+    from(rootDir.resolve("LICENSE"))
+    manifest.attributes["Main-Class"] = "net.irisshaders.iris.LaunchWarn"
+}
 
 neoForge {
     // Specify the version of NeoForge to use.
@@ -101,6 +95,7 @@ val notNeoTask: (Task) -> Boolean = { it: Task -> !it.name.startsWith("neo") && 
 tasks.withType<JavaCompile>().matching(notNeoTask).configureEach {
     source(project(":common").sourceSets.main.get().allSource)
     source(project(":common").sourceSets.getByName("vendored").allSource)
+    source(project(":common").sourceSets.getByName("desktop").allSource)
     source(project(":common").sourceSets.getByName("sodiumCompatibility").allSource)
 }
 
