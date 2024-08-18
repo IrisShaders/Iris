@@ -94,7 +94,7 @@ public abstract class MixinModelViewBobbing {
 
 	@Redirect(method = "renderLevel",
 		at = @At(value = "INVOKE",
-			target = "Lorg/joml/Matrix4f;rotation(Lorg/joml/Quaternionfc;)Lorg/joml/Matrix4f;"))
+			target = "Lorg/joml/Matrix4f;rotation(Lorg/joml/Quaternionfc;)Lorg/joml/Matrix4f;", remap = false))
 	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, Quaternionfc quat, DeltaTracker deltaTracker) {
 		if (!areShadersOn) {
 			instance.rotation(quat);

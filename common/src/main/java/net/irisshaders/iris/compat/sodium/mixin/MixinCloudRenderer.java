@@ -37,13 +37,17 @@ public abstract class MixinCloudRenderer {
 		NormI8.pack(0.0f, 0.0f, -1.0f), // NEG_Z
 		NormI8.pack(0.0f, 0.0f, 1.0f) // POS_Z
 	};
+
 	@Unique
 	private static int computedNormal;
+
 	@Shadow
 	private ShaderInstance shaderProgram;
-	@Shadow
+
+	@Shadow(remap = false)
 	@Nullable
 	private CloudRenderer.@Nullable CloudGeometry cachedGeometry;
+
 	@Unique
 	private @Nullable CloudRenderer.CloudGeometry cachedGeometryIris;
 
@@ -98,7 +102,7 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;cachedGeometry:Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer$CloudGeometry;", ordinal = 0))
+	@Redirect(method = "render", at = @At(remap = false, value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;cachedGeometry:Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer$CloudGeometry;", ordinal = 0))
 	private CloudRenderer.@Nullable CloudGeometry changeGeometry(CloudRenderer instance) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return cachedGeometryIris;
@@ -107,7 +111,7 @@ public abstract class MixinCloudRenderer {
 		}
 	}
 
-	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;cachedGeometry:Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer$CloudGeometry;", ordinal = 1))
+	@Redirect(method = "render", at = @At(remap = false, value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;cachedGeometry:Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer$CloudGeometry;", ordinal = 1))
 	private void changeGeometry2(CloudRenderer instance, CloudRenderer.CloudGeometry value) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			cachedGeometryIris = value;

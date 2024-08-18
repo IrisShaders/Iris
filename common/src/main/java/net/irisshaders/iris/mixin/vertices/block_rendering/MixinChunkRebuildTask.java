@@ -31,28 +31,16 @@ import java.util.Set;
  * <p>
  * Uses a priority of 999 so that we apply before Indigo's mixins.
  */
-@Mixin(targets = "net.minecraft.client.renderer.chunk.SectionRenderDispatcher$RenderSection$RebuildTask", priority = 999)
+@Mixin(value = SectionRenderDispatcher.RenderSection.RebuildTask.class, priority = 999)
 public class MixinChunkRebuildTask {
-	@Unique
-	private static final String RENDER = "Lnet/minecraft/client/renderer/chunk/SectionRenderDispatcher$RenderSection$RebuildTask;compile(FFFLnet/minecraft/client/renderer/SectionBufferBuilderPack;)Lnet/minecraft/client/renderer/chunk/SectionRenderDispatcher$RenderSection$RebuildTask$CompileResults;";
 	// Resolve the ID map on the main thread to avoid thread safety issues
 	@Unique
 	private final Object2IntMap<BlockState> blockStateIds = getBlockStateIds();
-	@Unique
-	private BlockSensitiveBufferBuilder lastBufferBuilder;
 
 	@Unique
 	private Object2IntMap<BlockState> getBlockStateIds() {
 		return WorldRenderingSettings.INSTANCE.getBlockStateIds();
 	}
 
-	@Unique
-	private short resolveBlockId(BlockState state) {
-		if (blockStateIds == null) {
-			return -1;
-		}
-
-		return (short) blockStateIds.getOrDefault(state, -1);
-	}
-
+	// TODO: consider adding this back.
 }

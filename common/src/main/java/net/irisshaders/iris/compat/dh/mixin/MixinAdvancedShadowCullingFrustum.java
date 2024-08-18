@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(AdvancedShadowCullingFrustum.class)
 public class MixinAdvancedShadowCullingFrustum extends Frustum implements IDhApiShadowCullingFrustum {
-	@Shadow
+	@Shadow(remap = false)
 	protected int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		throw new IllegalStateException();
 	}

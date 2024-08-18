@@ -67,13 +67,4 @@ public class MixinBufferBuilder_SegmentRendering implements BufferBuilderExt {
 			duplicateLastVertex();
 		}
 	}
-
-	@Dynamic
-	@Inject(method = "sodium$moveToNextVertex", at = @At("RETURN"), require = 0)
-	private void batchedentityrendering$onNextSodium(CallbackInfo ci) {
-		if (dupeNextVertex) {
-			dupeNextVertex = false;
-			duplicateLastVertex();
-		}
-	}
 }

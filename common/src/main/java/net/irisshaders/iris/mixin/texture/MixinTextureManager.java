@@ -15,6 +15,7 @@ import java.util.concurrent.Executor;
 
 @Mixin(TextureManager.class)
 public class MixinTextureManager {
+	@SuppressWarnings("all")
 	@Inject(method = {
 		"method_18167",
 		"lambda$reload$5"

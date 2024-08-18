@@ -24,9 +24,9 @@ import java.util.Map;
 
 @Mixin(RenderSectionManager.class)
 public class MixinRenderSectionManagerShadow {
-	@Shadow
+	@Shadow(remap = false)
 	private @NotNull SortedRenderLists renderLists;
-	@Shadow
+	@Shadow(remap = false)
 	private @NotNull Map<ChunkUpdateType, ArrayDeque<RenderSection>> taskLists;
 	@Unique
 	private @NotNull SortedRenderLists shadowRenderLists = SortedRenderLists.empty();
@@ -41,7 +41,7 @@ public class MixinRenderSectionManagerShadow {
 		}
 	}
 
-	@Redirect(method = "createTerrainRenderList", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;renderLists:Lnet/caffeinemc/mods/sodium/client/render/chunk/lists/SortedRenderLists;"))
+	@Redirect(remap = false, method = "createTerrainRenderList", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;renderLists:Lnet/caffeinemc/mods/sodium/client/render/chunk/lists/SortedRenderLists;"))
 	private void useShadowRenderList(RenderSectionManager instance, SortedRenderLists value) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			shadowRenderLists = value;
@@ -50,7 +50,7 @@ public class MixinRenderSectionManagerShadow {
 		}
 	}
 
-	@Redirect(method = "createTerrainRenderList", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;taskLists:Ljava/util/Map;"))
+	@Redirect(remap = false, method = "createTerrainRenderList", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;taskLists:Ljava/util/Map;"))
 	private void useShadowTaskrList(RenderSectionManager instance, @NotNull Map<ChunkUpdateType, ArrayDeque<RenderSection>> value) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			shadowTaskLists = value;

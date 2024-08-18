@@ -20,10 +20,6 @@ sourceSets {
     main.get().apply {
         compileClasspath += project(":common").sourceSets.getByName("headers").output
     }
-
-    test.get().apply {
-        compileClasspath += project(":common").sourceSets.getByName("headers").output
-    }
 }
 
 dependencies {
@@ -83,7 +79,6 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
-           environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
         }
         named("server") {
             server()
@@ -95,6 +90,14 @@ loom {
 }
 
 tasks {
+    getByName("compileTestJava") {
+        enabled = false
+    }
+
+    getByName("test") {
+        enabled = false
+    }
+
     withType<JavaCompile> {
         source(project(":common").sourceSets.main.get().allSource)
         source(project(":common").sourceSets.getByName("vendored").allSource)

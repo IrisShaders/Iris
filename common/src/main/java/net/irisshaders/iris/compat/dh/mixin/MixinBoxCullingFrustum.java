@@ -13,7 +13,7 @@ public class MixinBoxCullingFrustum implements IDhApiShadowCullingFrustum {
 	private int worldMinYDH;
 	private int worldMaxYDH;
 
-	@Shadow
+	@Shadow(remap = false)
 	@Final
 	private BoxCuller boxCuller;
 

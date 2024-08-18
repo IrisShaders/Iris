@@ -5,6 +5,7 @@ import net.irisshaders.iris.pbr.pbr.PBRSpriteHolder;
 import net.irisshaders.iris.pbr.pbr.SpriteContentsExtension;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,6 +24,8 @@ public class MixinSpriteContents implements SpriteContentsExtension {
 		}
 	}
 
+	@Dynamic("Added by Sodium")
+	@SuppressWarnings("target")
 	@Inject(method = "sodium$setActive(Z)V", at = @At("TAIL"), remap = false, require = 0)
 	private void iris$onTailMarkActive(CallbackInfo ci) {
 		PBRSpriteHolder pbrHolder = ((SpriteContentsExtension) this).getPBRHolder();

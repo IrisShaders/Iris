@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(CommonVertexAttribute.class)
 public class MixinCommonVertexAttribute {
 	@Mutable
-	@Shadow
+	@Shadow(remap = false)
 	@Final
 	public static int COUNT;
 

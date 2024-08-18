@@ -47,12 +47,12 @@ public class SodiumShader implements ChunkShaderInterface {
 						List<BufferBlendOverride> bufferBlendOverrides, GlFramebuffer framebuffer,
 						CustomUniforms customUniforms, Supplier<ImmutableSet<Integer>> flipState, float alphaTest,
 						boolean containsTessellation) {
-		this.uniformModelViewMatrix = context.bindUniform("iris_ModelViewMatrix", GlUniformMatrix4f::new, false);
-		this.uniformModelViewMatrixInv = context.bindUniform("iris_ModelViewMatrixInverse", GlUniformMatrix4f::new, false);
-		this.uniformNormalMatrix = context.bindUniform("iris_NormalMatrix", GlUniformMatrix3f::new, false);
-		this.uniformProjectionMatrix = context.bindUniform("iris_ProjectionMatrix", GlUniformMatrix4f::new, false);
-		this.uniformProjectionMatrixInv = context.bindUniform("iris_ProjectionMatrixInv", GlUniformMatrix4f::new, false);
-		this.uniformRegionOffset = context.bindUniform("u_RegionOffset", GlUniformFloat3v::new, false);
+		this.uniformModelViewMatrix = context.bindUniformOptional("iris_ModelViewMatrix", GlUniformMatrix4f::new);
+		this.uniformModelViewMatrixInv = context.bindUniformOptional("iris_ModelViewMatrixInverse", GlUniformMatrix4f::new);
+		this.uniformNormalMatrix = context.bindUniformOptional("iris_NormalMatrix", GlUniformMatrix3f::new);
+		this.uniformProjectionMatrix = context.bindUniformOptional("iris_ProjectionMatrix", GlUniformMatrix4f::new);
+		this.uniformProjectionMatrixInv = context.bindUniformOptional("iris_ProjectionMatrixInv", GlUniformMatrix4f::new);
+		this.uniformRegionOffset = context.bindUniformOptional("u_RegionOffset", GlUniformFloat3v::new);
 
 		this.alphaTest = alphaTest;
 		this.framebuffer = framebuffer;

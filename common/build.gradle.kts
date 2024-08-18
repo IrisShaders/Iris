@@ -39,9 +39,7 @@ tasks.configureEach {
 dependencies {
     minecraft(group = "com.mojang", name = "minecraft", version = MINECRAFT_VERSION)
     mappings(loom.officialMojangMappings())
-    compileOnly("io.github.llamalad7:mixinextras-common:0.3.5")
-    annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5")
-    compileOnly("net.fabricmc:sponge-mixin:0.13.2+mixin.0.8.5")
+    modCompileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
     modCompileOnly("org.antlr:antlr4-runtime:4.13.1")
     modCompileOnly("io.github.douira:glsl-transformer:2.0.1")
     modCompileOnly("org.anarres:jcpp:1.4.14")

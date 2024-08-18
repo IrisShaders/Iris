@@ -28,12 +28,6 @@ import java.util.Set;
 
 @Mixin(LevelRenderer.class)
 public class MixinLevelRenderer_SkipRendering {
-	@Shadow
-	@Final
-	private ObjectArrayList<SectionRenderDispatcher.RenderSection> visibleSections;
-	@Shadow
-	@Final
-	private Set<BlockEntity> globalBlockEntities;
 	@Unique
 	private static final ObjectArrayList<SectionRenderDispatcher.RenderSection> EMPTY_LIST = new ObjectArrayList<>();
 
