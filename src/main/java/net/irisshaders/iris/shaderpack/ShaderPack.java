@@ -16,6 +16,7 @@ import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
+import net.irisshaders.iris.shaderpack.error.RusticError;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.include.IncludeGraph;
 import net.irisshaders.iris.shaderpack.include.IncludeProcessor;
@@ -151,11 +152,7 @@ public class ShaderPack {
 		IncludeGraph graph = new IncludeGraph(root, starts.build());
 
 		if (!graph.getFailures().isEmpty()) {
-			graph.getFailures().forEach((path, error) -> {
-				Iris.logger.error("{}", error.toString());
-			});
-
-			throw new IOException("Failed to resolve some #include directives, see previous messages for details");
+			throw new IOException(String.join("\n", graph.getFailures().values().stream().map(RusticError::toString).toArray(String[]::new)));
 		}
 
 		this.languageMap = new LanguageMap(root.resolve("lang"));
