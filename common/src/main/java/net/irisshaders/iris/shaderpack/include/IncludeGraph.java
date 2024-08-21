@@ -80,7 +80,12 @@ public class IncludeGraph {
 			String source;
 
 			try {
-				source = readFile(next.resolved(root));
+				Path p = next.resolved(root);
+				if (Iris.getIrisConfig().areDebugOptionsEnabled() && root.isAbsolute() && !p.toAbsolutePath().toString().equals(p.toFile().getCanonicalPath())) {
+					throw new FileIncludeException("'" + next.getPathString() + "' doesn't exist, did you mean '" +
+						root.relativize(p.toFile().getCanonicalFile().toPath()).toString().replace("\\", "/") + "'?");
+				}
+				source = readFile(p);
 			} catch (IOException e) {
 				AbsolutePackPath src = cameFrom.get(next);
 
@@ -90,8 +95,10 @@ public class IncludeGraph {
 
 				String topLevelMessage;
 				String detailMessage;
-
-				if (e instanceof NoSuchFileException) {
+				if (e instanceof FileIncludeException) {
+					topLevelMessage = "failed to resolve #include directive\n" + e.getMessage();
+					detailMessage = "file not found";
+				} else if (e instanceof NoSuchFileException) {
 					topLevelMessage = "failed to resolve #include directive";
 					detailMessage = "file not found";
 				} else {
