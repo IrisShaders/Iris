@@ -10,7 +10,7 @@ import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 import java.nio.file.Path;
 
-public class IrisForgeHelpers implements IrisPlatformHelpers{
+public class IrisForgeHelpers implements IrisPlatformHelpers {
 	@Override
 	public boolean isModLoaded(String modId) {
 		return LoadingModList.get().getModFileById(modId) != null;
@@ -45,5 +45,10 @@ public class IrisForgeHelpers implements IrisPlatformHelpers{
 	public KeyMapping registerKeyBinding(KeyMapping keyMapping) {
 		IrisForgeMod.KEYLIST.add(keyMapping);
 		return keyMapping;
+	}
+
+	@Override
+	public boolean useELS() {
+		return true;
 	}
 }

@@ -25,9 +25,14 @@ public abstract class MixinShaderChunkRenderer {
 		GlProgram<ChunkShaderInterface> program = null;
 
 		if (pipeline instanceof IrisRenderingPipeline irisRenderingPipeline) {
+			irisRenderingPipeline.getSodiumPrograms().getFramebuffer(pass).bind();
 			program = irisRenderingPipeline.getSodiumPrograms().getProgram(pass);
 		}
 
-		return program == null ? this.compileProgram(options) : program;
+		if (program == null) {
+			return this.compileProgram(options);
+		}
+
+		return program;
 	}
 }

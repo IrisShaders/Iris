@@ -1,7 +1,7 @@
 plugins {
     id("idea")
     id("maven-publish")
-    id("net.neoforged.moddev") version "1.0.15"
+    id("net.neoforged.moddev") version "2.0.16-beta"
     id("java-library")
 }
 
@@ -42,6 +42,13 @@ tasks.jar {
 neoForge {
     // Specify the version of NeoForge to use.
     version = NEOFORGE_VERSION
+
+    parchment {
+        // Get versions from https://parchmentmc.org/docs/getting-started
+        // Omit the "v"-prefix in mappingsVersion
+        minecraftVersion = "1.21"
+        mappingsVersion = "2024.07.28"
+    }
 
     runs {
         create("client") {

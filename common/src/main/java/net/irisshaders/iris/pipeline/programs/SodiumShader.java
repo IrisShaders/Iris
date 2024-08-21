@@ -38,13 +38,12 @@ public class SodiumShader implements ChunkShaderInterface {
 	private final CustomUniforms customUniforms;
 	private final BlendModeOverride blendModeOverride;
 	private final List<BufferBlendOverride> bufferBlendOverrides;
-	private final GlFramebuffer framebuffer;
 	private final float alphaTest;
 	private final boolean containsTessellation;
 
 	public SodiumShader(IrisRenderingPipeline pipeline, SodiumPrograms.Pass pass, ShaderBindingContext context,
 						int handle, Optional<BlendModeOverride> blendModeOverride,
-						List<BufferBlendOverride> bufferBlendOverrides, GlFramebuffer framebuffer,
+						List<BufferBlendOverride> bufferBlendOverrides,
 						CustomUniforms customUniforms, Supplier<ImmutableSet<Integer>> flipState, float alphaTest,
 						boolean containsTessellation) {
 		this.uniformModelViewMatrix = context.bindUniformOptional("iris_ModelViewMatrix", GlUniformMatrix4f::new);
@@ -55,7 +54,6 @@ public class SodiumShader implements ChunkShaderInterface {
 		this.uniformRegionOffset = context.bindUniformOptional("u_RegionOffset", GlUniformFloat3v::new);
 
 		this.alphaTest = alphaTest;
-		this.framebuffer = framebuffer;
 		this.containsTessellation = containsTessellation;
 
 		boolean isShadowPass = pass == SodiumPrograms.Pass.SHADOW || pass == SodiumPrograms.Pass.SHADOW_CUTOUT;
@@ -137,7 +135,6 @@ public class SodiumShader implements ChunkShaderInterface {
 		applyBlendModes();
 		updateUniforms();
 		images.update();
-		framebuffer.bind();
 		bindTextures();
 
 		if (containsTessellation) {

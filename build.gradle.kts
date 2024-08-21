@@ -27,6 +27,12 @@ subprojects {
 
     java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
+    repositories {
+        maven {
+            name = "ParchmentMC"
+            url = uri("https://maven.parchmentmc.org")
+        }
+    }
 
     fun createVersionString(): String {
         val builder = StringBuilder()

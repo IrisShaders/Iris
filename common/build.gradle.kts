@@ -38,7 +38,10 @@ tasks.configureEach {
 
 dependencies {
     minecraft(group = "com.mojang", name = "minecraft", version = MINECRAFT_VERSION)
-    mappings(loom.officialMojangMappings())
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-1.21:2024.07.28@zip")
+    })
     modCompileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
     modCompileOnly("org.antlr:antlr4-runtime:4.13.1")
     modCompileOnly("io.github.douira:glsl-transformer:2.0.1")

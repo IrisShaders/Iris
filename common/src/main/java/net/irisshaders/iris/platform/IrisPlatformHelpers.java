@@ -26,4 +26,6 @@ public interface IrisPlatformHelpers {
 	int compareVersions(String currentVersion, String semanticVersion) throws Exception;
 
 	KeyMapping registerKeyBinding(KeyMapping keyMapping);
+
+    boolean useELS();
 }

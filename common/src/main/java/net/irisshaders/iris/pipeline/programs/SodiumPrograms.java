@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class SodiumPrograms {
+	private final EnumMap<Pass, GlFramebuffer> framebuffers = new EnumMap<>(Pass.class);
 	private final EnumMap<Pass, GlProgram<ChunkShaderInterface>> shaders = new EnumMap<>(Pass.class);
 
 	public SodiumPrograms(IrisRenderingPipeline pipeline, ProgramSet programSet, ProgramFallbackResolver resolver,
@@ -48,16 +49,17 @@ public class SodiumPrograms {
 						  CustomUniforms customUniforms) {
 		for (Pass pass : Pass.values()) {
 			ProgramSource source = resolver.resolveNullable(pass.getOriginalId());
+			Supplier<ImmutableSet<Integer>> flipState = getFlipState(pipeline, pass, pass == Pass.SHADOW || pass == Pass.SHADOW_CUTOUT);
+			GlFramebuffer framebuffer = createFramebuffer(pass, source, shadowRenderTargets, renderTargets, flipState);
+			framebuffers.put(pass, framebuffer);
 
 			if (source == null) {
-				Iris.logger.fatal("TODO: Implement default shaders");
 				continue;
 			}
 
 			AlphaTest alphaTest = getAlphaTest(pass, source);
 			Map<PatchShaderType, String> transformed = transformShaders(source, alphaTest, programSet);
-			GlProgram<ChunkShaderInterface> shader = createShader(pipeline, pass, source, alphaTest, renderTargets,
-				shadowRenderTargets, customUniforms, createGlShaders(pass.name().toLowerCase(Locale.ROOT), transformed));
+			GlProgram<ChunkShaderInterface> shader = createShader(pipeline, pass, source, alphaTest, customUniforms, flipState, createGlShaders(pass.name().toLowerCase(Locale.ROOT), transformed));
 			shaders.put(pass, shader);
 		}
 	}
@@ -101,9 +103,8 @@ public class SodiumPrograms {
 	}
 
 	private GlProgram<ChunkShaderInterface> createShader(IrisRenderingPipeline pipeline, Pass pass, ProgramSource source,
-														 AlphaTest alphaTest, RenderTargets renderTargets,
-														 Supplier<ShadowRenderTargets> shadowRenderTargets,
-														 CustomUniforms customUniforms,
+														 AlphaTest alphaTest,
+														 CustomUniforms customUniforms, Supplier<ImmutableSet<Integer>> flipState,
 														 Map<PatchShaderType, GlShader> transformed) {
 		GlProgram.Builder builder = GlProgram.builder(ResourceLocation.fromNamespaceAndPath("sodium", "chunk_shader_for_" + pass.name().toLowerCase(Locale.ROOT)));
 
@@ -111,12 +112,10 @@ public class SodiumPrograms {
 			builder.attachShader(shader);
 		}
 
-		Supplier<ImmutableSet<Integer>> flipState = getFlipState(pipeline, pass, pass == Pass.SHADOW || pass == Pass.SHADOW_CUTOUT);
-		GlFramebuffer framebuffer = createFramebuffer(pass, source, shadowRenderTargets, renderTargets, flipState);
 		boolean containsTessellation = source.getTessEvalSource().isPresent();
 
 		try {
-			return buildProgram(builder, pipeline, pass, source, alphaTest, framebuffer, customUniforms, flipState, containsTessellation);
+			return buildProgram(builder, pipeline, pass, source, alphaTest, customUniforms, flipState, containsTessellation);
 		} finally {
 			transformed.values().forEach(GlShader::delete);
 		}
@@ -128,9 +127,9 @@ public class SodiumPrograms {
 											Supplier<ImmutableSet<Integer>> flipState) {
 		if (pass == Pass.SHADOW || pass == Pass.SHADOW_CUTOUT) {
 			return shadowRenderTargets.get().createShadowFramebuffer(ImmutableSet.of(),
-				source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers());
+				source == null ? new int[] {0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers()));
 		} else {
-			return renderTargets.createGbufferFramebuffer(flipState.get(), source.getDirectives().getDrawBuffers());
+			return renderTargets.createGbufferFramebuffer(flipState.get(), source == null ? new int[] {0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{ 0 } : source.getDirectives().getDrawBuffers()));
 		}
 	}
 
@@ -146,8 +145,7 @@ public class SodiumPrograms {
 	}
 
 	private GlProgram<ChunkShaderInterface> buildProgram(GlProgram.Builder builder, IrisRenderingPipeline pipeline,
-														 Pass pass, ProgramSource source, AlphaTest alphaTest,
-														 GlFramebuffer framebuffer, CustomUniforms customUniforms,
+														 Pass pass, ProgramSource source, AlphaTest alphaTest, CustomUniforms customUniforms,
 														 Supplier<ImmutableSet<Integer>> flipState,
 														 boolean containsTessellation) {
 		return builder
@@ -165,7 +163,7 @@ public class SodiumPrograms {
 				int handle = ((GlObject) shader).handle();
 				GLDebug.nameObject(GL43C.GL_PROGRAM, handle, "sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
 				return new SodiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride(),
-					createBufferBlendOverrides(source), framebuffer, customUniforms, flipState,
+					createBufferBlendOverrides(source), customUniforms, flipState,
 					alphaTest.reference(), containsTessellation);
 			});
 	}
@@ -173,6 +171,11 @@ public class SodiumPrograms {
 	public GlProgram<ChunkShaderInterface> getProgram(TerrainRenderPass pass) {
 		Pass pass2 = mapTerrainRenderPass(pass);
 		return this.shaders.get(pass2);
+	}
+
+	public GlFramebuffer getFramebuffer(TerrainRenderPass pass) {
+		Pass pass2 = mapTerrainRenderPass(pass);
+		return this.framebuffers.get(pass2);
 	}
 
 	private Pass mapTerrainRenderPass(TerrainRenderPass pass) {

@@ -24,7 +24,10 @@ sourceSets {
 
 dependencies {
     minecraft("com.mojang:minecraft:${MINECRAFT_VERSION}")
-    mappings(loom.officialMojangMappings())
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-1.21:2024.07.28@zip")
+    })
     modImplementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
     fun addEmbeddedFabricModule(name: String) {
