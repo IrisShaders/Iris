@@ -41,10 +41,11 @@
       "1.21.x"
     ],
     "sodium": [
-      "*"
+      "0.6.x"
     ]
   },
   "breaks": {
+    "embeddium": "*",
     "iris-explorer": "*",
     "originsenhanced": "<=1.3.2",
     "colormatic": "<=3.0.0",
@@ -59,8 +60,7 @@
   },
   "custom": {
     "sodium:options": {
-      "mixin.features.render.world.sky": false,
-      "mixin.features.render.gui.font": false
+      "mixin.features.render.world.sky": false
     },
     "mc-publish": {
       "loaders": [

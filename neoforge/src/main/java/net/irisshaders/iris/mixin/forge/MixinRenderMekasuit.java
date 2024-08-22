@@ -5,13 +5,10 @@ import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.pathways.LightningHandler;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-
-import java.util.function.Function;
 
 @Pseudo
 @Mixin(targets = "mekanism/client/render/armor/MekaSuitArmor", remap = false)

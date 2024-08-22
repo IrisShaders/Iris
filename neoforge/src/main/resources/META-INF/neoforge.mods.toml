@@ -8,20 +8,20 @@ modId = "iris"
 version = "${version}"
 displayName = "Iris"
 
-logoFile="iris-logo.png" #optional
+logoFile = "iris-logo.png" #optional
 
-authors="coderbot, IMS212"
+authors = "coderbot, IMS212"
 
 description = '''
 Iris is a modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs.
 '''
 
-[[dependencies.sodium]]
-modId="minecraft"
-type="required"
-versionRange="[1.20.4,1.21)"
-ordering="NONE"
-side="CLIENT"
+[[dependencies.iris]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21,1.21.1)"
+ordering = "NONE"
+side = "CLIENT"
 
 [[mixins]]
 config = "mixins.iris.json"
@@ -45,8 +45,7 @@ config = "mixins.iris.compat.dh.json"
 config = "mixins.iris.forge.json"
 
 [mods."sodium:options"]
-"mixin.features.render.world.sky"=false
-"mixin.features.render.gui.font"=false
+"mixin.features.render.world.sky" = false
 
 [[dependencies.iris]]
 modId = "embeddium"
