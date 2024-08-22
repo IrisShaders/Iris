@@ -1,7 +1,7 @@
-package net.irisshaders.iris.pbr.pbr.loader;
+package net.irisshaders.iris.pbr.loader;
 
 import net.irisshaders.iris.mixin.texture.SimpleTextureAccessor;
-import net.irisshaders.iris.pbr.pbr.PBRType;
+import net.irisshaders.iris.pbr.texture.PBRType;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.resources.ResourceLocation;

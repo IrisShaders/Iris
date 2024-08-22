@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pbr.pbr;
+package net.irisshaders.iris.pbr.texture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -7,9 +7,9 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.pbr.TextureTracker;
-import net.irisshaders.iris.pbr.pbr.loader.PBRTextureLoader;
-import net.irisshaders.iris.pbr.pbr.loader.PBRTextureLoader.PBRTextureConsumer;
-import net.irisshaders.iris.pbr.pbr.loader.PBRTextureLoaderRegistry;
+import net.irisshaders.iris.pbr.loader.PBRTextureLoader;
+import net.irisshaders.iris.pbr.loader.PBRTextureLoader.PBRTextureConsumer;
+import net.irisshaders.iris.pbr.loader.PBRTextureLoaderRegistry;
 import net.irisshaders.iris.targets.backed.NativeImageBackedSingleColorTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;

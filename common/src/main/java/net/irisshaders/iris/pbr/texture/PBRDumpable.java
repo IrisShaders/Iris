@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pbr.pbr;
+package net.irisshaders.iris.pbr.texture;
 
 import net.minecraft.client.renderer.texture.Dumpable;
 import net.minecraft.resources.ResourceLocation;

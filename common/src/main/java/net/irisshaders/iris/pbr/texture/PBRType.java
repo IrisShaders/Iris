@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pbr.pbr;
+package net.irisshaders.iris.pbr.texture;
 
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.Nullable;

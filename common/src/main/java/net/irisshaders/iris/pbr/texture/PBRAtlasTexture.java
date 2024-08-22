@@ -1,11 +1,11 @@
-package net.irisshaders.iris.pbr.pbr;
+package net.irisshaders.iris.pbr.texture;
 
 import com.mojang.blaze3d.platform.TextureUtil;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.mixin.texture.SpriteContentsAnimatedTextureAccessor;
 import net.irisshaders.iris.mixin.texture.SpriteContentsFrameInfoAccessor;
 import net.irisshaders.iris.mixin.texture.SpriteContentsTickerAccessor;
-import net.irisshaders.iris.pbr.pbr.loader.AtlasPBRLoader.PBRTextureAtlasSprite;
+import net.irisshaders.iris.pbr.loader.AtlasPBRLoader.PBRTextureAtlasSprite;
 import net.irisshaders.iris.pbr.util.TextureManipulationUtil;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;

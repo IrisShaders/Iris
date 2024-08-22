@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pbr.pbr.loader;
+package net.irisshaders.iris.pbr.loader;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.irisshaders.iris.Iris;
@@ -9,10 +9,10 @@ import net.irisshaders.iris.pbr.format.TextureFormatLoader;
 import net.irisshaders.iris.pbr.mipmap.ChannelMipmapGenerator;
 import net.irisshaders.iris.pbr.mipmap.CustomMipmapGenerator;
 import net.irisshaders.iris.pbr.mipmap.LinearBlendFunction;
-import net.irisshaders.iris.pbr.pbr.PBRAtlasTexture;
-import net.irisshaders.iris.pbr.pbr.PBRSpriteHolder;
-import net.irisshaders.iris.pbr.pbr.PBRType;
-import net.irisshaders.iris.pbr.pbr.SpriteContentsExtension;
+import net.irisshaders.iris.pbr.texture.PBRAtlasTexture;
+import net.irisshaders.iris.pbr.texture.PBRSpriteHolder;
+import net.irisshaders.iris.pbr.texture.PBRType;
+import net.irisshaders.iris.pbr.texture.SpriteContentsExtension;
 import net.irisshaders.iris.pbr.util.ImageManipulationUtil;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;

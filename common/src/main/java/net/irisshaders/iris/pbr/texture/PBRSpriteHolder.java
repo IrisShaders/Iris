@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pbr.pbr;
+package net.irisshaders.iris.pbr.texture;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.jetbrains.annotations.Nullable;

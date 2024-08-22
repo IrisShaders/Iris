@@ -1,4 +1,4 @@
-package net.irisshaders.iris.pbr.pbr.loader;
+package net.irisshaders.iris.pbr.loader;
 
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.server.packs.resources.ResourceManager;

@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin.texture.pbr;
 
-import net.irisshaders.iris.pbr.pbr.PBRAtlasHolder;
-import net.irisshaders.iris.pbr.pbr.TextureAtlasExtension;
+import net.irisshaders.iris.pbr.texture.PBRAtlasHolder;
+import net.irisshaders.iris.pbr.texture.TextureAtlasExtension;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;

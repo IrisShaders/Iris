@@ -1,8 +1,8 @@
 package net.irisshaders.iris.mixin.texture.pbr;
 
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteUtil;
-import net.irisshaders.iris.pbr.pbr.PBRSpriteHolder;
-import net.irisshaders.iris.pbr.pbr.SpriteContentsExtension;
+import net.irisshaders.iris.pbr.texture.PBRSpriteHolder;
+import net.irisshaders.iris.pbr.texture.SpriteContentsExtension;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.spongepowered.asm.mixin.Dynamic;
