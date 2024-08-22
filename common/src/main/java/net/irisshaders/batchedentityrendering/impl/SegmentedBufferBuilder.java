@@ -7,7 +7,6 @@ import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.batchedentityrendering.mixin.RenderTypeAccessor;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ public class SegmentedBufferBuilder implements MemoryTrackingBuffer {
 
 	public VertexConsumer getBuffer(RenderType renderType) {
 		try {
-			ByteBufferBuilderHolder buffer = buffers.computeIfAbsent(renderType, (r) -> new ByteBufferBuilderHolder(new ByteBufferBuilder(512*2024)));
+			ByteBufferBuilderHolder buffer = buffers.computeIfAbsent(renderType, (r) -> new ByteBufferBuilderHolder(new ByteBufferBuilder(512 * 2024)));
 
 			buffer.wasUsed();
 			BufferBuilder builder = builders.computeIfAbsent(renderType, (t) -> new BufferBuilder(buffer.getBuffer(), renderType.mode(), renderType.format()));

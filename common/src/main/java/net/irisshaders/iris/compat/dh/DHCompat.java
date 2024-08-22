@@ -1,9 +1,9 @@
 package net.irisshaders.iris.compat.dh;
 
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
@@ -16,7 +16,6 @@ import java.lang.reflect.InvocationTargetException;
 public class DHCompat {
 	private static boolean dhPresent = true;
 	private static boolean lastIncompatible;
-	private static MethodHandle setupEventHandlers;
 	private static MethodHandle deletePipeline;
 	private static MethodHandle incompatible;
 	private static MethodHandle getDepthTex;
@@ -59,7 +58,7 @@ public class DHCompat {
 		try {
 			if (IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons")) {
 				deletePipeline = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "clear", MethodType.methodType(void.class));
-				setupEventHandlers = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.LodRendererEvents"), "setupEventHandlers", MethodType.methodType(void.class));
+				MethodHandle setupEventHandlers = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.LodRendererEvents"), "setupEventHandlers", MethodType.methodType(void.class));
 				getDepthTex = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getStoredDepthTex", MethodType.methodType(int.class));
 				getRenderDistance = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
 				incompatible = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "incompatiblePack", MethodType.methodType(boolean.class));

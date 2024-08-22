@@ -19,9 +19,9 @@ public class MixinLocalPlayer implements LocalPlayerInterface {
 
 	@Override
 	public float getCurrentConstantMood() {
-		for(AmbientSoundHandler ambientSoundHandler : this.ambientSoundHandlers) {
+		for (AmbientSoundHandler ambientSoundHandler : this.ambientSoundHandlers) {
 			if (ambientSoundHandler instanceof BiomeAmbientSoundsHandler) {
-				return ((BiomeAmbienceInterface)ambientSoundHandler).getConstantMood();
+				return ((BiomeAmbienceInterface) ambientSoundHandler).getConstantMood();
 			}
 		}
 

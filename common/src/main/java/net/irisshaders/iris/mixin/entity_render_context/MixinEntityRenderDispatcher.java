@@ -2,8 +2,6 @@ package net.irisshaders.iris.mixin.entity_render_context;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
-import net.irisshaders.batchedentityrendering.impl.Groupable;
-import net.irisshaders.iris.layer.BlockEntityRenderStateShard;
 import net.irisshaders.iris.layer.BufferSourceWrapper;
 import net.irisshaders.iris.layer.EntityRenderStateShard;
 import net.irisshaders.iris.layer.OuterWrappedRenderType;

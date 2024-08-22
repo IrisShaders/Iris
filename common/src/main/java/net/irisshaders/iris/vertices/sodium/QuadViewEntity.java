@@ -3,8 +3,6 @@ package net.irisshaders.iris.vertices.sodium;
 import net.irisshaders.iris.vertices.views.QuadView;
 import org.lwjgl.system.MemoryUtil;
 
-import java.nio.ByteBuffer;
-
 public class QuadViewEntity implements QuadView {
 	private long writePointer;
 	private int stride;

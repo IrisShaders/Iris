@@ -19,7 +19,7 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	private static final int OFFSET_LIGHT = 24;
 	private static final int OFFSET_NORMAL = 28;
 	private static final int OFFSET_TANGENT = 46;
-	static VertexFormat format = IrisVertexFormats.GLYPH;
+	static final VertexFormat format = IrisVertexFormats.GLYPH;
 	private final ByteBuffer buffer;
 	private final TextQuadView quad = new TextQuadView();
 	private final Vector3f saveNormal = new Vector3f();

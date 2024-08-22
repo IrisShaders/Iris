@@ -61,9 +61,7 @@ public class TranslucencyRenderOrderManager implements RenderOrderManager {
 
 	@Override
 	public void reset() {
-		renderTypes.forEach((type, set) -> {
-			set.clear();
-		});
+		renderTypes.forEach((type, set) -> set.clear());
 	}
 
 	@Override

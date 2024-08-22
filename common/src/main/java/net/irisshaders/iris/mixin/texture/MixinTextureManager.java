@@ -15,6 +15,7 @@ import java.util.concurrent.Executor;
 
 @Mixin(TextureManager.class)
 public class MixinTextureManager {
+	@SuppressWarnings("UnresolvedMixinReference")
 	@Inject(method = {
 		"method_18167",
 		"lambda$reload$5"

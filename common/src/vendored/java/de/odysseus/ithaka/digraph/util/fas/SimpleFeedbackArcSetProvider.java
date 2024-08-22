@@ -73,19 +73,11 @@ public class SimpleFeedbackArcSetProvider extends AbstractFeedbackArcSetProvider
 			Collections.shuffle(shuffle, random);
 			List<Integer> mapping = new ArrayList<>(shuffle);
 
-			copies.add(Digraphs.copy(digraph, new DigraphFactory<>() {
-				@Override
-				public Digraph<V> create() {
-					return new MapDigraph<>(new Comparator<>() {
-						@Override
-						public int compare(V v1, V v2) {
-							int value1 = mapping.get(order.get(v1));
-							int value2 = mapping.get(order.get(v2));
-							return Integer.compare(value1, value2);
-						}
-					});
-				}
-			}));
+			copies.add(Digraphs.copy(digraph, (DigraphFactory<Digraph<V>>) () -> new MapDigraph<>((v1, v2) -> {
+				int value1 = mapping.get(order.get(v1));
+				int value2 = mapping.get(order.get(v2));
+				return Integer.compare(value1, value2);
+			})));
 		}
 		return copies;
 	}

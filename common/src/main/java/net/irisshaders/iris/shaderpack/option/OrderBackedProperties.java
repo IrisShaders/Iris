@@ -52,7 +52,7 @@ public class OrderBackedProperties extends Properties {
 		bw.write("#" + new Date());
 		bw.newLine();
 		synchronized (this) {
-			for (Enumeration<?> e = keys(); e.hasMoreElements();) {
+			for (Enumeration<?> e = keys(); e.hasMoreElements(); ) {
 				String key = (String) e.nextElement();
 				String val = (String) get(key);
 				// Commented out to stop '/' or ':' chars being replaced

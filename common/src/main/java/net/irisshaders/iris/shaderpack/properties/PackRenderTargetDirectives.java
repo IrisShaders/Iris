@@ -73,28 +73,24 @@ public class PackRenderTargetDirectives {
 			// Handle legacy GAUX4FORMAT directives
 
 			directives.acceptCommentStringDirective("GAUX4FORMAT", format -> {
-				if ("RGBA32F".equals(format)) {
-					colortex7.requestedFormat = InternalTextureFormat.RGBA32F;
-				} else if ("RGB32F".equals(format)) {
-					colortex7.requestedFormat = InternalTextureFormat.RGB32F;
-				} else if ("RGB16".equals(format)) {
-					colortex7.requestedFormat = InternalTextureFormat.RGB16;
-				} else {
-					Iris.logger.warn("Ignoring GAUX4FORMAT directive /* GAUX4FORMAT:" + format + "*/ because " + format
-						+ " must be RGBA32F, RGB32F, or RGB16. Use `const int colortex7Format = " + format + ";` + instead.");
+				switch (format) {
+					case "RGBA32F" -> colortex7.requestedFormat = InternalTextureFormat.RGBA32F;
+					case "RGB32F" -> colortex7.requestedFormat = InternalTextureFormat.RGB32F;
+					case "RGB16" -> colortex7.requestedFormat = InternalTextureFormat.RGB16;
+					case null, default ->
+						Iris.logger.warn("Ignoring GAUX4FORMAT directive /* GAUX4FORMAT:" + format + "*/ because " + format
+							+ " must be RGBA32F, RGB32F, or RGB16. Use `const int colortex7Format = " + format + ";` + instead.");
 				}
 			});
 		});
 
 		// If a shaderpack declares a gdepth uniform (even if it is not actually sampled or even of the correct type),
 		// we upgrade the format of gdepth / colortex1 to RGBA32F if it is currently RGBA.
-		Optional.ofNullable(renderTargetSettings.get(1)).ifPresent(gdepth -> {
-			directives.acceptUniformDirective("gdepth", () -> {
-				if (gdepth.requestedFormat == InternalTextureFormat.RGBA) {
-					gdepth.requestedFormat = InternalTextureFormat.RGBA32F;
-				}
-			});
-		});
+		Optional.ofNullable(renderTargetSettings.get(1)).ifPresent(gdepth -> directives.acceptUniformDirective("gdepth", () -> {
+            if (gdepth.requestedFormat == InternalTextureFormat.RGBA) {
+                gdepth.requestedFormat = InternalTextureFormat.RGBA32F;
+            }
+        }));
 
 		renderTargetSettings.forEach((index, settings) -> {
 			acceptBufferDirectives(directives, settings, "colortex" + index);

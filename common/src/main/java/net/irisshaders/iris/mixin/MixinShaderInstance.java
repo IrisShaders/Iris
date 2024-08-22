@@ -7,11 +7,11 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
+import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.ExtendedShader;
 import net.irisshaders.iris.pipeline.programs.FallbackShader;
-import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.lwjgl.opengl.KHRDebug;
@@ -29,7 +29,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 	@Unique
 	private static final ImmutableSet<String> ATTRIBUTE_LIST = ImmutableSet.of("Position", "Color", "Normal", "UV0", "UV1", "UV2");
+	@Shadow
+	private static ShaderInstance lastAppliedShader;
+	@Shadow
+	@Final
+	private int programId;
+	@Shadow
+	@Final
+	private Program vertexProgram;
+	@Shadow
+	@Final
+	private Program fragmentProgram;
 
+	@Unique
 	private static boolean shouldOverrideShaders() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
@@ -42,21 +54,6 @@ public abstract class MixinShaderInstance implements ShaderInstanceInterface {
 
 	@Shadow
 	public abstract int getId();
-
-	@Shadow
-	@Final
-	private int programId;
-
-	@Shadow
-	@Final
-	private Program vertexProgram;
-
-	@Shadow
-	@Final
-	private Program fragmentProgram;
-
-	@Shadow
-	private static ShaderInstance lastAppliedShader;
 
 	@Redirect(method = "updateLocations",
 		at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V", remap = false))

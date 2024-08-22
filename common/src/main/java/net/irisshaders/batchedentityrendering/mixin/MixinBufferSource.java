@@ -1,6 +1,5 @@
 package net.irisshaders.batchedentityrendering.mixin;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingBuffer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -9,7 +8,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.Map;
 import java.util.SequencedMap;
 
 @Mixin(MultiBufferSource.BufferSource.class)

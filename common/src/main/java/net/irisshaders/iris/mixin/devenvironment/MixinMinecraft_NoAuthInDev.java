@@ -2,7 +2,6 @@ package net.irisshaders.iris.mixin.devenvironment;
 
 import com.mojang.authlib.minecraft.UserApiService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import org.slf4j.Logger;

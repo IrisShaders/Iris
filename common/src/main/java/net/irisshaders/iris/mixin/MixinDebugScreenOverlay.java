@@ -70,9 +70,7 @@ public abstract class MixinDebugScreenOverlay {
 
 		if (Iris.getIrisConfig().areShadersEnabled()) {
 			messages.add("[" + Iris.MODNAME + "] Shaderpack: " + Iris.getCurrentPackName() + (Iris.isFallback() ? " (fallback)" : ""));
-			Iris.getCurrentPack().ifPresent(pack -> {
-				messages.add("[" + Iris.MODNAME + "] " + pack.getProfileInfo());
-			});
+			Iris.getCurrentPack().ifPresent(pack -> messages.add("[" + Iris.MODNAME + "] " + pack.getProfileInfo()));
 			messages.add("[" + Iris.MODNAME + "] Color space: " + IrisVideoSettings.colorSpace.name());
 		} else {
 			messages.add("[" + Iris.MODNAME + "] Shaders are disabled");

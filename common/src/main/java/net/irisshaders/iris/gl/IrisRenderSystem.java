@@ -675,12 +675,11 @@ public class IrisRenderSystem {
 
 		@Override
 		public int createBuffers() {
-			int value = GlStateManager._glGenBuffers();
-			return value;
+            return GlStateManager._glGenBuffers();
 		}
 	}
 
-	/*
+		/*
 	public static void bindTextures(int startingTexture, int[] bindings) {
 		if (hasMultibind) {
 			ARBMultiBind.glBindTextures(startingTexture, bindings);

@@ -13,9 +13,65 @@ import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
 public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInterface {
+	private static final int POSITION_MAX_VALUE = 1 << 20;
+	private static final int TEXTURE_MAX_VALUE = 1 << 15;
+	private static final float MODEL_ORIGIN = 8.0f;
+	private static final float MODEL_RANGE = 32.0f;
 	private final Vector3f normal = new Vector3f();
-
 	private BlockContextHolder contextHolder;
+
+	private static int packPositionHi(int x, int y, int z) {
+		return (x >>> 10 & 1023) << 0 | (y >>> 10 & 1023) << 10 | (z >>> 10 & 1023) << 20;
+	}
+
+	private static int packPositionLo(int x, int y, int z) {
+		return (x & 1023) << 0 | (y & 1023) << 10 | (z & 1023) << 20;
+	}
+
+	private static int quantizePosition(float position) {
+		return ((int) (normalizePosition(position) * POSITION_MAX_VALUE)) & 0xFFFFF;
+	}
+
+	private static float normalizePosition(float v) {
+		return (MODEL_ORIGIN + v) / MODEL_RANGE;
+	}
+
+	private static int packTexture(int u, int v) {
+		return ((u & 0xFFFF) << 0) | ((v & 0xFFFF) << 16);
+	}
+
+	private static int encodeTexture(float center, float x) {
+		// Shrink the texture coordinates (towards the center of the mapped texture region) by the minimum
+		// addressable unit (after quantization.) Then, encode the sign of the bias that was used, and apply
+		// the inverse transformation on the GPU with a small epsilon.
+		//
+		// This makes it possible to use much smaller epsilons for avoiding texture bleed, since the epsilon is no
+		// longer encoded into the vertex data (instead, we only store the sign.)
+		int bias = (x < center) ? 1 : -1;
+		int quantized = floorInt(x * TEXTURE_MAX_VALUE) + bias;
+
+		return (quantized & 0x7FFF) | (sign(bias) << 15);
+	}
+
+	private static int encodeLight(int light) {
+		int sky = Mth.clamp(light >>> 16 & 255, 8, 248);
+		int block = Mth.clamp(light >>> 0 & 255, 8, 248);
+		return block << 0 | sky << 8;
+	}
+
+	private static int sign(int x) {
+		// Shift the sign-bit to the least significant bit's position
+		// (0) if positive, (1) if negative
+		return (x >>> 31);
+	}
+
+	private static int packLightAndData(int light, int material, int section) {
+		return (light & '\uffff') << 0 | (material & 255) << 16 | (section & 255) << 24;
+	}
+
+	private static int floorInt(float x) {
+		return (int) Math.floor(x);
+	}
 
 	@Override
 	public void iris$setContextHolder(BlockContextHolder holder) {
@@ -67,9 +123,9 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 
 			int light = encodeLight(vertex.light);
 
-			MemoryUtil.memPutInt(ptr +  0L, packPositionHi(x, y, z));
-			MemoryUtil.memPutInt(ptr +  4L, packPositionLo(x, y, z));
-			MemoryUtil.memPutInt(ptr +  8L, WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? ColorABGR.withAlpha(vertex.color, vertex.ao) : ColorHelper.multiplyRGB(vertex.color, vertex.ao));
+			MemoryUtil.memPutInt(ptr, packPositionHi(x, y, z));
+			MemoryUtil.memPutInt(ptr + 4L, packPositionLo(x, y, z));
+			MemoryUtil.memPutInt(ptr + 8L, WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? ColorABGR.withAlpha(vertex.color, vertex.ao) : ColorHelper.multiplyRGB(vertex.color, vertex.ao));
 			MemoryUtil.memPutInt(ptr + 12L, packTexture(u, v));
 			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material.bits(), section));
 
@@ -86,64 +142,5 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 		}
 
 		return ptr;
-	}
-
-	private static int packPositionHi(int x, int y, int z) {
-		return (x >>> 10 & 1023) << 0 | (y >>> 10 & 1023) << 10 | (z >>> 10 & 1023) << 20;
-	}
-
-	private static int packPositionLo(int x, int y, int z) {
-		return (x & 1023) << 0 | (y & 1023) << 10 | (z & 1023) << 20;
-	}
-
-	private static final int POSITION_MAX_VALUE = 1 << 20;
-	private static final int TEXTURE_MAX_VALUE = 1 << 15;
-
-	private static final float MODEL_ORIGIN = 8.0f;
-	private static final float MODEL_RANGE = 32.0f;
-
-	private static int quantizePosition(float position) {
-		return ((int) (normalizePosition(position) * POSITION_MAX_VALUE)) & 0xFFFFF;
-	}
-
-	private static float normalizePosition(float v) {
-		return (MODEL_ORIGIN + v) / MODEL_RANGE;
-	}
-
-	private static int packTexture(int u, int v) {
-		return ((u & 0xFFFF) << 0) | ((v & 0xFFFF) << 16);
-	}
-
-	private static int encodeTexture(float center, float x) {
-		// Shrink the texture coordinates (towards the center of the mapped texture region) by the minimum
-		// addressable unit (after quantization.) Then, encode the sign of the bias that was used, and apply
-		// the inverse transformation on the GPU with a small epsilon.
-		//
-		// This makes it possible to use much smaller epsilons for avoiding texture bleed, since the epsilon is no
-		// longer encoded into the vertex data (instead, we only store the sign.)
-		int bias = (x < center) ? 1 : -1;
-		int quantized = floorInt(x * TEXTURE_MAX_VALUE) + bias;
-
-		return (quantized & 0x7FFF) | (sign(bias) << 15);
-	}
-
-	private static int encodeLight(int light) {
-		int sky = Mth.clamp(light >>> 16 & 255, 8, 248);
-		int block = Mth.clamp(light >>> 0 & 255, 8, 248);
-		return block << 0 | sky << 8;
-	}
-
-	private static int sign(int x) {
-		// Shift the sign-bit to the least significant bit's position
-		// (0) if positive, (1) if negative
-		return (x >>> 31);
-	}
-
-	private static int packLightAndData(int light, int material, int section) {
-		return (light & '\uffff') << 0 | (material & 255) << 16 | (section & 255) << 24;
-	}
-
-	private static int floorInt(float x) {
-		return (int)Math.floor((double)x);
 	}
 }

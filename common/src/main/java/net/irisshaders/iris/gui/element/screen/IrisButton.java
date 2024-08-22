@@ -1,7 +1,6 @@
 package net.irisshaders.iris.gui.element.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.uniform.FloatSupplier;
 import net.irisshaders.iris.gui.GuiUtil;
 import net.minecraft.client.Minecraft;
@@ -20,6 +19,10 @@ public class IrisButton extends Button {
 		this.alphaSupplier = alpha;
 	}
 
+	public static IrisButton.Builder iris$builder(Component pComponent0, Button.OnPress pButton$OnPress1, FloatSupplier alpha) {
+		return new IrisButton.Builder(pComponent0, pButton$OnPress1, alpha);
+	}
+
 	@Override
 	protected void renderWidget(GuiGraphics guiGraphics, int pInt1, int pInt2, float pFloat3) {
 		Minecraft lvMinecraft5 = Minecraft.getInstance();
@@ -35,10 +38,6 @@ public class IrisButton extends Button {
 
 	}
 
-	public static IrisButton.Builder iris$builder(Component pComponent0, Button.OnPress pButton$OnPress1, FloatSupplier alpha) {
-		return new IrisButton.Builder(pComponent0, pButton$OnPress1, alpha);
-	}
-
 	public static class Builder {
 		private final Component message;
 		private final Button.OnPress onPress;
@@ -49,7 +48,7 @@ public class IrisButton extends Button {
 		private int width = 150;
 		private int height = 20;
 		private Button.CreateNarration createNarration = Button.DEFAULT_NARRATION;
-		private FloatSupplier alpha;
+		private final FloatSupplier alpha;
 
 		public Builder(Component pButton$Builder0, Button.OnPress pButton$OnPress1, FloatSupplier alpha) {
 			this.message = pButton$Builder0;

@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(RenderType.CompositeRenderType.class)
 public abstract class MixinCompositeRenderType extends RenderType implements BlendingStateHolder {
+	@Unique
 	private static final String INIT =
 		"<init>(Ljava/lang/String;Lcom/mojang/blaze3d/vertex/VertexFormat;Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;IZZLnet/minecraft/client/renderer/RenderType$CompositeState;)V";
 

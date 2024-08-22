@@ -35,18 +35,14 @@ import java.util.Arrays;
  */
 @Mixin(BufferBuilder.class)
 public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensitiveBufferBuilder {
+	@Unique
+	private final BufferBuilderPolygonView polygon = new BufferBuilderPolygonView();
+	@Unique
+	private final Vector3f normal = new Vector3f();
 	@Shadow
 	private int elementsToFill;
-
 	@Unique
 	private boolean skipEndVertexOnce;
-
-	@Shadow
-	public abstract VertexConsumer setNormal(float f, float g, float h);
-
-	@Shadow
-	protected abstract long beginElement(VertexFormatElement vertexFormatElement);
-
 	@Shadow
 	@Final
 	private VertexFormat.Mode mode;
@@ -64,14 +60,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	@Shadow
 	private int vertices;
 	@Unique
-	private final BufferBuilderPolygonView polygon = new BufferBuilderPolygonView();
-	@Unique
-	private final Vector3f normal = new Vector3f();
-	@Unique
 	private boolean extending;
-	@Unique
-	private boolean iris$isTerrain;
-	@Unique
+    @Unique
 	private boolean injectNormalAndUV1;
 	@Unique
 	private int iris$vertexCount;
@@ -79,21 +69,24 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	private short currentBlock = -1;
 	@Unique
 	private short currentRenderType = -1;
-	@Unique
-	private byte currentBlockEmission = -1;
-	@Unique
+    @Unique
 	private int currentLocalPosX;
 	@Unique
 	private int currentLocalPosY;
 	@Unique
 	private int currentLocalPosZ;
-
 	@Unique
-	private long[] vertexPointers = new long[4];
+	private final long[] vertexPointers = new long[4];
+
+	@Shadow
+	public abstract VertexConsumer setNormal(float f, float g, float h);
+
+	@Shadow
+	protected abstract long beginElement(VertexFormatElement vertexFormatElement);
 
 	@ModifyVariable(method = "<init>", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/VertexFormatElement;POSITION:Lcom/mojang/blaze3d/vertex/VertexFormatElement;", ordinal = 0), argsOnly = true)
 	private VertexFormat iris$extendFormat(VertexFormat format) {
-		iris$isTerrain = false;
+        boolean iris$isTerrain = false;
 		injectNormalAndUV1 = false;
 
 		if (ImmediateState.skipExtension.get() || !WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat()) {
@@ -130,7 +123,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		if ((this.elementsToFill & IrisVertexFormats.MID_BLOCK_ELEMENT.mask()) != 0) {
 			long midBlockOffset = this.beginElement(IrisVertexFormats.MID_BLOCK_ELEMENT);
 			MemoryUtil.memPutInt(midBlockOffset, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
-			MemoryUtil.memPutByte(midBlockOffset + 3, currentBlockEmission);
+            byte currentBlockEmission = -1;
+            MemoryUtil.memPutByte(midBlockOffset + 3, currentBlockEmission);
 		}
 
 		if ((this.elementsToFill & IrisVertexFormats.ENTITY_ELEMENT.mask()) != 0) {

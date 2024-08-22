@@ -10,13 +10,11 @@ import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderBindingP
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.AlphaTests;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
-import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
@@ -127,9 +125,9 @@ public class SodiumPrograms {
 											Supplier<ImmutableSet<Integer>> flipState) {
 		if (pass == Pass.SHADOW || pass == Pass.SHADOW_CUTOUT) {
 			return shadowRenderTargets.get().createShadowFramebuffer(ImmutableSet.of(),
-				source == null ? new int[] {0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers()));
+				source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers()));
 		} else {
-			return renderTargets.createGbufferFramebuffer(flipState.get(), source == null ? new int[] {0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{ 0 } : source.getDirectives().getDrawBuffers()));
+			return renderTargets.createGbufferFramebuffer(flipState.get(), source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0} : source.getDirectives().getDrawBuffers()));
 		}
 	}
 

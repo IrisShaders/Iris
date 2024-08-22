@@ -3,17 +3,11 @@ package net.irisshaders.iris.vertices;
 import net.irisshaders.iris.vertices.views.QuadView;
 import org.lwjgl.system.MemoryUtil;
 
-import java.nio.ByteBuffer;
-
 public class BufferBuilderPolygonView implements QuadView {
 	private long[] writePointers;
-	private int stride = 48;
-	private int vertexAmount;
 
 	public void setup(long[] writePointers, int stride, int vertexAmount) {
 		this.writePointers = writePointers;
-		this.stride = stride;
-		this.vertexAmount = vertexAmount;
 	}
 
 	@Override

@@ -23,7 +23,6 @@ import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
@@ -43,6 +42,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class ShaderPackOptionList extends IrisContainerObjectSelectionList<ShaderPackOptionList.BaseEntry> {
+	private static final ResourceLocation MENU_LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/menu_background.png");
 	private final List<AbstractElementWidget<?>> elementWidgets = new ArrayList<>();
 	private final ShaderPackScreen screen;
 	private final NavigationController navigation;
@@ -75,8 +75,6 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		return Math.min(400, width - 12);
 	}
 
-	private static final ResourceLocation MENU_LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/menu_background.png");
-
 	@Override
 	protected void renderListBackground(GuiGraphics pAbstractSelectionList0) {
 		if (screen.listTransition.getAsFloat() < 0.02f) return;
@@ -86,8 +84,8 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 			MENU_LIST_BACKGROUND,
 			this.getX(),
 			this.getY() + 3,
-			(float)this.getRight(),
-			(float)(this.getBottom() + (int)this.getScrollAmount()),
+			(float) this.getRight(),
+			(float) (this.getBottom() + (int) this.getScrollAmount()),
 			this.getWidth(),
 			this.getHeight(),
 			32,
@@ -97,6 +95,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		RenderSystem.disableBlend();
 		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
+
 	@Override
 	protected void renderListSeparators(GuiGraphics pAbstractSelectionList0) {
 		RenderSystem.enableBlend();

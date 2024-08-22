@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 
 public class ShaderAccess {
-	public static VertexFormat IE_FORMAT = VertexFormat.builder()
+	public static final VertexFormat IE_FORMAT = VertexFormat.builder()
 		.add("Position", VertexFormatElement.POSITION)
 		.add("Color", VertexFormatElement.COLOR)
 		.add("UV0", VertexFormatElement.UV0)

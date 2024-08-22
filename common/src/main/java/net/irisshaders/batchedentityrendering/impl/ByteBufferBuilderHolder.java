@@ -1,7 +1,6 @@
 package net.irisshaders.batchedentityrendering.impl;
 
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import net.irisshaders.iris.Iris;
 
 public class ByteBufferBuilderHolder implements MemoryTrackingBuffer {
 	private final ByteBufferBuilder builder;

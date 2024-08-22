@@ -1,6 +1,5 @@
 package net.irisshaders.batchedentityrendering.impl;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
@@ -59,6 +58,10 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		this.wrappingFunctionStack = new ArrayList<>();
 	}
 
+	private static long toMib(long x) {
+		return x / 1024L / 1024L;
+	}
+
 	@Override
 	public VertexConsumer getBuffer(RenderType renderType) {
 		removeReady();
@@ -90,9 +93,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 			affinities.put(renderType, affinity);
 		}
 
-		VertexConsumer buffer = builders[affinity].getBuffer(renderType);
-
-		return buffer;
+		return builders[affinity].getBuffer(renderType);
 	}
 
 	private void removeReady() {
@@ -197,10 +198,6 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		renderOrder.removeAll(types);
 
 		profiler.pop();
-	}
-
-	private static long toMib(long x) {
-		return x / 1024L / 1024L;
 	}
 
 	private int getTargetClearTime() {

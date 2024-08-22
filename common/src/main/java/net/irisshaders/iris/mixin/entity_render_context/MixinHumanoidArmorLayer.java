@@ -1,5 +1,6 @@
 package net.irisshaders.iris.mixin.entity_render_context;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.helpers.EntityState;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
@@ -33,8 +34,8 @@ public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends 
 		super(pRenderLayer0);
 	}
 
-	@Inject(method = "renderArmorPiece", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/HumanoidModel;copyPropertiesTo(Lnet/minecraft/client/model/HumanoidModel;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void changeId(PoseStack pHumanoidArmorLayer0, MultiBufferSource pMultiBufferSource1, T pLivingEntity2, EquipmentSlot pEquipmentSlot3, int pInt4, A pHumanoidModel5, CallbackInfo ci, ItemStack lvItemStack7, ArmorItem lvArmorItem8) {
+	@Inject(method = "renderArmorPiece", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/HumanoidModel;copyPropertiesTo(Lnet/minecraft/client/model/HumanoidModel;)V"))
+	private void changeId(PoseStack pHumanoidArmorLayer0, MultiBufferSource pMultiBufferSource1, T pLivingEntity2, EquipmentSlot pEquipmentSlot3, int pInt4, A pHumanoidModel5, CallbackInfo ci, @Local ArmorItem lvArmorItem8) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		ResourceLocation location = BuiltInRegistries.ITEM.getKey(lvArmorItem8);

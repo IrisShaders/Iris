@@ -20,6 +20,7 @@ import java.util.Locale;
 @Mixin(SpriteContents.class)
 public class MixinTextureAtlasSprite {
 	// Generate some color tables for gamma correction.
+	@Unique
 	private static final float[] SRGB_TO_LINEAR = new float[256];
 
 	static {
@@ -99,6 +100,7 @@ public class MixinTextureAtlasSprite {
 		}
 	}
 
+	@Unique
 	private static long getPointerRGBA(NativeImage nativeImage) {
 		if (nativeImage.format() != NativeImage.Format.RGBA) {
 			throw new IllegalArgumentException(String.format(Locale.ROOT,

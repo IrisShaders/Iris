@@ -23,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(BannerRenderer.class)
 public class MixinBannerRenderer {
+	@Unique
 	private static final String RENDER_PATTERNS =
 		"Lnet/minecraft/client/renderer/blockentity/BannerRenderer;renderPatterns(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/client/model/geom/ModelPart;Lnet/minecraft/client/resources/model/Material;ZLjava/util/List;Z)V";
 
@@ -32,6 +33,7 @@ public class MixinBannerRenderer {
 	 */
 	@Unique
 	private static Groupable groupableToEnd;
+	@Unique
 	private static int index;
 
 	@ModifyVariable(method = "renderPatterns(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/client/model/geom/ModelPart;Lnet/minecraft/client/resources/model/Material;ZLnet/minecraft/world/item/DyeColor;Lnet/minecraft/world/level/block/entity/BannerPatternLayers;Z)V", at = @At("HEAD"), argsOnly = true)

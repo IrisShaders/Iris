@@ -1,9 +1,6 @@
 package net.irisshaders.iris.shaderpack;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
@@ -63,7 +60,7 @@ public class IdMap {
 	/**
 	 * Maps tags to block ids defined in block.properties
 	 */
-	private Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap;
+	private final Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap;
 
 	/**
 	 * A set of render type overrides for specific blocks. Allows shader packs to move blocks to different render types.
@@ -107,7 +104,7 @@ public class IdMap {
 		}
 
 		// TODO: This is the worst code I have ever made. Do not do this.
-		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines).replaceAll("\\\\\\n\\s*\\n", " ").replaceAll("\\S\s*block\\.", "\nblock.");
+		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines).replaceAll("\\\\\\n\\s*\\n", " ").replaceAll("\\S *block\\.", "\nblock.");
 		StringReader propertiesReader = new StringReader(processed);
 		warnMissingBackslashInPropertiesFile(processed, name);
 

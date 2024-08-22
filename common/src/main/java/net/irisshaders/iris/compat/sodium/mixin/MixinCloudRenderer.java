@@ -125,6 +125,7 @@ public abstract class MixinCloudRenderer {
 		return getClouds();
 	}
 
+	@Unique
 	private ShaderInstance getClouds() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 

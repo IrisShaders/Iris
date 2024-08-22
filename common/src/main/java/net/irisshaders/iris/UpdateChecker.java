@@ -22,10 +22,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.text.ParseException;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -123,7 +123,7 @@ public class UpdateChecker {
 	private void checkBetaUpdates() {
 		this.betaInfo = CompletableFuture.supplyAsync(() -> {
 			try {
-				try (InputStream in = new URL("https://raw.githubusercontent.com/IrisShaders/Iris-Installer-Files/master/betaTag.json").openStream()) {
+				try (InputStream in = URI.create("https://raw.githubusercontent.com/IrisShaders/Iris-Installer-Files/master/betaTag.json").toURL().openStream()) {
 					BetaInfo updateInfo = new Gson().fromJson(JsonParser.parseReader(new InputStreamReader(in)).getAsJsonObject(), BetaInfo.class);
 					if (BuildConfig.BETA_VERSION < updateInfo.betaVersion && BuildConfig.BETA_TAG.equalsIgnoreCase(updateInfo.betaTag)) {
 						shouldShowUpdateMessage = true;

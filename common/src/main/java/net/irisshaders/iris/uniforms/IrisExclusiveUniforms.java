@@ -76,7 +76,7 @@ public class IrisExclusiveUniforms {
 	private static int getCurrentSelectedBlockId() {
 		HitResult hitResult = Minecraft.getInstance().hitResult;
 		if (Minecraft.getInstance().level != null && ((GameRendererAccessor) Minecraft.getInstance().gameRenderer).shouldRenderBlockOutlineA() && hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
-			BlockPos blockPos4 = ((BlockHitResult)hitResult).getBlockPos();
+			BlockPos blockPos4 = ((BlockHitResult) hitResult).getBlockPos();
 			BlockState blockState = Minecraft.getInstance().level.getBlockState(blockPos4);
 			if (!blockState.isAir() && Minecraft.getInstance().level.getWorldBorder().isWithinBounds(blockPos4)) {
 				return WorldRenderingSettings.INSTANCE.getBlockStateIds().getInt(blockState);
@@ -89,7 +89,7 @@ public class IrisExclusiveUniforms {
 	private static Vector3f getCurrentSelectedBlockPos() {
 		HitResult hitResult = Minecraft.getInstance().hitResult;
 		if (Minecraft.getInstance().level != null && ((GameRendererAccessor) Minecraft.getInstance().gameRenderer).shouldRenderBlockOutlineA() && hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
-			BlockPos blockPos4 = ((BlockHitResult)hitResult).getBlockPos();
+			BlockPos blockPos4 = ((BlockHitResult) hitResult).getBlockPos();
 			return blockPos4.getCenter().subtract(Minecraft.getInstance().gameRenderer.getMainCamera().getPosition()).toVector3f();
 		}
 

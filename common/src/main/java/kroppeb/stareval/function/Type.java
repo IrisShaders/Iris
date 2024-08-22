@@ -7,15 +7,14 @@ import net.irisshaders.iris.parsing.MatrixType;
 import net.irisshaders.iris.parsing.VectorType;
 
 public abstract class Type {
-	public static Boolean Boolean = new Boolean();
-	public static Int Int = new Int();
-	public static Float Float = new Float();
-	public static Parameter BooleanParameter = new Parameter(Boolean);
-	public static Parameter IntParameter = new Parameter(Int);
-	public static Parameter FloatParameter = new Parameter(Float);
-	public static Primitive[] AllPrimitives = {Type.Boolean, Type.Int, Type.Float};
+	public static final Boolean Boolean = new Boolean();
+	public static final Int Int = new Int();
+	public static final Float Float = new Float();
+	public static final Parameter BooleanParameter = new Parameter(Boolean);
+	public static final Parameter IntParameter = new Parameter(Int);
+	public static final Parameter FloatParameter = new Parameter(Float);
+	public static final Primitive[] AllPrimitives = {Type.Boolean, Type.Int, Type.Float};
 
-	@Deprecated
 	public static UniformType convert(Type type) {
 		if (type == Type.Int || type == Type.Boolean) return UniformType.INT;
 		else if (type == Type.Float) return UniformType.FLOAT;

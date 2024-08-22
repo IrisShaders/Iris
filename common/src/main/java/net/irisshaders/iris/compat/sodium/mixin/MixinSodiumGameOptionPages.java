@@ -19,6 +19,7 @@ import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -89,8 +90,10 @@ public class MixinSodiumGameOptionPages {
 		}
 	}
 
+	@Unique
 	private static OptionImpl<Options, Integer> createMaxShadowDistanceSlider(MinecraftOptionsStorage vanillaOpts) {
-		OptionImpl<Options, Integer> maxShadowDistanceSlider = OptionImpl.createBuilder(int.class, vanillaOpts)
+
+		return OptionImpl.createBuilder(int.class, vanillaOpts)
 			.setName(Component.translatable("options.iris.shadowDistance"))
 			.setTooltip(Component.translatable("options.iris.shadowDistance.sodium_tooltip"))
 			.setControl(option -> new SliderControl(option, 0, 32, 1, translateVariableOrDisabled("options.chunks", "Disabled")))
@@ -106,12 +109,13 @@ public class MixinSodiumGameOptionPages {
 			.setImpact(OptionImpact.HIGH)
 			.setEnabled(IrisVideoSettings::isShadowDistanceSliderEnabled)
 			.build();
-
-		return maxShadowDistanceSlider;
 	}
 
+	@Unique
 	private static OptionImpl<Options, ColorSpace> createColorSpaceButton(MinecraftOptionsStorage vanillaOpts) {
-		OptionImpl<Options, ColorSpace> colorSpace = OptionImpl.createBuilder(ColorSpace.class, vanillaOpts)
+
+
+		return OptionImpl.createBuilder(ColorSpace.class, vanillaOpts)
 			.setName(Component.translatable("options.iris.colorSpace"))
 			.setTooltip(Component.translatable("options.iris.colorSpace.sodium_tooltip"))
 			.setControl(option -> new CyclingControl<>(option, ColorSpace.class,
@@ -128,15 +132,14 @@ public class MixinSodiumGameOptionPages {
 			.setImpact(OptionImpact.LOW)
 			.setEnabled(() -> true)
 			.build();
-
-
-		return colorSpace;
 	}
 
+	@Unique
 	private static ControlValueFormatter translateVariableOrDisabled(String key, String disabled) {
 		return (v) -> v == 0 ? Component.literal(disabled) : (Component.translatable(key, v));
 	}
 
+	@Unique
 	private static OptionImpl<Options, SupportedGraphicsMode> createLimitedVideoSettingsButton(MinecraftOptionsStorage vanillaOpts) {
 		return OptionImpl.createBuilder(SupportedGraphicsMode.class, vanillaOpts)
 			.setName(Component.translatable("options.graphics"))

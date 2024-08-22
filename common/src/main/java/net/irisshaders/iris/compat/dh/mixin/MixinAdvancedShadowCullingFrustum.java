@@ -7,19 +7,21 @@ import net.minecraft.client.renderer.culling.Frustum;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(AdvancedShadowCullingFrustum.class)
 public class MixinAdvancedShadowCullingFrustum extends Frustum implements IDhApiShadowCullingFrustum {
+	@Unique
+	private int worldMinYDH;
+	@Unique
+	private int worldMaxYDH;
+	public MixinAdvancedShadowCullingFrustum(Matrix4f matrix4f, Matrix4f matrix4f2) {
+		super(matrix4f, matrix4f2);
+	}
+
 	@Shadow(remap = false)
 	protected int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		throw new IllegalStateException();
-	}
-
-	private int worldMinYDH;
-	private int worldMaxYDH;
-
-	public MixinAdvancedShadowCullingFrustum(Matrix4f matrix4f, Matrix4f matrix4f2) {
-		super(matrix4f, matrix4f2);
 	}
 
 	@Override

@@ -118,9 +118,7 @@ public class ShaderPrinter {
 				if (!outputLocationCleared) {
 					try {
 						if (Files.exists(debugOutDir)) {
-							try (Stream<Path> stream = Files.list(debugOutDir).filter(s -> {
-								return !FilenameUtils.getExtension(s.toString()).contains("properties");
-							})) {
+							try (Stream<Path> stream = Files.list(debugOutDir).filter(s -> !FilenameUtils.getExtension(s.toString()).contains("properties"))) {
 								stream.forEach(path -> {
 									try {
 										Files.delete(path);

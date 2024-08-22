@@ -168,9 +168,7 @@ public class PackShadowDirectives {
 
 	private static void acceptColorMipmapSettings(DirectiveHolder directives, Int2ObjectMap<SamplingSettings> samplers) {
 		// Get the default base value for the shadow depth mipmap setting
-		directives.acceptConstBooleanDirective("generateShadowColorMipmap", mipmap -> {
-			samplers.forEach((i, sampler) -> sampler.setMipmap(mipmap));
-		});
+		directives.acceptConstBooleanDirective("generateShadowColorMipmap", mipmap -> samplers.forEach((i, sampler) -> sampler.setMipmap(mipmap)));
 
 		// Find any per-sampler overrides for the shadow depth mipmap setting
 		for (int i = 0; i < samplers.size(); i++) {

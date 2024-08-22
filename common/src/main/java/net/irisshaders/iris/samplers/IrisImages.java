@@ -79,8 +79,6 @@ public class IrisImages {
 	}
 
 	public static void addCustomImages(ImageHolder images, Set<GlImage> customImages) {
-		customImages.forEach(image -> {
-			images.addTextureImage(image::getId, image.getInternalFormat(), image.getName());
-		});
+		customImages.forEach(image -> images.addTextureImage(image::getId, image.getInternalFormat(), image.getName()));
 	}
 }

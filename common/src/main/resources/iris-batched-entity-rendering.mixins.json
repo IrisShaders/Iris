@@ -7,10 +7,10 @@
   "client": [
     "BufferSourceAccessor",
     "CompositeStateAccessor",
-    "MixinByteBufferBuilder",
     "MixinBannerRenderer",
     "MixinBufferBuilder_SegmentRendering",
     "MixinBufferSource",
+    "MixinByteBufferBuilder",
     "MixinCompositeRenderType",
     "MixinDebugScreenOverlay",
     "MixinFishingHookRenderer",

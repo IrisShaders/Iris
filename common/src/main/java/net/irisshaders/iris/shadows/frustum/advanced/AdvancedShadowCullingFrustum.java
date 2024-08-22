@@ -1,12 +1,10 @@
 package net.irisshaders.iris.shadows.frustum.advanced;
 
-import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
-import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
@@ -70,6 +68,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 	public double y;
 	public double z;
 	private int planeCount = 0;
+	private final Vector3d position = new Vector3d();
 
 	public AdvancedShadowCullingFrustum(Matrix4fc playerView, Matrix4fc playerProjection, Vector3f shadowLightVectorFromOrigin,
 										BoxCuller boxCuller) {
@@ -313,7 +312,6 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 		return this.checkCornerVisibility(f, g, h, i, j, k);
 	}
 
-
 	/**
 	 * Checks corner visibility.
 	 *
@@ -345,7 +343,6 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 		return 2;
 	}
 
-
 	/**
 	 * Checks corner visibility.
 	 *
@@ -371,8 +368,6 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		return (boxCuller == null || !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) && this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ) > 0;
 	}
-
-	private Vector3d position = new Vector3d();
 
 	@Override
 	public Viewport sodium$createViewport() {

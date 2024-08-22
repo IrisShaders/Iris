@@ -1,36 +1,48 @@
 package net.irisshaders.iris.pipeline.programs;
 
 import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
-import com.mojang.blaze3d.shaders.*;
 import com.mojang.blaze3d.shaders.Program;
+import com.mojang.blaze3d.shaders.ProgramManager;
+import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.gl.*;
-import net.irisshaders.iris.gl.blending.*;
+import net.irisshaders.iris.gl.GLDebug;
+import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.blending.AlphaTest;
+import net.irisshaders.iris.gl.blending.BlendModeOverride;
+import net.irisshaders.iris.gl.blending.BufferBlendOverride;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.image.ImageHolder;
-import net.irisshaders.iris.gl.program.*;
+import net.irisshaders.iris.gl.program.IrisProgramTypes;
+import net.irisshaders.iris.gl.program.ProgramImages;
+import net.irisshaders.iris.gl.program.ProgramSamplers;
+import net.irisshaders.iris.gl.program.ProgramUniforms;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.gl.uniform.DynamicLocationalUniformHolder;
 import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.samplers.IrisSamplers;
-import net.irisshaders.iris.uniforms.*;
+import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import org.jetbrains.annotations.*;
-import org.joml.*;
-import org.lwjgl.opengl.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.lwjgl.opengl.ARBTextureSwizzle;
+import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.KHRDebug;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.function.*;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class ExtendedShader extends ShaderInstance implements ShaderInstanceInterface {
 	private static final Matrix4f IDENTITY = new Matrix4f().identity();

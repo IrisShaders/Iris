@@ -5,6 +5,7 @@ import net.irisshaders.iris.Iris;
 import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -69,6 +70,7 @@ public class MixinTweakFarPlane {
 
 	// Seemingly, this should not be activated on 1.17.
 	//@Inject(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderDistance:F", shift = At.Shift.AFTER))
+	@Unique
 	private void iris$tweakViewDistanceBasedOnFog(float f, long l, PoseStack poseStack, CallbackInfo ci) {
 		if (Iris.getCurrentPack().isEmpty()) {
 			// Don't mess with the far plane if no shaderpack is loaded

@@ -183,46 +183,69 @@ public class ExpressionResolver {
 
 		this.log("[DEBUG] resolving %s to type %s (%d%d)",
 			expression, targetType, allowNonImplicit ? 1 : 0, allowImplicit ? 1 : 0);
-		if (expression instanceof UnaryExpressionElement token) {
-			// I want my pattern matching =(
-			return this.resolveCallExpression(targetType, token.getOp().getName(), Collections.singletonList(token.getInner()),
-				allowNonImplicit, allowImplicit);
-		} else if (expression instanceof BinaryExpressionElement token) {
-			return this.resolveCallExpression(targetType, token.getOp().getName(), Arrays.asList(token.getLeft(), token.getRight()),
-				allowNonImplicit, allowImplicit);
-		} else if (expression instanceof FunctionCall token) {
-			return this.resolveCallExpression(targetType, token.getId(), token.getArgs(),
-				allowNonImplicit, allowImplicit);
-		} else if (expression instanceof AccessExpressionElement token) {
-			return this.resolveCallExpression(targetType, "<access$" + token.getIndex() + ">",
-				Collections.singletonList(token.getBase()),
-				allowNonImplicit, allowImplicit);
-		} else if (expression instanceof NumberToken token) {
-			ConstantExpression exp = this.resolveNumber(token.getNumber());
-			if (exp.getType().equals(targetType)) {
-				this.log("[DEBUG] resolved constant %s to type %s", token.getNumber(), targetType);
-				return exp;
+		switch (expression) {
+			case UnaryExpressionElement token -> {
+				return this.resolveCallExpression(targetType, token.op().name(), Collections.singletonList(token.inner()),
+					allowNonImplicit, allowImplicit);
 			}
-			// TODO: implicit casting is split up too much
-			if (!allowImplicit) {
-				this.log("[DEBUG] failed to resolve constant %s (of type %s) to type %s without implicit casts",
+			case BinaryExpressionElement token -> {
+				return this.resolveCallExpression(targetType, token.op().name(), Arrays.asList(token.left(), token.right()),
+					allowNonImplicit, allowImplicit);
+			}
+			case FunctionCall token -> {
+				return this.resolveCallExpression(targetType, token.id(), token.args(),
+					allowNonImplicit, allowImplicit);
+			}
+			case AccessExpressionElement token -> {
+				return this.resolveCallExpression(targetType, "<access$" + token.index() + ">",
+					Collections.singletonList(token.base()),
+					allowNonImplicit, allowImplicit);
+			}
+			case NumberToken token -> {
+				ConstantExpression exp = this.resolveNumber(token.getNumber());
+				if (exp.getType().equals(targetType)) {
+					this.log("[DEBUG] resolved constant %s to type %s", token.getNumber(), targetType);
+					return exp;
+				}
+				// TODO: implicit casting is split up too much
+				if (!allowImplicit) {
+					this.log("[DEBUG] failed to resolve constant %s (of type %s) to type %s without implicit casts",
+						token.getNumber(), exp.getType(), targetType);
+					return null;
+				}
+				this.log("[DEBUG] trying implicit casts to resolve constant %s (of type %s) to type %s",
 					token.getNumber(), exp.getType(), targetType);
-				return null;
+				castable = exp;
+				innerType = exp.getType();
 			}
-			this.log("[DEBUG] trying implicit casts to resolve constant %s (of type %s) to type %s",
-				token.getNumber(), exp.getType(), targetType);
-			castable = exp;
-			innerType = exp.getType();
-		} else if (expression instanceof IdToken token) {
-			final String name = token.getId();
-			Type type = this.variableTypeMap.apply(name);
-			if (type == null)
-				throw new RuntimeException("Unknown variable: " + name);
-			if (type.equals(targetType)) {
-				log("[DEBUG] resolved variable %s to type %s", name, targetType);
-				// TODO: We should add a variable provider (and have this as default)
-				//       doing so would remove the need for a FunctionContext.
-				return new VariableExpression() {
+			case IdToken token -> {
+				final String name = token.getId();
+				Type type = this.variableTypeMap.apply(name);
+				if (type == null)
+					throw new RuntimeException("Unknown variable: " + name);
+				if (type.equals(targetType)) {
+					log("[DEBUG] resolved variable %s to type %s", name, targetType);
+					// TODO: We should add a variable provider (and have this as default)
+					//       doing so would remove the need for a FunctionContext.
+					return new VariableExpression() {
+						@Override
+						public void evaluateTo(FunctionContext c, FunctionReturn r) {
+							c.getVariable(name).evaluateTo(c, r);
+						}
+
+						@Override
+						public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
+							return context.hasVariable(name) ? context.getVariable(name) : this;
+						}
+					};
+				}
+				if (!allowImplicit) {
+					log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",
+						name, type, targetType);
+					return null;
+				}
+				// TODO duplicate of above
+				castable = new VariableExpression() {
 					@Override
 					public void evaluateTo(FunctionContext c, FunctionReturn r) {
 						c.getVariable(name).evaluateTo(c, r);
@@ -233,27 +256,9 @@ public class ExpressionResolver {
 						return context.hasVariable(name) ? context.getVariable(name) : this;
 					}
 				};
+				innerType = type;
 			}
-			if (!allowImplicit) {
-				log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",
-					name, type, targetType);
-				return null;
-			}
-			// TODO duplicate of above
-			castable = new VariableExpression() {
-				@Override
-				public void evaluateTo(FunctionContext c, FunctionReturn r) {
-					c.getVariable(name).evaluateTo(c, r);
-				}
-
-				@Override
-				public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
-					return context.hasVariable(name) ? context.getVariable(name) : this;
-				}
-			};
-			innerType = type;
-		} else {
-			throw new RuntimeException("unexpected token: " + expression.toString());
+			case null, default -> throw new RuntimeException("unexpected token: " + expression.toString());
 		}
 
 		List<? extends TypedFunction> casts = this.functionResolver.resolve("<cast>", targetType);

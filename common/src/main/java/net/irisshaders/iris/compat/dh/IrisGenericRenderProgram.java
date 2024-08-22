@@ -3,7 +3,6 @@ package net.irisshaders.iris.compat.dh;
 import com.google.common.primitives.Ints;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiGenericObjectShaderProgram;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderableBoxGroup;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam;
@@ -191,6 +190,15 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 	// Noise Uniforms
 
+	private static int getChunkPosFromDouble(double value) {
+		return (int) Math.floor(value / 16);
+	}
+
+	private static float getSubChunkPosFromDouble(double value) {
+		double chunkPos = Math.floor(value / 16);
+		return (float) (value - chunkPos * 16);
+	}
+
 	public int tryGetUniformLocation2(CharSequence name) {
 		return GL32.glGetUniformLocation(this.id, name);
 	}
@@ -267,14 +275,6 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 	@Override
 	public int getId() {
 		return id;
-	}
-
-	private static int getChunkPosFromDouble(double value) { return (int) Math.floor(value / 16); }
-
-	private static float getSubChunkPosFromDouble(double value)
-	{
-		double chunkPos = Math.floor(value / 16);
-		return (float) (value - chunkPos * 16);
 	}
 
 	public void free() {

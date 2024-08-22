@@ -73,7 +73,7 @@ public class ShaderProperties {
 	private final Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects = new Int2ObjectArrayMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
-	CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
+	final CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
 	private CloudSetting dhCloudSetting = CloudSetting.DEFAULT;
@@ -361,9 +361,7 @@ public class ShaderProperties {
 				}
 			});
 
-			handleProgramEnabledDirective("program.", key, value, program -> {
-				conditionallyEnabledPrograms.put(program, value);
-			});
+			handleProgramEnabledDirective("program.", key, value, program -> conditionallyEnabledPrograms.put(program, value));
 
 			handlePassDirective("bufferObject.", key, value, index -> {
 				int trueIndex;
@@ -546,12 +544,8 @@ public class ShaderProperties {
 				irisCustomImages.add(image);
 			});
 
-			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> {
-				handleBooleanValue(key, value, shouldFlip -> {
-					explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
-						.put(buffer, shouldFlip);
-				});
-			});
+			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> handleBooleanValue(key, value, shouldFlip -> explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
+				.put(buffer, shouldFlip)));
 
 			handlePassDirective("variable.", key, value, pass -> {
 				String[] parts = pass.split("\\.");

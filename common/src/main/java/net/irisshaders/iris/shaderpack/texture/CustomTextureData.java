@@ -118,8 +118,8 @@ public abstract class CustomTextureData {
 	}
 
 	public static class RawData2D extends RawData {
-		int sizeX;
-		int sizeY;
+		final int sizeX;
+		final int sizeY;
 
 		public RawData2D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
 						 PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY) {
@@ -139,9 +139,9 @@ public abstract class CustomTextureData {
 	}
 
 	public static final class RawData3D extends RawData {
-		int sizeX;
-		int sizeY;
-		int sizeZ;
+		final int sizeX;
+		final int sizeY;
+		final int sizeZ;
 
 		public RawData3D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
 						 PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY, int sizeZ) {

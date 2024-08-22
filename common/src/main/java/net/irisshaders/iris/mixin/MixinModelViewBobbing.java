@@ -1,14 +1,14 @@
 package net.irisshaders.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import org.joml.Matrix4f;
-import net.irisshaders.iris.api.v0.IrisApi;
-import net.minecraft.client.renderer.GameRenderer;
 import org.joml.Matrix4fc;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
@@ -24,23 +24,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * This mixin makes the effects of view bobbing and nausea apply to the model view matrix, not the projection matrix.
- *
+ * <p>
  * Applying these effects to the projection matrix causes severe issues with most shaderpacks. As it turns out, OptiFine
  * applies these effects to the modelview matrix. As such, we must do the same to properly run shaderpacks.
- *
+ * <p>
  * This mixin makes use of the matrix stack in order to make these changes without more invasive changes.
  */
 @Mixin(GameRenderer.class)
 public abstract class MixinModelViewBobbing {
 	@Shadow
-	protected abstract void bobView(PoseStack pGameRenderer0, float pFloat1);
-
-	@Shadow
-	protected abstract void bobHurt(PoseStack pGameRenderer0, float pFloat1);
-
-	@Shadow
 	@Final
-	private Minecraft minecraft;
+	Minecraft minecraft;
+
 	@Shadow
 	@Final
 	private Camera mainCamera;
@@ -48,9 +43,14 @@ public abstract class MixinModelViewBobbing {
 	private int confusionAnimationTick;
 	@Unique
 	private Matrix4fc bobbingEffectsModel;
-
 	@Unique
 	private boolean areShadersOn;
+
+	@Shadow
+	protected abstract void bobView(PoseStack pGameRenderer0, float pFloat1);
+
+	@Shadow
+	protected abstract void bobHurt(PoseStack pGameRenderer0, float pFloat1);
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
 	private void iris$saveShadersOn(DeltaTracker deltaTracker, CallbackInfo ci) {
@@ -122,7 +122,7 @@ public abstract class MixinModelViewBobbing {
 			float k = 5.0F / (i * i + 5.0F) - i * 0.04F;
 			k *= k;
 			Vector3f vector3f = new Vector3f(0.0F, Mth.SQRT_OF_TWO / 2.0F, Mth.SQRT_OF_TWO / 2.0F);
-			float l = ((float)this.confusionAnimationTick + f) * (float)j * (float) (Math.PI / 180.0);
+			float l = ((float) this.confusionAnimationTick + f) * (float) j * (float) (Math.PI / 180.0);
 			instance.rotate(l, vector3f);
 			instance.scale(1.0F / k, 1.0F, 1.0F);
 			instance.rotate(-l, vector3f);

@@ -42,7 +42,7 @@ public class MixinEntityRenderer<T extends Entity> {
 	private void resetId(T entity, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, float f, CallbackInfo ci) {
 		if (lastId != -100) {
 			CapturedRenderingState.INSTANCE.setCurrentEntity(lastId);
-			lastId = -100	;
+			lastId = -100;
 		}
 	}
 }

@@ -13,7 +13,6 @@ import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.shadows.ShadowRenderer;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.Util;
@@ -28,6 +27,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -329,14 +329,6 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Inject(method = "render", at = @At("HEAD"))
-	private void iris$startFrame(DeltaTracker deltaTracker, boolean bl, CallbackInfo ci) {
-		// This allows certain functions like float smoothing to function outside a world.
-		CapturedRenderingState.INSTANCE.setRealTickDelta(deltaTracker.getGameTimeDeltaPartialTick(true));
-		SystemTimeUniforms.COUNTER.beginFrame();
-		SystemTimeUniforms.TIMER.beginFrame(Util.getNanos());
-	}
-
 	@Inject(method = {
 		"getRendertypeTextShader",
 		"getRendertypeTextSeeThroughShader",
@@ -393,18 +385,21 @@ public class MixinGameRenderer {
 		}
 	}
 
+	@Unique
 	private static boolean isBlockEntities() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		return pipeline != null && pipeline.getPhase() == WorldRenderingPhase.BLOCK_ENTITIES;
 	}
 
+	@Unique
 	private static boolean isEntities() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		return pipeline != null && pipeline.getPhase() == WorldRenderingPhase.ENTITIES;
 	}
 
+	@Unique
 	private static boolean isSky() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
@@ -418,9 +413,7 @@ public class MixinGameRenderer {
 		}
 	}
 
-	// ignored: getRendertypeEndGatewayShader (we replace the end portal rendering for shaders)
-	// ignored: getRendertypeEndPortalShader (we replace the end portal rendering for shaders)
-
+	@Unique
 	private static boolean isPhase(WorldRenderingPhase phase) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
@@ -431,6 +424,10 @@ public class MixinGameRenderer {
 		}
 	}
 
+	// ignored: getRendertypeEndGatewayShader (we replace the end portal rendering for shaders)
+	// ignored: getRendertypeEndPortalShader (we replace the end portal rendering for shaders)
+
+	@Unique
 	private static boolean shouldOverrideShaders() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
@@ -441,6 +438,7 @@ public class MixinGameRenderer {
 		}
 	}
 
+	@Unique
 	private static void override(ShaderKey key, CallbackInfoReturnable<ShaderInstance> cir) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
@@ -451,6 +449,14 @@ public class MixinGameRenderer {
 				cir.setReturnValue(override);
 			}
 		}
+	}
+
+	@Inject(method = "render", at = @At("HEAD"))
+	private void iris$startFrame(DeltaTracker deltaTracker, boolean bl, CallbackInfo ci) {
+		// This allows certain functions like float smoothing to function outside a world.
+		CapturedRenderingState.INSTANCE.setRealTickDelta(deltaTracker.getGameTimeDeltaPartialTick(true));
+		SystemTimeUniforms.COUNTER.beginFrame();
+		SystemTimeUniforms.TIMER.beginFrame(Util.getNanos());
 	}
 
 	@Inject(method = "<init>", at = @At("TAIL"))

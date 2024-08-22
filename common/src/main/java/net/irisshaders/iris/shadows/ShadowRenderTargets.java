@@ -29,18 +29,15 @@ public class ShadowRenderTargets {
 
 	private final List<GlFramebuffer> ownedFramebuffers;
 	private final int resolution;
-	private final WorldRenderingPipeline pipeline;
 	private final boolean[] hardwareFiltered;
 	private final boolean[] linearFiltered;
 	private final InternalTextureFormat[] formats;
 	private final IntList buffersToBeCleared;
 	private final int size;
-	private final boolean shouldRefresh;
 	private boolean fullClearRequired;
 	private boolean translucentDepthDirty;
 
 	public ShadowRenderTargets(WorldRenderingPipeline pipeline, int resolution, PackShadowDirectives shadowDirectives) {
-		this.pipeline = pipeline;
 		this.shadowDirectives = shadowDirectives;
 		this.size = pipeline.hasFeature(FeatureFlags.HIGHER_SHADOWCOLOR) ? PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS : PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_OF;
 		targets = new RenderTarget[size];
@@ -71,7 +68,7 @@ public class ShadowRenderTargets {
 		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents.getTextureId());
 
 		this.translucentDepthDirty = true;
-		this.shouldRefresh = false;
+		boolean shouldRefresh = false;
 	}
 
 	// TODO: Actually flip. This is required for shadow composites!

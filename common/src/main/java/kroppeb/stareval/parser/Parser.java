@@ -260,7 +260,7 @@ public class Parser {
 	 */
 	void visitBinaryOperator(BinaryOp binaryOp) {
 		// reduce the expressions to the needed priority level
-		ExpressionElement left = this.expressionReducePop(binaryOp.getPriority());
+		ExpressionElement left = this.expressionReducePop(binaryOp.priority());
 		// stack[ {'a', '*'}, 'b'], token = '+' -> stack[], left = {'a', '*', 'b'}
 		//                                      -> stack[{{'a', '*', 'b'}, '+'}]
 		// stack[ {'a', '+'}, 'b'], token = '+' -> stack[], left = {'a', '+', 'b'}

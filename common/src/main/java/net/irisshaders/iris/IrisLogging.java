@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class IrisLogging {
-	public static boolean ENABLE_SPAM = false; // IrisPlatformHelpers.getInstance().isDevelopmentEnvironment();
+	public static final boolean ENABLE_SPAM = false; // IrisPlatformHelpers.getInstance().isDevelopmentEnvironment();
 
 	private final Logger logger;
 

@@ -1,6 +1,5 @@
 package net.irisshaders.iris.mixin.vertices.immediate;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;

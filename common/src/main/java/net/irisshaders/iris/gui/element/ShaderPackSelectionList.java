@@ -14,9 +14,7 @@ import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -34,13 +32,13 @@ import java.util.function.Function;
 
 public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
 	private static final Component PACK_LIST_LABEL = Component.translatable("pack.iris.list.label").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
-
+	private static final ResourceLocation MENU_LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/menu_background.png");
 	private final ShaderPackScreen screen;
 	private final TopButtonRowEntry topButtonRow;
 	private final WatchService watcher;
 	private final WatchKey key;
-	private boolean keyValid;
 	private final PinnedEntry downloadButton;
+	private boolean keyValid;
 	private ShaderPackEntry applied = null;
 
 	public ShaderPackSelectionList(ShaderPackScreen screen, Minecraft client, int width, int height, int top, int bottom, int left, int right) {
@@ -50,14 +48,12 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		this.screen = screen;
 		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
-		this.downloadButton = new PinnedEntry(Component.literal("Download Shaders"), () -> {
-			this.minecraft.setScreen(new ConfirmLinkScreen(bl -> {
-				if (bl) {
-					Util.getPlatform().openUri("https://modrinth.com/shaders");
-				}
-				this.minecraft.setScreen(this.screen);
-			}, "https://modrinth.com/shaders", true));
-		}, this);
+		this.downloadButton = new PinnedEntry(Component.literal("Download Shaders"), () -> this.minecraft.setScreen(new ConfirmLinkScreen(bl -> {
+            if (bl) {
+                Util.getPlatform().openUri("https://modrinth.com/shaders");
+            }
+            this.minecraft.setScreen(this.screen);
+        }, "https://modrinth.com/shaders", true)), this);
 		try {
 			watcher1 = FileSystems.getDefault().newWatchService();
 			key1 = Iris.getShaderpacksDirectory().register(watcher1,
@@ -112,9 +108,6 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 	}
 
-
-	private static final ResourceLocation MENU_LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/menu_background.png");
-
 	@Override
 	protected void renderListBackground(GuiGraphics pAbstractSelectionList0) {
 		if (screen.listTransition.getAsFloat() < 0.02f) return;
@@ -124,8 +117,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			MENU_LIST_BACKGROUND,
 			this.getX(),
 			this.getY() - 2,
-			(float)this.getRight(),
-			(float)(this.getBottom() + (int)this.getScrollAmount()),
+			(float) this.getRight(),
+			(float) (this.getBottom() + (int) this.getScrollAmount()),
 			this.getWidth(),
 			this.getHeight(),
 			32,
@@ -352,6 +345,49 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 	}
 
+	private static class PinnedEntry extends BaseEntry {
+        private final Component label;
+		private final Runnable onClick;
+
+		public final boolean allowPressButton = true;
+
+		public PinnedEntry(Component label, Runnable onClick, ShaderPackSelectionList list) {
+			this.label = label;
+			this.onClick = onClick;
+		}
+
+		@Override
+		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			GuiUtil.bindIrisWidgetsTexture();
+			GuiUtil.drawButton(guiGraphics, x - 2, y - 2, entryWidth, entryHeight + 2, hovered, !allowPressButton);
+			guiGraphics.drawCenteredString(Minecraft.getInstance().font, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
+		}
+
+		@Override
+		public boolean mouseClicked(double mouseX, double mouseY, int button) {
+			if (this.allowPressButton) {
+				GuiUtil.playButtonClickSound();
+				onClick.run();
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
+		public boolean keyPressed(int keycode, int scancode, int modifiers) {
+			if (keycode == GLFW.GLFW_KEY_ENTER) {
+				if (this.allowPressButton) {
+					GuiUtil.playButtonClickSound();
+					onClick.run();
+					return false;
+				}
+			}
+
+			return false;
+		}
+	}
+
 	public class ShaderPackEntry extends BaseEntry {
 		private final String packName;
 		private final ShaderPackSelectionList list;
@@ -470,51 +506,6 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 		public boolean isFocused() {
 			return this.list.getFocused() == this;
-		}
-	}
-
-	private static class PinnedEntry extends BaseEntry {
-		private final ShaderPackSelectionList list;
-		private final Component label;
-		private final Runnable onClick;
-
-		public boolean allowPressButton = true;
-
-		public PinnedEntry(Component label, Runnable onClick, ShaderPackSelectionList list) {
-			this.label = label;
-			this.onClick = onClick;
-			this.list = list;
-		}
-
-		@Override
-		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-			GuiUtil.bindIrisWidgetsTexture();
-			GuiUtil.drawButton(guiGraphics, x - 2, y - 2, entryWidth, entryHeight + 2, hovered, !allowPressButton);
-			guiGraphics.drawCenteredString(Minecraft.getInstance().font, label, (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFF);
-		}
-
-		@Override
-		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			if (this.allowPressButton) {
-				GuiUtil.playButtonClickSound();
-				onClick.run();
-				return false;
-			}
-
-			return false;
-		}
-
-		@Override
-		public boolean keyPressed(int keycode, int scancode, int modifiers) {
-			if (keycode == GLFW.GLFW_KEY_ENTER) {
-				if (this.allowPressButton) {
-					GuiUtil.playButtonClickSound();
-					onClick.run();
-					return false;
-				}
-			}
-
-			return false;
 		}
 	}
 }

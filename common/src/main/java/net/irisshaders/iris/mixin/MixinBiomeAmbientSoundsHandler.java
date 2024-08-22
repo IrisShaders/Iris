@@ -1,9 +1,7 @@
 package net.irisshaders.iris.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.mixinterface.BiomeAmbienceInterface;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.BiomeAmbientSoundsHandler;
 import net.minecraft.core.BlockPos;
@@ -27,6 +25,7 @@ public class MixinBiomeAmbientSoundsHandler implements BiomeAmbienceInterface {
 	@Unique
 	private float constantMoodiness;
 
+	@SuppressWarnings("UnresolvedMixinReference")
 	@Inject(method = {
 		"method_26271",
 		"lambda$tick$3"
@@ -34,9 +33,9 @@ public class MixinBiomeAmbientSoundsHandler implements BiomeAmbienceInterface {
 	private void calculateConstantMoodiness(AmbientMoodSettings ambientMoodSettings, CallbackInfo ci, @Local BlockPos blockPos) {
 		int j = this.player.level().getBrightness(LightLayer.SKY, blockPos);
 		if (j > 0) {
-			this.constantMoodiness -= (float)j / (float)this.player.level().getMaxLightLevel() * 0.001F;
+			this.constantMoodiness -= (float) j / (float) this.player.level().getMaxLightLevel() * 0.001F;
 		} else {
-			this.constantMoodiness -= (float)(this.player.level().getBrightness(LightLayer.BLOCK, blockPos) - 1) / (float)ambientMoodSettings.getTickDelay();
+			this.constantMoodiness -= (float) (this.player.level().getBrightness(LightLayer.BLOCK, blockPos) - 1) / (float) ambientMoodSettings.getTickDelay();
 		}
 
 		this.constantMoodiness = Mth.clamp(constantMoodiness, 0.0f, 1.0f);

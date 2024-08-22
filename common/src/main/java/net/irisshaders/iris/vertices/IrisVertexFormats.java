@@ -1,7 +1,5 @@
 package net.irisshaders.iris.vertices;
 
-import com.google.common.collect.ImmutableMap;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.irisshaders.iris.Iris;
@@ -26,18 +24,18 @@ public class IrisVertexFormats {
 		MID_BLOCK_ELEMENT = VertexFormatElement.register(14, 14, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
 
 		TERRAIN = VertexFormat.builder()
-				.add("Position", VertexFormatElement.POSITION)
-				.add("Color", VertexFormatElement.COLOR)
-				.add("UV0", VertexFormatElement.UV0)
-				.add("UV2", VertexFormatElement.UV2)
-				.add("Normal", VertexFormatElement.NORMAL)
-				.padding(1)
-				.add("mc_Entity", ENTITY_ELEMENT)
-				.add("mc_midTexCoord", MID_TEXTURE_ELEMENT)
-				.add("at_tangent", TANGENT_ELEMENT)
-				.add("at_midBlock", MID_BLOCK_ELEMENT)
-				.padding(1)
-				.build();
+			.add("Position", VertexFormatElement.POSITION)
+			.add("Color", VertexFormatElement.COLOR)
+			.add("UV0", VertexFormatElement.UV0)
+			.add("UV2", VertexFormatElement.UV2)
+			.add("Normal", VertexFormatElement.NORMAL)
+			.padding(1)
+			.add("mc_Entity", ENTITY_ELEMENT)
+			.add("mc_midTexCoord", MID_TEXTURE_ELEMENT)
+			.add("at_tangent", TANGENT_ELEMENT)
+			.add("at_midBlock", MID_BLOCK_ELEMENT)
+			.padding(1)
+			.build();
 
 		ENTITY = VertexFormat.builder()
 			.add("Position", VertexFormatElement.POSITION)

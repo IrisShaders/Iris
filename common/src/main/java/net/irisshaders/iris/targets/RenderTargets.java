@@ -289,9 +289,7 @@ public class RenderTargets {
 
 		ImmutableSet<Integer> stageWritesToMain = invert(stageWritesToAlt, drawBuffers);
 
-		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
-
-		return framebuffer;
+		return createColorFramebuffer(stageWritesToMain, drawBuffers);
 	}
 
 

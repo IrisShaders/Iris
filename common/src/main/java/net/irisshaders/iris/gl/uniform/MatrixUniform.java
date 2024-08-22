@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 public class MatrixUniform extends Uniform {
 	private final FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
 	private final Supplier<Matrix4fc> value;
-	private Matrix4f cachedValue;
+	private final Matrix4f cachedValue;
 
 	MatrixUniform(int location, Supplier<Matrix4fc> value) {
 		super(location);

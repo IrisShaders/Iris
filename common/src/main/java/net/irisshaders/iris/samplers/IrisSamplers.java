@@ -34,18 +34,16 @@ public class IrisSamplers {
 	public static final ImmutableSet<Integer> COMPOSITE_RESERVED_TEXTURE_UNITS = ImmutableSet.of(1, 2);
 	private static GlSampler SHADOW_SAMPLER_NEAREST;
 	private static GlSampler SHADOW_SAMPLER_LINEAR;
-	private static GlSampler LINEAR_MIPMAP;
-	private static GlSampler NEAREST_MIPMAP;
 
-	private IrisSamplers() {
+    private IrisSamplers() {
 		// no construction allowed
 	}
 
 	public static void initRenderer() {
 		SHADOW_SAMPLER_NEAREST = new GlSampler(false, false, true, true);
 		SHADOW_SAMPLER_LINEAR = new GlSampler(true, false, true, true);
-		LINEAR_MIPMAP = new GlSampler(true, true, false, false);
-		NEAREST_MIPMAP = new GlSampler(false, true, false, false);
+        GlSampler LINEAR_MIPMAP = new GlSampler(true, true, false, false);
+        GlSampler NEAREST_MIPMAP = new GlSampler(false, true, false, false);
 	}
 
 	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped,
@@ -220,9 +218,7 @@ public class IrisSamplers {
 	}
 
 	public static void addCustomTextures(SamplerHolder samplers, Object2ObjectMap<String, TextureAccess> irisCustomTextures) {
-		irisCustomTextures.forEach((name, texture) -> {
-			samplers.addDynamicSampler(texture.getType(), texture.getTextureId(), null, name);
-		});
+		irisCustomTextures.forEach((name, texture) -> samplers.addDynamicSampler(texture.getType(), texture.getTextureId(), null, name));
 	}
 
 	public static void addCustomImages(SamplerHolder images, Set<GlImage> customImages) {

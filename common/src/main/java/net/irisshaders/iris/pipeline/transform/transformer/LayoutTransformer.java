@@ -34,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 public class LayoutTransformer {
@@ -172,7 +173,7 @@ public class LayoutTransformer {
 		  - improved geometry shader support? They use funky declarations
 		 */
 		ShaderType prevType = null;
-		final Object2IntMap<String>[] lastMap = new Object2IntMap[]{null};
+		final AtomicReference<Object2IntMap<String>> lastMap = new AtomicReference<>();
 		for (ShaderType type : pipeline) {
 			PatchShaderType[] patchTypes = PatchShaderType.fromGlShaderType(type);
 
@@ -198,11 +199,11 @@ public class LayoutTransformer {
 
 			currentRoot.indexBuildSession((root) -> {
 				if (root != null) {
-					if (lastMap[0] != null) {
-						transformIn(lastMap[0], t, currentTree, root, parameters);
+					if (lastMap.get() != null) {
+						transformIn(lastMap.get(), t, currentTree, root, parameters);
 					}
 
-					lastMap[0] = transformOut(t, currentTree, root, parameters);
+					lastMap.set(transformOut(t, currentTree, root, parameters));
 				}
 			});
 

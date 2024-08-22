@@ -61,8 +61,7 @@ public class CompositeRenderer {
 
 	private final ImmutableList<Pass> passes;
 	private final TextureAccess noiseTexture;
-	private final FrameUpdateNotifier updateNotifier;
-	private final CenterDepthSampler centerDepthSampler;
+    private final CenterDepthSampler centerDepthSampler;
 	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
 	private final CustomUniforms customUniforms;
@@ -79,7 +78,6 @@ public class CompositeRenderer {
 							 CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
 		this.noiseTexture = noiseTexture;
-		this.updateNotifier = updateNotifier;
 		this.centerDepthSampler = centerDepthSampler;
 		this.renderTargets = renderTargets;
 		this.customTextureIds = customTextureIds;

@@ -31,7 +31,7 @@ public class DotExporter {
 	private final String lineSpeparator;
 
 	public DotExporter() {
-		this("  ", System.getProperty("line.separator"));
+		this("  ", System.lineSeparator());
 	}
 
 	public DotExporter(String indent, String newline) {
@@ -206,11 +206,11 @@ public class DotExporter {
 	}
 
 	private static class Cluster<V, G extends Digraph<V>> {
-		String id;
-		G subgraph;
-		V sample;
-		DotAttribute tail;
-		DotAttribute head;
+		final String id;
+		final G subgraph;
+		final V sample;
+		final DotAttribute tail;
+		final DotAttribute head;
 
 		public Cluster(String id, G subgraph) {
 			this.id = id;

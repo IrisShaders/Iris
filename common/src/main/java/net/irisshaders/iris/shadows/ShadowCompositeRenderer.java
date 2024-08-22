@@ -52,8 +52,7 @@ public class ShadowCompositeRenderer {
 
 	private final ImmutableList<Pass> passes;
 	private final TextureAccess noiseTexture;
-	private final FrameUpdateNotifier updateNotifier;
-	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
+    private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
 	private final CustomUniforms customUniforms;
 	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
@@ -65,8 +64,7 @@ public class ShadowCompositeRenderer {
 								   Object2ObjectMap<String, TextureAccess> customTextureIds, Set<GlImage> customImages, ImmutableMap<Integer, Boolean> explicitPreFlips, Object2ObjectMap<String, TextureAccess> irisCustomTextures, CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
 		this.noiseTexture = noiseTexture;
-		this.updateNotifier = updateNotifier;
-		this.renderTargets = renderTargets;
+        this.renderTargets = renderTargets;
 		this.customTextureIds = customTextureIds;
 		this.irisCustomTextures = irisCustomTextures;
 		this.irisCustomImages = customImages;

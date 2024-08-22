@@ -1,6 +1,5 @@
 package net.irisshaders.iris.shadows.frustum.fallback;
 
-import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.minecraft.client.renderer.culling.Frustum;
@@ -9,6 +8,8 @@ import org.joml.Matrix4f;
 import org.joml.Vector3d;
 
 public class NonCullingFrustum extends Frustum implements ViewportProvider, net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum {
+	private final Vector3d position = new Vector3d();
+
 	public NonCullingFrustum() {
 		super(new Matrix4f(), new Matrix4f());
 	}
@@ -29,8 +30,6 @@ public class NonCullingFrustum extends Frustum implements ViewportProvider, net.
 	public void prepare(double d, double e, double f) {
 		this.position.set(d, e, f);
 	}
-
-	private final Vector3d position = new Vector3d();
 
 	@Override
 	public Viewport sodium$createViewport() {

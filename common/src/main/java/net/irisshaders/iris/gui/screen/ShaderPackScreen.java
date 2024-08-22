@@ -1,8 +1,6 @@
 package net.irisshaders.iris.gui.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gui.GuiUtil;
@@ -14,8 +12,8 @@ import net.irisshaders.iris.gui.element.screen.IrisButton;
 import net.irisshaders.iris.gui.element.widget.AbstractElementWidget;
 import net.irisshaders.iris.gui.element.widget.CommentedElementWidget;
 import net.irisshaders.iris.mixin.GameRendererAccessor;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.shaderpack.ShaderPack;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.transforms.SmoothedFloat;
 import net.minecraft.ChatFormatting;
@@ -49,7 +47,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class ShaderPackScreen extends Screen implements HudHideable {
 	/**
@@ -82,10 +79,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private float guiButtonHoverTimer = 0.0f;
 	private Button openFolderButton;
 
-	private FrameUpdateNotifier notifier = new FrameUpdateNotifier();
-	private float backgroundInit = 0.0f;
-
-	public SmoothedFloat blurTransition = new SmoothedFloat(2, 2, () -> {
+	private final FrameUpdateNotifier notifier = new FrameUpdateNotifier();
+	public final SmoothedFloat blurTransition = new SmoothedFloat(2, 2, () -> {
 		if (guiHidden) {
 			return 0.0f;
 		} else if (this.optionMenuOpen) {
@@ -94,8 +89,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			return (float) this.minecraft.options.getMenuBackgroundBlurriness();
 		}
 	}, notifier);
-
-	public SmoothedFloat listTransition = new SmoothedFloat(1, 1, () -> {
+	private float backgroundInit = 0.0f;
+	public final SmoothedFloat listTransition = new SmoothedFloat(1, 1, () -> {
 		if (guiHidden || this.optionMenuOpen) {
 			return 0.0f;
 		} else {
@@ -103,7 +98,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		}
 	}, notifier);
 
-	public SmoothedFloat buttonTransition = new SmoothedFloat(1, 1, () -> {
+	public final SmoothedFloat buttonTransition = new SmoothedFloat(1, 1, () -> {
 		if (guiHidden) {
 			return 0.0f;
 		} else {
@@ -632,9 +627,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private void openShaderPackFolder() {
-		CompletableFuture.runAsync(() -> {
-			Util.getPlatform().openUri(Iris.getShaderpacksDirectoryManager().getDirectoryUri());
-		});
+		CompletableFuture.runAsync(() -> Util.getPlatform().openUri(Iris.getShaderpacksDirectoryManager().getDirectoryUri()));
 	}
 
 	// Let the screen know if an element is hovered or not, allowing for accurately updating which element is hovered

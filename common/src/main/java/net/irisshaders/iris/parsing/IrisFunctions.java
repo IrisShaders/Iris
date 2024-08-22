@@ -23,7 +23,6 @@ import kroppeb.stareval.function.TypedFunction;
 import kroppeb.stareval.function.TypedFunction.Parameter;
 import kroppeb.stareval.function.V2FFunction;
 import kroppeb.stareval.function.V2IFunction;
-import net.irisshaders.iris.Iris;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -678,13 +677,9 @@ public class IrisFunctions {
 
 		// casts
 		{
-			addImplicitCast(Type.Int, Type.Float, r -> {
-				r.floatReturn = r.intReturn;
-			});
+			addImplicitCast(Type.Int, Type.Float, r -> r.floatReturn = r.intReturn);
 			// this is actually done by round i think
-			addExplicitCast(Type.Float, Type.Int, r -> {
-				r.intReturn = (int) r.floatReturn;
-			});
+			addExplicitCast(Type.Float, Type.Int, r -> r.intReturn = (int) r.floatReturn);
 		}
 
 		// boolean functions

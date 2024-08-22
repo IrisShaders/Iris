@@ -48,8 +48,8 @@ public abstract class AbstractTypedFunction implements TypedFunction {
 		if (obj instanceof AbstractTypedFunction func) {
 			return Objects.equals(returnType, func.returnType) &&
 				Arrays.equals(parameters, func.parameters) &&
-			priority == func.priority &&
-			isPure == func.isPure;
+				priority == func.priority &&
+				isPure == func.isPure;
 		}
 
 		return false;

@@ -48,16 +48,16 @@ public final class MatrixUniforms {
 	}
 
 	private record Inverted(Supplier<Matrix4fc> parent) implements Supplier<Matrix4fc> {
-			@Override
-			public Matrix4fc get() {
-				// PERF: Don't copy + allocate this matrix every time?
-				Matrix4f copy = new Matrix4f(parent.get());
+		@Override
+		public Matrix4fc get() {
+			// PERF: Don't copy + allocate this matrix every time?
+			Matrix4f copy = new Matrix4f(parent.get());
 
-				copy.invert();
+			copy.invert();
 
-				return copy;
-			}
+			return copy;
 		}
+	}
 
 	private static class Previous implements Supplier<Matrix4fc> {
 		private final Supplier<Matrix4fc> parent;

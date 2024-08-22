@@ -6,6 +6,7 @@ public record Tri<X, Y, Z>(X first, Y second, Z third) {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) return true;
+		//noinspection rawtypes
 		if (!(obj instanceof Tri tri)) return false;
 		return tri.first == this.first && tri.second == this.second && tri.third == this.third;
 	}

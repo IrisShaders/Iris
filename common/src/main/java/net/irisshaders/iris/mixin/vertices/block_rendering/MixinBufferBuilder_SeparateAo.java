@@ -6,8 +6,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.Arrays;
 
@@ -24,16 +22,13 @@ import java.util.Arrays;
  */
 @Mixin(value = BufferBuilder.class, priority = 999)
 public abstract class MixinBufferBuilder_SeparateAo implements VertexConsumer {
-	private float[] brightnesses;
 
-	private int brightnessIndex;
-
-	@Override
+    @Override
 	public void putBulkData(PoseStack.Pose matrixEntry, BakedQuad quad, float[] brightnesses, float red, float green,
 							float blue, float alpha, int[] lights, int overlay, boolean useQuadColorData) {
 		if (WorldRenderingSettings.INSTANCE.shouldUseSeparateAo()) {
-			this.brightnesses = brightnesses;
-			this.brightnessIndex = 0;
+            float[] brightnesses1 = brightnesses;
+            int brightnessIndex = 0;
 
 			brightnesses = new float[brightnesses.length];
 			Arrays.fill(brightnesses, 1.0f);

@@ -109,34 +109,28 @@ public class MapDigraph<V> implements Digraph<V> {
 	}
 
 	private static <V> VertexMapFactory<V> getDefaultVertexMapFactory(final Comparator<? super V> comparator) {
-		return new VertexMapFactory<>() {
-			@Override
-			public Map<V, Object2IntMap<V>> create() {
-				if (comparator == null) {
-					return new LinkedHashMap<>(16);
-				} else {
-					return new TreeMap<>(comparator);
-				}
+		return () -> {
+			if (comparator == null) {
+				return new LinkedHashMap<>(16);
+			} else {
+				return new TreeMap<>(comparator);
 			}
 		};
 	}
 
 	private static <V> EdgeMapFactory<V> getDefaultEdgeMapFactory(final Comparator<? super V> comparator) {
-		return new EdgeMapFactory<>() {
-			@Override
-			public Object2IntMap<V> create(V ignore) {
-				Object2IntMap<V> map;
+		return ignore -> {
+			Object2IntMap<V> map;
 
-				if (comparator == null) {
-					map = new Object2IntLinkedOpenHashMap<>(16);
-				} else {
-					map = new Object2IntAVLTreeMap<>(comparator);
-				}
-
-				map.defaultReturnValue(INVALID_WEIGHT);
-
-				return map;
+			if (comparator == null) {
+				map = new Object2IntLinkedOpenHashMap<>(16);
+			} else {
+				map = new Object2IntAVLTreeMap<>(comparator);
 			}
+
+			map.defaultReturnValue(INVALID_WEIGHT);
+
+			return map;
 		};
 	}
 

@@ -3,14 +3,14 @@ package net.irisshaders.iris.gl.shader;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.HandRenderer;
-import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pbr.format.TextureFormat;
 import net.irisshaders.iris.pbr.format.TextureFormatLoader;
+import net.irisshaders.iris.pipeline.WorldRenderingPhase;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.minecraft.Util;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
@@ -138,7 +138,6 @@ public class StandardMacros {
 	 * Gets the current Iris version String in a 5 digit format
 	 *
 	 * @return The Iris version string
-	 *
 	 */
 	public static String getFormattedIrisVersion() {
 		String rawVersion = Iris.getVersion();
@@ -168,7 +167,6 @@ public class StandardMacros {
 	}
 
 	/**
-	 *
 	 * Formats a semver string into a 122 format
 	 *
 	 * @param version The string version to format
@@ -352,10 +350,9 @@ public class StandardMacros {
 	 * @return List of definitions corresponding to the uniform names prefixed with "MC_"
 	 */
 	public static List<String> getIrisDefines() {
-		List<String> defines = new ArrayList<>();
 		// All Iris-exclusive uniforms should have a corresponding definition here. Example:
 		// defines.add("MC_UNIFORM_DRAGON_DEATH_PROGRESS");
 
-		return defines;
+		return new ArrayList<>();
 	}
 }

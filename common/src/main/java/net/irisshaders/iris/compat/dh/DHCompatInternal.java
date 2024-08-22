@@ -2,10 +2,8 @@ package net.irisshaders.iris.compat.dh;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
-import com.seibel.distanthorizons.api.interfaces.override.IDhApiOverrideable;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiGenericObjectShaderProgram;
-import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam;
 import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import net.irisshaders.iris.Iris;
@@ -30,9 +28,9 @@ public class DHCompatInternal {
 	static boolean dhEnabled;
 	private static int guiScale = -1;
 	private final IrisRenderingPipeline pipeline;
-	private GlFramebuffer dhGenericFramebuffer;
 	public boolean shouldOverrideShadow;
 	public boolean shouldOverride;
+	private GlFramebuffer dhGenericFramebuffer;
 	private IrisLodRenderProgram solidProgram;
 	private IrisGenericRenderProgram genericShader;
 	private IrisLodRenderProgram translucentProgram;
