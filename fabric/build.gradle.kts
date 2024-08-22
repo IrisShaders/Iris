@@ -13,7 +13,7 @@ val SODIUM_FILE: String by rootProject.extra
 
 
 base {
-    archivesName.set("iris-fabric-${MINECRAFT_VERSION}")
+    archivesName.set("iris-fabric")
 }
 
 sourceSets {

@@ -510,9 +510,9 @@ public class ShadowRenderer {
 		levelRenderer.getLevel().getProfiler().popPush("build blockentities");
 
 		if (shouldRenderBlockEntities) {
-			renderedShadowBlockEntities = ShadowRenderingState.renderBlockEntities(this, bufferSource, modelView, playerCamera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, false);
+			renderedShadowBlockEntities = ShadowRenderingState.renderBlockEntities(this, buffers, modelView, playerCamera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, false);
 		} else if (shouldRenderLightBlockEntities) {
-			renderedShadowBlockEntities = ShadowRenderingState.renderBlockEntities(this, bufferSource, modelView, playerCamera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, true);
+			renderedShadowBlockEntities = ShadowRenderingState.renderBlockEntities(this, buffers, modelView, playerCamera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, true);
 		}
 
 		levelRenderer.getLevel().getProfiler().popPush("draw entities");
@@ -576,7 +576,7 @@ public class ShadowRenderer {
 		levelRenderer.getLevel().getProfiler().popPush("updatechunks");
 	}
 
-	public int renderBlockEntities(MultiBufferSource.BufferSource bufferSource, PoseStack modelView, Camera camera, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum, boolean lightsOnly) {
+	public int renderBlockEntities(RenderBuffers bufferSource, PoseStack modelView, Camera camera, double cameraX, double cameraY, double cameraZ, float tickDelta, boolean hasEntityFrustum, boolean lightsOnly) {
 		getLevel().getProfiler().push("build blockentities");
 
 		int shadowBlockEntities = 0;
@@ -599,7 +599,7 @@ public class ShadowRenderer {
 			}
 			modelView.pushPose();
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
-			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, bufferSource);
+			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, buffers.bufferSource());
 			modelView.popPose();
 
 			shadowBlockEntities++;

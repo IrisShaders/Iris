@@ -79,6 +79,7 @@ public class MixinLevelRenderer {
 			if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource source) {
 				source.endBatchWithType(TransparencyType.OPAQUE);
 				source.endBatchWithType(TransparencyType.OPAQUE_DECAL);
+				source.endBatchWithType(TransparencyType.WATER_MASK);
 			} else {
 				this.renderBuffers.bufferSource().endBatch();
 			}

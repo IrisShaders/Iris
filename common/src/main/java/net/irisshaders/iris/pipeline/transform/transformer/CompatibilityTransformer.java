@@ -110,7 +110,7 @@ public class CompatibilityTransformer {
 	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
 		.withExternalDeclaration("out __type __name;");
 	private static final String attachTargetPrefix = "outColor";
-	private static final List<String> reservedWords = List.of("texture");
+	private static final List<String> reservedWords = List.of("texture", "sample");
 
 	static {
 		declarationTemplate
