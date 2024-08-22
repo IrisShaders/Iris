@@ -55,7 +55,7 @@
     "optifabric": "*",
     "worldeditcui": "<1.18.1",
     "physicsmod": "<=3.0.13",
-    "distanthorizons": "<=2.0.1",
+    "distanthorizons": "<=2.2.0",
     "immersive_portals": "<=1.4.2"
   },
   "custom": {
