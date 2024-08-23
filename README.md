@@ -37,9 +37,9 @@ These are the goals of Iris. Iris hasn't fully achieved all these goals, however
 
 ## What's the current state of development?
 
-Iris has public releases for 1.18.2, 1.19.2, 1.19.3, and 1.19.4 that work with the official releases of Sodium. Iris is generally usable on most shader packs, and most shader packs are being designed with Iris support in mind.
+Iris has public releases for 1.20.1, 1.20.4, 1.20.6, and 1.21 that work with the official releases of Sodium. There are older unmaintained releases for versions such as 1.19.4, but support will not be provided for these versions. 
 
-However, Iris is still not complete software. Performance can be improved, and more features are being added for shader developers. There are also some minor missing features from OptiFine that make the implementation incomplete.
+Iris is generally usable on most shader packs, and most shader packs are being designed with Iris support in mind. However, Iris is still not complete software. Performance can be improved, and more features are being added for shader developers. There are also some minor missing features from OptiFine that make the implementation incomplete.
 
 ## How can I help?
 
