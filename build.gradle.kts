@@ -11,7 +11,7 @@ val FABRIC_API_VERSION by extra { "0.102.0+1.21.1" }
 val SODIUM_FILE by extra { "sodium-LOADER-0.6.0-beta.1+mc1.21.jar" }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.8.0-beta.1" }
+val MOD_VERSION by extra { "1.8.0-beta.2" }
 
 allprojects {
     apply(plugin = "java")

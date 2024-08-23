@@ -133,10 +133,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	public void apply() {
 		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest);
 
-		if (lastApplied != this) {
-			lastApplied = this;
-			ProgramManager.glUseProgram(this.getId());
-		}
+		ProgramManager.glUseProgram(this.getId());
 
 		setupTextures();
 		updateMatrices();

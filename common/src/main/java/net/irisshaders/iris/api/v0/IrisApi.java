@@ -49,7 +49,7 @@ public interface IrisApi {
 	 * <p>Generally, mods won't need to call this function for much.
 	 * Mods should be fine with things being rendered multiple times
 	 * each frame from different camera perspectives. Often, there's
-	 * a better approach to fixing bugs than calling this function.
+	 * a	 better approach to fixing bugs than calling this function.
 	 *
 	 * <p>Pretty much the main legitimate use for this function that
 	 * I've seen is in a mod like Immersive Portals, where it has

@@ -73,6 +73,9 @@ public class MixinLevelRenderer {
 	@Unique
 	private boolean warned;
 
+	@Unique
+	private NonCullingFrustum overrideFrustum;
+
 	// Begin shader rendering after buffers have been cleared.
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
 	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
@@ -93,7 +96,11 @@ public class MixinLevelRenderer {
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 
 		if (pipeline.shouldDisableFrustumCulling()) {
-			this.cullingFrustum = new NonCullingFrustum();
+			this.overrideFrustum = new NonCullingFrustum();
+			this.overrideFrustum.prepare(camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
+			this.cullingFrustum = overrideFrustum;
+		} else {
+			this.overrideFrustum = null;
 		}
 
 		Minecraft.getInstance().smartCull = !pipeline.shouldDisableOcclusionCulling();
@@ -101,6 +108,11 @@ public class MixinLevelRenderer {
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
 			IrisRenderSystem.setPolygonMode(GL43C.GL_LINE);
 		}
+	}
+
+	@ModifyArg(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;setupRender(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;ZZ)V"), index = 1)
+	private Frustum changeFrustum(Frustum frustum) {
+		return this.overrideFrustum != null ? this.overrideFrustum : frustum;
 	}
 
 	// Begin shader rendering after buffers have been cleared.

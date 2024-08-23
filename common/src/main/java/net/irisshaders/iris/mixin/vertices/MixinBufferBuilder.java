@@ -75,6 +75,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	private int currentLocalPosY;
 	@Unique
 	private int currentLocalPosZ;
+	@Unique
+	private final long[] vertexPointers = new long[4];
 
 	@Shadow
 	public abstract VertexConsumer setNormal(float f, float g, float h);
@@ -168,6 +170,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			return;
 		}
 
+		vertexPointers[iris$vertexCount] = vertexPointer;
+
 		iris$vertexCount++;
 
 		if (mode == VertexFormat.Mode.QUADS && iris$vertexCount == 4 || mode == VertexFormat.Mode.TRIANGLES && iris$vertexCount == 3) {
@@ -199,7 +203,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 
 		int stride = format.getVertexSize();
 
-		polygon.setup(vertexPointer, stride, vertexAmount);
+		polygon.setup(vertexPointers, stride, vertexAmount);
 
 		float midU = 0;
 		float midV = 0;
@@ -219,13 +223,13 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			// NormalHelper.computeFaceNormalTri(normal, polygon);	// Removed to enable smooth shaded triangles. Mods rendering triangles with bad normals need to recalculate their normals manually or otherwise shading might be inconsistent.
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
-				int vertexNormal = MemoryUtil.memGetInt((vertexPointer - (stride * vertex)) + normalOffset); // retrieve per-vertex normal
+				int vertexNormal = MemoryUtil.memGetInt(vertexPointers[vertex] + normalOffset); // retrieve per-vertex normal
 
 				int tangent = NormalHelper.computeTangentSmooth(NormI8.unpackX(vertexNormal), NormI8.unpackY(vertexNormal), NormI8.unpackZ(vertexNormal), polygon);
 
-				MemoryUtil.memPutFloat((vertexPointer - (stride * vertex)) + midTexOffset, midU);
-				MemoryUtil.memPutFloat((vertexPointer - (stride * vertex)) + midTexOffset + 4, midV);
-				MemoryUtil.memPutInt((vertexPointer - (stride * vertex)) + tangentOffset, tangent);
+				MemoryUtil.memPutFloat(vertexPointers[vertex] + midTexOffset, midU);
+				MemoryUtil.memPutFloat(vertexPointers[vertex] + midTexOffset + 4, midV);
+				MemoryUtil.memPutInt(vertexPointers[vertex] + tangentOffset, tangent);
 			}
 		} else {
 			NormalHelper.computeFaceNormal(normal, polygon);
@@ -233,11 +237,13 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
-				MemoryUtil.memPutFloat((vertexPointer - (stride * vertex)) + midTexOffset, midU);
-				MemoryUtil.memPutFloat((vertexPointer - (stride * vertex)) + midTexOffset + 4, midV);
-				MemoryUtil.memPutInt((vertexPointer - (stride * vertex)) + normalOffset, packedNormal);
-				MemoryUtil.memPutInt((vertexPointer - (stride * vertex)) + tangentOffset, tangent);
+				MemoryUtil.memPutFloat(vertexPointers[vertex] + midTexOffset, midU);
+				MemoryUtil.memPutFloat(vertexPointers[vertex] + midTexOffset + 4, midV);
+				MemoryUtil.memPutInt(vertexPointers[vertex] + normalOffset, packedNormal);
+				MemoryUtil.memPutInt(vertexPointers[vertex] + tangentOffset, tangent);
 			}
 		}
+
+		Arrays.fill(vertexPointers, 0);
 	}
 }
