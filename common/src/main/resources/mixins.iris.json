@@ -15,6 +15,7 @@
     "MixinBiomes",
     "MixinBlockStateBehavior",
     "MixinBooleanState",
+    "MixinByteBufferBuilder",
     "MixinChainedJsonException",
     "MixinClientLanguage",
     "MixinClientPacketListener",
