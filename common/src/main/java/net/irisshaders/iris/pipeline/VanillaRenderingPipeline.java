@@ -28,7 +28,7 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 		WorldRenderingSettings.INSTANCE.setAmbientOcclusionLevel(1.0f);
 		WorldRenderingSettings.INSTANCE.setUseExtendedVertexFormat(false);
 		WorldRenderingSettings.INSTANCE.setVoxelizeLightBlocks(false);
-		WorldRenderingSettings.INSTANCE.setBlockTypeIds(null);
+		WorldRenderingSettings.INSTANCE.setBlockTypeIds(Object2ObjectMaps.emptyMap());
 	}
 
 	@Override

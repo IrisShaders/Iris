@@ -80,7 +80,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 
 	@Override
 	public long write(long ptr,
-					  Material material, Vertex[] vertices, int section) {
+					  int material, Vertex[] vertices, int section) {
 		// Calculate the center point of the texture region which is mapped to the quad
 		float texCentroidU = 0.0f;
 		float texCentroidV = 0.0f;
@@ -127,7 +127,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 			MemoryUtil.memPutInt(ptr + 4L, packPositionLo(x, y, z));
 			MemoryUtil.memPutInt(ptr + 8L, WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? ColorABGR.withAlpha(vertex.color, vertex.ao) : ColorHelper.multiplyRGB(vertex.color, vertex.ao));
 			MemoryUtil.memPutInt(ptr + 12L, packTexture(u, v));
-			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material.bits(), section));
+			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material, section));
 
 			MemoryUtil.memPutShort(ptr + 32, contextHolder.getBlockId());
 			MemoryUtil.memPutShort(ptr + 34, contextHolder.getRenderType());

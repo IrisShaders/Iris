@@ -117,10 +117,10 @@ public class Iris {
 
 		PBRTextureManager.INSTANCE.init();
 
-		VertexSerializerRegistry.instance().registerSerializer(VertexFormatRegistry.instance().get(DefaultVertexFormat.NEW_ENTITY), VertexFormatRegistry.instance().get(IrisVertexFormats.TERRAIN), new EntityToTerrainVertexSerializer());
-		VertexSerializerRegistry.instance().registerSerializer(VertexFormatRegistry.instance().get(IrisVertexFormats.ENTITY), VertexFormatRegistry.instance().get(IrisVertexFormats.TERRAIN), new IrisEntityToTerrainVertexSerializer());
-		VertexSerializerRegistry.instance().registerSerializer(VertexFormatRegistry.instance().get(DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP), VertexFormatRegistry.instance().get(IrisVertexFormats.GLYPH), new GlyphExtVertexSerializer());
-		VertexSerializerRegistry.instance().registerSerializer(VertexFormatRegistry.instance().get(DefaultVertexFormat.NEW_ENTITY), VertexFormatRegistry.instance().get(IrisVertexFormats.ENTITY), new ModelToEntityVertexSerializer());
+		VertexSerializerRegistry.instance().registerSerializer(DefaultVertexFormat.NEW_ENTITY, IrisVertexFormats.TERRAIN, new EntityToTerrainVertexSerializer());
+		VertexSerializerRegistry.instance().registerSerializer(IrisVertexFormats.ENTITY, IrisVertexFormats.TERRAIN, new IrisEntityToTerrainVertexSerializer());
+		VertexSerializerRegistry.instance().registerSerializer(DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP, IrisVertexFormats.GLYPH, new GlyphExtVertexSerializer());
+		VertexSerializerRegistry.instance().registerSerializer(DefaultVertexFormat.NEW_ENTITY, IrisVertexFormats.ENTITY, new ModelToEntityVertexSerializer());
 
 		// Only load the shader pack when we can access OpenGL
 		loadShaderpack();

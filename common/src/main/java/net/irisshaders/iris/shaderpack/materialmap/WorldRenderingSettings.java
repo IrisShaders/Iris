@@ -59,7 +59,6 @@ public class WorldRenderingSettings {
 		this.blockStateIds = blockStateIds;
 	}
 
-	@Nullable
 	public Map<Block, BlockRenderType> getBlockTypeIds() {
 		return blockTypeIds;
 	}

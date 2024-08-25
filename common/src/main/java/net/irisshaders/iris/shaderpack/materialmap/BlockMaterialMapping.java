@@ -3,6 +3,7 @@ package net.irisshaders.iris.shaderpack.materialmap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.minecraft.client.renderer.RenderType;
@@ -97,6 +98,8 @@ public class BlockMaterialMapping {
 	}
 
 	public static Map<Block, BlockRenderType> createBlockTypeMap(Map<NamespacedId, BlockRenderType> blockPropertiesMap) {
+		if (blockPropertiesMap.isEmpty()) return Object2ObjectMaps.emptyMap();
+
 		Map<Block, BlockRenderType> blockTypeIds = new Reference2ReferenceOpenHashMap<>();
 
 		blockPropertiesMap.forEach((id, blockType) -> {

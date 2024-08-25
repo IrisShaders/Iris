@@ -5,8 +5,7 @@
   "refmap": "iris.refmap.json",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "entity.CommonVertexAttributeInterface",
-    "entity.MixinCommonVertexAttribute",
+    "MixinBlockRenderer",
     "MixinChunkBuildBuffers",
     "MixinChunkMeshBuildTask",
     "MixinCloudRenderer",

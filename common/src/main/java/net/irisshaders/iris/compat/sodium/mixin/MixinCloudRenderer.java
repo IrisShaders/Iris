@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.ColorVertex;
 import net.caffeinemc.mods.sodium.client.render.immediate.CloudRenderer;
 import net.irisshaders.iris.Iris;
@@ -79,10 +78,10 @@ public abstract class MixinCloudRenderer {
 		return IrisApi.getInstance().isShaderPackInUse() ? IrisVertexFormats.CLOUDS : p_350837_;
 	}
 
-	@ModifyArg(remap = false, method = "emitCellGeometry3D", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILnet/caffeinemc/mods/sodium/api/vertex/format/VertexFormatDescription;)V"), index = 3)
-	private static VertexFormatDescription modifyArgIris(VertexFormatDescription vertexFormatDescription) {
+	@ModifyArg(remap = false, method = "emitCellGeometry3D", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 3)
+	private static VertexFormat modifyArgIris(VertexFormat vertexFormatDescription) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
-			return CloudVertex.FORMAT;
+			return IrisVertexFormats.CLOUDS;
 		} else {
 			return ColorVertex.FORMAT;
 		}
@@ -93,10 +92,10 @@ public abstract class MixinCloudRenderer {
 		return IrisApi.getInstance().isShaderPackInUse() ? 80 : size;
 	}
 
-	@ModifyArg(remap = false, method = "emitCellGeometry2D", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILnet/caffeinemc/mods/sodium/api/vertex/format/VertexFormatDescription;)V"), index = 3)
-	private static VertexFormatDescription modifyArgIris2D(VertexFormatDescription vertexFormatDescription) {
+	@ModifyArg(remap = false, method = "emitCellGeometry2D", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 3)
+	private static VertexFormat modifyArgIris2D(VertexFormat vertexFormatDescription) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
-			return CloudVertex.FORMAT;
+			return IrisVertexFormats.CLOUDS;
 		} else {
 			return ColorVertex.FORMAT;
 		}
