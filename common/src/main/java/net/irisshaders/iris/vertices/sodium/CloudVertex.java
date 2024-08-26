@@ -4,15 +4,11 @@ import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.ColorAttribute;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.NormalAttribute;
 import net.caffeinemc.mods.sodium.api.vertex.attributes.common.PositionAttribute;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
+	import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.joml.Matrix4f;
 
 public final class CloudVertex {
-	public static final VertexFormatDescription FORMAT = VertexFormatRegistry.instance()
-		.get(IrisVertexFormats.CLOUDS);
-
 	public static final int STRIDE = 20;
 
 	private static final int OFFSET_POSITION = 0;

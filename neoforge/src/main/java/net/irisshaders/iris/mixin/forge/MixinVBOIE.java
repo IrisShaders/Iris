@@ -1,5 +1,6 @@
 package net.irisshaders.iris.mixin.forge;
 
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.pipeline.programs.FallbackShader;
 import net.irisshaders.iris.pipeline.programs.ShaderAccess;
@@ -17,7 +18,7 @@ public class MixinVBOIE {
 
 	@Overwrite
 	public static ShaderInstance getVboShader() {
-		if (!IrisApi.getInstance().isShaderPackInUse()) {
+		if (!Iris.isPackInUseQuick()) {
 			return vboShader;
 		} else {
 			ShaderInstance shader = ShaderAccess.getIEVBOShader();

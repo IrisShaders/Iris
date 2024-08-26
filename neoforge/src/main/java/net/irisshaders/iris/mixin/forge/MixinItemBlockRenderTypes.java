@@ -31,12 +31,9 @@ public class MixinItemBlockRenderTypes {
 
 	@Inject(method = "getRenderLayers", at = @At("HEAD"), cancellable = true)
 	private static void iris$setCustomRenderType(BlockState arg, CallbackInfoReturnable<ChunkRenderTypeSet> cir) {
-		Map<Block, BlockRenderType> idMap = WorldRenderingSettings.INSTANCE.getBlockTypeIds();
-		if (idMap != null) {
-			BlockRenderType type = idMap.get(arg.getBlock());
-			if (type != null) {
-				cir.setReturnValue(LAYER_SET[type.ordinal()]);
-			}
+		BlockRenderType type = WorldRenderingSettings.INSTANCE.getBlockTypeIds().get(arg.getBlock());
+		if (type != null) {
+			cir.setReturnValue(LAYER_SET[type.ordinal()]);
 		}
 	}
 }

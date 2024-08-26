@@ -2,7 +2,7 @@ package net.irisshaders.iris.vertices.sodium;
 
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
-import net.caffeinemc.mods.sodium.api.vertex.format.common.ModelVertex;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
@@ -17,12 +17,12 @@ public class ModelToEntityVertexSerializer implements VertexSerializer {
 		for (int i = 0; i < quadCount; i++) {
 			int normal = MemoryUtil.memGetInt(src + 32);
 			int tangent = NormalHelper.computeTangent(NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal), MemoryUtil.memGetFloat(src), MemoryUtil.memGetFloat(src + 4), MemoryUtil.memGetFloat(src + 8), MemoryUtil.memGetFloat(src + 16), MemoryUtil.memGetFloat(src + 20),
-				MemoryUtil.memGetFloat(src + ModelVertex.STRIDE), MemoryUtil.memGetFloat(src + 4 + ModelVertex.STRIDE), MemoryUtil.memGetFloat(src + 8 + ModelVertex.STRIDE), MemoryUtil.memGetFloat(src + 16 + ModelVertex.STRIDE), MemoryUtil.memGetFloat(src + 20 + ModelVertex.STRIDE),
-				MemoryUtil.memGetFloat(src + ModelVertex.STRIDE + ModelVertex.STRIDE), MemoryUtil.memGetFloat(src + 4 + ModelVertex.STRIDE + ModelVertex.STRIDE), MemoryUtil.memGetFloat(src + 8 + ModelVertex.STRIDE + ModelVertex.STRIDE), MemoryUtil.memGetFloat(src + 16 + ModelVertex.STRIDE + ModelVertex.STRIDE), MemoryUtil.memGetFloat(src + 20 + ModelVertex.STRIDE + ModelVertex.STRIDE));
+				MemoryUtil.memGetFloat(src + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 4 + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 8 + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 16 + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 20 + EntityVertex.STRIDE),
+				MemoryUtil.memGetFloat(src + EntityVertex.STRIDE + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 4 + EntityVertex.STRIDE + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 8 + EntityVertex.STRIDE + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 16 + EntityVertex.STRIDE + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 20 + EntityVertex.STRIDE + EntityVertex.STRIDE));
 			float midU = 0, midV = 0;
 			for (int vertex = 0; vertex < 4; vertex++) {
-				midU += MemoryUtil.memGetFloat(src + 16 + (ModelVertex.STRIDE * vertex));
-				midV += MemoryUtil.memGetFloat(src + 20 + (ModelVertex.STRIDE * vertex));
+				midU += MemoryUtil.memGetFloat(src + 16 + (EntityVertex.STRIDE * vertex));
+				midV += MemoryUtil.memGetFloat(src + 20 + (EntityVertex.STRIDE * vertex));
 			}
 
 			midU /= 4;
@@ -37,7 +37,7 @@ public class ModelToEntityVertexSerializer implements VertexSerializer {
 				MemoryUtil.memPutFloat(dst + 46, midV);
 				MemoryUtil.memPutInt(dst + 50, tangent);
 
-				src += ModelVertex.STRIDE;
+				src += EntityVertex.STRIDE;
 				dst += IrisVertexFormats.ENTITY.getVertexSize();
 			}
 		}

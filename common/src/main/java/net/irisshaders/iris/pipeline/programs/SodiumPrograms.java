@@ -20,6 +20,7 @@ import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.programs.ProgramFallbackResolver;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
@@ -27,10 +28,13 @@ import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
+import net.irisshaders.iris.vertices.sodium.terrain.FormatAnalyzer;
 import net.irisshaders.iris.vertices.sodium.terrain.IrisModelVertexFormats;
 import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.system.MemoryStack;
 
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -41,6 +45,12 @@ import java.util.function.Supplier;
 public class SodiumPrograms {
 	private final EnumMap<Pass, GlFramebuffer> framebuffers = new EnumMap<>(Pass.class);
 	private final EnumMap<Pass, GlProgram<ChunkShaderInterface>> shaders = new EnumMap<>(Pass.class);
+
+	private boolean hasBlockId;
+	private boolean hasMidUv;
+	private boolean hasNormal;
+	private boolean hasTangent;
+	private boolean hasMidBlock;
 
 	public SodiumPrograms(IrisRenderingPipeline pipeline, ProgramSet programSet, ProgramFallbackResolver resolver,
 						  RenderTargets renderTargets, Supplier<ShadowRenderTargets> shadowRenderTargets,
@@ -60,6 +70,8 @@ public class SodiumPrograms {
 			GlProgram<ChunkShaderInterface> shader = createShader(pipeline, pass, source, alphaTest, customUniforms, flipState, createGlShaders(pass.name().toLowerCase(Locale.ROOT), transformed));
 			shaders.put(pass, shader);
 		}
+
+		WorldRenderingSettings.INSTANCE.setVertexFormat(FormatAnalyzer.createFormat(hasBlockId, hasNormal, hasMidUv, hasTangent, hasMidBlock));
 	}
 
 	private AlphaTest getAlphaTest(Pass pass, ProgramSource source) {
@@ -75,7 +87,7 @@ public class SodiumPrograms {
 			source.getTessControlSource().orElse(null),
 			source.getTessEvalSource().orElse(null),
 			source.getFragmentSource().orElse(null),
-			alphaTest, IrisModelVertexFormats.MODEL_VERTEX_XHFP,
+			alphaTest,
 			programSet.getPackDirectives().getTextureMap());
 
 		ShaderPrinter.printProgram("sodium_" + source.getName()).addSources(transformed).print();
@@ -160,6 +172,13 @@ public class SodiumPrograms {
 			.link((shader) -> {
 				int handle = ((GlObject) shader).handle();
 				GLDebug.nameObject(GL43C.GL_PROGRAM, handle, "sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
+
+				if (!hasNormal) hasNormal = GL43C.glGetAttribLocation(handle, "iris_Normal") != -1;
+				if (!hasMidBlock) hasMidBlock = GL43C.glGetAttribLocation(handle, "at_midBlock") != -1;
+				if (!hasBlockId) hasBlockId = GL43C.glGetAttribLocation(handle, "mc_Entity") != -1;
+				if (!hasMidUv) hasMidUv = GL43C.glGetAttribLocation(handle, "mc_midTexCoord") != -1;
+				if (!hasTangent) hasTangent = GL43C.glGetAttribLocation(handle, "at_tangent") != -1;
+
 				return new SodiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride(),
 					createBufferBlendOverrides(source), customUniforms, flipState,
 					alphaTest.reference(), containsTessellation);

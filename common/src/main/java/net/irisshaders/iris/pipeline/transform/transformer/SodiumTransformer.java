@@ -51,7 +51,7 @@ public class SodiumTransformer {
 
 		root.rename("gl_Color", "_vert_color");
 
-		if (parameters.type.glShaderType == ShaderType.VERTEX) {
+		if (parameters.type.glShaderType == ShaderType.VERTEX && root.identifierIndex.has("gl_Normal")) {
 			root.rename("gl_Normal", "iris_Normal");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
 		}
