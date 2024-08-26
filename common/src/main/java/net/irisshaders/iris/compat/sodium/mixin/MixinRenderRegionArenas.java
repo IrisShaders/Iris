@@ -16,6 +16,6 @@ public class MixinRenderRegionArenas {
 			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkMeshFormats;COMPACT:Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;",
 			remap = false))
 	private ChunkVertexType iris$useExtendedStride() {
-		return WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() ? IrisModelVertexFormats.MODEL_VERTEX_XHFP : ChunkMeshFormats.COMPACT;
+		return WorldRenderingSettings.INSTANCE.getVertexFormat();
 	}
 }
