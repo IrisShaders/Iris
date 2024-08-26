@@ -1,6 +1,7 @@
 package net.irisshaders.iris.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -54,7 +55,7 @@ public abstract class MixinModelViewBobbing {
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
 	private void iris$saveShadersOn(DeltaTracker deltaTracker, CallbackInfo ci) {
-		areShadersOn = IrisApi.getInstance().isShaderPackInUse();
+		areShadersOn = Iris.isPackInUseQuick();
 	}
 
 	@ModifyArg(method = "renderLevel", index = 0,

@@ -5,25 +5,30 @@ import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderBindingP
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.DefaultChunkMeshAttributes;
+import net.irisshaders.iris.vertices.NormI8;
+import net.irisshaders.iris.vertices.NormalHelper;
+import net.minecraft.util.Mth;
+import org.joml.Vector3f;
 
 /**
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
  */
 public class XHFPModelVertexType implements ChunkVertexType {
-	public static final int STRIDE = 40;
+	private final GlVertexFormat format;
+	private final int normalOffset;
+	private final int blockIdOffset;
+	private final int tangentOffset;
+	private final int midBlockOffset;
+	private final int midUvOffset;
 
-	public static final GlVertexFormat VERTEX_FORMAT = GlVertexFormat.builder(STRIDE)
-		.addElement(DefaultChunkMeshAttributes.POSITION_HI, ChunkShaderBindingPoints.ATTRIBUTE_POSITION_HI, 0)
-		.addElement(DefaultChunkMeshAttributes.POSITION_LO, ChunkShaderBindingPoints.ATTRIBUTE_POSITION_LO, 4)
-		.addElement(DefaultChunkMeshAttributes.COLOR, ChunkShaderBindingPoints.ATTRIBUTE_COLOR, 8)
-		.addElement(DefaultChunkMeshAttributes.TEXTURE, ChunkShaderBindingPoints.ATTRIBUTE_TEXTURE, 12)
-		.addElement(DefaultChunkMeshAttributes.LIGHT_MATERIAL_INDEX, ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_MATERIAL_INDEX, 16)
-		.addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 12, 20)
-		.addElement(IrisChunkMeshAttributes.TANGENT, 13, 24)
-		.addElement(IrisChunkMeshAttributes.NORMAL, 10, 28)
-		.addElement(IrisChunkMeshAttributes.BLOCK_ID, 11, 32)
-		.addElement(IrisChunkMeshAttributes.MID_BLOCK, 14, 36)
-		.build();
+	public XHFPModelVertexType(GlVertexFormat format, int blockIdOffset, int normalOffset, int tangentOffset, int midUvOffset, int midBlockOffset) {
+		this.format = format;
+		this.blockIdOffset = blockIdOffset;
+		this.normalOffset = normalOffset;
+		this.tangentOffset = tangentOffset;
+		this.midUvOffset = midUvOffset;
+		this.midBlockOffset = midBlockOffset;
+	}
 
 	private static final int POSITION_MAX_VALUE = 65536;
 	private static final int TEXTURE_MAX_VALUE = 32768;
@@ -43,11 +48,11 @@ public class XHFPModelVertexType implements ChunkVertexType {
 
 	@Override
 	public GlVertexFormat getVertexFormat() {
-		return VERTEX_FORMAT;
+		return format;
 	}
 
 	@Override
 	public ChunkVertexEncoder getEncoder() {
-		return new XHFPTerrainVertex();
+		return new XHFPTerrainVertex(blockIdOffset, normalOffset, tangentOffset, midUvOffset, midBlockOffset, format.getStride());
 	}
 }
