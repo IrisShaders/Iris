@@ -1,0 +1,60 @@
+#version 450
+#if defined(GL_EXT_control_flow_attributes)
+#extension GL_EXT_control_flow_attributes : require
+#define SPIRV_CROSS_FLATTEN [[flatten]]
+#define SPIRV_CROSS_BRANCH [[dont_flatten]]
+#define SPIRV_CROSS_UNROLL [[unroll]]
+#define SPIRV_CROSS_LOOP [[dont_unroll]]
+#else
+#define SPIRV_CROSS_FLATTEN
+#define SPIRV_CROSS_BRANCH
+#define SPIRV_CROSS_UNROLL
+#define SPIRV_CROSS_LOOP
+#endif
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+uniform float nearPlane;
+uniform float farPlane;
+
+layout(binding = 0, rg32f) uniform writeonly image2D gOutputMap;
+uniform sampler2D depthTex;
+
+shared vec2 depthSamples[256];
+
+// Same algorithm, but faster, thanks to Kneemund/Niemand
+float linearizeDepthFast(float depth, float near, float far) {
+    return (near * far) / (depth * (near - far) + far);
+}
+
+void main()
+{
+    float depthSample = texelFetch(depthTex, ivec2(min(((gl_WorkGroupID.xy * uvec2(16u)) + gl_LocalInvocationID.xy), (uvec2(textureSize(depthTex, 0)) - uvec2(1u)))), int(0u)).x;
+    float maxDepth = 0.0;
+    float minDepth = 1.0;
+    if (depthSample < 1.0)
+    {
+        float linear = linearizeDepthFast(depthSample, nearPlane, farPlane);
+        maxDepth = isnan(linear) ? 0.0 : (isnan(0.0) ? linear : max(0.0, linear));
+        minDepth = isnan(linear) ? 1.0 : (isnan(1.0) ? linear : min(1.0, linear));
+    }
+    depthSamples[gl_LocalInvocationIndex] = vec2(minDepth, maxDepth);
+    groupMemoryBarrier();
+    barrier();
+    SPIRV_CROSS_UNROLL
+    for (uint i = 128u; i > 0u; i = i >> 1u)
+    {
+        if (gl_LocalInvocationIndex < i)
+        {
+            uint index = gl_LocalInvocationIndex + i;
+            depthSamples[gl_LocalInvocationIndex].x = isnan(depthSamples[index].x) ? depthSamples[gl_LocalInvocationIndex].x : (isnan(depthSamples[gl_LocalInvocationIndex].x) ? depthSamples[index].x : min(depthSamples[gl_LocalInvocationIndex].x, depthSamples[index].x));
+            depthSamples[gl_LocalInvocationIndex].y = isnan(depthSamples[index].y) ? depthSamples[gl_LocalInvocationIndex].y : (isnan(depthSamples[gl_LocalInvocationIndex].y) ? depthSamples[index].y : max(depthSamples[gl_LocalInvocationIndex].y, depthSamples[index].y));
+        }
+        groupMemoryBarrier();
+        barrier();
+    }
+    if (gl_LocalInvocationIndex == 0u)
+    {
+        imageStore(gOutputMap, ivec2(gl_WorkGroupID.xy), vec2(depthSamples[0].x, depthSamples[0].y).xyyy);
+    }
+}
+

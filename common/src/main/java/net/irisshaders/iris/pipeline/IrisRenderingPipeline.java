@@ -139,6 +139,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final ImmutableSet<Integer> flippedBeforeShadow;
 	private final ImmutableSet<Integer> flippedAfterPrepare;
 	private final ImmutableSet<Integer> flippedAfterTranslucent;
+	private final SDSMPass sdsmPass;
 	private final HorizonRenderer horizonRenderer = new HorizonRenderer();
 	@Nullable
 	private final ComputeProgram[] shadowComputes;
@@ -375,6 +376,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		this.loadedShaders = new HashSet<>();
 
+		this.sdsmPass = new SDSMPass();
 
 		this.shaderMap = new ShaderMap(key -> {
 			try {
@@ -1033,6 +1035,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		isRenderingWorld = false;
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
+		sdsmPass.dispatch(renderTargets.getDepthTexture(), 0.05f, Minecraft.getInstance().gameRenderer.getDepthFar());
 	}
 
 	@Override
