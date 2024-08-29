@@ -3,7 +3,9 @@ package net.irisshaders.iris.uniforms;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
+import net.irisshaders.iris.shadows.NullCascade;
 import net.irisshaders.iris.shadows.ShadowMatrices;
+import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -16,13 +18,13 @@ public final class MatrixUniforms {
 	private MatrixUniforms() {
 	}
 
-	public static void addMatrixUniforms(UniformHolder uniforms, PackDirectives directives) {
+	public static void addMatrixUniforms(UniformHolder uniforms, PackDirectives directives, FrameUpdateNotifier updateNotifier) {
 		addMatrix(uniforms, "ModelView", CapturedRenderingState.INSTANCE::getGbufferModelView);
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
 		addDHMatrix(uniforms, "Projection", DHCompat::getProjection);
 		addShadowMatrix(uniforms, "ModelView", () ->
 			new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize()).last().pose()));
-		addShadowMatrix(uniforms, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance(),
+		addShadowMatrixProj(uniforms, updateNotifier, "Projection", () -> ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance(),
 			directives.getShadowDirectives().getNearPlane() < 0 ? -DHCompat.getRenderDistance() : directives.getShadowDirectives().getNearPlane(),
 			directives.getShadowDirectives().getFarPlane() < 0 ? DHCompat.getRenderDistance() : directives.getShadowDirectives().getFarPlane()));
 	}
@@ -44,6 +46,35 @@ public final class MatrixUniforms {
 	private static void addShadowMatrix(UniformHolder uniforms, String name, Supplier<Matrix4fc> supplier) {
 		uniforms
 			.uniformMatrix(PER_FRAME, "shadow" + name, supplier)
+			.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
+	}
+
+	private static NullCascade.CascadeOutput out;
+
+	private static void addShadowMatrixProj(UniformHolder uniforms, FrameUpdateNotifier updateNotifier, String name, Supplier<Matrix4fc> supplier) {
+		updateNotifier.addListener(() -> {
+			out = NullCascade.getCascades(ShadowRenderer.MODELVIEW, ShadowRenderer.nearPlane, ShadowRenderer.farPlane, ShadowRenderer.halfPlaneLength);
+		});
+
+		uniforms
+			.uniformMatrixArray(PER_FRAME, "shadow" + name, ShadowRenderTargets.NUM_CASCADES, () -> {
+				return out.cascadeProjection;
+			})
+			.uniform1fArray(PER_FRAME, "cascadeSize", ShadowRenderTargets.NUM_CASCADES, () -> {
+				return out.cascadeSize;
+			})
+			.uniform2fArray(PER_FRAME, "shadowProjectionSize", ShadowRenderTargets.NUM_CASCADES, () -> {
+				return out.shadowProjectionSize;
+			})
+			.uniform2fArray(PER_FRAME, "shadowProjectionPos", ShadowRenderTargets.NUM_CASCADES, () -> {
+				return out.shadowProjectionPos;
+			})
+			.uniform2fArray(PER_FRAME, "cascadeViewMin", ShadowRenderTargets.NUM_CASCADES, () -> {
+				return out.cascadeViewMin;
+			})
+			.uniform2fArray(PER_FRAME, "cascadeViewMax", ShadowRenderTargets.NUM_CASCADES, () -> {
+				return out.cascadeViewMax;
+			})
 			.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
 	}
 

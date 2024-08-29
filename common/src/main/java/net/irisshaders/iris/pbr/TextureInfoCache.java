@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL43C;
 
 import java.nio.IntBuffer;
 
@@ -37,6 +38,16 @@ public class TextureInfoCache {
 		}
 	}
 
+	public void onTexImage(int target, int id, int level, int internalformat, int width, int height) {
+		if (level == 0) {
+			TextureInfo info = getInfo(id);
+			info.internalFormat = internalformat;
+			info.target = target;
+			info.width = width;
+			info.height = height;
+		}
+	}
+
 	public void onDeleteTexture(int id) {
 		cache.remove(id);
 	}
@@ -46,6 +57,7 @@ public class TextureInfoCache {
 		private int internalFormat = -1;
 		private int width = -1;
 		private int height = -1;
+		private int target = GL43C.GL_TEXTURE_2D;
 
 		private TextureInfo(int id) {
 			this.id = id;
@@ -82,7 +94,7 @@ public class TextureInfoCache {
 
 			// Bind this texture and grab the parameter from it.
 			GlStateManager._bindTexture(id);
-			int parameter = GlStateManager._getTexLevelParameter(GL20C.GL_TEXTURE_2D, 0, pname);
+			int parameter = GlStateManager._getTexLevelParameter(target, 0, pname);
 
 			// Make sure to re-bind the previous texture to avoid issues.
 			GlStateManager._bindTexture(previousTextureBinding);

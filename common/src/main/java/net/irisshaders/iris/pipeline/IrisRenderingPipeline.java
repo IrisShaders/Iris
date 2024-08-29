@@ -683,7 +683,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	}
 
 	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
-		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), new int[]{0});
+		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), new int[]{0}, ShadowRenderTargets.TEMP_LAYER);
 
 		FallbackShader shader = ShaderCreator.createFallback(name, framebuffer, framebuffer,
 			key.getAlphaTest(), key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(),
@@ -696,7 +696,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	private ShaderInstance createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright, boolean isText, boolean isIE) throws IOException {
-		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers());
+		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers(), ShadowRenderTargets.TEMP_LAYER);
 		boolean isLines = programId == ProgramId.Line && resolver.has(ProgramId.Line);
 
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isLines, false, isText, isIE);
@@ -826,8 +826,10 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				}
 			} else {
 				// Clear depth first, regardless of any color clearing.
-				shadowRenderTargets.getDepthSourceFb().bind();
-				RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+				for (int i = 0; i < ShadowRenderTargets.NUM_CASCADES; i++) {
+					shadowRenderTargets.getDepthSourceFb()[i].bind();
+					RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+				}
 
 				ImmutableList<ClearPass> passes;
 
@@ -1251,9 +1253,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return flippedAfterTranslucent;
 	}
 
-	public GlFramebuffer createDHFramebufferShadow(ProgramSource sources) {
+	public GlFramebuffer createDHFramebufferShadow(ProgramSource sources, int layer) {
 
-		return shadowRenderTargets.createDHFramebuffer(ImmutableSet.of(), new int[]{0, 1});
+		return shadowRenderTargets.createDHFramebuffer(ImmutableSet.of(), new int[]{0, 1}, layer);
 	}
 
 	public boolean hasShadowRenderTargets() {

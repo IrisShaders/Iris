@@ -2,6 +2,8 @@ package net.irisshaders.iris.pipeline.programs;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.caffeinemc.mods.sodium.client.gl.GlObject;
 import net.caffeinemc.mods.sodium.client.gl.shader.GlProgram;
 import net.caffeinemc.mods.sodium.client.gl.shader.GlShader;
@@ -25,6 +27,7 @@ import net.irisshaders.iris.shaderpack.programs.ProgramFallbackResolver;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
+import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
@@ -43,6 +46,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class SodiumPrograms {
+	private final GlFramebuffer[] shadowMap = new GlFramebuffer[ShadowRenderTargets.NUM_CASCADES];
 	private final EnumMap<Pass, GlFramebuffer> framebuffers = new EnumMap<>(Pass.class);
 	private final EnumMap<Pass, GlProgram<ChunkShaderInterface>> shaders = new EnumMap<>(Pass.class);
 
@@ -58,8 +62,16 @@ public class SodiumPrograms {
 		for (Pass pass : Pass.values()) {
 			ProgramSource source = resolver.resolveNullable(pass.getOriginalId());
 			Supplier<ImmutableSet<Integer>> flipState = getFlipState(pipeline, pass, pass == Pass.SHADOW || pass == Pass.SHADOW_CUTOUT);
-			GlFramebuffer framebuffer = createFramebuffer(pass, source, shadowRenderTargets, renderTargets, flipState);
-			framebuffers.put(pass, framebuffer);
+			if (pass == Pass.SHADOW) {
+				for (int layer = 0; layer < ShadowRenderTargets.NUM_CASCADES; layer++) {
+					GlFramebuffer framebuffer = shadowRenderTargets.get().createShadowFramebuffer(ImmutableSet.of(),
+						source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers()), layer);
+					shadowMap[layer] = framebuffer;
+				}
+			} else {
+				GlFramebuffer framebuffer = createFramebuffer(pass, source, shadowRenderTargets, renderTargets, flipState);
+				framebuffers.put(pass, framebuffer);
+			}
 
 			if (source == null) {
 				continue;
@@ -137,7 +149,7 @@ public class SodiumPrograms {
 											Supplier<ImmutableSet<Integer>> flipState) {
 		if (pass == Pass.SHADOW || pass == Pass.SHADOW_CUTOUT) {
 			return shadowRenderTargets.get().createShadowFramebuffer(ImmutableSet.of(),
-				source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers()));
+				source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers()), ShadowRenderTargets.TEMP_LAYER);
 		} else {
 			return renderTargets.createGbufferFramebuffer(flipState.get(), source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0} : source.getDirectives().getDrawBuffers()));
 		}
@@ -192,7 +204,7 @@ public class SodiumPrograms {
 
 	public GlFramebuffer getFramebuffer(TerrainRenderPass pass) {
 		Pass pass2 = mapTerrainRenderPass(pass);
-		return this.framebuffers.get(pass2);
+		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? this.shadowMap[ShadowRenderer.CASCADE] : this.framebuffers.get(pass2);
 	}
 
 	private Pass mapTerrainRenderPass(TerrainRenderPass pass) {

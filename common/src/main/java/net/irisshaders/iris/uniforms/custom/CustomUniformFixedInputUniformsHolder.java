@@ -10,14 +10,18 @@ import net.irisshaders.iris.gl.uniform.UniformType;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.uniforms.custom.cached.BooleanCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
+import net.irisshaders.iris.uniforms.custom.cached.Float2VectorArrayCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Float2VectorCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Float3VectorCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Float4MatrixCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Float4VectorCachedUniform;
+import net.irisshaders.iris.uniforms.custom.cached.FloatArrayCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.FloatCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Int2VectorCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Int3VectorCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.IntCachedUniform;
+import net.irisshaders.iris.uniforms.custom.cached.MatrixArrayUniform;
+import org.apache.commons.lang3.ArrayUtils;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
@@ -85,6 +89,11 @@ public class CustomUniformFixedInputUniformsHolder {
 		}
 
 		@Override
+		public Builder uniform1fArray(UniformUpdateFrequency updateFrequency, String name, int count, Supplier<float[]> value) {
+			return this.put(name, new FloatArrayCachedUniform(name, updateFrequency, count, value));
+		}
+
+		@Override
 		public Builder uniform1f(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
 			return this.put(name, new FloatCachedUniform(name, updateFrequency, value::getAsInt));
 		}
@@ -107,6 +116,11 @@ public class CustomUniformFixedInputUniformsHolder {
 		@Override
 		public Builder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2f> value) {
 			return this.put(name, new Float2VectorCachedUniform(name, updateFrequency, value));
+		}
+
+		@Override
+		public UniformHolder uniform2fArray(UniformUpdateFrequency updateFrequency, String name, int count, Supplier<Vector2f[]> value) {
+			return this.put(name, new Float2VectorArrayCachedUniform(name, updateFrequency, count, value));
 		}
 
 		@Override
@@ -171,14 +185,8 @@ public class CustomUniformFixedInputUniformsHolder {
 		}
 
 		@Override
-		public UniformHolder uniformMatrixFromArray(
-			UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
-			Matrix4f held = new Matrix4f();
-
-			return this.put(name, new Float4MatrixCachedUniform(name, updateFrequency, () -> {
-				held.set(value.get());
-				return held;
-			}));
+		public UniformHolder uniformMatrixArray(UniformUpdateFrequency updateFrequency, String name, int count, Supplier<Matrix4fc[]> value) {
+			return this.put(name, new MatrixArrayUniform(name, count, updateFrequency, value));
 		}
 
 		@Override

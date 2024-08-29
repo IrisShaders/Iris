@@ -1,5 +1,6 @@
 package net.irisshaders.iris.gl.uniform;
 
+import net.irisshaders.iris.uniforms.custom.CustomUniformFixedInputUniformsHolder;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -22,6 +23,13 @@ public interface LocationalUniformHolder extends UniformHolder {
 	@Override
 	default LocationalUniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value) {
 		location(name, UniformType.FLOAT).ifPresent(id -> addUniform(updateFrequency, new FloatUniform(id, value)));
+
+		return this;
+	}
+
+	@Override
+	default LocationalUniformHolder uniform1fArray(UniformUpdateFrequency updateFrequency, String name, int count, Supplier<float[]> value) {
+		location(name, UniformType.FLOAT).ifPresent(id -> addUniform(updateFrequency, new FloatArrayUniform(id, count, value)));
 
 		return this;
 	}
@@ -57,6 +65,13 @@ public interface LocationalUniformHolder extends UniformHolder {
 	@Override
 	default LocationalUniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2f> value) {
 		location(name, UniformType.VEC2).ifPresent(id -> addUniform(updateFrequency, new Vector2Uniform(id, value)));
+
+		return this;
+	}
+
+	@Override
+	default LocationalUniformHolder uniform2fArray(UniformUpdateFrequency updateFrequency, String name, int count, Supplier<Vector2f[]> value) {
+		location(name, UniformType.VEC2).ifPresent(id -> addUniform(updateFrequency, new Vector2ArrayUniform(id, count, value)));
 
 		return this;
 	}
@@ -118,8 +133,8 @@ public interface LocationalUniformHolder extends UniformHolder {
 	}
 
 	@Override
-	default LocationalUniformHolder uniformMatrixFromArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
-		location(name, UniformType.MAT4).ifPresent(id -> addUniform(updateFrequency, new MatrixFromFloatArrayUniform(id, value)));
+	default LocationalUniformHolder uniformMatrixArray(UniformUpdateFrequency updateFrequency, String name, int count, Supplier<Matrix4fc[]> value) {
+		location(name, UniformType.MAT4).ifPresent(id -> addUniform(updateFrequency, new MatrixArrayUniform(id, count, value)));
 
 		return this;
 	}

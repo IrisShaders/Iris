@@ -39,10 +39,32 @@ public class GlFramebuffer extends GlResource {
 		this.hasDepthAttachment = true;
 	}
 
+	public void addDepthAttachmentLayer(int texture, int layer) {
+		int internalFormat = TextureInfoCache.INSTANCE.getInfo(texture).getInternalFormat();
+		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
+
+		int fb = getGlId();
+
+		if (depthBufferFormat.isCombinedStencil()) {
+			IrisRenderSystem.framebufferTextureLayer(fb, GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_STENCIL_ATTACHMENT, GL30C.GL_TEXTURE_2D_ARRAY, texture, 0, layer);
+		} else {
+			IrisRenderSystem.framebufferTextureLayer(fb, GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D_ARRAY, texture, 0, layer);
+		}
+
+		this.hasDepthAttachment = true;
+	}
+
 	public void addColorAttachment(int index, int texture) {
 		int fb = getGlId();
 
 		IrisRenderSystem.framebufferTexture2D(fb, GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0 + index, GL30C.GL_TEXTURE_2D, texture, 0);
+		attachments.put(index, texture);
+	}
+
+	public void addColorAttachmentLayer(int index, int texture, int layer) {
+		int fb = getGlId();
+
+		IrisRenderSystem.framebufferTextureLayer(fb, GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0 + index, GL30C.GL_TEXTURE_2D_ARRAY, texture, 0, layer);
 		attachments.put(index, texture);
 	}
 

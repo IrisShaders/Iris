@@ -15,6 +15,7 @@ import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.shaderpack.properties.CloudSetting;
+import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.targets.Blaze3dRenderTargetExt;
 import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -81,7 +82,7 @@ public class DHCompatInternal {
 			ProgramSource shadow = pipeline.getDHShadowShader().get();
 			shadowProgram = IrisLodRenderProgram.createProgram(shadow.getName(), true, false, shadow, pipeline.getCustomUniforms(), pipeline);
 			if (pipeline.hasShadowRenderTargets()) {
-				dhShadowFramebuffer = pipeline.createDHFramebufferShadow(shadow);
+				dhShadowFramebuffer = pipeline.createDHFramebufferShadow(shadow, ShadowRenderTargets.TEMP_LAYER);
 				dhShadowFramebufferWrapper = new DhFrameBufferWrapper(dhShadowFramebuffer);
 			}
 			shouldOverrideShadow = true;

@@ -83,6 +83,7 @@ loom {
             ideConfigGenerated(true)
             runDir("run")
             environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
+            //vmArgs("-Dorg.lwjgl.util.Debug=true", "-Dorg.lwjgl.util.DebugAllocator=true")
         }
         named("server") {
             server()

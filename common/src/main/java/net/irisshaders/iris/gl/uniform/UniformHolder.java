@@ -16,6 +16,8 @@ import java.util.function.Supplier;
 public interface UniformHolder {
 	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value);
 
+	UniformHolder uniform1fArray(UniformUpdateFrequency updateFrequency, String name, int count, Supplier<float[]> value);
+
 	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, IntSupplier value);
 
 	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, DoubleSupplier value);
@@ -25,6 +27,8 @@ public interface UniformHolder {
 	UniformHolder uniform1b(UniformUpdateFrequency updateFrequency, String name, BooleanSupplier value);
 
 	UniformHolder uniform2f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2f> value);
+
+	UniformHolder uniform2fArray(UniformUpdateFrequency updateFrequency, String name, int count, Supplier<Vector2f[]> value);
 
 	UniformHolder uniform2i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector2i> value);
 
@@ -42,7 +46,7 @@ public interface UniformHolder {
 
 	UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4fc> value);
 
-	UniformHolder uniformMatrixFromArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value);
+	UniformHolder uniformMatrixArray(UniformUpdateFrequency updateFrequency, String name, int count, Supplier<Matrix4fc[]> value);
 
 	UniformHolder externallyManagedUniform(String name, UniformType type);
 }

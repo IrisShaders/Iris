@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.sampler.SamplerLimits;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
+import net.irisshaders.iris.pbr.TextureInfoCache;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3i;
@@ -89,6 +90,8 @@ public class IrisRenderSystem {
 
 	public static void texImage2D(int texture, int target, int level, int internalformat, int width, int height, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThreadOrInit();
+		TextureInfoCache.INSTANCE.onTexImage(target, texture, level, internalformat, width, height);
+					
 		IrisRenderSystem.bindTextureForSetup(target, texture);
 		GL32C.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 	}
@@ -96,6 +99,7 @@ public class IrisRenderSystem {
 	public static void texImage3D(int texture, int target, int level, int internalformat, int width, int height, int depth, int border, int format, int type, @Nullable ByteBuffer pixels) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		IrisRenderSystem.bindTextureForSetup(target, texture);
+		TextureInfoCache.INSTANCE.onTexImage(target, texture, level, internalformat, width, height);
 		GL30C.glTexImage3D(target, level, internalformat, width, height, depth, border, format, type, pixels);
 	}
 
@@ -234,6 +238,10 @@ public class IrisRenderSystem {
 
 	public static void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels) {
 		dsaState.framebufferTexture2D(fb, fbtarget, attachment, target, texture, levels);
+	}
+
+	public static void framebufferTextureLayer(int fb, int fbtarget, int attachment, int target, int texture, int levels, int layer) {
+		dsaState.framebufferTextureLayer(fb, fbtarget, attachment, target, texture, levels, layer);
 	}
 
 	public static int getTexParameteri(int texture, int target, int pname) {
@@ -454,6 +462,10 @@ public class IrisRenderSystem {
 		return dsaState.createBuffers();
 	}
 
+	public static void createTextures(int target, int[] textures) {
+		dsaState.createTextures(target, textures);
+	}
+
 	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);
 
@@ -479,9 +491,13 @@ public class IrisRenderSystem {
 
 		void framebufferTexture2D(int fb, int fbtarget, int attachment, int target, int texture, int levels);
 
+		void framebufferTextureLayer(int fb, int fbtarget, int attachment, int target, int texture, int levels, int layer);
+
 		int createFramebuffer();
 
 		int createTexture(int target);
+
+		void createTextures(int target, int[] textures);
 
 		int createBuffers();
 	}
@@ -567,6 +583,11 @@ public class IrisRenderSystem {
 		}
 
 		@Override
+		public void framebufferTextureLayer(int fb, int fbtarget, int attachment, int target, int texture, int levels, int layer) {
+			ARBDirectStateAccess.glNamedFramebufferTextureLayer(fb, attachment, texture, levels, layer);
+		}
+
+		@Override
 		public int createFramebuffer() {
 			return ARBDirectStateAccess.glCreateFramebuffers();
 		}
@@ -574,6 +595,11 @@ public class IrisRenderSystem {
 		@Override
 		public int createTexture(int target) {
 			return ARBDirectStateAccess.glCreateTextures(target);
+		}
+
+		@Override
+		public void createTextures(int target, int[] textures) {
+			ARBDirectStateAccess.glCreateTextures(target, textures);
 		}
 	}
 
@@ -660,6 +686,12 @@ public class IrisRenderSystem {
 		}
 
 		@Override
+		public void framebufferTextureLayer(int fb, int fbtarget, int attachment, int target, int texture, int levels, int layer) {
+			GlStateManager._glBindFramebuffer(fbtarget, fb);
+			GL32C.glFramebufferTextureLayer(fbtarget, attachment, texture, levels, layer);
+		}
+
+		@Override
 		public int createFramebuffer() {
 			int framebuffer = GlStateManager.glGenFramebuffers();
 			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
@@ -671,6 +703,14 @@ public class IrisRenderSystem {
 			int texture = GlStateManager._genTexture();
 			GlStateManager._bindTexture(texture);
 			return texture;
+		}
+
+		@Override
+		public void createTextures(int target, int[] textures) {
+			GL46C.glGenTextures(textures);
+			for (int texture : textures) {
+				GL46C.glBindTexture(target, texture);
+			}
 		}
 
 		@Override

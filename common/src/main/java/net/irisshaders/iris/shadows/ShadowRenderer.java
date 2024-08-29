@@ -55,14 +55,15 @@ import java.util.List;
 import java.util.Objects;
 
 public class ShadowRenderer {
+	public static int CASCADE;
 	public static boolean ACTIVE = false;
 	public static List<BlockEntity> visibleBlockEntities;
 	public static int renderDistance;
-	public static Matrix4f MODELVIEW;
+	public static Matrix4f MODELVIEW = new Matrix4f();
 	public static Matrix4f PROJECTION;
 	public static Frustum FRUSTUM;
-	private final float halfPlaneLength;
-	private final float nearPlane, farPlane;
+	public static float halfPlaneLength;
+	public static float nearPlane, farPlane;
 	private final float voxelDistance;
 	private final float renderDistanceMultiplier;
 	private final float entityShadowDistanceMultiplier;
@@ -434,14 +435,11 @@ public class ShadowRenderer {
 		levelRenderer.getLevel().getProfiler().popPush("terrain");
 
 
-		// Set up our orthographic projection matrix and load it into RenderSystem
-		Matrix4f shadowProjection;
-		if (this.fov != null) {
-			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
-			shadowProjection = ShadowMatrices.createPerspectiveMatrix(this.fov);
-		} else {
-			shadowProjection = ShadowMatrices.createOrthoMatrix(halfPlaneLength, nearPlane < 0 ? -DHCompat.getRenderDistance() : nearPlane, farPlane < 0 ? DHCompat.getRenderDistance() : farPlane);
-		}
+		NullCascade.CascadeOutput o = NullCascade.getCascades(MODELVIEW, nearPlane, farPlane, halfPlaneLength);
+
+		Matrix4f[] proj = o.cascadeProjection;
+
+		Matrix4f shadowProjection = proj[0];
 
 		IrisRenderSystem.setShadowProjection(shadowProjection);
 
@@ -458,10 +456,14 @@ public class ShadowRenderer {
 
 		// Render all opaque terrain unless pack requests not to
 		if (shouldRenderTerrain) {
-			levelRenderer.invokeRenderSectionLayer(RenderType.solid(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
-			levelRenderer.invokeRenderSectionLayer(RenderType.cutout(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
-			levelRenderer.invokeRenderSectionLayer(RenderType.cutoutMipped(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
+			for (int e = 0; e < ShadowRenderTargets.NUM_CASCADES; e++) {
+				ShadowRenderer.CASCADE = e;
+				levelRenderer.invokeRenderSectionLayer(RenderType.solid(), cameraX, cameraY, cameraZ, MODELVIEW, proj[e]);
+				levelRenderer.invokeRenderSectionLayer(RenderType.cutout(), cameraX, cameraY, cameraZ, MODELVIEW, proj[e]);
+				levelRenderer.invokeRenderSectionLayer(RenderType.cutoutMipped(), cameraX, cameraY, cameraZ, MODELVIEW, proj[e]);
+			}
 		}
+		ShadowRenderer.CASCADE = 0;
 
 		// Reset our viewport in case Sodium overrode it
 		RenderSystem.viewport(0, 0, resolution, resolution);
@@ -533,8 +535,12 @@ public class ShadowRenderer {
 		// It doesn't matter a ton, since this just means that they won't be sorted in the normal rendering pass.
 		// Just something to watch out for, however...
 		if (shouldRenderTranslucent) {
-			levelRenderer.invokeRenderSectionLayer(RenderType.translucent(), cameraX, cameraY, cameraZ, MODELVIEW, shadowProjection);
+			for (int e = 0; e < ShadowRenderTargets.NUM_CASCADES; e++) {
+				ShadowRenderer.CASCADE = e;
+				levelRenderer.invokeRenderSectionLayer(RenderType.translucent(), cameraX, cameraY, cameraZ, MODELVIEW, proj[e]);
+			}
 		}
+		ShadowRenderer.CASCADE = 0;
 
 		// Note: Apparently tripwire isn't rendered in the shadow pass.
 		// levelRenderer.invokeRenderChunkLayer(RenderType.tripwire(), modelView, cameraX, cameraY, cameraZ, shadowProjection);

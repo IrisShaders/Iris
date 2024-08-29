@@ -117,12 +117,14 @@ public class ClearPassCreator {
 					startIndex++;
 				}
 
-				// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
-				clearPasses.add(new ClearPass(clearColor, renderTargets::getResolution, renderTargets::getResolution,
-					renderTargets.createFramebufferWritingToAlt(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+				for (int layer = 0; layer < ShadowRenderTargets.NUM_CASCADES; layer++) {
+					// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
+					clearPasses.add(new ClearPass(clearColor, renderTargets::getResolution, renderTargets::getResolution,
+						renderTargets.createFramebufferWritingToAlt(clearBuffers, layer), GL21C.GL_COLOR_BUFFER_BIT));
 
-				clearPasses.add(new ClearPass(clearColor, renderTargets::getResolution, renderTargets::getResolution,
-					renderTargets.createFramebufferWritingToMain(clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
+					clearPasses.add(new ClearPass(clearColor, renderTargets::getResolution, renderTargets::getResolution,
+						renderTargets.createFramebufferWritingToMain(clearBuffers, layer), GL21C.GL_COLOR_BUFFER_BIT));
+				}
 			}
 		});
 
