@@ -8,7 +8,7 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.ShaderProgram;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
@@ -154,14 +154,14 @@ public class HorizonRenderer {
 		buildBottomPlane(consumer, 384);
 	}
 
-	public void renderHorizon(Matrix4fc modelView, Matrix4fc projection, ShaderInstance shader) {
+	public void renderHorizon(Matrix4fc modelView, Matrix4fc projection, ShaderProgram shader) {
 		if (currentRenderDistance != Minecraft.getInstance().options.getEffectiveRenderDistance()) {
 			currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
 			rebuildBuffer();
 		}
 
 		buffer.bind();
-		buffer.drawWithShader(new Matrix4f(modelView), new Matrix4f(projection), shader);
+		buffer.drawWithShader(new Matrix4f(modelView), new Matrix4f(projection), Minecraft.getInstance().getShaderManager().getProgram(shader));
 		VertexBuffer.unbind();
 	}
 

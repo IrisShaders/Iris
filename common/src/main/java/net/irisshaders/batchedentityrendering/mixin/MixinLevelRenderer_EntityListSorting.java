@@ -40,7 +40,7 @@ public class MixinLevelRenderer_EntityListSorting {
 	@Shadow
 	private ClientLevel level;
 
-	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Ljava/lang/Iterable;iterator()Ljava/util/Iterator;"))
+	@WrapOperation(method = "collectVisibleEntities", at = @At(value = "INVOKE", target = "Ljava/lang/Iterable;iterator()Ljava/util/Iterator;"))
 	private Iterator<Entity> batchedentityrendering$sortEntityList(Iterable<Entity> instance, Operation<Iterator<Entity>> original) {
 		// Sort the entity list first in order to allow vanilla's entity batching code to work better.
 		this.level.getProfiler().push("sortEntityList");

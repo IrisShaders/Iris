@@ -3,6 +3,8 @@ package net.irisshaders.iris.mixin;
 import net.irisshaders.iris.Iris;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
+import net.minecraft.client.renderer.FogParameters;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.util.Mth;
@@ -41,9 +43,10 @@ public class MixinLevelRenderer_Sky {
 	 * <p>When updating Sodium to new releases of the game, please check for new
 	 * ways the fog can be reduced in {@link FogRenderer#setupFog}.</p>
 	 */
-	@Inject(method = "renderSky", at = @At("HEAD"), cancellable = true)
-	private void preRenderSky(Matrix4f matrix4f, Matrix4f matrix4f2, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
+	@Inject(method = "method_62215", at = @At("HEAD"), cancellable = true)
+	private void preRenderSky(FogParameters fogParameters, DimensionSpecialEffects.SkyType skyType, float f, DimensionSpecialEffects dimensionSpecialEffects, CallbackInfo ci) {
 		if (Iris.getCurrentPack().isEmpty()) {
+			Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
 			Vec3 cameraPosition = camera.getPosition();
 			Entity cameraEntity = camera.getEntity();
 

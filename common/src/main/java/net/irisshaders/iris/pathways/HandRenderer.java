@@ -2,6 +2,7 @@ package net.irisshaders.iris.pathways;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexSorting;
 import net.irisshaders.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.mixin.GameRendererAccessor;
@@ -36,7 +37,7 @@ public class HandRenderer {
 		// We need to scale the matrix by 0.125 so the hand doesn't clip through blocks.
 		Matrix4f scaleMatrix = new Matrix4f().scale(1F, 1F, DEPTH);
 		scaleMatrix.mul(gameRenderer.getProjectionMatrix(((GameRendererAccessor) gameRenderer).invokeGetFov(camera, tickDelta, false)));
-		gameRenderer.resetProjectionMatrix(scaleMatrix);
+		RenderSystem.setProjectionMatrix(scaleMatrix, VertexSorting.DISTANCE_TO_ORIGIN);
 
 		poseStack.setIdentity();
 
@@ -92,7 +93,6 @@ public class HandRenderer {
 
 		RenderSystem.getModelViewStack().pushMatrix();
 		RenderSystem.getModelViewStack().set(poseStack.last().pose());
-		RenderSystem.applyModelViewMatrix();
 
 		gameRenderer.itemInHandRenderer.renderHandsWithItems(tickDelta, new PoseStack(), bufferSource.getUnflushableWrapper(), Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
@@ -101,11 +101,10 @@ public class HandRenderer {
 		bufferSource.readyUp();
 		bufferSource.endBatch();
 
-		gameRenderer.resetProjectionMatrix(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection()));
+		RenderSystem.setProjectionMatrix(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection()), VertexSorting.DISTANCE_TO_ORIGIN);
 
 		poseStack.popPose();
 		RenderSystem.getModelViewStack().popMatrix();
-		RenderSystem.applyModelViewMatrix();
 
 		renderingSolid = false;
 
@@ -131,7 +130,6 @@ public class HandRenderer {
 
 		RenderSystem.getModelViewStack().pushMatrix();
 		RenderSystem.getModelViewStack().set(poseStack.last().pose());
-		RenderSystem.applyModelViewMatrix();
 
 		gameRenderer.itemInHandRenderer.renderHandsWithItems(tickDelta, new PoseStack(), bufferSource, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
@@ -139,11 +137,10 @@ public class HandRenderer {
 
 		Minecraft.getInstance().getProfiler().pop();
 
-		gameRenderer.resetProjectionMatrix(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection()));
+		RenderSystem.setProjectionMatrix(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection()), VertexSorting.DISTANCE_TO_ORIGIN);
 
 		bufferSource.endBatch();
 		RenderSystem.getModelViewStack().popMatrix();
-		RenderSystem.applyModelViewMatrix();
 
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 

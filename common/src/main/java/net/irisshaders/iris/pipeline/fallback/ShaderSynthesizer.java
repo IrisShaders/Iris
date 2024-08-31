@@ -21,8 +21,8 @@ public class ShaderSynthesizer {
 		String position;
 
 		if (hasChunkOffset) {
-			shader.append("uniform vec3 ChunkOffset;\n");
-			position = "Position + ChunkOffset";
+			shader.append("uniform vec3 ModelOffset;\n");
+			position = "Position + ModelOffset";
 		} else {
 			position = "Position";
 		}

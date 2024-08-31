@@ -1,28 +1,28 @@
 package net.irisshaders.iris.pipeline.programs;
 
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
 
 import java.util.function.Function;
 
 /**
- * A specialized map mapping {@link ShaderKey} to {@link ShaderInstance}.
+ * A specialized map mapping {@link ShaderKey} to {@link CompiledShaderProgram}.
  * Avoids much of the complexity / overhead of an EnumMap while ultimately
  * fulfilling the same function.
  */
 public class ShaderMap {
-	private final ShaderInstance[] shaders;
+	private final CompiledShaderProgram[] shaders;
 
-	public ShaderMap(Function<ShaderKey, ShaderInstance> factory) {
+	public ShaderMap(Function<ShaderKey, CompiledShaderProgram> factory) {
 		ShaderKey[] ids = ShaderKey.values();
 
-		this.shaders = new ShaderInstance[ids.length];
+		this.shaders = new CompiledShaderProgram[ids.length];
 
 		for (int i = 0; i < ids.length; i++) {
 			this.shaders[i] = factory.apply(ids[i]);
 		}
 	}
 
-	public ShaderInstance getShader(ShaderKey id) {
+	public CompiledShaderProgram getShader(ShaderKey id) {
 		return shaders[id.ordinal()];
 	}
 }

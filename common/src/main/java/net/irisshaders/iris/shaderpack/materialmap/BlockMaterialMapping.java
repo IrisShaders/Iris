@@ -7,6 +7,8 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -40,15 +42,15 @@ public class BlockMaterialMapping {
 	}
 
 	private static void addTag(TagEntry tagEntry, Object2IntMap<BlockState> idMap, int intId) {
-		List<TagKey<Block>> compatibleTags = BuiltInRegistries.BLOCK.getTagNames().filter(t -> t.location().getNamespace().equalsIgnoreCase(tagEntry.id().getNamespace()) &&
-			t.location().getPath().equalsIgnoreCase(tagEntry.id().getName())).toList();
+		List<HolderSet.Named<Block>> compatibleTags = BuiltInRegistries.BLOCK.getTags().filter(t -> t.key().location().getNamespace().equalsIgnoreCase(tagEntry.id().getNamespace()) &&
+			t.key().location().getPath().equalsIgnoreCase(tagEntry.id().getName())).toList();
 
 		if (compatibleTags.isEmpty()) {
 			Iris.logger.warn("Failed to find the tag " + tagEntry.id());
 		} else if (compatibleTags.size() > 1) {
 			Iris.logger.fatal("You've broke the system; congrats. More than one tag matched " + tagEntry.id());
 		} else {
-			BuiltInRegistries.BLOCK.getTag(compatibleTags.getFirst()).get().forEach((block) -> {
+			BuiltInRegistries.BLOCK.getTagOrEmpty(compatibleTags.getFirst().key()).forEach((block) -> {
 					Map<String, String> propertyPredicates = tagEntry.propertyPredicates();
 
 					if (propertyPredicates.isEmpty()) {
@@ -105,7 +107,7 @@ public class BlockMaterialMapping {
 		blockPropertiesMap.forEach((id, blockType) -> {
 			ResourceLocation resourceLocation = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), id.getName());
 
-			Block block = BuiltInRegistries.BLOCK.get(resourceLocation);
+			Block block = BuiltInRegistries.BLOCK.get(resourceLocation).map(Holder::value).orElse(Blocks.AIR);
 
 			blockTypeIds.put(block, blockType);
 		});
@@ -135,10 +137,8 @@ public class BlockMaterialMapping {
 			throw new IllegalStateException("Failed to get entry for " + intId, exception);
 		}
 
-		Block block = BuiltInRegistries.BLOCK.get(resourceLocation);
+		Block block = BuiltInRegistries.BLOCK.get(resourceLocation).map(Holder::value).orElse(Blocks.AIR);
 
-		// If the block doesn't exist, by default the registry will return AIR. That probably isn't what we want.
-		// TODO: Assuming that Registry.BLOCK.getDefaultId() == "minecraft:air" here
 		if (block == Blocks.AIR) {
 			return;
 		}

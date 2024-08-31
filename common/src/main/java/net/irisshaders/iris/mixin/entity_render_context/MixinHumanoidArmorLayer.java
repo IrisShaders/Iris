@@ -1,6 +1,5 @@
 package net.irisshaders.iris.mixin.entity_render_context;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.helpers.EntityState;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
@@ -11,6 +10,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -27,18 +27,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(HumanoidArmorLayer.class)
-public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends HumanoidModel<T>, A extends HumanoidModel<T>>
-	extends RenderLayer<T, M> {
+public abstract class MixinHumanoidArmorLayer<S extends HumanoidRenderState, M extends HumanoidModel<S>, A extends HumanoidModel<S>> extends RenderLayer<S, M> {
 
-	public MixinHumanoidArmorLayer(RenderLayerParent<T, M> pRenderLayer0) {
-		super(pRenderLayer0);
+	public MixinHumanoidArmorLayer(RenderLayerParent<S, M> renderer) {
+		super(renderer);
 	}
 
-	@Inject(method = "renderArmorPiece", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/HumanoidModel;copyPropertiesTo(Lnet/minecraft/client/model/HumanoidModel;)V"))
-	private void changeId(PoseStack pHumanoidArmorLayer0, MultiBufferSource pMultiBufferSource1, T pLivingEntity2, EquipmentSlot pEquipmentSlot3, int pInt4, A pHumanoidModel5, CallbackInfo ci, @Local ArmorItem lvArmorItem8) {
-		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
+	@Inject(method = "renderArmorPiece", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/HumanoidModel;setupAnim(Lnet/minecraft/client/renderer/entity/state/HumanoidRenderState;)V"))
+	private void changeId(PoseStack poseStack, MultiBufferSource multiBufferSource, S humanoidRenderState, ItemStack itemStack, EquipmentSlot equipmentSlot, int i, A humanoidModel, CallbackInfo ci) {
+		if (WorldRenderingSettings.INSTANCE.getItemIds() == null || !(itemStack.getItem() instanceof ArmorItem)) return;
 
-		ResourceLocation location = BuiltInRegistries.ITEM.getKey(lvArmorItem8);
+		ResourceLocation location = BuiltInRegistries.ITEM.getKey(itemStack.getItem());
 
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
 	}

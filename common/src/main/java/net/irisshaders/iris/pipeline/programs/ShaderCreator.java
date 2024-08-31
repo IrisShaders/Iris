@@ -2,8 +2,15 @@ package net.irisshaders.iris.pipeline.programs;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.shaders.CompiledShader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.shader.ShaderCompileException;
+import net.irisshaders.iris.gl.shader.ShaderType;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
@@ -16,7 +23,6 @@ import net.irisshaders.iris.pipeline.fallback.ShaderSynthesizer;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.uniforms.CommonUniforms;
@@ -24,6 +30,9 @@ import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.VanillaUniforms;
 import net.irisshaders.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
+import net.minecraft.client.renderer.CompiledShaderProgram;
+import net.minecraft.client.renderer.ShaderManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackLocationInfo;
@@ -33,6 +42,7 @@ import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.apache.commons.io.IOUtils;
+import org.lwjgl.opengl.GL20C;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -91,7 +101,7 @@ public class ShaderCreator {
 			        { "name": "iris_ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
 			        { "name": "iris_ProjMatInverse", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
 			        { "name": "iris_NormalMat", "type": "matrix3x3", "count": 9, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 ] },
-			        { "name": "iris_ChunkOffset", "type": "float", "count": 3, "values": [ 0.0, 0.0, 0.0 ] },
+			        { "name": "iris_ModelOffset", "type": "float", "count": 3, "values": [ 0.0, 0.0, 0.0 ] },
 			        { "name": "iris_ColorModulator", "type": "float", "count": 4, "values": [ 1.0, 1.0, 1.0, 1.0 ] },
 			        { "name": "iris_GlintAlpha", "type": "float", "count": 1, "values": [ 1.0 ] },
 			        { "name": "iris_FogStart", "type": "float", "count": 1, "values": [ 0.0 ] },
@@ -130,12 +140,91 @@ public class ShaderCreator {
 			}
 		});
 
-		return new ExtendedShader(shaderResourceFactory, name, vertexFormat, tessControl != null || tessEval != null, writingToBeforeTranslucent, writingToAfterTranslucent, blendModeOverride, alpha, uniforms -> {
+		int id = link(name, vertex, geometry, tessControl, tessEval, fragment, vertexFormat);
+
+
+		return new ExtendedShader(id, shaderResourceFactory, name, vertexFormat, tessControl != null || tessEval != null, writingToBeforeTranslucent, writingToAfterTranslucent, blendModeOverride, alpha, uniforms -> {
 			CommonUniforms.addDynamicUniforms(uniforms, FogMode.PER_VERTEX);
 			customUniforms.assignTo(uniforms);
 			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
 			VanillaUniforms.addVanillaUniforms(uniforms);
-		}, (samplerHolder, imageHolder) -> parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.hasTex(), inputs.hasLight(), inputs.hasOverlay()), isIntensity, parent, overrides, customUniforms);
+		}, (samplerHolder, imageHolder) -> {
+			parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.hasTex(), inputs.hasLight(), inputs.hasOverlay());
+		}, isIntensity, parent, overrides, customUniforms);
+	}
+
+
+
+	public static int link(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment, VertexFormat vertexFormat) throws ShaderCompileException {
+		int i = GlStateManager.glCreateProgram();
+		if (i <= 0) {
+			throw new RuntimeException("Could not create shader program (returned program ID " + i + ")");
+		} else {
+			int vertexS = createShader(name, ShaderType.VERTEX, vertex);
+			int geometryS = createShader(name, ShaderType.GEOMETRY, geometry);
+			int tessContS = createShader(name, ShaderType.TESSELATION_CONTROL, tessControl);
+			int tessEvalS = createShader(name, ShaderType.TESSELATION_EVAL, tessEval);
+			int fragS = createShader(name, ShaderType.FRAGMENT, fragment);
+
+			attachIfValid(i, vertexS);
+			attachIfValid(i, geometryS);
+			attachIfValid(i, tessContS);
+			attachIfValid(i, tessEvalS);
+			attachIfValid(i, fragS);
+
+			((VertexFormatExtension) vertexFormat).bindAttributesIris(i);
+			GlStateManager.glLinkProgram(i);
+
+			int j = GlStateManager.glGetProgrami(i, 35714);
+			if (j == 0) {
+				String string = GlStateManager.glGetProgramInfoLog(i, 32768);
+				throw new ShaderCompileException(
+					name, string
+				);
+			} else {
+				detachIfValid(i, vertexS);
+				detachIfValid(i, geometryS);
+				detachIfValid(i, tessContS);
+				detachIfValid(i, tessEvalS);
+				detachIfValid(i, fragS);
+
+				return i;
+			}
+		}
+	}
+
+	private static void attachIfValid(int i, int s) {
+		if (s >= 0) {
+			GlStateManager.glAttachShader(i, s);
+		}
+	}
+
+	private static void detachIfValid(int i, int s) {
+		if (s >= 0) {
+			IrisRenderSystem.detachShader(i, s);
+			GlStateManager.glDeleteShader(s);
+		}
+	}
+
+	private static int createShader(String name, ShaderType shaderType, String source) {
+		if (source == null) return -1;
+
+		int shader = GlStateManager.glCreateShader(shaderType.id);
+		GlStateManager.glShaderSource(shader, source);
+		GlStateManager.glCompileShader(shader);
+		String log = IrisRenderSystem.getShaderInfoLog(shader);
+
+		if (!log.isEmpty()) {
+			Iris.logger.warn("Shader compilation log for " + name + ": " + log);
+		}
+
+		int result = GlStateManager.glGetShaderi(shader, GL20C.GL_COMPILE_STATUS);
+
+		if (result != GL20C.GL_TRUE) {
+			throw new ShaderCompileException(name, log);
+		}
+
+		return shader;
 	}
 
 	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
@@ -172,7 +261,7 @@ public class ShaderCreator {
 			        		{ "name": "TextureMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
 			        		{ "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
 			        		{ "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
-			        		{ "name": "ChunkOffset", "type": "float", "count": 3, "values": [ 0.0, 0.0, 0.0 ] },
+			        		{ "name": "ModelOffset", "type": "float", "count": 3, "values": [ 0.0, 0.0, 0.0 ] },
 			        		{ "name": "ColorModulator", "type": "float", "count": 4, "values": [ 1.0, 1.0, 1.0, 1.0 ] },
 			        		{ "name": "GlintAlpha", "type": "float", "count": 1, "values": [ 1.0 ] },
 			        		{ "name": "Light0_Direction", "type": "float", "count": 3, "values": [0.0, 0.0, 0.0] },
@@ -195,7 +284,8 @@ public class ShaderCreator {
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, null, null, fragment);
 
-		return new FallbackShader(shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
+		// TODO 24w34a FALLBACK
+		return new FallbackShader(0, shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
 			writingToAfterTranslucent, blendModeOverride, alpha.reference(), parent);
 	}
 
@@ -238,7 +328,7 @@ public class ShaderCreator {
 
 		private StringResource(ResourceLocation id, String content) {
 			super(new PathPackResources(new PackLocationInfo("<iris shaderpack shaders>", Component.literal("iris"), PackSource.BUILT_IN, Optional.of(new KnownPack("iris", "shader", "1.0"))), IrisPlatformHelpers.getInstance().getConfigDir()), () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
-			this.content = content;
+            this.content = content;
 		}
 
 		@Override

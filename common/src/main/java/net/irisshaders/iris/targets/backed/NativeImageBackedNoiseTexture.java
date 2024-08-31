@@ -22,7 +22,7 @@ public class NativeImageBackedNoiseTexture extends DynamicTexture implements Tex
 			for (int y = 0; y < size; y++) {
 				int color = random.nextInt() | (255 << 24);
 
-				image.setPixelRGBA(x, y, color);
+				image.setPixel(x, y, color);
 			}
 		}
 

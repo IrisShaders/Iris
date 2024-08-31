@@ -88,9 +88,10 @@ import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.apache.commons.lang3.StringUtils;
@@ -125,7 +126,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final boolean separateHardwareSamplers;
 	private final ProgramFallbackResolver resolver;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
-	private final Set<ShaderInstance> loadedShaders;
+	private final Set<CompiledShaderProgram> loadedShaders;
 	private final CompositeRenderer beginRenderer;
 	private final CompositeRenderer prepareRenderer;
 	private final CompositeRenderer deferredRenderer;
@@ -411,7 +412,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		WorldRenderingSettings.INSTANCE.setUseExtendedVertexFormat(true);
 
 		if (shadowRenderTargets != null) {
-			ShaderInstance shader = shaderMap.getShader(ShaderKey.SHADOW_TERRAIN_CUTOUT);
+			CompiledShaderProgram shader = shaderMap.getShader(ShaderKey.SHADOW_TERRAIN_CUTOUT);
 			boolean shadowUsesImages = false;
 
 			if (shader instanceof ExtendedShader shader2) {
@@ -625,7 +626,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return programs;
 	}
 
-	private ShaderInstance createShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
+	private CompiledShaderProgram createShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
 		if (source.isEmpty()) {
 			return createFallbackShader(name, key);
 		}
@@ -639,7 +640,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return customTextureMap;
 	}
 
-	private ShaderInstance createShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
+	private CompiledShaderProgram createShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FogMode fogMode,
 										boolean isIntensity, boolean isFullbright, boolean isGlint, boolean isText, boolean isIE) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
@@ -661,7 +662,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return extendedShader;
 	}
 
-	private ShaderInstance createFallbackShader(String name, ShaderKey key) throws IOException {
+	private CompiledShaderProgram createFallbackShader(String name, ShaderKey key) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, new int[]{0});
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, new int[]{0});
 
@@ -674,7 +675,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return shader;
 	}
 
-	private ShaderInstance createShadowShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
+	private CompiledShaderProgram createShadowShader(String name, Optional<ProgramSource> source, ShaderKey key) throws IOException {
 		if (source.isEmpty()) {
 			return createFallbackShadowShader(name, key);
 		}
@@ -683,7 +684,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			key.isIntensity(), key.shouldIgnoreLightmap(), key.isText(), key == ShaderKey.IE_COMPAT_SHADOW);
 	}
 
-	private ShaderInstance createFallbackShadowShader(String name, ShaderKey key) throws IOException {
+	private CompiledShaderProgram createFallbackShadowShader(String name, ShaderKey key) throws IOException {
 		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), new int[]{0});
 
 		FallbackShader shader = ShaderCreator.createFallback(name, framebuffer, framebuffer,
@@ -695,7 +696,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return shader;
 	}
 
-	private ShaderInstance createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
+	private CompiledShaderProgram createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright, boolean isText, boolean isIE) throws IOException {
 		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers());
 		boolean isLines = programId == ProgramId.Line && resolver.has(ProgramId.Line);
@@ -828,7 +829,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			} else {
 				// Clear depth first, regardless of any color clearing.
 				shadowRenderTargets.getDepthSourceFb().bind();
-				RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+				RenderSystem.clear(GL21C.GL_DEPTH_BUFFER_BIT);
 
 				ImmutableList<ClearPass> passes;
 
@@ -951,12 +952,12 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
-		if (skyType == DimensionSpecialEffects.SkyType.NORMAL || Minecraft.getInstance().level.dimensionType().hasSkyLight()) {
+		if (skyType == DimensionSpecialEffects.SkyType.OVERWORLD || Minecraft.getInstance().level.dimensionType().hasSkyLight()) {
 			RenderSystem.depthMask(false);
 
 			RenderSystem.setShaderColor(fogColor.x, fogColor.y, fogColor.z, fogColor.w);
 
-			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), GameRenderer.getPositionShader());
+			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), CoreShaders.POSITION);
 
 			RenderSystem.depthMask(true);
 
@@ -1024,7 +1025,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		// Not good!
 
 		// Reset shader or whatever...
-		RenderSystem.setShader(GameRenderer::getPositionShader);
+		RenderSystem.setShader(CoreShaders.POSITION);
 	}
 
 	@Override

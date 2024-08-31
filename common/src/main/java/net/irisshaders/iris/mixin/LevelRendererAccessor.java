@@ -42,12 +42,6 @@ public interface LevelRendererAccessor {
 	@Accessor("renderBuffers")
 	void setRenderBuffers(RenderBuffers buffers);
 
-	@Accessor("generateClouds")
-	boolean shouldRegenerateClouds();
-
-	@Accessor("generateClouds")
-	void setShouldRegenerateClouds(boolean shouldRegenerate);
-
 	@Invoker
 	boolean invokeDoesMobEffectBlockSky(Camera mainCamera);
 

@@ -10,6 +10,7 @@ import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.jetbrains.annotations.NotNull;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -28,10 +29,13 @@ public class MixinRenderSectionManagerShadow {
 	private @NotNull SortedRenderLists renderLists;
 	@Shadow(remap = false)
 	private @NotNull Map<ChunkUpdateType, ArrayDeque<RenderSection>> taskLists;
+	@Shadow
+	private int lastUpdatedFrame;
 	@Unique
 	private @NotNull SortedRenderLists shadowRenderLists = SortedRenderLists.empty();
 	@Unique
 	private @NotNull Map<ChunkUpdateType, ArrayDeque<RenderSection>> shadowTaskLists = new EnumMap<>(ChunkUpdateType.class);
+	private int lastUpdatedFrameShadow;
 
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void create(ClientLevel level, int renderDistance, CommandList commandList, CallbackInfo ci) {

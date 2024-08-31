@@ -26,6 +26,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -219,8 +220,10 @@ public final class CommonUniforms {
 			return ZERO_VECTOR_3d;
 		}
 
-		return JomlConversions.fromVec3(client.level.getSkyColor(client.cameraEntity.position(),
-			CapturedRenderingState.INSTANCE.getTickDelta()));
+		int skyColor = client.level.getSkyColor(client.cameraEntity.position(),
+			CapturedRenderingState.INSTANCE.getTickDelta());
+
+		return new Vector3d(ARGB.from8BitChannel(ARGB.red(skyColor)), ARGB.from8BitChannel(ARGB.green(skyColor)), ARGB.from8BitChannel(ARGB.blue(skyColor)));
 	}
 
 	static float getBlindness() {
