@@ -36,9 +36,11 @@ import net.irisshaders.iris.pipeline.transform.transformer.DHGenericTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DHTerrainTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumCoreTransformer;
+import net.irisshaders.iris.pipeline.transform.transformer.SodiumFutureTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.TextureTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.VanillaCoreTransformer;
+import net.irisshaders.iris.pipeline.transform.transformer.VanillaFutureTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.VanillaTransformer;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.antlr.v4.runtime.Token;
@@ -119,6 +121,8 @@ public class TransformPatcher {
 				parameters.type = type;
 				Root root = tree.getRoot();
 
+				// TODO IMS
+				/*
 				// check for illegal references to internal Iris shader interfaces
 				internalPrefixes.stream()
 					.flatMap(root.getPrefixIdentifierIndex()::prefixQueryFlat)
@@ -128,7 +132,7 @@ public class TransformPatcher {
 							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
 								+ id.getName() + ". See debugging.md for more information.");
 					});
-
+*/
 				root.indexBuildSession(() -> {
 					VersionStatement versionStatement = tree.getVersionStatement();
 					if (versionStatement == null) {
@@ -144,8 +148,8 @@ public class TransformPatcher {
 
 						if (profile == Profile.CORE || version.number >= 150 && profile == null || isLine) {
 							// patch the version number to at least 330
-							if (version.number < 330) {
-								versionStatement.version = Version.GLSL33;
+							if (version.number < 400) {
+								versionStatement.version = Version.GLSL40;
 							}
 
 							switch (parameters.patch) {
@@ -168,8 +172,8 @@ public class TransformPatcher {
 							}
 						} else {
 							// patch the version number to at least 330
-							if (version.number < 330) {
-								versionStatement.version = Version.GLSL33;
+							if (version.number < 400) {
+								versionStatement.version = Version.GLSL40;
 							}
 							versionStatement.profile = Profile.CORE;
 
@@ -179,10 +183,10 @@ public class TransformPatcher {
 									break;
 								case SODIUM:
 									SodiumParameters sodiumParameters = (SodiumParameters) parameters;
-									SodiumTransformer.transform(transformer, tree, root, sodiumParameters);
+									SodiumFutureTransformer.transform(transformer, tree, root, sodiumParameters);
 									break;
 								case VANILLA:
-									VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
+									VanillaFutureTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
 									break;
 								case DH_TERRAIN:
 									DHTerrainTransformer.transform(transformer, tree, root, parameters);

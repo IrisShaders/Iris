@@ -97,7 +97,6 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 			vertices[1].x, vertices[1].y, vertices[1].z,
 			vertices[2].x, vertices[2].y, vertices[2].z,
 			vertices[3].x, vertices[3].y, vertices[3].z);
-		int packedNormal = NormI8.pack(normal);
 		int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z,
 			vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v,
 			vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v,
@@ -117,6 +116,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 			int x = quantizePosition(vertex.x);
 			int y = quantizePosition(vertex.y);
 			int z = quantizePosition(vertex.z);
+			int packedNormal = NormI8.pack(normal, vertices[i].ao);
 
 			int u = encodeTexture(texCentroidU, vertex.u);
 			int v = encodeTexture(texCentroidV, vertex.v);
@@ -125,7 +125,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 
 			MemoryUtil.memPutInt(ptr, packPositionHi(x, y, z));
 			MemoryUtil.memPutInt(ptr + 4L, packPositionLo(x, y, z));
-			MemoryUtil.memPutInt(ptr + 8L, WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? ColorABGR.withAlpha(vertex.color, vertex.ao) : ColorHelper.multiplyRGB(vertex.color, vertex.ao));
+			MemoryUtil.memPutInt(ptr + 8L, vertex.color);
 			MemoryUtil.memPutInt(ptr + 12L, packTexture(u, v));
 			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material, section));
 

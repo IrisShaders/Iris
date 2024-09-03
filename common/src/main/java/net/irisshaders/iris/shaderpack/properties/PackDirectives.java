@@ -75,7 +75,7 @@ public class PackDirectives {
 		sun = properties.getSun().orElse(true);
 		moon = properties.getMoon().orElse(true);
 		rainDepth = properties.getRainDepth().orElse(false);
-		separateAo = properties.getSeparateAo().orElse(false);
+		separateAo = properties.getSeparateAo().orElse(true);
 		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
 		skipAllRendering = properties.skipAllRendering().orElse(false);

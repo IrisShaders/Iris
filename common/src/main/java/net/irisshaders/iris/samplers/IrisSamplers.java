@@ -179,17 +179,17 @@ public class IrisSamplers {
 
 	public static void addLevelSamplers(SamplerHolder samplers, WorldRenderingPipeline pipeline, AbstractTexture whitePixel, boolean hasTexture, boolean hasLightmap, boolean hasOverlay) {
 		if (hasTexture) {
-			samplers.addExternalSampler(ALBEDO_TEXTURE_UNIT, "tex", "texture", "gtexture");
+			samplers.addExternalSampler(ALBEDO_TEXTURE_UNIT, "tex", "texture", "gtexture", "mainTexture");
 		} else {
 			// TODO: Rebind unbound sampler IDs instead of hardcoding a list...
 			samplers.addDynamicSampler(whitePixel::getId, "tex", "texture", "gtexture",
-				"gcolor", "colortex0");
+				"gcolor", "colortex0", "mainTexture");
 		}
 
 		if (hasLightmap) {
-			samplers.addExternalSampler(LIGHTMAP_TEXTURE_UNIT, "lightmap");
+			samplers.addExternalSampler(LIGHTMAP_TEXTURE_UNIT, "lightmap", "lightmapTexture");
 		} else {
-			samplers.addDynamicSampler(whitePixel::getId, "lightmap");
+			samplers.addDynamicSampler(whitePixel::getId, "lightmap", "lightmapTexture");
 		}
 
 		if (hasOverlay) {

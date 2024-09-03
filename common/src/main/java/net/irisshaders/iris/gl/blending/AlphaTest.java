@@ -27,6 +27,32 @@ public record AlphaTest(AlphaTestFunction function, float reference) {
 			indentation + "}\n";
 	}
 
+	public String toBoolean(String alphaAccessor, String alphaThreshold) {
+		if (function == AlphaTestFunction.ALWAYS) {
+			return "true";
+		}
+
+		if (this == AlphaTests.VERTEX_ALPHA) {
+			return alphaAccessor + " <= irisInt_vertexColor.a";
+		}
+
+		return alphaAccessor + " " + function.getExpression() + " " + alphaThreshold;
+	}
+
+	public String toBoolean(String alphaAccessor, String alphaThreshold, String vertexColorA) {
+		if (function == AlphaTestFunction.ALWAYS) {
+			return "true";
+		}
+
+		if (this == AlphaTests.VERTEX_ALPHA) {
+			// TODO IMS
+			return "false";
+			//return alphaAccessor + " <= " + vertexColorA;
+		}
+
+		return alphaAccessor + " " + function.getExpression() + " " + alphaThreshold;
+	}
+
 
 	@Override
 	public boolean equals(Object obj) {

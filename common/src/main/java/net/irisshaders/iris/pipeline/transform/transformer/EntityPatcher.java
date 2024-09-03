@@ -40,7 +40,7 @@ public class EntityPatcher {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform sampler2D iris_overlay;",
 				"out vec4 entityColor;",
-				"out vec4 iris_vertexColor;",
+				"out vec4 irisInt_vertexColor;",
 				parameters.inputs.isIE() ? "uniform ivec2 iris_OverlayUV;" : "in ivec2 iris_UV1;");
 
 			// Create our own main function to wrap the existing main function, so that we
@@ -49,7 +49,7 @@ public class EntityPatcher {
 			tree.prependMainFunctionBody(t,
 				"vec4 overlayColor = texelFetch(iris_overlay, " + (parameters.inputs.isIE() ? "iris_OverlayUV" : "iris_UV1") + ", 0);",
 				"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);",
-				"iris_vertexColor = iris_Color;",
+				"irisInt_vertexColor = iris_Color;",
 				// Workaround for a shader pack bug:
 				// https://github.com/IrisShaders/Iris/issues/1549
 				// Some shader packs incorrectly ignore the alpha value, and assume that rgb
@@ -63,11 +63,11 @@ public class EntityPatcher {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"patch out vec4 entityColorTCS;",
 				"in vec4 entityColor[];",
-				"out vec4 iris_vertexColorTCS[];",
-				"in vec4 iris_vertexColor[];");
+				"out vec4 irisInt_vertexColorTCS[];",
+				"in vec4 irisInt_vertexColor[];");
 			tree.prependMainFunctionBody(t,
 				"entityColorTCS = entityColor[gl_InvocationID];",
-				"iris_vertexColorTCS[gl_InvocationID] = iris_vertexColor[gl_InvocationID];");
+				"irisInt_vertexColorTCS[gl_InvocationID] = irisInt_vertexColor[gl_InvocationID];");
 		} else if (parameters.type.glShaderType == ShaderType.TESSELATION_EVAL) {
 			// replace read references to grab the color from the first vertex.
 			root.replaceReferenceExpressions(t, "entityColor", "entityColorTCS");
@@ -76,11 +76,11 @@ public class EntityPatcher {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"out vec4 entityColorTES;",
 				"patch in vec4 entityColorTCS;",
-				"out vec4 iris_vertexColorTES;",
-				"in vec4 iris_vertexColorTCS[];");
+				"out vec4 irisInt_vertexColorTES;",
+				"in vec4 irisInt_vertexColorTCS[];");
 			tree.prependMainFunctionBody(t,
 				"entityColorTES = entityColorTCS;",
-				"iris_vertexColorTES = iris_vertexColorTCS[0];");
+				"irisInt_vertexColorTES = irisInt_vertexColorTCS[0];");
 		} else if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
 			// replace read references to grab the color from the first vertex.
 			root.replaceReferenceExpressions(t, "entityColor", "entityColor[0]");
@@ -89,29 +89,29 @@ public class EntityPatcher {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"out vec4 entityColorGS;",
 				"in vec4 entityColor[];",
-				"out vec4 iris_vertexColorGS;",
-				"in vec4 iris_vertexColor[];");
+				"out vec4 irisInt_vertexColorGS;",
+				"in vec4 irisInt_vertexColor[];");
 			tree.prependMainFunctionBody(t,
 				"entityColorGS = entityColor[0];",
-				"iris_vertexColorGS = iris_vertexColor[0];");
+				"irisInt_vertexColorGS = irisInt_vertexColor[0];");
 
 			if (parameters.hasTesselation) {
-				root.rename("iris_vertexColor", "iris_vertexColorTES");
+				root.rename("irisInt_vertexColor", "irisInt_vertexColorTES");
 				root.rename("entityColor", "entityColorTES");
 			}
 		} else if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"in vec4 entityColor;", "in vec4 iris_vertexColor;");
+				"in vec4 entityColor;", "in vec4 irisInt_vertexColor;");
 
-			tree.prependMainFunctionBody(t, "float iris_vertexColorAlpha = iris_vertexColor.a;");
+			tree.prependMainFunctionBody(t, "float iris_vertexColorAlpha = irisInt_vertexColor.a;");
 
 			// Different output name to avoid a name collision in the geometry shader.
 			if (parameters.hasGeometry) {
 				root.rename("entityColor", "entityColorGS");
-				root.rename("iris_vertexColor", "iris_vertexColorGS");
+				root.rename("irisInt_vertexColor", "irisInt_vertexColorGS");
 			} else if (parameters.hasTesselation) {
 				root.rename("entityColor", "entityColorTES");
-				root.rename("iris_vertexColor", "iris_vertexColorTES");
+				root.rename("irisInt_vertexColor", "irisInt_vertexColorTES");
 			}
 		}
 	}

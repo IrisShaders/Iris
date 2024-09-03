@@ -53,6 +53,7 @@ neoForge {
     runs {
         create("client") {
             client()
+            environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
         }
     }
 
