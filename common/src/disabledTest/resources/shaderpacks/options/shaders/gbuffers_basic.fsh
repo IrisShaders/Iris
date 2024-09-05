@@ -1,4 +1,4 @@
-#version 120
+#version 330 compatibility
 
 // these shouldn't be recognized as options, conflicts with vsh values
 // #define VSH

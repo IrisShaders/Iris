@@ -1,4 +1,4 @@
-#version 120
+#version 330 compatibility
 
 const float ambientOcclusionLevel = 2.0f;
 

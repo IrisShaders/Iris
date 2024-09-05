@@ -1,4 +1,4 @@
-#version 120
+#version 330 compatibility
 
 #define GODRAYS 32 // [16 32 64 128] Number of godrays
  #define SHADOWS

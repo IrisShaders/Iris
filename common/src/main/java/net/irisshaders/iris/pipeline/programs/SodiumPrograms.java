@@ -164,8 +164,8 @@ public class SodiumPrograms {
 			.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
 			.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_TEXTURE)
 			.bindAttribute("a_LightAndData", ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_MATERIAL_INDEX)
-			.bindAttribute("mc_Entity", 11)
-			.bindAttribute("mc_midTexCoord", 12)
+			.bindAttribute("irisInt_BlockInfo", 11)
+			.bindAttribute("irisInt_MidTexCoord", 12)
 			.bindAttribute("at_tangent", 13)
 			.bindAttribute("iris_Normal", 10)
 			.bindAttribute("at_midBlock", 14)
@@ -173,10 +173,10 @@ public class SodiumPrograms {
 				int handle = ((GlObject) shader).handle();
 				GLDebug.nameObject(GL43C.GL_PROGRAM, handle, "sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
 
-				if (!hasNormal) hasNormal = GL43C.glGetAttribLocation(handle, "iris_Normal") != -1;
-				if (!hasMidBlock) hasMidBlock = GL43C.glGetAttribLocation(handle, "at_midBlock") != -1;
-				if (!hasBlockId) hasBlockId = GL43C.glGetAttribLocation(handle, "mc_Entity") != -1;
-				if (!hasMidUv) hasMidUv = GL43C.glGetAttribLocation(handle, "mc_midTexCoord") != -1;
+				if (!hasNormal) hasNormal = GL43C.glGetAttribLocation(handle, "irisInt_Normal") != -1;
+				if (!hasMidBlock) hasMidBlock = GL43C.glGetAttribLocation(handle, "irisInt_midBlock") != -1;
+				if (!hasBlockId) hasBlockId = GL43C.glGetAttribLocation(handle, "irisInt_BlockInfo") != -1;
+				if (!hasMidUv) hasMidUv = GL43C.glGetAttribLocation(handle, "irisInt_MidTexCoord") != -1;
 				if (!hasTangent) hasTangent = GL43C.glGetAttribLocation(handle, "at_tangent") != -1;
 
 				return new SodiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride(),

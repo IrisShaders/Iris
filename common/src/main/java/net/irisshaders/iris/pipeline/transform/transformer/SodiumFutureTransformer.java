@@ -55,14 +55,14 @@ public class SodiumFutureTransformer {
 				"irisInt_modelPosition = vec4(_vert_position + u_RegionOffset + _get_draw_translation(irisInt_LightAndData[3]), 1.0);" +
 				viewPositionSetup +
 				clipPositionSetup +
-				"iris_overlayColor = vec4(0.0, 0.0, 0.0, 1.0);" +
+				"iris_overlayColor = vec4(0.0, 0.0, 0.0, 0.0);" +
 				"}");
 
 			addIfNotExists(root, t, tree, "irisInt_Normal", Type.F32VEC4, StorageQualifier.StorageType.IN, 10);
 			addIfNotExists(root, t, tree, "irisInt_Tangent", Type.F32VEC4, StorageQualifier.StorageType.IN, 13);
 			addIfNotExists(root, t, tree, "irisInt_MidTexCoord", Type.F32VEC2, StorageQualifier.StorageType.IN, 12);
 			addIfNotExists(root, t, tree, "irisInt_midBlock", Type.F32VEC4, StorageQualifier.StorageType.IN, 14);
-			addIfNotExists(root, t, tree, "irisInt_BlockInfo", Type.F32VEC2, StorageQualifier.StorageType.IN, 11);
+			addIfNotExists(root, t, tree, "irisInt_BlockInfo", Type.I32VEC2, StorageQualifier.StorageType.IN, 11);
 			addIfNotExists(root, t, tree, "irisInt_PositionHi", Type.UINT32, StorageQualifier.StorageType.IN, ChunkShaderBindingPoints.ATTRIBUTE_POSITION_HI);
 			addIfNotExists(root, t, tree, "irisInt_PositionLo", Type.UINT32, StorageQualifier.StorageType.IN, ChunkShaderBindingPoints.ATTRIBUTE_POSITION_LO);
 			addIfNotExists(root, t, tree, "irisInt_TexCoord", Type.U32VEC2, StorageQualifier.StorageType.IN, ChunkShaderBindingPoints.ATTRIBUTE_TEXTURE);
@@ -121,7 +121,7 @@ public class SodiumFutureTransformer {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "vec4 irisInt_clipPosition;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "vec4 irisInt_viewPosition;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "vec4 iris_overlayColor;");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "float iris_blockId;");
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "int iris_blockId;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "float iris_ambientOcclusion;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "int iris_blockEmission;");
 		}

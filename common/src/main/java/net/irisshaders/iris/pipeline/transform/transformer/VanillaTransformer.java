@@ -9,7 +9,7 @@ import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
 
-public class VanillaTransformer {
+public class 	VanillaTransformer {
 	public static void transform(
 		ASTParser t,
 		TranslationUnit tree,
@@ -155,20 +155,20 @@ public class VanillaTransformer {
 				tree.parseAndInjectNodes(t, ASTInjectionPoint.END,
 					"uniform vec2 iris_ScreenSize;",
 					"uniform float iris_LineWidth;",
-					"void iris_widen_lines(vec4 linePosStart, vec4 linePosEnd) {" +
-						"vec3 ndc1 = linePosStart.xyz / linePosStart.w;" +
-						"vec3 ndc2 = linePosEnd.xyz / linePosEnd.w;" +
-						"vec2 lineScreenDirection = normalize((ndc2.xy - ndc1.xy) * iris_ScreenSize);" +
-						"vec2 lineOffset = vec2(-lineScreenDirection.y, lineScreenDirection.x) * iris_LineWidth / iris_ScreenSize;"
-						+
-						"if (lineOffset.x < 0.0) {" +
-						"    lineOffset *= -1.0;" +
-						"}" +
-						"if (gl_VertexID % 2 == 0) {" +
-						"    gl_Position = vec4((ndc1 + vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);" +
-						"} else {" +
-						"    gl_Position = vec4((ndc1 - vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);" +
-						"}}",
+					"""
+						void iris_widen_lines(vec4 linePosStart, vec4 linePosEnd) {
+						vec3 ndc1 = linePosStart.xyz / linePosStart.w;
+						vec3 ndc2 = linePosEnd.xyz / linePosEnd.w;
+						vec2 lineScreenDirection = normalize((ndc2.xy - ndc1.xy) * iris_ScreenSize);
+						vec2 lineOffset = vec2(-lineScreenDirection.y, lineScreenDirection.x) * iris_LineWidth / iris_ScreenSize;
+						if (lineOffset.x < 0.0) {
+						    lineOffset *= -1.0;
+						}
+						if (gl_VertexID % 2 == 0) {
+						    gl_Position = vec4((ndc1 + vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);
+						} else {
+						    gl_Position = vec4((ndc1 - vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);
+						}}""",
 					"void main() {" +
 						"iris_vertex_offset = iris_Normal;" +
 						"irisMain();" +

@@ -42,7 +42,8 @@ public class VanillaFutureTransformer {
 		root.replaceReferenceExpressions(t, "iris_modelViewMatrix", "iris_ModelViewMat");
 		root.replaceReferenceExpressions(t, "iris_modelViewMatrixInverse", "iris_ModelViewMatInverse");
 		root.replaceReferenceExpressions(t, "iris_normalMatrix", "iris_NormalMat");
-
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+			"vec3 iris_vertex_offset = vec3(0.0);");
 		if (parameters.type == PatchShaderType.VERTEX) {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform sampler2D iris_overlay;");
 
@@ -53,12 +54,13 @@ public class VanillaFutureTransformer {
 			addIfNotExists(root, t, tree, "irisInt_Tangent", Type.F32VEC4, StorageQualifier.StorageType.IN);
 			addIfNotExists(root, t, tree, "irisInt_UV0", Type.F32VEC2, StorageQualifier.StorageType.IN);
 			addIfNotExists(root, t, tree, "mc_Entity", Type.FLOAT32, StorageQualifier.StorageType.IN);
+			addIfNotExists(root, t, tree, "irisInt_Entity", Type.I32VEC3, StorageQualifier.StorageType.IN);
 			addIfNotExists(root, t, tree, "mc_midTexCoord", Type.F32VEC2, StorageQualifier.StorageType.IN);
 			addIfNotExists(root, t, tree, "at_midBlock", Type.F32VEC4, StorageQualifier.StorageType.IN);
 			addIfNotExists(root, t, tree, "irisInt_UV1", Type.I32VEC2, StorageQualifier.StorageType.IN);
 			addIfNotExists(root, t, tree, "irisInt_UV2", Type.I32VEC2, StorageQualifier.StorageType.IN);
 
-			tree.prependMainFunctionBody(t, "vanilla_init();");
+			if (!parameters.inputs.isNewLines()) tree.prependMainFunctionBody(t, "vanilla_init();");
 
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "void vanilla_init() {\n" +
 				"iris_midTexCoord = mc_midTexCoord;" +
@@ -67,18 +69,20 @@ public class VanillaFutureTransformer {
 				(parameters.inputs.hasNormal() ?
 				"iris_Normal = irisInt_Normal.rgb;" : "iris_Normal = vec3(0, 1, 0);") +
 				"iris_ambientOcclusion = irisInt_Color.a;" +
-				"iris_blockId = mc_Entity;" +
+				"iris_blockId = int(mc_Entity + 0.5);" +
+				"iris_entityId = int(irisInt_Entity.x + 0.5);" +
+				"iris_blockEntityId = int(irisInt_Entity.y + 0.5);" +
 				"iris_blockEmission = int(at_midBlock.w);" +
 					(parameters.inputs.hasColor() ?
 				"iris_vertexColor = irisInt_Color * iris_ColorModulator;" : "iris_vertexColor = iris_ColorModulator;") +
 				(parameters.inputs.hasLight() ?
 					"iris_lightCoord = (iris_LightmapTextureMatrix * vec4(irisInt_UV2, 0.0, 1.0)).xy;" :
 				"iris_lightCoord = vec2(240.0, 240.0)	;"		)+
-				"irisInt_modelPosition = vec4(irisInt_Position + iris_ChunkOffset, 1.0);" +
+				"irisInt_modelPosition = vec4(irisInt_Position + iris_ChunkOffset + iris_vertex_offset, 1.0);" +
 				viewPositionSetup +
 				clipPositionSetup +
 				(parameters.inputs.hasOverlay() ?
-				"iris_overlayColor = texelFetch(iris_overlay, irisInt_UV1, 0); iris_overlayColor.a = 1.0 - iris_overlayColor.a;" : "iris_overlayColor = vec4(0.0, 0.0, 0.0, 1.0);") +
+				"iris_overlayColor = texelFetch(iris_overlay, irisInt_UV1, 0); iris_overlayColor.a = 1.0 - iris_overlayColor.a;" : "iris_overlayColor = vec4(0.0, 0.0, 0.0, 0.0);") +
 				"}");
 
 			addIfNotExists(root, t, tree, "iris_ChunkOffset", Type.F32VEC3, StorageQualifier.StorageType.UNIFORM);
@@ -94,9 +98,51 @@ public class VanillaFutureTransformer {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "vec4 irisInt_viewPosition;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "vec4 irisInt_clipPosition;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "vec4 iris_overlayColor;");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "float iris_blockId;");
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "int iris_blockId;");
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "int iris_entityId;");
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "int iris_blockEntityId;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "int iris_blockEmission;");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "float iris_ambientOcclusion;");
+
+			if (parameters.inputs.isNewLines()) {
+				// Create our own main function to wrap the existing main function, so that we
+				// can do our line shenanigans.
+				// TRANSFORM: this is fine since the AttributeTransformer has a different name
+				// in the vertex shader
+
+				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+					"uniform vec2 iris_ScreenSize;",
+					"uniform float iris_LineWidth;",
+					"""
+						void iris_widen_lines(vec4 linePosStart, vec4 linePosEnd) {
+						vec3 ndc1 = linePosStart.xyz / linePosStart.w;
+						vec3 ndc2 = linePosEnd.xyz / linePosEnd.w;
+						vec2 lineScreenDirection = normalize((ndc2.xy - ndc1.xy) * iris_ScreenSize);
+						vec2 lineOffset = vec2(-lineScreenDirection.y, lineScreenDirection.x) * iris_LineWidth / iris_ScreenSize;
+						if (lineOffset.x < 0.0) {
+						    lineOffset *= -1.0;
+						}
+						if (gl_VertexID % 2 == 0) {
+						    gl_Position = vec4((ndc1 + vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);
+						} else {
+						    gl_Position = vec4((ndc1 - vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);
+						}}""");
+
+				root.rename("main", "irisMain");
+
+				tree.parseAndInjectNode(t, ASTInjectionPoint.END, "void main() {" +
+					"iris_vertex_offset = irisInt_Normal.rgb;" +
+					"vanilla_init();" +
+					"irisMain();" +
+					"vec4 linePosEnd = gl_Position;" +
+					"gl_Position = vec4(0.0);" +
+					"iris_vertex_offset = vec3(0.0);" +
+					"vanilla_init();" +
+					"irisMain();" +
+					"vec4 linePosStart = gl_Position;" +
+					"iris_widen_lines(linePosStart, linePosEnd);}");
+
+			}
 		}
 	}
 }

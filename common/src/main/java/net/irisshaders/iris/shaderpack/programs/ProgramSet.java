@@ -109,7 +109,7 @@ public class ProgramSet implements ProgramSetInterface {
 			// This is for really old packs that do not use a vertex shader.
 			Iris.logger.warn("Found a program (" + program + ") that has a fragment shader but no vertex shader? This is very legacy behavior and might not work right.");
 			vertexSource = """
-				#version 120
+				#version 330 compatibility
 
 				varying vec4 irs_texCoords[3];
 				varying vec4 irs_Color;
