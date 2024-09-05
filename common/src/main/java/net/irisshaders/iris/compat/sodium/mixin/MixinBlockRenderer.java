@@ -33,10 +33,10 @@ public class MixinBlockRenderer {
 		hasOverride = false;
 	}
 
-	@WrapOperation(method = "bufferQuad", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/pipeline/BlockRenderer;attemptPassDowngrade(Lnet/caffeinemc/mods/sodium/client/render/frapi/mesh/MutableQuadViewImpl;Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;"))
-	private TerrainRenderPass iris$skipPassDowngrade(BlockRenderer instance, MutableQuadViewImpl mutableQuadView, TextureAtlasSprite quad, TerrainRenderPass sprite, Operation<TerrainRenderPass> original) {
+	@WrapOperation(method = "bufferQuad", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/pipeline/BlockRenderer;attemptPassDowngrade(Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;"))
+	private TerrainRenderPass iris$skipPassDowngrade(BlockRenderer instance, TextureAtlasSprite textureAtlasSprite, TerrainRenderPass sprite, Operation<TerrainRenderPass> original) {
 		if (hasOverride) return null;
 
-		return original.call(instance, mutableQuadView, quad, sprite);
+		return original.call(instance, textureAtlasSprite, sprite);
 	}
 }

@@ -123,7 +123,7 @@ public class SodiumPrograms {
 											Supplier<ShadowRenderTargets> shadowRenderTargets,
 											RenderTargets renderTargets,
 											Supplier<ImmutableSet<Integer>> flipState) {
-		if (pass == Pass.SHADOW || pass == Pass.SHADOW_CUTOUT) {
+		if (pass == Pass.SHADOW || pass == Pass.SHADOW_CUTOUT || pass == Pass.SHADOW_TRANS) {
 			return shadowRenderTargets.get().createShadowFramebuffer(ImmutableSet.of(),
 				source == null ? new int[]{0, 1} : (source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers()));
 		} else {
@@ -182,7 +182,7 @@ public class SodiumPrograms {
 		} else if (pass == DefaultTerrainRenderPasses.CUTOUT) {
 			return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? Pass.SHADOW_CUTOUT : Pass.TERRAIN_CUTOUT;
 		} else if (pass == DefaultTerrainRenderPasses.TRANSLUCENT) {
-			return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? Pass.SHADOW : Pass.TRANSLUCENT;
+			return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? Pass.SHADOW_TRANS : Pass.TRANSLUCENT;
 		} else {
 			throw new IllegalArgumentException("Unknown pass: " + pass);
 		}
@@ -191,6 +191,7 @@ public class SodiumPrograms {
 	public enum Pass {
 		SHADOW(ProgramId.ShadowSolid),
 		SHADOW_CUTOUT(ProgramId.ShadowCutout),
+		SHADOW_TRANS(ProgramId.ShadowWater),
 		TERRAIN(ProgramId.TerrainSolid),
 		TERRAIN_CUTOUT(ProgramId.TerrainCutout),
 		TRANSLUCENT(ProgramId.Water);
