@@ -64,7 +64,7 @@ public class IncludeGraph {
 		this.failures = failures;
 	}
 
-	public IncludeGraph(Path root, ImmutableList<AbsolutePackPath> startingPaths) {
+	public IncludeGraph(Path root, ImmutableList<AbsolutePackPath> startingPaths, boolean isZip) {
 		Map<AbsolutePackPath, AbsolutePackPath> cameFrom = new HashMap<>();
 		Map<AbsolutePackPath, Integer> lineNumberInclude = new HashMap<>();
 
@@ -81,9 +81,15 @@ public class IncludeGraph {
 
 			try {
 				Path p = next.resolved(root);
-				if (Iris.getIrisConfig().areDebugOptionsEnabled() && root.isAbsolute() && !p.toAbsolutePath().toString().equals(p.toFile().getCanonicalPath())) {
-					throw new FileIncludeException("'" + next.getPathString() + "' doesn't exist, did you mean '" +
-						root.relativize(p.toFile().getCanonicalFile().toPath()).toString().replace("\\", "/") + "'?");
+				if (Iris.getIrisConfig().areDebugOptionsEnabled() && !isZip) {
+					String absolute = p.toAbsolutePath().toString().replace("\\", "/");
+					absolute = absolute.substring(absolute.lastIndexOf("shaders/") + 8);
+
+					String canonical = p.toFile().getCanonicalPath().replace("\\", "/");
+					canonical = canonical.substring(canonical.lastIndexOf("shaders/") + 8);
+					if (!absolute.equals(canonical)) {
+						throw new FileIncludeException("'" + next.getPathString() + "' doesn't exist, did you mean '" + canonical + "'?");
+					}
 				}
 				source = readFile(p);
 			} catch (IOException e) {
