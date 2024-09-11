@@ -152,8 +152,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material, section));
 
 			if (blockIdOffset != 0) {
-				MemoryUtil.memPutShort(ptr + blockIdOffset, contextHolder.getBlockId());
-				MemoryUtil.memPutShort(ptr + blockIdOffset + 2, contextHolder.getRenderType());
+				MemoryUtil.memPutInt(ptr + blockIdOffset, packBlockId(contextHolder));
 			}
 
 			if (midBlockOffset != 0) {
@@ -176,5 +175,9 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 		}
 
 		return ptr;
+	}
+
+	private int packBlockId(BlockContextHolder contextHolder) {
+		return ((contextHolder.getBlockId() + 1) << 1) | (contextHolder.getRenderType() & 1);
 	}
 }

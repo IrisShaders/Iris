@@ -27,12 +27,12 @@ public class MixinChunkBuildBuffers implements BlockSensitiveBufferBuilder {
 	}
 
 	@Override
-	public void beginBlock(short block, short renderType, byte blockEmission, int localPosX, int localPosY, int localPosZ) {
+	public void beginBlock(int block, byte renderType, byte blockEmission, int localPosX, int localPosY, int localPosZ) {
 		contextHolder.setBlockData(block, renderType, blockEmission, localPosX, localPosY, localPosZ);
 	}
 
 	@Override
 	public void endBlock() {
-		contextHolder.setBlockData((short) 0, (short) 0, (byte) 0, 0, 0, 0);
+		contextHolder.setBlockData(0, (byte) 0, (byte) 0, 0, 0, 0);
 	}
 }
