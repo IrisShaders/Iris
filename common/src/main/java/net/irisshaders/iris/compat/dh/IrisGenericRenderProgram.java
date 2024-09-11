@@ -12,6 +12,7 @@ import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
 import com.seibel.distanthorizons.api.objects.math.DhApiVec3i;
 import com.seibel.distanthorizons.api.objects.render.DhApiRenderableBox;
 import com.seibel.distanthorizons.api.objects.render.DhApiRenderableBoxGroupShading;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
@@ -38,7 +39,6 @@ import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL32C;
-import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.system.MemoryStack;
 
@@ -137,10 +137,8 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 		this.va = GlStateManager._glGenVertexArrays();
 		GlStateManager._glBindVertexArray(va);
-		GL43.glVertexAttribFormat(0, 3, GL43C.GL_FLOAT,
-			false, 0); // Here strideSize is new attrib offset
-		GL43.glVertexAttribBinding(0, 0);
-		GL43.glEnableVertexAttribArray(0);
+		GL32.glVertexAttribPointer(0, 3, GL32.GL_FLOAT, false, 0, 0);
+		GL32.glEnableVertexAttribArray(0);
 
 		projectionUniform = tryGetUniformLocation2("iris_ProjectionMatrix");
 		projectionInverseUniform = tryGetUniformLocation2("iris_ProjectionMatrixInverse");
@@ -264,12 +262,13 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 	@Override
 	public void bindVertexBuffer(int i) {
-		GL43.glBindVertexBuffer(0, i, 0, 12);
+		GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, i);
+		GL32.glVertexAttribPointer(0, 3, GL32.GL_FLOAT, false, 12, 0);
 	}
 
 	@Override
 	public boolean overrideThisFrame() {
-		return IrisApi.getInstance().isShaderPackInUse();
+		return Iris.isPackInUseQuick();
 	}
 
 	@Override

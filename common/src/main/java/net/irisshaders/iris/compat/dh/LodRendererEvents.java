@@ -85,7 +85,7 @@ public class LodRendererEvents {
 			@Override
 			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
 
-				DhApi.Delayed.renderProxy.setDeferTransparentRendering(IrisApi.getInstance().isShaderPackInUse() && getInstance().shouldOverride);
+				DhApi.Delayed.renderProxy.setDeferTransparentRendering(Iris.isPackInUseQuick() && getInstance().shouldOverride);
 				DhApi.Delayed.configs.graphics().fog().drawMode().setValue(getInstance().shouldOverride ? EDhApiFogDrawMode.FOG_DISABLED : EDhApiFogDrawMode.FOG_ENABLED);
 			}
 		};
@@ -365,7 +365,7 @@ public class LodRendererEvents {
 		DhApiBeforeApplyShaderRenderEvent beforeApplyShaderEvent = new DhApiBeforeApplyShaderRenderEvent() {
 			@Override
 			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
-				if (IrisApi.getInstance().isShaderPackInUse()) {
+				if (Iris.isPackInUseQuick()) {
 					DHCompatInternal instance = getInstance();
 
 					OverrideInjector.INSTANCE.unbind(IDhApiShadowCullingFrustum.class, (IDhApiOverrideable) ShadowRenderer.FRUSTUM);

@@ -18,7 +18,22 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 	private static final float MODEL_ORIGIN = 8.0f;
 	private static final float MODEL_RANGE = 32.0f;
 	private final Vector3f normal = new Vector3f();
+	private final int blockIdOffset;
+	private final int normalOffset;
+	private final int tangentOffset;
+	private final int midBlockOffset;
+	private final int midUvOffset;
+	private final int stride;
 	private BlockContextHolder contextHolder;
+
+	public XHFPTerrainVertex(int blockIdOffset, int normalOffset, int tangentOffset, int midUvOffset, int midBlockOffset, int stride) {
+		this.blockIdOffset = blockIdOffset;
+		this.normalOffset = normalOffset;
+		this.tangentOffset = tangentOffset;
+		this.midUvOffset = midUvOffset;
+		this.midBlockOffset = midBlockOffset;
+		this.stride = stride;
+	}
 
 	private static int packPositionHi(int x, int y, int z) {
 		return (x >>> 10 & 1023) << 0 | (y >>> 10 & 1023) << 10 | (z >>> 10 & 1023) << 20;
@@ -93,22 +108,29 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 		texCentroidU *= (1.0f / 4.0f);
 		texCentroidV *= (1.0f / 4.0f);
 		int midUV = XHFPModelVertexType.encodeOld(texCentroidU, texCentroidV);
-		NormalHelper.computeFaceNormalManual(normal, vertices[0].x, vertices[0].y, vertices[0].z,
-			vertices[1].x, vertices[1].y, vertices[1].z,
-			vertices[2].x, vertices[2].y, vertices[2].z,
-			vertices[3].x, vertices[3].y, vertices[3].z);
-		int packedNormal = NormI8.pack(normal);
-		int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z,
-			vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v,
-			vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v,
-			vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v);
+		int packedNormal = 0;
+		if (normalOffset != 0 || tangentOffset != 0) {
+			NormalHelper.computeFaceNormalManual(normal, vertices[0].x, vertices[0].y, vertices[0].z,
+				vertices[1].x, vertices[1].y, vertices[1].z,
+				vertices[2].x, vertices[2].y, vertices[2].z,
+				vertices[3].x, vertices[3].y, vertices[3].z);
+			packedNormal = NormI8.pack(normal);
+		}
+		int tangent = 0;
 
-		if (tangent == -1) {
-			// Try calculating the second triangle
+		if (tangentOffset != 0) {
 			tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z,
-				vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v,
-				vertices[3].x, vertices[3].y, vertices[3].z, vertices[3].u, vertices[3].v,
-				vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v);
+				vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v,
+				vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v,
+				vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v);
+
+			if (tangent == -1) {
+				// Try calculating the second triangle
+				tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z,
+					vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v,
+					vertices[3].x, vertices[3].y, vertices[3].z, vertices[3].u, vertices[3].v,
+					vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v);
+			}
 		}
 
 		for (int i = 0; i < 4; i++) {
@@ -129,18 +151,33 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 			MemoryUtil.memPutInt(ptr + 12L, packTexture(u, v));
 			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material, section));
 
-			MemoryUtil.memPutShort(ptr + 32, contextHolder.getBlockId());
-			MemoryUtil.memPutShort(ptr + 34, contextHolder.getRenderType());
-			MemoryUtil.memPutInt(ptr + 36, contextHolder.ignoreMidBlock() ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.getLocalPosX(), contextHolder.getLocalPosY(), contextHolder.getLocalPosZ()));
-			MemoryUtil.memPutByte(ptr + 39, contextHolder.getBlockEmission());
+			if (blockIdOffset != 0) {
+				MemoryUtil.memPutInt(ptr + blockIdOffset, packBlockId(contextHolder));
+			}
 
-			MemoryUtil.memPutInt(ptr + 20, midUV);
-			MemoryUtil.memPutInt(ptr + 28, packedNormal);
-			MemoryUtil.memPutInt(ptr + 24, tangent);
+			if (midBlockOffset != 0) {
+				MemoryUtil.memPutInt(ptr + midBlockOffset, contextHolder.ignoreMidBlock() ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.getLocalPosX(), contextHolder.getLocalPosY(), contextHolder.getLocalPosZ()));
+				MemoryUtil.memPutByte(ptr + midBlockOffset + 3, contextHolder.getBlockEmission());
+			}
 
-			ptr += XHFPModelVertexType.STRIDE;
+			if (midUvOffset != 0) {
+				MemoryUtil.memPutInt(ptr + midUvOffset, midUV);
+			}
+
+			if (normalOffset != 0) {
+				MemoryUtil.memPutInt(ptr + normalOffset, packedNormal);
+			}
+			if (tangentOffset != 0) {
+				MemoryUtil.memPutInt(ptr + tangentOffset, tangent);
+			}
+
+			ptr += stride;
 		}
 
 		return ptr;
+	}
+
+	private int packBlockId(BlockContextHolder contextHolder) {
+		return ((contextHolder.getBlockId() + 1) << 1) | (contextHolder.getRenderType() & 1);
 	}
 }

@@ -87,8 +87,8 @@ public class ShaderPack {
 	private final List<String> dimensionIds;
 	private Map<NamespacedId, String> dimensionMap;
 
-	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
-		this(root, Collections.emptyMap(), environmentDefines);
+	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
+		this(root, Collections.emptyMap(), environmentDefines, isZip);
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines) throws IOException, IllegalStateException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
@@ -149,7 +149,7 @@ public class ShaderPack {
 		}
 
 		// Read all files and included files recursively
-		IncludeGraph graph = new IncludeGraph(root, starts.build());
+		IncludeGraph graph = new IncludeGraph(root, starts.build(), isZip);
 
 		if (!graph.getFailures().isEmpty()) {
 			throw new IOException(String.join("\n", graph.getFailures().values().stream().map(RusticError::toString).toArray(String[]::new)));

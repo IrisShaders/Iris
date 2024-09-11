@@ -150,7 +150,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		}
 	}
 
-	public static class HeaderEntry extends BaseEntry {
+	public class HeaderEntry extends BaseEntry {
 		public static final Component BACK_BUTTON_TEXT = Component.literal("< ").append(Component.translatable("options.iris.back").withStyle(ChatFormatting.ITALIC));
 		public static final MutableComponent RESET_BUTTON_TEXT_INACTIVE = Component.translatable("options.iris.reset").withStyle(ChatFormatting.GRAY);
 		public static final MutableComponent RESET_BUTTON_TEXT_ACTIVE = Component.translatable("options.iris.reset").withStyle(ChatFormatting.YELLOW);
@@ -209,7 +209,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 			Font font = Minecraft.getInstance().font;
 
 			// Draw header text
-			guiGraphics.drawCenteredString(font, text, x + (int) (entryWidth * 0.5), y + 5, 0xFFFFFF);
+			renderScrollingString(guiGraphics, font, text, x + (int) (entryWidth * 0.5), x + 5, y + 5, ((x + entryWidth) - 10) - utilityButtons.getWidth(), y + 15, 0xFFFFFF);
 
 			GuiUtil.bindIrisWidgetsTexture();
 

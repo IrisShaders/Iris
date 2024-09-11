@@ -41,6 +41,10 @@ public class IrisElementRow {
 		this(1);
 	}
 
+	public int getWidth() {
+		return width;
+	}
+
 	/**
 	 * Adds an element to the right of this row.
 	 *

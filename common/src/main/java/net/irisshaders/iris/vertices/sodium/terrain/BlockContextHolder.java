@@ -2,15 +2,15 @@ package net.irisshaders.iris.vertices.sodium.terrain;
 
 public class BlockContextHolder {
 	private byte blockEmission;
-	private short blockId;
-	private short renderType;
+	private int blockId;
+	private byte renderType;
 	private int localPosX, localPosY, localPosZ;
 
-	public short getBlockId() {
+	public int getBlockId() {
 		return blockId;
 	}
 
-	public short getRenderType() {
+	public byte getRenderType() {
 		return renderType;
 	}
 
@@ -30,7 +30,7 @@ public class BlockContextHolder {
 		return localPosZ;
 	}
 
-	public void setBlockData(short blockId, short renderType, byte blockEmission, int localPosX, int localPosY, int localPosZ) {
+	public void setBlockData(int blockId, byte renderType, byte blockEmission, int localPosX, int localPosY, int localPosZ) {
 		this.blockId = blockId;
 		this.renderType = renderType;
 		this.blockEmission = blockEmission;

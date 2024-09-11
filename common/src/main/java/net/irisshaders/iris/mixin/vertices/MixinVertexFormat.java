@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.pipeline.programs.VertexFormatExtension;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.vertices.ImmediateState;
@@ -27,7 +29,7 @@ public abstract class MixinVertexFormat implements VertexFormatExtension {
 
 	@Inject(method = "setupBufferState", at = @At("HEAD"), cancellable = true)
 	private void iris$onSetupBufferState(CallbackInfo ci) {
-		if (WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
+		if (Iris.isPackInUseQuick() && ImmediateState.renderWithExtendedVertexFormat) {
 			if ((Object) this == DefaultVertexFormat.BLOCK) {
 				IrisVertexFormats.TERRAIN.setupBufferState();
 
@@ -46,7 +48,7 @@ public abstract class MixinVertexFormat implements VertexFormatExtension {
 
 	@Inject(method = "clearBufferState", at = @At("HEAD"), cancellable = true)
 	private void iris$onClearBufferState(CallbackInfo ci) {
-		if (WorldRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat() && ImmediateState.renderWithExtendedVertexFormat) {
+		if (Iris.isPackInUseQuick() && ImmediateState.renderWithExtendedVertexFormat) {
 			if ((Object) this == DefaultVertexFormat.BLOCK) {
 				IrisVertexFormats.TERRAIN.clearBufferState();
 
