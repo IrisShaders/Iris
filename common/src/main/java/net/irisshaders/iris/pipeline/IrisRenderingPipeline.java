@@ -153,6 +153,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final CloudSetting cloudSetting;
 	private final boolean shouldRenderSun;
 	private final boolean shouldRenderMoon;
+	private final boolean shouldRenderStars;
+	private final boolean shouldRenderSkyDisc;
 	private final boolean allowConcurrentCompute;
 	@Nullable
 	private final ShadowRenderer shadowRenderer;
@@ -202,6 +204,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.dhCloudSetting = programSet.getPackDirectives().getDHCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
+		this.shouldRenderStars = programSet.getPackDirectives().shouldRenderStars();
+		this.shouldRenderSkyDisc = programSet.getPackDirectives().shouldRenderSkyDisc();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 		this.skipAllRendering = programSet.getPackDirectives().skipAllRendering();
 		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
@@ -1062,6 +1066,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	@Override
 	public boolean shouldRenderMoon() {
 		return shouldRenderMoon;
+	}
+
+	@Override
+	public boolean shouldRenderStars() {
+		return shouldRenderStars;
+	}
+
+	@Override
+	public boolean shouldRenderSkyDisc() {
+		return shouldRenderSkyDisc;
 	}
 
 	@Override

@@ -90,6 +90,8 @@ public class ShaderProperties {
 	private OptionalBoolean underwaterOverlay = OptionalBoolean.DEFAULT;
 	private OptionalBoolean sun = OptionalBoolean.DEFAULT;
 	private OptionalBoolean moon = OptionalBoolean.DEFAULT;
+	private OptionalBoolean stars = OptionalBoolean.DEFAULT;
+	private OptionalBoolean sky = OptionalBoolean.DEFAULT;
 	private OptionalBoolean vignette = OptionalBoolean.DEFAULT;
 	private OptionalBoolean backFaceSolid = OptionalBoolean.DEFAULT;
 	private OptionalBoolean backFaceCutout = OptionalBoolean.DEFAULT;
@@ -191,6 +193,8 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "underwaterOverlay", bool -> underwaterOverlay = bool);
 			handleBooleanDirective(key, value, "sun", bool -> sun = bool);
 			handleBooleanDirective(key, value, "moon", bool -> moon = bool);
+			handleBooleanDirective(key, value, "stars", bool -> stars = bool);
+			handleBooleanDirective(key, value, "sky", bool -> sky = bool);
 			handleBooleanDirective(key, value, "vignette", bool -> vignette = bool);
 			handleBooleanDirective(key, value, "backFace.solid", bool -> backFaceSolid = bool);
 			handleBooleanDirective(key, value, "backFace.cutout", bool -> backFaceCutout = bool);
@@ -769,6 +773,14 @@ public class ShaderProperties {
 
 	public OptionalBoolean getMoon() {
 		return moon;
+	}
+
+	public OptionalBoolean getStars() {
+		return stars;
+	}
+
+	public OptionalBoolean getSky() {
+		return sky;
 	}
 
 	public OptionalBoolean getVignette() {

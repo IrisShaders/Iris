@@ -172,6 +172,16 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
+	public boolean shouldRenderStars() {
+		return true;
+	}
+
+	@Override
+	public boolean shouldRenderSkyDisc() {
+		return true;
+	}
+
+	@Override
 	public boolean shouldWriteRainAndSnowToDepthBuffer() {
 		return false;
 	}

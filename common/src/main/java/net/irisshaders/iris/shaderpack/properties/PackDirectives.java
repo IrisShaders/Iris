@@ -35,6 +35,8 @@ public class PackDirectives {
 	private boolean vignette;
 	private boolean sun;
 	private boolean moon;
+	private boolean stars;
+	private boolean sky;
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean voxelizeLightBlocks;
@@ -74,6 +76,8 @@ public class PackDirectives {
 		vignette = properties.getVignette().orElse(false);
 		sun = properties.getSun().orElse(true);
 		moon = properties.getMoon().orElse(true);
+		stars = properties.getStars().orElse(true);
+		sky = properties.getSky().orElse(true);
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
@@ -165,6 +169,14 @@ public class PackDirectives {
 
 	public boolean shouldRenderMoon() {
 		return moon;
+	}
+
+	public boolean shouldRenderStars() {
+		return stars;
+	}
+
+	public boolean shouldRenderSkyDisc() {
+		return sky;
 	}
 
 	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
