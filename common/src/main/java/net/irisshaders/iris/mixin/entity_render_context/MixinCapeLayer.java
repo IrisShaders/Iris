@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class MixinCapeLayer {
 	private static final NamespacedId CAPE_LOCATION = new NamespacedId("minecraft", "player_cape");
 
-	@Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/renderer/entity/state/PlayerRenderState;FF)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/item/Items;ELYTRA:Lnet/minecraft/world/item/Item;"))
+	@Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/renderer/entity/state/PlayerRenderState;FF)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/item/equipment/EquipmentModel$LayerType;WINGS:Lnet/minecraft/world/item/equipment/EquipmentModel$LayerType;"))
 	private void changeId(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, PlayerRenderState playerRenderState, float f, float g, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 

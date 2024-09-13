@@ -9,6 +9,7 @@ import net.irisshaders.iris.layer.WrappingMultiBufferSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.util.ArrayList;
@@ -105,9 +106,9 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	public void readyUp() {
 		isReady = true;
 
-		ProfilerFiller profiler = Minecraft.getInstance().getProfiler();
+		ProfilerFiller profiler = Profiler.get();
 
-		profiler.push("collect");
+		profiler.push("iris collect");
 
 		for (SegmentedBufferBuilder builder : builders) {
 			List<BufferSegment> segments = builder.getSegments();
@@ -129,11 +130,11 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 	@Override
 	public void endBatch() {
-		ProfilerFiller profiler = Minecraft.getInstance().getProfiler();
+		ProfilerFiller profiler = Profiler.get();
 
 		if (!isReady) readyUp();
 
-		profiler.push("draw buffers");
+		profiler.push("iris draw buffers");
 
 		for (RenderType type : renderOrder) {
 			if (!typeToSegment.containsKey(type)) continue;
@@ -164,11 +165,11 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	}
 
 	public void endBatchWithType(TransparencyType transparencyType) {
-		ProfilerFiller profiler = Minecraft.getInstance().getProfiler();
+		ProfilerFiller profiler = Profiler.get();
 
 		if (!isReady) readyUp();
 
-		profiler.push("draw buffers");
+		profiler.push("iris draw partial");
 
 		List<RenderType> types = new ArrayList<>();
 

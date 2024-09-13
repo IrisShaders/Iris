@@ -83,6 +83,7 @@ loom {
             ideConfigGenerated(true)
             runDir("run")
             environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
+            programArg("--tracy")
             vmArgs("-Dmixin.debug.export=true")
         }
         named("server") {

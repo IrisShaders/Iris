@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import org.joml.Matrix4f;
@@ -84,7 +85,7 @@ public class MixinLevelRenderer {
 		}
 
 		if (WorldRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
-			Minecraft.getInstance().getProfiler().popPush("entity_draws_opaque");
+			Profiler.get().popPush("entity_draws_opaque");
 			if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource source) {
 				source.endBatchWithType(TransparencyType.OPAQUE);
 				source.endBatchWithType(TransparencyType.OPAQUE_DECAL);
@@ -93,7 +94,7 @@ public class MixinLevelRenderer {
 				this.renderBuffers.bufferSource().endBatch();
 			}
 		} else {
-			Minecraft.getInstance().getProfiler().popPush("entity_draws");
+			Profiler.get().popPush("entity_draws");
 			this.renderBuffers.bufferSource().endBatch();
 		}
 	}

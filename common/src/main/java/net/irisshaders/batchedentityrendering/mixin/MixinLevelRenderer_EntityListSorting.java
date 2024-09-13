@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.util.profiling.Profiler;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,7 +44,7 @@ public class MixinLevelRenderer_EntityListSorting {
 	@WrapOperation(method = "collectVisibleEntities", at = @At(value = "INVOKE", target = "Ljava/lang/Iterable;iterator()Ljava/util/Iterator;"))
 	private Iterator<Entity> batchedentityrendering$sortEntityList(Iterable<Entity> instance, Operation<Iterator<Entity>> original) {
 		// Sort the entity list first in order to allow vanilla's entity batching code to work better.
-		this.level.getProfiler().push("sortEntityList");
+		Profiler.get().push("sortEntityList");
 
 		Map<EntityType<?>, List<Entity>> sortedEntities = new HashMap<>();
 
@@ -52,7 +53,7 @@ public class MixinLevelRenderer_EntityListSorting {
 
 		sortedEntities.values().forEach(entities::addAll);
 
-		this.level.getProfiler().pop();
+		Profiler.get().pop();
 
 		return entities.iterator();
 	}

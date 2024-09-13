@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.util.profiling.Profiler;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -88,7 +89,7 @@ public class HandRenderer {
 
 		poseStack.pushPose();
 
-		Minecraft.getInstance().getProfiler().push("iris_hand");
+		Profiler.get().push("iris_hand");
 
 		renderingSolid = true;
 
@@ -97,7 +98,7 @@ public class HandRenderer {
 
 		gameRenderer.itemInHandRenderer.renderHandsWithItems(tickDelta, new PoseStack(), bufferSource.getUnflushableWrapper(), Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.getEntity(), tickDelta));
 
-		Minecraft.getInstance().getProfiler().pop();
+		Profiler.get().pop();
 
 		bufferSource.readyUp();
 		bufferSource.endBatch();
@@ -127,7 +128,7 @@ public class HandRenderer {
 
 		poseStack.pushPose();
 
-		Minecraft.getInstance().getProfiler().push("iris_hand_translucent");
+		Profiler.get().push("iris_hand_translucent");
 
 		RenderSystem.getModelViewStack().pushMatrix();
 		RenderSystem.getModelViewStack().set(poseStack.last().pose());
@@ -136,7 +137,7 @@ public class HandRenderer {
 
 		poseStack.popPose();
 
-		Minecraft.getInstance().getProfiler().pop();
+		Profiler.get().pop();
 
 		RenderSystem.setProjectionMatrix(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection()), VertexSorting.DISTANCE_TO_ORIGIN);
 

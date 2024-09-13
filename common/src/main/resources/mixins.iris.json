@@ -65,7 +65,7 @@
     "entity_render_context.MixinEntityRenderDispatcher",
     "entity_render_context.MixinEntityRenderer",
     "entity_render_context.MixinHorseArmorLayer",
-    "entity_render_context.MixinHumanoidArmorLayer",
+    "entity_render_context.MixinEquipmentLayerRenderer",
     "entity_render_context.MixinItemRenderer",
     "fabulous.MixinDisableFabulousGraphics",
     "gui.MixinGui",
