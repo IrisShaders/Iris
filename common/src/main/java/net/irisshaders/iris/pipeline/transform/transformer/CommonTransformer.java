@@ -289,6 +289,8 @@ public class CommonTransformer {
 		renameFunctionCall(root, "texture3D", "texture");
 		renameFunctionCall(root, "texture2DLod", "textureLod");
 		renameFunctionCall(root, "texture3DLod", "textureLod");
+		renameFunctionCall(root, "texture2DProj", "textureProj");
+		renameFunctionCall(root, "texture3DProj", "textureProj");
 		renameFunctionCall(root, "texture2DGrad", "textureGrad");
 		renameFunctionCall(root, "texture2DGradARB", "textureGrad");
 		renameFunctionCall(root, "texture3DGrad", "textureGrad");

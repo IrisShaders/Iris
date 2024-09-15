@@ -70,9 +70,9 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	@Unique
 	private int iris$vertexCount;
 	@Unique
-	private short currentBlock = -1;
+	private int currentBlock = -1;
 	@Unique
-	private short currentRenderType = -1;
+	private byte currentRenderType = -1;
     @Unique
 	private int currentLocalPosX;
 	@Unique
@@ -138,7 +138,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		if ((this.elementsToFill & IrisVertexFormats.ENTITY_ELEMENT.mask()) != 0) {
 			long offset = this.beginElement(IrisVertexFormats.ENTITY_ELEMENT);
 			// ENTITY_ELEMENT
-			MemoryUtil.memPutShort(offset, currentBlock);
+			MemoryUtil.memPutShort(offset, (short) currentBlock);
 			MemoryUtil.memPutShort(offset + 2, currentRenderType);
 		} else if ((this.elementsToFill & IrisVertexFormats.ENTITY_ID_ELEMENT.mask()) != 0) {
 			long offset = this.beginElement(IrisVertexFormats.ENTITY_ID_ELEMENT);
@@ -188,7 +188,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	}
 
 	@Override
-	public void beginBlock(short block, short renderType, byte blockEmission, int localPosX, int localPosY, int localPosZ) {
+	public void beginBlock(int block, byte renderType, byte blockEmission, int localPosX, int localPosY, int localPosZ) {
 		this.currentBlock = block;
 		this.currentRenderType = renderType;
 		this.currentLocalPosX = localPosX;

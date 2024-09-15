@@ -17,6 +17,7 @@
     "MixinBooleanState",
     "MixinByteBufferBuilder",
     "MixinChainedJsonException",
+    "MixinChunkBorderRenderer",
     "MixinClientLanguage",
     "MixinClientPacketListener",
     "MixinDebugScreenOverlay",

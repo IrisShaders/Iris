@@ -3,6 +3,7 @@ package net.irisshaders.iris.mixin;
 import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.platform.GlStateManager;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL46C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -50,11 +51,11 @@ public class MixinGlStateManager_FramebufferBinding {
 
 	@Inject(method = "_glUseProgram", at = @At("HEAD"), cancellable = true, remap = false)
 	private static void iris$avoidRedundantBind2(int pInt0, CallbackInfo ci) {
-		if (iris$program == pInt0) {
+		if (iris$program == 0 && pInt0 == 0) {
 			ci.cancel();
-		} else {
-			iris$program = pInt0;
 		}
+
+		iris$program = pInt0;
 	}
 
 	@Inject(method = "_glDeleteFramebuffers(I)V", at = @At("HEAD"), remap = false)

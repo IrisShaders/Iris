@@ -24,6 +24,7 @@ public class SodiumTransformer {
 		CommonTransformer.transform(t, tree, root, parameters, false);
 
 		replaceMidTexCoord(t, tree, root, 1.0f / 32768.0f);
+		replaceMCEntity(t, tree, root);
 
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
@@ -175,6 +176,68 @@ public class SodiumTransformer {
 	}
 
 
+	public static void replaceMCEntity(ASTParser t,
+										  TranslationUnit tree, Root root) {
+		Type dimension = Type.BOOL;
+		for (Identifier id : root.identifierIndex.get("mc_Entity")) {
+			TypeAndInitDeclaration initDeclaration = (TypeAndInitDeclaration) id.getAncestor(
+				2, 0, TypeAndInitDeclaration.class::isInstance);
+			if (initDeclaration == null) {
+				continue;
+			}
+			DeclarationExternalDeclaration declaration = (DeclarationExternalDeclaration) initDeclaration.getAncestor(
+				1, 0, DeclarationExternalDeclaration.class::isInstance);
+			if (declaration == null) {
+				continue;
+			}
+			if (initDeclaration.getType().getTypeSpecifier() instanceof BuiltinNumericTypeSpecifier numeric) {
+				dimension = numeric.type;
+
+				declaration.detachAndDelete();
+				initDeclaration.detachAndDelete();
+				id.detachAndDelete();
+				break;
+			}
+		}
+
+
+		root.replaceReferenceExpressions(t, "mc_Entity", "iris_Entity");
+
+		switch (dimension) {
+			case BOOL:
+				return;
+			case FLOAT32:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "float iris_Entity = int(mc_Entity >> 1u) - 1;");
+				break;
+			case F32VEC2:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec2 iris_Entity = vec2(int(mc_Entity >> 1u) - 1, mc_Entity & 1u);");
+				break;
+			case F32VEC3:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec3 iris_Entity = vec3(int(mc_Entity >> 1u) - 1, mc_Entity & 1u, 0.0);");
+				break;
+			case F32VEC4:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_Entity = vec4(int(mc_Entity >> 1u) - 1, mc_Entity & 1u, 0.0, 1.0);");
+				break;
+			case INT32:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uint iris_Entity = int(mc_Entity >> 1u) - 1;");
+				break;
+			case I32VEC2:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "ivec2 iris_Entity = ivec2(int(mc_Entity >> 1u) - 1, mc_Entity & 1u);");
+				break;
+			case I32VEC3:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "ivec3 iris_Entity = ivec3(int(mc_Entity >> 1u) - 1, mc_Entity & 1u, 0);");
+				break;
+			case I32VEC4:
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "ivec4 iris_Entity = ivec4(int(mc_Entity >> 1u) - 1, mc_Entity & 1u, 0, 1);");
+				break;
+			default:
+				throw new IllegalStateException("Got an invalid format mc_Entity (" + dimension.getCompactName() + ").");
+		}
+
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in uint mc_Entity;");
+	}
+
+
 	public static void replaceMidTexCoord(ASTParser t,
 										  TranslationUnit tree, Root root, float textureScale) {
 		Type dimension = Type.BOOL;
@@ -206,7 +269,7 @@ public class SodiumTransformer {
 			case BOOL:
 				return;
 			case FLOAT32:
-				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "float iris_MidTex = (mc_midTexCoord.x * " + textureScale + ").x;");
+				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "float iris_MidTex = (mc_midTexCoord.x * " + textureScale + ");");
 				break;
 			case F32VEC2:
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec2 iris_MidTex = (mc_midTexCoord.xy * " + textureScale + ").xy;");
