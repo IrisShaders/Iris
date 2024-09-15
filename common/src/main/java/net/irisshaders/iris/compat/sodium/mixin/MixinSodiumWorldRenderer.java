@@ -1,5 +1,6 @@
 package net.irisshaders.iris.compat.sodium.mixin;
 
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
@@ -8,6 +9,7 @@ import net.irisshaders.iris.mixin.LevelRendererAccessor;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
@@ -67,7 +69,7 @@ public class MixinSodiumWorldRenderer {
 		ShadowRenderingState.setBlockEntityRenderFunction((shadowRenderer, bufferSource, modelView, camera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, lightsOnly) -> {
 			renderLightsOnly = lightsOnly;
 
-			SodiumWorldRenderer.instance().renderBlockEntities(modelView, bufferSource, ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).getDestructionProgress(), camera, tickDelta);
+			SodiumWorldRenderer.instance().renderBlockEntities(modelView, bufferSource, ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).getDestructionProgress(), camera, tickDelta, null);
 
 			int finalBeList = beList;
 
@@ -78,7 +80,7 @@ public class MixinSodiumWorldRenderer {
 	}
 
 	@Inject(method = "renderBlockEntity", at = @At("HEAD"), cancellable = true)
-	private static void checkRenderShadow(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity, CallbackInfo ci) {
+	private static void checkRenderShadow(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity, LocalPlayer player, LocalBooleanRef isGlowing, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			if (renderLightsOnly && entity.getBlockState().getLightEmission() == 0) {
 				ci.cancel();

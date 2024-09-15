@@ -82,7 +82,6 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
-            environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
         }
         named("server") {
             server()

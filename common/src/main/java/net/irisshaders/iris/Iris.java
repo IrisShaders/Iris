@@ -46,6 +46,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.Configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -100,6 +101,7 @@ public class Iris {
 	private static String IRIS_VERSION;
 	private static UpdateChecker updateChecker;
 	private static boolean fallback;
+	private static boolean loadShaderPackWhenPossible;
 
 	static {
 		if (!BuildConfig.ACTIVATE_RENDERDOC && IrisPlatformHelpers.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
@@ -124,7 +126,9 @@ public class Iris {
 		VertexSerializerRegistry.instance().registerSerializer(DefaultVertexFormat.NEW_ENTITY, IrisVertexFormats.ENTITY, new ModelToEntityVertexSerializer());
 
 		// Only load the shader pack when we can access OpenGL
-		loadShaderpack();
+		if (!IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons")) {
+			loadShaderpack();
+		}
 	}
 
 	public static void duringRenderSystemInit() {
@@ -149,6 +153,11 @@ public class Iris {
 	}
 
 	public static void handleKeybinds(Minecraft minecraft) {
+		if (loadShaderPackWhenPossible) {
+			loadShaderPackWhenPossible = false;
+			Iris.loadShaderpack();
+		}
+
 		if (reloadKeybind.consumeClick()) {
 			try {
 				reload();
@@ -720,7 +729,11 @@ public class Iris {
 		return getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline;
 	}
 
-    /**
+	public static void loadShaderpackWhenPossible() {
+		loadShaderPackWhenPossible = true;
+	}
+
+	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
 	 * some very basic setup, config loading, and environment checks.
 	 *

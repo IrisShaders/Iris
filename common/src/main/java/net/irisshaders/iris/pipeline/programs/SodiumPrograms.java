@@ -159,8 +159,7 @@ public class SodiumPrograms {
 														 Supplier<ImmutableSet<Integer>> flipState,
 														 boolean containsTessellation) {
 		return builder
-			.bindAttribute("a_PositionHi", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_HI)
-			.bindAttribute("a_PositionLo", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_LO)
+			.bindAttribute("a_Position", ChunkShaderBindingPoints.ATTRIBUTE_POSITION)
 			.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
 			.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_TEXTURE)
 			.bindAttribute("a_LightAndData", ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_MATERIAL_INDEX)

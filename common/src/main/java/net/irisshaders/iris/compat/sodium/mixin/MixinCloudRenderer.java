@@ -78,7 +78,7 @@ public abstract class MixinCloudRenderer {
 		return IrisApi.getInstance().isShaderPackInUse() ? IrisVertexFormats.CLOUDS : p_350837_;
 	}
 
-	@ModifyArg(remap = false, method = "emitCellGeometry3D", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 3)
+	@ModifyArg(method = "emitCellGeometry3D", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 3)
 	private static VertexFormat modifyArgIris(VertexFormat vertexFormatDescription) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return IrisVertexFormats.CLOUDS;
@@ -92,7 +92,7 @@ public abstract class MixinCloudRenderer {
 		return IrisApi.getInstance().isShaderPackInUse() ? 80 : size;
 	}
 
-	@ModifyArg(remap = false, method = "emitCellGeometry2D", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 3)
+	@ModifyArg(method = "emitCellGeometry2D", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/api/vertex/buffer/VertexBufferWriter;push(Lorg/lwjgl/system/MemoryStack;JILcom/mojang/blaze3d/vertex/VertexFormat;)V"), index = 3)
 	private static VertexFormat modifyArgIris2D(VertexFormat vertexFormatDescription) {
 		if (IrisApi.getInstance().isShaderPackInUse()) {
 			return IrisVertexFormats.CLOUDS;

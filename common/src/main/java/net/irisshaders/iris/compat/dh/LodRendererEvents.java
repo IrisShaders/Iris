@@ -55,6 +55,8 @@ public class LodRendererEvents {
 				public void afterDistantHorizonsInit(DhApiEventParam<Void> event) {
 					Iris.logger.info("DH Ready, binding Iris event handlers...");
 
+					Iris.loadShaderpackWhenPossible();
+
 					setupSetDeferredBeforeRenderingEvent();
 					setupReconnectDepthTextureEvent();
 					setupGenericEvent();
