@@ -51,7 +51,6 @@ public class PackDirectives {
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, TextureScaleOverride> scaleOverrides = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
-	private Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects;
 	private Optional<ParticleRenderingSettings> particleRenderingSettings;
 
 	private PackDirectives(Set<Integer> supportedRenderTargets, PackShadowDirectives packShadowDirectives) {
@@ -63,7 +62,6 @@ public class PackDirectives {
 		drynessHalfLife = 200.0f;
 		eyeBrightnessHalfLife = 10.0f;
 		centerDepthHalfLife = 1.0F;
-		bufferObjects = new Int2ObjectArrayMap<>();
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -94,7 +92,6 @@ public class PackDirectives {
 		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
 		particleRenderingSettings = properties.getParticleRenderingSettings();
 		textureMap = properties.getCustomTexturePatching();
-		bufferObjects = properties.getBufferObjects();
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -112,7 +109,6 @@ public class PackDirectives {
 		prepareBeforeShadow = directives.prepareBeforeShadow;
 		particleRenderingSettings = directives.particleRenderingSettings;
 		textureMap = directives.textureMap;
-		bufferObjects = directives.bufferObjects;
 	}
 
 	private static float clamp(float val, float lo, float hi) {
@@ -237,10 +233,6 @@ public class PackDirectives {
 
 	public PackShadowDirectives getShadowDirectives() {
 		return shadowDirectives;
-	}
-
-	public Int2ObjectArrayMap<ShaderStorageInfo> getBufferObjects() {
-		return bufferObjects;
 	}
 
 	public boolean supportsColorCorrection() {

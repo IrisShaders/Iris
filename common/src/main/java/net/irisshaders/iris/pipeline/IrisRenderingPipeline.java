@@ -218,9 +218,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
-		if (!programSet.getPackDirectives().getBufferObjects().isEmpty()) {
+		if (!pack.getBufferObjects().isEmpty()) {
 			if (IrisRenderSystem.supportsSSBO()) {
-				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programSet.getPackDirectives().getBufferObjects(), main.width, main.height);
+				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(pack.getBufferObjects(), main.width, main.height);
 
 				this.shaderStorageBufferHolder.setupBuffers();
 			} else {

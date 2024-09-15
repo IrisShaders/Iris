@@ -373,13 +373,19 @@ public class ShaderProperties {
 				boolean isRelative;
 				float scaleX, scaleY;
 				String[] parts = value.split(" ");
-				if (parts.length == 1) {
+				if (parts.length <= 2) {
 					try {
 						trueIndex = Integer.parseInt(index);
-						trueSize = Long.parseLong(value);
+						trueSize = Long.parseLong(parts[0]);
 					} catch (NumberFormatException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size!", e);
 						return;
+					}
+
+					String name = null;
+
+					if (parts.length > 1) {
+						name = parts[1];
 					}
 
 					if (trueIndex > 8) {
@@ -392,7 +398,7 @@ public class ShaderProperties {
 						return;
 					}
 
-					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0));
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, false, 0, 0, name));
 				} else {
 					// Assume it's a long one
 					try {
@@ -416,7 +422,7 @@ public class ShaderProperties {
 						return;
 					}
 
-					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, isRelative, scaleX, scaleY));
+					bufferObjects.put(trueIndex, new ShaderStorageInfo(trueSize, isRelative, scaleX, scaleY, null));
 				}
 			});
 
