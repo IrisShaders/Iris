@@ -47,7 +47,6 @@ import java.util.function.Consumer;
 public class ExtendedShader extends ShaderInstance implements ShaderInstanceInterface {
 	private static final Matrix4f IDENTITY = new Matrix4f().identity();
 	private static final Uniform FAKE_UNIFORM = new Uniform("", 1, 2, null);
-	private static ExtendedShader lastApplied;
 
 	private final boolean intensitySwizzle;
 	private final List<BufferBlendOverride> bufferBlendOverrides;
@@ -120,7 +119,6 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	public void clear() {
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
-		lastApplied = null;
 
 		if (this.blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();

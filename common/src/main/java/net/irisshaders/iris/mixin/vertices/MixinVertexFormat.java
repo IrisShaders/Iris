@@ -3,8 +3,6 @@ package net.irisshaders.iris.mixin.vertices;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.api.v0.IrisApi;
-import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import org.spongepowered.asm.mixin.Mixin;

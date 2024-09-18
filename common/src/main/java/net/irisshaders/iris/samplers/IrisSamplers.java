@@ -35,15 +35,15 @@ public class IrisSamplers {
 	private static GlSampler SHADOW_SAMPLER_NEAREST;
 	private static GlSampler SHADOW_SAMPLER_LINEAR;
 
-    private IrisSamplers() {
+	private IrisSamplers() {
 		// no construction allowed
 	}
 
 	public static void initRenderer() {
 		SHADOW_SAMPLER_NEAREST = new GlSampler(false, false, true, true);
 		SHADOW_SAMPLER_LINEAR = new GlSampler(true, false, true, true);
-        GlSampler LINEAR_MIPMAP = new GlSampler(true, true, false, false);
-        GlSampler NEAREST_MIPMAP = new GlSampler(false, true, false, false);
+		GlSampler LINEAR_MIPMAP = new GlSampler(true, true, false, false);
+		GlSampler NEAREST_MIPMAP = new GlSampler(false, true, false, false);
 	}
 
 	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped,

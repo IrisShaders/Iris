@@ -15,6 +15,7 @@ public class MixinAdvancedShadowCullingFrustum extends Frustum implements IDhApi
 	private int worldMinYDH;
 	@Unique
 	private int worldMaxYDH;
+
 	public MixinAdvancedShadowCullingFrustum(Matrix4f matrix4f, Matrix4f matrix4f2) {
 		super(matrix4f, matrix4f2);
 	}

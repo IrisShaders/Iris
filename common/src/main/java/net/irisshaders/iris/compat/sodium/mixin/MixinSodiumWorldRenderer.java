@@ -27,40 +27,6 @@ import java.util.SortedSet;
 @Mixin(SodiumWorldRenderer.class)
 public class MixinSodiumWorldRenderer {
 	@Unique
-	private float lastSunAngle;
-
-	@Redirect(method = "setupTerrain", remap = false,
-		at = @At(value = "INVOKE",
-			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z", ordinal = 0,
-			remap = false))
-	private boolean iris$forceChunkGraphRebuildInShadowPass(RenderSectionManager instance) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			float sunAngle = Minecraft.getInstance().level.getSunAngle(CapturedRenderingState.INSTANCE.getTickDelta());
-			if (lastSunAngle != sunAngle) {
-				lastSunAngle = sunAngle;
-				return true;
-			}
-
-			return instance.needsUpdate();
-		} else {
-			return instance.needsUpdate();
-		}
-	}
-
-	@Redirect(method = "setupTerrain", remap = false,
-		at = @At(value = "INVOKE",
-			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z", ordinal = 1,
-			remap = false))
-	private boolean iris$forceEndGraphRebuild(RenderSectionManager instance) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			// TODO: Detect when the sun/moon isn't moving
-			return false;
-		} else {
-			return instance.needsUpdate();
-		}
-	}
-
-	@Unique
 	private static boolean renderLightsOnly = false;
 	@Unique
 	private static int beList = 0;
@@ -79,6 +45,9 @@ public class MixinSodiumWorldRenderer {
 		});
 	}
 
+	@Unique
+	private float lastSunAngle;
+
 	@Inject(method = "renderBlockEntity", at = @At("HEAD"), cancellable = true)
 	private static void checkRenderShadow(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity, LocalPlayer player, LocalBooleanRef isGlowing, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
@@ -86,6 +55,35 @@ public class MixinSodiumWorldRenderer {
 				ci.cancel();
 			}
 			beList++;
+		}
+	}
+
+	@Redirect(method = "setupTerrain", remap = false,
+		at = @At(value = "INVOKE",
+			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z", ordinal = 0,
+			remap = false))
+	private boolean iris$forceChunkGraphRebuildInShadowPass(RenderSectionManager instance) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			float sunAngle = Minecraft.getInstance().level.getSunAngle(CapturedRenderingState.INSTANCE.getTickDelta());
+			if (lastSunAngle != sunAngle) {
+				lastSunAngle = sunAngle;
+				return true;
+			}
+		}
+
+		return instance.needsUpdate();
+	}
+
+	@Redirect(method = "setupTerrain", remap = false,
+		at = @At(value = "INVOKE",
+			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z", ordinal = 1,
+			remap = false))
+	private boolean iris$forceEndGraphRebuild(RenderSectionManager instance) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			// TODO: Detect when the sun/moon isn't moving
+			return false;
+		} else {
+			return instance.needsUpdate();
 		}
 	}
 }

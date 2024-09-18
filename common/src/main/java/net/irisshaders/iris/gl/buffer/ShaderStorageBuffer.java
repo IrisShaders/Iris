@@ -13,8 +13,8 @@ import java.nio.ByteBuffer;
 public class ShaderStorageBuffer {
 	protected final int index;
 	protected final BuiltShaderStorageInfo info;
-	protected int id;
 	protected final ByteBuffer content;
+	protected int id;
 
 	public ShaderStorageBuffer(int index, BuiltShaderStorageInfo info) {
 		this.id = IrisRenderSystem.createBuffers();

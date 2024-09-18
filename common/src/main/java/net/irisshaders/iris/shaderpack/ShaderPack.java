@@ -89,8 +89,8 @@ public class ShaderPack {
 	private final Function<AbsolutePackPath, String> sourceProvider;
 	private final ShaderProperties shaderProperties;
 	private final List<String> dimensionIds;
+	private final Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
 	private Map<NamespacedId, String> dimensionMap;
-	private Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
 
 	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
 		this(root, Collections.emptyMap(), environmentDefines, isZip);
@@ -182,7 +182,6 @@ public class ShaderPack {
 
 			if (info.name() == null) {
 				bufferObjects.put(shaderStorageInfoEntry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), null));
-				continue;
 			} else {
 				String path = info.name();
 
@@ -539,7 +538,6 @@ public class ShaderPack {
 						new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
 					case TEXTURE_RECTANGLE ->
 						new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
-					default -> throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
 				};
 			} else {
 				customTextureData = null;
@@ -603,8 +601,8 @@ public class ShaderPack {
 		return irisCustomTextureDataMap;
 	}
 
-	public Optional<CustomTextureData> getCustomNoiseTexture() {
-		return Optional.ofNullable(customNoiseTexture);
+	public CustomTextureData getCustomNoiseTexture() {
+		return customNoiseTexture;
 	}
 
 	public LanguageMap getLanguageMap() {

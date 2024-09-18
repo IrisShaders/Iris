@@ -81,6 +81,7 @@ loom {
             client()
             configName = "Fabric Client"
             ideConfigGenerated(true)
+            vmArgs("-Dmixin.debug.export=true")
             runDir("run")
         }
         named("server") {

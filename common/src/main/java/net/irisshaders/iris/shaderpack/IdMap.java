@@ -6,10 +6,10 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.shaderpack.materialmap.BlockEntry;
 import net.irisshaders.iris.shaderpack.materialmap.BlockRenderType;
 import net.irisshaders.iris.shaderpack.materialmap.Entry;
@@ -51,17 +51,14 @@ public class IdMap {
 	 * Maps a given entity ID to an integer ID
 	 */
 	private final Object2IntMap<NamespacedId> entityIdMap;
-
-	/**
-	 * Maps block states to block ids defined in block.properties
-	 */
-	private Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockPropertiesMap;
-
 	/**
 	 * Maps tags to block ids defined in block.properties
 	 */
 	private final Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap;
-
+	/**
+	 * Maps block states to block ids defined in block.properties
+	 */
+	private Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockPropertiesMap;
 	/**
 	 * A set of render type overrides for specific blocks. Allows shader packs to move blocks to different render types.
 	 */

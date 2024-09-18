@@ -7,8 +7,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.api.v0.IrisApi;
-import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.BlockSensitiveBufferBuilder;
 import net.irisshaders.iris.vertices.BufferBuilderPolygonView;
@@ -43,6 +41,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	private final BufferBuilderPolygonView polygon = new BufferBuilderPolygonView();
 	@Unique
 	private final Vector3f normal = new Vector3f();
+	@Unique
+	private final long[] vertexOffsets = new long[4];
 	@Shadow
 	private int elementsToFill;
 	@Unique
@@ -65,7 +65,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	private int vertices;
 	@Unique
 	private boolean extending;
-    @Unique
+	@Unique
 	private boolean injectNormalAndUV1;
 	@Unique
 	private int iris$vertexCount;
@@ -73,14 +73,15 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	private int currentBlock = -1;
 	@Unique
 	private byte currentRenderType = -1;
-    @Unique
+	@Unique
 	private int currentLocalPosX;
 	@Unique
 	private int currentLocalPosY;
 	@Unique
 	private int currentLocalPosZ;
-	@Unique
-	private final long[] vertexOffsets = new long[4];
+	@Shadow
+	@Final
+	private ByteBufferBuilder buffer;
 
 	@Shadow
 	public abstract VertexConsumer setNormal(float f, float g, float h);
@@ -88,13 +89,9 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	@Shadow
 	protected abstract long beginElement(VertexFormatElement vertexFormatElement);
 
-	@Shadow
-	@Final
-	private ByteBufferBuilder buffer;
-
 	@ModifyVariable(method = "<init>", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/VertexFormatElement;POSITION:Lcom/mojang/blaze3d/vertex/VertexFormatElement;", ordinal = 0), argsOnly = true)
 	private VertexFormat iris$extendFormat(VertexFormat format) {
-        boolean iris$isTerrain = false;
+		boolean iris$isTerrain = false;
 		injectNormalAndUV1 = false;
 
 		if (ImmediateState.skipExtension.get() || !Iris.isPackInUseQuick()) {
@@ -131,8 +128,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		if ((this.elementsToFill & IrisVertexFormats.MID_BLOCK_ELEMENT.mask()) != 0) {
 			long midBlockOffset = this.beginElement(IrisVertexFormats.MID_BLOCK_ELEMENT);
 			MemoryUtil.memPutInt(midBlockOffset, ExtendedDataHelper.computeMidBlock(x, y, z, currentLocalPosX, currentLocalPosY, currentLocalPosZ));
-            byte currentBlockEmission = -1;
-            MemoryUtil.memPutByte(midBlockOffset + 3, currentBlockEmission);
+			byte currentBlockEmission = -1;
+			MemoryUtil.memPutByte(midBlockOffset + 3, currentBlockEmission);
 		}
 
 		if ((this.elementsToFill & IrisVertexFormats.ENTITY_ELEMENT.mask()) != 0) {

@@ -38,7 +38,7 @@ public class OptionMenuContainer {
 
 		Map<String, Integer> subScreenColumnCounts = shaderProperties.getSubScreenColumnCount();
 		shaderProperties.getSubScreenOptions().forEach((screenKey, options) -> subScreens.put(screenKey, new OptionMenuSubElementScreen(
-            screenKey, this, shaderProperties, shaderPackOptions, options, Optional.ofNullable(subScreenColumnCounts.get(screenKey)))));
+			screenKey, this, shaderProperties, shaderPackOptions, options, Optional.ofNullable(subScreenColumnCounts.get(screenKey)))));
 
 		// Dump all unused options into screens containing "*"
 		for (Map.Entry<List<OptionMenuElement>, Integer> entry : unusedOptionDumpQueue.entrySet()) {

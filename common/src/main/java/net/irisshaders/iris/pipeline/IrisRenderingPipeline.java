@@ -243,13 +243,14 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		this.clearImages = customImages.stream().filter(GlImage::shouldClear).toArray(GlImage[]::new);
 
-		this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings().orElseGet(() -> {
-			if (programSet.getComposite(ProgramArrayId.Deferred).length > 0 && !programSet.getPackDirectives().shouldUseSeparateEntityDraws()) {
-				return ParticleRenderingSettings.AFTER;
-			} else {
-				return ParticleRenderingSettings.MIXED;
-			}
-		});
+		if (programSet.getPackDirectives().getParticleRenderingSettings() != ParticleRenderingSettings.UNSET) {
+			this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings();
+		} else if (programSet.getComposite(ProgramArrayId.Deferred).length > 0 && !programSet.getPackDirectives().shouldUseSeparateEntityDraws()) {
+			this.particleRenderingSettings = ParticleRenderingSettings.AFTER;
+		} else {
+			this.particleRenderingSettings = ParticleRenderingSettings.MIXED;
+		}
+
 
 		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, ((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings(), programSet.getPackDirectives());
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
@@ -506,7 +507,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
 			if (source == null || source.getSource().isEmpty()) {
-				continue;
 			} else {
 				ProgramBuilder builder;
 
@@ -570,7 +570,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
 			if (source == null || source.getSource().isEmpty()) {
-				continue;
 			} else {
 				ProgramBuilder builder;
 

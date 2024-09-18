@@ -13,7 +13,7 @@ void main() {
     float oldDepth = texture(altDepth, vec2(0.5)).r;
 
     if (isnan(oldDepth)) {
-       oldDepth = currentDepth;
+        oldDepth = currentDepth;
     }
 
     iris_fragColor = mix(oldDepth, currentDepth, decay2);

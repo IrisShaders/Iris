@@ -21,7 +21,7 @@ public class GlyphExtVertexSerializer implements VertexSerializer {
 	private static final int OFFSET_TANGENT = IrisVertexFormats.GLYPH.getOffset(IrisVertexFormats.TANGENT_ELEMENT);
 	private static final QuadViewEntity quad = new QuadViewEntity();
 	private static final Vector3f saveNormal = new Vector3f();
-		private static final int STRIDE = IrisVertexFormats.GLYPH.getVertexSize();
+	private static final int STRIDE = IrisVertexFormats.GLYPH.getVertexSize();
 
 	private static void endQuad(float uSum, float vSum, long src, long dst) {
 		uSum *= 0.25f;

@@ -41,6 +41,7 @@ public class IrisButton extends Button {
 	public static class Builder {
 		private final Component message;
 		private final Button.OnPress onPress;
+		private final FloatSupplier alpha;
 		@Nullable
 		private Tooltip tooltip;
 		private int x;
@@ -48,7 +49,6 @@ public class IrisButton extends Button {
 		private int width = 150;
 		private int height = 20;
 		private Button.CreateNarration createNarration = Button.DEFAULT_NARRATION;
-		private final FloatSupplier alpha;
 
 		public Builder(Component pButton$Builder0, Button.OnPress pButton$OnPress1, FloatSupplier alpha) {
 			this.message = pButton$Builder0;

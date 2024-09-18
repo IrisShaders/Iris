@@ -176,7 +176,7 @@ public class SodiumTransformer {
 
 
 	public static void replaceMCEntity(ASTParser t,
-										  TranslationUnit tree, Root root) {
+									   TranslationUnit tree, Root root) {
 		Type dimension = Type.BOOL;
 		for (Identifier id : root.identifierIndex.get("mc_Entity")) {
 			TypeAndInitDeclaration initDeclaration = (TypeAndInitDeclaration) id.getAncestor(

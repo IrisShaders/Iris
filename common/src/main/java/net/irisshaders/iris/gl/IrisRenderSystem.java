@@ -675,7 +675,7 @@ public class IrisRenderSystem {
 
 		@Override
 		public int createBuffers() {
-            return GlStateManager._glGenBuffers();
+			return GlStateManager._glGenBuffers();
 		}
 	}
 

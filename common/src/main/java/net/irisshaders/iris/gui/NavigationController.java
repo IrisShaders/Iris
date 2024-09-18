@@ -7,12 +7,12 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class NavigationController {
-    private final Deque<String> history = new ArrayDeque<>();
+	private final Deque<String> history = new ArrayDeque<>();
 	private ShaderPackOptionList optionList;
 	private String currentScreen = null;
 
 	public NavigationController(OptionMenuContainer container) {
-    }
+	}
 
 	public void back() {
 		if (!history.isEmpty()) {

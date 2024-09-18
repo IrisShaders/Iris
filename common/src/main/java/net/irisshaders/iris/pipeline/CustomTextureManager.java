@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Optional;
 
 public class CustomTextureManager {
 	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureAccess>> customTextureIdMap = new EnumMap<>(TextureStage.class);
@@ -50,7 +49,7 @@ public class CustomTextureManager {
 
 	public CustomTextureManager(PackDirectives packDirectives,
 								EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap,
-								Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap, Optional<CustomTextureData> customNoiseTextureData) {
+								Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap, CustomTextureData customNoiseTextureData) {
 		customTextureDataMap.forEach((textureStage, customTextureStageDataMap) -> {
 			Object2ObjectMap<String, TextureAccess> customTextureIds = new Object2ObjectOpenHashMap<>();
 
@@ -74,22 +73,20 @@ public class CustomTextureManager {
 			}
 		});
 
-		noise = customNoiseTextureData.flatMap(textureData -> {
-			try {
-				return Optional.of(createCustomTexture(textureData));
-			} catch (IOException | ResourceLocationException e) {
-				Iris.logger.error("Unable to parse the image data for the custom noise texture", e);
-
-				return Optional.empty();
-			}
-		}).orElseGet(() -> {
+		if (customNoiseTextureData == null) {
 			final int noiseTextureResolution = packDirectives.getNoiseTextureResolution();
 
 			NativeImageBackedNoiseTexture texture = new NativeImageBackedNoiseTexture(noiseTextureResolution);
 			ownedTextures.add(texture);
 
-			return texture;
-		});
+			noise = texture;
+		} else {
+			try {
+				noise = createCustomTexture(customNoiseTextureData);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 
 	private TextureAccess createCustomTexture(CustomTextureData textureData) throws IOException, ResourceLocationException {
@@ -163,7 +160,6 @@ public class CustomTextureManager {
 						AbstractTexture pbrTexture = switch (pbrType) {
 							case NORMAL -> pbrHolder.normalTexture();
 							case SPECULAR -> pbrHolder.specularTexture();
-							default -> throw new IllegalArgumentException("Unknown PBRType '" + pbrType + "'");
 						};
 
 						TextureFormat textureFormat = TextureFormatLoader.getFormat();

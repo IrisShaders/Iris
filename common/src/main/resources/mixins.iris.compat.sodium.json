@@ -7,9 +7,9 @@
   "client": [
     "MixinBlockRenderer",
     "MixinChunkBuildBuffers",
+    "MixinChunkMeshBufferBuilder",
     "MixinChunkMeshBuildTask",
     "MixinCloudRenderer",
-    "MixinChunkMeshBufferBuilder",
     "MixinDefaultChunkRenderer",
     "MixinGlRenderDevice",
     "MixinRenderRegionArenas",

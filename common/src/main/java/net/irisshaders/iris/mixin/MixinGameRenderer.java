@@ -5,7 +5,6 @@ import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gl.program.IrisProgramTypes;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;

@@ -61,7 +61,7 @@ public class CompositeRenderer {
 
 	private final ImmutableList<Pass> passes;
 	private final TextureAccess noiseTexture;
-    private final CenterDepthSampler centerDepthSampler;
+	private final CenterDepthSampler centerDepthSampler;
 	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
 	private final CustomUniforms customUniforms;
@@ -368,7 +368,6 @@ public class CompositeRenderer {
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
 			if (source == null || source.getSource().isEmpty()) {
-				continue;
 			} else {
 				// TODO: Properly handle empty shaders
 				Objects.requireNonNull(flipped);

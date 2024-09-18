@@ -67,7 +67,7 @@ public class FinalPassRenderer {
 	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
 	private final Set<GlImage> customImages;
 	private final TextureAccess noiseTexture;
-    private final CenterDepthSampler centerDepthSampler;
+	private final CenterDepthSampler centerDepthSampler;
 	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final CustomUniforms customUniforms;
 	private final WorldRenderingPipeline pipeline;
@@ -83,7 +83,7 @@ public class FinalPassRenderer {
 							 Object2ObjectMap<String, TextureAccess> irisCustomTextures, Set<GlImage> customImages, ImmutableSet<Integer> flippedAtLeastOnce
 		, CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
-        this.centerDepthSampler = centerDepthSampler;
+		this.centerDepthSampler = centerDepthSampler;
 		this.customTextureIds = customTextureIds;
 		this.irisCustomTextures = irisCustomTextures;
 		this.customImages = customImages;
@@ -384,7 +384,6 @@ public class FinalPassRenderer {
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
 			if (source == null || source.getSource().isEmpty()) {
-				continue;
 			} else {
 				// TODO: Properly handle empty shaders
 				Objects.requireNonNull(flipped);

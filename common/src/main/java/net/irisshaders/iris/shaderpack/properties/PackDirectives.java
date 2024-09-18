@@ -1,13 +1,11 @@
 package net.irisshaders.iris.shaderpack.properties;
 
 import com.google.common.collect.ImmutableMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.gl.buffer.ShaderStorageInfo;
 import net.irisshaders.iris.gl.texture.TextureScaleOverride;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
@@ -15,7 +13,6 @@ import net.irisshaders.iris.shaderpack.parsing.DirectiveHolder;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.joml.Vector2i;
 
-import java.util.Optional;
 import java.util.Set;
 
 public class PackDirectives {
@@ -51,7 +48,7 @@ public class PackDirectives {
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, TextureScaleOverride> scaleOverrides = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
-	private Optional<ParticleRenderingSettings> particleRenderingSettings;
+	private ParticleRenderingSettings particleRenderingSettings;
 
 	private PackDirectives(Set<Integer> supportedRenderTargets, PackShadowDirectives packShadowDirectives) {
 		noiseTextureResolution = 256;
@@ -175,7 +172,7 @@ public class PackDirectives {
 		return sky;
 	}
 
-	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
+	public ParticleRenderingSettings getParticleRenderingSettings() {
 		return particleRenderingSettings;
 	}
 

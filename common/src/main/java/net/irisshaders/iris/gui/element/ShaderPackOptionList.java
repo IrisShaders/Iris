@@ -149,6 +149,71 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		}
 	}
 
+	public static class ElementRowEntry extends BaseEntry {
+		private final List<AbstractElementWidget<?>> widgets;
+		private final ShaderPackScreen screen;
+
+		private int cachedWidth;
+		private int cachedPosX;
+
+		public ElementRowEntry(ShaderPackScreen screen, NavigationController navigation, List<AbstractElementWidget<?>> widgets) {
+			super(navigation);
+
+			this.screen = screen;
+			this.widgets = widgets;
+		}
+
+		@Override
+		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			this.cachedWidth = entryWidth;
+			this.cachedPosX = x;
+
+			// The amount of space widgets will occupy, excluding margins. Will be divided up between widgets.
+			int totalWidthWithoutMargins = entryWidth - (2 * (widgets.size() - 1));
+
+			totalWidthWithoutMargins -= 3; // Centers it for some reason
+
+			// Width of a single widget
+			float singleWidgetWidth = (float) totalWidthWithoutMargins / widgets.size();
+
+			for (int i = 0; i < widgets.size(); i++) {
+				AbstractElementWidget<?> widget = widgets.get(i);
+				boolean widgetHovered = (hovered && (getHoveredWidget(mouseX) == i)) || getFocused() == widget;
+
+				widget.bounds = new ScreenRectangle(x + (int) ((singleWidgetWidth + 2) * i), y, (int) singleWidgetWidth, entryHeight + 2);
+				widget.render(guiGraphics, mouseX, mouseY, tickDelta, widgetHovered);
+
+				screen.setElementHoveredStatus(widget, widgetHovered);
+			}
+		}
+
+		public int getHoveredWidget(int mouseX) {
+			float positionAcrossWidget = ((float) Mth.clamp(mouseX - cachedPosX, 0, cachedWidth)) / cachedWidth;
+
+			return Mth.clamp((int) Math.floor(widgets.size() * positionAcrossWidget), 0, widgets.size() - 1);
+		}
+
+		@Override
+		public boolean mouseClicked(double mouseX, double mouseY, int button) {
+			return this.widgets.get(getHoveredWidget((int) mouseX)).mouseClicked(mouseX, mouseY, button);
+		}
+
+		@Override
+		public boolean mouseReleased(double mouseX, double mouseY, int button) {
+			return this.widgets.get(getHoveredWidget((int) mouseX)).mouseReleased(mouseX, mouseY, button);
+		}
+
+		@Override
+		public @NotNull List<? extends GuiEventListener> children() {
+			return ImmutableList.copyOf(widgets);
+		}
+
+		@Override
+		public @NotNull List<? extends NarratableEntry> narratables() {
+			return ImmutableList.copyOf(widgets);
+		}
+	}
+
 	public class HeaderEntry extends BaseEntry {
 		public static final Component BACK_BUTTON_TEXT = Component.literal("< ").append(Component.translatable("options.iris.back").withStyle(ChatFormatting.ITALIC));
 		public static final MutableComponent RESET_BUTTON_TEXT_INACTIVE = Component.translatable("options.iris.reset").withStyle(ChatFormatting.GRAY);
@@ -384,71 +449,6 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 				});
 
 			return true;
-		}
-	}
-
-	public static class ElementRowEntry extends BaseEntry {
-		private final List<AbstractElementWidget<?>> widgets;
-		private final ShaderPackScreen screen;
-
-		private int cachedWidth;
-		private int cachedPosX;
-
-		public ElementRowEntry(ShaderPackScreen screen, NavigationController navigation, List<AbstractElementWidget<?>> widgets) {
-			super(navigation);
-
-			this.screen = screen;
-			this.widgets = widgets;
-		}
-
-		@Override
-		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-			this.cachedWidth = entryWidth;
-			this.cachedPosX = x;
-
-			// The amount of space widgets will occupy, excluding margins. Will be divided up between widgets.
-			int totalWidthWithoutMargins = entryWidth - (2 * (widgets.size() - 1));
-
-			totalWidthWithoutMargins -= 3; // Centers it for some reason
-
-			// Width of a single widget
-			float singleWidgetWidth = (float) totalWidthWithoutMargins / widgets.size();
-
-			for (int i = 0; i < widgets.size(); i++) {
-				AbstractElementWidget<?> widget = widgets.get(i);
-				boolean widgetHovered = (hovered && (getHoveredWidget(mouseX) == i)) || getFocused() == widget;
-
-				widget.bounds = new ScreenRectangle(x + (int) ((singleWidgetWidth + 2) * i), y, (int) singleWidgetWidth, entryHeight + 2);
-				widget.render(guiGraphics, mouseX, mouseY, tickDelta, widgetHovered);
-
-				screen.setElementHoveredStatus(widget, widgetHovered);
-			}
-		}
-
-		public int getHoveredWidget(int mouseX) {
-			float positionAcrossWidget = ((float) Mth.clamp(mouseX - cachedPosX, 0, cachedWidth)) / cachedWidth;
-
-			return Mth.clamp((int) Math.floor(widgets.size() * positionAcrossWidget), 0, widgets.size() - 1);
-		}
-
-		@Override
-		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			return this.widgets.get(getHoveredWidget((int) mouseX)).mouseClicked(mouseX, mouseY, button);
-		}
-
-		@Override
-		public boolean mouseReleased(double mouseX, double mouseY, int button) {
-			return this.widgets.get(getHoveredWidget((int) mouseX)).mouseReleased(mouseX, mouseY, button);
-		}
-
-		@Override
-		public @NotNull List<? extends GuiEventListener> children() {
-			return ImmutableList.copyOf(widgets);
-		}
-
-		@Override
-		public @NotNull List<? extends NarratableEntry> narratables() {
-			return ImmutableList.copyOf(widgets);
 		}
 	}
 }

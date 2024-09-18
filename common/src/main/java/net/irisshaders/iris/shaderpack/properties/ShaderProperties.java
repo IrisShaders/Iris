@@ -6,7 +6,6 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.AlphaTest;
@@ -26,6 +25,7 @@ import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.helpers.Tri;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.shaderpack.ImageInformation;
 import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
@@ -55,6 +55,7 @@ import java.util.function.Consumer;
  * values in here & the values parsed from shader source code.
  */
 public class ShaderProperties {
+	final CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private final Map<String, List<String>> profiles = new LinkedHashMap<>();
 	private final Map<String, List<String>> subScreenOptions = new HashMap<>();
 	private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
@@ -73,7 +74,6 @@ public class ShaderProperties {
 	private final Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects = new Int2ObjectArrayMap<>();
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, String> conditionallyEnabledPrograms = new Object2ObjectOpenHashMap<>();
-	final CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private int customTexAmount;
 	private CloudSetting cloudSetting = CloudSetting.DEFAULT;
 	private CloudSetting dhCloudSetting = CloudSetting.DEFAULT;
@@ -109,7 +109,7 @@ public class ShaderProperties {
 	private ShadowCullState shadowCulling = ShadowCullState.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
 	private OptionalBoolean dhShadowEnabled = OptionalBoolean.DEFAULT;
-	private Optional<ParticleRenderingSettings> particleRenderingSettings = Optional.empty();
+	private ParticleRenderingSettings particleRenderingSettings = ParticleRenderingSettings.UNSET;
 	private OptionalBoolean prepareBeforeShadow = OptionalBoolean.DEFAULT;
 	private List<String> sliderOptions = new ArrayList<>();
 	private List<String> mainScreenOptions = null;
@@ -205,27 +205,25 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
-			handleBooleanDirective(key, value, "separateEntityDraws", bool -> separateEntityDraws = bool);
+			handleBooleanDirective(key, value, "separateEntityDraws", bool -> {
+				separateEntityDraws = bool;
+				particleRenderingSettings = ParticleRenderingSettings.MIXED;
+			});
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
 			handleBooleanDirective(key, value, "occlusion.culling", bool -> occlusionCulling = bool);
 			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
 			handleBooleanDirective(key, value, "skipAllRendering", bool -> skipAllRendering = bool);
 			handleBooleanDirective(key, value, "dhShadow.enabled", bool -> dhShadowEnabled = bool);
 			handleBooleanDirective(key, value, "particles.before.deferred", bool -> {
-				if (bool.orElse(false) && particleRenderingSettings.isEmpty()) {
-					particleRenderingSettings = Optional.of(ParticleRenderingSettings.BEFORE);
+				if (bool.orElse(false) && particleRenderingSettings == ParticleRenderingSettings.UNSET) {
+					particleRenderingSettings = ParticleRenderingSettings.BEFORE;
 				}
 			});
 			handleBooleanDirective(key, value, "prepareBeforeShadow", bool -> prepareBeforeShadow = bool);
 			handleBooleanDirective(key, value, "supportsColorCorrection", bool -> supportsColorCorrection = bool);
 
 			if (key.startsWith("particles.ordering")) {
-				Optional<ParticleRenderingSettings> settings = ParticleRenderingSettings.fromString(value.trim().toUpperCase(Locale.US));
-				if (settings.isPresent()) {
-					particleRenderingSettings = settings;
-				} else {
-					throw new RuntimeException("Failed to parse particle rendering order! " + value);
-				}
+				particleRenderingSettings = ParticleRenderingSettings.fromString(value.trim().toUpperCase(Locale.US));
 			}
 
 			// TODO: Min optifine versions, shader options layout / appearance / profiles
@@ -853,9 +851,8 @@ public class ShaderProperties {
 		return shadowEnabled;
 	}
 
-	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
-		// Before is implied if separateEntityDraws is true.
-		if (separateEntityDraws == OptionalBoolean.TRUE) return Optional.of(ParticleRenderingSettings.MIXED);
+	public ParticleRenderingSettings getParticleRenderingSettings() {
+		// Mixed is implied if separateEntityDraws is true.
 		return particleRenderingSettings;
 	}
 
