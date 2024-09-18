@@ -39,6 +39,7 @@ public abstract class MixinItemRenderer {
 			previousBeValue = CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
 			CapturedRenderingState.INSTANCE.setCurrentBlockEntity(1);
 
+			//System.out.println(WorldRenderingSettings.INSTANCE.getBlockStateIds().getInt(blockItem.getBlock().defaultBlockState()));
 			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getBlockStateIds().getOrDefault(blockItem.getBlock().defaultBlockState(), 0));
 		} else {
 			ResourceLocation location = BuiltInRegistries.ITEM.getKey(pItemRenderer0.getItem());

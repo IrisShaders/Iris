@@ -1,5 +1,6 @@
 package net.irisshaders.iris.pathways;
 
+import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
@@ -63,7 +64,7 @@ public class HorizonRenderer {
 		buildHorizon(currentRenderDistance * 16, buffer);
 		MeshData meshData = buffer.build();
 
-		this.buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+		this.buffer = new VertexBuffer(BufferUsage.STATIC_WRITE);
 		this.buffer.bind();
 		this.buffer.upload(meshData);
 		Tesselator.getInstance().clear();
