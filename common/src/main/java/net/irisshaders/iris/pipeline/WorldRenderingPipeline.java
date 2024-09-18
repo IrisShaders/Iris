@@ -71,6 +71,10 @@ public interface WorldRenderingPipeline {
 
 	boolean shouldRenderMoon();
 
+	boolean shouldRenderStars();
+
+	boolean shouldRenderSkyDisc();
+
 	boolean shouldWriteRainAndSnowToDepthBuffer();
 
 	ParticleRenderingSettings getParticleRenderingSettings();

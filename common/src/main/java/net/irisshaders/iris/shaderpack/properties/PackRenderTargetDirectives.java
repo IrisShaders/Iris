@@ -87,10 +87,10 @@ public class PackRenderTargetDirectives {
 		// If a shaderpack declares a gdepth uniform (even if it is not actually sampled or even of the correct type),
 		// we upgrade the format of gdepth / colortex1 to RGBA32F if it is currently RGBA.
 		Optional.ofNullable(renderTargetSettings.get(1)).ifPresent(gdepth -> directives.acceptUniformDirective("gdepth", () -> {
-            if (gdepth.requestedFormat == InternalTextureFormat.RGBA) {
-                gdepth.requestedFormat = InternalTextureFormat.RGBA32F;
-            }
-        }));
+			if (gdepth.requestedFormat == InternalTextureFormat.RGBA) {
+				gdepth.requestedFormat = InternalTextureFormat.RGBA32F;
+			}
+		}));
 
 		renderTargetSettings.forEach((index, settings) -> {
 			acceptBufferDirectives(directives, settings, "colortex" + index);

@@ -77,8 +77,7 @@ public class FormatAnalyzer {
 		}
 
 		GlVertexFormat.Builder VERTEX_FORMAT = GlVertexFormat.builder(offset)
-			.addElement(DefaultChunkMeshAttributes.POSITION_HI, ChunkShaderBindingPoints.ATTRIBUTE_POSITION_HI, 0)
-			.addElement(DefaultChunkMeshAttributes.POSITION_LO, ChunkShaderBindingPoints.ATTRIBUTE_POSITION_LO, 4)
+			.addElement(DefaultChunkMeshAttributes.POSITION, ChunkShaderBindingPoints.ATTRIBUTE_POSITION, 0)
 			.addElement(DefaultChunkMeshAttributes.COLOR, ChunkShaderBindingPoints.ATTRIBUTE_COLOR, 8)
 			.addElement(DefaultChunkMeshAttributes.TEXTURE, ChunkShaderBindingPoints.ATTRIBUTE_TEXTURE, 12)
 			.addElement(DefaultChunkMeshAttributes.LIGHT_MATERIAL_INDEX, ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_MATERIAL_INDEX, 16);

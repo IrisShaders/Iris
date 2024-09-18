@@ -63,12 +63,12 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 	 */
 	private final Vector4f[] planes = new Vector4f[MAX_CLIPPING_PLANES];
 	private final Vector3f shadowLightVectorFromOrigin;
+	private final Vector3d position = new Vector3d();
 	// The center coordinates of this frustum.
 	public double x;
 	public double y;
 	public double z;
 	private int planeCount = 0;
-	private final Vector3d position = new Vector3d();
 
 	public AdvancedShadowCullingFrustum(Matrix4fc playerView, Matrix4fc playerProjection, Vector3f shadowLightVectorFromOrigin,
 										BoxCuller boxCuller) {

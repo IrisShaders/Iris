@@ -29,7 +29,6 @@ import org.lwjgl.opengl.GL20C;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 public class SodiumShader implements ChunkShaderInterface {
@@ -49,7 +48,7 @@ public class SodiumShader implements ChunkShaderInterface {
 	private final boolean containsTessellation;
 
 	public SodiumShader(IrisRenderingPipeline pipeline, SodiumPrograms.Pass pass, ShaderBindingContext context,
-						int handle, Optional<BlendModeOverride> blendModeOverride,
+						int handle, BlendModeOverride blendModeOverride,
 						List<BufferBlendOverride> bufferBlendOverrides,
 						CustomUniforms customUniforms, Supplier<ImmutableSet<Integer>> flipState, float alphaTest,
 						boolean containsTessellation) {
@@ -70,7 +69,7 @@ public class SodiumShader implements ChunkShaderInterface {
 		this.samplers = buildSamplers(pipeline, pass, handle, isShadowPass, flipState);
 		this.images = buildImages(pipeline, pass, handle, isShadowPass, flipState);
 
-		this.blendModeOverride = blendModeOverride.orElse(null);
+		this.blendModeOverride = blendModeOverride;
 		this.bufferBlendOverrides = bufferBlendOverrides;
 	}
 

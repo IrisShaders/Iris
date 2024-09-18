@@ -60,6 +60,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private static final String development = "Development Environment";
 	private final Screen parent;
 	private final MutableComponent irisTextComponent;
+	private final FrameUpdateNotifier notifier = new FrameUpdateNotifier();
 	private ShaderPackSelectionList shaderPackList;
 	private @Nullable ShaderPackOptionList shaderOptionList = null;
 	private @Nullable NavigationController navigation = null;
@@ -74,12 +75,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private boolean dropChanges = false;
 	private MutableComponent developmentComponent;
 	private MutableComponent updateComponent;
-
 	private boolean guiHidden = false;
-	private float guiButtonHoverTimer = 0.0f;
-	private Button openFolderButton;
-
-	private final FrameUpdateNotifier notifier = new FrameUpdateNotifier();
 	public final SmoothedFloat blurTransition = new SmoothedFloat(2, 2, () -> {
 		if (guiHidden) {
 			return 0.0f;
@@ -89,6 +85,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			return (float) this.minecraft.options.getMenuBackgroundBlurriness();
 		}
 	}, notifier);
+	private float guiButtonHoverTimer = 0.0f;
+	private Button openFolderButton;
 	private float backgroundInit = 0.0f;
 	public final SmoothedFloat listTransition = new SmoothedFloat(1, 1, () -> {
 		if (guiHidden || this.optionMenuOpen) {

@@ -50,11 +50,11 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		this.screen = screen;
 		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
 		this.downloadButton = new PinnedEntry(Component.literal("Download Shaders"), () -> this.minecraft.setScreen(new ConfirmLinkScreen(bl -> {
-            if (bl) {
-                Util.getPlatform().openUri("https://modrinth.com/shaders");
-            }
-            this.minecraft.setScreen(this.screen);
-        }, "https://modrinth.com/shaders", true)), this);
+			if (bl) {
+				Util.getPlatform().openUri("https://modrinth.com/shaders");
+			}
+			this.minecraft.setScreen(this.screen);
+		}, "https://modrinth.com/shaders", true)), this);
 		try {
 			watcher1 = FileSystems.getDefault().newWatchService();
 			key1 = Iris.getShaderpacksDirectory().register(watcher1,
@@ -347,10 +347,9 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	}
 
 	private static class PinnedEntry extends BaseEntry {
-        private final Component label;
-		private final Runnable onClick;
-
 		public final boolean allowPressButton = true;
+		private final Component label;
+		private final Runnable onClick;
 
 		public PinnedEntry(Component label, Runnable onClick, ShaderPackSelectionList list) {
 			this.label = label;

@@ -1,13 +1,11 @@
 package net.irisshaders.iris.shaderpack.properties;
 
 import com.google.common.collect.ImmutableMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.gl.buffer.ShaderStorageInfo;
 import net.irisshaders.iris.gl.texture.TextureScaleOverride;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
@@ -15,7 +13,6 @@ import net.irisshaders.iris.shaderpack.parsing.DirectiveHolder;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.joml.Vector2i;
 
-import java.util.Optional;
 import java.util.Set;
 
 public class PackDirectives {
@@ -35,6 +32,8 @@ public class PackDirectives {
 	private boolean vignette;
 	private boolean sun;
 	private boolean moon;
+	private boolean stars;
+	private boolean sky;
 	private boolean rainDepth;
 	private boolean separateAo;
 	private boolean voxelizeLightBlocks;
@@ -49,8 +48,7 @@ public class PackDirectives {
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, TextureScaleOverride> scaleOverrides = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
-	private Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects;
-	private Optional<ParticleRenderingSettings> particleRenderingSettings;
+	private ParticleRenderingSettings particleRenderingSettings;
 
 	private PackDirectives(Set<Integer> supportedRenderTargets, PackShadowDirectives packShadowDirectives) {
 		noiseTextureResolution = 256;
@@ -61,7 +59,6 @@ public class PackDirectives {
 		drynessHalfLife = 200.0f;
 		eyeBrightnessHalfLife = 10.0f;
 		centerDepthHalfLife = 1.0F;
-		bufferObjects = new Int2ObjectArrayMap<>();
 		renderTargetDirectives = new PackRenderTargetDirectives(supportedRenderTargets);
 		shadowDirectives = packShadowDirectives;
 	}
@@ -74,6 +71,8 @@ public class PackDirectives {
 		vignette = properties.getVignette().orElse(false);
 		sun = properties.getSun().orElse(true);
 		moon = properties.getMoon().orElse(true);
+		stars = properties.getStars().orElse(true);
+		sky = properties.getSky().orElse(true);
 		rainDepth = properties.getRainDepth().orElse(false);
 		separateAo = properties.getSeparateAo().orElse(false);
 		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
@@ -90,7 +89,6 @@ public class PackDirectives {
 		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
 		particleRenderingSettings = properties.getParticleRenderingSettings();
 		textureMap = properties.getCustomTexturePatching();
-		bufferObjects = properties.getBufferObjects();
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -108,7 +106,6 @@ public class PackDirectives {
 		prepareBeforeShadow = directives.prepareBeforeShadow;
 		particleRenderingSettings = directives.particleRenderingSettings;
 		textureMap = directives.textureMap;
-		bufferObjects = directives.bufferObjects;
 	}
 
 	private static float clamp(float val, float lo, float hi) {
@@ -167,7 +164,15 @@ public class PackDirectives {
 		return moon;
 	}
 
-	public Optional<ParticleRenderingSettings> getParticleRenderingSettings() {
+	public boolean shouldRenderStars() {
+		return stars;
+	}
+
+	public boolean shouldRenderSkyDisc() {
+		return sky;
+	}
+
+	public ParticleRenderingSettings getParticleRenderingSettings() {
 		return particleRenderingSettings;
 	}
 
@@ -225,10 +230,6 @@ public class PackDirectives {
 
 	public PackShadowDirectives getShadowDirectives() {
 		return shadowDirectives;
-	}
-
-	public Int2ObjectArrayMap<ShaderStorageInfo> getBufferObjects() {
-		return bufferObjects;
 	}
 
 	public boolean supportsColorCorrection() {

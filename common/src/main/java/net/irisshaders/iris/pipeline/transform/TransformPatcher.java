@@ -15,7 +15,6 @@ import io.github.douira.glsl_transformer.token_filter.TokenChannel;
 import io.github.douira.glsl_transformer.token_filter.TokenFilter;
 import io.github.douira.glsl_transformer.util.LRUCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisLimits;
 import net.irisshaders.iris.gl.blending.AlphaTest;
@@ -69,12 +68,6 @@ import java.util.regex.Pattern;
  * the string, it will throw.
  */
 public class TransformPatcher {
-	private static final boolean useCache = true;
-	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = new LRUCache<>(400);
-	private static final List<String> internalPrefixes = List.of("iris_", "irisMain", "moj_import");
-	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
-	private static final EnumASTTransformer<Parameters, PatchShaderType> transformer;
-	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 	// TODO: Only do the NewLines patches if the source code isn't from
 	// gbuffers_lines (what does this mean?)
 	static final TokenFilter<Parameters> parseTokenFilter = new ChannelFilter<>(TokenChannel.PREPROCESSOR) {
@@ -87,6 +80,12 @@ public class TransformPatcher {
 			return true;
 		}
 	};
+	private static final boolean useCache = true;
+	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = new LRUCache<>(400);
+	private static final List<String> internalPrefixes = List.of("iris_", "irisMain", "moj_import");
+	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
+	private static final EnumASTTransformer<Parameters, PatchShaderType> transformer;
+	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 
 	static {
 		transformer = new EnumASTTransformer<>(PatchShaderType.class) {

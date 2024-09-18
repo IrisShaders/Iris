@@ -56,8 +56,8 @@ public class OptionTests {
 
 		System.out.println("Diagnostics:");
 		source.getDiagnostics().forEach((index, diagnostic) -> System.out.println(
-            "[" + StringUtils.leftPad(Integer.toString(index + 1), 4, ' ') + "] " +
-                diagnostic));
+			"[" + StringUtils.leftPad(Integer.toString(index + 1), 4, ' ') + "] " +
+				diagnostic));
 
 		if (source.getDiagnostics().isEmpty()) {
 			System.out.println("(none)");

@@ -60,7 +60,6 @@ public class TextureTransformer {
 			case TEXTURE_3D -> extractedType == BuiltinFixedTypeSpecifier.BuiltinType.SAMPLER3D ||
 				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.ISAMPLER3D ||
 				extractedType == BuiltinFixedTypeSpecifier.BuiltinType.USAMPLER3D;
-			default -> throw new IllegalStateException("Unexpected enum! " + expectedType);
 		};
 	}
 }

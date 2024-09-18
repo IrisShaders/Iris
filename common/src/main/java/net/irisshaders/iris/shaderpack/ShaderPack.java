@@ -5,12 +5,16 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.features.FeatureFlags;
+import net.irisshaders.iris.gl.buffer.BuiltShaderStorageInfo;
+import net.irisshaders.iris.gl.buffer.ShaderStorageInfo;
 import net.irisshaders.iris.gl.texture.TextureDefinition;
 import net.irisshaders.iris.gui.FeatureMissingErrorScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
@@ -85,6 +89,7 @@ public class ShaderPack {
 	private final Function<AbsolutePackPath, String> sourceProvider;
 	private final ShaderProperties shaderProperties;
 	private final List<String> dimensionIds;
+	private final Int2ObjectArrayMap<BuiltShaderStorageInfo> bufferObjects;
 	private Map<NamespacedId, String> dimensionMap;
 
 	public ShaderPack(Path root, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
@@ -113,6 +118,7 @@ public class ShaderPack {
 			potentialFileNames);
 
 		dimensionIds = new ArrayList<>();
+		bufferObjects = new Int2ObjectArrayMap<>();
 
 		final boolean[] hasDimensionIds = {false}; // Thanks Java
 
@@ -170,6 +176,34 @@ public class ShaderPack {
 		this.shaderProperties = loadProperties(root, "shaders.properties")
 			.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
 			.orElseGet(ShaderProperties::empty);
+
+		for (Int2ObjectMap.Entry<ShaderStorageInfo> shaderStorageInfoEntry : shaderProperties.getBufferObjects().int2ObjectEntrySet()) {
+			ShaderStorageInfo info = shaderStorageInfoEntry.getValue();
+
+			if (info.name() == null) {
+				bufferObjects.put(shaderStorageInfoEntry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), null));
+			} else {
+				String path = info.name();
+
+				try {
+					if (path.startsWith("/")) {
+						// NB: This does not guarantee the resulting path is in the shaderpack as a double slash could be used,
+						// this just fixes shaderpacks like Continuum 2.0.4 that use a leading slash in texture paths
+						path = path.substring(1);
+					}
+
+					byte[] data = Files.readAllBytes(root.resolve(path));
+
+					if (data.length > info.size()) {
+						throw new IllegalStateException("Tried to load a shader storage file with no space in the buffer! Increase the buffer size.");
+					}
+
+					bufferObjects.put(shaderStorageInfoEntry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), data));
+				} catch (IOException e) {
+					Iris.logger.error("Shader storage buffer with index " + shaderStorageInfoEntry.getIntKey() + " and path " + path + " could not be read.", e);
+				}
+			}
+		}
 
 		activeFeatures = new HashSet<>();
 		for (int i = 0; i < shaderProperties.getRequiredFeatureFlags().size(); i++) {
@@ -504,7 +538,6 @@ public class ShaderPack {
 						new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
 					case TEXTURE_RECTANGLE ->
 						new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
-					default -> throw new IllegalStateException("Unknown texture type: " + rawDefinition.getTarget());
 				};
 			} else {
 				customTextureData = null;
@@ -568,8 +601,8 @@ public class ShaderPack {
 		return irisCustomTextureDataMap;
 	}
 
-	public Optional<CustomTextureData> getCustomNoiseTexture() {
-		return Optional.ofNullable(customNoiseTexture);
+	public CustomTextureData getCustomNoiseTexture() {
+		return customNoiseTexture;
 	}
 
 	public LanguageMap getLanguageMap() {
@@ -586,5 +619,9 @@ public class ShaderPack {
 
 	public boolean hasFeature(FeatureFlags feature) {
 		return activeFeatures.contains(feature);
+	}
+
+	public Int2ObjectArrayMap<BuiltShaderStorageInfo> getBufferObjects() {
+		return bufferObjects;
 	}
 }

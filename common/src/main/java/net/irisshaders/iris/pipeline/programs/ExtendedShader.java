@@ -139,7 +139,6 @@ public class ExtendedShader extends CompiledShaderProgram {
 	public void clear() {
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
-		lastApplied = null;
 
 		if (this.blendModeOverride != null || hasOverrides) {
 			BlendModeOverride.restore();

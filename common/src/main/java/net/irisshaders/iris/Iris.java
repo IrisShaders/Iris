@@ -4,7 +4,6 @@ import com.google.common.base.Throwables;
 import com.mojang.blaze3d.platform.GlDebug;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializerRegistry;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.config.IrisConfig;
@@ -15,6 +14,7 @@ import net.irisshaders.iris.gl.shader.StandardMacros;
 import net.irisshaders.iris.gui.debug.DebugLoadFailedGridScreen;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.helpers.OptionalBoolean;
+import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
@@ -29,7 +29,6 @@ import net.irisshaders.iris.shaderpack.option.Profile;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
-import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.vertices.sodium.EntityToTerrainVertexSerializer;
 import net.irisshaders.iris.vertices.sodium.GlyphExtVertexSerializer;
@@ -100,6 +99,7 @@ public class Iris {
 	private static String IRIS_VERSION;
 	private static UpdateChecker updateChecker;
 	private static boolean fallback;
+	private static boolean loadShaderPackWhenPossible;
 
 	static {
 		if (!BuildConfig.ACTIVATE_RENDERDOC && IrisPlatformHelpers.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
@@ -124,7 +124,9 @@ public class Iris {
 		VertexSerializerRegistry.instance().registerSerializer(DefaultVertexFormat.NEW_ENTITY, IrisVertexFormats.ENTITY, new ModelToEntityVertexSerializer());
 
 		// Only load the shader pack when we can access OpenGL
-		loadShaderpack();
+		if (!IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons")) {
+			loadShaderpack();
+		}
 	}
 
 	public static void duringRenderSystemInit() {
@@ -149,6 +151,11 @@ public class Iris {
 	}
 
 	public static void handleKeybinds(Minecraft minecraft) {
+		if (loadShaderPackWhenPossible) {
+			loadShaderPackWhenPossible = false;
+			Iris.loadShaderpack();
+		}
+
 		if (reloadKeybind.consumeClick()) {
 			try {
 				reload();
@@ -720,7 +727,11 @@ public class Iris {
 		return getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline;
 	}
 
-    /**
+	public static void loadShaderpackWhenPossible() {
+		loadShaderPackWhenPossible = true;
+	}
+
+	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
 	 * some very basic setup, config loading, and environment checks.
 	 *

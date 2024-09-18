@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.util.function.IntFunction;
 
 public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
+	static final VertexFormat format = IrisVertexFormats.GLYPH;
 	private static final int STRIDE = IrisVertexFormats.GLYPH.getVertexSize();
 	private static final int OFFSET_POSITION = 0;
 	private static final int OFFSET_COLOR = 12;
@@ -19,7 +20,6 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	private static final int OFFSET_LIGHT = 24;
 	private static final int OFFSET_NORMAL = 28;
 	private static final int OFFSET_TANGENT = 46;
-	static final VertexFormat format = IrisVertexFormats.GLYPH;
 	private final ByteBuffer buffer;
 	private final TextQuadView quad = new TextQuadView();
 	private final Vector3f saveNormal = new Vector3f();

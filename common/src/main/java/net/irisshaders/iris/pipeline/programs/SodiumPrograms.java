@@ -29,12 +29,9 @@ import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.sodium.terrain.FormatAnalyzer;
-import net.irisshaders.iris.vertices.sodium.terrain.IrisModelVertexFormats;
 import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.opengl.GL43C;
-import org.lwjgl.system.MemoryStack;
 
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -159,8 +156,7 @@ public class SodiumPrograms {
 														 Supplier<ImmutableSet<Integer>> flipState,
 														 boolean containsTessellation) {
 		return builder
-			.bindAttribute("a_PositionHi", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_HI)
-			.bindAttribute("a_PositionLo", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_LO)
+			.bindAttribute("a_Position", ChunkShaderBindingPoints.ATTRIBUTE_POSITION)
 			.bindAttribute("a_Color", ChunkShaderBindingPoints.ATTRIBUTE_COLOR)
 			.bindAttribute("a_TexCoord", ChunkShaderBindingPoints.ATTRIBUTE_TEXTURE)
 			.bindAttribute("a_LightAndData", ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_MATERIAL_INDEX)
@@ -179,7 +175,7 @@ public class SodiumPrograms {
 				if (!hasMidUv) hasMidUv = GL43C.glGetAttribLocation(handle, "mc_midTexCoord") != -1;
 				if (!hasTangent) hasTangent = GL43C.glGetAttribLocation(handle, "at_tangent") != -1;
 
-				return new SodiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride(),
+				return new SodiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride().orElse(null),
 					createBufferBlendOverrides(source), customUniforms, flipState,
 					alphaTest.reference(), containsTessellation);
 			});

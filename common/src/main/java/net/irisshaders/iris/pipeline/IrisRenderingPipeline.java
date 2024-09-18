@@ -154,6 +154,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final CloudSetting cloudSetting;
 	private final boolean shouldRenderSun;
 	private final boolean shouldRenderMoon;
+	private final boolean shouldRenderStars;
+	private final boolean shouldRenderSkyDisc;
 	private final boolean allowConcurrentCompute;
 	@Nullable
 	private final ShadowRenderer shadowRenderer;
@@ -203,6 +205,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		this.dhCloudSetting = programSet.getPackDirectives().getDHCloudSetting();
 		this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
+		this.shouldRenderStars = programSet.getPackDirectives().shouldRenderStars();
+		this.shouldRenderSkyDisc = programSet.getPackDirectives().shouldRenderSkyDisc();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 		this.skipAllRendering = programSet.getPackDirectives().skipAllRendering();
 		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
@@ -215,9 +219,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		int internalFormat = TextureInfoCache.INSTANCE.getInfo(depthTextureId).getInternalFormat();
 		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
 
-		if (!programSet.getPackDirectives().getBufferObjects().isEmpty()) {
+		if (!pack.getBufferObjects().isEmpty()) {
 			if (IrisRenderSystem.supportsSSBO()) {
-				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(programSet.getPackDirectives().getBufferObjects(), main.width, main.height);
+				this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(pack.getBufferObjects(), main.width, main.height);
 
 				this.shaderStorageBufferHolder.setupBuffers();
 			} else {
@@ -240,13 +244,14 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		this.clearImages = customImages.stream().filter(GlImage::shouldClear).toArray(GlImage[]::new);
 
-		this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings().orElseGet(() -> {
-			if (programSet.getComposite(ProgramArrayId.Deferred).length > 0 && !programSet.getPackDirectives().shouldUseSeparateEntityDraws()) {
-				return ParticleRenderingSettings.AFTER;
-			} else {
-				return ParticleRenderingSettings.MIXED;
-			}
-		});
+		if (programSet.getPackDirectives().getParticleRenderingSettings() != ParticleRenderingSettings.UNSET) {
+			this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings();
+		} else if (programSet.getComposite(ProgramArrayId.Deferred).length > 0 && !programSet.getPackDirectives().shouldUseSeparateEntityDraws()) {
+			this.particleRenderingSettings = ParticleRenderingSettings.AFTER;
+		} else {
+			this.particleRenderingSettings = ParticleRenderingSettings.MIXED;
+		}
+
 
 		this.renderTargets = new RenderTargets(main.width, main.height, depthTextureId, ((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat, programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings(), programSet.getPackDirectives());
 		this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
@@ -503,7 +508,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
 			if (source == null || source.getSource().isEmpty()) {
-				continue;
 			} else {
 				ProgramBuilder builder;
 
@@ -567,7 +571,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
 			if (source == null || source.getSource().isEmpty()) {
-				continue;
 			} else {
 				ProgramBuilder builder;
 
@@ -951,7 +954,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
 		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
 
-		if (skyType == DimensionSpecialEffects.SkyType.OVERWORLD || Minecraft.getInstance().level.dimensionType().hasSkyLight()) {
+		if (shouldRenderSkyDisc && (skyType == DimensionSpecialEffects.SkyType.OVERWORLD || Minecraft.getInstance().level.dimensionType().hasSkyLight())) {
 			RenderSystem.depthMask(false);
 
 			RenderSystem.setShaderColor(fogColor.x, fogColor.y, fogColor.z, fogColor.w);
@@ -1063,6 +1066,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	@Override
 	public boolean shouldRenderMoon() {
 		return shouldRenderMoon;
+	}
+
+	@Override
+	public boolean shouldRenderStars() {
+		return shouldRenderStars;
+	}
+
+	@Override
+	public boolean shouldRenderSkyDisc() {
+		return shouldRenderSkyDisc;
 	}
 
 	@Override

@@ -203,7 +203,7 @@ public class UpdateChecker {
 		}
 	}
 
-	static class UpdateInfo {
+	public static class UpdateInfo {
 		public String semanticVersion;
 		public Map<String, String> updateInfo;
 		public String modHost;
