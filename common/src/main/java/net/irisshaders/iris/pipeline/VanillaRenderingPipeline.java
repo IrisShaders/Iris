@@ -7,8 +7,10 @@ import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFor
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.texture.TextureType;
+import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
+import net.irisshaders.iris.pathways.colorspace.ColorSpaceFragmentConverter;
 import net.irisshaders.iris.pipeline.programs.SodiumPrograms;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.properties.CloudSetting;
@@ -22,6 +24,9 @@ import java.util.List;
 import java.util.OptionalInt;
 
 public class VanillaRenderingPipeline implements WorldRenderingPipeline {
+	private final ColorSpaceFragmentConverter colorSpaceConverter;
+	private int widthHeight;
+
 	public VanillaRenderingPipeline() {
 		WorldRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
 		WorldRenderingSettings.INSTANCE.setUseSeparateAo(false);
@@ -30,6 +35,8 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 		WorldRenderingSettings.INSTANCE.setVertexFormat(ChunkMeshFormats.COMPACT);
 		WorldRenderingSettings.INSTANCE.setVoxelizeLightBlocks(false);
 		WorldRenderingSettings.INSTANCE.setBlockTypeIds(Object2ObjectMaps.emptyMap());
+		colorSpaceConverter = new ColorSpaceFragmentConverter(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height, IrisVideoSettings.colorSpace);
+		widthHeight = Minecraft.getInstance().getMainRenderTarget().width * Minecraft.getInstance().getMainRenderTarget().height;
 	}
 
 	@Override
@@ -37,6 +44,10 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 		// Use the default Minecraft framebuffer and ensure that no programs are in use
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 		GlStateManager._glUseProgram(0);
+		if (widthHeight != Minecraft.getInstance().getMainRenderTarget().width * Minecraft.getInstance().getMainRenderTarget().height) {
+			widthHeight = Minecraft.getInstance().getMainRenderTarget().width * Minecraft.getInstance().getMainRenderTarget().height;
+			colorSpaceConverter.rebuildProgram(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height, IrisVideoSettings.colorSpace);
+		}
 	}
 
 	@Override
@@ -100,13 +111,13 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	}
 
 	@Override
-	public void finalizeLevelRendering() {
+	public void finalizeLevelRendering(float f) {
 		// stub: nothing to do here
 	}
 
 	@Override
 	public void finalizeGameRendering() {
-		// stub: nothing to do here
+		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
 	}
 
 	@Override

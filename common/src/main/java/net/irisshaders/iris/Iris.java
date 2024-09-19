@@ -104,7 +104,6 @@ public class Iris {
 	private static boolean loadShaderPackWhenPossible;
 
 	static {
-		Configuration.GLFW_LIBRARY_NAME.set(IrisPlatformHelpers.getInstance().getGameDir().resolve("glfw3.dll").toAbsolutePath().toString());
 	}
 
 	/**

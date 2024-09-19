@@ -46,11 +46,14 @@ import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL13C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 
+import java.nio.IntBuffer;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -71,6 +74,8 @@ public class FinalPassRenderer {
 	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final CustomUniforms customUniforms;
 	private final WorldRenderingPipeline pipeline;
+	private int newColorTexId;
+	private GlFramebuffer finalFB;
 	private int lastColorTextureId;
 	private int lastColorTextureVersion;
 
@@ -116,8 +121,19 @@ public class FinalPassRenderer {
 		this.baseline = renderTargets.createGbufferFramebuffer(flippedBuffers, new int[]{0});
 		this.colorHolder = new GlFramebuffer();
 		this.lastColorTextureId = Minecraft.getInstance().getMainRenderTarget().getColorTextureId();
+		this.newColorTexId = GL46C.glCreateTextures(GL46C.GL_TEXTURE_2D);
+		this.finalFB = new GlFramebuffer();
+		finalFB.addColorAttachment(0, newColorTexId);
+		GlStateManager._bindTexture(newColorTexId);
+		GL46C.glTexImage2D(GL46C.GL_TEXTURE_2D, 0, GL46C.GL_RGBA16F, Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height, 0, GL46C.GL_RGBA, GL46C.GL_FLOAT, (IntBuffer) null);
+		IrisRenderSystem.texParameteri(newColorTexId, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_NEAREST);
+		IrisRenderSystem.texParameteri(newColorTexId, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_NEAREST);
+		IrisRenderSystem.texParameteri(newColorTexId, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+		IrisRenderSystem.texParameteri(newColorTexId, GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+
+
 		this.lastColorTextureVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getColorBufferVersion();
-		this.colorHolder.addColorAttachment(0, lastColorTextureId);
+		this.colorHolder.addColorAttachment(0, newColorTexId);
 
 		// TODO: We don't actually fully swap the content, we merely copy it from alt to main
 		// This works for the most part, but it's not perfect. A better approach would be creating secondary
@@ -214,7 +230,9 @@ public class FinalPassRenderer {
 		if (((Blaze3dRenderTargetExt) main).iris$getColorBufferVersion() != lastColorTextureVersion || main.getColorTextureId() != lastColorTextureId) {
 			lastColorTextureVersion = ((Blaze3dRenderTargetExt) main).iris$getColorBufferVersion();
 			this.lastColorTextureId = main.getColorTextureId();
-			colorHolder.addColorAttachment(0, lastColorTextureId);
+			GlStateManager._bindTexture(newColorTexId);
+			GL46C.glTexImage2D(GL46C.GL_TEXTURE_2D, 0, GL46C.GL_RGBA16F, Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height, 0, GL46C.GL_RGBA, GL46C.GL_FLOAT, (IntBuffer) null);
+			colorHolder.addColorAttachment(0, newColorTexId);
 		}
 
 		if (this.finalPass != null) {
@@ -443,6 +461,24 @@ public class FinalPassRenderer {
 			finalPass.destroy();
 		}
 		colorHolder.destroy();
+	}
+
+	public int getColorTex() {
+		return newColorTexId;
+	}
+
+	public void bindFinalFB() {
+		finalFB.bind();
+	}
+
+	public void bindFinalFBRead() {
+		finalFB.bindAsReadBuffer();
+	}
+
+	public void clearFinal() {
+		finalFB.bind();
+		GlStateManager._clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		GlStateManager._clear(GL46C.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
 	}
 
 	private static final class Pass {

@@ -43,7 +43,7 @@ public interface WorldRenderingPipeline {
 
 	void beginTranslucents();
 
-	void finalizeLevelRendering();
+	void finalizeLevelRendering(float tickDelta);
 
 	void finalizeGameRendering();
 

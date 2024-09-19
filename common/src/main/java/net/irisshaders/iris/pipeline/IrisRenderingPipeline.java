@@ -5,6 +5,9 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
@@ -35,6 +38,7 @@ import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
+import net.irisshaders.iris.pathways.BlurAccess;
 import net.irisshaders.iris.pathways.CenterDepthSampler;
 import net.irisshaders.iris.pathways.HorizonRenderer;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
@@ -98,11 +102,13 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.ARBClearTexture;
+import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -477,26 +483,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			ComputeProgram.unbind();
 		}
 
-		if (programSet.getPackDirectives().supportsColorCorrection()) {
-			colorSpaceConverter = new ColorSpaceConverter() {
-				@Override
-				public void rebuildProgram(int width, int height, ColorSpace colorSpace) {
+		colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
 
-				}
-
-				@Override
-				public void process(int target) {
-
-				}
-			};
-		} else {
-			// TODO: Fix grid appearing on some devices with compute converter
-			//if (IrisRenderSystem.supportsCompute()) {
-			//	colorSpaceConverter = new ColorSpaceComputeConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			//} else {
-			colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
-			//}
-		}
 
 		currentColorSpace = IrisVideoSettings.colorSpace;
 	}
@@ -1031,15 +1019,42 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	}
 
 	@Override
-	public void finalizeLevelRendering() {
+	public void finalizeLevelRendering(float tickDelta) {
 		isRenderingWorld = false;
 		compositeRenderer.renderAll();
 		finalPassRenderer.renderFinalPass();
+		((BlurAccess) Minecraft.getInstance().gameRenderer).processBlurIris(finalPassRenderer.getColorTex(), Minecraft.getInstance().getMainRenderTarget().getColorTextureId(), tickDelta);
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
+		GlStateManager._clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		GlStateManager._clear(GL46C.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
 	}
 
 	@Override
 	public void finalizeGameRendering() {
 		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
+
+		finalPassRenderer.bindFinalFB();
+		Minecraft minecraft = Minecraft.getInstance();
+		ShaderInstance shaderInstance = (ShaderInstance)Objects.requireNonNull(minecraft.gameRenderer.blitShader, "Blit shader not loaded");
+		shaderInstance.setSampler("DiffuseSampler", Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
+		shaderInstance.apply();
+		GlStateManager._enableBlend();
+		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+		BufferBuilder bufferBuilder = RenderSystem.renderThreadTesselator().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
+		bufferBuilder.addVertex(0.0F, 0.0F, 0.0F);
+		bufferBuilder.addVertex(1.0F, 0.0F, 0.0F);
+		bufferBuilder.addVertex(1.0F, 1.0F, 0.0F);
+		bufferBuilder.addVertex(0.0F, 1.0F, 0.0F);
+		BufferUploader.draw(bufferBuilder.buildOrThrow());
+		shaderInstance.clear();
+		GlStateManager._depthMask(true);
+		GlStateManager._colorMask(true, true, true, true);
+
+		finalPassRenderer.bindFinalFBRead();
+
+		IrisRenderSystem.copyTexSubImage2D(Minecraft.getInstance().getMainRenderTarget().getColorTextureId(), GL11C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height);
+		finalPassRenderer.clearFinal();
+
 	}
 
 	@Override
@@ -1280,5 +1295,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	public CloudSetting getDHCloudSetting() {
 		return dhCloudSetting;
+	}
+
+	public int getMainTarget() {
+		return finalPassRenderer.getColorTex();
 	}
 }

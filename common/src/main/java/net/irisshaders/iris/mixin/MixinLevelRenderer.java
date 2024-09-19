@@ -132,7 +132,7 @@ public class MixinLevelRenderer {
 	private void iris$endLevelRender(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f modelMatrix, Matrix4f matrix4f2, CallbackInfo ci) {
 		HandRenderer.INSTANCE.renderTranslucent(modelMatrix, deltaTracker.getGameTimeDeltaPartialTick(true), camera, gameRenderer, pipeline);
 		Minecraft.getInstance().getProfiler().popPush("iris_final");
-		pipeline.finalizeLevelRendering();
+		pipeline.finalizeLevelRendering(deltaTracker.getGameTimeDeltaPartialTick(true));
 		pipeline = null;
 
 		if (!warned) {

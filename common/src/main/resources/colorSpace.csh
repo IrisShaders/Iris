@@ -13,6 +13,9 @@ in vec2 uv;
 out vec4 outColor;
 #endif
 
+uniform float sdrWhite;
+uniform float maxLuminance;
+
 // https://en.wikipedia.org/wiki/Rec._709#Transfer_characteristics
 vec3 EOTF_Curve(vec3 LinearCV, const float LinearFactor, const float Exponent, const float Alpha, const float Beta) {
     return mix(LinearCV * LinearFactor, clamp(Alpha * pow(LinearCV, vec3(Exponent)) - (Alpha - 1.0), 0.0, 1.0), step(Beta, LinearCV));
@@ -97,6 +100,16 @@ const mat3 D60_D65 = mat3(
 	 0.00307257, -0.00509595, 1.08168
 );
 
+vec3 SRGBToLinear(vec3 color)
+{
+    // Approximately pow(color, 2.2)
+    return vec3(
+            color.r < 0.04045 ? color.r / 12.92 : pow(abs(color.r + 0.055) / 1.055, 2.4),
+            color.g < 0.04045 ? color.g / 12.92 : pow(abs(color.g + 0.055) / 1.055, 2.4),
+            color.b < 0.04045 ? color.b / 12.92 : pow(abs(color.b + 0.055) / 1.055, 2.4)
+        );
+}
+
 const mat3 sRGB_to_P3DCI = ((sRGB_XYZ) * XYZ_P3D65) * D65_DCI;
 //const mat3 sRGB_to_P3DCI = (sRGB_XYZ) * (XYZ_P3DCI);
 const mat3 sRGB_to_P3D65 = sRGB_XYZ * XYZ_P3D65;
@@ -104,42 +117,21 @@ const mat3 sRGB_to_REC2020 = sRGB_XYZ * XYZ_REC2020;
 const mat3 sRGB_to_AdobeRGB = sRGB_XYZ * XYZ_AdobeRGB;
 
 void main() {
-    #if CURRENT_COLOR_SPACE != SRGB
         #ifdef COMPUTE
         ivec2 PixelIndex = ivec2(gl_GlobalInvocationID.xy);
         vec4 SourceColor = imageLoad(readImage, PixelIndex);
         #else
         vec4 SourceColor = texture(readImage, uv);
         #endif
-            SourceColor.rgb = InverseEOTF_IEC61966(SourceColor.rgb);
 
         vec3 TargetColor = SourceColor.rgb;
 
-        #if CURRENT_COLOR_SPACE == DCI_P3
-            // https://en.wikipedia.org/wiki/DCI-P3
-            TargetColor = TargetColor * sRGB_to_P3DCI;
-            TargetColor = EOTF_P3DCI(TargetColor);
-
-        #elif CURRENT_COLOR_SPACE == DISPLAY_P3
-            // https://en.wikipedia.org/wiki/DCI-P3#Display_technology
-            TargetColor = TargetColor * sRGB_to_P3D65;
-            TargetColor = EOTF_IEC61966(TargetColor);
-
-        #elif CURRENT_COLOR_SPACE == REC2020
-            // https://en.wikipedia.org/wiki/Rec._2020
-            TargetColor = TargetColor * sRGB_to_REC2020;
-            TargetColor = EOTF_BT709(TargetColor);
-
-        #elif CURRENT_COLOR_SPACE == ADOBE_RGB
-            // https://en.wikipedia.org/wiki/Adobe_RGB_color_space
-            TargetColor = TargetColor * sRGB_to_AdobeRGB;
-            TargetColor = EOTF_Adobe(TargetColor);
 
         #endif
         #ifdef COMPUTE
-        imageStore(readImage, PixelIndex, vec4(TargetColor, SourceColor.a));
+        imageStore(readImage, PixelIndex, vec4(1.0, 1.0, 0.0, SourceColor.a));
         #else
-        outColor = vec4(TargetColor, SourceColor.a);
+        TargetColor = SRGBToLinear(TargetColor);
+        outColor = vec4(TargetColor.rgb * (maxLuminance / 80.0), min(SourceColor.a * 1.4, 1.0));
         #endif
-    #endif
 }

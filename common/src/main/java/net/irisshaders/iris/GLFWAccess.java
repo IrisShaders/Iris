@@ -3,6 +3,7 @@ package net.irisshaders.iris;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.JNI;
+import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.SharedLibrary;
 
 import java.lang.reflect.Field;
@@ -27,10 +28,13 @@ public class GLFWAccess {
 	private static boolean done;
 
 	public static void tryHDRConf() {
-		if (done) return;
+		conf = GLFWHDRConfig.create(MemoryUtil.nmemAlloc(GLFWHDRConfig.SIZEOF));
+		conf.setMaxLuminance(1000);
+		conf.setSDRWhite(100);
+		if (true) return;
 		done = true;
 		long addr = JNI.invokePP(Minecraft.getInstance().getWindow().getWindow(), lib.getFunctionAddress("glfwGetHDRConfig"));
 		conf = GLFWHDRConfig.create(addr);
-		System.out.println("Testing red primary X: " + conf.getPrimaryRedX());
+		System.out.println("Testing SDR white: " + conf.getSDRWhite());
 	}
 }

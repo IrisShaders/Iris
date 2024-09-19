@@ -2,6 +2,7 @@ package net.irisshaders.iris.pathways.colorspace;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.irisshaders.iris.GLFWAccess;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.program.Program;
@@ -10,6 +11,7 @@ import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.FullScreenQuadRenderer;
 import net.irisshaders.iris.shaderpack.preprocessor.JcppProcessor;
+import net.irisshaders.iris.uniforms.HDRUniforms;
 import org.apache.commons.io.IOUtils;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11C;
@@ -68,11 +70,14 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 
 		ProgramBuilder builder = ProgramBuilder.begin("colorSpaceFragment", vertexSource, null, source, ImmutableSet.of());
 
+		HDRUniforms.addHDRUniforms(builder);
+
+		builder.uniform1f(UniformUpdateFrequency.ONCE, "sdrWhite", () -> GLFWAccess.conf.getSDRWhite() / 1000);
 		builder.uniformMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0, 1));
 		builder.addDynamicSampler(() -> target, "readImage");
 
 		swapTexture = GlStateManager._genTexture();
-		IrisRenderSystem.texImage2D(swapTexture, GL30C.GL_TEXTURE_2D, 0, GL30C.GL_RGBA8, width, height, 0, GL30C.GL_RGBA, GL30C.GL_UNSIGNED_BYTE, null);
+		IrisRenderSystem.texImage2D(swapTexture, GL30C.GL_TEXTURE_2D, 0, GL30C.GL_RGBA16F, width, height, 0, GL30C.GL_RGBA, GL30C.GL_UNSIGNED_BYTE, null);
 
 		this.framebuffer = new GlFramebuffer();
 		framebuffer.addColorAttachment(0, swapTexture);
@@ -80,8 +85,6 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 	}
 
 	public void process(int targetImage) {
-		if (colorSpace == ColorSpace.SRGB) return;
-
 		this.target = targetImage;
 		program.use();
 		framebuffer.bind();

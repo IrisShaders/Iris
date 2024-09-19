@@ -8,6 +8,7 @@ import org.lwjgl.system.StructBuffer;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.system.MemoryUtil.memGetFloat;
+import static org.lwjgl.system.MemoryUtil.memPutFloat;
 
 public class GLFWHDRConfig extends Struct<GLFWHDRConfig> {
 	public static final int SIZEOF, ALIGNOF;
@@ -24,9 +25,11 @@ public class GLFWHDRConfig extends Struct<GLFWHDRConfig> {
 	private static final int OFFSET_MAX_LUMINANCE;
 	private static final int OFFSET_MIN_LUMINANCE;
 	private static final int OFFSET_MAX_FRAME_LUMINANCE;
+	private static final int OFFSET_SDR_WHITE;
 
 	static {
 		var layout = __struct(
+			__member(Float.BYTES),
 			__member(Float.BYTES),
 			__member(Float.BYTES),
 			__member(Float.BYTES),
@@ -56,6 +59,7 @@ public class GLFWHDRConfig extends Struct<GLFWHDRConfig> {
 		OFFSET_MAX_LUMINANCE = layout.offsetof(9);
 		OFFSET_MIN_LUMINANCE = layout.offsetof(10);
 		OFFSET_MAX_FRAME_LUMINANCE = layout.offsetof(11);
+		OFFSET_SDR_WHITE = layout.offsetof(12);
 	}
 
 	GLFWHDRConfig(long address, ByteBuffer container) {
@@ -77,6 +81,10 @@ public class GLFWHDRConfig extends Struct<GLFWHDRConfig> {
 
 	public float getTransferFunction() {
 		return memGetFloat(this.address + OFFSET_TRANSFER_FUNCTION);
+	}
+
+	public void setTransferFunction(float value) {
+		memPutFloat(this.address + OFFSET_TRANSFER_FUNCTION, value);
 	}
 
 	public float getPrimaryRedX() {
@@ -121,6 +129,18 @@ public class GLFWHDRConfig extends Struct<GLFWHDRConfig> {
 
 	public float getMinLuminance() {
 		return memGetFloat(this.address + OFFSET_MIN_LUMINANCE);
+	}
+
+	public void setMaxLuminance(float value) {
+		memPutFloat(this.address + OFFSET_MAX_LUMINANCE, value);
+	}
+
+	public float getSDRWhite() {
+		return memGetFloat(this.address + OFFSET_SDR_WHITE);
+	}
+
+	public void setSDRWhite(float value) {
+		memPutFloat(this.address + OFFSET_SDR_WHITE, value);
 	}
 
 	@Override
