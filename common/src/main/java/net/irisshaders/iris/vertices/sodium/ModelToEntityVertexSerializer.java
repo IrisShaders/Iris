@@ -16,7 +16,7 @@ public class ModelToEntityVertexSerializer implements VertexSerializer {
 		int quadCount = vertexCount / 4;
 		for (int i = 0; i < quadCount; i++) {
 			int normal = MemoryUtil.memGetInt(src + 32);
-			int tangent = NormalHelper.computeTangent(NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal), MemoryUtil.memGetFloat(src), MemoryUtil.memGetFloat(src + 4), MemoryUtil.memGetFloat(src + 8), MemoryUtil.memGetFloat(src + 16), MemoryUtil.memGetFloat(src + 20),
+			int tangent = NormalHelper.computeTangent(null, NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal), MemoryUtil.memGetFloat(src), MemoryUtil.memGetFloat(src + 4), MemoryUtil.memGetFloat(src + 8), MemoryUtil.memGetFloat(src + 16), MemoryUtil.memGetFloat(src + 20),
 				MemoryUtil.memGetFloat(src + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 4 + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 8 + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 16 + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 20 + EntityVertex.STRIDE),
 				MemoryUtil.memGetFloat(src + EntityVertex.STRIDE + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 4 + EntityVertex.STRIDE + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 8 + EntityVertex.STRIDE + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 16 + EntityVertex.STRIDE + EntityVertex.STRIDE), MemoryUtil.memGetFloat(src + 20 + EntityVertex.STRIDE + EntityVertex.STRIDE));
 			float midU = 0, midV = 0;

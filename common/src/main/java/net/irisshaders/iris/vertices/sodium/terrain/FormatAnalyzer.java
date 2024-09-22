@@ -15,7 +15,7 @@ public class FormatAnalyzer {
 		classMap.put((byte) 0, ChunkMeshFormats.COMPACT);
 	}
 
-	public static ChunkVertexType createFormat(boolean blockId, boolean normal, boolean midUV, boolean tangent, boolean midBlock) {
+	public static ChunkVertexType createFormat(boolean blockId, boolean normal, boolean midUV, boolean midBlock) {
 		byte key = 0;
 		if (blockId) {
 			key |= 1;
@@ -26,9 +26,7 @@ public class FormatAnalyzer {
 		if (midUV) {
 			key |= 4;
 		}
-		if (tangent) {
-			key |= 8;
-		}
+
 		if (midBlock) {
 			key |= 16;
 		}
@@ -39,7 +37,7 @@ public class FormatAnalyzer {
 
 		int offset = 20; // Normal Sodium stuff
 
-		int blockIdOffset, normalOffset, tangentOffset, midUvOffset, midBlockOffset;
+		int blockIdOffset, normalOffset, midUvOffset, midBlockOffset;
 
 		if (blockId) {
 			blockIdOffset = offset;
@@ -60,13 +58,6 @@ public class FormatAnalyzer {
 			offset += 4;
 		} else {
 			midUvOffset = 0;
-		}
-
-		if (tangent) {
-			tangentOffset = offset;
-			offset += 4;
-		} else {
-			tangentOffset = 0;
 		}
 
 		if (midBlock) {
@@ -94,15 +85,13 @@ public class FormatAnalyzer {
 			VERTEX_FORMAT.addElement(IrisChunkMeshAttributes.MID_TEX_COORD, 12, midUvOffset);
 		}
 
-		if (tangent) {
-			VERTEX_FORMAT.addElement(IrisChunkMeshAttributes.TANGENT, 13, tangentOffset);
-		}
-
 		if (midBlock) {
 			VERTEX_FORMAT.addElement(IrisChunkMeshAttributes.MID_BLOCK, 14, midBlockOffset);
 		}
 
+		System.out.println("Created a new format with " + offset + " stride: " + Integer.toBinaryString(key));
 
-		return classMap.computeIfAbsent(key, k -> new XHFPModelVertexType(VERTEX_FORMAT.build(), blockIdOffset, normalOffset, tangentOffset, midUvOffset, midBlockOffset));
+
+		return classMap.computeIfAbsent(key, k -> new XHFPModelVertexType(VERTEX_FORMAT.build(), blockIdOffset, normalOffset, midUvOffset, midBlockOffset));
 	}
 }

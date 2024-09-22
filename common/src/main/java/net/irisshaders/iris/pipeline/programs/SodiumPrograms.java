@@ -46,7 +46,6 @@ public class SodiumPrograms {
 	private boolean hasBlockId;
 	private boolean hasMidUv;
 	private boolean hasNormal;
-	private boolean hasTangent;
 	private boolean hasMidBlock;
 
 	public SodiumPrograms(IrisRenderingPipeline pipeline, ProgramSet programSet, ProgramFallbackResolver resolver,
@@ -68,7 +67,7 @@ public class SodiumPrograms {
 			shaders.put(pass, shader);
 		}
 
-		WorldRenderingSettings.INSTANCE.setVertexFormat(FormatAnalyzer.createFormat(hasBlockId, hasNormal, hasMidUv, hasTangent, hasMidBlock));
+		WorldRenderingSettings.INSTANCE.setVertexFormat(FormatAnalyzer.createFormat(hasBlockId, hasNormal, hasMidUv, hasMidBlock));
 	}
 
 	private AlphaTest getAlphaTest(Pass pass, ProgramSource source) {
@@ -173,7 +172,6 @@ public class SodiumPrograms {
 				if (!hasMidBlock) hasMidBlock = GL43C.glGetAttribLocation(handle, "at_midBlock") != -1;
 				if (!hasBlockId) hasBlockId = GL43C.glGetAttribLocation(handle, "mc_Entity") != -1;
 				if (!hasMidUv) hasMidUv = GL43C.glGetAttribLocation(handle, "mc_midTexCoord") != -1;
-				if (!hasTangent) hasTangent = GL43C.glGetAttribLocation(handle, "at_tangent") != -1;
 
 				return new SodiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride().orElse(null),
 					createBufferBlendOverrides(source), customUniforms, flipState,

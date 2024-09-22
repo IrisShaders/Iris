@@ -26,6 +26,8 @@ public class SodiumTransformer {
 		replaceMidTexCoord(t, tree, root, 1.0f / 32768.0f);
 		replaceMCEntity(t, tree, root);
 
+		boolean needsNormal = root.identifierIndex.has("gl_Normal") || root.identifierIndex.has("at_tangent");
+
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
@@ -52,9 +54,9 @@ public class SodiumTransformer {
 
 		root.rename("gl_Color", "_vert_color");
 
-		if (parameters.type.glShaderType == ShaderType.VERTEX && root.identifierIndex.has("gl_Normal")) {
-			root.rename("gl_Normal", "iris_Normal");
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_Normal;");
+		if (parameters.type.glShaderType == ShaderType.VERTEX && needsNormal) {
+			root.rename("gl_Normal", "irs_Normal");
+			root.replaceReferenceExpressions(t, "at_tangent", "irs_Tangent");
 		}
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's
@@ -94,7 +96,7 @@ public class SodiumTransformer {
 			// inject here so that _vert_position is available to the above. (injections
 			// inject in reverse order if performed piece-wise but in correct order if
 			// performed as an array of injections)
-			injectVertInit(t, tree, root, parameters);
+			injectVertInit(t, tree, root, parameters, needsNormal);
 		} else {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"uniform mat4 iris_ModelViewMatrix;",
@@ -111,7 +113,7 @@ public class SodiumTransformer {
 		ASTParser t,
 		TranslationUnit tree,
 		Root root,
-		SodiumParameters parameters) {
+		SodiumParameters parameters, boolean needsNormal) {
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 			// translated from sodium's chunk_vertex.glsl
 			"vec3 _vert_position;",
@@ -131,7 +133,29 @@ public class SodiumTransformer {
 			"const float TEXTURE_FUZZ_AMOUNT = 1.0 / 64.0;",
 			"const float TEXTURE_GROW_FACTOR = (1.0 - TEXTURE_FUZZ_AMOUNT) / TEXTURE_MAX_COORD;",
 			"uint _draw_id;",
+			"vec3 irs_Normal;",
+			"vec4 irs_Tangent;",
 			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
+			"""
+vec3 oct_to_vec3(vec2 e) {
+	vec2 f = vec2(e.x * 2.0f - 1.0f, e.y * 2.0f - 1.0f);
+	vec3 n = vec3(f.x, f.y, 1.0f - abs(f.x) - abs(f.y));
+	float t = clamp(-n.z, 0.0f, 1.0f);
+	n.x += n.x >= 0.0f ? -t : t;
+	n.y += n.y >= 0.0f ? -t : t;
+	return normalize(n);
+}
+				""",
+			"""
+vec4 tangent_decode(vec2 e) {
+	vec2 oct_compressed = e;
+	oct_compressed.y = oct_compressed.y * 2 - 1;
+	float r_sign = oct_compressed.y >= 0.0f ? 1.0f : -1.0f;
+	oct_compressed.y = abs(oct_compressed.y);
+	vec3 res = oct_to_vec3(oct_compressed.xy);
+	return vec4(res, r_sign);
+}
+				""",
 			"""
 					uvec3 _deinterleave_u20x3(uvec2 data) {
 					     uvec3 hi = (uvec3(data.x) >> uvec3(0u, 10u, 20u)) & 0x3FFu;
@@ -158,6 +182,8 @@ public class SodiumTransformer {
 				"_vert_tex_diffuse_coord = _get_texcoord() + _get_texcoord_bias();" +
 				"_vert_tex_light_coord = vec2(a_LightAndData.xy);" +
 				"_vert_color = a_Color;" +
+				(needsNormal ? "irs_Normal = oct_to_vec3(iris_Normal.xy);" : "") +
+				(needsNormal ? "irs_Tangent = tangent_decode(iris_Normal.zw);" : "") +
 				"_draw_id = a_LightAndData[3]; }",
 
 			"uvec3 _get_relative_chunk_coord(uint pos) {\n" +
@@ -171,6 +197,7 @@ public class SodiumTransformer {
 		addIfNotExists(root, t, tree, "a_TexCoord", Type.U32VEC2, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_Color", Type.F32VEC4, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "a_LightAndData", Type.U32VEC4, StorageQualifier.StorageType.IN);
+		if (needsNormal) addIfNotExists(root, t, tree, "iris_Normal", Type.F32VEC4, StorageQualifier.StorageType.IN);
 		tree.prependMainFunctionBody(t, "_vert_init();");
 	}
 
