@@ -1,5 +1,6 @@
 package net.irisshaders.iris.shaderpack.texture;
 
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.PixelFormat;
 import net.irisshaders.iris.gl.texture.PixelType;
@@ -108,6 +109,13 @@ public abstract class CustomTextureData {
 		public RawData1D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
 						 PixelFormat pixelFormat, PixelType pixelType, int sizeX) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType);
+			int expectedSize = sizeX * pixelFormat.getComponentCount() * pixelType.getByteSize();
+
+			if (content.length < expectedSize) {
+				throw new IllegalStateException("1D Custom texture was " + content.length + " bytes; expected " + expectedSize);
+			} else if (content.length > expectedSize) {
+				Iris.logger.warn("1D Custom texture was " + content.length + " bytes; expected " + expectedSize + ". This is allowed, but you probably don't want this.");
+			}
 
 			this.sizeX = sizeX;
 		}
@@ -124,6 +132,14 @@ public abstract class CustomTextureData {
 		public RawData2D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
 						 PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType);
+
+			int expectedSize = sizeX * sizeY * pixelFormat.getComponentCount() * pixelType.getByteSize();
+
+			if (content.length < expectedSize) {
+				throw new IllegalStateException("2D Custom texture was " + content.length + " bytes; expected " + expectedSize);
+			} else if (content.length > expectedSize) {
+				Iris.logger.warn("2D Custom texture was " + content.length + " bytes; expected " + expectedSize + ". This is allowed, but you probably don't want this.");
+			}
 
 			this.sizeX = sizeX;
 			this.sizeY = sizeY;
@@ -146,6 +162,14 @@ public abstract class CustomTextureData {
 		public RawData3D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
 						 PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY, int sizeZ) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType);
+
+			int expectedSize = sizeX * sizeY * sizeZ * pixelFormat.getComponentCount() * pixelType.getByteSize();
+
+			if (content.length < expectedSize) {
+				throw new IllegalStateException("3D Custom texture was " + content.length + " bytes; expected " + expectedSize);
+			} else if (content.length > expectedSize) {
+				Iris.logger.warn("3D Custom texture was " + content.length + " bytes; expected " + expectedSize + ". This is allowed, but you probably don't want this.");
+			}
 
 			this.sizeX = sizeX;
 			this.sizeY = sizeY;
