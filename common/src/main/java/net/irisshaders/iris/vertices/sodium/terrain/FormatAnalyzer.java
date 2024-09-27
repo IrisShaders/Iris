@@ -28,7 +28,7 @@ public class FormatAnalyzer {
 		}
 
 		if (midBlock) {
-			key |= 16;
+			key |= 8;
 		}
 
 		if (classMap.containsKey(key)) {
@@ -89,7 +89,7 @@ public class FormatAnalyzer {
 			VERTEX_FORMAT.addElement(IrisChunkMeshAttributes.MID_BLOCK, 14, midBlockOffset);
 		}
 
-		//System.out.println("Created a new format with " + offset + " stride: " + Integer.toBinaryString(key));
+		System.out.println("Created a new format with " + offset + " stride: " + Integer.toBinaryString(key));
 
 
 		return classMap.computeIfAbsent(key, k -> new XHFPModelVertexType(VERTEX_FORMAT.build(), blockIdOffset, normalOffset, midUvOffset, midBlockOffset));

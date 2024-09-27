@@ -18,6 +18,15 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 	private static final int TEXTURE_MAX_VALUE = 1 << 15;
 	private static final float MODEL_ORIGIN = 8.0f;
 	private static final float MODEL_RANGE = 32.0f;
+	private static final int DEFAULT_NORMAL;
+
+	static {
+		Vector2f normE = new Vector2f(), tangE = new Vector2f();
+		NormalHelper.octahedronEncode(normE, 0, 1, 0);
+		NormalHelper.tangentEncode(tangE, new Vector4f(0, 1, 0, 1));
+		DEFAULT_NORMAL = NormI8.pack(normE.x, normE.y, tangE.x, tangE.y);
+	}
+
 	private final Vector3f normal = new Vector3f(0.0f, 1.0f, 0.0f);
 	private final Vector4f tangent = new Vector4f(0.0f, 1.0f, 0.0f, 1.0f);
 	private final int blockIdOffset;
@@ -111,19 +120,21 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 		texCentroidV *= 0.25f;
 		int midUV = XHFPModelVertexType.encodeOld(texCentroidU, texCentroidV);
 
-		NormalHelper.computeFaceNormalManual(normal,
-			vertices[0].x, vertices[0].y, vertices[0].z,
-			vertices[1].x, vertices[1].y, vertices[1].z,
-			vertices[2].x, vertices[2].y, vertices[2].z,
-			vertices[3].x, vertices[3].y, vertices[3].z);
+		int finalNorm;
+		if (normalOffset != 0) {
+			NormalHelper.computeFaceNormalManual(normal,
+				vertices[0].x, vertices[0].y, vertices[0].z,
+				vertices[1].x, vertices[1].y, vertices[1].z,
+				vertices[2].x, vertices[2].y, vertices[2].z,
+				vertices[3].x, vertices[3].y, vertices[3].z);
 
-		int tangent = computeTangentForQuad(normal, vertices);
-
-		NormalHelper.octahedronEncode(normEncoded, normal.x, normal.y, normal.z);
-		NormalHelper.tangentEncode(tangEncoded, this.tangent);
-
-		int finalNorm = NormI8.pack(normEncoded.x, normEncoded.y, tangEncoded.x, tangEncoded.y);
-
+			int tangent = computeTangentForQuad(normal, vertices);
+			NormalHelper.octahedronEncode(normEncoded, normal.x, normal.y, normal.z);
+			NormalHelper.tangentEncode(tangEncoded, this.tangent);
+			finalNorm = NormI8.pack(normEncoded.x, normEncoded.y, tangEncoded.x, tangEncoded.y);
+		} else {
+			finalNorm = DEFAULT_NORMAL;
+		}
 
 		for (int i = 0; i < 4; i++) {
 			var vertex = vertices[i];
