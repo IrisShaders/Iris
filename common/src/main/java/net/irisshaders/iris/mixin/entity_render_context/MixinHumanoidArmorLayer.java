@@ -21,6 +21,7 @@ import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.armortrim.ArmorTrim;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -32,8 +33,19 @@ public abstract class MixinHumanoidArmorLayer<T extends LivingEntity, M extends 
 		super(pRenderLayer0);
 	}
 
-	@Inject(method = "renderArmorPiece", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/HumanoidModel;copyPropertiesTo(Lnet/minecraft/client/model/HumanoidModel;)V"))
+	@Group(name = "armorPieceForge", min = 1, max = 1)
+	@Inject(method = "renderArmorPiece(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;ILnet/minecraft/client/model/HumanoidModel;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/HumanoidModel;copyPropertiesTo(Lnet/minecraft/client/model/HumanoidModel;)V"))
 	private void changeId(PoseStack pHumanoidArmorLayer0, MultiBufferSource pMultiBufferSource1, T pLivingEntity2, EquipmentSlot pEquipmentSlot3, int pInt4, A pHumanoidModel5, CallbackInfo ci, @Local ArmorItem lvArmorItem8) {
+		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
+
+		ResourceLocation location = BuiltInRegistries.ITEM.getKey(lvArmorItem8);
+
+		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
+	}
+
+	@Group(name = "armorPieceForge", min = 1, max = 1)
+	@Inject(method = "Lnet/minecraft/client/renderer/entity/layers/HumanoidArmorLayer;renderArmorPiece(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;ILnet/minecraft/client/model/HumanoidModel;FFFFFF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/HumanoidModel;copyPropertiesTo(Lnet/minecraft/client/model/HumanoidModel;)V"))
+	private void changeIdF(PoseStack pHumanoidArmorLayer0, MultiBufferSource pMultiBufferSource1, T pLivingEntity2, EquipmentSlot pEquipmentSlot3, int pInt4, A pHumanoidModel5, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci, @Local ArmorItem lvArmorItem8) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		ResourceLocation location = BuiltInRegistries.ITEM.getKey(lvArmorItem8);
