@@ -108,6 +108,11 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			iris$isTerrain = false;
 			injectNormalAndUV1 = false;
 			return IrisVertexFormats.ENTITY;
+		}  else if (format == DefaultVertexFormat.PARTICLE || format == IrisVertexFormats.PARTICLE) {
+			extending = true;
+			iris$isTerrain = false;
+			injectNormalAndUV1 = false;
+			return IrisVertexFormats.PARTICLE;
 		} else if (format == DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP || format == IrisVertexFormats.GLYPH) {
 			extending = true;
 			iris$isTerrain = false;
@@ -161,6 +166,9 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		// We can't fill these yet.
 		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.MID_TEXTURE_ELEMENT.mask();
 		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.TANGENT_ELEMENT.mask();
+
+		// TODO VELOCITY
+		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.VELOCITY_ELEMENT.mask();
 
 		if (injectNormalAndUV1 && this.elementsToFill != (this.elementsToFill & ~VertexFormatElement.NORMAL.mask())) {
 			this.setNormal(0, 0, 0);

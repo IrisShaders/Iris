@@ -60,7 +60,8 @@
   },
   "custom": {
     "sodium:options": {
-      "mixin.features.render.world.sky": false
+      "mixin.features.render.world.sky": false,
+      "mixin.features.render.particle": false
     },
     "mc-publish": {
       "loaders": [

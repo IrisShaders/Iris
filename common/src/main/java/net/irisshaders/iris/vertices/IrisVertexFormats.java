@@ -10,9 +10,11 @@ public class IrisVertexFormats {
 	public static final VertexFormatElement MID_TEXTURE_ELEMENT;
 	public static final VertexFormatElement TANGENT_ELEMENT;
 	public static final VertexFormatElement MID_BLOCK_ELEMENT;
+	public static final VertexFormatElement VELOCITY_ELEMENT;
 
 	public static final VertexFormat TERRAIN;
 	public static final VertexFormat ENTITY;
+	public static final VertexFormat PARTICLE;
 	public static final VertexFormat GLYPH;
 	public static final VertexFormat CLOUDS;
 
@@ -22,6 +24,7 @@ public class IrisVertexFormats {
 		MID_TEXTURE_ELEMENT = VertexFormatElement.register(12, 12, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
 		TANGENT_ELEMENT = VertexFormatElement.register(13, 13, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
 		MID_BLOCK_ELEMENT = VertexFormatElement.register(14, 14, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
+		VELOCITY_ELEMENT = VertexFormatElement.register(15, 15, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 3);
 
 		TERRAIN = VertexFormat.builder()
 			.add("Position", VertexFormatElement.POSITION)
@@ -37,6 +40,14 @@ public class IrisVertexFormats {
 			.padding(1)
 			.build();
 
+		PARTICLE = VertexFormat.builder()
+			.add("Position", VertexFormatElement.POSITION)
+			.add("UV0", VertexFormatElement.UV0)
+			.add("Color", VertexFormatElement.COLOR)
+			.add("UV2", VertexFormatElement.UV2)
+			.add("at_velocity", VELOCITY_ELEMENT)
+			.build();
+
 		ENTITY = VertexFormat.builder()
 			.add("Position", VertexFormatElement.POSITION)
 			.add("Color", VertexFormatElement.COLOR)
@@ -48,6 +59,7 @@ public class IrisVertexFormats {
 			.add("iris_Entity", ENTITY_ID_ELEMENT)
 			.add("mc_midTexCoord", MID_TEXTURE_ELEMENT)
 			.add("at_tangent", TANGENT_ELEMENT)
+			.add("at_velocity", VELOCITY_ELEMENT)
 			.build();
 
 		GLYPH = VertexFormat.builder()
@@ -69,6 +81,8 @@ public class IrisVertexFormats {
 			.add("Normal", VertexFormatElement.NORMAL)
 			.padding(1)
 			.build();
+
+		debug(ENTITY);
 	}
 
 	private static void debug(VertexFormat format) {

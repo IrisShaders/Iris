@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.irisshaders.iris.layer.BufferSourceWrapper;
 import net.irisshaders.iris.layer.EntityRenderStateShard;
 import net.irisshaders.iris.layer.OuterWrappedRenderType;
+import net.irisshaders.iris.mixinterface.EntityUniqueId;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -15,6 +16,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.level.entity.EntityAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -48,6 +50,7 @@ public class MixinEntityRenderDispatcher {
 		}
 
 		CapturedRenderingState.INSTANCE.setCurrentEntity(intId);
+		CapturedRenderingState.INSTANCE.setEntityRollingId(((EntityUniqueId) entity).iris$getRollingId());
 
 		return new BufferSourceWrapper(bufferSource, (renderType) -> OuterWrappedRenderType.wrapExactlyOnce("iris:entity", renderType, EntityRenderStateShard.INSTANCE));
 	}
@@ -59,6 +62,7 @@ public class MixinEntityRenderDispatcher {
 									  PoseStack poseStack, MultiBufferSource bufferSource, int light,
 									  CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentEntity(0);
+		CapturedRenderingState.INSTANCE.setEntityRollingId(-1);
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 	}
 }
