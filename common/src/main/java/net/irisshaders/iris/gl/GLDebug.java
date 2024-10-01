@@ -10,6 +10,7 @@ import org.lwjgl.opengl.AMDDebugOutput;
 import org.lwjgl.opengl.ARBDebugOutput;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengl.GLDebugMessageAMDCallback;
 import org.lwjgl.opengl.GLDebugMessageARBCallback;
@@ -31,7 +32,7 @@ public final class GLDebug {
 	public static int setupDebugMessageCallback() {
 		reloadDebugState();
 
-		return setupDebugMessageCallback(APIUtil.DEBUG_STREAM);
+		return setupDebugMessageCallback(System.out);
 	}
 
 	private static void trace(Consumer<String> output) {
@@ -75,6 +76,7 @@ public final class GLDebug {
 
 	public static int setupDebugMessageCallback(PrintStream stream) {
 		GLCapabilities caps = GL.getCapabilities();
+		GL46C.glEnable(GL46C.GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		if (caps.OpenGL43) {
 			Iris.logger.info("[GL] Using OpenGL 4.3 for error logging.");
 			GLDebugMessageCallback proc = GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {

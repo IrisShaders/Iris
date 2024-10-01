@@ -18,15 +18,13 @@ public class XHFPModelVertexType implements ChunkVertexType {
 	private final GlVertexFormat format;
 	private final int normalOffset;
 	private final int blockIdOffset;
-	private final int tangentOffset;
 	private final int midBlockOffset;
 	private final int midUvOffset;
 
-	public XHFPModelVertexType(GlVertexFormat format, int blockIdOffset, int normalOffset, int tangentOffset, int midUvOffset, int midBlockOffset) {
+	public XHFPModelVertexType(GlVertexFormat format, int blockIdOffset, int normalOffset, int midUvOffset, int midBlockOffset) {
 		this.format = format;
 		this.blockIdOffset = blockIdOffset;
 		this.normalOffset = normalOffset;
-		this.tangentOffset = tangentOffset;
 		this.midUvOffset = midUvOffset;
 		this.midBlockOffset = midBlockOffset;
 	}
@@ -43,6 +41,6 @@ public class XHFPModelVertexType implements ChunkVertexType {
 
 	@Override
 	public ChunkVertexEncoder getEncoder() {
-		return new XHFPTerrainVertex(blockIdOffset, normalOffset, tangentOffset, midUvOffset, midBlockOffset, format.getStride());
+		return new XHFPTerrainVertex(blockIdOffset, normalOffset, midUvOffset, midBlockOffset, format.getStride());
 	}
 }

@@ -8,7 +8,9 @@ import net.irisshaders.iris.vertices.ExtendedDataHelper;
 import net.irisshaders.iris.vertices.NormI8;
 import net.irisshaders.iris.vertices.NormalHelper;
 import net.minecraft.util.Mth;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
 
 public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInterface {
@@ -16,19 +18,29 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 	private static final int TEXTURE_MAX_VALUE = 1 << 15;
 	private static final float MODEL_ORIGIN = 8.0f;
 	private static final float MODEL_RANGE = 32.0f;
-	private final Vector3f normal = new Vector3f();
+	private static final int DEFAULT_NORMAL;
+
+	static {
+		Vector2f normE = new Vector2f(), tangE = new Vector2f();
+		NormalHelper.octahedronEncode(normE, 0, 1, 0);
+		NormalHelper.tangentEncode(tangE, new Vector4f(0, 1, 0, 1));
+		DEFAULT_NORMAL = NormI8.pack(normE.x, normE.y, tangE.x, tangE.y);
+	}
+
+	private final Vector3f normal = new Vector3f(0.0f, 1.0f, 0.0f);
+	private final Vector4f tangent = new Vector4f(0.0f, 1.0f, 0.0f, 1.0f);
 	private final int blockIdOffset;
 	private final int normalOffset;
-	private final int tangentOffset;
 	private final int midBlockOffset;
 	private final int midUvOffset;
 	private final int stride;
+	private final Vector2f normEncoded = new Vector2f();
+	private final Vector2f tangEncoded = new Vector2f();
 	private BlockContextHolder contextHolder;
 
-	public XHFPTerrainVertex(int blockIdOffset, int normalOffset, int tangentOffset, int midUvOffset, int midBlockOffset, int stride) {
+	public XHFPTerrainVertex(int blockIdOffset, int normalOffset, int midUvOffset, int midBlockOffset, int stride) {
 		this.blockIdOffset = blockIdOffset;
 		this.normalOffset = normalOffset;
-		this.tangentOffset = tangentOffset;
 		this.midUvOffset = midUvOffset;
 		this.midBlockOffset = midBlockOffset;
 		this.stride = stride;
@@ -104,32 +116,24 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 			texCentroidV += vertex.v;
 		}
 
-		texCentroidU *= (1.0f / 4.0f);
-		texCentroidV *= (1.0f / 4.0f);
+		texCentroidU *= 0.25f;
+		texCentroidV *= 0.25f;
 		int midUV = XHFPModelVertexType.encodeOld(texCentroidU, texCentroidV);
-		int packedNormal = 0;
-		if (normalOffset != 0 || tangentOffset != 0) {
-			NormalHelper.computeFaceNormalManual(normal, vertices[0].x, vertices[0].y, vertices[0].z,
+
+		int finalNorm;
+		if (normalOffset != 0) {
+			NormalHelper.computeFaceNormalManual(normal,
+				vertices[0].x, vertices[0].y, vertices[0].z,
 				vertices[1].x, vertices[1].y, vertices[1].z,
 				vertices[2].x, vertices[2].y, vertices[2].z,
 				vertices[3].x, vertices[3].y, vertices[3].z);
-			packedNormal = NormI8.pack(normal);
-		}
-		int tangent = 0;
 
-		if (tangentOffset != 0) {
-			tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z,
-				vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v,
-				vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v,
-				vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v);
-
-			if (tangent == -1) {
-				// Try calculating the second triangle
-				tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z,
-					vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v,
-					vertices[3].x, vertices[3].y, vertices[3].z, vertices[3].u, vertices[3].v,
-					vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v);
-			}
+			int tangent = computeTangentForQuad(normal, vertices);
+			NormalHelper.octahedronEncode(normEncoded, normal.x, normal.y, normal.z);
+			NormalHelper.tangentEncode(tangEncoded, this.tangent);
+			finalNorm = NormI8.pack(normEncoded.x, normEncoded.y, tangEncoded.x, tangEncoded.y);
+		} else {
+			finalNorm = DEFAULT_NORMAL;
 		}
 
 		for (int i = 0; i < 4; i++) {
@@ -164,16 +168,30 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 			}
 
 			if (normalOffset != 0) {
-				MemoryUtil.memPutInt(ptr + normalOffset, packedNormal);
-			}
-			if (tangentOffset != 0) {
-				MemoryUtil.memPutInt(ptr + tangentOffset, tangent);
+				MemoryUtil.memPutInt(ptr + normalOffset, finalNorm);
 			}
 
 			ptr += stride;
 		}
 
 		return ptr;
+	}
+
+	private int computeTangentForQuad(Vector3f normal, Vertex[] vertices) {
+		int tangent = NormalHelper.computeTangent(this.tangent, normal.x, normal.y, normal.z,
+			vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v,
+			vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v,
+			vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v);
+
+		if (tangent == -1) {
+			// Try calculating the second triangle
+			tangent = NormalHelper.computeTangent(this.tangent, normal.x, normal.y, normal.z,
+				vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v,
+				vertices[3].x, vertices[3].y, vertices[3].z, vertices[3].u, vertices[3].v,
+				vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v);
+		}
+
+		return tangent;
 	}
 
 	private int packBlockId(BlockContextHolder contextHolder) {

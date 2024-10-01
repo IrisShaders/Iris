@@ -86,6 +86,13 @@ loom {
             programArg("--tracy")
             vmArgs("-Dmixin.debug.export=true")
         }
+        create("clientQuickplay") {
+            client()
+            configName = "Fabric Client"
+            ideConfigGenerated(true)
+            programArgs("--quickPlaySingleplayer", "\"GAMING\"")
+            runDir("run")
+        }
         named("server") {
             server()
             configName = "Fabric Server"

@@ -18,8 +18,13 @@ package net.irisshaders.iris.vertices;
 
 import net.irisshaders.iris.vertices.views.QuadView;
 import net.irisshaders.iris.vertices.views.TriView;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
+
+import static java.lang.Math.abs;
 
 public abstract class NormalHelper {
 	private NormalHelper() {
@@ -35,6 +40,58 @@ public abstract class NormalHelper {
 		iz &= 255;
 
 		return (packed & 0xFF000000) | (iz << 16) | (iy << 8) | ix;
+	}
+
+	public static void octahedronEncode(Vector2f output, float x, float y, float z) {
+		float nX = x, nY = y, nZ = z;
+
+		float invL1 = 1.0f / (Math.abs(nX) + Math.abs(nY) + Math.abs(nZ));
+		nX *= invL1;
+		nY *= invL1;
+		nZ *= invL1;
+
+		float oX, oY;
+		if (nZ >= 0.0f) {
+			oX = nX;
+			oY = nY;
+		} else {
+			float absNX = Math.abs(nX);
+			float absNY = Math.abs(nY);
+			oX = (1.0f - absNY) * (nX >= 0.0f ? 1.0f : -1.0f);
+			oY = (1.0f - absNX) * (nY >= 0.0f ? 1.0f : -1.0f);
+		}
+
+		oX = oX * 0.5f + 0.5f;
+		oY = oY * 0.5f + 0.5f;
+
+		output.set(oX, oY);
+	}
+
+	private static final float BIAS = 1.0f / 32767.0f;
+
+	public static void tangentEncode(Vector2f output, Vector4f tangent) {
+		octahedronEncode(output, tangent.x, tangent.y, tangent.z);
+		output.y = Math.max(output.y, BIAS);
+		output.y = output.y * 0.5f + 0.5f;
+		output.y = tangent.w >= 0.0f ? output.y : 1 - output.y;
+	}
+
+	static Vector4f octahedron_tangent_decode(Vector2f p_oct) {
+		Vector2f oct_compressed = new Vector2f(p_oct);
+		oct_compressed.y = oct_compressed.y * 2 - 1;
+		float r_sign = oct_compressed.y >= 0.0f ? 1.0f : -1.0f;
+		oct_compressed.y = Math.abs(oct_compressed.y);
+		Vector3f res = octahedron_decode(oct_compressed.x, oct_compressed.y);
+		return new Vector4f(res.x, res.y, res.z, r_sign);
+	}
+
+	private static Vector3f octahedron_decode(float inX, float inY) {
+		Vector2f f = new Vector2f(inX * 2.0f - 1.0f, inY * 2.0f - 1.0f);
+		Vector3f n = new Vector3f(f.x, f.y, 1.0f - Math.abs(f.x) - Math.abs(f.y));
+		float t = Mth.clamp(-n.z, 0.0f, 1.0f);
+		n.x += n.x >= 0 ? -t : t;
+		n.y += n.y >= 0 ? -t : t;
+		return n.normalize();
 	}
 
 	/**
@@ -83,15 +140,9 @@ public abstract class NormalHelper {
 		float normY = dz0 * dx1 - dx0 * dz1;
 		float normZ = dx0 * dy1 - dy0 * dx1;
 
-		float l = (float) Math.sqrt(normX * normX + normY * normY + normZ * normZ);
-
-		if (l != 0) {
-			normX /= l;
-			normY /= l;
-			normZ /= l;
-		}
-
 		saveTo.set(normX, normY, normZ);
+
+		saveTo.normalize();
 	}
 
 	/**
@@ -336,7 +387,7 @@ public abstract class NormalHelper {
 		return NormI8.pack(tangentx, tangenty, tangentz, tangentW);
 	}
 
-	public static int computeTangent(float normalX, float normalY, float normalZ, float x0, float y0, float z0, float u0, float v0,
+	public static int computeTangent(Vector4f output, float normalX, float normalY, float normalZ, float x0, float y0, float z0, float u0, float v0,
 									 float x1, float y1, float z1, float u1, float v1,
 									 float x2, float y2, float z2, float u2, float v2) {
 		float edge1x = x1 - x0;
@@ -402,6 +453,10 @@ public abstract class NormalHelper {
 			tangentW = -1.0F;
 		} else {
 			tangentW = 1.0F;
+		}
+
+		if (output != null) {
+			output.set(tangentx, tangenty, tangentz, tangentW);
 		}
 
 		return NormI8.pack(tangentx, tangenty, tangentz, tangentW);
