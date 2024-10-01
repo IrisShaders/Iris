@@ -45,6 +45,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.ARBParallelShaderCompile;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.KHRParallelShaderCompile;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -114,6 +117,12 @@ public class Iris {
 			Iris.logger.warn("Iris::onRenderSystemInit was called, but Iris::onEarlyInitialize was not called." +
 				" Trying to avoid a crash but this is an odd state.");
 			return;
+		}
+
+		if (GL.getCapabilities().GL_KHR_parallel_shader_compile) {
+			KHRParallelShaderCompile.glMaxShaderCompilerThreadsKHR(10);
+		} else if (GL.getCapabilities().GL_ARB_parallel_shader_compile) {
+			ARBParallelShaderCompile.glMaxShaderCompilerThreadsARB(10);
 		}
 
 		PBRTextureManager.INSTANCE.init();

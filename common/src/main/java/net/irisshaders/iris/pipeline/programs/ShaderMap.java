@@ -1,7 +1,11 @@
 package net.irisshaders.iris.pipeline.programs;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.minecraft.client.renderer.CompiledShaderProgram;
+import org.lwjgl.opengl.GL46C;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -12,13 +16,30 @@ import java.util.function.Function;
 public class ShaderMap {
 	private final CompiledShaderProgram[] shaders;
 
-	public ShaderMap(Function<ShaderKey, CompiledShaderProgram> factory) {
+	public ShaderMap(ShaderLoadingMap loadingMap, Consumer<CompiledShaderProgram> programConsumer) {
 		ShaderKey[] ids = ShaderKey.values();
 
 		this.shaders = new CompiledShaderProgram[ids.length];
 
-		for (int i = 0; i < ids.length; i++) {
-			this.shaders[i] = factory.apply(ids[i]);
+		loadingMap.forAllShaders((key, shader) -> {
+			if (shader != null) {
+				checkLinkingState(key, shader);
+				CompiledShaderProgram shaderProgram = shader.shader().get();
+				this.shaders[key.ordinal()] = shaderProgram;
+				programConsumer.accept(shaderProgram);
+			}
+		});
+	}
+
+	private void checkLinkingState(ShaderKey key, ShaderSupplier shader) {
+		int i = shader.id();
+
+		int j = GlStateManager.glGetProgrami(i, 35714);
+		if (j == GL46C.GL_FALSE) {
+			String string = GlStateManager.glGetProgramInfoLog(i, 32768);
+			throw new ShaderCompileException(
+				key.name(), string
+			);
 		}
 	}
 

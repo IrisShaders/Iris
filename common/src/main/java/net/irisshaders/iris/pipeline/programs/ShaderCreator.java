@@ -60,7 +60,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class ShaderCreator {
-	public static ExtendedShader create(WorldRenderingPipeline pipeline, String name, ProgramSource source, ProgramId programId, GlFramebuffer writingToBeforeTranslucent,
+	public static ShaderSupplier create(WorldRenderingPipeline pipeline, String name, ProgramSource source, ProgramId programId, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, ShaderAttributeInputs inputs, FrameUpdateNotifier updateNotifier,
 										IrisRenderingPipeline parent, Supplier<ImmutableSet<Integer>> flipped, FogMode fogMode, boolean isIntensity,
@@ -148,14 +148,20 @@ public class ShaderCreator {
 		int id = link(name, vertex, geometry, tessControl, tessEval, fragment, vertexFormat);
 
 
-		return new ExtendedShader(id, shaderResourceFactory, name, vertexFormat, tessControl != null || tessEval != null, writingToBeforeTranslucent, writingToAfterTranslucent, blendModeOverride, alpha, uniforms -> {
-			CommonUniforms.addDynamicUniforms(uniforms, FogMode.PER_VERTEX);
-			customUniforms.assignTo(uniforms);
-			BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
-			VanillaUniforms.addVanillaUniforms(uniforms);
-		}, (samplerHolder, imageHolder) -> {
-			parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.hasTex(), inputs.hasLight(), inputs.hasOverlay());
-		}, isIntensity, parent, overrides, customUniforms);
+		return new ShaderSupplier(id, () -> {
+			try {
+				return new ExtendedShader(id, shaderResourceFactory, name, vertexFormat, tessControl != null || tessEval != null, writingToBeforeTranslucent, writingToAfterTranslucent, blendModeOverride, alpha, uniforms -> {
+					CommonUniforms.addDynamicUniforms(uniforms, FogMode.PER_VERTEX);
+					customUniforms.assignTo(uniforms);
+					BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
+					VanillaUniforms.addVanillaUniforms(uniforms);
+				}, (samplerHolder, imageHolder) -> {
+					parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.hasTex(), inputs.hasLight(), inputs.hasOverlay());
+				}, isIntensity, parent, overrides, customUniforms);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
 	}
 
 
@@ -180,13 +186,6 @@ public class ShaderCreator {
 			((VertexFormatExtension) vertexFormat).bindAttributesIris(i);
 			GlStateManager.glLinkProgram(i);
 
-			int j = GlStateManager.glGetProgrami(i, 35714);
-			if (j == 0) {
-				String string = GlStateManager.glGetProgramInfoLog(i, 32768);
-				throw new ShaderCompileException(
-					name, string
-				);
-			} else {
 				detachIfValid(i, vertexS);
 				detachIfValid(i, geometryS);
 				detachIfValid(i, tessContS);
@@ -194,7 +193,6 @@ public class ShaderCreator {
 				detachIfValid(i, fragS);
 
 				return i;
-			}
 		}
 	}
 
@@ -232,7 +230,7 @@ public class ShaderCreator {
 		return shader;
 	}
 
-	public static FallbackShader createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
+	public static ShaderSupplier createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
 												GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
 												VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
 												IrisRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
@@ -292,9 +290,17 @@ public class ShaderCreator {
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, null, null, fragment);
 
+		int id = link(name, vertex, null, null, null, fragment, vertexFormat);
+
 		// TODO 24w34a FALLBACK
-		return new FallbackShader(link(name, vertex, null, null, null, fragment, vertexFormat), shaderProgramConfig, shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
-			writingToAfterTranslucent, blendModeOverride, alpha.reference(), parent);
+		return new ShaderSupplier(id, () -> {
+			try {
+				return new FallbackShader(id, shaderProgramConfig, shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
+					writingToAfterTranslucent, blendModeOverride, alpha.reference(), parent);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
 	}
 
 	private record IrisProgramResourceFactory(String json, String vertex, String geometry, String tessControl,

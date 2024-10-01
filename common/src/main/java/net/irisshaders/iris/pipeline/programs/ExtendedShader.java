@@ -151,10 +151,7 @@ public class ExtendedShader extends CompiledShaderProgram {
 	public void apply() {
 		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest);
 
-		if (lastApplied != this) {
-			lastApplied = this;
-			GlStateManager._glUseProgram(getProgramId());
-		}
+		GlStateManager._glUseProgram(getProgramId());
 
 		int i = GlStateManager._getActiveTexture();
 

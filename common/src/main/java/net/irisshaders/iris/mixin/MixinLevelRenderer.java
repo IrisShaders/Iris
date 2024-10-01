@@ -100,6 +100,7 @@ public class MixinLevelRenderer {
 
 		if (pipeline.shouldDisableFrustumCulling()) {
 			this.cullingFrustum = new NonCullingFrustum();
+			this.cullingFrustum.prepare(camera.getPosition().x(), camera.getPosition().y(), camera.getPosition().z());
 		}
 		pipeline.beginLevelRendering();
 		pipeline.setPhase(WorldRenderingPhase.NONE);
