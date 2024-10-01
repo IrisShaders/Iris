@@ -2,10 +2,14 @@ package net.irisshaders.iris.pipeline.programs;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.CompiledShader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.serialization.JsonOps;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
@@ -33,6 +37,7 @@ import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.minecraft.client.renderer.CompiledShaderProgram;
 import net.minecraft.client.renderer.ShaderManager;
+import net.minecraft.client.renderer.ShaderProgramConfig;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackLocationInfo;
@@ -282,10 +287,13 @@ public class ShaderCreator {
 			.addJson(shaderJsonString)
 			.print();
 
+		JsonElement jsonElement = JsonParser.parseString(shaderJsonString);
+		ShaderProgramConfig shaderProgramConfig = ShaderProgramConfig.CODEC.parse(JsonOps.INSTANCE, jsonElement).getOrThrow(JsonSyntaxException::new);
+
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, null, null, fragment);
 
 		// TODO 24w34a FALLBACK
-		return new FallbackShader(0, shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
+		return new FallbackShader(link(name, vertex, null, null, null, fragment, vertexFormat), shaderProgramConfig, shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
 			writingToAfterTranslucent, blendModeOverride, alpha.reference(), parent);
 	}
 

@@ -95,8 +95,8 @@ public class ExtendedShader extends CompiledShaderProgram {
 		uniformList.add(new ShaderProgramConfig.Uniform("iris_FogStart", "float", 1, List.of(0.0f)));
 		uniformList.add(new ShaderProgramConfig.Uniform("iris_FogEnd", "float", 1, List.of(1.0f)));
 		uniformList.add(new ShaderProgramConfig.Uniform("iris_GlintAlpha", "float", 1, List.of(0.0f)));
-		uniformList.add(new ShaderProgramConfig.Uniform("iris_ModelViewMatInverse", "float", 1, List.of(0.0f)));
-		uniformList.add(new ShaderProgramConfig.Uniform("iris_ProjMatInverse", "float", 1, List.of(0.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_ModelViewMatInverse", "matrix4x4", 16, List.of(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_ProjMatInverse", "matrix4x4", 16, List.of(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f)));
 
 		samplerList.add(new ShaderProgramConfig.Sampler("Sampler0"));
 		setupUniforms(uniformList, samplerList);

@@ -13,6 +13,7 @@ import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.CompiledShaderProgram;
+import net.minecraft.client.renderer.ShaderProgramConfig;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,10 +35,12 @@ public class FallbackShader extends CompiledShaderProgram {
 	private final int overlay;
 	private final int lightmap;
 
-	public FallbackShader(int programId, ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
+	public FallbackShader(int programId, ShaderProgramConfig shaderProgramConfig, ResourceProvider resourceFactory, String string, VertexFormat vertexFormat,
 						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
 						  BlendModeOverride blendModeOverride, float alphaValue, IrisRenderingPipeline parent) throws IOException {
 		super(programId);
+
+		setupUniforms(shaderProgramConfig.uniforms(), shaderProgramConfig.samplers());
 
 		this.parent = parent;
 		this.blendModeOverride = blendModeOverride;

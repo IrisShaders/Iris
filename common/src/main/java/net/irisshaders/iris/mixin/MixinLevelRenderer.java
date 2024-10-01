@@ -79,11 +79,6 @@ public class MixinLevelRenderer {
 	@Shadow
 	private Frustum cullingFrustum;
 
-	@Shadow
-	private @Nullable ClientLevel level;
-	@Shadow
-	@Final
-	private LevelTargetBundle targets;
 	private boolean warned;
 
 	// Begin shader rendering after buffers have been cleared.
@@ -106,7 +101,8 @@ public class MixinLevelRenderer {
 		if (pipeline.shouldDisableFrustumCulling()) {
 			this.cullingFrustum = new NonCullingFrustum();
 		}
-
+		pipeline.beginLevelRendering();
+		pipeline.setPhase(WorldRenderingPhase.NONE);
 		Minecraft.getInstance().smartCull = !pipeline.shouldDisableOcclusionCulling();
 
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
@@ -120,8 +116,7 @@ public class MixinLevelRenderer {
 	// all pixels.
 	@Inject(method = "method_62218", at = @At(value = "TAIL"))
 	private static void iris$beginLevelRender(Vector4f vector4f, CallbackInfo ci) {
-		pipeline.beginLevelRendering();
-		pipeline.setPhase(WorldRenderingPhase.NONE);
+
 	}
 
 
@@ -149,14 +144,10 @@ public class MixinLevelRenderer {
 	// avoid breaking other mods such as Light Overlay: https://github.com/IrisShaders/Iris/issues/1356
 
 	// Do this before sky rendering so it's ready before the sky render starts.
-	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/framegraph/FramePass;executes(Ljava/lang/Runnable;)V", ordinal = 0, shift = At.Shift.AFTER))
-	private void iris$renderTerrainShadows(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci, @Local FrameGraphBuilder frameGraphBuilder) {
-		FramePass framePass = frameGraphBuilder.addPass("shadows");
-		this.targets.main = framePass.readsAndWrites(this.targets.main);
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;collectVisibleEntities(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/culling/Frustum;Ljava/util/List;)Z", shift = At.Shift.AFTER))
+	private void iris$renderTerrainShadows(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+		pipeline.renderShadows((LevelRendererAccessor) this, camera);
 
-		framePass.executes(() -> {
-			pipeline.renderShadows((LevelRendererAccessor) this, camera);
-		});
 	}
 
 	// TODO IMS 1.21.2
