@@ -23,6 +23,7 @@ import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.parameter.ComputeParameters;
+import net.irisshaders.iris.pipeline.transform.parameter.DHParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.TextureStageParameters;
@@ -83,7 +84,7 @@ public class TransformPatcher {
 	private static final boolean useCache = true;
 	private static final Map<CacheKey, Map<PatchShaderType, String>> cache = new LRUCache<>(400);
 	private static final List<String> internalPrefixes = List.of("iris_", "irisMain", "moj_import");
-	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
+	private static final Pattern versionPattern = Pattern.compile("#version\\s+(\\d+)", Pattern.DOTALL);
 	private static final EnumASTTransformer<Parameters, PatchShaderType> transformer;
 	static Logger LOGGER = LogManager.getLogger(TransformPatcher.class);
 
@@ -305,12 +306,7 @@ public class TransformPatcher {
 		String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new Parameters(Patch.DH_TERRAIN, textureMap) {
-				@Override
-				public TextureStage getTextureStage() {
-					return TextureStage.GBUFFERS_AND_SHADOW;
-				}
-			});
+			new DHParameters(Patch.DH_TERRAIN, textureMap));
 	}
 
 
@@ -318,12 +314,8 @@ public class TransformPatcher {
 		String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new Parameters(Patch.DH_GENERIC, textureMap) {
-				@Override
-				public TextureStage getTextureStage() {
-					return TextureStage.GBUFFERS_AND_SHADOW;
-				}
-			});
+			new DHParameters(Patch.DH_GENERIC, textureMap));
+
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,

@@ -20,6 +20,10 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 
 public class ProgramSet implements ProgramSetInterface {
@@ -56,18 +60,28 @@ public class ProgramSet implements ProgramSetInterface {
 		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow", shaderProperties);
 		this.setup = readProgramArray(directory, sourceProvider, "setup", shaderProperties);
 
-		for (ProgramArrayId id : ProgramArrayId.values()) {
-			ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation);
-			compositePrograms.put(id, sources);
-			ComputeSource[][] computes = new ComputeSource[id.getNumPrograms()][];
-			for (int i = 0; i < id.getNumPrograms(); i++) {
-				computes[i] = readComputeArray(directory, sourceProvider, id.getSourcePrefix() + (i == 0 ? "" : i), shaderProperties);
+		try (ExecutorService service = Executors.newFixedThreadPool(10)) {
+			for (ProgramArrayId id : ProgramArrayId.values()) {
+				ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation);
+				compositePrograms.put(id, sources);
+				ComputeSource[][] computes = new ComputeSource[id.getNumPrograms()][];
+				for (int i = 0; i < id.getNumPrograms(); i++) {
+					computes[i] = readComputeArray(directory, sourceProvider, id.getSourcePrefix() + (i == 0 ? "" : i), shaderProperties);
+				}
+				computePrograms.put(id, computes);
 			}
-			computePrograms.put(id, computes);
-		}
 
-		for (ProgramId programId : ProgramId.values()) {
-			gbufferPrograms.put(programId, readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties, programId.getBlendModeOverride(), readTesselation));
+			Future[] sources = new Future[ProgramId.values().length];
+
+			for (ProgramId programId : ProgramId.values()) {
+				sources[programId.ordinal()] = service.submit(() -> readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties, programId.getBlendModeOverride(), readTesselation));
+			}
+
+			for (ProgramId id : ProgramId.values()) {
+				gbufferPrograms.put(id, (ProgramSource) sources[id.ordinal()].get());
+			}
+		} catch (ExecutionException | InterruptedException e) {
+			throw new RuntimeException(e);
 		}
 
 		this.finalCompute = readComputeArray(directory, sourceProvider, "final", shaderProperties);
