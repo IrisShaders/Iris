@@ -47,7 +47,6 @@ import net.irisshaders.iris.pbr.texture.PBRTextureHolder;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.pbr.texture.PBRType;
 import net.irisshaders.iris.pipeline.programs.ExtendedShader;
-import net.irisshaders.iris.pipeline.programs.FallbackShader;
 import net.irisshaders.iris.pipeline.programs.ShaderCreator;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderLoadingMap;
@@ -92,7 +91,6 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.CompiledShaderProgram;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -387,11 +385,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		ShaderLoadingMap loadingMap = new ShaderLoadingMap(key -> {
 			try {
 				if (key.isShadow()) {
-					if (shadowRenderTargets != null) {
-						return createShadowShader(key.getName(), resolver.resolve(key.getProgram()), key);
-					} else {
-						return null;
-					}
+					return createShadowShader(key.getName(), resolver.resolve(key.getProgram()), key);
 				} else {
 					return createShader(key.getName(), resolver.resolve(key.getProgram()), key);
 				}
@@ -407,7 +401,13 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			}
 		});
 
-		this.shaderMap = new ShaderMap(loadingMap, loadedShaders::add);
+		this.shaderMap = new ShaderMap(loadingMap, (shader) -> {
+			if (shader.key().isShadow()) {
+				return shadowRenderTargets == null;
+			} else {
+				return false;
+			}
+		}, loadedShaders::add);
 
 		initializedBlockIds = false;
 
@@ -637,7 +637,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			return createFallbackShader(name, key);
 		}
 
-		return createShader(name, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
+		return createShader(name, key, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
 			key.isIntensity(), key.shouldIgnoreLightmap(), key.isGlint(), key.isText(), key == ShaderKey.IE_COMPAT);
 	}
 
@@ -646,7 +646,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return customTextureMap;
 	}
 
-	private ShaderSupplier createShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
+	private ShaderSupplier createShader(String name, ShaderKey key, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, FogMode fogMode,
 										boolean isIntensity, boolean isFullbright, boolean isGlint, boolean isText, boolean isIE) throws IOException {
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, source.getDirectives().getDrawBuffers());
@@ -660,7 +660,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			() -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
 
-		ShaderSupplier extendedShader = ShaderCreator.create(this, name, source, programId, beforeTranslucent, afterTranslucent,
+		ShaderSupplier extendedShader = ShaderCreator.create(this, name, key, source, programId, beforeTranslucent, afterTranslucent,
 			fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, fogMode, isIntensity, isFullbright, false, isLines, customUniforms);
 
 		return extendedShader;
@@ -670,7 +670,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		GlFramebuffer beforeTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterPrepare, new int[]{0});
 		GlFramebuffer afterTranslucent = renderTargets.createGbufferFramebuffer(flippedAfterTranslucent, new int[]{0});
 
-		ShaderSupplier shader = ShaderCreator.createFallback(name, beforeTranslucent, afterTranslucent,
+		ShaderSupplier shader = ShaderCreator.createFallback(name, key, beforeTranslucent, afterTranslucent,
 			key.getAlphaTest(), key.getVertexFormat(), null, this, key.getFogMode(),
 			key == ShaderKey.GLINT, key.isText(), key.hasDiffuseLighting(), key.isIntensity(), key.shouldIgnoreLightmap());
 
@@ -682,30 +682,27 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			return createFallbackShadowShader(name, key);
 		}
 
-		return createShadowShader(name, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(),
+		return createShadowShader(name, key, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(),
 			key.isIntensity(), key.shouldIgnoreLightmap(), key.isText(), key == ShaderKey.IE_COMPAT_SHADOW);
 	}
 
 	private ShaderSupplier createFallbackShadowShader(String name, ShaderKey key) throws IOException {
-		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), new int[]{0});
-
-		ShaderSupplier shader = ShaderCreator.createFallback(name, framebuffer, framebuffer,
+		ShaderSupplier shader = ShaderCreator.createFallbackShadow(name, key, shadowTargetsSupplier,
 			key.getAlphaTest(), key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(),
 			key == ShaderKey.GLINT, key.isText(), key.hasDiffuseLighting(), key.isIntensity(), key.shouldIgnoreLightmap());
 
 		return shader;
 	}
 
-	private ShaderSupplier createShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
+	private ShaderSupplier createShadowShader(String name, ShaderKey key, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
 											  VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright, boolean isText, boolean isIE) throws IOException {
-		GlFramebuffer framebuffer = shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers());
 		boolean isLines = programId == ProgramId.Line && resolver.has(ProgramId.Line);
 
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isLines, false, isText, isIE);
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> flippedBeforeShadow;
 
-		ShaderSupplier extendedShader = ShaderCreator.create(this, name, source, programId, framebuffer, framebuffer,
+		ShaderSupplier extendedShader = ShaderCreator.createShadow(this, name, key, source, programId, shadowTargetsSupplier,
 			fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped, FogMode.PER_VERTEX, isIntensity, isFullbright, true, isLines, customUniforms);
 
 		return extendedShader;

@@ -1,6 +1,7 @@
 package net.irisshaders.iris.pipeline.programs;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import it.unimi.dsi.fastutil.objects.Object2BooleanFunction;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.minecraft.client.renderer.CompiledShaderProgram;
 import org.lwjgl.opengl.GL46C;
@@ -16,13 +17,18 @@ import java.util.function.Function;
 public class ShaderMap {
 	private final CompiledShaderProgram[] shaders;
 
-	public ShaderMap(ShaderLoadingMap loadingMap, Consumer<CompiledShaderProgram> programConsumer) {
+	public ShaderMap(ShaderLoadingMap loadingMap, Function<ShaderSupplier, Boolean> deletionFunction, Consumer<CompiledShaderProgram> programConsumer) {
 		ShaderKey[] ids = ShaderKey.values();
 
 		this.shaders = new CompiledShaderProgram[ids.length];
 
 		loadingMap.forAllShaders((key, shader) -> {
 			if (shader != null) {
+				if (deletionFunction.apply(shader)) {
+					GlStateManager.glDeleteShader(shader.id());
+					return;
+				}
+
 				checkLinkingState(key, shader);
 				CompiledShaderProgram shaderProgram = shader.shader().get();
 				this.shaders[key.ordinal()] = shaderProgram;

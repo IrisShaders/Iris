@@ -29,6 +29,7 @@ import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.VanillaUniforms;
@@ -60,7 +61,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class ShaderCreator {
-	public static ShaderSupplier create(WorldRenderingPipeline pipeline, String name, ProgramSource source, ProgramId programId, GlFramebuffer writingToBeforeTranslucent,
+	public static ShaderSupplier create(WorldRenderingPipeline pipeline, String name, ShaderKey shaderKey, ProgramSource source, ProgramId programId, GlFramebuffer writingToBeforeTranslucent,
 										GlFramebuffer writingToAfterTranslucent, AlphaTest fallbackAlpha,
 										VertexFormat vertexFormat, ShaderAttributeInputs inputs, FrameUpdateNotifier updateNotifier,
 										IrisRenderingPipeline parent, Supplier<ImmutableSet<Integer>> flipped, FogMode fogMode, boolean isIntensity,
@@ -148,7 +149,7 @@ public class ShaderCreator {
 		int id = link(name, vertex, geometry, tessControl, tessEval, fragment, vertexFormat);
 
 
-		return new ShaderSupplier(id, () -> {
+		return new ShaderSupplier(shaderKey, id, () -> {
 			try {
 				return new ExtendedShader(id, shaderResourceFactory, name, vertexFormat, tessControl != null || tessEval != null, writingToBeforeTranslucent, writingToAfterTranslucent, blendModeOverride, alpha, uniforms -> {
 					CommonUniforms.addDynamicUniforms(uniforms, FogMode.PER_VERTEX);
@@ -230,7 +231,7 @@ public class ShaderCreator {
 		return shader;
 	}
 
-	public static ShaderSupplier createFallback(String name, GlFramebuffer writingToBeforeTranslucent,
+	public static ShaderSupplier createFallback(String name, ShaderKey shaderKey, GlFramebuffer writingToBeforeTranslucent,
 												GlFramebuffer writingToAfterTranslucent, AlphaTest alpha,
 												VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
 												IrisRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
@@ -282,7 +283,6 @@ public class ShaderCreator {
 		ShaderPrinter.printProgram(name)
 			.addSource(PatchShaderType.VERTEX, vertex)
 			.addSource(PatchShaderType.FRAGMENT, fragment)
-			.addJson(shaderJsonString)
 			.print();
 
 		JsonElement jsonElement = JsonParser.parseString(shaderJsonString);
@@ -293,10 +293,134 @@ public class ShaderCreator {
 		int id = link(name, vertex, null, null, null, fragment, vertexFormat);
 
 		// TODO 24w34a FALLBACK
-		return new ShaderSupplier(id, () -> {
+		return new ShaderSupplier(shaderKey, id, () -> {
 			try {
 				return new FallbackShader(id, shaderProgramConfig, shaderResourceFactory, name, vertexFormat, writingToBeforeTranslucent,
 					writingToAfterTranslucent, blendModeOverride, alpha.reference(), parent);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+	}
+
+	public static ShaderSupplier createFallbackShadow(String name, ShaderKey shaderKey, Supplier<ShadowRenderTargets> shadowSupplier, AlphaTest alpha,
+												VertexFormat vertexFormat, BlendModeOverride blendModeOverride,
+												IrisRenderingPipeline parent, FogMode fogMode, boolean entityLighting,
+												boolean isGlint, boolean isText, boolean intensityTex, boolean isFullbright) throws IOException {
+		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, false, isGlint, isText, false);
+
+		// TODO: Is this check sound in newer versions?
+		boolean isLeash = vertexFormat == DefaultVertexFormat.POSITION_COLOR_LIGHTMAP;
+		String vertex = ShaderSynthesizer.vsh(true, inputs, fogMode, entityLighting, isLeash);
+		String fragment = ShaderSynthesizer.fsh(inputs, fogMode, alpha, intensityTex, isLeash);
+
+
+		String shaderJsonString = String.format("""
+			    {
+			    "blend": {
+			        "func": "add",
+			        "srcrgb": "srcalpha",
+			        "dstrgb": "1-srcalpha"
+			    },
+			    "vertex": "%s",
+			    "fragment": "%s",
+			    "attributes": [
+			        "Position",
+			        "Color",
+			        "UV0",
+			        "UV1",
+			        "UV2",
+			        "Normal"
+			    ],
+			    "uniforms": [
+			        		{ "name": "TextureMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+			        		{ "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+			        		{ "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+			        		{ "name": "ModelOffset", "type": "float", "count": 3, "values": [ 0.0, 0.0, 0.0 ] },
+			        		{ "name": "ColorModulator", "type": "float", "count": 4, "values": [ 1.0, 1.0, 1.0, 1.0 ] },
+			        		{ "name": "GlintAlpha", "type": "float", "count": 1, "values": [ 1.0 ] },
+			        		{ "name": "Light0_Direction", "type": "float", "count": 3, "values": [0.0, 0.0, 0.0] },
+			        		{ "name": "Light1_Direction", "type": "float", "count": 3, "values": [0.0, 0.0, 0.0] },
+			        		{ "name": "FogStart", "type": "float", "count": 1, "values": [ 0.0 ] },
+			        		{ "name": "FogEnd", "type": "float", "count": 1, "values": [ 1.0 ] },
+			        		{ "name": "FogDensity", "type": "float", "count": 1, "values": [ 1.0 ] },
+			        		{ "name": "FogIsExp2", "type": "int", "count": 1, "values": [ 0 ] },
+			        		{ "name": "AlphaTestValue", "type": "float", "count": 1, "values": [ 0.0 ] },
+			        		{ "name": "LineWidth", "type": "float", "count": 1, "values": [ 1.0 ] },
+			        		{ "name": "ScreenSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
+			        		{ "name": "FogColor", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] }
+			    ]
+			}""", name, name);
+		ShaderPrinter.printProgram(name)
+			.addSource(PatchShaderType.VERTEX, vertex)
+			.addSource(PatchShaderType.FRAGMENT, fragment)
+			.print();
+
+		JsonElement jsonElement = JsonParser.parseString(shaderJsonString);
+		ShaderProgramConfig shaderProgramConfig = ShaderProgramConfig.CODEC.parse(JsonOps.INSTANCE, jsonElement).getOrThrow(JsonSyntaxException::new);
+
+		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, null, null, fragment);
+
+		int id = link(name, vertex, null, null, null, fragment, vertexFormat);
+
+		// TODO 24w34a FALLBACK
+		return new ShaderSupplier(shaderKey, id, () -> {
+			try {
+				GlFramebuffer framebuffer = shadowSupplier.get().createShadowFramebuffer(ImmutableSet.of(), new int[]{0});
+				return new FallbackShader(id, shaderProgramConfig, shaderResourceFactory, name, vertexFormat, framebuffer, framebuffer, blendModeOverride, alpha.reference(), parent);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+	}
+
+	public static ShaderSupplier createShadow(WorldRenderingPipeline pipeline, String name, ShaderKey shaderKey, ProgramSource source, ProgramId programId, Supplier<ShadowRenderTargets> shadowSupplier, AlphaTest fallbackAlpha,
+											  VertexFormat vertexFormat, ShaderAttributeInputs inputs, FrameUpdateNotifier updateNotifier,
+											  IrisRenderingPipeline parent, Supplier<ImmutableSet<Integer>> flipped, FogMode fogMode, boolean isIntensity,
+											  boolean isFullbright, boolean isShadowPass, boolean isLines, CustomUniforms customUniforms) throws IOException {
+		AlphaTest alpha = source.getDirectives().getAlphaTestOverride().orElse(fallbackAlpha);
+		BlendModeOverride blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(programId.getBlendModeOverride());
+
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchVanilla(
+			name,
+			source.getVertexSource().orElseThrow(RuntimeException::new),
+			source.getGeometrySource().orElse(null),
+			source.getTessControlSource().orElse(null),
+			source.getTessEvalSource().orElse(null),
+			source.getFragmentSource().orElseThrow(RuntimeException::new),
+			alpha, isLines, true, inputs, pipeline.getTextureMap());
+		String vertex = transformed.get(PatchShaderType.VERTEX);
+		String geometry = transformed.get(PatchShaderType.GEOMETRY);
+		String tessControl = transformed.get(PatchShaderType.TESS_CONTROL);
+		String tessEval = transformed.get(PatchShaderType.TESS_EVAL);
+		String fragment = transformed.get(PatchShaderType.FRAGMENT);
+
+		ShaderPrinter.printProgram(name).addSources(transformed).print();
+
+		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory("", vertex, geometry, tessControl, tessEval, fragment);
+
+		List<BufferBlendOverride> overrides = new ArrayList<>();
+		source.getDirectives().getBufferBlendOverrides().forEach(information -> {
+			int index = Ints.indexOf(source.getDirectives().getDrawBuffers(), information.index());
+			if (index > -1) {
+				overrides.add(new BufferBlendOverride(index, information.blendMode()));
+			}
+		});
+
+		int id = link(name, vertex, geometry, tessControl, tessEval, fragment, vertexFormat);
+
+
+		return new ShaderSupplier(shaderKey, id, () -> {
+			GlFramebuffer framebuffer = shadowSupplier.get().createShadowFramebuffer(ImmutableSet.of(), source.getDirectives().hasUnknownDrawBuffers() ? new int[]{0, 1} : source.getDirectives().getDrawBuffers());
+			try {
+				return new ExtendedShader(id, shaderResourceFactory, name, vertexFormat, tessControl != null || tessEval != null, framebuffer, framebuffer, blendModeOverride, alpha, uniforms -> {
+					CommonUniforms.addDynamicUniforms(uniforms, FogMode.PER_VERTEX);
+					customUniforms.assignTo(uniforms);
+					BuiltinReplacementUniforms.addBuiltinReplacementUniforms(uniforms);
+					VanillaUniforms.addVanillaUniforms(uniforms);
+				}, (samplerHolder, imageHolder) -> {
+					parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.hasTex(), inputs.hasLight(), inputs.hasOverlay());
+				}, isIntensity, parent, overrides, customUniforms);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
