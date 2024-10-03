@@ -117,7 +117,7 @@ public class MixinLevelRenderer {
 	// all pixels.
 	@Inject(method = "method_62218", at = @At(value = "TAIL"))
 	private static void iris$beginLevelRender(Vector4f vector4f, CallbackInfo ci) {
-
+		pipeline.onBeginClear();
 	}
 
 

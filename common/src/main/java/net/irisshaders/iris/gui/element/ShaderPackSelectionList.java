@@ -146,7 +146,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	}
 
 	@Override
-	protected int getRowTop(int index) {
+	public int getRowTop(int index) {
 		return super.getRowTop(index) + 2;
 	}
 

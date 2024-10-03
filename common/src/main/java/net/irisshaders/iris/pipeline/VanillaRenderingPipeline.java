@@ -216,4 +216,9 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	public void setIsMainBound(boolean mainBound) {
 
 	}
+
+	@Override
+	public void onBeginClear() {
+
+	}
 }

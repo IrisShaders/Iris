@@ -83,6 +83,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMap.put(CoreShaders.RENDERTYPE_LEASH, p -> ShaderKey.LEASH);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_WATER_MASK, p -> ShaderKey.ENTITIES_CUTOUT);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_CLOUDS, p -> ShaderKey.CLOUDS);
+			coreShaderMap.put(CoreShaders.RENDERTYPE_CRUMBLING, p -> ShaderKey.CRUMBLING);
 			coreShaderMap.put(CloudRenderer.CLOUDS, p -> ShaderKey.CLOUDS_SODIUM);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_TRANSLUCENT_MOVING_BLOCK, p -> ShaderKey.MOVING_BLOCK);
 
@@ -127,6 +128,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_LEASH, p -> ShaderKey.SHADOW_LEASH);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_WATER_MASK, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_CLOUDS, p -> ShaderKey.SHADOW_CLOUDS);
+			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_CRUMBLING, p -> ShaderKey.SHADOW_BASIC);
 			coreShaderMapShadow.put(CloudRenderer.CLOUDS, p -> ShaderKey.SHADOW_CLOUDS);
 			coreShaderMapShadow.put(CoreShaders.RENDERTYPE_TRANSLUCENT_MOVING_BLOCK, p -> ShaderKey.SHADOW_TERRAIN_CUTOUT);
 

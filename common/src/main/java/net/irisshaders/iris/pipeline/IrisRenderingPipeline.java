@@ -936,28 +936,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		}
 
 		isBeforeTranslucent = true;
-
-		beginRenderer.renderAll();
-
-		setPhase(WorldRenderingPhase.SKY);
-
-		// Render our horizon box before actual sky rendering to avoid being broken by mods that do weird things
-		// while rendering the sky.
-		//
-		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
-		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
-
-		if (shouldRenderSkyDisc && (skyType == DimensionSpecialEffects.SkyType.OVERWORLD || Minecraft.getInstance().level.dimensionType().hasSkyLight())) {
-			RenderSystem.depthMask(false);
-
-			RenderSystem.setShaderColor(fogColor.x, fogColor.y, fogColor.z, fogColor.w);
-
-			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), CoreShaders.POSITION);
-
-			RenderSystem.depthMask(true);
-
-			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-		}
 	}
 
 	@Override
@@ -1219,6 +1197,35 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	@Override
 	public void setIsMainBound(boolean bound) {
 		isMainBound = bound;
+	}
+
+	@Override
+	public void onBeginClear() {
+		setPhase(WorldRenderingPhase.SKY);
+
+		// Render our horizon box before actual sky rendering to avoid being broken by mods that do weird things
+		// while rendering the sky.
+		//
+		// A lot of dimension mods touch sky rendering, FabricSkyboxes injects at HEAD and cancels, etc.
+		DimensionSpecialEffects.SkyType skyType = Minecraft.getInstance().level.effects().skyType();
+
+		if (shouldRenderSkyDisc && (skyType == DimensionSpecialEffects.SkyType.OVERWORLD || Minecraft.getInstance().level.dimensionType().hasSkyLight())) {
+			RenderSystem.depthMask(false);
+
+			Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
+
+			// NB: The alpha value must be 1.0 here, or else you will get a bunch of bugs. Sildur's Vibrant Shaders
+			//     will give you pink reflections and other weirdness if this is zero.
+			Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
+
+			RenderSystem.setShaderColor(fogColor.x, fogColor.y, fogColor.z, fogColor.w);
+
+			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(), CapturedRenderingState.INSTANCE.getGbufferProjection(), CoreShaders.POSITION);
+
+			RenderSystem.depthMask(true);
+
+			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+		}
 	}
 
 	public Optional<ProgramSource> getDHTerrainShader() {

@@ -1,14 +1,14 @@
 
 plugins {
     id("java")
-    id("fabric-loom") version("1.7.2") apply(false)
+    id("fabric-loom") version("1.8.2") apply(false)
 }
 
-val MINECRAFT_VERSION by extra { "24w39a" }
+val MINECRAFT_VERSION by extra { "24w40a" }
 val NEOFORGE_VERSION by extra { "21.1.19" }
 val FABRIC_LOADER_VERSION by extra { "0.16.5" }
 val FABRIC_API_VERSION by extra { "0.105.1+1.21.2" }
-val SODIUM_FILE by extra { "sodium-fabric-0.6.0-snapshot+mc24w38a-local.jar" }
+val SODIUM_FILE by extra { "sodium-fabric-0.6.0-snapshot+mc24w40a-local.jar" }
 
 // https://semver.org/
 val MOD_VERSION by extra { "1.8.0-beta.2" }

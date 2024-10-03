@@ -88,4 +88,6 @@ public interface WorldRenderingPipeline {
 	DHCompat getDHCompat();
 
 	void setIsMainBound(boolean mainBound);
+
+    void onBeginClear();
 }
