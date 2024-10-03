@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlUtil;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.dh.DHCompat;
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pbr.format.TextureFormat;
@@ -317,12 +318,12 @@ public class StandardMacros {
 	 */
 	public static Set<String> getGlExtensions() {
 		// In OpenGL Core, we must use a new way of retrieving extensions.
-		int numExtensions = GL30C.glGetInteger(GL30C.GL_NUM_EXTENSIONS);
+		int numExtensions = GlStateManager._getInteger(GL30C.GL_NUM_EXTENSIONS);
 
 		String[] extensions = new String[numExtensions];
 
 		for (int i = 0; i < numExtensions; i++) {
-			extensions[i] = GL30C.glGetStringi(GL30C.GL_EXTENSIONS, i);
+			extensions[i] = IrisRenderSystem.getStringi(GL30C.GL_EXTENSIONS, i);
 		}
 
 		// TODO note that we do not add extensions based on if the shader uses them and if they are supported

@@ -104,6 +104,11 @@ public class IrisRenderSystem {
 		GL32C.glUniformMatrix4fv(location, transpose, matrix);
 	}
 
+	public static void uniformMatrix4fv(int location, boolean transpose, float[] matrix) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glUniformMatrix4fv(location, transpose, matrix);
+	}
+
 	public static void copyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border);
@@ -452,6 +457,14 @@ public class IrisRenderSystem {
 
 	public static int createBuffers() {
 		return dsaState.createBuffers();
+	}
+
+	public static String getStringi(int glEnum, int index) {
+		return GL46C.glGetStringi(glEnum, index);
+	}
+
+	public static void copyImageSubData(int sourceTexture, int target, int mip, int srcX, int srcY, int srcZ, int destTexture, int dstTarget, int dstMip, int dstX, int dstY, int dstZ, int width, int height, int depth) {
+		GL46C.glCopyImageSubData(sourceTexture, target, mip, srcX, srcY, srcZ, destTexture, dstTarget, dstMip, dstX, dstY, dstZ, width, height, depth);
 	}
 
 	public interface DSAAccess {

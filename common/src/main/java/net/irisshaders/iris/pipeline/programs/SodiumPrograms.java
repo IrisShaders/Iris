@@ -2,6 +2,7 @@ package net.irisshaders.iris.pipeline.programs;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.caffeinemc.mods.sodium.client.gl.GlObject;
 import net.caffeinemc.mods.sodium.client.gl.shader.GlProgram;
 import net.caffeinemc.mods.sodium.client.gl.shader.GlShader;
@@ -168,10 +169,10 @@ public class SodiumPrograms {
 				int handle = ((GlObject) shader).handle();
 				GLDebug.nameObject(GL43C.GL_PROGRAM, handle, "sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
 
-				if (!hasNormal) hasNormal = GL43C.glGetAttribLocation(handle, "iris_Normal") != -1;
-				if (!hasMidBlock) hasMidBlock = GL43C.glGetAttribLocation(handle, "at_midBlock") != -1;
-				if (!hasBlockId) hasBlockId = GL43C.glGetAttribLocation(handle, "mc_Entity") != -1;
-				if (!hasMidUv) hasMidUv = GL43C.glGetAttribLocation(handle, "mc_midTexCoord") != -1;
+				if (!hasNormal) hasNormal = GlStateManager._glGetAttribLocation(handle, "iris_Normal") != -1;
+				if (!hasMidBlock) hasMidBlock = GlStateManager._glGetAttribLocation(handle, "at_midBlock") != -1;
+				if (!hasBlockId) hasBlockId = GlStateManager._glGetAttribLocation(handle, "mc_Entity") != -1;
+				if (!hasMidUv) hasMidUv = GlStateManager._glGetAttribLocation(handle, "mc_midTexCoord") != -1;
 
 				return new SodiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride().orElse(null),
 					createBufferBlendOverrides(source), customUniforms, flipState,

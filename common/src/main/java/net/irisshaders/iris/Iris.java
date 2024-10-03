@@ -355,7 +355,7 @@ public class Iris {
 	}
 
 	private static void handleException(Exception e) {
-		if (lastDimension != null && irisConfig.areDebugOptionsEnabled()) {
+		if (irisConfig.areDebugOptionsEnabled()) {
 			Minecraft.getInstance().setScreen(new DebugLoadFailedGridScreen(Minecraft.getInstance().screen, Component.literal(e instanceof ShaderCompileException ? "Failed to compile shaders" : "Exception"), e));
 		} else {
 			if (Minecraft.getInstance().player != null) {

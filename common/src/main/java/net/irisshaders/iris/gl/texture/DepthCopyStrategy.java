@@ -111,7 +111,7 @@ public interface DepthCopyStrategy {
 
 		@Override
 		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
-			GL43C.glCopyImageSubData(
+			IrisRenderSystem.copyImageSubData(
 				sourceTexture,
 				GL43C.GL_TEXTURE_2D,
 				0,

@@ -1,6 +1,7 @@
 package net.irisshaders.iris.pipeline.programs;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
 import com.mojang.blaze3d.shaders.CompiledShader;
 import com.mojang.blaze3d.shaders.Uniform;
@@ -144,7 +145,28 @@ public class ExtendedShader extends CompiledShaderProgram {
 			BlendModeOverride.restore();
 		}
 
+		if (intensitySwizzle) {
+			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), TextureType.TEXTURE_2D.getGlType(), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+				new int[]{GL30C.GL_RED, GL30C.GL_GREEN, GL30C.GL_BLUE, GL30C.GL_ALPHA});
+		}
+
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+	}
+
+	@Override
+	public void setDefaultUniforms(VertexFormat.Mode mode, Matrix4f modelView, Matrix4f projection, Window window) {
+		super.setDefaultUniforms(mode, modelView, projection, window);
+		if (modelViewInverse != null) {
+			modelViewInverse.set(modelView.invert(tempMatrix4f));
+		}
+
+		if (normalMatrix != null) {
+			normalMatrix.set(modelView.invert(tempMatrix4f).transpose3x3(tempMatrix3f));
+		}
+
+		if (projectionInverse != null) {
+			projectionInverse.set(projection.invert(tempMatrix4f));
+		}
 	}
 
 	@Override
@@ -168,26 +190,6 @@ public class ExtendedShader extends CompiledShaderProgram {
 
 		ImmediateState.usingTessellation = usesTessellation;
 
-		if (PROJECTION_MATRIX != null) {
-			if (projectionInverse != null) {
-				projectionInverse.set(tempMatrix4f.set(PROJECTION_MATRIX.getFloatBuffer()).invert().get(tempFloats));
-			}
-		} else {
-			if (projectionInverse != null) {
-				projectionInverse.set(identity);
-			}
-		}
-
-		if (MODEL_VIEW_MATRIX != null) {
-			if (modelViewInverse != null) {
-				modelViewInverse.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer()).invert().get(tempFloats));
-			}
-
-			if (normalMatrix != null) {
-				normalMatrix.set(tempMatrix3f.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer())).invert().transpose().get(tempFloats2));
-			}
-		}
-
 		uploadIfNotNull(projectionInverse);
 		uploadIfNotNull(modelViewInverse);
 		uploadIfNotNull(normalMatrix);
@@ -204,7 +206,7 @@ public class ExtendedShader extends CompiledShaderProgram {
 
 		images.update();
 
-		GL46C.glUniform1i(GlStateManager._glGetUniformLocation(getProgramId(), "iris_overlay"), 1);
+		//GL46C.glUniform1i(GlStateManager._glGetUniformLocation(getProgramId(), "iris_overlay"), 1);
 
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();

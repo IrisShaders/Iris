@@ -1,5 +1,6 @@
 package net.irisshaders.iris.compat.dh;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiFogDrawMode;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiRenderPass;
@@ -197,7 +198,7 @@ public class LodRendererEvents {
 					if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 						event.cancelEvent();
 					} else if (getInstance().shouldOverride) {
-						GL43C.glClear(GL43C.GL_DEPTH_BUFFER_BIT);
+						RenderSystem.clear(GL43C.GL_DEPTH_BUFFER_BIT);
 						event.cancelEvent();
 					}
 				}
