@@ -1,6 +1,7 @@
 package net.irisshaders.iris.pipeline.programs;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -16,6 +17,7 @@ import net.minecraft.client.renderer.CompiledShaderProgram;
 import net.minecraft.client.renderer.ShaderProgramConfig;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 
 import java.io.IOException;
 import java.util.List;
@@ -71,6 +73,11 @@ public class FallbackShader extends CompiledShaderProgram {
 		}
 
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+	}
+
+	@Override
+	public void setDefaultUniforms(VertexFormat.Mode mode, Matrix4f matrix4f, Matrix4f matrix4f2, Window window) {
+		super.setDefaultUniforms(mode, matrix4f, matrix4f2, window);
 	}
 
 	@Override

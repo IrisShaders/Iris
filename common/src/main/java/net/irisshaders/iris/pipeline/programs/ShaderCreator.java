@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.serialization.JsonOps;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.shader.ShaderType;
@@ -49,6 +50,7 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.KHRDebug;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -146,7 +148,7 @@ public class ShaderCreator {
 			}
 		});
 
-		int id = link(name, vertex, geometry, tessControl, tessEval, fragment, vertexFormat);
+		int id = link(name, vertex, geometry, tessControl, tessEval, fragment, vertexFormat, false);
 
 
 		return new ShaderSupplier(shaderKey, id, () -> {
@@ -167,7 +169,7 @@ public class ShaderCreator {
 
 
 
-	public static int link(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment, VertexFormat vertexFormat) throws ShaderCompileException {
+	public static int link(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment, VertexFormat vertexFormat, boolean isFallback) throws ShaderCompileException {
 		int i = GlStateManager.glCreateProgram();
 		if (i <= 0) {
 			throw new RuntimeException("Could not create shader program (returned program ID " + i + ")");
@@ -184,7 +186,11 @@ public class ShaderCreator {
 			attachIfValid(i, tessEvalS);
 			attachIfValid(i, fragS);
 
-			((VertexFormatExtension) vertexFormat).bindAttributesIris(i);
+			if (isFallback) {
+				vertexFormat.bindAttributes(i);
+			} else {
+				((VertexFormatExtension) vertexFormat).bindAttributesIris(i);
+			}
 			GlStateManager.glLinkProgram(i);
 
 				detachIfValid(i, vertexS);
@@ -290,7 +296,8 @@ public class ShaderCreator {
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, null, null, fragment);
 
-		int id = link(name, vertex, null, null, null, fragment, vertexFormat);
+		int id = link(name, vertex, null, null, null, fragment, vertexFormat, true);
+		GLDebug.nameObject(KHRDebug.GL_PROGRAM, id, name + "_fallback");
 
 		// TODO 24w34a FALLBACK
 		return new ShaderSupplier(shaderKey, id, () -> {
@@ -361,7 +368,7 @@ public class ShaderCreator {
 
 		ResourceProvider shaderResourceFactory = new IrisProgramResourceFactory(shaderJsonString, vertex, null, null, null, fragment);
 
-		int id = link(name, vertex, null, null, null, fragment, vertexFormat);
+		int id = link(name, vertex, null, null, null, fragment, vertexFormat, true);
 
 		// TODO 24w34a FALLBACK
 		return new ShaderSupplier(shaderKey, id, () -> {
@@ -407,7 +414,7 @@ public class ShaderCreator {
 			}
 		});
 
-		int id = link(name, vertex, geometry, tessControl, tessEval, fragment, vertexFormat);
+		int id = link(name, vertex, geometry, tessControl, tessEval, fragment, vertexFormat, false);
 
 
 		return new ShaderSupplier(shaderKey, id, () -> {

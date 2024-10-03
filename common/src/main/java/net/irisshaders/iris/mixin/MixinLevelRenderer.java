@@ -68,7 +68,7 @@ public class MixinLevelRenderer {
 	private Minecraft minecraft;
 
 	@Unique
-	private static WorldRenderingPipeline pipeline;
+	private WorldRenderingPipeline pipeline;
 
 	@Shadow
 	private RenderBuffers renderBuffers;
@@ -79,6 +79,9 @@ public class MixinLevelRenderer {
 	@Shadow
 	private Frustum cullingFrustum;
 
+	@Shadow
+	@Final
+	private LevelTargetBundle targets;
 	private boolean warned;
 
 	// Begin shader rendering after buffers have been cleared.
@@ -115,9 +118,17 @@ public class MixinLevelRenderer {
 	// At this point we've ensured that Minecraft's main framebuffer is cleared.
 	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
 	// all pixels.
-	@Inject(method = "method_62218", at = @At(value = "TAIL"))
-	private static void iris$beginLevelRender(Vector4f vector4f, CallbackInfo ci) {
-		pipeline.onBeginClear();
+	@Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/framegraph/FramePass;executes(Ljava/lang/Runnable;)V", ordinal = 0, shift = At.Shift.AFTER))
+	private void iris$beginLevelRender(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci, @Local FrameGraphBuilder frameGraphBuilder, @Local(ordinal = 1) FogParameters fogParameters, @Local(ordinal = 0) FramePass clearPass) {
+		FramePass framePass = frameGraphBuilder.addPass("iris_setup");
+		this.targets.main = framePass.readsAndWrites(this.targets.main);
+		framePass.requires(clearPass);
+		framePass.executes(() -> {
+			FogParameters params = RenderSystem.getShaderFog();
+			RenderSystem.setShaderFog(fogParameters);
+			pipeline.onBeginClear();
+			RenderSystem.setShaderFog(params);
+		});
 	}
 
 
