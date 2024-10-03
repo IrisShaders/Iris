@@ -25,7 +25,7 @@ public class ShaderMap {
 		loadingMap.forAllShaders((key, shader) -> {
 			if (shader != null) {
 				if (deletionFunction.apply(shader)) {
-					GlStateManager.glDeleteShader(shader.id());
+					GlStateManager.glDeleteProgram(shader.id());
 					return;
 				}
 
