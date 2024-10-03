@@ -23,6 +23,7 @@ import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.parameter.ComputeParameters;
+import net.irisshaders.iris.pipeline.transform.parameter.DHParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.TextureStageParameters;
@@ -31,7 +32,8 @@ import net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.CompatibilityTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.CompositeCoreTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.CompositeTransformer;
-import net.irisshaders.iris.pipeline.transform.transformer.DHTransformer;
+import net.irisshaders.iris.pipeline.transform.transformer.DHGenericTransformer;
+import net.irisshaders.iris.pipeline.transform.transformer.DHTerrainTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumCoreTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumTransformer;
@@ -182,8 +184,11 @@ public class TransformPatcher {
 								case VANILLA:
 									VanillaTransformer.transform(transformer, tree, root, (VanillaParameters) parameters);
 									break;
-								case DH:
-									DHTransformer.transform(transformer, tree, root, parameters);
+								case DH_TERRAIN:
+									DHTerrainTransformer.transform(transformer, tree, root, parameters);
+									break;
+								case DH_GENERIC:
+									DHGenericTransformer.transform(transformer, tree, root, parameters);
 									break;
 								default:
 									throw new UnsupportedOperationException("Unknown patch type: " + parameters.patch);
@@ -297,16 +302,19 @@ public class TransformPatcher {
 	}
 
 
-	public static Map<PatchShaderType, String> patchDH(
+	public static Map<PatchShaderType, String> patchDHTerrain(
 		String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new Parameters(Patch.DH, textureMap) {
-				@Override
-				public TextureStage getTextureStage() {
-					return TextureStage.GBUFFERS_AND_SHADOW;
-				}
-			});
+			new DHParameters(Patch.DH_TERRAIN, textureMap));
+	}
+
+
+	public static Map<PatchShaderType, String> patchDHGeneric(
+		String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
+			new DHParameters(Patch.DH_GENERIC, textureMap));
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,

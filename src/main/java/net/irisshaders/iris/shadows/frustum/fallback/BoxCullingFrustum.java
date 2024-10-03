@@ -1,7 +1,7 @@
 package net.irisshaders.iris.shadows.frustum.fallback;
 
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
-import com.seibel.distanthorizons.coreapi.util.math.Mat4f;
+import com.seibel.distanthorizons.api.objects.math.DhApiMat4f;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
@@ -39,7 +39,7 @@ public class BoxCullingFrustum extends Frustum implements IDhApiShadowCullingFru
 	}
 
 	@Override
-	public void update(int worldMinBlockY, int worldMaxBlockY, Mat4f worldViewProjection) {
+	public void update(int worldMinBlockY, int worldMaxBlockY, DhApiMat4f worldViewProjection) {
 		this.worldMinYDH = worldMinBlockY;
 		this.worldMaxYDH = worldMaxBlockY;
 	}

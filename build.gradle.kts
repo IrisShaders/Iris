@@ -8,7 +8,7 @@ object Constants {
     const val FABRIC_API_VERSION: String = "0.92.0+1.20.1"
 
     // https://semver.org/
-    const val MOD_VERSION: String = "1.7.2"
+    const val MOD_VERSION: String = "1.7.5"
 
     const val CUSTOM_SODIUM: Boolean = false
     const val CUSTOM_SODIUM_NAME: String = ""
@@ -171,7 +171,7 @@ dependencies {
     modRuntimeOnly(fabricApi.module("fabric-resource-loader-v0", Constants.FABRIC_API_VERSION))
     modRuntimeOnly(fabricApi.module("fabric-block-view-api-v2", Constants.FABRIC_API_VERSION))
 
-    modCompileOnly(files(projectDir.resolve("DHApi.jar")))
+    modCompileOnly("maven.modrinth", "distanthorizonsapi", "3.0.0")
 
     fun addEmbeddedFabricModule(name: String) {
         val module = fabricApi.module(name, Constants.FABRIC_API_VERSION)

@@ -12,7 +12,7 @@ import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 
 import static net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
-public class DHTransformer {
+public class DHTerrainTransformer {
 	public static void transform(
 		ASTParser t,
 		TranslationUnit tree,

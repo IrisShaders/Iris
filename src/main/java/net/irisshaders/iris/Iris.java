@@ -95,10 +95,19 @@ public class Iris {
 	private static Version IRIS_VERSION;
 	private static UpdateChecker updateChecker;
 	private static boolean fallback;
+	private static boolean loadShaderPackWhenPossible = false;
 
 	static {
 		if (!BuildConfig.ACTIVATE_RENDERDOC && FabricLoader.getInstance().isDevelopmentEnvironment() && System.getProperty("user.name").contains("ims") && Util.getPlatform() == Util.OS.LINUX) {
 		}
+	}
+
+	public static boolean isPackInUseQuick() {
+		return getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline;
+	}
+
+	public static void loadShaderpackWhenPossible() {
+		loadShaderPackWhenPossible = true;
 	}
 
 	/**
@@ -114,7 +123,9 @@ public class Iris {
 		PBRTextureManager.INSTANCE.init();
 
 		// Only load the shader pack when we can access OpenGL
-		loadShaderpack();
+		if (!FabricLoader.getInstance().isModLoaded("distanthorizons")) {
+			loadShaderpack();
+		}
 	}
 
 	public static void duringRenderSystemInit() {
@@ -139,6 +150,11 @@ public class Iris {
 	}
 
 	public static void handleKeybinds(Minecraft minecraft) {
+		if (loadShaderPackWhenPossible) {
+			loadShaderPackWhenPossible = false;
+			Iris.loadShaderpack();
+		}
+
 		if (reloadKeybind.consumeClick()) {
 			try {
 				reload();

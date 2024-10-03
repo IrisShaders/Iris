@@ -167,6 +167,9 @@ public class ShaderPack {
 		List<StringPair> finalEnvironmentDefines = new ArrayList<>(List.copyOf(environmentDefines));
 		for (FeatureFlags flag : FeatureFlags.values()) {
 			if (flag.isUsable()) {
+				if (flag == FeatureFlags.TESSELLATION_SHADERS) {
+					finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_TESSELATION_SHADERS", ""));
+				}
 				finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_" + flag.name(), ""));
 			}
 		}
