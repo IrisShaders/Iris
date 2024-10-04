@@ -35,4 +35,9 @@ public class MixinChunkBuildBuffers implements BlockSensitiveBufferBuilder {
 	public void endBlock() {
 		contextHolder.setBlockData(0, (byte) 0, (byte) 0, 0, 0, 0);
 	}
+
+	@Override
+	public void ignoreMidBlock(boolean b) {
+		contextHolder.setIgnoreMidBlock(b);
+	}
 }

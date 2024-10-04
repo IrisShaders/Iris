@@ -5,6 +5,7 @@ public class BlockContextHolder {
 	private int blockId;
 	private byte renderType;
 	private int localPosX, localPosY, localPosZ;
+	private boolean ignoreMidBlock;
 
 	public int getBlockId() {
 		return blockId;
@@ -40,7 +41,10 @@ public class BlockContextHolder {
 	}
 
 	public boolean ignoreMidBlock() {
-		// TODO ADD THIS
-		return false;
+		return ignoreMidBlock;
+	}
+
+	public void setIgnoreMidBlock(boolean ignoreMidBlock) {
+		this.ignoreMidBlock = ignoreMidBlock;
 	}
 }
