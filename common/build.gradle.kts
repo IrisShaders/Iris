@@ -102,7 +102,7 @@ sourceSets {
 loom {
     mixin {
         defaultRefmapName = "iris.refmap.json"
-        useLegacyMixinAp = false
+        useLegacyMixinAp = true
     }
 
     accessWidenerPath = file("src/main/resources/iris.accesswidener")
