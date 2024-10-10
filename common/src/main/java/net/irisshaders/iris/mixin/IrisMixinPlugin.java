@@ -1,6 +1,5 @@
-package net.irisshaders.iris.compat.dh;
+package net.irisshaders.iris.mixin;
 
-import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -8,7 +7,7 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
-public class DHMixinConfigPlugin implements IMixinConfigPlugin {
+public class IrisMixinPlugin implements IMixinConfigPlugin {
 	@Override
 	public void onLoad(String mixinPackage) {
 
@@ -16,12 +15,12 @@ public class DHMixinConfigPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public String getRefMapperConfig() {
-		return null;
+		return "iris.refmap.json";
 	}
 
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-		return IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons");
+		return true;
 	}
 
 	@Override

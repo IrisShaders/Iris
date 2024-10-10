@@ -1,17 +1,20 @@
 
 plugins {
     id("java")
-    id("fabric-loom") version("1.8-SNAPSHOT") apply(false)
+    id("fabric-loom") version("1.7.3") apply(false)
 }
 
-val MINECRAFT_VERSION by extra { "24w40a" }
-val NEOFORGE_VERSION by extra { "21.1.19" }
-val FABRIC_LOADER_VERSION by extra { "0.16.5" }
-val FABRIC_API_VERSION by extra { "0.105.1+1.21.2" }
-val SODIUM_FILE by extra { "sodium-fabric-0.6.0-snapshot+mc24w40a-local.jar" }
+val MINECRAFT_VERSION by extra { "1.21.1" }
+val NEOFORGE_VERSION by extra { "21.1.46" }
+val FABRIC_LOADER_VERSION by extra { "0.16.4" }
+val FABRIC_API_VERSION by extra { "0.103.0+1.21.1" }
+
+// This value can be set to null to disable Parchment.
+// TODO: Re-add Parchment
+val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.8.0-beta.2" }
+val MOD_VERSION by extra { "1.8.0-beta.5" }
 
 allprojects {
     apply(plugin = "java")
@@ -22,17 +25,15 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
+tasks.jar {
+    enabled = false
+}
+
 subprojects {
     apply(plugin = "maven-publish")
 
     java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-    repositories {
-        maven {
-            name = "ParchmentMC"
-            url = uri("https://maven.parchmentmc.org")
-        }
-    }
 
     fun createVersionString(): String {
         val builder = StringBuilder()

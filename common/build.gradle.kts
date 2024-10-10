@@ -1,17 +1,30 @@
-import net.fabricmc.loom.task.AbstractRemapJarTask
-
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.8-SNAPSHOT"
+    id("fabric-loom") version "1.7.3"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
+repositories {
+    maven("https://maven.parchmentmc.org/")
+
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = uri("https://api.modrinth.com/maven")
+            }
+        }
+        filter {
+            includeGroup("maven.modrinth")
+        }
+    }
+}
+
 val MINECRAFT_VERSION: String by rootProject.extra
+val PARCHMENT_VERSION: String? by rootProject.extra
 val FABRIC_LOADER_VERSION: String by rootProject.extra
 val FABRIC_API_VERSION: String by rootProject.extra
-val SODIUM_VERSION: String by rootProject.extra
-val SODIUM_FILE: String by rootProject.extra
 
 sourceSets.create("desktop")
 
@@ -31,48 +44,37 @@ buildConfig {
     }
 }
 
-// This trick hides common tasks in the IDEA list.
-tasks.configureEach {
-    group = null
-}
-
 dependencies {
     minecraft(group = "com.mojang", name = "minecraft", version = MINECRAFT_VERSION)
-    mappings(loom.layered {
+
+    mappings(loom.layered() {
         officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-1.21:2024.07.28@zip")
+        if (PARCHMENT_VERSION != null) {
+            parchment("org.parchmentmc.data:parchment-${MINECRAFT_VERSION}:${PARCHMENT_VERSION}@zip")
+        }
     })
-    modCompileOnly("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
+
+    modImplementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
+
+    modCompileOnly("net.fabricmc.fabric-api:fabric-renderer-api-v1:3.2.9+1172e897d7")
+
+    modImplementation("maven.modrinth", "sodium", "mc1.21-0.6.0-beta.2-fabric")
     modCompileOnly("org.antlr:antlr4-runtime:4.13.1")
     modCompileOnly("io.github.douira:glsl-transformer:2.0.1")
     modCompileOnly("org.anarres:jcpp:1.4.14")
 
-    modCompileOnly(files(rootDir.resolve("custom_sodium").resolve(SODIUM_FILE.replace("LOADER", "fabric"))))
-
-    modCompileOnly(files(rootDir.resolve("DHApi.jar")))
-}
-
-tasks.withType<AbstractRemapJarTask>().forEach {
-    it.targetNamespace = "named"
+    compileOnly(files(rootDir.resolve("DHApi.jar")))
 }
 
 sourceSets {
     val main = getByName("main")
-    val test = getByName("test")
     val headers = create("headers")
     val vendored = create("vendored")
-    val sodiumCompatibility = create("sodiumCompatibility")
+    val desktop = getByName("desktop")
 
     headers.apply {
         java {
             compileClasspath += main.compileClasspath
-        }
-    }
-
-    test.apply {
-        java {
-            compileClasspath += main.compileClasspath
-            compileClasspath += main.output
         }
     }
 
@@ -82,10 +84,9 @@ sourceSets {
         }
     }
 
-    sodiumCompatibility.apply {
+    desktop.apply {
         java {
-            compileClasspath += main.compileClasspath
-            compileClasspath += main.output
+            srcDir("src/desktop/java")
         }
     }
 
@@ -101,7 +102,7 @@ sourceSets {
 loom {
     mixin {
         defaultRefmapName = "iris.refmap.json"
-        useLegacyMixinAp = false
+        useLegacyMixinAp = true
     }
 
     accessWidenerPath = file("src/main/resources/iris.accesswidener")
@@ -109,7 +110,6 @@ loom {
     mods {
         val main by creating { // to match the default mod generated for Forge
             sourceSet("vendored")
-            sourceSet("sodiumCompatibility")
             sourceSet("main")
         }
     }
@@ -128,6 +128,15 @@ tasks {
         from(vendored.output.classesDirs)
         from(vendored.output.resourcesDir)
 
-        manifest.attributes["Main-Class"] = "net.caffeinemc.mods.sodium.desktop.LaunchWarn"
+        val desktop = sourceSets.getByName("desktop")
+        from(desktop.output.classesDirs)
+        from(desktop.output.resourcesDir)
+
+        manifest.attributes["Main-Class"] = "net.irisshaders.iris.LaunchWarn"
     }
+}
+
+// This trick hides common tasks in the IDEA list.
+tasks.configureEach {
+    group = null
 }

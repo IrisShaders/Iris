@@ -1,6 +1,6 @@
 name: Crash Report
 description: Create a report to inform us of a constant crash
-labels: [crash]
+type: 'crash'
 body:
   - type: markdown
     attributes:
