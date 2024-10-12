@@ -103,7 +103,7 @@ public class MixinLevelRenderer {
 			this.overrideFrustum = null;
 		}
 
-		Minecraft.getInstance().smartCull = !pipeline.shouldDisableOcclusionCulling();
+		IrisRenderSystem.backupAndDisableCullingState(pipeline.shouldDisableOcclusionCulling());
 
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
 			IrisRenderSystem.setPolygonMode(GL43C.GL_LINE);
@@ -140,6 +140,8 @@ public class MixinLevelRenderer {
 			Iris.getUpdateChecker().getBetaInfo().ifPresent(info ->
 				Minecraft.getInstance().gui.getChat().addMessage(Component.literal("A new beta is out for Iris " + info.betaTag + ". Please redownload it.").withStyle(ChatFormatting.BOLD, ChatFormatting.RED)));
 		}
+
+		IrisRenderSystem.restoreCullingState();
 
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
 			IrisRenderSystem.setPolygonMode(GL43C.GL_FILL);
