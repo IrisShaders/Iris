@@ -17,11 +17,20 @@ public class IrisVertexFormats {
 	public static final VertexFormat CLOUDS;
 
 	static {
-		ENTITY_ELEMENT = VertexFormatElement.register(10, 10, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
-		ENTITY_ID_ELEMENT = VertexFormatElement.register(11, 11, VertexFormatElement.Type.USHORT, VertexFormatElement.Usage.UV, 3);
-		MID_TEXTURE_ELEMENT = VertexFormatElement.register(12, 12, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
-		TANGENT_ELEMENT = VertexFormatElement.register(13, 13, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
-		MID_BLOCK_ELEMENT = VertexFormatElement.register(14, 14, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
+		int LAST_UV = 0;
+
+		for (int i = 0; i < VertexFormatElement.MAX_COUNT; i++) {
+			VertexFormatElement element = VertexFormatElement.byId(i);
+			if (element != null && element.usage() == VertexFormatElement.Usage.UV) {
+				LAST_UV = Math.max(LAST_UV, element.index());
+			}
+		}
+
+		ENTITY_ELEMENT = VertexFormatElement.register(10, 0, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
+		ENTITY_ID_ELEMENT = VertexFormatElement.register(11, LAST_UV + 1, VertexFormatElement.Type.USHORT, VertexFormatElement.Usage.UV, 3);
+		MID_TEXTURE_ELEMENT = VertexFormatElement.register(12, 0, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
+		TANGENT_ELEMENT = VertexFormatElement.register(13, 0, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
+		MID_BLOCK_ELEMENT = VertexFormatElement.register(14, 0, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
 
 		TERRAIN = VertexFormat.builder()
 			.add("Position", VertexFormatElement.POSITION)
