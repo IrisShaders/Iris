@@ -38,6 +38,10 @@ tasks.jar {
     from(vendored.output.classesDirs)
     from(vendored.output.resourcesDir)
 
+    val desktop = project.project(":common").sourceSets.getByName("desktop")
+    from(desktop.output.classesDirs)
+    from(desktop.output.resourcesDir)
+
     val main = project.project(":common").sourceSets.getByName("main")
     from(main.output.classesDirs) {
         exclude("/iris.refmap.json")
