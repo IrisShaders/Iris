@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.8.6")
+    id("fabric-loom") version ("1.7.3")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -63,7 +63,7 @@ dependencies {
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
 
-    modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc24w40a-local.jar")))
+    modImplementation("maven.modrinth", "sodium", "mc1.21-0.6.0-beta.2-fabric")
     implementAndInclude("org.antlr:antlr4-runtime:4.13.1")
     implementAndInclude("io.github.douira:glsl-transformer:2.0.1")
     implementAndInclude("org.anarres:jcpp:1.4.14")
@@ -96,13 +96,6 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
-        }
-        create("clientQuickplay") {
-            client()
-            configName = "Fabric Client - Quickplay"
-            ideConfigGenerated(true)
-            runDir("run")
-            programArgs("--quickPlaySingleplayer", "\"World on $MINECRAFT_VERSION\"")
         }
     }
 }

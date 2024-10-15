@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.8.6"
+    id("fabric-loom") version "1.7.3"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
@@ -58,7 +58,7 @@ dependencies {
 
     modCompileOnly("net.fabricmc.fabric-api:fabric-renderer-api-v1:3.2.9+1172e897d7")
 
-    modImplementation(files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.6.0-snapshot+mc24w40a-local.jar")))
+    modImplementation("maven.modrinth", "sodium", "mc1.21-0.6.0-beta.2-fabric")
     modCompileOnly("org.antlr:antlr4-runtime:4.13.1")
     modCompileOnly("io.github.douira:glsl-transformer:2.0.1")
     modCompileOnly("org.anarres:jcpp:1.4.14")

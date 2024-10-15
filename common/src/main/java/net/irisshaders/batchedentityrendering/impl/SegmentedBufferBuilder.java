@@ -67,7 +67,7 @@ public class SegmentedBufferBuilder implements MemoryTrackingBuffer {
 				if (meshData == null) return;
 
 				if (shouldSortOnUpload(renderType)) {
-					meshData.sortQuads(buffers.get(renderType).getBuffer(), RenderSystem.getProjectionType().vertexSorting());
+					meshData.sortQuads(buffers.get(renderType).getBuffer(), RenderSystem.getVertexSorting());
 				}
 
 				segments.add(new BufferSegment(meshData, renderType));

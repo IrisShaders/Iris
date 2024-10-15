@@ -1,6 +1,5 @@
 package net.irisshaders.iris.pathways;
 
-import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
@@ -39,7 +38,7 @@ public class HandRenderer {
 		// We need to scale the matrix by 0.125 so the hand doesn't clip through blocks.
 		Matrix4f scaleMatrix = new Matrix4f().scale(1F, 1F, DEPTH);
 		scaleMatrix.mul(gameRenderer.getProjectionMatrix(((GameRendererAccessor) gameRenderer).invokeGetFov(camera, tickDelta, false)));
-		RenderSystem.setProjectionMatrix(scaleMatrix, ProjectionType.PERSPECTIVE);
+		RenderSystem.setProjectionMatrix(scaleMatrix, VertexSorting.DISTANCE_TO_ORIGIN);
 
 		poseStack.setIdentity();
 
@@ -103,7 +102,7 @@ public class HandRenderer {
 		bufferSource.readyUp();
 		bufferSource.endBatch();
 
-		RenderSystem.setProjectionMatrix(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection()), ProjectionType.PERSPECTIVE);
+		RenderSystem.setProjectionMatrix(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection()), VertexSorting.DISTANCE_TO_ORIGIN);
 
 		poseStack.popPose();
 		RenderSystem.getModelViewStack().popMatrix();
@@ -139,7 +138,7 @@ public class HandRenderer {
 
 		Profiler.get().pop();
 
-		RenderSystem.setProjectionMatrix(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection()), ProjectionType.PERSPECTIVE);
+		RenderSystem.setProjectionMatrix(new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection()), VertexSorting.DISTANCE_TO_ORIGIN);
 
 		bufferSource.endBatch();
 		RenderSystem.getModelViewStack().popMatrix();
