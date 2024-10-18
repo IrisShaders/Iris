@@ -7,6 +7,8 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.sampler.SamplerLimits;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3i;
@@ -469,7 +471,20 @@ public class IrisRenderSystem {
 
 	public static void copyImageSubData(int sourceTexture, int target, int mip, int srcX, int srcY, int srcZ, int destTexture, int dstTarget, int dstMip, int dstX, int dstY, int dstZ, int width, int height, int depth) {
 		GL46C.glCopyImageSubData(sourceTexture, target, mip, srcX, srcY, srcZ, destTexture, dstTarget, dstMip, dstX, dstY, dstZ, width, height, depth);
+  }
+  
+  
+  private static boolean cullingState;
+
+	public static void backupAndDisableCullingState(boolean b) {
+		cullingState = Minecraft.getInstance().smartCull;
+		Minecraft.getInstance().smartCull = Minecraft.getInstance().smartCull && !b;
 	}
+
+	public static void restoreCullingState() {
+		Minecraft.getInstance().smartCull = cullingState;
+		cullingState = true;
+  }
 
 	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);

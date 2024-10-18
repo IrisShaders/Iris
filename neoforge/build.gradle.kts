@@ -42,7 +42,6 @@ repositories {
 }
 
 tasks.jar {
-
     from(rootDir.resolve("LICENSE.md"))
 
     filesMatching("neoforge.mods.toml") {
