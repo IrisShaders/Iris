@@ -1,5 +1,6 @@
 package net.irisshaders.iris.gl;
 
+import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
@@ -35,6 +36,7 @@ import java.nio.IntBuffer;
 public class IrisRenderSystem {
 	private static final int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
 	private static Matrix4f backupProjection;
+	private static ProjectionType backupProjectionType;
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
 	private static boolean supportsCompute;
@@ -102,6 +104,11 @@ public class IrisRenderSystem {
 	}
 
 	public static void uniformMatrix4fv(int location, boolean transpose, FloatBuffer matrix) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		GL32C.glUniformMatrix4fv(location, transpose, matrix);
+	}
+
+	public static void uniformMatrix4fv(int location, boolean transpose, float[] matrix) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL32C.glUniformMatrix4fv(location, transpose, matrix);
 	}
@@ -337,12 +344,14 @@ public class IrisRenderSystem {
 
 	public static void setShadowProjection(Matrix4f shadowProjection) {
 		backupProjection = RenderSystem.getProjectionMatrix();
-		RenderSystem.setProjectionMatrix(shadowProjection, VertexSorting.ORTHOGRAPHIC_Z);
+		backupProjectionType = RenderSystem.getProjectionType();
+		RenderSystem.setProjectionMatrix(shadowProjection, ProjectionType.ORTHOGRAPHIC);
 	}
 
 	public static void restorePlayerProjection() {
-		RenderSystem.setProjectionMatrix(backupProjection, VertexSorting.DISTANCE_TO_ORIGIN);
+		RenderSystem.setProjectionMatrix(backupProjection, backupProjectionType);
 		backupProjection = null;
+		backupProjectionType = null;
 	}
 
 	public static void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
@@ -456,7 +465,16 @@ public class IrisRenderSystem {
 		return dsaState.createBuffers();
 	}
 
-	private static boolean cullingState;
+	public static String getStringi(int glEnum, int index) {
+		return GL46C.glGetStringi(glEnum, index);
+	}
+
+	public static void copyImageSubData(int sourceTexture, int target, int mip, int srcX, int srcY, int srcZ, int destTexture, int dstTarget, int dstMip, int dstX, int dstY, int dstZ, int width, int height, int depth) {
+		GL46C.glCopyImageSubData(sourceTexture, target, mip, srcX, srcY, srcZ, destTexture, dstTarget, dstMip, dstX, dstY, dstZ, width, height, depth);
+  }
+  
+  
+  private static boolean cullingState;
 
 	public static void backupAndDisableCullingState(boolean b) {
 		cullingState = Minecraft.getInstance().smartCull;
@@ -466,7 +484,7 @@ public class IrisRenderSystem {
 	public static void restoreCullingState() {
 		Minecraft.getInstance().smartCull = cullingState;
 		cullingState = true;
-	}
+  }
 
 	public interface DSAAccess {
 		void generateMipmaps(int texture, int target);

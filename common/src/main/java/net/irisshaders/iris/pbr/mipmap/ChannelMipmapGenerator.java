@@ -1,6 +1,6 @@
 package net.irisshaders.iris.pbr.mipmap;
 
-import net.minecraft.util.FastColor;
+import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 
 public class ChannelMipmapGenerator extends AbstractMipmapGenerator {
 	protected final BlendFunction redFunc;
@@ -17,32 +17,36 @@ public class ChannelMipmapGenerator extends AbstractMipmapGenerator {
 
 	@Override
 	public int blend(int c0, int c1, int c2, int c3) {
-		return FastColor.ABGR32.color(
+		return packABGR(
 			alphaFunc.blend(
-				FastColor.ABGR32.alpha(c0),
-				FastColor.ABGR32.alpha(c1),
-				FastColor.ABGR32.alpha(c2),
-				FastColor.ABGR32.alpha(c3)
+				ColorABGR.unpackAlpha(c0),
+				ColorABGR.unpackAlpha(c1),
+				ColorABGR.unpackAlpha(c2),
+				ColorABGR.unpackAlpha(c3)
 			),
 			blueFunc.blend(
-				FastColor.ABGR32.blue(c0),
-				FastColor.ABGR32.blue(c1),
-				FastColor.ABGR32.blue(c2),
-				FastColor.ABGR32.blue(c3)
+				ColorABGR.unpackBlue(c0),
+				ColorABGR.unpackBlue(c1),
+				ColorABGR.unpackBlue(c2),
+				ColorABGR.unpackBlue(c3)
 			),
 			greenFunc.blend(
-				FastColor.ABGR32.green(c0),
-				FastColor.ABGR32.green(c1),
-				FastColor.ABGR32.green(c2),
-				FastColor.ABGR32.green(c3)
+				ColorABGR.unpackGreen(c0),
+				ColorABGR.unpackGreen(c1),
+				ColorABGR.unpackGreen(c2),
+				ColorABGR.unpackGreen(c3)
 			),
 			redFunc.blend(
-				FastColor.ABGR32.red(c0),
-				FastColor.ABGR32.red(c1),
-				FastColor.ABGR32.red(c2),
-				FastColor.ABGR32.red(c3)
+				ColorABGR.unpackRed(c0),
+				ColorABGR.unpackRed(c1),
+				ColorABGR.unpackRed(c2),
+				ColorABGR.unpackRed(c3)
 			)
 		);
+	}
+
+	private int packABGR(int a, int b, int g, int r) {
+		return ColorABGR.pack(r,g,b,a);
 	}
 
 	public interface BlendFunction {

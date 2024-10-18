@@ -1,5 +1,6 @@
 package net.irisshaders.iris.pathways;
 
+import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -27,7 +28,7 @@ public class FullScreenQuadRenderer {
 		bufferBuilder.addVertex(0.0F, 1.0F, 0.0F).setUv(0.0F, 1.0F);
 		MeshData meshData = bufferBuilder.build();
 
-		quad = new VertexBuffer(VertexBuffer.Usage.STATIC);
+		quad = new VertexBuffer(BufferUsage.STATIC_WRITE);
 		quad.bind();
 		quad.upload(meshData);
 		Tesselator.getInstance().clear();

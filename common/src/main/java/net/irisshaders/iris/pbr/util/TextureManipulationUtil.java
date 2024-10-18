@@ -34,7 +34,7 @@ public class TextureManipulationUtil {
 			int height = GlStateManager._getTexLevelParameter(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_HEIGHT);
 			GlStateManager._viewport(0, 0, width, height);
 			GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, textureId, level);
-			GlStateManager._clear(GL11.GL_COLOR_BUFFER_BIT, Minecraft.ON_OSX);
+			GlStateManager._clear(GL11.GL_COLOR_BUFFER_BIT);
 			GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, 0, level);
 		}
 

@@ -353,15 +353,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private void processFixedBlur(float tick) {
-		PostChain blurEffect = ((GameRendererAccessor) this.minecraft.gameRenderer).getBlurEffect();
-		float g = Math.min(this.minecraft.options.getMenuBackgroundBlurriness(), this.blurTransition.getAsFloat());
-		if (blurEffect != null && g >= 1.0F) {
-			blurEffect.setUniform("Radius", g);
-			blurEffect.process(tick);
-		}
+		// TODO IMS 24w35a
 	}
 
-	@Override
 	protected void renderBlurredBackground(float pScreen0) {
 		processFixedBlur(pScreen0);
 		this.minecraft.getMainRenderTarget().bindWrite(false);

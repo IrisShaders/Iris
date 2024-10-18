@@ -13,7 +13,6 @@ import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.vertices.sodium.CloudVertex;
-import net.minecraft.client.renderer.ShaderInstance;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -39,9 +38,6 @@ public abstract class MixinCloudRenderer {
 
 	@Unique
 	private static int computedNormal;
-
-	@Shadow
-	private ShaderInstance shaderProgram;
 
 	@Shadow(remap = false)
 	@Nullable
@@ -117,21 +113,5 @@ public abstract class MixinCloudRenderer {
 		} else {
 			cachedGeometry = value;
 		}
-	}
-
-	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/immediate/CloudRenderer;shaderProgram:Lnet/minecraft/client/renderer/ShaderInstance;"))
-	private ShaderInstance changeShader(CloudRenderer instance) {
-		return getClouds();
-	}
-
-	@Unique
-	private ShaderInstance getClouds() {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
-
-		if (pipeline instanceof ShaderRenderingPipeline) {
-			return ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(ShaderKey.CLOUDS_SODIUM);
-		}
-
-		return shaderProgram;
 	}
 }

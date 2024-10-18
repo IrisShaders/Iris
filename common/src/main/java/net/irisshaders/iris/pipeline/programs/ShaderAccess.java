@@ -1,13 +1,19 @@
 package net.irisshaders.iris.pipeline.programs;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.CompiledShaderProgram;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.ShaderDefines;
+import net.minecraft.client.renderer.ShaderProgram;
+import net.minecraft.resources.ResourceLocation;
 
 public class ShaderAccess {
 	public static final VertexFormat IE_FORMAT = VertexFormat.builder()
@@ -18,21 +24,21 @@ public class ShaderAccess {
 		.padding(1)
 		.build();
 
-	public static ShaderInstance getParticleTranslucentShader() {
+	public static CompiledShaderProgram getParticleTranslucentShader() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof ShaderRenderingPipeline) {
-			ShaderInstance override = ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(ShaderKey.PARTICLES_TRANS);
+			CompiledShaderProgram override = ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(ShaderKey.PARTICLES_TRANS);
 
 			if (override != null) {
 				return override;
 			}
 		}
 
-		return GameRenderer.getParticleShader();
+		return Minecraft.getInstance().getShaderManager().getProgram(CoreShaders.PARTICLE);
 	}
 
-	public static ShaderInstance getIEVBOShader() {
+	public static CompiledShaderProgram getIEVBOShader() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof ShaderRenderingPipeline) {
@@ -43,24 +49,7 @@ public class ShaderAccess {
 		return null;
 	}
 
-	public static ShaderInstance getMekanismFlameShader() {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
-
-		if (pipeline instanceof ShaderRenderingPipeline) {
-
-			return ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.MEKANISM_FLAME_SHADOW : ShaderKey.MEKANISM_FLAME);
-		}
-
-		return GameRenderer.getPositionTexColorShader();
-	}
-
-	public static ShaderInstance getMekasuitShader() {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
-
-		if (pipeline instanceof ShaderRenderingPipeline) {
-			return ((ShaderRenderingPipeline) pipeline).getShaderMap().getShader(ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_ENTITIES_CUTOUT : ShaderKey.ENTITIES_TRANSLUCENT);
-		}
-
-		return GameRenderer.getRendertypeEntityCutoutShader();
-	}
+	public static ShaderProgram MEKANISM_FLAME = new ShaderProgram(ResourceLocation.fromNamespaceAndPath("iris", "mekanism_flame"), DefaultVertexFormat.POSITION_TEX_COLOR, ShaderDefines.EMPTY);
+	public static ShaderProgram MEKASUIT = new ShaderProgram(ResourceLocation.fromNamespaceAndPath("iris", "mekasuit"), DefaultVertexFormat.NEW_ENTITY, ShaderDefines.EMPTY);
+	public static ShaderProgram IE_COMPAT = new ShaderProgram(ResourceLocation.fromNamespaceAndPath("iris", "ie_vbo"), IE_FORMAT, ShaderDefines.EMPTY);
 }

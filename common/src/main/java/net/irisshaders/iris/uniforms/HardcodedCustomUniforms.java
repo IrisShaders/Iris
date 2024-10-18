@@ -183,7 +183,7 @@ public class HardcodedCustomUniforms {
 		if (storedBiome == null) {
 			return 0;
 		}
-		Biome.Precipitation precipitation = storedBiome.value().getPrecipitationAt(Minecraft.getInstance().cameraEntity.blockPosition());
+		Biome.Precipitation precipitation = storedBiome.value().getPrecipitationAt(Minecraft.getInstance().cameraEntity.blockPosition(), Minecraft.getInstance().level.getSeaLevel());
 		return switch (precipitation) {
 			case RAIN -> 1;
 			case SNOW -> 2;

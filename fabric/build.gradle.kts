@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.7.3")
+    id("fabric-loom") version ("1.8.10")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -11,6 +11,7 @@ val FABRIC_API_VERSION: String by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 repositories {
+    mavenLocal()
     exclusiveContent {
         forRepository {
             maven {
@@ -63,7 +64,7 @@ dependencies {
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
 
-    modImplementation("maven.modrinth", "sodium", "mc1.21-0.6.0-beta.2-fabric")
+    modImplementation("net.caffeinemc", "sodium-fabric", "0.6.0-snapshot+mc1.21.2-rc1-local")
     implementAndInclude("org.antlr:antlr4-runtime:4.13.1")
     implementAndInclude("io.github.douira:glsl-transformer:2.0.1")
     implementAndInclude("org.anarres:jcpp:1.4.14")

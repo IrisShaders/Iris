@@ -1,8 +1,9 @@
 package net.irisshaders.iris.pipeline.programs;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
-import com.mojang.blaze3d.shaders.Program;
-import com.mojang.blaze3d.shaders.ProgramManager;
+import com.mojang.blaze3d.shaders.CompiledShader;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -14,21 +15,20 @@ import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.image.ImageHolder;
-import net.irisshaders.iris.gl.program.IrisProgramTypes;
 import net.irisshaders.iris.gl.program.ProgramImages;
 import net.irisshaders.iris.gl.program.ProgramSamplers;
 import net.irisshaders.iris.gl.program.ProgramUniforms;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.gl.uniform.DynamicLocationalUniformHolder;
-import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.CompiledShaderProgram;
+import net.minecraft.client.renderer.ShaderProgramConfig;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceProvider;
 import org.jetbrains.annotations.NotNull;
@@ -37,16 +37,24 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.ARBTextureSwizzle;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.KHRDebug;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class ExtendedShader extends ShaderInstance implements ShaderInstanceInterface {
-	private static final Matrix4f IDENTITY = new Matrix4f().identity();
-	private static final Uniform FAKE_UNIFORM = new Uniform("", 1, 2, null);
+public class ExtendedShader extends CompiledShaderProgram {
+	private static final Matrix4f identity;
+	private static ExtendedShader lastApplied;
+
+	static {
+		identity = new Matrix4f();
+		identity.identity();
+	}
 
 	private final boolean intensitySwizzle;
 	private final List<BufferBlendOverride> bufferBlendOverrides;
@@ -68,32 +76,47 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	private final Matrix3f tempMatrix3f = new Matrix3f();
 	private final float[] tempFloats = new float[16];
 	private final float[] tempFloats2 = new float[9];
-	private Program geometry, tessControl, tessEval;
 
-	public ExtendedShader(ResourceProvider resourceFactory, String name, VertexFormat vertexFormat,
-						  boolean usesTessellation, GlFramebuffer writingToBeforeTranslucent,
-						  GlFramebuffer writingToAfterTranslucent, BlendModeOverride blendModeOverride,
-						  AlphaTest alphaTest, Consumer<DynamicLocationalUniformHolder> uniformCreator,
-						  BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
-						  IrisRenderingPipeline parent, @Nullable List<BufferBlendOverride> bufferBlendOverrides,
-						  CustomUniforms customUniforms) throws IOException {
-		super(resourceFactory, name, vertexFormat);
+	public ExtendedShader(int programId, ResourceProvider resourceFactory, String string, VertexFormat vertexFormat, boolean usesTessellation,
+						  GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
+						  BlendModeOverride blendModeOverride, AlphaTest alphaTest,
+						  Consumer<DynamicLocationalUniformHolder> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
+						  IrisRenderingPipeline parent, @Nullable List<BufferBlendOverride> bufferBlendOverrides, CustomUniforms customUniforms) throws IOException {
+		super(programId);
 
-		setupDebugNames(name);
+		List<ShaderProgramConfig.Uniform> uniformList = new ArrayList<>();
+		List<ShaderProgramConfig.Sampler> samplerList = new ArrayList<>();
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_ModelViewMat", "matrix4x4", 16, List.of(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_NormalMat", "matrix3x3", 9, List.of(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_ProjMat", "matrix4x4", 16, List.of(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_TextureMat", "matrix4x4", 16, List.of(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_ColorModulator", "float", 4, List.of(1.0f, 1.0f, 1.0f, 1.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_FogColor", "float", 4, List.of(1.0f, 1.0f, 1.0f, 1.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_ModelOffset", "float", 3, List.of(0.0f, 0.0f, 0.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_FogStart", "float", 1, List.of(0.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_FogEnd", "float", 1, List.of(1.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_GlintAlpha", "float", 1, List.of(0.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_ModelViewMatInverse", "matrix4x4", 16, List.of(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f)));
+		uniformList.add(new ShaderProgramConfig.Uniform("iris_ProjMatInverse", "matrix4x4", 16, List.of(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f)));
 
-		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(name, this.getId());
-		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(this.getId(), IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
-		ProgramImages.Builder imageBuilder = ProgramImages.builder(this.getId());
+		samplerList.add(new ShaderProgramConfig.Sampler("Sampler0"));
+		setupUniforms(uniformList, samplerList);
 
+
+		GLDebug.nameObject(KHRDebug.GL_PROGRAM, programId, string);
+
+		ProgramUniforms.Builder uniformBuilder = ProgramUniforms.builder(string, programId);
+		ProgramSamplers.Builder samplerBuilder = ProgramSamplers.builder(programId, IrisSamplers.WORLD_RESERVED_TEXTURE_UNITS);
 		uniformCreator.accept(uniformBuilder);
-		samplerCreator.accept(samplerBuilder, imageBuilder);
+		ProgramImages.Builder builder = ProgramImages.builder(programId);
+		samplerCreator.accept(samplerBuilder, builder);
 		customUniforms.mapholderToPass(uniformBuilder, this);
-
-		this.uniforms = uniformBuilder.buildUniforms();
-		this.samplers = samplerBuilder.build();
-		this.images = imageBuilder.build();
-
 		this.usesTessellation = usesTessellation;
+
+		uniforms = uniformBuilder.buildUniforms();
+		this.customUniforms = customUniforms;
+		samplers = samplerBuilder.build();
+		images = builder.build();
 		this.writingToBeforeTranslucent = writingToBeforeTranslucent;
 		this.writingToAfterTranslucent = writingToAfterTranslucent;
 		this.blendModeOverride = blendModeOverride;
@@ -101,18 +124,16 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		this.hasOverrides = bufferBlendOverrides != null && !bufferBlendOverrides.isEmpty();
 		this.alphaTest = alphaTest.reference();
 		this.parent = parent;
-		this.customUniforms = customUniforms;
-		this.intensitySwizzle = isIntensity;
 
 		this.modelViewInverse = this.getUniform("ModelViewMatInverse");
 		this.projectionInverse = this.getUniform("ProjMatInverse");
 		this.normalMatrix = this.getUniform("NormalMat");
+
+		this.intensitySwizzle = isIntensity;
 	}
 
-	private void setupDebugNames(String name) {
-		GLDebug.nameObject(KHRDebug.GL_SHADER, this.getVertexProgram().getId(), name + "_vertex.vsh");
-		GLDebug.nameObject(KHRDebug.GL_SHADER, this.getFragmentProgram().getId(), name + "_fragment.fsh");
-		GLDebug.nameObject(KHRDebug.GL_PROGRAM, this.getId(), name);
+	public boolean isIntensitySwizzle() {
+		return intensitySwizzle;
 	}
 
 	@Override
@@ -124,26 +145,43 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 			BlendModeOverride.restore();
 		}
 
+		if (intensitySwizzle) {
+			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), TextureType.TEXTURE_2D.getGlType(), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+				new int[]{GL30C.GL_RED, GL30C.GL_GREEN, GL30C.GL_BLUE, GL30C.GL_ALPHA});
+		}
+
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+	}
+
+	@Override
+	public void setDefaultUniforms(VertexFormat.Mode mode, Matrix4f modelView, Matrix4f projection, Window window) {
+		super.setDefaultUniforms(mode, modelView, projection, window);
+		if (modelViewInverse != null) {
+			modelViewInverse.set(modelView.invert(tempMatrix4f));
+		}
+
+		if (normalMatrix != null) {
+			normalMatrix.set(modelView.invert(tempMatrix4f).transpose3x3(tempMatrix3f));
+		}
+
+		if (projectionInverse != null) {
+			projectionInverse.set(projection.invert(tempMatrix4f));
+		}
 	}
 
 	@Override
 	public void apply() {
 		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest);
 
-		ProgramManager.glUseProgram(this.getId());
+		GlStateManager._glUseProgram(getProgramId());
 
-		setupTextures();
-		updateMatrices();
-		updateUniforms();
-		applyBlendModes();
-		bindFramebuffer();
-	}
+		int i = GlStateManager._getActiveTexture();
 
-	private void setupTextures() {
+		GlStateManager._activeTexture(i);
+
 		if (intensitySwizzle) {
-			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), TextureType.TEXTURE_2D.getGlType(),
-				ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA, new int[]{GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED});
+			IrisRenderSystem.texParameteriv(RenderSystem.getShaderTexture(0), TextureType.TEXTURE_2D.getGlType(), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
+				new int[]{GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED});
 		}
 
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.ALBEDO_TEXTURE_UNIT, RenderSystem.getShaderTexture(0));
@@ -151,40 +189,25 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
 
 		ImmediateState.usingTessellation = usesTessellation;
-	}
 
-	private void updateMatrices() {
-		if (PROJECTION_MATRIX != null && projectionInverse != null) {
-			projectionInverse.set(tempMatrix4f.set(PROJECTION_MATRIX.getFloatBuffer()).invert().get(tempFloats));
-		} else if (projectionInverse != null) {
-			projectionInverse.set(IDENTITY);
-		}
-
-		if (MODEL_VIEW_MATRIX != null) {
-			if (modelViewInverse != null) {
-				modelViewInverse.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer()).invert().get(tempFloats));
-			}
-
-			if (normalMatrix != null) {
-				normalMatrix.set(tempMatrix3f.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer())).invert().transpose().get(tempFloats2));
-			}
-		}
-	}
-
-	private void updateUniforms() {
 		uploadIfNotNull(projectionInverse);
 		uploadIfNotNull(modelViewInverse);
 		uploadIfNotNull(normalMatrix);
 
-		super.uniforms.forEach(this::uploadIfNotNull);
-
 		samplers.update();
 		uniforms.update();
-		customUniforms.push(this);
-		images.update();
-	}
 
-	private void applyBlendModes() {
+		List<Uniform> uniformList = super.uniforms;
+		for (Uniform uniform : uniformList) {
+			uploadIfNotNull(uniform);
+		}
+
+		customUniforms.push(this);
+
+		images.update();
+
+		//GL46C.glUniform1i(GlStateManager._glGetUniformLocation(getProgramId(), "iris_overlay"), 1);
+
 		if (this.blendModeOverride != null) {
 			this.blendModeOverride.apply();
 		}
@@ -192,9 +215,7 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		if (hasOverrides) {
 			bufferBlendOverrides.forEach(BufferBlendOverride::apply);
 		}
-	}
 
-	private void bindFramebuffer() {
 		if (parent.isBeforeTranslucent) {
 			writingToBeforeTranslucent.bind();
 		} else {
@@ -209,87 +230,62 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		Uniform uniform = super.getUniform("iris_" + name);
 
 		if (uniform == null && (name.equalsIgnoreCase("OverlayUV") || name.equalsIgnoreCase("LightUV"))) {
-			return FAKE_UNIFORM;
+			return null;
+		} else {
+			return uniform;
 		}
-		return uniform;
 	}
+
+	@Override
+	public void setupUniforms(List<ShaderProgramConfig.Uniform> list, List<ShaderProgramConfig.Sampler> list2) {
+		RenderSystem.assertOnRenderThread();
+		Iterator<?> var3 = list.iterator();
+
+		while(var3.hasNext()) {
+			ShaderProgramConfig.Uniform uniform = (ShaderProgramConfig.Uniform)var3.next();
+			String string = uniform.name();
+			int i = Uniform.glGetUniformLocation(this.getProgramId(), string);
+			if (i != -1) {
+				Uniform uniform2 = this.parseUniformNode(uniform);
+				uniform2.setLocation(i);
+				super.uniforms.add(uniform2);
+				super.uniformsByName.put(string, uniform2);
+			}
+		}
+
+		var3 = list2.iterator();
+
+		while(var3.hasNext()) {
+			ShaderProgramConfig.Sampler sampler = (ShaderProgramConfig.Sampler)var3.next();
+			int j = Uniform.glGetUniformLocation(this.getProgramId(), sampler.name());
+			if (j != -1) {
+				super.samplers.add(sampler);
+				super.samplerLocations.add(j);
+			}
+		}
+
+		this.MODEL_VIEW_MATRIX = super.getUniform("iris_ModelViewMat");
+		this.PROJECTION_MATRIX = super.getUniform("iris_ProjMat");
+		this.TEXTURE_MATRIX = super.getUniform("iris_TextureMat");
+		this.SCREEN_SIZE = super.getUniform("iris_ScreenSize");
+		this.COLOR_MODULATOR = super.getUniform("iris_ColorModulator");
+		this.LIGHT0_DIRECTION = super.getUniform("iris_Light0_Direction");
+		this.LIGHT1_DIRECTION = super.getUniform("iris_Light1_Direction");
+		this.GLINT_ALPHA = super.getUniform("iris_GlintAlpha");
+		this.FOG_START = super.getUniform("iris_FogStart");
+		this.FOG_END = super.getUniform("iris_FogEnd");
+		this.FOG_COLOR = super.getUniform("iris_FogColor");
+		this.FOG_SHAPE = super.getUniform("iris_FogShape");
+		this.LINE_WIDTH = super.getUniform("iris_LineWidth");
+		this.GAME_TIME = super.getUniform("iris_GameTime");
+		this.MODEL_OFFSET = super.getUniform("iris_ModelOffset");
+	}
+
 
 	private void uploadIfNotNull(Uniform uniform) {
 		if (uniform != null) {
 			uniform.upload();
 		}
-	}
-
-	@Override
-	public void attachToProgram() {
-		super.attachToProgram();
-		attachExtraShaders();
-	}
-
-	private void attachExtraShaders() {
-		if (this.geometry != null) {
-			this.geometry.attachToShader(this);
-		}
-		if (this.tessControl != null) {
-			this.tessControl.attachToShader(this);
-		}
-		if (this.tessEval != null) {
-			this.tessEval.attachToShader(this);
-		}
-	}
-
-	@Override
-	public void iris$createExtraShaders(ResourceProvider factory, String name) {
-		createGeometryShader(factory, name);
-		createTessControlShader(factory, name);
-		createTessEvalShader(factory, name);
-	}
-
-	private void createGeometryShader(ResourceProvider factory, String name) {
-		createShader(factory, name, "_geometry.gsh", IrisProgramTypes.GEOMETRY,
-			program -> this.geometry = program);
-	}
-
-	private void createTessControlShader(ResourceProvider factory, String name) {
-		createShader(factory, name, "_tessControl.tcs", IrisProgramTypes.TESS_CONTROL,
-			program -> this.tessControl = program);
-	}
-
-	private void createTessEvalShader(ResourceProvider factory, String name) {
-		createShader(factory, name, "_tessEval.tes", IrisProgramTypes.TESS_EVAL,
-			program -> this.tessEval = program);
-	}
-
-	private void createShader(ResourceProvider factory, String name, String suffix,
-							  Program.Type type, Consumer<Program> programSetter) {
-		factory.getResource(ResourceLocation.fromNamespaceAndPath("minecraft", name + suffix)).ifPresent(resource -> {
-			try {
-				Program program = Program.compileShader(type, name, resource.open(), resource.sourcePackId(),
-					new GlslPreprocessor() {
-						@Nullable
-						@Override
-						public String applyImport(boolean bl, String string) {
-							return null;
-						}
-					});
-				GLDebug.nameObject(KHRDebug.GL_SHADER, program.getId(), name + suffix);
-				programSetter.accept(program);
-			} catch (IOException e) {
-				Iris.logger.error("Failed to create shader program", e);
-			}
-		});
-	}
-
-	public Program getGeometry() {
-		return this.geometry;
-	}
-
-	public Program getTessControl() {
-		return this.tessControl;
-	}
-
-	public Program getTessEval() {
-		return this.tessEval;
 	}
 
 	public boolean hasActiveImages() {

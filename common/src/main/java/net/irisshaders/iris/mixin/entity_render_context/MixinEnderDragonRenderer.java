@@ -20,7 +20,7 @@ public class MixinEnderDragonRenderer {
 	private static int previousE;
 
 	@Inject(method = "renderCrystalBeams", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V"))
-	private static void changeId(float f, float g, float h, float i, int j, PoseStack poseStack, MultiBufferSource multiBufferSource, int k, CallbackInfo ci) {
+	private static void changeId(float f, float g, float h, float i, PoseStack poseStack, MultiBufferSource multiBufferSource, int j, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getEntityIds() == null) return;
 
 		previousE = CapturedRenderingState.INSTANCE.getCurrentRenderedEntity();

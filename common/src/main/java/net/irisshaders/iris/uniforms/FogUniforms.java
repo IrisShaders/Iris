@@ -33,7 +33,7 @@ public class FogUniforms {
 			});
 
 			// To keep a stable interface, 0 is defined as spherical while 1 is defined as cylindrical, even if Mojang's index changes.
-			uniforms.uniform1i(PER_FRAME, "fogShape", () -> RenderSystem.getShaderFogShape() == FogShape.CYLINDER ? 1 : 0);
+			uniforms.uniform1i(PER_FRAME, "fogShape", () -> RenderSystem.getShaderFog().shape() == FogShape.CYLINDER ? 1 : 0);
 		}
 
 		uniforms.uniform1f("fogDensity", () -> {
@@ -42,15 +42,14 @@ public class FogUniforms {
 		}, notifier -> {
 		});
 
-		uniforms.uniform1f("fogStart", RenderSystem::getShaderFogStart, listener -> StateUpdateNotifiers.fogStartNotifier.setListener(listener));
+		uniforms.uniform1f("fogStart", () -> RenderSystem.getShaderFog().start(), listener -> StateUpdateNotifiers.fogStartNotifier.setListener(listener));
 
-		uniforms.uniform1f("fogEnd", RenderSystem::getShaderFogEnd, listener -> StateUpdateNotifiers.fogEndNotifier.setListener(listener));
+		uniforms.uniform1f("fogEnd", () -> RenderSystem.getShaderFog().end(), listener -> StateUpdateNotifiers.fogEndNotifier.setListener(listener));
 
 		uniforms
 			// TODO: Update frequency of continuous?
 			.uniform3f(PER_FRAME, "fogColor", () -> {
-				float[] fogColor = RenderSystem.getShaderFogColor();
-				return new Vector3f(fogColor[0], fogColor[1], fogColor[2]);
+				return new Vector3f((float) CapturedRenderingState.INSTANCE.getFogColor().x, (float) CapturedRenderingState.INSTANCE.getFogColor().y, (float) CapturedRenderingState.INSTANCE.getFogColor().z);
 			});
 	}
 }

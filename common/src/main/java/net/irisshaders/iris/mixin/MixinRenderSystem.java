@@ -25,12 +25,12 @@ public class MixinRenderSystem {
 		Iris.onRenderSystemInit();
 	}
 
-	@Inject(method = "_setShaderTexture(ILnet/minecraft/resources/ResourceLocation;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/AbstractTexture;getId()I", shift = At.Shift.AFTER))
+	@Inject(method = "setShaderTexture(ILnet/minecraft/resources/ResourceLocation;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/AbstractTexture;getId()I", shift = At.Shift.AFTER))
 	private static void _setShaderTexture(int unit, ResourceLocation resourceLocation, CallbackInfo ci, @Local AbstractTexture tex) {
 		TextureTracker.INSTANCE.onSetShaderTexture(unit, tex.getId());
 	}
 
-	@Inject(method = "_setShaderTexture(II)V", at = @At("RETURN"), remap = false)
+	@Inject(method = "setShaderTexture(II)V", at = @At("RETURN"), remap = false)
 	private static void _setShaderTexture(int unit, int glId, CallbackInfo ci) {
 		TextureTracker.INSTANCE.onSetShaderTexture(unit, glId);
 	}

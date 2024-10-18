@@ -11,9 +11,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(GameRenderer.class)
 public interface GameRendererAccessor {
 	@Accessor
-	PostChain getBlurEffect();
-
-	@Accessor
 	boolean getRenderHand();
 
 	@Accessor
@@ -26,7 +23,7 @@ public interface GameRendererAccessor {
 	void invokeBobHurt(PoseStack poseStack, float tickDelta);
 
 	@Invoker
-	double invokeGetFov(Camera camera, float tickDelta, boolean b);
+	float invokeGetFov(Camera camera, float tickDelta, boolean b);
 
 	@Invoker("shouldRenderBlockOutline")
 	boolean shouldRenderBlockOutlineA();

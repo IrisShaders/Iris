@@ -17,18 +17,17 @@ accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
 accessible class net/minecraft/client/renderer/texture/SpriteContents$Ticker
 accessible  class   net/minecraft/client/OptionInstance$ValueSet
 extendable  class   net/minecraft/client/OptionInstance
+accessible method net/minecraft/client/renderer/CompiledShaderProgram <init> (I)V
+accessible field net/minecraft/client/renderer/CompiledShaderProgram uniformsByName Ljava/util/Map;
+accessible method net/minecraft/client/renderer/CompiledShaderProgram parseUniformNode (Lnet/minecraft/client/renderer/ShaderProgramConfig$Uniform;)Lcom/mojang/blaze3d/shaders/Uniform;
+accessible field net/minecraft/client/renderer/CompiledShaderProgram samplers Ljava/util/List;
+accessible field net/minecraft/client/renderer/CompiledShaderProgram samplerLocations Lit/unimi/dsi/fastutil/ints/IntList;
+accessible field net/minecraft/client/renderer/CompiledShaderProgram uniforms Ljava/util/List;
 accessible  class   net/minecraft/client/renderer/chunk/SectionRenderDispatcher$RenderSection$RebuildTask
 extendable  class   net/minecraft/core/RegistryAccess$RegistryEntry
 accessible method net/minecraft/client/renderer/RenderType create (Ljava/lang/String;Lcom/mojang/blaze3d/vertex/VertexFormat;Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;IZZLnet/minecraft/client/renderer/RenderType$CompositeState;)Lnet/minecraft/client/renderer/RenderType$CompositeRenderType;
 accessible field com/mojang/blaze3d/platform/NativeImage pixels J
-mutable field net/minecraft/client/renderer/ShaderInstance PROJECTION_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
-mutable field net/minecraft/client/renderer/ShaderInstance MODEL_VIEW_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
-mutable field net/minecraft/client/renderer/ShaderInstance TEXTURE_MATRIX Lcom/mojang/blaze3d/shaders/Uniform;
-mutable field net/minecraft/client/renderer/ShaderInstance CHUNK_OFFSET Lcom/mojang/blaze3d/shaders/Uniform;
-mutable field net/minecraft/client/renderer/ShaderInstance COLOR_MODULATOR Lcom/mojang/blaze3d/shaders/Uniform;
-accessible field net/minecraft/client/renderer/ShaderInstance uniforms Ljava/util/List;
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
 accessible class net/minecraft/client/gui/components/AbstractSelectionList$Entry
 accessible field com/mojang/blaze3d/platform/GlStateManager$BooleanState enabled Z
-accessible method com/mojang/blaze3d/shaders/Program getId ()I
 accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z

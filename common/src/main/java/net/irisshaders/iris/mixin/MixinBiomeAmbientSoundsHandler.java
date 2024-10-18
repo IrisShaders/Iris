@@ -33,7 +33,7 @@ public class MixinBiomeAmbientSoundsHandler implements BiomeAmbienceInterface {
 	private void calculateConstantMoodiness(AmbientMoodSettings ambientMoodSettings, CallbackInfo ci, @Local BlockPos blockPos) {
 		int j = this.player.level().getBrightness(LightLayer.SKY, blockPos);
 		if (j > 0) {
-			this.constantMoodiness -= (float) j / (float) this.player.level().getMaxLightLevel() * 0.001F;
+			this.constantMoodiness -= (float) j / (float) 15 * 0.001F;
 		} else {
 			this.constantMoodiness -= (float) (this.player.level().getBrightness(LightLayer.BLOCK, blockPos) - 1) / (float) ambientMoodSettings.getTickDelay();
 		}

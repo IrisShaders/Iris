@@ -1,5 +1,6 @@
 package net.irisshaders.iris.pathways;
 
+import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
@@ -8,7 +9,7 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.ShaderProgram;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
@@ -63,7 +64,7 @@ public class HorizonRenderer {
 		buildHorizon(currentRenderDistance * 16, buffer);
 		MeshData meshData = buffer.build();
 
-		this.buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+		this.buffer = new VertexBuffer(BufferUsage.STATIC_WRITE);
 		this.buffer.bind();
 		this.buffer.upload(meshData);
 		Tesselator.getInstance().clear();
@@ -154,14 +155,14 @@ public class HorizonRenderer {
 		buildBottomPlane(consumer, 384);
 	}
 
-	public void renderHorizon(Matrix4fc modelView, Matrix4fc projection, ShaderInstance shader) {
+	public void renderHorizon(Matrix4fc modelView, Matrix4fc projection, ShaderProgram shader) {
 		if (currentRenderDistance != Minecraft.getInstance().options.getEffectiveRenderDistance()) {
 			currentRenderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
 			rebuildBuffer();
 		}
 
 		buffer.bind();
-		buffer.drawWithShader(new Matrix4f(modelView), new Matrix4f(projection), shader);
+		buffer.drawWithShader(new Matrix4f(modelView), new Matrix4f(projection), Minecraft.getInstance().getShaderManager().getProgram(shader));
 		VertexBuffer.unbind();
 	}
 
