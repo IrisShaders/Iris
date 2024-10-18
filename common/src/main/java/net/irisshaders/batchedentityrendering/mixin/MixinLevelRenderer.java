@@ -8,6 +8,7 @@ import net.irisshaders.batchedentityrendering.impl.FullyBufferedMultiBufferSourc
 import net.irisshaders.batchedentityrendering.impl.Groupable;
 import net.irisshaders.batchedentityrendering.impl.RenderBuffersExt;
 import net.irisshaders.batchedentityrendering.impl.TransparencyType;
+import net.irisshaders.iris.NeoLambdas;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -77,8 +78,8 @@ public class MixinLevelRenderer {
 		}
 	}
 
-	@Inject(method = "method_62214", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
-	private void batchedentityrendering$beginTranslucents(FogParameters fogParameters, DeltaTracker deltaTracker, Camera camera, ProfilerFiller profilerFiller, Matrix4f matrix4f, Matrix4f matrix4f2, ResourceHandle resourceHandle, ResourceHandle resourceHandle2, ResourceHandle resourceHandle3, ResourceHandle resourceHandle4, boolean bl, Frustum frustum, ResourceHandle resourceHandle5, CallbackInfo ci) {
+	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "CONSTANT", args = "stringValue=translucent"))
+	private void batchedentityrendering$beginTranslucents(CallbackInfo ci) {
 		if (renderBuffers.bufferSource() instanceof FullyBufferedMultiBufferSource fullyBufferedMultiBufferSource) {
 			fullyBufferedMultiBufferSource.readyUp();
 		}
@@ -99,15 +100,15 @@ public class MixinLevelRenderer {
 	}
 
 
-	@Inject(method = "method_62214", at = @At(value = "CONSTANT", args = "stringValue=translucent", shift = At.Shift.AFTER))
-	private void batchedentityrendering$endTranslucents(FogParameters fogParameters, DeltaTracker deltaTracker, Camera camera, ProfilerFiller profilerFiller, Matrix4f matrix4f, Matrix4f matrix4f2, ResourceHandle resourceHandle, ResourceHandle resourceHandle2, ResourceHandle resourceHandle3, ResourceHandle resourceHandle4, boolean bl, Frustum frustum, ResourceHandle resourceHandle5, CallbackInfo ci) {
+	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "CONSTANT", args = "stringValue=translucent", shift = At.Shift.AFTER))
+	private void batchedentityrendering$endTranslucents(CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.shouldSeparateEntityDraws()) {
 			this.renderBuffers.bufferSource().endBatch();
 		}
 	}
 
-	@Inject(method = "method_62214", at = @At("RETURN"))
-	private void batchedentityrendering$endLevelRender(FogParameters fogParameters, DeltaTracker deltaTracker, Camera camera, ProfilerFiller profilerFiller, Matrix4f matrix4f, Matrix4f matrix4f2, ResourceHandle resourceHandle, ResourceHandle resourceHandle2, ResourceHandle resourceHandle3, ResourceHandle resourceHandle4, boolean bl, Frustum frustum, ResourceHandle resourceHandle5, CallbackInfo ci) {
+	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At("RETURN"))
+	private void batchedentityrendering$endLevelRender(CallbackInfo ci) {
 		((RenderBuffersExt) renderBuffers).endLevelRendering();
 		groupable = null;
 	}

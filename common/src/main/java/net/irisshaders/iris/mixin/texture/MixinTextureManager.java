@@ -18,7 +18,7 @@ public class MixinTextureManager {
 	@SuppressWarnings("UnresolvedMixinReference")
 	@Inject(method = {
 		"method_18167",
-		"lambda$reload$5"
+		"lambda$reload$4"
 	}, at = @At("TAIL"), require = 1)
 	private void iris$onTailReloadLambda(ResourceManager resourceManager, Executor applyExecutor, CompletableFuture<?> future, Void void1, CallbackInfo ci) {
 		TextureFormatLoader.reload(resourceManager);

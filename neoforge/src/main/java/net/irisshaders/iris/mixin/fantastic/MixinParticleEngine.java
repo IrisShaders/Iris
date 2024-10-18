@@ -11,14 +11,15 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.culling.Frustum;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -56,8 +57,10 @@ import java.util.function.Supplier;
  */
 @Mixin(ParticleEngine.class)
 public class MixinParticleEngine {
-	@Redirect(method = "Lnet/minecraft/client/particle/ParticleEngine;render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/culling/Frustum;Ljava/util/function/Predicate;)V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShader(Ljava/util/function/Supplier;)V"))
-	private void iris$changeParticleShader(Supplier<ShaderInstance> pSupplier0, LightTexture p_107339_, Camera p_107340_, float p_107341_, @Nullable Frustum frustum, Predicate<ParticleRenderType> renderTypePredicate) {
-		RenderSystem.setShader(!renderTypePredicate.test(ParticleRenderType.PARTICLE_SHEET_OPAQUE) ? ShaderAccess::getParticleTranslucentShader : pSupplier0);
+	@Inject(method = "render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/culling/Frustum;Ljava/util/function/Predicate;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleRenderType;begin(Lcom/mojang/blaze3d/vertex/Tesselator;Lnet/minecraft/client/renderer/texture/TextureManager;)Lcom/mojang/blaze3d/vertex/BufferBuilder;"))
+	private void iris$changeParticleShader(LightTexture p_107339_, Camera p_107340_, float p_107341_, Frustum frustum, Predicate<ParticleRenderType> renderTypePredicate, CallbackInfo ci) {
+		if (!renderTypePredicate.test(ParticleRenderType.PARTICLE_SHEET_OPAQUE)) {
+			RenderSystem.setShader(ShaderAccess.getParticleTranslucentShader());
+		}
 	}
 }

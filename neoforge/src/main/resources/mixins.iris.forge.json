@@ -4,9 +4,7 @@
   "package": "net.irisshaders.iris.mixin.forge",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinHumanoidArmorLayer",
     "MixinItemBlockRenderTypes",
-    "MixinShaderInstance",
     "MixinRenderFlame",
     "MixinRenderMekasuit",
     "MixinShadowRenderer",

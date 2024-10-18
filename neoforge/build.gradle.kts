@@ -1,6 +1,6 @@
 plugins {
     id("idea")
-    id("net.neoforged.moddev") version "2.0.28-beta"
+    id("net.neoforged.moddev") version "2.0.36-beta"
     id("java-library")
 }
 
@@ -17,9 +17,17 @@ sourceSets {
 }
 
 repositories {
+    mavenLocal()
     maven("https://maven.su5ed.dev/releases")
     maven("https://maven.neoforged.net/releases/")
-
+    maven("https://prmaven.neoforged.net/NeoForge/pr1590") {
+        name = "Maven for PR #1590" // https://github.com/neoforged/NeoForge/pull/1590
+        content {
+            includeModule("net.neoforged", "testframework")
+            includeModule("net.neoforged", "neoforge")
+        }
+    }
+    maven("https://libraries.minecraft.net/")
     exclusiveContent {
         forRepository {
             maven {
@@ -34,15 +42,6 @@ repositories {
 }
 
 tasks.jar {
-    val vendored = project.project(":common").sourceSets.getByName("vendored")
-    from(vendored.output.classesDirs)
-    from(vendored.output.resourcesDir)
-
-    val main = project.project(":common").sourceSets.getByName("main")
-    from(main.output.classesDirs) {
-        exclude("/iris.refmap.json")
-    }
-    from(main.output.resourcesDir)
 
     from(rootDir.resolve("LICENSE.md"))
 
@@ -73,10 +72,8 @@ neoForge {
     }
 
     mods {
-        create("sodium") {
+        create("iris") {
             sourceSet(sourceSets.main.get())
-            sourceSet(project.project(":common").sourceSets.main.get())
-            sourceSet(project.project(":common").sourceSets.getByName("vendored"))
         }
     }
 }
@@ -99,17 +96,35 @@ fun includeAdditional(dependency: String) {
 tasks.named("compileTestJava").configure {
     enabled = false
 }
+// NeoGradle compiles the game, but we don't want to add our common code to the game's code
+val notNeoTask: (Task) -> Boolean = { it: Task -> !it.name.startsWith("neo") && !it.name.startsWith("compileService") }
+
+tasks.withType<JavaCompile>().matching(notNeoTask).configureEach {
+    source(project(":common").sourceSets.main.get().allSource)
+    source(project(":common").sourceSets.getByName("vendored").allSource)
+    source(project(":common").sourceSets.getByName("desktop").allSource)
+}
+
+tasks.withType<Javadoc>().matching(notNeoTask).configureEach {
+    source(project(":common").sourceSets.main.get().allJava)
+}
+
+tasks.withType<ProcessResources>().matching(notNeoTask).configureEach {
+    from(project(":common").sourceSets.main.get().resources)
+}
 
 dependencies {
+    compileOnly(files(rootDir.resolve("DHApi.jar")))
+
     compileOnly(project.project(":common").sourceSets.main.get().output)
     compileOnly(project.project(":common").sourceSets.getByName("vendored").output)
     compileOnly(project.project(":common").sourceSets.getByName("headers").output)
     includeDep("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
-    includeDep("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.0+acb05a3919")
+    includeDep("net.fabricmc:fabric_renderer_api_v1:3.3.0+1.21.2-pre1")
     includeDep("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
     includeDep("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 
-    implementation("maven.modrinth", "sodium", "mc1.21-0.6.0-beta.2-neoforge")
+    implementation("net.caffeinemc", "sodium-neoforge", "0.6.0-snapshot+mc1.21.2-rc1-local")
     includeAdditional("io.github.douira:glsl-transformer:2.0.1")
     includeAdditional("org.anarres:jcpp:1.4.14")
 }

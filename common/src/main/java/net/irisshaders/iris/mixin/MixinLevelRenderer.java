@@ -9,6 +9,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.NeoLambdas;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.layer.IsOutlineRenderStateShard;
@@ -168,8 +169,8 @@ public class MixinLevelRenderer {
 		return false;
 	}
 
-	@Inject(method = "method_62215", at = @At(value = "HEAD"))
-	private void iris$beginSky(FogParameters fogParameters, DimensionSpecialEffects.SkyType skyType, float f, DimensionSpecialEffects dimensionSpecialEffects, CallbackInfo ci) {
+	@Inject(method = { "method_62215", NeoLambdas.NEO_RENDER_SKY }, require = 1, at = @At(value = "HEAD"))
+	private void iris$beginSky(CallbackInfo ci) {
 		// Use CUSTOM_SKY until levelFogColor is called as a heuristic to catch FabricSkyboxes.
 		pipeline.setPhase(WorldRenderingPhase.CUSTOM_SKY);
 
@@ -179,18 +180,18 @@ public class MixinLevelRenderer {
 		RenderSystem.setShader(CoreShaders.POSITION);
 	}
 
-	@Inject(method = "method_62215", at = @At(value = "RETURN"))
-	private void iris$endSky(FogParameters fogParameters, DimensionSpecialEffects.SkyType skyType, float f, DimensionSpecialEffects dimensionSpecialEffects, CallbackInfo ci) {
+	@Inject(method = { "method_62215", NeoLambdas.NEO_RENDER_SKY }, require = 1, at = @At(value = "RETURN"))
+	private void iris$endSky(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
-	@Inject(method = "method_62205", at = @At(value = "HEAD"))
-	private void iris$beginClouds(ResourceHandle<?> resourceHandle, int i, CloudStatus cloudStatus, float f, Matrix4f matrix4f, Matrix4f matrix4f2, Vec3 vec3, float g, CallbackInfo ci) {
+	@Inject(method = { "method_62205", NeoLambdas.NEO_RENDER_CLOUDS }, require = 1, at = @At(value = "HEAD"))
+	private void iris$beginClouds(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.CLOUDS);
 	}
 
-	@Inject(method = "method_62205", at = @At("RETURN"))
-	private void iris$endClouds(ResourceHandle<?> resourceHandle, int i, CloudStatus cloudStatus, float f, Matrix4f matrix4f, Matrix4f matrix4f2, Vec3 vec3, float g, CallbackInfo ci) {
+	@Inject(method = { "method_62205", NeoLambdas.NEO_RENDER_CLOUDS }, require = 1, at = @At("RETURN"))
+	private void iris$endClouds(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
@@ -205,29 +206,29 @@ public class MixinLevelRenderer {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
-	@Inject(method = "method_62216", at = @At(value = "HEAD"))
-	private void iris$beginWeather(FogParameters fogParameters, LightTexture lightTexture, float f, Vec3 vec3, int i, float g, CallbackInfo ci) {
+	@Inject(method = { "method_62216", NeoLambdas.NEO_RENDER_WEATHER }, require = 1, at = @At(value = "HEAD"))
+	private void iris$beginWeather(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.RAIN_SNOW);
 	}
 
 
-	@Inject(method = "method_62216", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldBorderRenderer;render(Lnet/minecraft/world/level/border/WorldBorder;Lnet/minecraft/world/phys/Vec3;DD)V"))
-	private void iris$beginWorldBorder(FogParameters fogParameters, LightTexture lightTexture, float f, Vec3 vec3, int i, float g, CallbackInfo ci) {
+	@Inject(method = { "method_62216", NeoLambdas.NEO_RENDER_WEATHER }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldBorderRenderer;render(Lnet/minecraft/world/level/border/WorldBorder;Lnet/minecraft/world/phys/Vec3;DD)V"))
+	private void iris$beginWorldBorder(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.WORLD_BORDER);
 	}
 
-	@Inject(method = "method_62216", at = @At(value = "RETURN"))
-	private void iris$endWeather(FogParameters fogParameters, LightTexture lightTexture, float f, Vec3 vec3, int i, float g, CallbackInfo ci) {
+	@Inject(method = { "method_62216", NeoLambdas.NEO_RENDER_WEATHER }, require = 1, at = @At(value = "RETURN"))
+	private void iris$endWeather(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
-	@Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/debug/DebugRenderer;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/culling/Frustum;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDD)V"))
-	private void iris$setDebugRenderStage(FogParameters fogParameters, DeltaTracker deltaTracker, Camera camera, ProfilerFiller profilerFiller, Matrix4f matrix4f, Matrix4f matrix4f2, ResourceHandle<?> resourceHandle, ResourceHandle<?> resourceHandle2, ResourceHandle<?> resourceHandle3, ResourceHandle<?> resourceHandle4, boolean bl, Frustum frustum, ResourceHandle<?> resourceHandle5, CallbackInfo ci) {
+	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/debug/DebugRenderer;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/culling/Frustum;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDD)V"))
+	private void iris$setDebugRenderStage(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.DEBUG);
 	}
 
-	@Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/debug/DebugRenderer;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/culling/Frustum;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDD)V", shift = At.Shift.AFTER))
-	private void iris$resetDebugRenderStage(FogParameters fogParameters, DeltaTracker deltaTracker, Camera camera, ProfilerFiller profilerFiller, Matrix4f matrix4f, Matrix4f matrix4f2, ResourceHandle<?> resourceHandle, ResourceHandle<?> resourceHandle2, ResourceHandle<?> resourceHandle3, ResourceHandle<?> resourceHandle4, boolean bl, Frustum frustum, ResourceHandle<?> resourceHandle5, CallbackInfo ci) {
+	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/debug/DebugRenderer;render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/culling/Frustum;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDD)V", shift = At.Shift.AFTER))
+	private void iris$resetDebugRenderStage(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
@@ -237,8 +238,8 @@ public class MixinLevelRenderer {
 		return new OuterWrappedRenderType("iris:is_outline", type, IsOutlineRenderStateShard.INSTANCE);
 	}
 
-	@Inject(method = "method_62214", at = @At(value = "CONSTANT", args = "stringValue=translucent"))
-	private void iris$beginTranslucents(FogParameters fogParameters, DeltaTracker deltaTracker, Camera camera, ProfilerFiller profilerFiller, Matrix4f modelMatrix, Matrix4f matrix4f2, ResourceHandle<?> resourceHandle, ResourceHandle<?> resourceHandle2, ResourceHandle<?> resourceHandle3, ResourceHandle<?> resourceHandle4, boolean bl, Frustum frustum, ResourceHandle<?> resourceHandle5, CallbackInfo ci) {
+	@Inject(method = { "method_62214", NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "CONSTANT", args = "stringValue=translucent"))
+	private void iris$beginTranslucents(CallbackInfo ci, @Local(argsOnly = true) DeltaTracker deltaTracker, @Local(ordinal = 0, argsOnly = true) Matrix4f modelMatrix, @Local(argsOnly = true) Camera camera) {
 		pipeline.beginHand();
 		HandRenderer.INSTANCE.renderSolid(modelMatrix, deltaTracker.getGameTimeDeltaPartialTick(true), camera, Minecraft.getInstance().gameRenderer, pipeline);
 		Profiler.get().popPush("iris_pre_translucent");

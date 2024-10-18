@@ -1,5 +1,6 @@
 package net.irisshaders.iris.gl;
 
+import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
@@ -33,6 +34,7 @@ import java.nio.IntBuffer;
 public class IrisRenderSystem {
 	private static final int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
 	private static Matrix4f backupProjection;
+	private static ProjectionType backupProjectionType;
 	private static DSAAccess dsaState;
 	private static boolean hasMultibind;
 	private static boolean supportsCompute;
@@ -340,12 +342,14 @@ public class IrisRenderSystem {
 
 	public static void setShadowProjection(Matrix4f shadowProjection) {
 		backupProjection = RenderSystem.getProjectionMatrix();
-		RenderSystem.setProjectionMatrix(shadowProjection, VertexSorting.ORTHOGRAPHIC_Z);
+		backupProjectionType = RenderSystem.getProjectionType();
+		RenderSystem.setProjectionMatrix(shadowProjection, ProjectionType.ORTHOGRAPHIC);
 	}
 
 	public static void restorePlayerProjection() {
-		RenderSystem.setProjectionMatrix(backupProjection, VertexSorting.DISTANCE_TO_ORIGIN);
+		RenderSystem.setProjectionMatrix(backupProjection, backupProjectionType);
 		backupProjection = null;
+		backupProjectionType = null;
 	}
 
 	public static void blitFramebuffer(int source, int dest, int offsetX, int offsetY, int width, int height, int offsetX2, int offsetY2, int width2, int height2, int bufferChoice, int filter) {
