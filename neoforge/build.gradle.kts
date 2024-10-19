@@ -34,19 +34,6 @@ repositories {
 }
 
 tasks.jar {
-    val vendored = project.project(":common").sourceSets.getByName("vendored")
-    from(vendored.output.classesDirs)
-    from(vendored.output.resourcesDir)
-
-    val desktop = project.project(":common").sourceSets.getByName("desktop")
-    from(desktop.output.classesDirs)
-    from(desktop.output.resourcesDir)
-
-    val main = project.project(":common").sourceSets.getByName("main")
-    from(main.output.classesDirs) {
-        exclude("/iris.refmap.json")
-    }
-    from(main.output.resourcesDir)
 
     from(rootDir.resolve("LICENSE.md"))
 
@@ -55,6 +42,24 @@ tasks.jar {
     }
 
     manifest.attributes["Main-Class"] = "net.irisshaders.iris.LaunchWarn"
+}
+
+// NeoGradle compiles the game, but we don't want to add our common code to the game's code
+val notNeoTask: (Task) -> Boolean = { it: Task -> !it.name.startsWith("neo") && !it.name.startsWith("compileService") }
+
+tasks.withType<JavaCompile>().matching(notNeoTask).configureEach {
+    source(project(":common").sourceSets.main.get().allSource)
+    source(project(":common").sourceSets.getByName("vendored").allSource)
+    source(project(":common").sourceSets.getByName("api").allSource)
+    source(project(":common").sourceSets.getByName("desktop").allSource)
+}
+
+tasks.withType<Javadoc>().matching(notNeoTask).configureEach {
+    source(project(":common").sourceSets.main.get().allJava)
+}
+
+tasks.withType<ProcessResources>().matching(notNeoTask).configureEach {
+    from(project(":common").sourceSets.main.get().resources)
 }
 
 tasks.jar.get().destinationDirectory = rootDir.resolve("build").resolve("libs")
@@ -79,8 +84,6 @@ neoForge {
     mods {
         create("sodium") {
             sourceSet(sourceSets.main.get())
-            sourceSet(project.project(":common").sourceSets.main.get())
-            sourceSet(project.project(":common").sourceSets.getByName("vendored"))
         }
     }
 }
@@ -105,9 +108,12 @@ tasks.named("compileTestJava").configure {
 }
 
 dependencies {
+    compileOnly(files(rootDir.resolve("DHApi.jar")))
+
     compileOnly(project.project(":common").sourceSets.main.get().output)
     compileOnly(project.project(":common").sourceSets.getByName("vendored").output)
     compileOnly(project.project(":common").sourceSets.getByName("headers").output)
+    compileOnly(project.project(":common").sourceSets.getByName("api").output)
     includeDep("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
     includeDep("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.0+acb05a3919")
     includeDep("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")

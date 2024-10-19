@@ -163,7 +163,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		this.elementsToFill = this.elementsToFill & ~IrisVertexFormats.TANGENT_ELEMENT.mask();
 
 		if (injectNormalAndUV1 && this.elementsToFill != (this.elementsToFill & ~VertexFormatElement.NORMAL.mask())) {
-			this.setNormal(0, 0, 0);
+			this.setNormal(0, 1, 0);
 		}
 
 		if (skipEndVertexOnce) {
@@ -238,8 +238,13 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 				MemoryUtil.memPutInt(newPointer + tangentOffset, tangent);
 			}
 		} else {
+			// TODO: Temporary fix for EMI item batching
+			boolean recalculateNormal = ImmediateState.isRenderingLevel;
 			NormalHelper.computeFaceNormal(normal, polygon);
-			int packedNormal = NormI8.pack(normal.x, normal.y, normal.z, 0.0f);
+			int packedNormal = 0;
+			if (recalculateNormal) {
+				packedNormal = NormI8.pack(normal.x, normal.y, normal.z, 0.0f);
+			}
 			int tangent = NormalHelper.computeTangent(normal.x, normal.y, normal.z, polygon);
 
 			for (int vertex = 0; vertex < vertexAmount; vertex++) {
@@ -247,7 +252,9 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 
 				MemoryUtil.memPutFloat(newPointer + midTexOffset, midU);
 				MemoryUtil.memPutFloat(newPointer + midTexOffset + 4, midV);
-				MemoryUtil.memPutInt(newPointer + normalOffset, packedNormal);
+				if (recalculateNormal) {
+					MemoryUtil.memPutInt(newPointer + normalOffset, packedNormal);
+				}
 				MemoryUtil.memPutInt(newPointer + tangentOffset, tangent);
 			}
 		}

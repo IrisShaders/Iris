@@ -7,8 +7,8 @@ import org.joml.Vector4f;
 public class BaseClippingPlanes {
 	private final Vector4f[] planes = new Vector4f[6];
 
-	public BaseClippingPlanes(Matrix4fc playerView, Matrix4fc playerProjection) {
-		this.init(playerView, playerProjection);
+	public BaseClippingPlanes(Matrix4fc modelViewProjection) {
+		this.init(modelViewProjection);
 	}
 
 	private static Vector4f transform(Matrix4fc transform, float x, float y, float z) {
@@ -19,11 +19,10 @@ public class BaseClippingPlanes {
 		return vector4f;
 	}
 
-	private void init(Matrix4fc view, Matrix4fc projection) {
+	private void init(Matrix4fc modelViewProjection) {
 		// Transform = Transpose(Projection x View)
 
-		Matrix4f transform = new Matrix4f(projection);
-		transform.mul(view);
+		Matrix4f transform = new Matrix4f(modelViewProjection);
 		transform.transpose();
 
 		planes[0] = transform(transform, -1, 0, 0);
