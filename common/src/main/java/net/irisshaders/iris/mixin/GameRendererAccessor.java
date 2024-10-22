@@ -1,5 +1,7 @@
 package net.irisshaders.iris.mixin;
 
+import com.mojang.blaze3d.resource.CrossFrameResourcePool;
+import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
@@ -27,4 +29,7 @@ public interface GameRendererAccessor {
 
 	@Invoker("shouldRenderBlockOutline")
 	boolean shouldRenderBlockOutlineA();
+
+	@Accessor("resourcePool")
+	CrossFrameResourcePool getResourcePool();
 }

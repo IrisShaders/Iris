@@ -25,10 +25,13 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelTargetBundle;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -150,7 +153,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				this.shaderPackList.render(guiGraphics, mouseX, mouseY, delta);
 			}
 		} else {
-			this.renderBlurredBackground(delta);
 			this.showHideButton.render(guiGraphics, mouseX, mouseY, delta);
 		}
 
@@ -229,12 +231,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.removeWidget(this.shaderPackList);
 		this.removeWidget(this.shaderOptionList);
 
-		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58 - 32, 0, this.width);
+		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58 - 36, 0, this.width);
 
 		if (Iris.getCurrentPack().isPresent() && this.navigation != null) {
 			ShaderPack currentPack = Iris.getCurrentPack().get();
 
-			this.shaderOptionList = new ShaderPackOptionList(this, this.navigation, currentPack, this.minecraft, this.width, this.height, 32, this.height - 58 - 32, 0, this.width);
+			this.shaderOptionList = new ShaderPackOptionList(this, this.navigation, currentPack, this.minecraft, this.width, this.height, 32, this.height - 58 - 36, 0, this.width);
 			this.navigation.setActiveOptionList(this.shaderOptionList);
 
 			this.shaderOptionList.rebuild();
@@ -351,13 +353,23 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.screenSwitchButton.active = optionMenuOpen || shaderPackList.getTopButtonRow().shadersEnabled;
 		}
 	}
+	private static final ResourceLocation BLUR_POST_CHAIN_ID = ResourceLocation.withDefaultNamespace("blur");
 
-	private void processFixedBlur(float tick) {
-		// TODO IMS 24w35a
+	private void processFixedBlur() {
+		float f = Math.min(this.minecraft.options.getMenuBackgroundBlurriness(), this.blurTransition.getAsFloat());
+		if (!(f < 1.0F)) {
+			PostChain postChain = this.minecraft.getShaderManager().getPostChain(BLUR_POST_CHAIN_ID, LevelTargetBundle.MAIN_TARGETS);
+			if (postChain != null) {
+				postChain.setUniform("Radius", f);
+				postChain.process(this.minecraft.getMainRenderTarget(), ((GameRendererAccessor) this.minecraft.gameRenderer).getResourcePool());
+			}
+
+		}
 	}
 
-	protected void renderBlurredBackground(float pScreen0) {
-		processFixedBlur(pScreen0);
+	@Override
+	protected void renderBlurredBackground() {
+		processFixedBlur();
 		this.minecraft.getMainRenderTarget().bindWrite(false);
 	}
 

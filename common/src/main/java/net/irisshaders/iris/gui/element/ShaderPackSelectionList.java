@@ -111,20 +111,16 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 	@Override
 	protected void renderListBackground(GuiGraphics pAbstractSelectionList0) {
-		if (screen.listTransition.getAsFloat() < 0.02f) return;
+		float transition = screen.listTransition.getAsFloat();
+		if (transition < 0.02f) return;
+		if (transition < 0.99f) pAbstractSelectionList0.flush();
 		RenderSystem.enableBlend();
-		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, screen.listTransition.getAsFloat());
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, Math.max(screen.listTransition.getAsFloat(), 0.01f));
 		pAbstractSelectionList0.blit(RenderType::guiTextured,
 			MENU_LIST_BACKGROUND,
-			this.getX(),
-			this.getY() - 2,
-			(float) this.getRight(),
-			(float) (this.getBottom() + (int) this.getScrollAmount()),
-			this.getWidth(),
-			this.getHeight(),
-			32,
-			32
+			this.getX(), this.getY(), (float)this.getRight(), (float)(this.getBottom() + (int)this.getScrollAmount()), this.getWidth(), this.getHeight(), 32, 32
 		);
+		if (transition < 0.99f) pAbstractSelectionList0.flush();
 
 		RenderSystem.disableBlend();
 		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -132,10 +128,15 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 	@Override
 	protected void renderListSeparators(GuiGraphics pAbstractSelectionList0) {
+		float transition = screen.listTransition.getAsFloat();
+		if (transition < 0.02f) return;
+		if (transition < 0.99f) pAbstractSelectionList0.flush();
 		RenderSystem.enableBlend();
-		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, screen.listTransition.getAsFloat());
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, Math.max(screen.listTransition.getAsFloat(), 0.01f));
 		pAbstractSelectionList0.blit(RenderType::guiTextured, CreateWorldScreen.HEADER_SEPARATOR, this.getX(), this.getY() - 2, 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
 		pAbstractSelectionList0.blit(RenderType::guiTextured, CreateWorldScreen.FOOTER_SEPARATOR, this.getX(), this.getBottom(), 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
+		if (transition < 0.99f) pAbstractSelectionList0.flush();
+
 		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.disableBlend();
 	}
