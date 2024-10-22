@@ -29,6 +29,7 @@ import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.samplers.IrisImages;
 import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
+import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.programs.ComputeSource;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
@@ -96,7 +97,7 @@ public class FinalPassRenderer {
 		this.noiseTexture = noiseTexture;
 		this.renderTargets = renderTargets;
 		this.customUniforms = customUniforms;
-		this.finalPass = pack.getCompositeFinal().map(source -> {
+		this.finalPass = pack.get(ProgramId.Final).map(source -> {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
 

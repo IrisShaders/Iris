@@ -1,8 +1,6 @@
 package net.irisshaders.iris.shaderpack;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMaps;
@@ -14,8 +12,10 @@ import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.shaderpack.materialmap.BlockEntry;
 import net.irisshaders.iris.shaderpack.materialmap.BlockRenderType;
+import net.irisshaders.iris.shaderpack.materialmap.Entry;
 import net.irisshaders.iris.shaderpack.materialmap.LegacyIdMap;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
+import net.irisshaders.iris.shaderpack.materialmap.TagEntry;
 import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.regex.Matcher;
 
 /**
  * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
@@ -54,7 +55,12 @@ public class IdMap {
 	/**
 	 * Maps block states to block ids defined in block.properties
 	 */
-	private Int2ObjectMap<List<BlockEntry>> blockPropertiesMap;
+	private Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockPropertiesMap;
+
+	/**
+	 * Maps tags to block ids defined in block.properties
+	 */
+	private Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap;
 
 	/**
 	 * A set of render type overrides for specific blocks. Allows shader packs to move blocks to different render types.
@@ -67,9 +73,10 @@ public class IdMap {
 
 		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions, environmentDefines)
 			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
+		blockTagMap = new Int2ObjectLinkedOpenHashMap<>();
 
 		loadProperties(shaderPath, "block.properties", shaderPackOptions, environmentDefines).ifPresent(blockProperties -> {
-			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties");
+			blockPropertiesMap = parseBlockMap(blockProperties, "block.", "block.properties", blockTagMap);
 			blockRenderTypeMap = parseRenderTypeMap(blockProperties, "layer.", "block.properties");
 		});
 
@@ -77,7 +84,7 @@ public class IdMap {
 
 		if (blockPropertiesMap == null) {
 			// Fill in with default values...
-			blockPropertiesMap = new Int2ObjectOpenHashMap<>();
+			blockPropertiesMap = new Int2ObjectLinkedOpenHashMap<>();
 			LegacyIdMap.addLegacyValues(blockPropertiesMap);
 		}
 
@@ -98,8 +105,8 @@ public class IdMap {
 
 		// TODO: This is the worst code I have ever made. Do not do this.
 		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines).replaceAll("\\\\\\n\\s*\\n", " ").replaceAll("\\S\s*block\\.", "\nblock.");
-
 		StringReader propertiesReader = new StringReader(processed);
+		warnMissingBackslashInPropertiesFile(processed, name);
 
 		// Note: ordering of properties is significant
 		// See https://github.com/IrisShaders/Iris/issues/1327 and the relevant putIfAbsent calls in
@@ -191,8 +198,9 @@ public class IdMap {
 		return Object2IntMaps.unmodifiable(idMap);
 	}
 
-	private static Int2ObjectMap<List<BlockEntry>> parseBlockMap(Properties properties, String keyPrefix, String fileName) {
-		Int2ObjectMap<List<BlockEntry>> entriesById = new Int2ObjectOpenHashMap<>();
+	private static Int2ObjectLinkedOpenHashMap<List<BlockEntry>> parseBlockMap(Properties properties, String keyPrefix, String fileName, Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap) {
+		Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockEntriesById = new Int2ObjectLinkedOpenHashMap<>();
+		Int2ObjectLinkedOpenHashMap<List<TagEntry>> tagEntriesById = new Int2ObjectLinkedOpenHashMap<>();
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -213,7 +221,8 @@ public class IdMap {
 				return;
 			}
 
-			List<BlockEntry> entries = new ArrayList<>();
+			List<BlockEntry> blockEntries = new ArrayList<>();
+			List<TagEntry> tagEntries = new ArrayList<>();
 
 			// Split on whitespace groups, not just single spaces
 			for (String part : value.split("\\s+")) {
@@ -222,22 +231,29 @@ public class IdMap {
 				}
 
 				try {
-					entries.add(BlockEntry.parse(part));
+					Entry entry = BlockEntry.parse(part);
+					if (entry instanceof BlockEntry be) {
+						blockEntries.add(be);
+					} else if (entry instanceof TagEntry te) {
+						tagEntries.add(te);
+					}
 				} catch (Exception e) {
 					Iris.logger.warn("Unexpected error while parsing an entry from " + fileName + " for the key " + key + ":", e);
 				}
 			}
 
-			entriesById.put(intId, Collections.unmodifiableList(entries));
+			blockEntriesById.put(intId, Collections.unmodifiableList(blockEntries));
+			tagEntriesById.put(intId, Collections.unmodifiableList(tagEntries));
 		});
 
-		return Int2ObjectMaps.unmodifiable(entriesById);
+		blockTagMap.putAll(tagEntriesById);
+
+		return blockEntriesById;
 	}
 
 	/**
 	 * Parses a render layer map.
 	 * <p>
-	 * This feature is used by Chocapic v9 and Wisdom Shaders. Otherwise, it is a rarely-used feature.
 	 */
 	private static Map<NamespacedId, BlockRenderType> parseRenderTypeMap(Properties properties, String keyPrefix, String fileName) {
 		Map<NamespacedId, BlockRenderType> overrides = new HashMap<>();
@@ -262,6 +278,10 @@ public class IdMap {
 			}
 
 			for (String part : value.split("\\s+")) {
+				if (part.startsWith("%")) {
+					Iris.logger.fatal("Cannot use a tag in the render type map: " + key + " = " + value);
+					continue;
+				}
 				// Note: NamespacedId performs no validation on the content. That will need to be done by whatever is
 				//       converting these things to ResourceLocations.
 				overrides.put(new NamespacedId(part), renderType);
@@ -294,8 +314,34 @@ public class IdMap {
 		return overrides;
 	}
 
-	public Int2ObjectMap<List<BlockEntry>> getBlockProperties() {
+	private static void warnMissingBackslashInPropertiesFile(String processedSource, String propertiesFileName) {
+		if (propertiesFileName.equals("shaders.properties")) {
+			return;
+		}
+		String[] fileNameSections = propertiesFileName.split("\\.");
+		String entryName = "entry";
+		if (fileNameSections.length >= 2) {
+			entryName = fileNameSections[0] + " entry";
+		}
+		Matcher matcher = PropertiesPreprocessor.BACKSLASH_MATCHER.matcher(processedSource);
+		while (matcher.find()) {
+			Iris.logger.warn("Found missing \"\\\" in file \"{}\" in {}: \"{}\"", propertiesFileName, entryName, matcher.group(0));
+			for (int i = 1; i <= matcher.groupCount(); i++) {
+				String match = matcher.group(i);
+				if (match == null) {
+					continue;
+				}
+				Iris.logger.warn("At ID: \"{}\"", match);
+			}
+		}
+	}
+
+	public Int2ObjectLinkedOpenHashMap<List<BlockEntry>> getBlockProperties() {
 		return blockPropertiesMap;
+	}
+
+	public Int2ObjectLinkedOpenHashMap<List<TagEntry>> getTagEntries() {
+		return blockTagMap;
 	}
 
 	public Object2IntFunction<NamespacedId> getItemIdMap() {
@@ -325,11 +371,12 @@ public class IdMap {
 		return Objects.equals(itemIdMap, idMap.itemIdMap)
 			&& Objects.equals(entityIdMap, idMap.entityIdMap)
 			&& Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap)
+			&& Objects.equals(blockTagMap, idMap.blockTagMap)
 			&& Objects.equals(blockRenderTypeMap, idMap.blockRenderTypeMap);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockRenderTypeMap);
+		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockTagMap, blockRenderTypeMap);
 	}
 }

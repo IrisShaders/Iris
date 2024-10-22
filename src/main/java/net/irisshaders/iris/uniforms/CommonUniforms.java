@@ -12,6 +12,7 @@ import net.irisshaders.iris.layer.GbufferPrograms;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.irisshaders.iris.mixin.texture.TextureAtlasAccessor;
+import net.irisshaders.iris.mixinterface.LocalPlayerInterface;
 import net.irisshaders.iris.shaderpack.IdMap;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.texture.TextureInfoCache;
@@ -155,6 +156,7 @@ public final class CommonUniforms {
 			.uniform1i(ONCE, "currentRenderedItemId", () -> -1)
 			.uniform1f(ONCE, "pi", () -> Math.PI)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
+			.uniform1f(PER_TICK, "constantMood", CommonUniforms::getConstantMood)
 			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
 			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", () -> {
 				Vector2f smoothed = eyeBrightnessSmooth.get();
@@ -262,6 +264,15 @@ public final class CommonUniforms {
 
 		// This should always be 0 to 1 anyways but just making sure
 		return Math.clamp(0.0F, 1.0F, ((LocalPlayer) client.cameraEntity).getCurrentMood());
+	}
+
+	private static float getConstantMood() {
+		if (!(client.cameraEntity instanceof LocalPlayer)) {
+			return 0.0F;
+		}
+
+		// This should always be 0 to 1 anyways but just making sure
+		return Math.clamp(0.0F, 1.0F, ((LocalPlayerInterface) client.cameraEntity).getCurrentConstantMood());
 	}
 
 	static float getRainStrength() {

@@ -79,7 +79,7 @@ public class DHCompat {
 				if (e instanceof ExceptionInInitializerError eiie) {
 					throw new RuntimeException("Failure loading DH compat.", eiie.getCause());
 				} else {
-					throw new RuntimeException("DH 2.0 not found, yet Fabric claims it's there. Curious.", e);
+					throw new RuntimeException("DH found, but one or more API methods are missing. Iris requires DH [2.0.4] or DH API version [1.1.0] or newer. Please make sure you are on the latest version of DH and Iris.", e);
 				}
 			} else {
 				Iris.logger.info("DH not found, and classes not found.");

@@ -8,7 +8,7 @@ object Constants {
     const val FABRIC_API_VERSION: String = "0.96.0+1.20.4"
 
     // https://semver.org/
-    const val MOD_VERSION: String = "1.7.0"
+    const val MOD_VERSION: String = "1.7.2"
 
     const val CUSTOM_SODIUM: Boolean = false
     const val CUSTOM_SODIUM_NAME: String = ""
@@ -33,6 +33,7 @@ repositories {
             includeGroup("maven.modrinth")
         }
     }
+    maven("https://maven.covers1624.net/")
 }
 
 plugins {
@@ -53,6 +54,21 @@ base {
 }
 
 loom {
+    runs {
+        create("clientWithQuickplay") {
+            client()
+            isIdeConfigGenerated = true
+            programArgs("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient")
+            mainClass.set("net.covers1624.devlogin.DevLogin")
+            projectDir.resolve("run").resolve("mods").resolve(Constants.MINECRAFT_VERSION).mkdirs()
+            vmArgs("-Dfabric.modsFolder=" + projectDir.resolve("run").resolve("mods").resolve(Constants.MINECRAFT_VERSION).absolutePath)
+            programArgs("--quickPlaySingleplayer", "World For " + Constants.MINECRAFT_VERSION)
+            if (Constants.ACTIVATE_RENDERDOC && DefaultNativePlatform.getCurrentOperatingSystem().isLinux) {
+                environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
+            }
+        }
+    }
+
     mixin {
         useLegacyMixinAp = false
     }
@@ -134,11 +150,12 @@ dependencies {
     minecraft(group = "com.mojang", name = "minecraft", version = Constants.MINECRAFT_VERSION)
     mappings(loom.officialMojangMappings())
     modImplementation(group = "net.fabricmc", name = "fabric-loader", version = Constants.FABRIC_LOADER_VERSION)
+    localRuntime("net.covers1624:DevLogin:0.1.0.5")
 
-    include("org.antlr:antlr4-runtime:4.11.1")
-    modImplementation("org.antlr:antlr4-runtime:4.11.1")
-    include("io.github.douira:glsl-transformer:2.0.0-pre13")
-    modImplementation("io.github.douira:glsl-transformer:2.0.0-pre13")
+    include("org.antlr:antlr4-runtime:4.13.1")
+    modImplementation("org.antlr:antlr4-runtime:4.13.1")
+    include("io.github.douira:glsl-transformer:2.0.1")
+    modImplementation("io.github.douira:glsl-transformer:2.0.1")
     include("org.anarres:jcpp:1.4.14")
     modImplementation("org.anarres:jcpp:1.4.14")
 
@@ -173,6 +190,7 @@ tasks {
             environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
         }
     }
+
     getByName<JavaCompile>("compileDesktopJava") {
         sourceCompatibility = JavaVersion.VERSION_1_8.toString()
         targetCompatibility = JavaVersion.VERSION_1_8.toString()

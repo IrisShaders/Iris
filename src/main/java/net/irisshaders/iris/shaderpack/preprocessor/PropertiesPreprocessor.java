@@ -17,9 +17,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PropertiesPreprocessor {
+
+	public static final Pattern BACKSLASH_MATCHER = Pattern.compile("(?<!\\\\\\n)^(?![ \\t]*(#|block\\.\\d*|layer\\.\\d*|item\\.\\d*|entity\\.\\d*|dimension\\.\\d*)).+", Pattern.MULTILINE);
+
 	// Derived from ShaderProcessor.glslPreprocessSource, which is derived from GlShader from Canvas, licenced under LGPL
 	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
 		if (source.contains(PropertyCollectingListener.PROPERTY_MARKER) || source.contains("IRIS_PASSTHROUGHBACKSLASH")) {
@@ -35,7 +39,11 @@ public class PropertiesPreprocessor {
 			}
 
 			for (StringPair envDefine : environmentDefines) {
-				pp.addMacro(envDefine.key(), envDefine.value());
+				if (envDefine.value().isEmpty()) {
+					pp.addMacro(envDefine.key());
+				} else {
+					pp.addMacro(envDefine.key(), envDefine.value());
+				}
 			}
 
 			stringValues.forEach((name, value) -> {

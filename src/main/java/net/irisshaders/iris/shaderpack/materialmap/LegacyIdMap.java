@@ -2,6 +2,7 @@ package net.irisshaders.iris.shaderpack.materialmap;
 
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.Function;
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class LegacyIdMap {
 	private static final ImmutableList<String> WOOD_TYPES =
 		ImmutableList.of("oak", "birch", "jungle", "spruce", "acacia", "dark_oak");
 
-	public static void addLegacyValues(Int2ObjectMap<List<BlockEntry>> blockIdMap) {
+	public static void addLegacyValues(Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockIdMap) {
 		add(blockIdMap, 1, block("stone"), block("granite"), block("diorite"), block("andesite"));
 		add(blockIdMap, 2, block("grass_block"));
 		add(blockIdMap, 4, block("cobblestone"));
@@ -80,7 +81,7 @@ public class LegacyIdMap {
 		return new BlockEntry(new NamespacedId("minecraft", name), Collections.emptyMap());
 	}
 
-	private static void addMany(Int2ObjectMap<List<BlockEntry>> blockIdMap, int id, List<String> prefixes, Function<String, BlockEntry> toId) {
+	private static void addMany(Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockIdMap, int id, List<String> prefixes, Function<String, BlockEntry> toId) {
 		List<BlockEntry> entries = new ArrayList<>();
 
 		for (String prefix : prefixes) {

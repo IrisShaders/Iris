@@ -1,5 +1,7 @@
 package net.irisshaders.batchedentityrendering.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.world.entity.Entity;
@@ -40,17 +42,15 @@ public class MixinLevelRenderer_EntityListSorting {
 	@Shadow
 	private ClientLevel level;
 
-	@ModifyVariable(method = "renderLevel", at = @At(value = "INVOKE_ASSIGN", target = "Ljava/lang/Iterable;iterator()Ljava/util/Iterator;"),
-		slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderBuffers;bufferSource()Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;"),
-			to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;shouldRender(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/culling/Frustum;DDD)Z")), allow = 1)
-	private Iterator<Entity> batchedentityrendering$sortEntityList(Iterator<Entity> iterator) {
+	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Ljava/lang/Iterable;iterator()Ljava/util/Iterator;"))
+	private Iterator<Entity> batchedentityrendering$sortEntityList(Iterable<Entity> instance, Operation<Iterator<Entity>> original) {
 		// Sort the entity list first in order to allow vanilla's entity batching code to work better.
 		this.level.getProfiler().push("sortEntityList");
 
 		Map<EntityType<?>, List<Entity>> sortedEntities = new HashMap<>();
 
 		List<Entity> entities = new ArrayList<>();
-		iterator.forEachRemaining(entity -> {
+		original.call(instance).forEachRemaining(entity -> {
 			sortedEntities.computeIfAbsent(entity.getType(), entityType -> new ArrayList<>(32)).add(entity);
 		});
 
