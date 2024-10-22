@@ -70,6 +70,7 @@ dependencies {
 sourceSets {
     val main = getByName("main")
     val headers = create("headers")
+    val api = create("api")
     val vendored = create("vendored")
     val desktop = getByName("desktop")
 
@@ -85,6 +86,12 @@ sourceSets {
         }
     }
 
+    api.apply {
+        java {
+            compileClasspath += main.compileClasspath
+        }
+    }
+
     desktop.apply {
         java {
             srcDir("src/desktop/java")
@@ -94,7 +101,9 @@ sourceSets {
     main.apply {
         java {
             compileClasspath += headers.output
+            compileClasspath += api.output
             compileClasspath += vendored.output
+            runtimeClasspath += api.output
             runtimeClasspath += vendored.output
         }
     }
@@ -129,6 +138,10 @@ tasks {
         val vendored = sourceSets.getByName("vendored")
         from(vendored.output.classesDirs)
         from(vendored.output.resourcesDir)
+
+        val api = sourceSets.getByName("api")
+        from(api.output.classesDirs)
+        from(api.output.resourcesDir)
 
         val desktop = sourceSets.getByName("desktop")
         from(desktop.output.classesDirs)

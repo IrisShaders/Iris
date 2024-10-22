@@ -1,7 +1,5 @@
 package net.irisshaders.iris.api.v0;
 
-import net.irisshaders.iris.apiimpl.IrisApiV0Impl;
-
 import java.nio.ByteBuffer;
 import java.util.function.IntFunction;
 
@@ -16,7 +14,7 @@ public interface IrisApi {
 	 * @since API v0.0
 	 */
 	static IrisApi getInstance() {
-		return IrisApiV0Impl.INSTANCE;
+		return IrisApiInternal.INSTANCE;
 	}
 
 	/**

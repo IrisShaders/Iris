@@ -42,6 +42,7 @@ repositories {
 }
 
 tasks.jar {
+
     from(rootDir.resolve("LICENSE.md"))
 
     filesMatching("neoforge.mods.toml") {
@@ -118,6 +119,7 @@ dependencies {
     compileOnly(project.project(":common").sourceSets.main.get().output)
     compileOnly(project.project(":common").sourceSets.getByName("vendored").output)
     compileOnly(project.project(":common").sourceSets.getByName("headers").output)
+    compileOnly(project.project(":common").sourceSets.getByName("api").output)
     includeDep("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
     includeDep("net.fabricmc:fabric_renderer_api_v1:3.3.0+1.21.2-pre1")
     includeDep("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")

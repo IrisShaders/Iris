@@ -337,12 +337,13 @@ public class ShadowRenderer {
 
 			shadowLightVectorFromOrigin.normalize();
 
+			Matrix4f projView = ((shouldRenderDH && DHCompat.hasRenderingEnabled()) ? DHCompat.getProjection() : CapturedRenderingState.INSTANCE.getGbufferProjection())
+					.mul(CapturedRenderingState.INSTANCE.getGbufferModelView(), new Matrix4f());
+
 			if (isReversed) {
-				return holder.setInfo(new ReversedAdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
-					(shouldRenderDH && DHCompat.hasRenderingEnabled()) ? DHCompat.getProjection() : CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
+				return holder.setInfo(new ReversedAdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
 			} else {
-				return holder.setInfo(new AdvancedShadowCullingFrustum(CapturedRenderingState.INSTANCE.getGbufferModelView(),
-					(shouldRenderDH && DHCompat.hasRenderingEnabled()) ? DHCompat.getProjection() : CapturedRenderingState.INSTANCE.getGbufferProjection(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
+				return holder.setInfo(new AdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
 			}
 		}
 
@@ -388,6 +389,19 @@ public class ShadowRenderer {
 
 		RenderSystem.getModelViewStack().pushMatrix();
 		RenderSystem.getModelViewStack().set(MODELVIEW);
+
+		// Set up our orthographic projection matrix and load it into RenderSystem
+		Matrix4f shadowProjection;
+		if (this.fov != null) {
+			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
+			shadowProjection = ShadowMatrices.createPerspectiveMatrix(this.fov);
+		} else {
+			shadowProjection = ShadowMatrices.createOrthoMatrix(halfPlaneLength, nearPlane < 0 ? -DHCompat.getRenderDistance() : nearPlane, farPlane < 0 ? DHCompat.getRenderDistance() : farPlane);
+		}
+
+		IrisRenderSystem.setShadowProjection(shadowProjection);
+
+		PROJECTION = shadowProjection;
 
 		profiler.push("terrain_setup");
 
@@ -439,20 +453,6 @@ public class ShadowRenderer {
 		client.smartCull = wasChunkCullingEnabled;
 
 		profiler.popPush("terrain");
-
-
-		// Set up our orthographic projection matrix and load it into RenderSystem
-		Matrix4f shadowProjection;
-		if (this.fov != null) {
-			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
-			shadowProjection = ShadowMatrices.createPerspectiveMatrix(this.fov);
-		} else {
-			shadowProjection = ShadowMatrices.createOrthoMatrix(halfPlaneLength, nearPlane < 0 ? -DHCompat.getRenderDistance() : nearPlane, farPlane < 0 ? DHCompat.getRenderDistance() : farPlane);
-		}
-
-		IrisRenderSystem.setShadowProjection(shadowProjection);
-
-		PROJECTION = shadowProjection;
 
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no

@@ -70,6 +70,7 @@ dependencies {
     implementAndInclude("org.anarres:jcpp:1.4.14")
 
     implementation(project.project(":common").sourceSets.getByName("vendored").output)
+    implementation(project.project(":common").sourceSets.getByName("api").output)
     compileOnly(project.project(":common").sourceSets.getByName("headers").output)
     implementation(project.project(":common").sourceSets.getByName("main").output)
 
