@@ -4,17 +4,17 @@ plugins {
     id("fabric-loom") version("1.8.10") apply(false)
 }
 
-val MINECRAFT_VERSION by extra { "1.21.2-rc1" }
+val MINECRAFT_VERSION by extra { "1.21.2" }
 val NEOFORGE_VERSION by extra { "21.2.0-alpha.1.21.2-rc1.20241017.223717" }
-val FABRIC_LOADER_VERSION by extra { "0.16.5" }
-val FABRIC_API_VERSION by extra { "0.105.3+1.21.2" }
+val FABRIC_LOADER_VERSION by extra { "0.16.7" }
+val FABRIC_API_VERSION by extra { "0.106.0+1.21.2" }
 
 // This value can be set to null to disable Parchment.
 // TODO: Re-add Parchment
 val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.8.0-beta.5" }
+val MOD_VERSION by extra { "1.8.0-beta.6" }
 
 allprojects {
     apply(plugin = "java")

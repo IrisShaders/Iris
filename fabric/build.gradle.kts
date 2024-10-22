@@ -90,7 +90,10 @@ loom {
         accessWidenerPath.set(project(":common").file("src/main/resources/iris.accesswidener"))
 
     @Suppress("UnstableApiUsage")
-    mixin { defaultRefmapName.set("iris-fabric.refmap.json") }
+    mixin {
+        defaultRefmapName.set("iris-fabric.refmap.json")
+        useLegacyMixinAp = false
+    }
 
     runs {
         named("client") {
