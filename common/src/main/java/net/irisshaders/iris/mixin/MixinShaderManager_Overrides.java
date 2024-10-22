@@ -48,7 +48,7 @@ public abstract class MixinShaderManager_Overrides {
 			coreShaderMap.put(CoreShaders.POSITION_COLOR, p -> ShaderOverrides.getSkyColorShader((IrisRenderingPipeline) p));
 			coreShaderMap.put(CoreShaders.PARTICLE, p -> ShaderOverrides.isPhase((IrisRenderingPipeline) p, WorldRenderingPhase.RAIN_SNOW) ? ShaderKey.WEATHER : ShaderKey.PARTICLES);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_CUTOUT, p -> getCutout(p));
-			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_SOLID, p -> isBlockEntities((IrisRenderingPipeline) p) ? ShaderKey.BLOCK_ENTITY : ShaderKey.ENTITIES_SOLID);
+			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_SOLID, p -> getSolid(p));
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ARMOR_CUTOUT_NO_CULL, p -> getCutout(p));
 			coreShaderMap.put(CoreShaders.RENDERTYPE_GLINT, p -> ShaderKey.GLINT);
 			coreShaderMap.put(CoreShaders.RENDERTYPE_ENTITY_GLINT, p -> ShaderKey.GLINT);
@@ -149,6 +149,18 @@ public abstract class MixinShaderManager_Overrides {
 			return (ShaderKey.BLOCK_ENTITY_DIFFUSE);
 		} else {
 			return (ShaderKey.ENTITIES_CUTOUT_DIFFUSE);
+		}
+	}
+
+	private static ShaderKey getSolid(Object p) {
+		IrisRenderingPipeline pipeline = (IrisRenderingPipeline) p;
+
+		if (HandRenderer.INSTANCE.isActive()) {
+			return (HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT : ShaderKey.HAND_TRANSLUCENT);
+		} else if (isBlockEntities(pipeline)) {
+			return (ShaderKey.BLOCK_ENTITY);
+		} else {
+			return (ShaderKey.ENTITIES_SOLID);
 		}
 	}
 

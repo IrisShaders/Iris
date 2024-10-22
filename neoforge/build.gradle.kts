@@ -102,6 +102,7 @@ val notNeoTask: (Task) -> Boolean = { it: Task -> !it.name.startsWith("neo") && 
 tasks.withType<JavaCompile>().matching(notNeoTask).configureEach {
     source(project(":common").sourceSets.main.get().allSource)
     source(project(":common").sourceSets.getByName("vendored").allSource)
+    source(project(":common").sourceSets.getByName("api").allSource)
     source(project(":common").sourceSets.getByName("desktop").allSource)
 }
 

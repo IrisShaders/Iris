@@ -43,7 +43,7 @@ public class MixinShadowRenderer {
 		if (IEhandle != null) {
 			try {
 				// TODO: This is completely wrong. There is no reason passing an identity modelview should work here. But it does.
-				IEhandle.invokeExact(new RenderLevelStageEvent(RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES, Minecraft.getInstance().levelRenderer, new PoseStack(), new Matrix4f(), shadowProjection, 0, Minecraft.getInstance().getTimer(), playerCamera, ShadowRenderer.FRUSTUM));
+				IEhandle.invokeExact(new RenderLevelStageEvent(RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES, Minecraft.getInstance().levelRenderer, new PoseStack(), new Matrix4f(), shadowProjection, 0, Minecraft.getInstance().getDeltaTracker(), playerCamera, ShadowRenderer.FRUSTUM));
 			} catch (Throwable e) {
 				throw new RuntimeException(e);
 			}
