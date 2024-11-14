@@ -26,7 +26,8 @@
     "MixinSodiumGameOptionPages",
     "MixinSodiumGameOptions",
     "MixinSodiumOptionsGUI",
-    "MixinSodiumWorldRenderer"
+    "MixinSodiumWorldRenderer",
+    "MixinRenderRegion"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -47,7 +47,6 @@
     "MixinParticleEngine",
     "MixinShaderManager_Overrides",
     "MixinQuickPlayDev",
-    "MixinRenderSection",
     "MixinRenderSystem",
     "MixinRenderTarget",
     "MixinRenderType",

@@ -62,4 +62,9 @@ public class NonCullingFrustum extends Frustum implements ViewportProvider, net.
 	public boolean testAab(float v, float v1, float v2, float v3, float v4, float v5) {
 		return true;
 	}
+
+	@Override
+	public int intersectAab(float v, float v1, float v2, float v3, float v4, float v5) {
+		return FrustumIntersection.INSIDE;
+	}
 }
