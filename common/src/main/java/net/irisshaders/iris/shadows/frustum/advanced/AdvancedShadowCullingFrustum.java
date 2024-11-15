@@ -358,7 +358,6 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 			float outsideBoundY = (plane[1] < 0) ? minY : maxY;
 			float outsideBoundZ = (plane[2] < 0) ? minZ : maxZ;
 
-			// Use Math.fma for the dot product calculation to get vectorization (sorry old Intel users)
 			if (FMA_SUPPORT) {
 				if (Math.fma(plane[0], outsideBoundX, Math.fma(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) >= -plane[3]) {
 					inside &= Math.fma(plane[0], (plane[0] < 0 ? maxX : minX),
@@ -400,6 +399,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 			float outsideBoundY = (plane[1] < 0) ? minY : maxY;
 			float outsideBoundZ = (plane[2] < 0) ? minZ : maxZ;
 
+			// TODO: also implement with safeFMA
 			if (Math.fma(plane[0], outsideBoundX, Math.fma(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) < -plane[3]) {
 				return false;
 			}

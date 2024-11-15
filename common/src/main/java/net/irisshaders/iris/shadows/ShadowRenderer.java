@@ -451,11 +451,6 @@ public class ShadowRenderer {
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
 		levelRenderer.invokeSetupRender(playerCamera, terrainFrustumHolder.getFrustum(), false, false);
 
-		// Don't forget to increment the frame counter! This variable is arbitrary and only used in terrain setup,
-		// and if it's not incremented, the vanilla culling code will get confused and think that it's already seen
-		// chunks during traversal, and break rendering in concerning ways.
-		//worldRenderer.setFrameId(worldRenderer.getFrameId() + 1);
-
 		client.smartCull = wasChunkCullingEnabled;
 
 		profiler.popPush("terrain");
