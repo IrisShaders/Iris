@@ -435,13 +435,16 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 		if (distanceResult == FrustumIntersection.OUTSIDE) {
 			return FrustumIntersection.OUTSIDE;
 		}
-		if (distanceResult == FrustumIntersection.INSIDE) {
-			return this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ);
+
+		var frustumResult = this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ);
+		if (frustumResult == FrustumIntersection.OUTSIDE) {
+			return FrustumIntersection.OUTSIDE;
 		}
 
-		// distanceResult == FrustumIntersection.INTERSECT, so the final result is either OUTSIDE or INTERSECT.
-		// critically, it's not INSIDE, because the frustum test can't determine that alone.
-		var frustumResult = this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ);
-		return frustumResult == FrustumIntersection.INSIDE ? FrustumIntersection.INTERSECT : frustumResult;
+		if (frustumResult == FrustumIntersection.INSIDE && distanceResult == FrustumIntersection.INSIDE) {
+			return FrustumIntersection.INSIDE;
+		}
+
+		return FrustumIntersection.INTERSECT;
 	}
 }

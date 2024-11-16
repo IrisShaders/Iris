@@ -25,7 +25,7 @@ import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.irisshaders.iris.shadows.frustum.CullEverythingFrustum;
 import net.irisshaders.iris.shadows.frustum.FrustumHolder;
 import net.irisshaders.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
-import net.irisshaders.iris.shadows.frustum.advanced.ReversedAdvancedShadowCullingFrustum;
+import net.irisshaders.iris.shadows.frustum.advanced.SafeZoneAdvancedShadowCullingFrustum;
 import net.irisshaders.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.irisshaders.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.irisshaders.iris.uniforms.CameraUniforms;
@@ -305,12 +305,12 @@ public class ShadowRenderer {
 		} else {
 			BoxCuller boxCuller;
 
-			boolean isReversed = packCullingState == ShadowCullState.REVERSED;
+			boolean hasSafeZone = packCullingState == ShadowCullState.ADVANCED_SAFE_ZONE;
 
 			// Assume render multiplier is meant to be 1 if reversed culling is on
-			if (isReversed && renderMultiplier < 0) renderMultiplier = 1.0f;
+			if (hasSafeZone && renderMultiplier < 0) renderMultiplier = 1.0f;
 
-			double distance = (isReversed ? voxelDistance : halfPlaneLength) * renderMultiplier;
+			double distance = (hasSafeZone ? voxelDistance : halfPlaneLength) * renderMultiplier;
 			String setter = "(set by shader pack)";
 
 			if (renderMultiplier < 0) {
@@ -318,7 +318,7 @@ public class ShadowRenderer {
 				setter = "(set by user)";
 			}
 
-			if (distance >= Minecraft.getInstance().options.getEffectiveRenderDistance() * 16 && !isReversed) {
+			if (distance >= Minecraft.getInstance().options.getEffectiveRenderDistance() * 16 && !hasSafeZone) {
 				distanceInfo = "render distance = " + Minecraft.getInstance().options.getEffectiveRenderDistance() * 16
 					+ " blocks ";
 				distanceInfo += Minecraft.getInstance().isLocalServer() ? "(capped by normal render distance)" : "(capped by normal/server render distance)";
@@ -326,7 +326,7 @@ public class ShadowRenderer {
 			} else {
 				distanceInfo = distance + " blocks " + setter;
 
-				if (distance == 0.0 && !isReversed) {
+				if (distance == 0.0 && !hasSafeZone) {
 					cullingInfo = "no shadows rendered";
 					holder.setInfo(new CullEverythingFrustum(), distanceInfo, cullingInfo);
 				}
@@ -334,7 +334,7 @@ public class ShadowRenderer {
 				boxCuller = new BoxCuller(distance);
 			}
 
-			cullingInfo = (isReversed ? "Reversed" : "Advanced") + " Frustum Culling enabled";
+			cullingInfo = (hasSafeZone ? "Reversed" : "Advanced") + " Frustum Culling enabled";
 
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
@@ -346,8 +346,8 @@ public class ShadowRenderer {
 			Matrix4f projView = ((shouldRenderDH && DHCompat.hasRenderingEnabled()) ? DHCompat.getProjection() : CapturedRenderingState.INSTANCE.getGbufferProjection())
 					.mul(CapturedRenderingState.INSTANCE.getGbufferModelView(), new Matrix4f());
 
-			if (isReversed) {
-				return holder.setInfo(new ReversedAdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
+			if (hasSafeZone) {
+				return holder.setInfo(new SafeZoneAdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
 			} else {
 				return holder.setInfo(new AdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
 			}

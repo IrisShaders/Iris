@@ -7,11 +7,11 @@ import org.joml.FrustumIntersection;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 
-// nothing is rendered that falls outside the distanceCuller, and everything is rendered that falls within the boxCuller (voxel culler)
-public class ReversedAdvancedShadowCullingFrustum extends AdvancedShadowCullingFrustum {
+// nothing is rendered that falls outside the distanceCuller, and everything is rendered that falls within the boxCuller (safe zone)
+public class SafeZoneAdvancedShadowCullingFrustum extends AdvancedShadowCullingFrustum {
 	private final @NotNull BoxCuller distanceCuller;
 
-	public ReversedAdvancedShadowCullingFrustum(Matrix4fc modelViewProjection, Matrix4fc shadowProjection, Vector3f shadowLightVectorFromOrigin, BoxCuller voxelCuller, @NotNull BoxCuller distanceCuller) {
+	public SafeZoneAdvancedShadowCullingFrustum(Matrix4fc modelViewProjection, Matrix4fc shadowProjection, Vector3f shadowLightVectorFromOrigin, BoxCuller voxelCuller, @NotNull BoxCuller distanceCuller) {
 		super(modelViewProjection, shadowProjection, shadowLightVectorFromOrigin, voxelCuller);
 		this.distanceCuller = distanceCuller;
 	}
@@ -55,15 +55,28 @@ public class ReversedAdvancedShadowCullingFrustum extends AdvancedShadowCullingF
 			return FrustumIntersection.OUTSIDE;
 		}
 
-		if (this.boxCuller != null && !this.boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) {
-			return FrustumIntersection.INSIDE;
+		var safeZoneResult = FrustumIntersection.OUTSIDE;
+		if (this.boxCuller != null) {
+			safeZoneResult = this.boxCuller.intersectAab(minX, minY, minZ, maxX, maxY, maxZ);
+			if (safeZoneResult == FrustumIntersection.INSIDE) {
+				return FrustumIntersection.INSIDE;
+			}
 		}
 
-		if (distanceResult == FrustumIntersection.INSIDE) {
-			return this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ);
+		if (distanceResult == FrustumIntersection.INTERSECT && safeZoneResult == FrustumIntersection.INTERSECT) {
+			return FrustumIntersection.INTERSECT;
 		}
 
 		var frustumResult = this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ);
-		return frustumResult == FrustumIntersection.INSIDE ? FrustumIntersection.INTERSECT : frustumResult;
+
+		if (safeZoneResult == FrustumIntersection.OUTSIDE && frustumResult == FrustumIntersection.OUTSIDE) {
+			return FrustumIntersection.OUTSIDE;
+		}
+
+		if (frustumResult == FrustumIntersection.INSIDE && distanceResult == FrustumIntersection.INSIDE) {
+			return FrustumIntersection.INSIDE;
+		}
+
+		return FrustumIntersection.INTERSECT;
 	}
 }
