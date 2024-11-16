@@ -32,22 +32,22 @@ public class BoxCullingFrustum extends Frustum implements net.caffeinemc.mods.so
 		return false;
 	}
 
-	public boolean isVisible(AABB box) {
-		return !boxCuller.isCulled(box);
-	}
-
 	@Override
 	public Viewport sodium$createViewport() {
-		return new Viewport(this, position);
+		return new Viewport(this, this.position);
+	}
+
+	public boolean isVisible(AABB box) {
+		return !this.boxCuller.isCulled(box);
 	}
 
 	@Override
 	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ);
+		return !this.boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
 	@Override
 	public int intersectAab(float v, float v1, float v2, float v3, float v4, float v5) {
-		return this.boxCuller.isCulledSodium(v, v1, v2, v3, v4, v5) ? FrustumIntersection.OUTSIDE : FrustumIntersection.INTERSECT;
+		return this.boxCuller.intersectAab(v, v1, v2, v3, v4, v5);
 	}
 }

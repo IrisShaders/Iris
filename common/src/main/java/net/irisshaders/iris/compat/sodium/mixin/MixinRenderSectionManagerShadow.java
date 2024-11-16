@@ -66,13 +66,13 @@ public abstract class MixinRenderSectionManagerShadow {
 		this.shadowNeedsRenderListUpdate |= this.needsRenderListUpdate;
 	}
 
-	@Shadow
+	@Shadow(remap = false)
 	protected abstract float getRenderDistance();
 
-	@Shadow
+	@Shadow(remap = false)
 	public abstract int getVisibleChunkCount();
 
-	@Shadow
+	@Shadow(remap = false)
 	public abstract int getTotalSections();
 
 	@Inject(method = "updateRenderLists", at = @At("HEAD"), cancellable = true)
