@@ -43,7 +43,7 @@ public abstract class MixinRenderSectionManagerShadow {
 	private @NotNull SortedRenderLists shadowRenderLists = SortedRenderLists.empty();
 
 	@Unique
-	private boolean shadowNeedsRenderListUpdate;
+	private boolean shadowNeedsRenderListUpdate = true;
 
 	@Unique
 	private ShadowSectionTree shadowSectionTree;
@@ -127,6 +127,7 @@ public abstract class MixinRenderSectionManagerShadow {
 		} else {
 			this.shadowSectionTree.addSection(x, y, z);
 		}
+		this.shadowNeedsRenderListUpdate = true;
 	}
 
 	@Inject(method = "onSectionRemoved", at = @At("HEAD"))
@@ -134,6 +135,7 @@ public abstract class MixinRenderSectionManagerShadow {
 		this.ensureShadowSectionTree();
 
 		this.shadowSectionTree.removeSection(x, y, z);
+		this.shadowNeedsRenderListUpdate = true;
 	}
 
 	@Redirect(method = {
@@ -144,7 +146,6 @@ public abstract class MixinRenderSectionManagerShadow {
 	private SortedRenderLists useShadowRenderList(RenderSectionManager instance) {
 		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? this.shadowRenderLists : this.renderLists;
 	}
-
 
 	@Inject(method = "getChunksDebugString", at = @At("HEAD"), cancellable = true)
 	private void getShadowChunksDebugString(CallbackInfoReturnable<String> cir) {
