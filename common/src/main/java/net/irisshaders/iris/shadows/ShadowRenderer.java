@@ -440,13 +440,7 @@ public class ShadowRenderer {
 		boolean wasChunkCullingEnabled = client.smartCull;
 		client.smartCull = false;
 
-		// Always schedule a terrain update
-		// TODO: Only schedule a terrain update if the sun / moon is moving, or the shadow map camera moved.
-		// We have to ensure that we don't regenerate clouds every frame, since that's what needsUpdate ends up doing.
-		// This took up to 10% of the frame time before we applied this fix! That's really bad!
-
-		// TODO IMS 24w35a determine clouds
-		((LevelRenderer) levelRenderer).needsUpdate();
+		// forcing a terrain update it not necessary here, sodium figured it out on its own
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
 		levelRenderer.invokeSetupRender(playerCamera, terrainFrustumHolder.getFrustum(), false, false);
