@@ -36,7 +36,10 @@ public abstract class MixinEquipmentLayerRenderer {
 	private void changeId(CallbackInfo ci, @Local(argsOnly = true) ItemStack itemStack) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
-		ResourceLocation location = BuiltInRegistries.ITEM.getKey(itemStack.getItem());
+		ResourceLocation location = itemStack.get(DataComponents.ITEM_MODEL);
+		if (location == null)
+			location = BuiltInRegistries.ITEM.getKey(itemStack.getItem());
+
 
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
 	}

@@ -34,7 +34,7 @@ public class ItemStackStateLayerMixin {
 	@Inject(method = "render", at = @At("HEAD"))
 	private void onRender(PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j, CallbackInfo ci, @Share("lastBState") LocalIntRef ref) {
 		ref.set(CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
-		iris$setupId(((ItemContextState) parentState).getDisplayItem());
+		iris$setupId(((ItemContextState) parentState).getDisplayItem(), ((ItemContextState) parentState).getDisplayItemModel());
 	}
 
 	@Inject(method = "render", at = @At("TAIL"))
@@ -44,7 +44,7 @@ public class ItemStackStateLayerMixin {
 	}
 
 	@Unique
-	private void iris$setupId(Item item) {
+	private void iris$setupId(Item item, ResourceLocation modelId) {
 		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
 
 		if (item instanceof BlockItem blockItem && !(item instanceof SolidBucketItem)) {
@@ -55,7 +55,7 @@ public class ItemStackStateLayerMixin {
 			//System.out.println(WorldRenderingSettings.INSTANCE.getBlockStateIds().getInt(blockItem.getBlock().defaultBlockState()));
 			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getBlockStateIds().getOrDefault(blockItem.getBlock().defaultBlockState(), 0));
 		} else {
-			ResourceLocation location = BuiltInRegistries.ITEM.getKey(item);
+			ResourceLocation location = modelId != null ? modelId : BuiltInRegistries.ITEM.getKey(item);
 
 			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
 		}

@@ -3,6 +3,7 @@ package net.irisshaders.iris.mixin.entity_render_context;
 import net.irisshaders.iris.mixinterface.ItemContextState;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -20,6 +21,10 @@ public abstract class MixinItemRenderer {
 
 	@Inject(method = "appendItemLayers", at = @At(value = "HEAD"))
 	private void changeId(ItemStackRenderState itemStackRenderState, ItemStack itemStack, ItemDisplayContext itemDisplayContext, Level level, LivingEntity livingEntity, int i, CallbackInfo ci) {
-		((ItemContextState) itemStackRenderState).setDisplayItem(itemStack != null ? itemStack.getItem() : null);
+		if (itemStack != null) {
+			((ItemContextState) itemStackRenderState).setDisplayItem(itemStack.getItem(), itemStack.get(DataComponents.ITEM_MODEL));
+		} else {
+			((ItemContextState) itemStackRenderState).setDisplayItem(null, null);
+		}
 	}
 }
