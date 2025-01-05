@@ -26,11 +26,11 @@ public class IrisVertexFormats {
 			}
 		}
 
-		ENTITY_ELEMENT = VertexFormatElement.register(10, 0, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
-		ENTITY_ID_ELEMENT = VertexFormatElement.register(11, LAST_UV + 1, VertexFormatElement.Type.USHORT, VertexFormatElement.Usage.UV, 3);
-		MID_TEXTURE_ELEMENT = VertexFormatElement.register(12, 0, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
-		TANGENT_ELEMENT = VertexFormatElement.register(13, 0, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
-		MID_BLOCK_ELEMENT = VertexFormatElement.register(14, 0, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
+		ENTITY_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
+		ENTITY_ID_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), LAST_UV + 1, VertexFormatElement.Type.USHORT, VertexFormatElement.Usage.UV, 3);
+		MID_TEXTURE_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
+		TANGENT_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
+		MID_BLOCK_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
 
 		TERRAIN = VertexFormat.builder()
 			.add("Position", VertexFormatElement.POSITION)
@@ -87,5 +87,15 @@ public class IrisVertexFormats {
 			Iris.logger.info(element + " @ " + byteIndex + " is " + element.type() + " " + element.usage());
 			byteIndex += element.byteSize();
 		}
+	}
+
+	private static int getNextVertexFormatElementId() {
+		int id = 0;
+		while (VertexFormatElement.byId(id) != null) {
+			if (++id >= VertexFormatElement.MAX_COUNT) {
+				throw new RuntimeException("Too many mods registering VertexFormatElements");
+			}
+		}
+		return id;
 	}
 }
