@@ -82,8 +82,8 @@ public class ShaderSynthesizer {
 
 				// Copied from Mojang code.
 				shader.append("vec4 minecraft_mix_light(vec3 lightDir0, vec3 lightDir1, vec3 normal, vec4 color) {\n" +
-					"    lightDir0 = normalize(lightDir0);\n" +
-					"    lightDir1 = normalize(lightDir1);\n" +
+		//			"    lightDir0 = normalize(lightDir0);\n" +
+		//			"    lightDir1 = normalize(lightDir1);\n" +
 					"    float light0 = max(0.0, dot(lightDir0, normal));\n" +
 					"    float light1 = max(0.0, dot(lightDir1, normal));\n" +
 					"    float lightAccum = min(1.0, (light0 + light1) * 0.6 + 0.4);\n" +
@@ -122,7 +122,8 @@ public class ShaderSynthesizer {
 			shader.append("in vec2 UV0;\n");
 			shader.append("out vec2 texCoord;\n");
 
-			main.append("    texCoord = UV0;\n");
+			shader.append("uniform mat4 TextureMat;\n");
+			main.append("    texCoord = (TextureMat * vec4(UV0, 0.0, 1.0)).xy;\n");
 		}
 
 		// Fog

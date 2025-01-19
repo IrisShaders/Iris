@@ -17,6 +17,7 @@
     "MixinChunkMeshBuildTask",
     "MixinCloudRenderer",
     "MixinDefaultChunkRenderer",
+    "MixinDefaultFluidRenderer",
     "MixinGlRenderDevice",
     "MixinRenderRegionArenas",
     "MixinRenderSectionManager",
@@ -25,7 +26,8 @@
     "MixinSodiumGameOptionPages",
     "MixinSodiumGameOptions",
     "MixinSodiumOptionsGUI",
-    "MixinSodiumWorldRenderer"
+    "MixinSodiumWorldRenderer",
+    "MixinRenderRegion"
   ],
   "injectors": {
     "defaultRequire": 1

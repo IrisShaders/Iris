@@ -21,7 +21,7 @@ public class MixinAdvancedShadowCullingFrustum extends Frustum implements IDhApi
 	}
 
 	@Shadow(remap = false)
-	protected int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+	protected boolean isVisibleBool(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		throw new IllegalStateException();
 	}
 
@@ -33,6 +33,6 @@ public class MixinAdvancedShadowCullingFrustum extends Frustum implements IDhApi
 
 	@Override
 	public boolean intersects(int lodBlockPosMinX, int lodBlockPosMinZ, int lodBlockWidth, int lodDetailLevel) {
-		return this.isVisible(lodBlockPosMinX, this.worldMinYDH, lodBlockPosMinZ, lodBlockPosMinX + lodBlockWidth, this.worldMaxYDH, lodBlockPosMinZ + lodBlockWidth) != 0;
+		return this.isVisibleBool(lodBlockPosMinX, this.worldMinYDH, lodBlockPosMinZ, lodBlockPosMinX + lodBlockWidth, this.worldMaxYDH, lodBlockPosMinZ + lodBlockWidth);
 	}
 }

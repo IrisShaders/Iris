@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.irisshaders.batchedentityrendering.impl.BatchingDebugMessageHelper;
 import net.irisshaders.batchedentityrendering.impl.DrawCallTrackingRenderBuffers;
 import net.irisshaders.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
@@ -24,7 +25,7 @@ import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.irisshaders.iris.shadows.frustum.CullEverythingFrustum;
 import net.irisshaders.iris.shadows.frustum.FrustumHolder;
 import net.irisshaders.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
-import net.irisshaders.iris.shadows.frustum.advanced.ReversedAdvancedShadowCullingFrustum;
+import net.irisshaders.iris.shadows.frustum.advanced.SafeZoneAdvancedShadowCullingFrustum;
 import net.irisshaders.iris.shadows.frustum.fallback.BoxCullingFrustum;
 import net.irisshaders.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.irisshaders.iris.uniforms.CameraUniforms;
@@ -304,12 +305,12 @@ public class ShadowRenderer {
 		} else {
 			BoxCuller boxCuller;
 
-			boolean isReversed = packCullingState == ShadowCullState.REVERSED;
+			boolean hasSafeZone = packCullingState == ShadowCullState.ADVANCED_SAFE_ZONE;
 
 			// Assume render multiplier is meant to be 1 if reversed culling is on
-			if (isReversed && renderMultiplier < 0) renderMultiplier = 1.0f;
+			if (hasSafeZone && renderMultiplier < 0) renderMultiplier = 1.0f;
 
-			double distance = (isReversed ? voxelDistance : halfPlaneLength) * renderMultiplier;
+			double distance = (hasSafeZone ? voxelDistance : halfPlaneLength) * renderMultiplier;
 			String setter = "(set by shader pack)";
 
 			if (renderMultiplier < 0) {
@@ -317,7 +318,7 @@ public class ShadowRenderer {
 				setter = "(set by user)";
 			}
 
-			if (distance >= Minecraft.getInstance().options.getEffectiveRenderDistance() * 16 && !isReversed) {
+			if (distance >= Minecraft.getInstance().options.getEffectiveRenderDistance() * 16 && !hasSafeZone) {
 				distanceInfo = "render distance = " + Minecraft.getInstance().options.getEffectiveRenderDistance() * 16
 					+ " blocks ";
 				distanceInfo += Minecraft.getInstance().isLocalServer() ? "(capped by normal render distance)" : "(capped by normal/server render distance)";
@@ -325,7 +326,7 @@ public class ShadowRenderer {
 			} else {
 				distanceInfo = distance + " blocks " + setter;
 
-				if (distance == 0.0 && !isReversed) {
+				if (distance == 0.0 && !hasSafeZone) {
 					cullingInfo = "no shadows rendered";
 					holder.setInfo(new CullEverythingFrustum(), distanceInfo, cullingInfo);
 				}
@@ -333,7 +334,7 @@ public class ShadowRenderer {
 				boxCuller = new BoxCuller(distance);
 			}
 
-			cullingInfo = (isReversed ? "Reversed" : "Advanced") + " Frustum Culling enabled";
+			cullingInfo = (hasSafeZone ? "Reversed" : "Advanced") + " Frustum Culling enabled";
 
 			Vector4f shadowLightPosition = new CelestialUniforms(sunPathRotation).getShadowLightPositionInWorldSpace();
 
@@ -345,8 +346,8 @@ public class ShadowRenderer {
 			Matrix4f projView = ((shouldRenderDH && DHCompat.hasRenderingEnabled()) ? DHCompat.getProjection() : CapturedRenderingState.INSTANCE.getGbufferProjection())
 					.mul(CapturedRenderingState.INSTANCE.getGbufferModelView(), new Matrix4f());
 
-			if (isReversed) {
-				return holder.setInfo(new ReversedAdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
+			if (hasSafeZone) {
+				return holder.setInfo(new SafeZoneAdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
 			} else {
 				return holder.setInfo(new AdvancedShadowCullingFrustum(projView, PROJECTION, shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
 			}
@@ -439,21 +440,10 @@ public class ShadowRenderer {
 		boolean wasChunkCullingEnabled = client.smartCull;
 		client.smartCull = false;
 
-		// Always schedule a terrain update
-		// TODO: Only schedule a terrain update if the sun / moon is moving, or the shadow map camera moved.
-		// We have to ensure that we don't regenerate clouds every frame, since that's what needsUpdate ends up doing.
-		// This took up to 10% of the frame time before we applied this fix! That's really bad!
-
-		// TODO IMS 24w35a determine clouds
-		((LevelRenderer) levelRenderer).needsUpdate();
+		// forcing a terrain update it not necessary here, sodium figured it out on its own
 
 		// Execute the vanilla terrain setup / culling routines using our shadow frustum.
 		levelRenderer.invokeSetupRender(playerCamera, terrainFrustumHolder.getFrustum(), false, false);
-
-		// Don't forget to increment the frame counter! This variable is arbitrary and only used in terrain setup,
-		// and if it's not incremented, the vanilla culling code will get confused and think that it's already seen
-		// chunks during traversal, and break rendering in concerning ways.
-		//worldRenderer.setFrameId(worldRenderer.getFrameId() + 1);
 
 		client.smartCull = wasChunkCullingEnabled;
 
@@ -560,7 +550,7 @@ public class ShadowRenderer {
 
 		IrisRenderSystem.restorePlayerProjection();
 
-		debugStringTerrain = ((LevelRenderer) levelRenderer).getSectionStatistics();
+		debugStringTerrain = SodiumWorldRenderer.instance().getChunksDebugString();
 
 		profiler.popPush("generate mipmaps");
 

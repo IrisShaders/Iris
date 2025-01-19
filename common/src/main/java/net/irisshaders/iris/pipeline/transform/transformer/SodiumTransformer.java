@@ -37,9 +37,10 @@ public class SodiumTransformer {
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
 			// See https://github.com/IrisShaders/Iris/issues/1149
 			root.rename("gl_MultiTexCoord2", "gl_MultiTexCoord1");
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform vec2 u_TexCoordShrink;");
 
 			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
-				"vec4(_vert_tex_diffuse_coord, 0.0, 1.0)");
+				"vec4(_vert_tex_diffuse_coord - (_vert_tex_diffuse_coord_bias * u_TexCoordShrink), 0.0, 1.0)");
 
 			root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
 				"vec4(_vert_tex_light_coord, 0.0, 1.0)");
@@ -118,6 +119,7 @@ public class SodiumTransformer {
 			// translated from sodium's chunk_vertex.glsl
 			"vec3 _vert_position;",
 			"vec2 _vert_tex_diffuse_coord;",
+			"vec2 _vert_tex_diffuse_coord_bias;",
 			"vec2 _vert_tex_light_coord;",
 			"vec4 _vert_color;",
 			"const uint POSITION_BITS        = 20u;",
@@ -130,8 +132,6 @@ public class SodiumTransformer {
 
 			"const float VERTEX_SCALE = 32.0 / POSITION_MAX_COORD;",
 			"const float VERTEX_OFFSET = -8.0;",
-			"const float TEXTURE_FUZZ_AMOUNT = 1.0 / 64.0;",
-			"const float TEXTURE_GROW_FACTOR = (1.0 - TEXTURE_FUZZ_AMOUNT) / TEXTURE_MAX_COORD;",
 			"uint _draw_id;",
 			"vec3 irs_Normal;",
 			"vec4 irs_Tangent;",
@@ -171,7 +171,7 @@ vec4 tangent_decode(vec2 e) {
 				""",
 			"""
 					vec2 _get_texcoord_bias() {
-					     return mix(vec2(-TEXTURE_GROW_FACTOR), vec2(TEXTURE_GROW_FACTOR), bvec2(a_TexCoord >> TEXTURE_BITS));
+					     return mix(vec2(-1.0), vec2(1.0), bvec2(a_TexCoord >> TEXTURE_BITS));
 					 }
 				""",
 			"float _material_mip_bias(uint material) {\n" +
@@ -179,7 +179,8 @@ vec4 tangent_decode(vec2 e) {
 				"}",
 			"void _vert_init() {" +
 				"_vert_position = ((_deinterleave_u20x3(a_Position) * VERTEX_SCALE) + VERTEX_OFFSET);" +
-				"_vert_tex_diffuse_coord = _get_texcoord() + _get_texcoord_bias();" +
+				"_vert_tex_diffuse_coord = _get_texcoord();" +
+				"_vert_tex_diffuse_coord_bias = _get_texcoord_bias();" +
 				"_vert_tex_light_coord = vec2(a_LightAndData.xy);" +
 				"_vert_color = a_Color;" +
 				(needsNormal ? "irs_Normal = oct_to_vec3(iris_Normal.xy);" : "") +

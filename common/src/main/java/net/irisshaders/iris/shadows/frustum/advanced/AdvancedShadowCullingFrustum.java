@@ -7,6 +7,8 @@ import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
+import org.jetbrains.annotations.Nullable;
+import org.joml.FrustumIntersection;
 import org.joml.Matrix4fc;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
@@ -36,7 +38,7 @@ import java.lang.management.ManagementFactory;
  */
 public class AdvancedShadowCullingFrustum extends Frustum implements net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum, ViewportProvider {
 	private static final int MAX_CLIPPING_PLANES = 13;
-	protected final BoxCuller boxCuller;
+	protected final @Nullable BoxCuller boxCuller;
 	/**
 	 * We store each plane equation as a Vector4f.
 	 *
@@ -75,7 +77,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 	private int planeCount = 0;
 
 	public AdvancedShadowCullingFrustum(Matrix4fc modelViewProjection, Matrix4fc shadowProjection, Vector3f shadowLightVectorFromOrigin,
-										BoxCuller boxCuller) {
+										@Nullable BoxCuller boxCuller) {
 		// We're overriding all of the methods, don't pass any matrices down.
 		super(new org.joml.Matrix4f(), new org.joml.Matrix4f());
 
@@ -290,37 +292,8 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 	}
 
 	@Override
-	public boolean isVisible(AABB aabb) {
-		if (boxCuller != null && boxCuller.isCulled(aabb)) {
-			return false;
-		}
-
-		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ) != 0;
-	}
-
-	// For Sodium
-	public int fastAabbTest(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		if (boxCuller != null && boxCuller.isCulled(minX, minY, minZ, maxX, maxY, maxZ)) {
-			return 0;
-		}
-
-		return isVisible(minX, minY, minZ, maxX, maxY, maxZ);
-	}
-
-	// For Immersive Portals
-	// TODO: Figure out if IP culling can somehow be compatible with Iris culling.
-	public boolean canDetermineInvisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		return false;
-	}
-
-	protected int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		float f = (float) (minX - this.x);
-		float g = (float) (minY - this.y);
-		float h = (float) (minZ - this.z);
-		float i = (float) (maxX - this.x);
-		float j = (float) (maxY - this.y);
-		float k = (float) (maxZ - this.z);
-		return this.checkCornerVisibility(f, g, h, i, j, k);
+	public Viewport sodium$createViewport() {
+		return new Viewport(this, this.position.set(this.x, this.y, this.z));
 	}
 
 	private static final boolean FMA_SUPPORT;
@@ -351,12 +324,12 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 	 * @param maxX Maximum X value of the AABB.
 	 * @param maxY Maximum Y value of the AABB.
 	 * @param maxZ Maximum Z value of the AABB.
-	 * @return 0 if nothing is visible, 1 if everything is visible, 2 if only some corners are visible.
+	 * @return OUTSIDE if nothing is visible, INSIDE if everything is visible, INTERSECT if only some corners are visible.
 	 */
 	protected int checkCornerVisibility(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		boolean inside = true;
 
-		for (int i = 0; i < planeCount; ++i) {
+		for (int i = 0; i < this.planeCount; ++i) {
 			float[] plane = this.planes[i];
 
 			// Check if plane is inside or intersecting.
@@ -366,14 +339,13 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 			float outsideBoundY = (plane[1] < 0) ? minY : maxY;
 			float outsideBoundZ = (plane[2] < 0) ? minZ : maxZ;
 
-			// Use Math.fma for the dot product calculation to get vectorization (sorry old Intel users)
 			if (FMA_SUPPORT) {
 				if (Math.fma(plane[0], outsideBoundX, Math.fma(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) >= -plane[3]) {
 					inside &= Math.fma(plane[0], (plane[0] < 0 ? maxX : minX),
 						Math.fma(plane[1], (plane[1] < 0 ? maxY : minY),
 							Math.fma(plane[2], (plane[2] < 0 ? maxZ : minZ), plane[3]))) >= 0;
 				} else {
-					return 0;
+					return FrustumIntersection.OUTSIDE;
 				}
 			} else {
 				if (safeFMA(plane[0], outsideBoundX, safeFMA(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) >= -plane[3]) {
@@ -381,12 +353,12 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 						safeFMA(plane[1], (plane[1] < 0 ? maxY : minY),
 							safeFMA(plane[2], (plane[2] < 0 ? maxZ : minZ), plane[3]))) >= 0;
 				} else {
-					return 0;
+					return FrustumIntersection.OUTSIDE;
 				}
 			}
 		}
 
-		return inside ? 1 : 2;
+		return inside ? FrustumIntersection.INSIDE : FrustumIntersection.INTERSECT;
 	}
 
 	/**
@@ -401,28 +373,78 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 	 * @return true if visible, false if not.
 	 */
 	public boolean checkCornerVisibilityBool(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		for (int i = 0; i < planeCount; ++i) {
-			float[] plane = planes[i];
+		for (int i = 0; i < this.planeCount; ++i) {
+			float[] plane = this.planes[i];
 
 			float outsideBoundX = (plane[0] < 0) ? minX : maxX;
 			float outsideBoundY = (plane[1] < 0) ? minY : maxY;
 			float outsideBoundZ = (plane[2] < 0) ? minZ : maxZ;
 
-			if (Math.fma(plane[0], outsideBoundX, Math.fma(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) < -plane[3]) {
-				return false;
+			if (FMA_SUPPORT) {
+				if (Math.fma(plane[0], outsideBoundX, Math.fma(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) < -plane[3]) {
+					return false;
+				}
+			} else {
+				if (safeFMA(plane[0], outsideBoundX, safeFMA(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) < -plane[3]) {
+					return false;
+				}
 			}
 		}
 
 		return true;
 	}
 
-	@Override
-	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return (boxCuller == null || !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) && this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ) > 0;
+	// For Immersive Portals
+	// TODO: Figure out if IP culling can somehow be compatible with Iris culling.
+	public boolean canDetermineInvisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		return false;
+	}
+
+	protected boolean isVisibleBool(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		return this.checkCornerVisibilityBool(
+			(float) (minX - this.x),
+			(float) (minY - this.y),
+			(float) (minZ - this.z),
+			(float) (maxX - this.x),
+			(float) (maxY - this.y),
+			(float) (maxZ - this.z));
 	}
 
 	@Override
-	public Viewport sodium$createViewport() {
-		return new Viewport(this, position.set(x, y, z));
+	public boolean isVisible(AABB aabb) {
+		if (this.boxCuller != null && this.boxCuller.isCulled(aabb)) {
+			return false;
+		}
+
+		return this.isVisibleBool(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ);
+	}
+
+	@Override
+	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		return (this.boxCuller == null || !this.boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) &&
+			this.checkCornerVisibilityBool(minX, minY, minZ, maxX, maxY, maxZ);
+	}
+
+	@Override
+	public int intersectAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		if (this.boxCuller == null) {
+			return this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ);
+		}
+
+		var distanceResult = this.boxCuller.intersectAab(minX, minY, minZ, maxX, maxY, maxZ);
+		if (distanceResult == FrustumIntersection.OUTSIDE) {
+			return FrustumIntersection.OUTSIDE;
+		}
+
+		var frustumResult = this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ);
+		if (frustumResult == FrustumIntersection.OUTSIDE) {
+			return FrustumIntersection.OUTSIDE;
+		}
+
+		if (frustumResult == FrustumIntersection.INSIDE && distanceResult == FrustumIntersection.INSIDE) {
+			return FrustumIntersection.INSIDE;
+		}
+
+		return FrustumIntersection.INTERSECT;
 	}
 }

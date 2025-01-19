@@ -24,10 +24,6 @@ public class NonCullingFrustum extends Frustum implements ViewportProvider, net.
 		return false;
 	}
 
-	public boolean isVisible(AABB box) {
-		return true;
-	}
-
 	@Override
 	public int cubeInFrustum(BoundingBox boundingBox) {
 		return FrustumIntersection.INSIDE;
@@ -55,11 +51,20 @@ public class NonCullingFrustum extends Frustum implements ViewportProvider, net.
 
 	@Override
 	public Viewport sodium$createViewport() {
-		return new Viewport(this, position);
+		return new Viewport(this, this.position);
+	}
+
+	public boolean isVisible(AABB box) {
+		return true;
 	}
 
 	@Override
 	public boolean testAab(float v, float v1, float v2, float v3, float v4, float v5) {
 		return true;
+	}
+
+	@Override
+	public int intersectAab(float v, float v1, float v2, float v3, float v4, float v5) {
+		return FrustumIntersection.INSIDE;
 	}
 }
