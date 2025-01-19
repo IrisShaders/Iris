@@ -6,6 +6,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import net.caffeinemc.mods.sodium.client.gl.GlObject;
 import net.caffeinemc.mods.sodium.client.gl.shader.GlProgram;
 import net.caffeinemc.mods.sodium.client.gl.shader.GlShader;
+import net.caffeinemc.mods.sodium.client.gl.shader.ShaderParser;
 import net.caffeinemc.mods.sodium.client.gl.shader.ShaderType;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
@@ -96,8 +97,9 @@ public class SodiumPrograms {
 		Map<PatchShaderType, GlShader> newMap = new EnumMap<>(PatchShaderType.class);
 		for (Map.Entry<PatchShaderType, String> entry : transformed.entrySet()) {
 			if (entry.getValue() == null) continue;
+			// TODO: is it acceptable to pass null as the list of include ids? It should probably correctly resolve includes instead
 			newMap.put(entry.getKey(), new GlShader(ShaderType.fromGlShaderType(entry.getKey().glShaderType.id),
-				ResourceLocation.fromNamespaceAndPath("iris", "sodium-shader-" + passName), entry.getValue()));
+				ResourceLocation.fromNamespaceAndPath("iris", "sodium-shader-" + passName), new ShaderParser.ParsedShader(entry.getValue(), null)));
 		}
 		return newMap;
 	}
