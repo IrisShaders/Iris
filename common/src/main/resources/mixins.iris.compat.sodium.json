@@ -17,6 +17,7 @@
     "MixinChunkMeshBuildTask",
     "MixinCloudRenderer",
     "MixinDefaultChunkRenderer",
+    "MixinDefaultFluidRenderer",
     "MixinGlRenderDevice",
     "MixinRenderRegionArenas",
     "MixinRenderSectionManager",

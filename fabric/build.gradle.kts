@@ -8,6 +8,7 @@ val MINECRAFT_VERSION: String by rootProject.extra
 val PARCHMENT_VERSION: String? by rootProject.extra
 val FABRIC_LOADER_VERSION: String by rootProject.extra
 val FABRIC_API_VERSION: String by rootProject.extra
+val SODIUM_DEPENDENCY_FABRIC: Any by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 repositories {
@@ -64,7 +65,7 @@ dependencies {
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
 
-    modImplementation("maven.modrinth", "sodium", "mc1.21.4-0.6.3-fabric")
+    modImplementation(SODIUM_DEPENDENCY_FABRIC)
     implementAndInclude("org.antlr:antlr4-runtime:4.13.1")
     implementAndInclude("io.github.douira:glsl-transformer:2.0.1")
     implementAndInclude("org.anarres:jcpp:1.4.14")

@@ -3,10 +3,12 @@ package net.irisshaders.iris.pipeline.programs;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat2v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
+import net.caffeinemc.mods.sodium.mixin.core.render.texture.TextureAtlasAccessor;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
@@ -22,6 +24,7 @@ import net.irisshaders.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -32,12 +35,15 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 public class SodiumShader implements ChunkShaderInterface {
+	private static final int SUB_TEXEL_PRECISION_BITS = 5;
+
 	private final GlUniformMatrix4f uniformModelViewMatrix;
 	private final GlUniformMatrix4f uniformModelViewMatrixInv;
 	private final GlUniformMatrix4f uniformProjectionMatrix;
 	private final GlUniformMatrix4f uniformProjectionMatrixInv;
 	private final GlUniformMatrix3f uniformNormalMatrix;
 	private final GlUniformFloat3v uniformRegionOffset;
+	private final GlUniformFloat2v uniformTexCoordShrink;
 	private final ProgramImages images;
 	private final ProgramSamplers samplers;
 	private final ProgramUniforms uniforms;
@@ -58,6 +64,7 @@ public class SodiumShader implements ChunkShaderInterface {
 		this.uniformProjectionMatrix = context.bindUniformOptional("iris_ProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrixInv = context.bindUniformOptional("iris_ProjectionMatrixInv", GlUniformMatrix4f::new);
 		this.uniformRegionOffset = context.bindUniformOptional("u_RegionOffset", GlUniformFloat3v::new);
+		this.uniformTexCoordShrink = context.bindUniformOptional("u_TexCoordShrink", GlUniformFloat2v::new);
 
 		this.alphaTest = alphaTest;
 		this.containsTessellation = containsTessellation;
@@ -142,6 +149,20 @@ public class SodiumShader implements ChunkShaderInterface {
 		updateUniforms();
 		images.update();
 		bindTextures();
+
+		var textureAtlas = (TextureAtlasAccessor) Minecraft.getInstance()
+			.getTextureManager()
+			.getTexture(TextureAtlas.LOCATION_BLOCKS);
+
+		// There is a limited amount of sub-texel precision when using hardware texture sampling. The mapped texture
+		// area must be "shrunk" by at least one sub-texel to avoid bleed between textures in the atlas. And since we
+		// offset texture coordinates in the vertex format by one texel, we also need to undo that here.
+		double subTexelPrecision = (1 << SUB_TEXEL_PRECISION_BITS);
+		double subTexelOffset = 1.0f / (1 << 15);
+		this.uniformTexCoordShrink.set(
+			(float) (subTexelOffset + ((1.0D / textureAtlas.getWidth()) / subTexelPrecision)),
+			(float) (subTexelOffset + ((1.0D / textureAtlas.getHeight()) / subTexelPrecision))
+		);
 
 		if (containsTessellation) {
 			ImmediateState.usingTessellation = true;
