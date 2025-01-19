@@ -154,15 +154,17 @@ public class SodiumShader implements ChunkShaderInterface {
 			.getTextureManager()
 			.getTexture(TextureAtlas.LOCATION_BLOCKS);
 
-		// There is a limited amount of sub-texel precision when using hardware texture sampling. The mapped texture
-		// area must be "shrunk" by at least one sub-texel to avoid bleed between textures in the atlas. And since we
-		// offset texture coordinates in the vertex format by one texel, we also need to undo that here.
-		double subTexelPrecision = (1 << SUB_TEXEL_PRECISION_BITS);
-		double subTexelOffset = 1.0f / (1 << 15);
-		this.uniformTexCoordShrink.set(
-			(float) (subTexelOffset + ((1.0D / textureAtlas.getWidth()) / subTexelPrecision)),
-			(float) (subTexelOffset + ((1.0D / textureAtlas.getHeight()) / subTexelPrecision))
-		);
+		if (this.uniformTexCoordShrink != null) {
+			// There is a limited amount of sub-texel precision when using hardware texture sampling. The mapped texture
+			// area must be "shrunk" by at least one sub-texel to avoid bleed between textures in the atlas. And since we
+			// offset texture coordinates in the vertex format by one texel, we also need to undo that here.
+			double subTexelPrecision = (1 << SUB_TEXEL_PRECISION_BITS);
+			double subTexelOffset = 1.0f / (1 << 15);
+			this.uniformTexCoordShrink.set(
+				(float) (subTexelOffset + ((1.0D / textureAtlas.getWidth()) / subTexelPrecision)),
+				(float) (subTexelOffset + ((1.0D / textureAtlas.getHeight()) / subTexelPrecision))
+			);
+		}
 
 		if (containsTessellation) {
 			ImmediateState.usingTessellation = true;
