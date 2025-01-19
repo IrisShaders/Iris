@@ -135,7 +135,9 @@ dependencies {
     runtimeOnly("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
     runtimeOnly("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 
-    implementation(SODIUM_DEPENDENCY_NEO)
+    implementation(SODIUM_DEPENDENCY_NEO) {
+        isChanging = true
+    }
     includeAdditional("io.github.douira:glsl-transformer:2.0.1")
     includeAdditional("org.anarres:jcpp:1.4.14")
     includeAdditional("org.antlr:antlr4-runtime:4.13.1")
