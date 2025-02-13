@@ -1,5 +1,7 @@
 package net.irisshaders.iris.helpers;
 
+import java.util.Objects;
+
 public record Tri<X, Y, Z>(X first, Y second, Z third) {
 
 
@@ -8,7 +10,7 @@ public record Tri<X, Y, Z>(X first, Y second, Z third) {
 		if (obj == this) return true;
 		//noinspection rawtypes
 		if (!(obj instanceof Tri tri)) return false;
-		return tri.first.equals(this.first) && tri.second.equals(this.second) && tri.third.equals(this.third);
+		return Objects.equals(tri.first, this.first) && Objects.equals(tri.second, this.second) && Objects.equals(tri.third, this.third);
 	}
 
 	@Override
