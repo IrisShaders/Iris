@@ -60,7 +60,7 @@ public class ProgramSet implements ProgramSetInterface {
 		ProgramId[] programIds = ProgramId.values();
 
 		ForkJoinTask<ComputeSource[]> readShadowComputeTask = new ReadComputeArrayTask(directory, sourceProvider, "shadow", shaderProperties).fork();
-		ForkJoinTask<ComputeSource[]> readSetupTask = new ReadComputeArrayTask(directory, sourceProvider, "setup", shaderProperties).fork();
+		ForkJoinTask<ComputeSource[]> readSetupTask = new ReadComputeProgramArrayTask(directory, sourceProvider, "setup", shaderProperties).fork();
 
 		EnumMap<ProgramArrayId, ForkJoinTask<ProgramSource[]>> readCompositeProgramTask = new EnumMap<>(ProgramArrayId.class);
 		EnumMap<ProgramArrayId, ForkJoinTask<ComputeSource[]>[]> readComputeProgramTask = new EnumMap<>(ProgramArrayId.class);
@@ -108,6 +108,43 @@ public class ProgramSet implements ProgramSetInterface {
 		this.finalCompute = readFinalComputeTask.join();
 
 		locateDirectives();
+	}
+
+	private class ReadComputeProgramArrayTask extends RecursiveTask<ComputeSource[]> {
+		private final AbsolutePackPath directory;
+		private final Function<AbsolutePackPath, String> sourceProvider;
+		private final String name;
+		private final ShaderProperties properties;
+
+		private ReadComputeProgramArrayTask(
+			AbsolutePackPath directory,
+			Function<AbsolutePackPath, String> sourceProvider,
+			String name,
+			ShaderProperties properties
+		) {
+			this.directory = directory;
+			this.sourceProvider = sourceProvider;
+			this.name = name;
+			this.properties = properties;
+		}
+
+		@Override
+		protected ComputeSource[] compute() {
+			ForkJoinTask<ComputeSource>[] tasks = new ForkJoinTask[100];
+
+			for (int i = 0; i < tasks.length; i++) {
+				String suffix = i == 0 ? "" : Integer.toString(i);
+
+				tasks[i] = new ReadComputeSourceTask(directory, sourceProvider, name + suffix, properties).fork();
+			}
+
+			ComputeSource[] programs = new ComputeSource[100];
+			for (int i = 0; i < tasks.length; i++) {
+				programs[i] = tasks[i].join();
+			}
+
+			return programs;
+		}
 	}
 
 	private class ReadProgramArrayTask extends RecursiveTask<ProgramSource[]> {
