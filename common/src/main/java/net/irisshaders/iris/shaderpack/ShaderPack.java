@@ -67,6 +67,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -255,7 +256,7 @@ public class ShaderPack {
 		this.profile = profiles.scan(this.shaderPackOptions.getOptionSet(), this.shaderPackOptions.getOptionValues());
 
 		// Get programs that should be disabled from the detected profile
-		List<String> disabledPrograms = new ArrayList<>();
+		Set<String> disabledPrograms = Collections.newSetFromMap(new ConcurrentHashMap<>());
 		this.profile.current.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
 		// Add programs that are disabled by shader options
 		shaderProperties.getConditionallyEnabledPrograms().forEach((program, shaderOption) -> {
@@ -296,7 +297,7 @@ public class ShaderPack {
 
 			ImmutableList<String> lines = includeProcessor.getIncludedFile(path);
 
-			if (lines == null) {
+			if (lines == null || lines.isEmpty()) {
 				return null;
 			}
 

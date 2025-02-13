@@ -3,9 +3,9 @@ package net.irisshaders.iris.shaderpack.include;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 // TODO: Write tests for this code
 public class IncludeProcessor {
@@ -14,7 +14,7 @@ public class IncludeProcessor {
 
 	public IncludeProcessor(IncludeGraph graph) {
 		this.graph = graph;
-		this.cache = new HashMap<>();
+		this.cache = new ConcurrentHashMap<>();
 	}
 
 	// TODO: Actual error handling
@@ -34,7 +34,7 @@ public class IncludeProcessor {
 		FileNode fileNode = graph.getNodes().get(path);
 
 		if (fileNode == null) {
-			return null;
+			return ImmutableList.of();
 		}
 
 		ImmutableList.Builder<String> builder = ImmutableList.builder();
