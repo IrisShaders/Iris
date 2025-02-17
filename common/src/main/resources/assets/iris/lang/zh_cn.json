@@ -1,4 +1,6 @@
 {
+  "modmenu.descriptionTranslation.iris": "Minecraft的现代着色器模组，旨在与现有的OptiFine着色器包兼容",
+
   "iris.shaders.reloaded": "已重新加载光影包！",
   "iris.shaders.disabled": "光影包已禁用！",
   "iris.shaders.toggled": "光影包已切换到 %s！",
@@ -65,5 +67,11 @@
   "pack.iris.configure.title": "配置",
   "pack.iris.list.label": "+ 拖放光影包至此以添加",
   "label.iris.true": "开",
-  "label.iris.false": "关"
+  "label.iris.false": "关",
+  "iris.shaders.debug.restartNoDebug": "着色器调试已启用；NeoForge不支持OpenGL调试。",
+  "iris.load.failure.shader": "着色器包加载失败！请向着色器开发人员报告错误。",
+  "iris.load.failure.generic": "Iris在尝试加载着色器时遇到问题；请将此情况报告给Iris开发人员。",
+  "iris.keybind.wireframe": "线框（仅SP）",
+  "options.iris.colorSpace": "色彩空间",
+  "options.iris.colorSpace.sodium_tooltip": "将屏幕转换到的颜色空间。适用于着色器包之上。如有疑问，请使用sRGB。",
 }
