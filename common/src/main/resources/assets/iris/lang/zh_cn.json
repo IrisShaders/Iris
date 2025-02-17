@@ -73,5 +73,5 @@
   "iris.load.failure.generic": "Iris在尝试加载着色器时遇到问题；请将此情况报告给Iris开发人员。",
   "iris.keybind.wireframe": "线框（仅SP）",
   "options.iris.colorSpace": "色彩空间",
-  "options.iris.colorSpace.sodium_tooltip": "将屏幕转换到的颜色空间。适用于着色器包之上。如有疑问，请使用sRGB。",
+  "options.iris.colorSpace.sodium_tooltip": "将屏幕转换到的颜色空间。适用于着色器包之上。如有疑问，请使用sRGB。"
 }
