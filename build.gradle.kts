@@ -1,7 +1,6 @@
-
 plugins {
     id("java")
-    id("fabric-loom") version("1.7.3") apply(false)
+    id("fabric-loom") apply(false)
 }
 
 val MINECRAFT_VERSION by extra { "1.21.1" }
@@ -24,19 +23,12 @@ allprojects {
     apply(plugin = "maven-publish")
 }
 
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
-}
-
 tasks.jar {
     enabled = false
 }
 
 subprojects {
     apply(plugin = "maven-publish")
-
-    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
 
     fun createVersionString(): String {
         val builder = StringBuilder()
