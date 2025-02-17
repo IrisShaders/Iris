@@ -37,6 +37,7 @@ import org.lwjgl.opengl.GL46C;
 public class LodRendererEvents {
 	private static boolean eventHandlersBound = false;
 
+	private static boolean previousFramePackInUse;
 	private static boolean atTranslucent = false;
 	private static int textureWidth;
 	private static int textureHeight;
@@ -85,9 +86,19 @@ public class LodRendererEvents {
 			// canceling it will prevent DH from rendering for that frame
 			@Override
 			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
+				// Check if the Shader Pack enabled status has changed between frames.
+				boolean isPackInUse = Iris.isPackInUseQuick();
 
-				DhApi.Delayed.renderProxy.setDeferTransparentRendering(Iris.isPackInUseQuick() && getInstance().shouldOverride);
-				DhApi.Delayed.configs.graphics().fog().drawMode().setValue(getInstance().shouldOverride ? EDhApiFogDrawMode.FOG_DISABLED : EDhApiFogDrawMode.FOG_ENABLED);
+				if (isPackInUse != previousFramePackInUse) {
+					// Shader Pack enabled status has changed between frames; adapt the DH fog settings.
+					DhApi.Delayed.renderProxy.setDeferTransparentRendering(isPackInUse && getInstance().shouldOverride);
+					if (isPackInUse) {
+						DhApi.Delayed.configs.graphics().fog().drawMode().setValue(getInstance().shouldOverride ? EDhApiFogDrawMode.FOG_DISABLED : EDhApiFogDrawMode.FOG_ENABLED);
+					} else {
+						DhApi.Delayed.configs.graphics().fog().drawMode().clearValue();
+					}
+					previousFramePackInUse = isPackInUse;
+				}
 			}
 		};
 
