@@ -125,5 +125,3 @@ dependencies {
     includeAdditional("io.github.douira:glsl-transformer:2.0.1")
     includeAdditional("org.anarres:jcpp:1.4.14")
 }
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
