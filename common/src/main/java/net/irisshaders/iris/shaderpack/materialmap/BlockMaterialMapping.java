@@ -44,8 +44,10 @@ public class BlockMaterialMapping {
 		List<TagKey<Block>> compatibleTags = BuiltInRegistries.BLOCK.getTagNames().filter(t -> t.location().getNamespace().equalsIgnoreCase(tagEntry.id().getNamespace()) &&
 			t.location().getPath().equalsIgnoreCase(tagEntry.id().getName())).toList();
 
-		if (compatibleTags.isEmpty() && IrisPlatformHelpers.getInstance().isDevelopmentEnvironment()) {
-			Iris.logger.warn("Failed to find the tag " + tagEntry.id());
+		if (compatibleTags.isEmpty()) {
+			if (IrisPlatformHelpers.getInstance().isDevelopmentEnvironment()) {
+				Iris.logger.warn("Failed to find the tag " + tagEntry.id());
+			}
 		} else if (compatibleTags.size() > 1) {
 			Iris.logger.fatal("You've broke the system; congrats. More than one tag matched " + tagEntry.id());
 		} else {

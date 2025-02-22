@@ -40,6 +40,7 @@ import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.KHRDebug;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -243,6 +244,11 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		createGeometryShader(factory, name);
 		createTessControlShader(factory, name);
 		createTessEvalShader(factory, name);
+	}
+
+	@Override
+	public void setShouldSkip(MethodHandle s) {
+
 	}
 
 	private void createGeometryShader(ResourceProvider factory, String name) {

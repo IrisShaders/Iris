@@ -40,7 +40,7 @@ public class SodiumTransformer {
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform vec2 u_TexCoordShrink;");
 
 			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
-				"vec4(_vert_tex_diffuse_coord - (_vert_tex_diffuse_coord_bias * u_TexCoordShrink), 0.0, 1.0)");
+				"vec4((_vert_tex_diffuse_coord_bias * u_TexCoordShrink) + _vert_tex_diffuse_coord, 0.0, 1.0)");
 
 			root.replaceReferenceExpressions(t, "gl_MultiTexCoord1",
 				"vec4(_vert_tex_light_coord, 0.0, 1.0)");
@@ -171,8 +171,8 @@ vec4 tangent_decode(vec2 e) {
 				""",
 			"""
 					vec2 _get_texcoord_bias() {
-					     return mix(vec2(-1.0), vec2(1.0), bvec2(a_TexCoord >> TEXTURE_BITS));
-					 }
+										return mix(vec2(-1.0), vec2(1.0), bvec2(a_TexCoord >> TEXTURE_BITS));
+								}
 				""",
 			"float _material_mip_bias(uint material) {\n" +
 				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
