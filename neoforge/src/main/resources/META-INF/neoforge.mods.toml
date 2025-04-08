@@ -54,3 +54,11 @@ reason = "Iris and Embeddium cannot be used together. Please use Sodium 0.6 inst
 versionRange = "[0.0.1,)"
 ordering = "NONE"
 side = "CLIENT"
+
+[[dependencies.iris]]
+modId = "sodium"
+type = "required"
+reason = "Iris requires Sodium. Please install Sodium 0.6 for Iris to work."
+versionRange = "[0.6,)"
+ordering = "NONE"
+side = "CLIENT"
