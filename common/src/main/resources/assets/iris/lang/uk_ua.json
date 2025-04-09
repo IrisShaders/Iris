@@ -37,7 +37,7 @@
   "options.iris.shaderPackSettings": "Налаштування пакету шейдерів...",
   "options.iris.shaderPackList": "Список пакетів шейдерів...",
   "options.iris.refreshShaderPacks": "Оновити пакети шейдерів",
-  "options.iris.shaderPackSelection": "Пакети шейдерів..",
+  "options.iris.shaderPackSelection": "Пакети шейдерів...",
   "options.iris.shaderPackSelection.title": "Пакети шейдерів",
   "options.iris.shaderPackSelection.addedPack": "Додано пакет шейдерів «%s»",
   "options.iris.shaderPackSelection.addedPacks": "Додано пакетів шейдерів: %s",
