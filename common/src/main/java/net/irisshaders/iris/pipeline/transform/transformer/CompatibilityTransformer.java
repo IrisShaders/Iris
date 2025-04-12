@@ -191,7 +191,7 @@ public class CompatibilityTransformer {
 				 * LOGGER.warn(
 				 * "Removing unused function " + functionName
 				 * +
-				 * " and omitting further such messages outside of debug mode. See debugging.md for more information."
+				 * " and omitting further such messages outside of debug mode. See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information."
 				 * );
 				 * }
 				 */
@@ -286,7 +286,7 @@ public class CompatibilityTransformer {
 
 		if (constDeclarationHit) {
 			LOGGER.warn(
-				"Removed the const keyword from declarations that use const parameters. See debugging.md for more information.");
+				"Removed the const keyword from declarations that use const parameters. See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 		}
 
 		// remove empty external declarations
@@ -344,7 +344,7 @@ public class CompatibilityTransformer {
 				"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) "
 					+ structMember.getDeclarators().stream().map(StructDeclarator::getName).map(Identifier::getName)
 					.collect(Collectors.joining(", "))
-					+ ". See debugging.md for more information.");
+					+ ". See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 		}
 	}
 
@@ -475,7 +475,7 @@ public class CompatibilityTransformer {
 									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
 										+ " shader that has a missing corresponding out declaration in the previous stage "
 										+ prevType.name()
-										+ " has a non-numeric type and could not be compatibility-patched. See debugging.md for more information.");
+										+ " has a non-numeric type and could not be compatibility-patched. See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 								continue;
 							}
 							Type inType = inTypeSpecifier.type;
@@ -500,7 +500,7 @@ public class CompatibilityTransformer {
 								"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
 									+ " shader is missing a corresponding out declaration in the previous stage "
 									+ prevType.name()
-									+ " and has been compatibility-patched. See debugging.md for more information.");
+									+ " and has been compatibility-patched. See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 						}
 
 						// patch mismatching declaration with a local variable and a cast
@@ -526,7 +526,7 @@ public class CompatibilityTransformer {
 									"The out declaration '" + name + "' in the " + parameters.name + " " + prevPatchTypes.glShaderType.name()
 										+ " shader that has a missing corresponding in declaration in the next stage "
 										+ type.name()
-										+ " has an array type and could not be compatibility-patched. See debugging.md for more information.");
+										+ " has an array type and could not be compatibility-patched. See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 								continue;
 							}
 
@@ -546,7 +546,7 @@ public class CompatibilityTransformer {
 									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
 										+ " shader that is never assigned to in the previous stage "
 										+ prevType.name()
-										+ " has been compatibility-patched by adding an initialization for it. See debugging.md for more information.");
+										+ " has been compatibility-patched by adding an initialization for it. See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 								continue;
 							}
 
@@ -556,7 +556,7 @@ public class CompatibilityTransformer {
 									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
 										+ " shader has a mismatching dimensionality (scalar/vector/matrix) with the out declaration in the previous stage "
 										+ prevType.name()
-										+ " and could not be compatibility-patched. See debugging.md for more information.");
+										+ " and could not be compatibility-patched. See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 								continue;
 							}
 
@@ -623,7 +623,7 @@ public class CompatibilityTransformer {
 									+ " shader has a different type " + outType.getMostCompactName()
 									+ " than the corresponding in declaration of type " + inType.getMostCompactName()
 									+ " in the following stage " + currentType.glShaderType.name()
-									+ " and has been compatibility-patched. See debugging.md for more information.");
+									+ " and has been compatibility-patched. See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 						}
 					}
 				}
