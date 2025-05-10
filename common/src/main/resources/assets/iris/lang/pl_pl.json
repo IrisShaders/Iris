@@ -62,7 +62,7 @@
   "options.iris.shadowDistance": "Maksymalna odległość cieni",
   "options.iris.shadowDistance.enabled": "Umożliwia zmianę maksymalnej odległości wyświetlania cieni. Teren i obiekty znajdujące się poza tą odległością nie będą rzucać cieni. Zmniejszenie odległości cieni może znacznie zwiększyć wydajność.",
   "options.iris.shadowDistance.disabled": "Twoja aktualna paczka shaderów ma już ustawioną odległość renderowania cieni; nie możesz jej zmienić.",
-  "options.iris.shadowDistance.sodium_tooltip": "Odległość renderowania cieni określa, jak daleko mogą być potencjalnie renderowane cienie. Mniejsza odległość oznacza, że mniejsza liczba cieni będzie renderowane, co poprawia liczbę klatek na sekundę. Opcja ta nie może być zmieniona w shaderach, które jawnie określają odległość renderowania cieni. Rzeczywista odległość renderowania cieni jest ograniczona przez ustawienie Odległość widzenia.",
+  "options.iris.shadowDistance.sodium_tooltip": "Odległość renderowania cieni określa, jak daleko mogą być potencjalnie renderowane cienie. Mniejsza odległość oznacza, że mniejsza liczba cieni będzie renderowana, co poprawia liczbę klatek na sekundę. Opcja ta nie może być zmieniona w shaderach, które jawnie określają odległość renderowania cieni. Rzeczywista odległość renderowania cieni jest ograniczona przez ustawienie Odległość widzenia.",
   "options.iris.colorSpace": "Przestrzeń kolorów",
   "options.iris.colorSpace.sodium_tooltip": "Przestrzeń kolorów, do której ma zostać przekształcony ekran. Działa z shaderami. Jeśli nie masz pewności, użyj sRGB.",
   "options.iris.gui.hide": "Ukryj GUI",
