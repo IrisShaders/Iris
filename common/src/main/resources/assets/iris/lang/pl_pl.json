@@ -1,4 +1,5 @@
 {
+  "modmenu.descriptionTranslation.iris": "Nowoczesny mod shaderowy do Minecrafta przeznaczony do kompatybilności z istniejącymi paczkami shaderów Optifine",
   "iris.shaders.reloaded": "Przeładowano shadery!",
   "iris.shaders.disabled": "Shadery wyłączone!",
   "iris.shaders.toggled": "Przełączono shadery na %s!",
