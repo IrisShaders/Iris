@@ -67,10 +67,10 @@ Dynamic Lights - [LambDynamicLights](https://modrinth.com/mod/lambdynamiclights)
 
 Smart Leaves - [Cull Leaves](https://modrinth.com/mod/cull-leaves)
 
-Performance - Iris already requires [Sodium](https://modrinth.com/mod/sodium), but we also recommend [Lithium](https://modrinth.com/mod/lithium), [Hydrogen](https://modrinth.com/mod/hydrogen), and [FerriteCore](https://modrinth.com/mod/ferrite-core). You can also use either [Phosphor](https://modrinth.com/mod/phosphor) or [Starlight](https://modrinth.com/mod/starlight).
+Performance - Iris already requires [Sodium](https://modrinth.com/mod/sodium), but we also recommend [Lithium](https://modrinth.com/mod/lithium) and [FerriteCore](https://modrinth.com/mod/ferrite-core). You can also use [ScalableLux](https://modrinth.com/mod/scalablelux).
 
 Various OptiFine features including toggles for animations, particles, and fog - [Sodium Extra](https://modrinth.com/mod/sodium-extra)
 
-Zoom - [OkZoomer](https://modrinth.com/mod/ok-zoomer) or [Logical Zoom](https://modrinth.com/mod/logical-zoom), [Spy Zoom](https://modrinth.com/mod/spyzoom) for a vanilla alternative
+Zoom - [OkZoomer](https://modrinth.com/mod/ok-zoomer), [Logical Zoom](https://modrinth.com/mod/logical-zoom), [Spy Zoom](https://modrinth.com/mod/spyzoom), or [WI Zoom](https://modrinth.com/mod/wi-zoom) for a vanilla alternative
 
 You will also need [Indium](https://modrinth.com/mod/indium/) and [Fabric-API](https://modrinth.com/mod/fabric-api) for most mods as well as [ModMenu](https://modrinth.com/mod/modmenu) for settings.
