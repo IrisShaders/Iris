@@ -1,4 +1,5 @@
 {
+  "modmenu.descriptionTranslation.iris":"A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs",
   "iris.shaders.reloaded": "Shaders Reloaded!",
   "iris.shaders.disabled": "Shaders disabled!",
   "iris.shaders.toggled": "Toggled shaders to %s!",
