@@ -1026,6 +1026,13 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	}
 
 	@Override
+	public void setupShadowViewport() {
+		if (shadowRenderer != null) {
+			this.shadowRenderer.setupShadowViewport();
+		}
+	}
+
+	@Override
 	public void addDebugText(List<String> messages) {
 		if (this.shadowRenderer != null) {
 			messages.add("");
