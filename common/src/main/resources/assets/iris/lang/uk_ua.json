@@ -1,6 +1,6 @@
 {
   "modmenu.summaryTranslation.iris": "Додає підтримку шейдерів",
-  "modmenu.descriptionTranslation.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з існуючими пакетами шейдерів для Optifine",
+  "modmenu.descriptionTranslation.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які уже існують для Optifine",
   "iris.shaders.reloaded": "Шейдери перезавантажено!",
   "iris.shaders.disabled": "Шейдери вимкнено!",
   "iris.shaders.toggled": "Шейдери перемкнуто на %s!",
