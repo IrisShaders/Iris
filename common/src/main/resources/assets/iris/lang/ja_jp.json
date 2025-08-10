@@ -21,7 +21,7 @@
   "iris.unsupported.pc": "お使いのコンピューター",
   "iris.unsupported.pack": "シェーダーパックが非対応です！",
   "iris.unsupported.pack.description": "読み込もうとしているシェーダーパックには、%sで非対応の機能が含まれています。 他のシェーダーパックをご使用ください。 非対応の機能: %s",
-  "options.iris.apply": "適応",
+  "options.iris.apply": "適用",
   "options.iris.refresh": "更新",
   "options.iris.openShaderPackFolder": "パックフォルダーを開く...",
   "options.iris.shaderPackSettings": "シェーダーの設定...",
