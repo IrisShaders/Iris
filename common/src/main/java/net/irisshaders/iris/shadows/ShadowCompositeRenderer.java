@@ -11,6 +11,8 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.blending.BlendModeOverride;
+import net.irisshaders.iris.gl.blending.BlendModeStorage;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
@@ -108,7 +110,9 @@ public class ShadowCompositeRenderer {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
 
+			pass.name = source.getName();
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, renderTargets);
+			pass.blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(null);
 			if (computes.length > 0) {
 				pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, renderTargets, holder);
 			} else {
@@ -356,7 +360,9 @@ public class ShadowCompositeRenderer {
 	}
 
 	private static class Pass implements CustomPass {
+		String name;
 		Program program;
+		BlendModeOverride blendModeOverride;
 		GlFramebuffer framebuffer;
 		ImmutableSet<Integer> flippedAtLeastOnce;
 		ImmutableSet<Integer> stageReadsFromAlt;
@@ -375,7 +381,13 @@ public class ShadowCompositeRenderer {
 
 		@Override
 		public void setupState() {
-
+			framebuffer.bind();
+			if (blendModeOverride != null) {
+				blendModeOverride.apply();
+			} else {
+				BlendModeStorage.restoreBlend();
+				GlStateManager._disableBlend();
+			}
 		}
 	}
 
