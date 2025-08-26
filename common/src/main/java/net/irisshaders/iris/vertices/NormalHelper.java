@@ -61,32 +61,27 @@ public abstract class NormalHelper {
 			oY = (1.0f - absNX) * (nY >= 0.0f ? 1.0f : -1.0f);
 		}
 
-		oX = oX * 0.5f + 0.5f;
-		oY = oY * 0.5f + 0.5f;
-
 		output.set(oX, oY);
 	}
 
-	private static final float BIAS = 1.0f / 32767.0f;
-
 	public static void tangentEncode(Vector2f output, Vector4f tangent) {
 		octahedronEncode(output, tangent.x, tangent.y, tangent.z);
-		output.y = Math.max(output.y, BIAS);
-		output.y = output.y * 0.5f + 0.5f;
-		output.y = tangent.w >= 0.0f ? output.y : 1 - output.y;
+		float y_sign = output.y >= 0.0f ? 64.0f / 127.0f : -64.0f / 127.0f;
+		output.y *= 63.0f / 127.0f;
+		output.y = tangent.w >= 0.0f ? output.y : output.y + y_sign;
 	}
 
 	static Vector4f octahedron_tangent_decode(Vector2f p_oct) {
 		Vector2f oct_compressed = new Vector2f(p_oct);
-		oct_compressed.y = oct_compressed.y * 2 - 1;
-		float r_sign = oct_compressed.y >= 0.0f ? 1.0f : -1.0f;
-		oct_compressed.y = Math.abs(oct_compressed.y);
+		oct_compressed.y = oct_compressed.y * 127.0f / 64.0f;
+		float r_sign = Math.abs(oct_compressed.y) >= 1.0f ? -1.0f : 1.0f;
+		oct_compressed.y = oct_compressed.y % 1.0f;
 		Vector3f res = octahedron_decode(oct_compressed.x, oct_compressed.y);
 		return new Vector4f(res.x, res.y, res.z, r_sign);
 	}
 
 	private static Vector3f octahedron_decode(float inX, float inY) {
-		Vector2f f = new Vector2f(inX * 2.0f - 1.0f, inY * 2.0f - 1.0f);
+		Vector2f f = new Vector2f(inX, inY);
 		Vector3f n = new Vector3f(f.x, f.y, 1.0f - Math.abs(f.x) - Math.abs(f.y));
 		float t = Mth.clamp(-n.z, 0.0f, 1.0f);
 		n.x += n.x >= 0 ? -t : t;
