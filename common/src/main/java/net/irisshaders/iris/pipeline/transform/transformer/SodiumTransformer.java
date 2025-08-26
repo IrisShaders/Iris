@@ -138,7 +138,7 @@ public class SodiumTransformer {
 			"const uint MATERIAL_USE_MIP_OFFSET = 0u;",
 			"""
 vec3 oct_to_vec3(vec2 e) {
-	vec2 f = vec2(e.x * 2.0f - 1.0f, e.y * 2.0f - 1.0f);
+	vec2 f = vec2(e.x, e.y);
 	vec3 n = vec3(f.x, f.y, 1.0f - abs(f.x) - abs(f.y));
 	float t = clamp(-n.z, 0.0f, 1.0f);
 	n.x += n.x >= 0.0f ? -t : t;
@@ -149,9 +149,9 @@ vec3 oct_to_vec3(vec2 e) {
 			"""
 vec4 tangent_decode(vec2 e) {
 	vec2 oct_compressed = e;
-	oct_compressed.y = oct_compressed.y * 2 - 1;
-	float r_sign = oct_compressed.y >= 0.0f ? 1.0f : -1.0f;
-	oct_compressed.y = abs(oct_compressed.y);
+	oct_compressed.y *= 127.0f / 64.0f;
+	float r_sign = abs(oct_compressed.y) >= 1.0f ? -1.0f : 1.0f;
+	oct_compressed.y = fract(oct_compressed.y) * (64.0f / 63.0f);
 	vec3 res = oct_to_vec3(oct_compressed.xy);
 	return vec4(res, r_sign);
 }
