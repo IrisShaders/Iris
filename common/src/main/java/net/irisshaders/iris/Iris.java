@@ -45,6 +45,8 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.ARBParallelShaderCompile;
@@ -611,6 +613,21 @@ public class Iris {
 		ClientLevel level = Minecraft.getInstance().level;
 
 		if (level != null) {
+			// Check if the dimension type of the current level has custom effects set (end sky or nether).
+			// This is minecraft:overworld by default, but can also be minecraft:the_nether or minecraft:the_end.
+			// The appropriate shader for the dimension should be used by default in order to prevent buggy results.
+			// More information at https://minecraft.wiki/w/Dimension_type
+			// https://github.com/IrisShaders/Iris/issues/2200
+			ResourceLocation effects = level.dimensionType().effectsLocation();
+
+			if (Level.END.location().equals(effects)) {
+				return DimensionId.END;
+			}
+
+			if (Level.NETHER.location().equals(effects)) {
+				return DimensionId.NETHER;
+			}
+
 			return new NamespacedId(level.dimension().location().getNamespace(), level.dimension().location().getPath());
 		} else {
 			// This prevents us from reloading the shaderpack unless we need to. Otherwise, if the player is in the
