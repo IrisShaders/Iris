@@ -624,4 +624,8 @@ public class ShaderPack {
 	public Int2ObjectArrayMap<BuiltShaderStorageInfo> getBufferObjects() {
 		return bufferObjects;
 	}
+
+	public Map<NamespacedId, String> getDimensionMap() {
+		return dimensionMap;
+	}
 }

@@ -613,6 +613,15 @@ public class Iris {
 		ClientLevel level = Minecraft.getInstance().level;
 
 		if (level != null) {
+			NamespacedId dimensionId = new NamespacedId(level.dimension().location().getNamespace(), level.dimension().location().getPath());
+
+			ShaderPack pack = getCurrentPack().orElse(null);
+
+			// If there is an exact match in dimension.properties, don't override using dimension type effects
+			if (pack != null && pack.getDimensionMap().containsKey(dimensionId)) {
+				return dimensionId;
+			}
+
 			// Check if the dimension type of the current level has custom effects set (end sky or nether).
 			// This is minecraft:overworld by default, but can also be minecraft:the_nether or minecraft:the_end.
 			// The appropriate shader for the dimension should be used by default in order to prevent buggy results.
@@ -628,7 +637,7 @@ public class Iris {
 				return DimensionId.NETHER;
 			}
 
-			return new NamespacedId(level.dimension().location().getNamespace(), level.dimension().location().getPath());
+			return dimensionId;
 		} else {
 			// This prevents us from reloading the shaderpack unless we need to. Otherwise, if the player is in the
 			// nether and quits the game, we might end up reloading the shaders on exit and on entry to the level
