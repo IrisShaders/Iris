@@ -473,17 +473,7 @@ public class Iris {
 			if (pack.equals(getShaderpacksDirectory())) {
 				return false;
 			}
-			try (Stream<Path> stream = Files.walk(pack)) {
-				return stream
-					.filter(Files::isDirectory)
-					// Prevent a pack simply named "shaders" from being
-					// identified as a valid pack
-					.filter(path -> !path.equals(pack))
-					.anyMatch(path -> path.endsWith("shaders"));
-			} catch (IOException ignored) {
-				// ignored, not a valid shader pack.
-				return false;
-			}
+			return pack.resolve("shaders").toFile().exists();
 		}
 
 		if (pack.toString().endsWith(".zip")) {
