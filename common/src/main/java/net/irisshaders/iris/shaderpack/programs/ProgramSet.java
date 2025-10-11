@@ -21,10 +21,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveTask;
 import java.util.function.Function;
 
 public class ProgramSet implements ProgramSetInterface {
@@ -58,46 +56,229 @@ public class ProgramSet implements ProgramSetInterface {
 		// - https://github.com/IrisShaders/Iris/issues/987
 		boolean readTesselation = pack.hasFeature(FeatureFlags.TESSELLATION_SHADERS);
 
-		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow", shaderProperties);
-		this.setup = readProgramArray(directory, sourceProvider, "setup", shaderProperties);
+		ProgramArrayId[] programArrayIds = ProgramArrayId.values();
+		ProgramId[] programIds = ProgramId.values();
 
-		try (ExecutorService service = Executors.newFixedThreadPool(10)) {
-			for (ProgramArrayId id : ProgramArrayId.values()) {
-				ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation);
-				compositePrograms.put(id, sources);
-				ComputeSource[][] computes = new ComputeSource[id.getNumPrograms()][];
-				boolean hasNoComputes = true;
-				for (int i = 0; i < id.getNumPrograms(); i++) {
-					computes[i] = readComputeArray(directory, sourceProvider, id.getSourcePrefix() + (i == 0 ? "" : i), shaderProperties);
-					if (computes[i].length > 0) {
-						hasNoComputes = false;
-					}
-				}
-				computePrograms.put(id, hasNoComputes ? new ComputeSource[0][] : computes);
+		ForkJoinTask<ComputeSource[]> readShadowComputeTask = new ReadComputeArrayTask(directory, sourceProvider, "shadow", shaderProperties).fork();
+		ForkJoinTask<ComputeSource[]> readSetupTask = new ReadComputeProgramArrayTask(directory, sourceProvider, "setup", shaderProperties).fork();
+
+		EnumMap<ProgramArrayId, ForkJoinTask<ProgramSource[]>> readCompositeProgramTask = new EnumMap<>(ProgramArrayId.class);
+		EnumMap<ProgramArrayId, ForkJoinTask<ComputeSource[]>[]> readComputeProgramTask = new EnumMap<>(ProgramArrayId.class);
+
+		for (ProgramArrayId id : programArrayIds) {
+			ForkJoinTask<ProgramSource[]> sources = new ReadProgramArrayTask(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation).fork();
+			readCompositeProgramTask.put(id, sources);
+			ForkJoinTask<ComputeSource[]>[] computes = new ForkJoinTask[id.getNumPrograms()];
+			for (int i = 0; i < id.getNumPrograms(); i++) {
+				computes[i] = new ReadComputeArrayTask(directory, sourceProvider, id.getSourcePrefix() + (i == 0 ? "" : i), shaderProperties).fork();
 			}
-
-			Future[] sources = new Future[ProgramId.values().length];
-
-			for (ProgramId programId : ProgramId.values()) {
-				sources[programId.ordinal()] = service.submit(() -> readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties, programId.getBlendModeOverride(), readTesselation));
-			}
-
-			for (ProgramId id : ProgramId.values()) {
-				gbufferPrograms.put(id, (ProgramSource) sources[id.ordinal()].get());
-			}
-		} catch (ExecutionException | InterruptedException e) {
-			throw new RuntimeException(e);
+			readComputeProgramTask.put(id, computes);
 		}
 
-		this.finalCompute = readComputeArray(directory, sourceProvider, "final", shaderProperties);
+		ForkJoinTask<ProgramSource>[] readGbufferProgramTasks = new ForkJoinTask[programIds.length];
+		for (ProgramId programId : programIds) {
+			readGbufferProgramTasks[programId.ordinal()] = new ReadProgramSourceTask(directory, sourceProvider, programId.getSourceName(), shaderProperties, programId.getBlendModeOverride(), readTesselation).fork();
+		}
+
+		ForkJoinTask<ComputeSource[]> readFinalComputeTask = new ReadComputeArrayTask(directory, sourceProvider, "final", shaderProperties).fork();
+
+
+		this.shadowCompute = readShadowComputeTask.join();
+		this.setup = readSetupTask.join();
+
+		for (ProgramArrayId id : ProgramArrayId.values()) {
+			ProgramSource[] sources = readCompositeProgramTask.get(id).join();
+			compositePrograms.put(id, sources);
+			ComputeSource[][] computes = new ComputeSource[id.getNumPrograms()][];
+			boolean hasNoComputes = true;
+			ForkJoinTask<ComputeSource[]>[] tasks = readComputeProgramTask.get(id);
+			for (int i = 0; i < id.getNumPrograms(); i++) {
+				computes[i] = tasks[i].join();
+				if (computes[i].length > 0) {
+					hasNoComputes = false;
+				}
+			}
+			computePrograms.put(id, hasNoComputes ? new ComputeSource[0][] : computes);
+		}
+
+		for (ProgramId id : programIds) {
+			gbufferPrograms.put(id, readGbufferProgramTasks[id.ordinal()].join());
+		}
+
+		this.finalCompute = readFinalComputeTask.join();
 
 		locateDirectives();
 	}
 
-	private static ProgramSource readProgramSource(AbsolutePackPath directory,
-												   Function<AbsolutePackPath, String> sourceProvider, String program,
-												   ProgramSet programSet, ShaderProperties properties, boolean readTesselation) {
-		return readProgramSource(directory, sourceProvider, program, programSet, properties, null, readTesselation);
+	private class ReadComputeProgramArrayTask extends RecursiveTask<ComputeSource[]> {
+		private final AbsolutePackPath directory;
+		private final Function<AbsolutePackPath, String> sourceProvider;
+		private final String name;
+		private final ShaderProperties properties;
+
+		private ReadComputeProgramArrayTask(
+			AbsolutePackPath directory,
+			Function<AbsolutePackPath, String> sourceProvider,
+			String name,
+			ShaderProperties properties
+		) {
+			this.directory = directory;
+			this.sourceProvider = sourceProvider;
+			this.name = name;
+			this.properties = properties;
+		}
+
+		@Override
+		protected ComputeSource[] compute() {
+			ForkJoinTask<ComputeSource>[] tasks = new ForkJoinTask[100];
+
+			for (int i = 0; i < tasks.length; i++) {
+				String suffix = i == 0 ? "" : Integer.toString(i);
+
+				tasks[i] = new ReadComputeSourceTask(directory, sourceProvider, name + suffix, properties).fork();
+			}
+
+			ComputeSource[] programs = new ComputeSource[100];
+			for (int i = 0; i < tasks.length; i++) {
+				programs[i] = tasks[i].join();
+			}
+
+			return programs;
+		}
+	}
+
+	private class ReadProgramArrayTask extends RecursiveTask<ProgramSource[]> {
+		private final AbsolutePackPath directory;
+		private final Function<AbsolutePackPath, String> sourceProvider;
+		private final String name;
+		private final ShaderProperties shaderProperties;
+		private final BlendModeOverride blendModeOverride;
+		private final boolean readTesselation;
+
+		private ReadProgramArrayTask(AbsolutePackPath directory,
+									 Function<AbsolutePackPath, String> sourceProvider, String name,
+									 ShaderProperties shaderProperties, BlendModeOverride blendModeOverride, boolean readTesselation) {
+			this.directory = directory;
+			this.sourceProvider = sourceProvider;
+			this.name = name;
+			this.shaderProperties = shaderProperties;
+			this.blendModeOverride = blendModeOverride;
+			this.readTesselation = readTesselation;
+		}
+
+		public ReadProgramArrayTask(AbsolutePackPath directory,
+									Function<AbsolutePackPath, String> sourceProvider, String name,
+									ShaderProperties shaderProperties, boolean readTesselation) {
+			this(directory, sourceProvider, name, shaderProperties, null, readTesselation);
+		}
+
+		@Override
+		protected ProgramSource[] compute() {
+			ForkJoinTask<ProgramSource>[] tasks = new ForkJoinTask[100];
+
+			for (int i = 0; i < tasks.length; i++) {
+				String suffix = i == 0 ? "" : Integer.toString(i);
+
+				tasks[i] = new ReadProgramSourceTask(directory, sourceProvider, name + suffix, shaderProperties, blendModeOverride, readTesselation).fork();
+			}
+
+			ProgramSource[] programs = new ProgramSource[100];
+			for (int i = 0; i < tasks.length; i++) {
+				programs[i] = tasks[i].join();
+			}
+
+			return programs;
+		}
+	}
+
+	private class ReadComputeArrayTask extends RecursiveTask<ComputeSource[]> {
+		private final AbsolutePackPath directory;
+		private final Function<AbsolutePackPath, String> sourceProvider;
+		private final String name;
+		private final ShaderProperties properties;
+
+		private ReadComputeArrayTask(
+			AbsolutePackPath directory,
+			Function<AbsolutePackPath, String> sourceProvider,
+			String name,
+			ShaderProperties properties
+		) {
+			this.directory = directory;
+			this.sourceProvider = sourceProvider;
+			this.name = name;
+			this.properties = properties;
+		}
+
+		@Override
+		protected ComputeSource[] compute() {
+			ForkJoinTask<ComputeSource>[] tasks = new ReadComputeSourceTask[26];
+
+			for (char c = 'a'; c <= 'z'; ++c) {
+				String suffix = "_" + c;
+
+				tasks[c - 97] = new ReadComputeSourceTask(directory, sourceProvider, name + suffix, properties).fork();
+			}
+
+			ComputeSource[] programs = new ComputeSource[27];
+			programs[0] = new ReadComputeSourceTask(directory, sourceProvider, name, properties).compute();
+
+			for (int i = 1; i < 27; i++) {
+				programs[i] = tasks[i - 1].join();
+				if (programs[i] == null) {
+					break;
+				}
+			}
+
+			if (Arrays.stream(programs).allMatch(Objects::isNull)) {
+				return new ComputeSource[0];
+			}
+
+			return programs;
+		}
+	}
+
+	private class ReadProgramSourceTask extends RecursiveTask<ProgramSource> {
+		private final AbsolutePackPath directory;
+		private final Function<AbsolutePackPath, String> sourceProvider;
+		private final String program;
+		private final ShaderProperties properties;
+		private final BlendModeOverride defaultBlendModeOverride;
+		private final boolean readTesselation;
+
+		public ReadProgramSourceTask(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider, String program, ShaderProperties properties, BlendModeOverride defaultBlendModeOverride, boolean readTesselation) {
+			this.directory = directory;
+			this.sourceProvider = sourceProvider;
+			this.program = program;
+			this.properties = properties;
+			this.defaultBlendModeOverride = defaultBlendModeOverride;
+			this.readTesselation = readTesselation;
+		}
+
+		@Override
+		protected ProgramSource compute() {
+			return readProgramSource(directory, sourceProvider, program, ProgramSet.this, properties, defaultBlendModeOverride, readTesselation);
+		}
+	}
+
+	private class ReadComputeSourceTask extends RecursiveTask<ComputeSource> {
+		private final AbsolutePackPath directory;
+		private final Function<AbsolutePackPath, String> sourceProvider;
+		private final String program;
+		private final ShaderProperties properties;
+
+		public ReadComputeSourceTask(AbsolutePackPath directory,
+									 Function<AbsolutePackPath, String> sourceProvider, String program,
+									 ShaderProperties properties) {
+			this.directory = directory;
+			this.sourceProvider = sourceProvider;
+			this.program = program;
+			this.properties = properties;
+		}
+
+		@Override
+		protected ComputeSource compute() {
+			return readComputeSource(directory, sourceProvider, program, ProgramSet.this, properties);
+		}
 	}
 
 	private static ProgramSource readProgramSource(AbsolutePackPath directory,
@@ -158,56 +339,6 @@ public class ProgramSet implements ProgramSetInterface {
 		}
 
 		return new ComputeSource(program, computeSource, programSet, properties);
-	}
-
-	private ProgramSource[] readProgramArray(AbsolutePackPath directory,
-											 Function<AbsolutePackPath, String> sourceProvider, String name,
-											 ShaderProperties shaderProperties, boolean readTesselation) {
-		ProgramSource[] programs = new ProgramSource[100];
-
-		for (int i = 0; i < programs.length; i++) {
-			String suffix = i == 0 ? "" : Integer.toString(i);
-
-			programs[i] = readProgramSource(directory, sourceProvider, name + suffix, this, shaderProperties, readTesselation);
-		}
-
-		return programs;
-	}
-
-	private ComputeSource[] readProgramArray(AbsolutePackPath directory,
-											 Function<AbsolutePackPath, String> sourceProvider, String name, ShaderProperties properties) {
-		ComputeSource[] programs = new ComputeSource[100];
-
-		for (int i = 0; i < programs.length; i++) {
-			String suffix = i == 0 ? "" : Integer.toString(i);
-
-			programs[i] = readComputeSource(directory, sourceProvider, name + suffix, this, properties);
-		}
-
-		return programs;
-	}
-
-	private ComputeSource[] readComputeArray(AbsolutePackPath directory,
-											 Function<AbsolutePackPath, String> sourceProvider, String name, ShaderProperties properties) {
-		ComputeSource[] programs = new ComputeSource[27];
-
-		programs[0] = readComputeSource(directory, sourceProvider, name, this, properties);
-
-		for (char c = 'a'; c <= 'z'; ++c) {
-			String suffix = "_" + c;
-
-			programs[c - 96] = readComputeSource(directory, sourceProvider, name + suffix, this, properties);
-
-			if (programs[c - 96] == null) {
-				break;
-			}
-		}
-
-		if (Arrays.stream(programs).allMatch(Objects::isNull)) {
-			return new ComputeSource[0];
-		}
-
-		return programs;
 	}
 
 	private void locateDirectives() {
