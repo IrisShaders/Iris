@@ -102,7 +102,7 @@ public class TransformPatcher {
 				Matcher matcher = versionPattern.matcher(input);
 				if (!matcher.find()) {
 					throw new IllegalArgumentException(
-						"No #version directive found in source code! See debugging.md for more information.");
+						"No #version directive found in source code! See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 				}
 				transformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 
@@ -127,7 +127,7 @@ public class TransformPatcher {
 					.ifPresent(id -> {
 						throw new IllegalArgumentException(
 							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
-								+ id.getName() + ". See debugging.md for more information.");
+								+ id.getName() + ". See /docs/usage/debugging.md at https://github.com/IrisShaders/Iris for more information.");
 					});
 
 				root.indexBuildSession(() -> {
