@@ -1,6 +1,4 @@
 {
-  "modmenu.summaryTranslation.iris": "Додає підтримку шейдерів",
-  "modmenu.descriptionTranslation.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які уже існують для Optifine",
   "iris.shaders.reloaded": "Шейдери перезавантажено!",
   "iris.shaders.disabled": "Шейдери вимкнено!",
   "iris.shaders.toggled": "Шейдери перемкнуто на %s!",
@@ -16,7 +14,7 @@
   "iris.keybind.shaderPackSelection": "Екран вибору пакета шейдерів",
   "iris.keybind.wireframe": "Wireframe (лише ПШ)",
   "iris.keybind.toggleShaders": "Перемкнути шейдери",
-  "iris.keybinds": "Iris",
+  "key.category.iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Не вдалося перезавантажити шейдери! Причина: %s",
   "iris.shaders.toggled.failure": "Не вдалося перемкнути шейдери! Причина: %s",
   "iris.sodium.failure.title": "Iris не вдалося завантажити!",
@@ -73,5 +71,7 @@
   "pack.iris.configure.title": "Налаштувати",
   "pack.iris.list.label": "Виберіть пакет шейдерів",
   "label.iris.true": "УВІМК.",
-  "label.iris.false": "ВИМК."
+  "label.iris.false": "ВИМК.",
+  "modmenu.summaryTranslation.iris": "Додає підтримку шейдерів",
+  "modmenu.descriptionTranslation.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які уже існують для Optifine"
 }
