@@ -72,6 +72,6 @@
   "pack.iris.list.label": "Виберіть пакет шейдерів",
   "label.iris.true": "УВІМК.",
   "label.iris.false": "ВИМК.",
-  "modmenu.summaryTranslation.iris": "Додає підтримку шейдерів",
-  "modmenu.descriptionTranslation.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які уже існують для Optifine"
+  "modmenu.summaryTranslation.iris": "Додає підтримку шейдерів.",
+  "modmenu.descriptionTranslation.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які уже існують для Optifine."
 }
