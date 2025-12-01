@@ -4,16 +4,19 @@
   "package": "net.irisshaders.iris.mixin.forge",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinHumanoidArmorLayer",
     "MixinGameClientEvents",
+    "MixinFluidRendererImpl",
     "MixinGooBlock",
     "MixinItemBlockRenderTypes",
-    "MixinShaderInstance",
     "MixinRenderFlame",
     "MixinRenderMekasuit",
+    "MixinLevelRenderer",
+    "MixinParticleEngine",
     "MixinRenderSPS",
     "MixinShadowRenderer",
-    "MixinVBOIE"
+    "MixinVBOIE",
+    "PipelineMixin",
+    "PipelineBuilderMixin"
   ],
   "injectors": {
     "defaultRequire": 1,

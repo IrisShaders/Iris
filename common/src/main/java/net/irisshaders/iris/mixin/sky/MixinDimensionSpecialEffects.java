@@ -18,18 +18,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(DimensionSpecialEffects.class)
 public class MixinDimensionSpecialEffects {
-	@Inject(method = "getSunriseColor", at = @At("HEAD"), cancellable = true)
-	private void iris$getSunriseColor(float timeOfDay, float partialTicks, CallbackInfoReturnable<float[]> cir) {
+	@Inject(method = "getSunriseOrSunsetColor", at = @At("HEAD"), cancellable = true)
+	private void iris$getSunriseColor(float f, CallbackInfoReturnable<Integer> cir) {
 		boolean blockSky = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).invokeDoesMobEffectBlockSky(Minecraft.getInstance().gameRenderer.getMainCamera());
 
 		if (blockSky) {
-			cir.setReturnValue(null);
+			cir.setReturnValue(0);
 		}
 
 		FogType fogType = Minecraft.getInstance().gameRenderer.getMainCamera().getFluidInCamera();
 
 		if (fogType != FogType.NONE) {
-			cir.setReturnValue(null);
+			cir.setReturnValue(0);
 		}
 	}
 }

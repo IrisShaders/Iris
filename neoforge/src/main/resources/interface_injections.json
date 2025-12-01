@@ -1,0 +1,14 @@
+{
+  "com/mojang/blaze3d/pipeline/RenderTarget": [
+    "net/irisshaders/iris/mixinterface/RenderTargetInterface"
+  ],
+  "com/mojang/blaze3d/textures/GpuTexture": [
+    "net/irisshaders/iris/mixinterface/GpuTextureInterface"
+  ],
+  "com/mojang/blaze3d/systems/RenderPass": [
+    "net/irisshaders/iris/mixinterface/RenderPassInterface"
+  ],
+  "net/minecraft/client/renderer/RenderType": [
+    "net/irisshaders/iris/mixinterface/RenderTypeInterface"
+  ]
+}

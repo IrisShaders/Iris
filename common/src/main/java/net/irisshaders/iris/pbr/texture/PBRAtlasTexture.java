@@ -1,12 +1,19 @@
 package net.irisshaders.iris.pbr.texture;
 
 import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.TextureFormat;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.mixin.texture.SpriteContentsAnimatedTextureAccessor;
 import net.irisshaders.iris.mixin.texture.SpriteContentsFrameInfoAccessor;
 import net.irisshaders.iris.mixin.texture.SpriteContentsTickerAccessor;
+import net.irisshaders.iris.pbr.TextureTracker;
+import net.irisshaders.iris.pbr.format.TextureFormatLoader;
 import net.irisshaders.iris.pbr.loader.AtlasPBRLoader.PBRTextureAtlasSprite;
 import net.irisshaders.iris.pbr.util.TextureManipulationUtil;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -16,7 +23,6 @@ import net.minecraft.client.renderer.texture.SpriteContents.FrameInfo;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedWriter;
@@ -51,7 +57,7 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 
 		int ticks = 0;
 		for (int f = 0; f < sourceAccessor.getFrame(); f++) {
-			ticks += ((SpriteContentsFrameInfoAccessor) sourceFrames.get(f)).getTime();
+			ticks += ((SpriteContentsFrameInfoAccessor) (Object) sourceFrames.get(f)).getTime();
 		}
 
 		SpriteContentsTickerAccessor targetAccessor = (SpriteContentsTickerAccessor) target;
@@ -60,13 +66,13 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 		int cycleTime = 0;
 		int frameCount = targetFrames.size();
 		for (FrameInfo frame : targetFrames) {
-			cycleTime += ((SpriteContentsFrameInfoAccessor) frame).getTime();
+			cycleTime += ((SpriteContentsFrameInfoAccessor) (Object) frame).getTime();
 		}
 		ticks %= cycleTime;
 
 		int targetFrame = 0;
 		while (true) {
-			int time = ((SpriteContentsFrameInfoAccessor) targetFrames.get(targetFrame)).getTime();
+			int time = ((SpriteContentsFrameInfoAccessor) (Object) targetFrames.get(targetFrame)).getTime();
 			if (ticks >= time) {
 				targetFrame++;
 				ticks -= time;
@@ -115,9 +121,18 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 	}
 
 	public void upload(int atlasWidth, int atlasHeight, int mipLevel) {
-		int glId = getId();
-		TextureUtil.prepareImage(glId, mipLevel, atlasWidth, atlasHeight);
-		TextureManipulationUtil.fillWithColor(glId, mipLevel, type.getDefaultValue());
+		if (this.texture != null) {
+			this.texture.close();
+		}
+
+		this.texture = RenderSystem.getDevice().createTexture(getAtlasId().toString(), GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING, TextureFormat.RGBA8, atlasWidth, atlasHeight, 1, mipLevel + 1);
+		if (TextureFormatLoader.getFormat() != null && !TextureFormatLoader.getFormat().canInterpolateValues(type)) {
+			texture.iris$markMipmapNonLinear();
+		}
+		texture.setTextureFilter(FilterMode.NEAREST, mipLevel > 1);
+
+		TextureManipulationUtil.fillWithColor(texture.iris$getGlId(), mipLevel, type.getDefaultValue());
+		TextureTracker.INSTANCE.trackTexture(this.texture.iris$getGlId(), (AbstractTexture) (Object) this);
 		width = atlasWidth;
 		height = atlasHeight;
 		this.mipLevel = mipLevel;
@@ -151,6 +166,9 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 			upload(atlasWidth, atlasHeight, mipLevel);
 			return true;
 		} catch (Throwable t) {
+			if (IrisPlatformHelpers.getInstance().isDevelopmentEnvironment()) {
+				t.printStackTrace();
+			}
 			return false;
 		}
 	}
@@ -168,18 +186,17 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 				SpriteContentsTickerAccessor tickerAccessor = (SpriteContentsTickerAccessor) targetTicker;
 				SpriteContentsAnimatedTextureAccessor infoAccessor = (SpriteContentsAnimatedTextureAccessor) tickerAccessor.getAnimationInfo();
 
-				infoAccessor.invokeUploadFrame(sprite.getX(), sprite.getY(), ((SpriteContentsFrameInfoAccessor) infoAccessor.getFrames().get(tickerAccessor.getFrame())).getIndex());
+				infoAccessor.invokeUploadFrame(sprite.getX(), sprite.getY(), ((SpriteContentsFrameInfoAccessor) (Object) infoAccessor.getFrames().get(tickerAccessor.getFrame())).getIndex(), texture);
 				return;
 			}
 		}
 
-		sprite.uploadFirstFrame();
+		sprite.uploadFirstFrame(texture);
 	}
 
 	public void cycleAnimationFrames() {
-		bind();
 		for (TextureAtlasSprite.Ticker ticker : animatedTextures) {
-			ticker.tickAndUpload();
+			ticker.tickAndUpload(texture);
 		}
 	}
 
@@ -200,13 +217,9 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 	}
 
 	@Override
-	public void load(ResourceManager manager) {
-	}
-
-	@Override
 	public void dumpContents(ResourceLocation id, Path path) {
 		String fileName = id.toDebugFileName();
-		TextureUtil.writeAsPNG(path, fileName, getId(), mipLevel, width, height);
+		TextureUtil.writeAsPNG(path, fileName, texture, mipLevel, i -> i);
 		dumpSpriteNames(path, fileName, texturesByName);
 	}
 

@@ -19,7 +19,14 @@ Iris is a modern shaders mod for Minecraft intended to be compatible with existi
 [[dependencies.iris]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21,1.21.1)"
+versionRange = "[1.21.3,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.iris]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.3.9-beta,)"
 ordering = "NONE"
 side = "CLIENT"
 
@@ -31,9 +38,6 @@ config = "mixins.iris.fantastic.json"
 
 [[mixins]]
 config = "mixins.iris.vertexformat.json"
-
-[[mixins]]
-config = "iris-batched-entity-rendering.mixins.json"
 
 [[mixins]]
 config = "mixins.iris.compat.sodium.json"

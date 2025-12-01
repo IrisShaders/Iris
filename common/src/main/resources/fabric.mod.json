@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "id": "iris",
+  "version": "${version}",
+  "name": "Iris",
+  "description": "A modern shaders mod for Minecraft intended to be compatible with existing OptiFine shader packs",
+  "authors": [
+    "coderbot",
+    "IMS212",
+    "Justsnoopy30",
+    "FoundationGames"
+  ],
+  "contact": {
+    "homepage": "https://github.com/IrisShaders/Iris",
+    "sources": "https://github.com/IrisShaders/Iris.git",
+    "issues": "https://github.com/IrisShaders/Iris/issues"
+  },
+  "license": "LGPL-3.0-only",
+  "icon": "iris-logo.png",
+  "environment": "client",
+  "entrypoints": {
+    "modmenu": [
+      "net.irisshaders.iris.compat.modmenu.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "mixins.iris.json",
+    "mixins.iris.fabric.json",
+    "mixins.iris.fantastic.json",
+    "mixins.iris.vertexformat.json",
+    "mixins.iris.bettermipmaps.json",
+    "mixins.iris.compat.sodium.json",
+    "mixins.iris.compat.dh.json",
+    "mixins.iris.fixes.maxfpscrash.json"
+  ],
+  "accessWidener": "iris.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.12.3",
+    "minecraft": [
+      "1.21.9-rc.1",
+      "1.21.9",
+      "1.21.10"
+    ],
+    "sodium": [
+      "0.7.x"
+    ]
+  },
+  "breaks": {
+    "embeddium": "*",
+    "iris-explorer": "*",
+    "originsenhanced": "<=1.3.2",
+    "colormatic": "<=3.0.0",
+    "bedrockwaters": "<=1.6.0",
+    "batchedentityrendering": "*",
+    "canvas": "*",
+    "optifabric": "*",
+    "worldeditcui": "<1.18.1",
+    "physicsmod": "<=3.0.13",
+    "distanthorizons": "<=2.1.99",
+    "immersive_portals": "<=1.4.2"
+  },
+  "custom": {
+    "sodium:options": {
+      "mixin.features.render.world.sky": false
+    },
+    "mc-publish": {
+      "loaders": [
+        "fabric",
+        "quilt"
+      ]
+    },
+    "loom:injected_interfaces": {
+      "net/minecraft/class_276": ["net/irisshaders/iris/mixinterface/RenderTargetInterface"],
+      "com/mojang/blaze3d/textures/GpuTexture": ["net/irisshaders/iris/mixinterface/GpuTextureInterface"],
+      "com/mojang/blaze3d/systems/RenderPass": ["net/irisshaders/iris/mixinterface/RenderPassInterface"],
+      "net/minecraft/class_1921": ["net/irisshaders/iris/mixinterface/RenderTypeInterface"]
+    }
+  }
+}

@@ -5,6 +5,7 @@
   "refmap": "iris-fabric.refmap.json",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "MixinFluidRendererImpl",
     "MixinParticleEngine",
     "MixinLevelRenderer"
   ],

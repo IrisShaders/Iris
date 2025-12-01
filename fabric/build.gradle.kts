@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.9-SNAPSHOT")
+    id("fabric-loom") version ("1.11.4")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -12,6 +12,7 @@ val SODIUM_DEPENDENCY_FABRIC: Any by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 repositories {
+    mavenLocal()
     exclusiveContent {
         forRepository {
             maven {
@@ -59,10 +60,10 @@ dependencies {
     addEmbeddedFabricModule("fabric-api-base")
     addEmbeddedFabricModule("fabric-key-binding-api-v1")
     addRuntimeFabricModule("fabric-block-view-api-v2")
-    addRuntimeFabricModule("fabric-renderer-api-v1")
-    addRuntimeFabricModule("fabric-rendering-data-attachment-v1")
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
+    addRuntimeFabricModule("fabric-lifecycle-events-v1")
+    addRuntimeFabricModule("fabric-renderer-api-v1")
 
     modImplementation(SODIUM_DEPENDENCY_FABRIC)
     implementAndInclude("org.antlr:antlr4-runtime:4.13.1")
@@ -90,7 +91,10 @@ loom {
         accessWidenerPath.set(project(":common").file("src/main/resources/iris.accesswidener"))
 
     @Suppress("UnstableApiUsage")
-    mixin { defaultRefmapName.set("iris-fabric.refmap.json") }
+    mixin {
+        defaultRefmapName.set("iris-fabric.refmap.json")
+        useLegacyMixinAp = false
+    }
 
     runs {
         named("client") {
@@ -98,6 +102,16 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
+           // vmArgs("-Dmixin.debug.export=true")
+           // vmArg("-XX:+AllowEnhancedClassRedefinition")
+        }
+        create("clientWithRenderdoc") {
+            client()
+            configName = "Fabric Client"
+            ideConfigGenerated(true)
+            runDir("run")
+            environmentVariable("LD_PRELOAD", "/usr/lib/librenderdoc.so")
+            programArgs("--renderDebugLabels")
         }
     }
 }

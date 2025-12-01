@@ -9,6 +9,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -131,16 +133,16 @@ public class IrisElementRow {
 		return this.orderedElements.stream().filter(Element::isFocused).findFirst();
 	}
 
-	public boolean mouseClicked(double mx, double my, int button) {
-		return getHovered(mx, my).map(element -> element.mouseClicked(mx, my, button)).orElse(false);
+	public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
+		return getHovered(event.x(), event.y()).map(element -> element.mouseClicked(event, bl2)).orElse(false);
 	}
 
-	public boolean mouseReleased(double mx, double my, int button) {
-		return getHovered(mx, my).map(element -> element.mouseReleased(mx, my, button)).orElse(false);
+	public boolean mouseReleased(MouseButtonEvent event) {
+		return getHovered(event.x(), event.y()).map(element -> element.mouseReleased(event)).orElse(false);
 	}
 
-	public boolean keyPressed(int keycode, int scancode, int modifiers) {
-		return getFocused().map(element -> element.keyPressed(keycode, scancode, modifiers)).orElse(false);
+	public boolean keyPressed(KeyEvent event) {
+		return getFocused().map(element -> element.keyPressed(event)).orElse(false);
 	}
 
 	public List<? extends GuiEventListener> children() {
@@ -200,21 +202,21 @@ public class IrisElementRow {
 		}
 
 		@Override
-		public boolean mouseClicked(double mx, double my, int button) {
+		public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
 			if (this.disabled) {
 				return false;
 			}
 
-			if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
+			if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
 				return this.onClick.apply((T) this);
 			}
 
-			return super.mouseClicked(mx, my, button);
+			return super.mouseClicked(event, bl2);
 		}
 
 		@Override
-		public boolean keyPressed(int keycode, int scancode, int modifiers) {
-			if (keycode == GLFW.GLFW_KEY_ENTER) {
+		public boolean keyPressed(KeyEvent event) {
+			if (event.isConfirmation()) {
 				return this.onClick.apply((T) this);
 			}
 			return false;
@@ -271,7 +273,7 @@ public class IrisElementRow {
 			int textX = x + (int) ((width - this.font.width(this.text)) * 0.5);
 			int textY = y + (int) ((height - 8) * 0.5);
 
-			guiGraphics.drawString(this.font, this.text, textX, textY, 0xFFFFFF);
+			guiGraphics.drawString(this.font, this.text, textX, textY, 0xFFFFFFFF);
 		}
 	}
 }

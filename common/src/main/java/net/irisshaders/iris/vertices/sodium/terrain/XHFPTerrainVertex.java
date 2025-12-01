@@ -14,7 +14,7 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
 
-public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInterface {
+public class XHFPTerrainVertex implements ChunkVertexEncoder {
 	private static final int POSITION_MAX_VALUE = 1 << 20;
 	private static final int TEXTURE_MAX_VALUE = 1 << 15;
 	private static final float MODEL_ORIGIN = 8.0f;
@@ -37,7 +37,6 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 	private final int stride;
 	private final Vector2f normEncoded = new Vector2f();
 	private final Vector2f tangEncoded = new Vector2f();
-	private BlockContextHolder contextHolder;
 
 	public XHFPTerrainVertex(int blockIdOffset, int normalOffset, int midUvOffset, int midBlockOffset, int stride) {
 		this.blockIdOffset = blockIdOffset;
@@ -101,11 +100,6 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 	}
 
 	@Override
-	public void iris$setContextHolder(BlockContextHolder holder) {
-		this.contextHolder = holder;
-	}
-
-	@Override
 	public long write(long ptr,
 					  int material, Vertex[] vertices, int section) {
 		// Calculate the center point of the texture region which is mapped to the quad
@@ -139,6 +133,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 
 		for (int i = 0; i < 4; i++) {
 			var vertex = vertices[i];
+			var extension = (ChunkVertexExtension) vertex;
 
 			int x = quantizePosition(vertex.x);
 			int y = quantizePosition(vertex.y);
@@ -156,12 +151,12 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material, section));
 
 			if (blockIdOffset != 0) {
-				MemoryUtil.memPutInt(ptr + blockIdOffset, packBlockId(contextHolder));
+				MemoryUtil.memPutInt(ptr + blockIdOffset, packBlockId(extension));
 			}
 
 			if (midBlockOffset != 0) {
-				MemoryUtil.memPutInt(ptr + midBlockOffset, contextHolder.ignoreMidBlock() ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, contextHolder.getLocalPosX(), contextHolder.getLocalPosY(), contextHolder.getLocalPosZ()));
-				MemoryUtil.memPutByte(ptr + midBlockOffset + 3, contextHolder.getBlockEmission());
+				MemoryUtil.memPutInt(ptr + midBlockOffset, extension.ignoreMidBlock() ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, extension.getLocalPosX(), extension.getLocalPosY(), extension.getLocalPosZ()));
+				MemoryUtil.memPutByte(ptr + midBlockOffset + 3, extension.getBlockEmission());
 			}
 
 			if (midUvOffset != 0) {
@@ -195,7 +190,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder, VertexEncoderInter
 		return tangent;
 	}
 
-	private int packBlockId(BlockContextHolder contextHolder) {
+	private int packBlockId(ChunkVertexExtension contextHolder) {
 		return ((contextHolder.getBlockId() + 1) << 1) | (contextHolder.getRenderType() & 1);
 	}
 }

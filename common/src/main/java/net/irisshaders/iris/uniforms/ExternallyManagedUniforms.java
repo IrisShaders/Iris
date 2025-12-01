@@ -45,7 +45,7 @@ public class ExternallyManagedUniforms {
 		uniformHolder.externallyManagedUniform("iris_TextureMat", UniformType.MAT4);
 		uniformHolder.externallyManagedUniform("iris_ModelViewMat", UniformType.MAT4);
 		uniformHolder.externallyManagedUniform("iris_ProjMat", UniformType.MAT4);
-		uniformHolder.externallyManagedUniform("iris_ChunkOffset", UniformType.VEC3);
+		uniformHolder.externallyManagedUniform("iris_ModelOffset", UniformType.VEC3);
 		uniformHolder.externallyManagedUniform("iris_ColorModulator", UniformType.VEC4);
 		uniformHolder.externallyManagedUniform("iris_NormalMat", UniformType.MAT3);
 		uniformHolder.externallyManagedUniform("iris_FogStart", UniformType.FLOAT);

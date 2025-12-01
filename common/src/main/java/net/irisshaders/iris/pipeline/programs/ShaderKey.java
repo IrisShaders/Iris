@@ -1,9 +1,12 @@
 package net.irisshaders.iris.pipeline.programs;
 
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.AlphaTest;
+import net.irisshaders.iris.gl.blending.AlphaTestFunction;
 import net.irisshaders.iris.gl.blending.AlphaTests;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
@@ -25,7 +28,7 @@ public enum ShaderKey {
 	SKY_BASIC_COLOR(ProgramId.SkyBasic, AlphaTests.NON_ZERO_ALPHA, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF, LightingModel.LIGHTMAP),
 	SKY_TEXTURED(ProgramId.SkyTextured, AlphaTests.OFF, DefaultVertexFormat.POSITION_TEX, FogMode.OFF, LightingModel.LIGHTMAP),
 	SKY_TEXTURED_COLOR(ProgramId.SkyTextured, AlphaTests.OFF, DefaultVertexFormat.POSITION_TEX_COLOR, FogMode.OFF, LightingModel.LIGHTMAP),
-	CLOUDS(ProgramId.Clouds, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL, FogMode.PER_VERTEX, LightingModel.LIGHTMAP),
+	CLOUDS(ProgramId.Clouds, AlphaTests.ONE_TENTH_ALPHA, DefaultVertexFormat.POSITION_COLOR, FogMode.PER_VERTEX, LightingModel.LIGHTMAP),
 	CLOUDS_SODIUM(ProgramId.Clouds, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.CLOUDS, FogMode.PER_FRAGMENT, LightingModel.LIGHTMAP),
 	TERRAIN_SOLID(ProgramId.TerrainSolid, AlphaTests.OFF, IrisVertexFormats.TERRAIN, FogMode.PER_VERTEX, LightingModel.LIGHTMAP),
 	TERRAIN_CUTOUT(ProgramId.TerrainCutout, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.TERRAIN, FogMode.PER_VERTEX, LightingModel.LIGHTMAP),
@@ -159,5 +162,47 @@ public enum ShaderKey {
 		LIGHTMAP,
 		DIFFUSE,
 		DIFFUSE_LM
+	}
+
+	public static ShaderKey findBestMatch(RenderPipeline pipeline, ProgramId programId) {
+		boolean hasAlphaTest = false;
+		if (pipeline.getShaderDefines().values().containsKey("ALPHA_CUTOUT")) {
+			hasAlphaTest = true;
+		}
+
+		if (hasAlphaTest) {
+			for (ShaderKey key : ShaderKey.values()) {
+				if (programId == key.getProgram() && pipeline.getVertexFormat() == key.vertexFormat && key.alphaTest.reference() > 0.01f && key.alphaTest.function() != AlphaTestFunction.NEVER) {
+					Iris.logger.warn("Found perfect program match for " + pipeline.getLocation() + ": " + key);
+					return key;
+				}
+			}
+		}
+
+		for (ShaderKey key : ShaderKey.values()) {
+			if (programId == key.getProgram() && pipeline.getVertexFormat() == key.vertexFormat) {
+				Iris.logger.warn("Found okay program match for " + pipeline.getLocation() + ": " + key);
+				return key;
+			}
+		}
+
+		if (hasAlphaTest) {
+			for (ShaderKey key : ShaderKey.values()) {
+				if (programId == key.getProgram() && key.alphaTest.reference() > 0.01f && key.alphaTest.function() != AlphaTestFunction.NEVER) {
+					Iris.logger.warn("Found fine program match for " + pipeline.getLocation() + ": " + key);
+					return key;
+				}
+			}
+		}
+
+		for (ShaderKey key : ShaderKey.values()) {
+			if (programId == key.getProgram()) {
+				Iris.logger.warn("Found *decent* program match for " + pipeline.getLocation() + ": " + key);
+				return key;
+			}
+		}
+
+		Iris.logger.warn("Somehow couldn't find any match for " + pipeline.getLocation());
+		return null;
 	}
 }

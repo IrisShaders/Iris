@@ -1,5 +1,6 @@
 package net.irisshaders.iris.uniforms.custom.cached;
 
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.parsing.VectorType;
 import org.joml.Vector3i;
@@ -20,7 +21,7 @@ public class Int3VectorCachedUniform extends VectorCachedUniform<Vector3i> {
 
 	@Override
 	public void push(int location) {
-		GL21.glUniform3i(location, this.cached.x, this.cached.y, this.cached.z);
+		IrisRenderSystem.uniform3i(location, this.cached.x, this.cached.y, this.cached.z);
 	}
 
 	@Override

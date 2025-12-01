@@ -2,15 +2,18 @@ package net.irisshaders.iris.pipeline.programs;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import net.caffeinemc.mods.sodium.client.gl.GlObject;
 import net.caffeinemc.mods.sodium.client.gl.shader.GlProgram;
 import net.caffeinemc.mods.sodium.client.gl.shader.GlShader;
+import net.caffeinemc.mods.sodium.client.gl.shader.ShaderParser;
 import net.caffeinemc.mods.sodium.client.gl.shader.ShaderType;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.irisshaders.iris.gl.GLDebug;
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.AlphaTests;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
@@ -96,7 +99,7 @@ public class SodiumPrograms {
 		for (Map.Entry<PatchShaderType, String> entry : transformed.entrySet()) {
 			if (entry.getValue() == null) continue;
 			newMap.put(entry.getKey(), new GlShader(ShaderType.fromGlShaderType(entry.getKey().glShaderType.id),
-				ResourceLocation.fromNamespaceAndPath("iris", "sodium-shader-" + passName), entry.getValue()));
+				ResourceLocation.fromNamespaceAndPath("iris", "sodium-shader-" + passName), new ShaderParser.ParsedShader(entry.getValue(), new String[0])));
 		}
 		return newMap;
 	}
@@ -168,10 +171,10 @@ public class SodiumPrograms {
 				int handle = ((GlObject) shader).handle();
 				GLDebug.nameObject(GL43C.GL_PROGRAM, handle, "sodium-terrain-" + pass.toString().toLowerCase(Locale.ROOT));
 
-				if (!hasNormal) hasNormal = GL43C.glGetAttribLocation(handle, "iris_Normal") != -1;
-				if (!hasMidBlock) hasMidBlock = GL43C.glGetAttribLocation(handle, "at_midBlock") != -1;
-				if (!hasBlockId) hasBlockId = GL43C.glGetAttribLocation(handle, "mc_Entity") != -1;
-				if (!hasMidUv) hasMidUv = GL43C.glGetAttribLocation(handle, "mc_midTexCoord") != -1;
+				if (!hasNormal) hasNormal = IrisRenderSystem.getAttribLocation(handle, "iris_Normal") != -1;
+				if (!hasMidBlock) hasMidBlock = IrisRenderSystem.getAttribLocation(handle, "at_midBlock") != -1;
+				if (!hasBlockId) hasBlockId = IrisRenderSystem.getAttribLocation(handle, "mc_Entity") != -1;
+				if (!hasMidUv) hasMidUv = IrisRenderSystem.getAttribLocation(handle, "mc_midTexCoord") != -1;
 
 				return new SodiumShader(pipeline, pass, shader, handle, source.getDirectives().getBlendModeOverride().orElse(null),
 					createBufferBlendOverrides(source), customUniforms, flipState,

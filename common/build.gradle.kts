@@ -1,11 +1,12 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.9-SNAPSHOT"
+    id("fabric-loom") version "1.11.4"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
 repositories {
+    mavenLocal()
     maven("https://maven.parchmentmc.org/")
 
     exclusiveContent {
@@ -67,6 +68,13 @@ dependencies {
     compileOnly(files(rootDir.resolve("DHApi.jar")))
 }
 
+afterEvaluate {
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.add("-Xmaxerrs")
+        options.compilerArgs.add("2000")
+    }
+}
+
 sourceSets {
     val main = getByName("main")
     val headers = create("headers")
@@ -112,7 +120,7 @@ sourceSets {
 loom {
     mixin {
         defaultRefmapName = "iris.refmap.json"
-        useLegacyMixinAp = true
+        useLegacyMixinAp = false
     }
 
     accessWidenerPath = file("src/main/resources/iris.accesswidener")
@@ -126,6 +134,11 @@ loom {
 }
 
 tasks {
+    processResources {
+        filesMatching("fabric.mod.json") {
+            expand(mapOf("version" to project.version))
+        }
+    }
     getByName<JavaCompile>("compileDesktopJava") {
         sourceCompatibility = JavaVersion.VERSION_1_8.toString()
         targetCompatibility = JavaVersion.VERSION_1_8.toString()

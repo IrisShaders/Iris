@@ -31,11 +31,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 /**
@@ -159,6 +161,9 @@ public class IdMap {
 		Object2IntMap<NamespacedId> idMap = new Object2IntOpenHashMap<>();
 		idMap.defaultReturnValue(-1);
 
+		// Create a duplicate tracker for this parsing operation
+		DuplicateTracker duplicateTracker = new DuplicateTracker(fileName, "entry");
+
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
 			String value = (String) valueObject;
@@ -186,11 +191,16 @@ public class IdMap {
 					continue;
 				}
 
+				// Check for duplicates
+				duplicateTracker.checkAndRecord(part, key, part);
+
 				// Note: NamespacedId performs no validation on the content. That will need to be done by whatever is
 				//       converting these things to ResourceLocations.
 				idMap.put(new NamespacedId(part), intId);
 			}
 		});
+
+		duplicateTracker.reportSummary();
 
 		return Object2IntMaps.unmodifiable(idMap);
 	}
@@ -198,6 +208,9 @@ public class IdMap {
 	private static Int2ObjectLinkedOpenHashMap<List<BlockEntry>> parseBlockMap(Properties properties, String keyPrefix, String fileName, Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap) {
 		Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockEntriesById = new Int2ObjectLinkedOpenHashMap<>();
 		Int2ObjectLinkedOpenHashMap<List<TagEntry>> tagEntriesById = new Int2ObjectLinkedOpenHashMap<>();
+
+		// Create a duplicate tracker for this parsing operation
+		DuplicateTracker duplicateTracker = new DuplicateTracker(fileName, "block entry");
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -230,6 +243,10 @@ public class IdMap {
 				try {
 					Entry entry = BlockEntry.parse(part);
 					if (entry instanceof BlockEntry be) {
+						// Create a unique identifier that includes blockstates
+						String uniqueBlockIdentifier = DuplicateTracker.getUniqueBlockIdentifier(be);
+						duplicateTracker.checkAndRecord(uniqueBlockIdentifier, key, part); // Check for duplicates
+
 						blockEntries.add(be);
 					} else if (entry instanceof TagEntry te) {
 						tagEntries.add(te);
@@ -243,6 +260,8 @@ public class IdMap {
 			tagEntriesById.put(intId, Collections.unmodifiableList(tagEntries));
 		});
 
+		duplicateTracker.reportSummary();
+
 		blockTagMap.putAll(tagEntriesById);
 
 		return blockEntriesById;
@@ -254,6 +273,9 @@ public class IdMap {
 	 */
 	private static Map<NamespacedId, BlockRenderType> parseRenderTypeMap(Properties properties, String keyPrefix, String fileName) {
 		Map<NamespacedId, BlockRenderType> overrides = new HashMap<>();
+
+		// Create a duplicate tracker for this parsing operation
+		DuplicateTracker duplicateTracker = new DuplicateTracker(fileName, "render type map");
 
 		properties.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
@@ -279,15 +301,20 @@ public class IdMap {
 					Iris.logger.fatal("Cannot use a tag in the render type map: " + key + " = " + value);
 					continue;
 				}
+
+				// Check for duplicates
+				duplicateTracker.checkAndRecord(part, key, part);
+
 				// Note: NamespacedId performs no validation on the content. That will need to be done by whatever is
 				//       converting these things to ResourceLocations.
 				overrides.put(new NamespacedId(part), renderType);
 			}
 		});
 
+		duplicateTracker.reportSummary();
+
 		return overrides;
 	}
-
 
 	private static Map<NamespacedId, String> parseDimensionMap(Properties properties, String keyPrefix, String fileName) {
 		Map<NamespacedId, String> overrides = new Object2ObjectArrayMap<>();
@@ -375,5 +402,76 @@ public class IdMap {
 	@Override
 	public int hashCode() {
 		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockTagMap, blockRenderTypeMap);
+	}
+
+	private static class DuplicateTracker {
+		private final Map<String, String> identifierToKeyMap = new HashMap<>();
+		private final Set<String> reportedDuplicates = new HashSet<>(); // Tracks which duplicates have already been reported
+		private final Map<String, Integer> duplicateCounts = new HashMap<>();
+
+		private final String fileName;
+		private final String itemType;
+		private final boolean debugEnabled;
+
+		public DuplicateTracker(String fileName, String itemType) {
+			this.fileName = fileName;
+			this.itemType = itemType;
+			this.debugEnabled = Iris.getIrisConfig().areDebugOptionsEnabled();
+		}
+
+		/**
+		 * Creates a unique identifier for a block entry that includes both the block ID and its blockstates.
+		 * This ensures we don't flag blocks with different states as duplicates.
+		 */
+		public static String getUniqueBlockIdentifier(BlockEntry entry) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(entry.id().toString());
+
+			Map<String, String> properties = entry.propertyPredicates();
+			if (properties != null && !properties.isEmpty()) {
+				// Sort properties by key to ensure consistent ordering
+				List<String> propertyKeys = new ArrayList<>(properties.keySet());
+				Collections.sort(propertyKeys);
+
+				for (String propKey : propertyKeys) {
+					sb.append(':').append(propKey).append('=').append(properties.get(propKey));
+				}
+			}
+
+			return sb.toString();
+		}
+
+		public void checkAndRecord(String identifier, String key, String displayValue) {
+			if (identifierToKeyMap.containsKey(identifier)) {
+				String previousKey = identifierToKeyMap.get(identifier);
+
+				// Create a unique key for this specific duplicate
+				String duplicateKey = identifier + "|" + previousKey + "|" + key;
+
+				// Increment the count for this duplicate
+				duplicateCounts.put(duplicateKey, duplicateCounts.getOrDefault(duplicateKey, 0) + 1);
+
+				// Only log if we haven't reported this specific duplicate before AND debug is enabled
+				if (debugEnabled && !reportedDuplicates.contains(duplicateKey)) {
+					Iris.logger.warn("Duplicate {} in {}: '{}' in '{}' and '{}'",
+						itemType, fileName, displayValue, previousKey, key);
+					reportedDuplicates.add(duplicateKey);
+				} else reportedDuplicates.add(duplicateKey); // Still add to avoid double counting
+			}
+
+			// Always record the location (whether it's a duplicate or not)
+			identifierToKeyMap.put(identifier, key);
+
+		}
+
+		public void reportSummary() {
+			if (debugEnabled && !duplicateCounts.isEmpty()) {
+				int totalDuplicates = duplicateCounts.values().stream().mapToInt(Integer::intValue).sum();
+				Iris.logger.warn("Found {} duplicate {} in {}.",
+					totalDuplicates,
+					itemType + (totalDuplicates > 1 ? "s" : ""),
+					fileName);
+			}
+		}
 	}
 }

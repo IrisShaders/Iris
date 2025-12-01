@@ -1,18 +1,20 @@
 package net.irisshaders.iris.shadows;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.TextureFormat;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.sampler.GlSampler;
-import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
-import net.irisshaders.iris.targets.DepthTexture;
 import net.irisshaders.iris.targets.RenderTarget;
 import org.lwjgl.opengl.GL30C;
 
@@ -22,8 +24,8 @@ import java.util.List;
 public class ShadowRenderTargets {
 	private final RenderTarget[] targets;
 	private final PackShadowDirectives shadowDirectives;
-	private final DepthTexture mainDepth;
-	private final DepthTexture noTranslucents;
+	private final GpuTexture mainDepth;
+	private final GpuTexture noTranslucents;
 	private final GlFramebuffer depthSourceFb;
 	private final GlFramebuffer noTranslucentsDestFb;
 	private final boolean[] flipped;
@@ -50,8 +52,6 @@ public class ShadowRenderTargets {
 		linearFiltered = new boolean[size];
 		buffersToBeCleared = new IntArrayList();
 
-		this.mainDepth = new DepthTexture("shadowtex0", resolution, resolution, DepthBufferFormat.DEPTH);
-		this.noTranslucents = new DepthTexture("shadowtex1", resolution, resolution, DepthBufferFormat.DEPTH);
 
 		this.ownedFramebuffers = new ArrayList<>();
 		this.resolution = resolution;
@@ -62,6 +62,12 @@ public class ShadowRenderTargets {
 			this.linearFiltered[i] = !shadowDirectives.getDepthSamplingSettings().get(i).getNearest();
 		}
 
+		this.mainDepth = RenderSystem.getDevice().createTexture("Shadow Map", GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_TEXTURE_BINDING, TextureFormat.DEPTH32, resolution, resolution, 1, this.mipped[0] ? log2(resolution) : 1);
+		this.noTranslucents = RenderSystem.getDevice().createTexture("Shadow Map / Opaque", GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_TEXTURE_BINDING, TextureFormat.DEPTH32, resolution, resolution, 1, this.mipped[1] ? log2(resolution) : 1);
+
+		this.noTranslucents.setTextureFilter(linearFiltered[1] ? FilterMode.LINEAR : FilterMode.NEAREST, this.mipped[1]);
+		this.mainDepth.setTextureFilter(linearFiltered[0] ? FilterMode.LINEAR : FilterMode.NEAREST, this.mipped[0]);
+
 		// NB: Make sure all buffers are cleared so that they don't contain undefined
 		// data. Otherwise very weird things can happen.
 		fullClearRequired = true;
@@ -69,10 +75,16 @@ public class ShadowRenderTargets {
 		this.depthSourceFb = createFramebufferWritingToMain(new int[]{0});
 
 		this.noTranslucentsDestFb = createFramebufferWritingToMain(new int[]{0});
-		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents.getTextureId());
+		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents);
 
 		this.translucentDepthDirty = true;
 		boolean shouldRefresh = false;
+	}
+
+	private static final double LN_OF_2 = Math.log(2.0);
+
+	public static int log2(int val) {
+		return (int) Math.floor(Math.log(val) / LN_OF_2);
 	}
 
 	// TODO: Actually flip. This is required for shadow composites!
@@ -95,8 +107,8 @@ public class ShadowRenderTargets {
 			}
 		}
 
-		mainDepth.destroy();
-		noTranslucents.destroy();
+		mainDepth.close();
+		noTranslucents.close();
 	}
 
 	public int getRenderTargetCount() {
@@ -156,11 +168,11 @@ public class ShadowRenderTargets {
 		return resolution;
 	}
 
-	public DepthTexture getDepthTexture() {
+	public GpuTexture getDepthTexture() {
 		return mainDepth;
 	}
 
-	public DepthTexture getDepthTextureNoTranslucents() {
+	public GpuTexture getDepthTextureNoTranslucents() {
 		return noTranslucents;
 	}
 
@@ -176,7 +188,7 @@ public class ShadowRenderTargets {
 				GL30C.GL_DEPTH_BUFFER_BIT,
 				GL30C.GL_NEAREST);
 		} else {
-			DepthCopyStrategy.fastest(false).copy(depthSourceFb, mainDepth.getTextureId(), noTranslucentsDestFb, noTranslucents.getTextureId(),
+			DepthCopyStrategy.fastest(false).copy(depthSourceFb, mainDepth.iris$getGlId(), noTranslucentsDestFb, noTranslucents.iris$getGlId(),
 				resolution, resolution);
 		}
 	}
@@ -213,7 +225,7 @@ public class ShadowRenderTargets {
 		GlFramebuffer framebuffer = new GlFramebuffer();
 		ownedFramebuffers.add(framebuffer);
 
-		framebuffer.addDepthAttachment(mainDepth.getTextureId());
+		framebuffer.addDepthAttachment(mainDepth);
 
 		// NB: Before OpenGL 3.0, all framebuffers are required to have a color
 		// attachment no matter what.
@@ -232,7 +244,7 @@ public class ShadowRenderTargets {
 
 		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
 
-		framebuffer.addDepthAttachment(mainDepth.getTextureId());
+		framebuffer.addDepthAttachment(mainDepth);
 
 		return framebuffer;
 	}
@@ -246,7 +258,7 @@ public class ShadowRenderTargets {
 
 		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
 
-		framebuffer.addDepthAttachment(mainDepth.getTextureId());
+		framebuffer.addDepthAttachment(mainDepth);
 
 		return framebuffer;
 	}
@@ -268,7 +280,7 @@ public class ShadowRenderTargets {
 	public GlFramebuffer createColorFramebufferWithDepth(ImmutableSet<Integer> stageWritesToMain, int[] drawBuffers) {
 		GlFramebuffer framebuffer = createColorFramebuffer(stageWritesToMain, drawBuffers);
 
-		framebuffer.addDepthAttachment(mainDepth.getTextureId());
+		framebuffer.addDepthAttachment(mainDepth);
 
 		return framebuffer;
 	}

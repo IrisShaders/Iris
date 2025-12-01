@@ -294,12 +294,12 @@ public class TransformPatcher {
 
 	public static Map<PatchShaderType, String> patchVanilla(
 		String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,
-		AlphaTest alpha, boolean isLines,
+		AlphaTest alpha, boolean isLines, boolean isClouds,
 		boolean hasChunkOffset,
 		ShaderAttributeInputs inputs,
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
+			new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, isClouds, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
 	}
 
 

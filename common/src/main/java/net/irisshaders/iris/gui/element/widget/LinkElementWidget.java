@@ -10,6 +10,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenAxis;
 import net.minecraft.client.gui.navigation.ScreenDirection;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -58,8 +60,8 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 
 		int labelWidth = font.width(this.trimmedLabel);
 
-		guiGraphics.drawString(font, this.trimmedLabel, bounds.getCenterInAxis(ScreenAxis.HORIZONTAL) - (int) (labelWidth * 0.5) - (int) (0.5 * Math.max(labelWidth - (bounds.width() - 18), 0)), bounds.position().y() + 7, 0xFFFFFF);
-		guiGraphics.drawString(font, ARROW, bounds.getBoundInDirection(ScreenDirection.RIGHT) - 9, bounds.position().y() + 7, 0xFFFFFF);
+		guiGraphics.drawString(font, this.trimmedLabel, bounds.getCenterInAxis(ScreenAxis.HORIZONTAL) - (int) (labelWidth * 0.5) - (int) (0.5 * Math.max(labelWidth - (bounds.width() - 18), 0)), bounds.position().y() + 7, 0xFFFFFFFF);
+		guiGraphics.drawString(font, ARROW, bounds.getBoundInDirection(ScreenDirection.RIGHT) - 9, bounds.position().y() + 7, 0xFFFFFFF);
 
 		if (hovered && this.isLabelTrimmed) {
 			// To prevent other elements from being drawn on top of the tooltip
@@ -68,26 +70,26 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 	}
 
 	@Override
-	public boolean mouseClicked(double mx, double my, int button) {
-		if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
+		if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
 			this.navigation.open(targetScreenId);
 			GuiUtil.playButtonClickSound();
 
 			return true;
 		}
-		return super.mouseClicked(mx, my, button);
+		return super.mouseClicked(event, bl2);
 	}
 
 	@Override
-	public boolean keyPressed(int keyCode, int pInt1, int pInt2) {
-		if (keyCode == InputConstants.KEY_RETURN) {
+	public boolean keyPressed(KeyEvent event) {
+		if (event.isConfirmation()) {
 			this.navigation.open(targetScreenId);
 			GuiUtil.playButtonClickSound();
 
 			return true;
 		}
 
-		return super.keyPressed(keyCode, pInt1, pInt2);
+		return super.keyPressed(event);
 	}
 
 	@Override

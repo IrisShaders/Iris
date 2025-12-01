@@ -1,15 +1,22 @@
 package net.irisshaders.iris.pathways.colorspace;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.program.Program;
 import net.irisshaders.iris.gl.program.ProgramBuilder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.helpers.StringPair;
+import net.irisshaders.iris.mixinterface.CustomPass;
 import net.irisshaders.iris.pathways.FullScreenQuadRenderer;
 import net.irisshaders.iris.shaderpack.preprocessor.JcppProcessor;
+import net.minecraft.client.Minecraft;
 import org.apache.commons.io.IOUtils;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11C;
@@ -20,8 +27,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalInt;
+
+import static net.irisshaders.iris.pipeline.CompositeRenderer.COMPOSITE_PIPELINE;
 
 public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
+	private static final CustomPass EMPTY = new CustomPass() {
+		@Override
+		public void setupState() {
+
+		}
+	};
 	private int width;
 	private int height;
 	private ColorSpace colorSpace;
@@ -29,7 +45,7 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 	private GlFramebuffer framebuffer;
 	private int swapTexture;
 
-	private int target;
+	private GlTexture target;
 
 	public ColorSpaceFragmentConverter(int width, int height, ColorSpace colorSpace) {
 		rebuildProgram(width, height, colorSpace);
@@ -69,7 +85,7 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		ProgramBuilder builder = ProgramBuilder.begin("colorSpaceFragment", vertexSource, null, source, ImmutableSet.of());
 
 		builder.uniformMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0, 1));
-		builder.addDynamicSampler(() -> target, "readImage");
+		builder.addDynamicSampler(() -> target.glId(), "readImage");
 
 		swapTexture = GlStateManager._genTexture();
 		IrisRenderSystem.texImage2D(swapTexture, GL30C.GL_TEXTURE_2D, 0, GL30C.GL_RGBA8, width, height, 0, GL30C.GL_RGBA, GL30C.GL_UNSIGNED_BYTE, null);
@@ -79,15 +95,27 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		this.program = builder.build();
 	}
 
-	public void process(int targetImage) {
+	public void process(GlTexture targetImage) {
 		if (colorSpace == ColorSpace.SRGB) return;
 
 		this.target = targetImage;
-		program.use();
-		framebuffer.bind();
-		FullScreenQuadRenderer.INSTANCE.render();
+		GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).getBuffer(6);
+		VertexFormat.IndexType type = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).type();
+
+		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Color space", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty())) {
+			pass.setPipeline(COMPOSITE_PIPELINE);
+			pass.iris$setCustomPass(EMPTY);
+
+			program.use();
+			framebuffer.bind();
+
+			pass.setIndexBuffer(indices, type);
+			pass.setVertexBuffer(0, FullScreenQuadRenderer.INSTANCE.getQuad());
+
+			pass.drawIndexed(0, 0, 6, 1);
+		}
 		Program.unbind();
 		framebuffer.bindAsReadBuffer();
-		IrisRenderSystem.copyTexSubImage2D(targetImage, GL11C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
+		IrisRenderSystem.copyTexSubImage2D(targetImage.glId(), GL11C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
 	}
 }

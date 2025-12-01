@@ -44,4 +44,9 @@ public class BoxCullingFrustum extends Frustum implements net.caffeinemc.mods.so
 	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
 		return !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ);
 	}
+
+	@Override
+	public int intersectAab(float v, float v1, float v2, float v3, float v4, float v5) {
+		return this.boxCuller.intersectAab(v, v1, v2, v3, v4, v5);
+	}
 }

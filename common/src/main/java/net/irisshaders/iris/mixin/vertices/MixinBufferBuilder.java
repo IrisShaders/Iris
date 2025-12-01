@@ -94,7 +94,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		boolean iris$isTerrain = false;
 		injectNormalAndUV1 = false;
 
-		if (ImmediateState.skipExtension.get() || !Iris.isPackInUseQuick()) {
+		if (ImmediateState.skipExtension.get() || !ImmediateState.isRenderingLevel || !Iris.isPackInUseQuick()) {
 			return format;
 		}
 
