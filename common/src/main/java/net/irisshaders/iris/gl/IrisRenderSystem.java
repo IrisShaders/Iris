@@ -193,6 +193,21 @@ public class IrisRenderSystem {
 		dsaState.readBuffer(framebuffer, buffer);
 	}
 
+	public static void clearBufferfv(int framebuffer, int buffer, int drawbuffer, float[] values) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		dsaState.clearBufferfv(framebuffer, buffer, drawbuffer, values);
+	}
+
+	public static void clearBufferiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		dsaState.clearBufferiv(framebuffer, buffer, drawbuffer, values);
+	}
+
+	public static void clearBufferuiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
+		RenderSystem.assertOnRenderThreadOrInit();
+		dsaState.clearBufferuiv(framebuffer, buffer, drawbuffer, values);
+	}
+
 	public static String getActiveUniform(int program, int index, int size, IntBuffer type, IntBuffer name) {
 		RenderSystem.assertOnRenderThreadOrInit();
 		return GL32C.glGetActiveUniform(program, index, size, type, name);
@@ -481,6 +496,12 @@ public class IrisRenderSystem {
 
 		void drawBuffers(int framebuffer, int[] buffers);
 
+		void clearBufferfv(int framebuffer, int buffer, int drawbuffer, float[] values);
+
+		void clearBufferiv(int framebuffer, int buffer, int drawbuffer, int[] values);
+
+		void clearBufferuiv(int framebuffer, int buffer, int drawbuffer, int[] values);
+
 		int getTexParameteri(int texture, int target, int pname);
 
 		void copyTexSubImage2D(int destTexture, int target, int i, int i1, int i2, int i3, int i4, int width, int height);
@@ -534,6 +555,21 @@ public class IrisRenderSystem {
 		@Override
 		public void drawBuffers(int framebuffer, int[] buffers) {
 			ARBDirectStateAccess.glNamedFramebufferDrawBuffers(framebuffer, buffers);
+		}
+
+		@Override
+		public void clearBufferfv(int framebuffer, int buffer, int drawbuffer, float[] values) {
+			ARBDirectStateAccess.glClearNamedFramebufferfv(framebuffer, buffer, drawbuffer, values);
+		}
+
+		@Override
+		public void clearBufferiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
+			ARBDirectStateAccess.glClearNamedFramebufferiv(framebuffer, buffer, drawbuffer, values);
+		}
+
+		@Override
+		public void clearBufferuiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
+			ARBDirectStateAccess.glClearNamedFramebufferuiv(framebuffer, buffer, drawbuffer, values);
 		}
 
 		@Override
@@ -626,6 +662,24 @@ public class IrisRenderSystem {
 		public void drawBuffers(int framebuffer, int[] buffers) {
 			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
 			GL32C.glDrawBuffers(buffers);
+		}
+
+		@Override
+		public void clearBufferfv(int framebuffer, int buffer, int drawbuffer, float[] values) {
+			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
+			GL32C.glClearBufferfv(buffer, drawbuffer, values);
+		}
+
+		@Override
+		public void clearBufferiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
+			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
+			GL32C.glClearBufferiv(buffer, drawbuffer, values);
+		}
+
+		@Override
+		public void clearBufferuiv(int framebuffer, int buffer, int drawbuffer, int[] values) {
+			GlStateManager._glBindFramebuffer(GL32C.GL_FRAMEBUFFER, framebuffer);
+			GL32C.glClearBufferuiv(buffer, drawbuffer, values);
 		}
 
 		@Override

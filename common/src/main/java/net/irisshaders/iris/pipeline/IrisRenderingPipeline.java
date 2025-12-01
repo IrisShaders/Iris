@@ -18,6 +18,7 @@ import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.image.GlImage;
+import net.irisshaders.iris.gl.image.ImageClearPass;
 import net.irisshaders.iris.gl.image.ImageHolder;
 import net.irisshaders.iris.gl.program.ComputeProgram;
 import net.irisshaders.iris.gl.program.ProgramBuilder;
@@ -99,7 +100,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
-import org.lwjgl.opengl.ARBClearTexture;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -167,7 +167,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final ParticleRenderingSettings particleRenderingSettings;
 	private final PackDirectives packDirectives;
 	private final Set<GlImage> customImages;
-	private final GlImage[] clearImages;
+	private final ImmutableList<ImageClearPass> clearImages;
 	private final ShaderPack pack;
 	private final PackShadowDirectives shadowDirectives;
 	private final DHCompat dhCompat;
@@ -251,7 +251,10 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			}
 		}
 
-		this.clearImages = customImages.stream().filter(GlImage::shouldClear).toArray(GlImage[]::new);
+		this.clearImages = customImages.stream()
+			.filter(GlImage::shouldClear)
+			.map(ImageClearPass::create)
+			.collect(ImmutableList.toImmutableList());
 
 		if (programSet.getPackDirectives().getParticleRenderingSettings() != ParticleRenderingSettings.UNSET) {
 			this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings();
@@ -861,9 +864,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		GLDebug.pushGroup(100, "Clear textures");
 
-		for (GlImage image : clearImages) {
-			ARBClearTexture.glClearTexImage(image.getId(), 0, image.getFormat().getGlFormat(), image.getPixelType().getGlFormat(), (int[]) null);
-		}
+		clearImages.forEach(ImageClearPass::execute);
 
 		if (shadowRenderTargets != null) {
 			if (packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
@@ -1245,6 +1246,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		renderTargets.destroy();
 		dhCompat.clearPipeline();
 
+		clearImages.forEach(ImageClearPass::destroy);
 		customImages.forEach(GlImage::destroy);
 
 		if (shadowRenderTargets != null) {
