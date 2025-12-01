@@ -28,10 +28,10 @@ public class MixinRenderMekasuit {
 		"Lmekanism/client/render/armor/MekaSuitArmor;render(Lnet/minecraft/client/model/HumanoidModel;Lnet/minecraft/client/renderer/MultiBufferSource;Lcom/mojang/blaze3d/vertex/PoseStack;IILmekanism/common/lib/Color;ZLnet/minecraft/world/entity/LivingEntity;Ljava/util/Map;Z)V"
 	}, at = @At(value = "FIELD", target = "Lmekanism/client/render/MekanismRenderType;MEKASUIT:Lnet/minecraft/client/renderer/RenderType;"))
 	private RenderType doNotSwitchShaders() {
-		if (Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel) {
-			return LightningHandler.MEKASUIT;
-		} else {
+		//if (Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel) {
+		//	return LightningHandler.MEKASUIT;
+		//} else {
 			return (RenderType) MEKASUIT;
-		}
+		//}
 	}
 }

@@ -1,6 +1,6 @@
 package net.irisshaders.iris.gl.buffer;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import org.lwjgl.opengl.GL43C;
@@ -74,7 +74,7 @@ public class ShaderStorageBuffer {
 		GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, getId());
 		IrisRenderSystem.bufferStorage(GL43C.GL_SHADER_STORAGE_BUFFER, info.size(), content == null ? 0 : GL46C.GL_DYNAMIC_STORAGE_BIT);
 		if (content != null) {
-			GL46C.glBufferSubData(GL43C.GL_SHADER_STORAGE_BUFFER, 0, content);
+			GlStateManager._glBufferSubData(GL43C.GL_SHADER_STORAGE_BUFFER, 0, content);
 		} else {
 			IrisRenderSystem.clearBufferSubData(GL43C.GL_SHADER_STORAGE_BUFFER, GL43C.GL_R8, 0, info.size(), GL43C.GL_RED, GL43C.GL_BYTE, new int[]{0});
 		}

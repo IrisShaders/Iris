@@ -1,5 +1,7 @@
 package net.irisshaders.iris.platform;
 
+import com.mojang.blaze3d.textures.TextureFormat;
+import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,4 +35,6 @@ public interface IrisPlatformHelpers {
 	boolean useELS();
 
     BlockState getBlockAppearance(BlockAndTintGetter level, BlockState state, Direction cullFace, BlockPos pos);
+
+    TextureFormat mojangDepthFormat(DepthBufferFormat depthFormat);
 }

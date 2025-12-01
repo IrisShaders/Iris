@@ -1,5 +1,6 @@
 package net.irisshaders.iris.gl.texture;
 
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
@@ -73,7 +74,7 @@ public interface DepthCopyStrategy {
 				// height
 				height);
 
-			RenderSystem.bindTexture(previousTexture);
+			GlStateManager._bindTexture(previousTexture);
 		}
 	}
 
@@ -111,7 +112,7 @@ public interface DepthCopyStrategy {
 
 		@Override
 		public void copy(GlFramebuffer sourceFb, int sourceTexture, GlFramebuffer destFb, int destTexture, int width, int height) {
-			GL43C.glCopyImageSubData(
+			IrisRenderSystem.copyImageSubData(
 				sourceTexture,
 				GL43C.GL_TEXTURE_2D,
 				0,

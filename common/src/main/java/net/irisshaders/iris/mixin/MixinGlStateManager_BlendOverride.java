@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import net.irisshaders.iris.gl.blending.BlendModeStorage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,14 +21,6 @@ public class MixinGlStateManager_BlendOverride {
 	private static void iris$blendEnableLock(CallbackInfo ci) {
 		if (BlendModeStorage.isBlendLocked()) {
 			BlendModeStorage.deferBlendModeToggle(true);
-			ci.cancel();
-		}
-	}
-
-	@Inject(method = "_blendFunc", at = @At("HEAD"), cancellable = true)
-	private static void iris$blendFuncLock(int srcFactor, int dstFactor, CallbackInfo ci) {
-		if (BlendModeStorage.isBlendLocked()) {
-			BlendModeStorage.deferBlendFunc(srcFactor, dstFactor, srcFactor, dstFactor);
 			ci.cancel();
 		}
 	}

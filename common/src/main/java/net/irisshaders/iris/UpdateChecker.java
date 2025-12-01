@@ -148,7 +148,8 @@ public class UpdateChecker {
 			try {
 				return info.get();
 			} catch (InterruptedException | ExecutionException e) {
-				throw new RuntimeException(e);
+				Iris.logger.error("Failed to get update info!", e);
+				return null;
 			}
 		}
 
@@ -182,10 +183,10 @@ public class UpdateChecker {
 			if (textParts.length > 1) {
 				MutableComponent component1 = Component.literal(textParts[0]);
 				MutableComponent component2 = Component.literal(textParts[1]);
-				MutableComponent link = Component.literal(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
+				MutableComponent link = Component.literal(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent.OpenUrl(usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
 				return Optional.of(component1.append(link).append(component2));
 			} else {
-				MutableComponent link = Component.literal(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
+				MutableComponent link = Component.literal(usedIrisInstaller ? "the Iris Installer" : info.modHost).withStyle(arg -> arg.withClickEvent(new ClickEvent.OpenUrl(usedIrisInstaller ? info.installer : info.modDownload)).withUnderlined(true));
 				return Optional.of(Component.literal(textParts[0]).append(link));
 			}
 		} else {
@@ -193,7 +194,7 @@ public class UpdateChecker {
 		}
 	}
 
-	public Optional<String> getUpdateLink() {
+	public Optional<URI> getUpdateLink() {
 		if (shouldShowUpdateMessage) {
 			UpdateInfo info = getUpdateInfo();
 
@@ -207,8 +208,8 @@ public class UpdateChecker {
 		public String semanticVersion;
 		public Map<String, String> updateInfo;
 		public String modHost;
-		public String modDownload;
-		public String installer;
+		public URI modDownload;
+		public URI installer;
 	}
 
 	public static class BetaInfo {

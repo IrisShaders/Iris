@@ -119,12 +119,12 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getEyeSkyBrightness() {
-		if (client.cameraEntity == null || client.level == null) {
+		if (client.getCameraEntity() == null || client.level == null) {
 			return 0;
 		}
 
-		Vec3 feet = client.cameraEntity.position();
-		Vec3 eyes = new Vec3(feet.x, client.cameraEntity.getEyeY(), feet.z);
+		Vec3 feet = client.getCameraEntity().position();
+		Vec3 eyes = new Vec3(feet.x, client.getCameraEntity().getEyeY(), feet.z);
 		BlockPos eyeBlockPos = BlockPos.containing(eyes);
 
 		int skyLight = client.level.getBrightness(LightLayer.SKY, eyeBlockPos);
@@ -183,7 +183,7 @@ public class HardcodedCustomUniforms {
 		if (storedBiome == null) {
 			return 0;
 		}
-		Biome.Precipitation precipitation = storedBiome.value().getPrecipitationAt(Minecraft.getInstance().cameraEntity.blockPosition());
+		Biome.Precipitation precipitation = storedBiome.value().getPrecipitationAt(Minecraft.getInstance().getCameraEntity().blockPosition(), Minecraft.getInstance().level.getSeaLevel());
 		return switch (precipitation) {
 			case RAIN -> 1;
 			case SNOW -> 2;

@@ -12,13 +12,5 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Pseudo
 @Mixin(targets = "com/direwolf20/justdirethings/client/renderers/OurRenderTypes")
 public class MixinGooBlock {
-	@Redirect(method = "<clinit>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/RenderStateShard;RENDERTYPE_TRANSLUCENT_SHADER:Lnet/minecraft/client/renderer/RenderStateShard$ShaderStateShard;"))
-	private static RenderStateShard.ShaderStateShard redirectAlpha() {
-		return new Bypass(GameRenderer::getRendertypeTranslucentShader);
-	}
-
-	@Redirect(method = "<clinit>", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/RenderStateShard;RENDERTYPE_ENTITY_ALPHA_SHADER:Lnet/minecraft/client/renderer/RenderStateShard$ShaderStateShard;"))
-	private static RenderStateShard.ShaderStateShard redirectAlpha2() {
-		return new Bypass(GameRenderer::getRendertypeEntityAlphaShader);
-	}
+	// TODO 1.21.5 the fuck do I do
 }

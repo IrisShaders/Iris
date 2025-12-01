@@ -19,11 +19,11 @@ public abstract class AbstractMipmapGenerator implements CustomMipmapGenerator {
 				int height = mipmap.getHeight();
 				for (int x = 0; x < width; ++x) {
 					for (int y = 0; y < height; ++y) {
-						mipmap.setPixelRGBA(x, y, blend(
-							prevMipmap.getPixelRGBA(x * 2, y * 2),
-							prevMipmap.getPixelRGBA(x * 2 + 1, y * 2),
-							prevMipmap.getPixelRGBA(x * 2, y * 2 + 1),
-							prevMipmap.getPixelRGBA(x * 2 + 1, y * 2 + 1)
+						mipmap.setPixel(x, y, blend(
+							prevMipmap.getPixel(x * 2, y * 2),
+							prevMipmap.getPixel(x * 2 + 1, y * 2),
+							prevMipmap.getPixel(x * 2, y * 2 + 1),
+							prevMipmap.getPixel(x * 2 + 1, y * 2 + 1)
 						));
 					}
 				}

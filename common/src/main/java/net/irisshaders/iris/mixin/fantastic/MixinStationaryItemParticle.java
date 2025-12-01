@@ -1,10 +1,13 @@
 package net.irisshaders.iris.mixin.fantastic;
 
+import net.irisshaders.iris.fantastic.IrisParticleRenderTypes;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.BlockMarker;
 import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -20,17 +23,17 @@ public class MixinStationaryItemParticle {
 
 	@Inject(method = "<init>", at = @At("RETURN"))
 	private void iris$resolveTranslucency(ClientLevel clientLevel, double d, double e, double f, BlockState blockState, CallbackInfo ci) {
-		RenderType type = ItemBlockRenderTypes.getChunkRenderType(blockState);
+		ChunkSectionLayer type = ItemBlockRenderTypes.getChunkRenderType(blockState);
 
-		if (type == RenderType.solid() || type == RenderType.cutout() || type == RenderType.cutoutMipped()) {
+		if (type == ChunkSectionLayer.SOLID || type == ChunkSectionLayer.CUTOUT || type == ChunkSectionLayer.CUTOUT_MIPPED) {
 			isOpaque = true;
 		}
 	}
 
-	@Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
-	private void iris$overrideParticleRenderType(CallbackInfoReturnable<ParticleRenderType> cir) {
+	@Inject(method = "getLayer", at = @At("HEAD"), cancellable = true)
+	private void iris$overrideParticleRenderType(CallbackInfoReturnable<SingleQuadParticle.Layer> cir) {
 		if (isOpaque) {
-			cir.setReturnValue(ParticleRenderType.TERRAIN_SHEET);
+			cir.setReturnValue(IrisParticleRenderTypes.TERRAIN_OPAQUE);
 		}
 	}
 }

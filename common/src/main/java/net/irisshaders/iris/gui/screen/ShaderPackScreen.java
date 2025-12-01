@@ -25,16 +25,22 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelTargetBundle;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -131,7 +137,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		notifier.onNewFrame();
 		backgroundInit = 1.0f;
 
-		if (Screen.hasControlDown() && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_D)) {
+		if (Minecraft.getInstance().hasControlDown() && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_D)) {
 			Minecraft.getInstance().setScreen(new ConfirmScreen((option) -> {
 				Iris.setDebug(option);
 				Minecraft.getInstance().setScreen(this);
@@ -141,7 +147,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				Component.literal("No")));
 		}
 
-		if (Screen.hasControlDown() && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_G)) {
+		if (Minecraft.getInstance().hasControlDown() && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_G)) {
 			Minecraft.getInstance().setScreen(new ConfirmScreen((option) -> {
 				try {
 					Iris.getIrisConfig().setUnknown(option);
@@ -164,7 +170,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				this.shaderPackList.render(guiGraphics, mouseX, mouseY, delta);
 			}
 		} else {
-			this.renderBlurredBackground(delta);
 			this.showHideButton.render(guiGraphics, mouseX, mouseY, delta);
 		}
 
@@ -174,15 +179,15 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		}
 
 		if (!this.guiHidden) {
-			guiGraphics.drawCenteredString(this.font, this.title, (int) (this.width * 0.5), 8, 0xFFFFFF);
+			guiGraphics.drawCenteredString(this.font, this.title, (int) (this.width * 0.5), 8, 0xFFFFFFFF);
 
 			if (notificationDialog != null && notificationDialogTimer > 0) {
-				guiGraphics.drawCenteredString(this.font, notificationDialog, (int) (this.width * 0.5), 21, 0xFFFFFF);
+				guiGraphics.drawCenteredString(this.font, notificationDialog, (int) (this.width * 0.5), 21, 0xFFFFFFFF);
 			} else {
 				if (optionMenuOpen) {
-					guiGraphics.drawCenteredString(this.font, CONFIGURE_TITLE, (int) (this.width * 0.5), 21, 0xFFFFFF);
+					guiGraphics.drawCenteredString(this.font, CONFIGURE_TITLE, (int) (this.width * 0.5), 21, 0xFFFFFFFF);
 				} else {
-					guiGraphics.drawCenteredString(this.font, SELECT_TITLE, (int) (this.width * 0.5), 21, 0xFFFFFF);
+					guiGraphics.drawCenteredString(this.font, SELECT_TITLE, (int) (this.width * 0.5), 21, 0xFFFFFFFF);
 				}
 			}
 
@@ -195,9 +200,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				// Draw panel
 				GuiUtil.drawPanel(guiGraphics, x, y, COMMENT_PANEL_WIDTH, panelHeight);
 				// Draw text
-				guiGraphics.drawString(font, this.hoveredElementCommentTitle.orElse(Component.empty()), x + 4, y + 4, 0xFFFFFF);
+				guiGraphics.drawString(font, this.hoveredElementCommentTitle.orElse(Component.empty()), x + 4, y + 4, 0xFFFFFFFF);
 				for (int i = 0; i < this.hoveredElementCommentBody.size(); i++) {
-					guiGraphics.drawString(font, this.hoveredElementCommentBody.get(i), x + 4, (y + 16) + (i * 10), 0xFFFFFF);
+					guiGraphics.drawString(font, this.hoveredElementCommentBody.get(i), x + 4, (y + 16) + (i * 10), 0xFFFFFFFF);
 				}
 			}
 		}
@@ -209,28 +214,30 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		TOP_LAYER_RENDER_QUEUE.clear();
 
 		if (this.developmentComponent != null) {
-			guiGraphics.drawString(font, developmentComponent, 2, this.height - 10, 0xFFFFFF);
-			guiGraphics.drawString(font, irisTextComponent, 2, this.height - 20, 0xFFFFFF);
+			guiGraphics.drawString(font, developmentComponent, 2, this.height - 10, 0xFFFFFFFF);
+			guiGraphics.drawString(font, irisTextComponent, 2, this.height - 20, 0xFFFFFFFF);
 		} else if (this.updateComponent != null) {
-			guiGraphics.drawString(font, updateComponent, 2, this.height - 10, 0xFFFFFF);
-			guiGraphics.drawString(font, irisTextComponent, 2, this.height - 20, 0xFFFFFF);
+			guiGraphics.drawString(font, updateComponent, 2, this.height - 10, 0xFFFFFFFF);
+			guiGraphics.drawString(font, irisTextComponent, 2, this.height - 20, 0xFFFFFFFF);
 		} else {
-			guiGraphics.drawString(font, irisTextComponent, 2, this.height - 10, 0xFFFFFF);
+			guiGraphics.drawString(font, irisTextComponent, 2, this.height - 10, 0xFFFFFFFF);
 		}
 	}
 
 	@Override
-	public boolean mouseClicked(double d, double e, int i) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
 		int widthValue = this.font.width("New update available!");
-		if (this.updateComponent != null && d < widthValue && e > (this.height - 10) && e < this.height) {
+		double x = event.x();
+		double y = event.y();
+		if (this.updateComponent != null && x < widthValue && y > (this.height - 10) && y < this.height) {
 			this.minecraft.setScreen(new ConfirmLinkScreen(bl -> {
 				if (bl) {
 					Iris.getUpdateChecker().getUpdateLink().ifPresent(Util.getPlatform()::openUri);
 				}
 				this.minecraft.setScreen(this);
-			}, Iris.getUpdateChecker().getUpdateLink().orElse(""), true));
+			}, Iris.getUpdateChecker().getUpdateLink().map(URI::toString).orElse(""), true));
 		}
-		return super.mouseClicked(d, e, i);
+		return super.mouseClicked(event, bl2);
 	}
 
 	@Override
@@ -243,12 +250,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		this.removeWidget(this.shaderPackList);
 		this.removeWidget(this.shaderOptionList);
 
-		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58 - 32, 0, this.width);
+		this.shaderPackList = new ShaderPackSelectionList(this, this.minecraft, this.width, this.height, 32, this.height - 58 - 36, 0, this.width);
 
 		if (Iris.getCurrentPack().isPresent() && this.navigation != null) {
 			ShaderPack currentPack = Iris.getCurrentPack().get();
 
-			this.shaderOptionList = new ShaderPackOptionList(this, this.navigation, currentPack, this.minecraft, this.width, this.height, 32, this.height - 58 - 32, 0, this.width);
+			this.shaderOptionList = new ShaderPackOptionList(this, this.navigation, currentPack, this.minecraft, this.width, this.height, 32, this.height - 58 - 36, 0, this.width);
 			this.navigation.setActiveOptionList(this.shaderOptionList);
 
 			this.shaderOptionList.rebuild();
@@ -362,24 +369,10 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 					Component.translatable("options.iris.shaderPackList")
 					: Component.translatable("options.iris.shaderPackSettings")
 			);
-			this.screenSwitchButton.active = optionMenuOpen || shaderPackList.getTopButtonRow().shadersEnabled;
+			this.screenSwitchButton.active = optionMenuOpen || (shaderPackList.getTopButtonRow().shadersEnabled && Iris.getCurrentPack().map(p -> !p.getMenuContainer().mainScreen.elements.isEmpty()).orElse(true));
 		}
 	}
-
-	private void processFixedBlur(float tick) {
-		PostChain blurEffect = ((GameRendererAccessor) this.minecraft.gameRenderer).getBlurEffect();
-		float g = Math.min(this.minecraft.options.getMenuBackgroundBlurriness(), this.blurTransition.getAsFloat());
-		if (blurEffect != null && g >= 1.0F) {
-			blurEffect.setUniform("Radius", g);
-			blurEffect.process(tick);
-		}
-	}
-
-	@Override
-	protected void renderBlurredBackground(float pScreen0) {
-		processFixedBlur(pScreen0);
-		this.minecraft.getMainRenderTarget().bindWrite(false);
-	}
+	private static final ResourceLocation BLUR_POST_CHAIN_ID = ResourceLocation.withDefaultNamespace("blur");
 
 	@Override
 	public void tick() {
@@ -397,8 +390,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	@Override
-	public boolean keyPressed(int key, int j, int k) {
-		if (key == GLFW.GLFW_KEY_ESCAPE) {
+	public boolean keyPressed(KeyEvent event) {
+		if (event.isEscape()) {
 			if (this.guiHidden) {
 				this.guiHidden = false;
 				this.init();
@@ -414,9 +407,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 				return true;
 			}
-		} else if (key == GLFW.GLFW_KEY_TAB) {
+		} else if (event.isCycleFocus()) {
 			if (!optionMenuOpen) {
-				shaderPackList.keyPressed(GLFW.GLFW_KEY_ENTER, 0, 0);
+				shaderPackList.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ENTER, 0, 0));
 			}
 
 			this.optionMenuOpen = !this.optionMenuOpen;
@@ -431,12 +424,12 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.init();
 
 			this.setFocused(null);
-		} else if (key == GLFW.GLFW_KEY_F1 && this.showHideButton != null) {
+		} else if (event.key() == GLFW.GLFW_KEY_F1 && this.showHideButton != null) {
 			this.guiHidden = !guiHidden;
 			this.init();
 		}
 
-		return this.guiHidden || super.keyPressed(key, j, k);
+		return this.guiHidden || super.keyPressed(event);
 	}
 
 	@Override

@@ -11,7 +11,6 @@ public interface IrisItemLightProvider {
 
 	default int getLightEmission(Player player, ItemStack stack) {
 		if (stack.getItem() instanceof BlockItem item) {
-
 			return item.getBlock().defaultBlockState().getLightEmission();
 		}
 

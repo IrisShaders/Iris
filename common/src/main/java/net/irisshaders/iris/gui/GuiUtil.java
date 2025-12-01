@@ -1,9 +1,11 @@
 package net.irisshaders.iris.gui;
 
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -37,7 +39,7 @@ public final class GuiUtil {
 	 * used for succeeding draw calls.
 	 */
 	public static void bindIrisWidgetsTexture() {
-		RenderSystem.setShaderTexture(0, IRIS_WIDGETS_TEX);
+		RenderSystem.setShaderTexture(0, Minecraft.getInstance().getTextureManager().getTexture(IRIS_WIDGETS_TEX).getTextureView());
 	}
 
 	/**
@@ -62,16 +64,16 @@ public final class GuiUtil {
 		int vOffset = disabled ? 46 : hovered ? 86 : 66;
 
 		// Sets RenderSystem to use solid white as the tint color for blend mode, and enables blend mode
-		RenderSystem.enableBlend();
+		GlStateManager._enableBlend();
 
 		// Top left section
-		guiGraphics.blit(IRIS_WIDGETS_TEX, x, y, 0, vOffset, halfWidth, halfHeight, 256, 256);
+		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x, y, 0, vOffset, halfWidth, halfHeight, 256, 256);
 		// Top right section
-		guiGraphics.blit(IRIS_WIDGETS_TEX, x + halfWidth, y, 200 - (width - halfWidth), vOffset, width - halfWidth, halfHeight, 256, 256);
+		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x + halfWidth, y, 200 - (width - halfWidth), vOffset, width - halfWidth, halfHeight, 256, 256);
 		// Bottom left section
-		guiGraphics.blit(IRIS_WIDGETS_TEX, x, y + halfHeight, 0, vOffset + (20 - (height - halfHeight)), halfWidth, height - halfHeight, 256, 256);
+		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x, y + halfHeight, 0, vOffset + (20 - (height - halfHeight)), halfWidth, height - halfHeight, 256, 256);
 		// Bottom right section
-		guiGraphics.blit(IRIS_WIDGETS_TEX, x + halfWidth, y + halfHeight, 200 - (width - halfWidth), vOffset + (20 - (height - halfHeight)), width - halfWidth, height - halfHeight, 256, 256);
+		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x + halfWidth, y + halfHeight, 200 - (width - halfWidth), vOffset + (20 - (height - halfHeight)), width - halfWidth, height - halfHeight, 256, 256);
 	}
 
 	/**
@@ -88,15 +90,15 @@ public final class GuiUtil {
 		int innerColor = 0xDE000000;
 
 		// Top border section
-		guiGraphics.fill(RenderType.guiOverlay(), x, y, x + width, y + 1, borderColor);
+		guiGraphics.fill(RenderPipelines.GUI, x, y, x + width, y + 1, borderColor);
 		// Bottom border section
-		guiGraphics.fill(RenderType.guiOverlay(), x, (y + height) - 1, x + width, y + height, borderColor);
+		guiGraphics.fill(RenderPipelines.GUI, x, (y + height) - 1, x + width, y + height, borderColor);
 		// Left border section
-		guiGraphics.fill(RenderType.guiOverlay(), x, y + 1, x + 1, (y + height) - 1, borderColor);
+		guiGraphics.fill(RenderPipelines.GUI, x, y + 1, x + 1, (y + height) - 1, borderColor);
 		// Right border section
-		guiGraphics.fill(RenderType.guiOverlay(), (x + width) - 1, y + 1, x + width, (y + height) - 1, borderColor);
+		guiGraphics.fill(RenderPipelines.GUI, (x + width) - 1, y + 1, x + width, (y + height) - 1, borderColor);
 		// Inner section
-		guiGraphics.fill(RenderType.guiOverlay(), x + 1, y + 1, (x + width) - 1, (y + height) - 1, innerColor);
+		guiGraphics.fill(RenderPipelines.GUI, x + 1, y + 1, (x + width) - 1, (y + height) - 1, innerColor);
 	}
 
 	/**
@@ -108,7 +110,7 @@ public final class GuiUtil {
 	 */
 	public static void drawTextPanel(Font font, GuiGraphics guiGraphics, Component text, int x, int y) {
 		drawPanel(guiGraphics, x, y, font.width(text) + 8, 16);
-		guiGraphics.drawString(font, text, x + 4, y + 4, 0xFFFFFF);
+		guiGraphics.drawString(font, text, x + 4, y + 4, 0xFFFFFFFF);
 	}
 
 	/**
@@ -190,10 +192,10 @@ public final class GuiUtil {
 		 */
 		public void draw(GuiGraphics guiGraphics, int x, int y) {
 			// Sets RenderSystem to use solid white as the tint color for blend mode (1.16), and enables blend mode
-			RenderSystem.enableBlend();
+			GlStateManager._enableBlend();
 
 			// Draw the texture to the screen
-			guiGraphics.blit(IRIS_WIDGETS_TEX, x, y, u, v, width, height, 256, 256);
+			guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x, y, u, v, width, height, 256, 256);
 		}
 
 		public int getWidth() {

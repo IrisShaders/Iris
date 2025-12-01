@@ -43,6 +43,7 @@ public class PackDirectives {
 	private boolean separateEntityDraws;
 	private boolean skipAllRendering;
 	private boolean frustumCulling;
+	private boolean supportsEndFlash;
 	private boolean occlusionCulling;
 	private boolean oldLighting;
 	private boolean concurrentCompute;
@@ -84,6 +85,7 @@ public class PackDirectives {
 		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
 		skipAllRendering = properties.skipAllRendering().orElse(false);
 		frustumCulling = properties.getFrustumCulling().orElse(true);
+		supportsEndFlash = properties.supportsEndFlash().orElse(false);
 		occlusionCulling = properties.getOcclusionCulling().orElse(true);
 		oldLighting = properties.getOldLighting().orElse(false);
 		fallbackTex = properties.getFallbackTex();
@@ -105,6 +107,7 @@ public class PackDirectives {
 		voxelizeLightBlocks = directives.voxelizeLightBlocks;
 		separateEntityDraws = directives.separateEntityDraws;
 		frustumCulling = directives.frustumCulling;
+		supportsEndFlash = directives.supportsEndFlash;
 		oldLighting = directives.oldLighting;
 		concurrentCompute = directives.concurrentCompute;
 		explicitFlips = directives.explicitFlips;
@@ -338,5 +341,9 @@ public class PackDirectives {
 		}
 
 		return scale;
+	}
+
+	public boolean supportsEndFlash() {
+		return supportsEndFlash;
 	}
 }

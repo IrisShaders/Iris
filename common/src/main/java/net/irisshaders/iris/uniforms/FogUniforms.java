@@ -1,11 +1,12 @@
 package net.irisshaders.iris.uniforms;
 
-import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.caffeinemc.mods.sodium.client.util.FogStorage;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
+import net.minecraft.client.Minecraft;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
@@ -33,7 +34,7 @@ public class FogUniforms {
 			});
 
 			// To keep a stable interface, 0 is defined as spherical while 1 is defined as cylindrical, even if Mojang's index changes.
-			uniforms.uniform1i(PER_FRAME, "fogShape", () -> RenderSystem.getShaderFogShape() == FogShape.CYLINDER ? 1 : 0);
+			uniforms.uniform1i(PER_FRAME, "fogShape", () -> 1);
 		}
 
 		uniforms.uniform1f("fogDensity", () -> {
@@ -42,15 +43,14 @@ public class FogUniforms {
 		}, notifier -> {
 		});
 
-		uniforms.uniform1f("fogStart", RenderSystem::getShaderFogStart, listener -> StateUpdateNotifiers.fogStartNotifier.setListener(listener));
+		uniforms.uniform1f("fogStart", () -> ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters().environmentalStart(), listener -> StateUpdateNotifiers.fogStartNotifier.setListener(listener));
 
-		uniforms.uniform1f("fogEnd", RenderSystem::getShaderFogEnd, listener -> StateUpdateNotifiers.fogEndNotifier.setListener(listener));
+		uniforms.uniform1f("fogEnd", () -> ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters().environmentalEnd(), listener -> StateUpdateNotifiers.fogEndNotifier.setListener(listener));
 
 		uniforms
 			// TODO: Update frequency of continuous?
 			.uniform3f(PER_FRAME, "fogColor", () -> {
-				float[] fogColor = RenderSystem.getShaderFogColor();
-				return new Vector3f(fogColor[0], fogColor[1], fogColor[2]);
+				return new Vector3f((float) CapturedRenderingState.INSTANCE.getFogColor().x, (float) CapturedRenderingState.INSTANCE.getFogColor().y, (float) CapturedRenderingState.INSTANCE.getFogColor().z);
 			});
 	}
 }

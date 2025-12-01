@@ -1,6 +1,7 @@
 package net.irisshaders.iris.targets.backed;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
@@ -16,7 +17,7 @@ import java.util.function.IntSupplier;
 
 public class NativeImageBackedCustomTexture extends DynamicTexture implements TextureAccess {
 	public NativeImageBackedCustomTexture(CustomTextureData.PngData textureData) throws IOException {
-		super(create(textureData.getContent()));
+		super(() -> "PNG Texture", create(textureData.getContent()));
 
 		// By default, images are unblurred and not clamped.
 
@@ -31,6 +32,10 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 		}
 	}
 
+	private int getId() {
+		return this.texture.iris$getGlId();
+	}
+
 	private static NativeImage create(byte[] content) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocateDirect(content.length);
 		buffer.put(content);
@@ -43,8 +48,7 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 	public void upload() {
 		NativeImage image = Objects.requireNonNull(getPixels());
 
-		bind();
-		image.upload(0, 0, 0, 0, 0, image.getWidth(), image.getHeight(), false, false, false, false);
+		RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, image);
 	}
 
 	@Override

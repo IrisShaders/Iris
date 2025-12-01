@@ -1,5 +1,6 @@
 package net.irisshaders.iris.pbr;
 
+import com.mojang.blaze3d.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
@@ -35,7 +36,7 @@ public class TextureTracker {
 		return textures.get(id);
 	}
 
-	public void onSetShaderTexture(int unit, int id) {
+	public void onSetShaderTexture(int unit, GpuTextureView id) {
 		if (lockBindCallback) {
 			return;
 		}
@@ -49,7 +50,7 @@ public class TextureTracker {
 				pipeline.onSetShaderTexture(id);
 			}
 			// Reset texture state
-			IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), 0, id);
+			IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), 0, id == null ? 0 : id.texture().iris$getGlId());
 			lockBindCallback = false;
 		}
 	}

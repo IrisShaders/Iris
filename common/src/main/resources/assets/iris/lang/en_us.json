@@ -14,7 +14,7 @@
   "iris.keybind.shaderPackSelection": "Shaderpack Selection Screen",
   "iris.keybind.wireframe": "Wireframe (SP only)",
   "iris.keybind.toggleShaders": "Toggle Shaders",
-  "iris.keybinds": "Iris",
+  "key.category.iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "Failed to reload shaders! Reason: %s",
   "iris.shaders.toggled.failure": "Failed to toggle shaders! Reason: %s",
   "iris.sodium.failure.title": "Iris failed to load!",

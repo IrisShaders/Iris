@@ -1,6 +1,6 @@
 package net.irisshaders.iris.pbr.texture;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
@@ -67,7 +67,6 @@ public class PBRTextureManager {
 		} catch (Exception e) {
 			//
 		}
-		texture.releaseId();
 	}
 
 	public static void notifyPBRTexturesChanged() {
@@ -115,7 +114,7 @@ public class PBRTextureManager {
 					loader.load(texture, Minecraft.getInstance().getResourceManager(), consumer);
 					return consumer.toHolder();
 				} catch (Exception e) {
-					Iris.logger.debug("Failed to load PBR textures for texture " + id, e);
+					Iris.logger.warn("Failed to load PBR textures for texture " + id, e);
 				} finally {
 					GlStateManager._bindTexture(previousTextureBinding);
 				}

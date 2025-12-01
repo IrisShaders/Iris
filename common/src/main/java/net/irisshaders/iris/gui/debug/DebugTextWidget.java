@@ -3,7 +3,7 @@ package net.irisshaders.iris.gui.debug;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractScrollWidget;
+import net.minecraft.client.gui.components.AbstractTextAreaWidget;
 import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.layouts.GridLayout;
 import net.minecraft.client.gui.layouts.LayoutSettings;
@@ -14,7 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 public class DebugTextWidget
-	extends AbstractScrollWidget {
+	extends AbstractTextAreaWidget {
 	private final Font font;
 	private final Content content;
 
@@ -78,10 +78,10 @@ public class DebugTextWidget
 	protected void renderContents(GuiGraphics arg, int i, int j, float f) {
 		int k = this.getY() + this.innerPadding();
 		int l = this.getX() + this.innerPadding();
-		arg.pose().pushPose();
-		arg.pose().translate(l, k, 0.0);
+		arg.pose().pushMatrix();
+		arg.pose().translate(l, k);
 		this.content.container().visitWidgets(element -> element.render(arg, i, j, f));
-		arg.pose().popPose();
+		arg.pose().popMatrix();
 	}
 
 	@Override

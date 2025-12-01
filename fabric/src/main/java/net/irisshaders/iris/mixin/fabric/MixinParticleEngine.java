@@ -2,22 +2,29 @@ package net.irisshaders.iris.mixin.fabric;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.irisshaders.iris.api.v0.IrisApi;
+import net.irisshaders.iris.fantastic.IrisParticleRenderTypes;
 import net.irisshaders.iris.fantastic.ParticleRenderingPhase;
 import net.irisshaders.iris.fantastic.PhasedParticleEngine;
 import net.irisshaders.iris.pipeline.programs.ShaderAccess;
+import net.minecraft.client.Camera;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleRenderType;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.MultiBufferSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Queue;
 
 /**
  * Extends the ParticleEngine class to allow multiple phases of particle rendering.
@@ -45,8 +52,9 @@ import java.util.function.Supplier;
  * As the saying goes, "Work smarter, not harder."
  */
 @Mixin(ParticleEngine.class)
-public class MixinParticleEngine implements PhasedParticleEngine {
-	private static final List<ParticleRenderType> OPAQUE_PARTICLE_RENDER_TYPES;
+public class MixinParticleEngine {// implements PhasedParticleEngine {
+	/*private static final List<ParticleRenderType> OPAQUE_PARTICLE_RENDER_TYPES;
+	@Mutable
 	@Shadow
 	@Final
 	private static List<ParticleRenderType> RENDER_ORDER;
@@ -54,19 +62,14 @@ public class MixinParticleEngine implements PhasedParticleEngine {
 	static {
 		OPAQUE_PARTICLE_RENDER_TYPES = ImmutableList.of(
 			ParticleRenderType.PARTICLE_SHEET_OPAQUE,
-			ParticleRenderType.PARTICLE_SHEET_LIT,
-			ParticleRenderType.CUSTOM,
-			ParticleRenderType.NO_RENDER
+			IrisParticleRenderTypes.TERRAIN_OPAQUE
 		);
+
+		RENDER_ORDER = List.of(ParticleRenderType.TERRAIN_SHEET, IrisParticleRenderTypes.TERRAIN_OPAQUE, ParticleRenderType.PARTICLE_SHEET_OPAQUE, ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT);
 	}
 
 	@Unique
-	private ParticleRenderingPhase phase = ParticleRenderingPhase.EVERYTHING;
-
-	@Redirect(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShader(Ljava/util/function/Supplier;)V", remap = false))
-	private void iris$changeParticleShader(Supplier<ShaderInstance> pSupplier0) {
-		RenderSystem.setShader(phase == ParticleRenderingPhase.TRANSLUCENT ? ShaderAccess::getParticleTranslucentShader : pSupplier0);
-	}
+	private static ParticleRenderingPhase phase = ParticleRenderingPhase.EVERYTHING;
 
 	@Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/particle/ParticleEngine;RENDER_ORDER:Ljava/util/List;"))
 	private List<ParticleRenderType> iris$selectParticlesToRender() {
@@ -89,8 +92,15 @@ public class MixinParticleEngine implements PhasedParticleEngine {
 		}
 	}
 
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;renderCustomParticles(Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Ljava/util/Queue;)V"), cancellable = true)
+	private void iris$cancel(Camera camera, float f, MultiBufferSource.BufferSource bufferSource, CallbackInfo ci) {
+		if (phase == ParticleRenderingPhase.TRANSLUCENT) {
+			ci.cancel();
+		}
+	}
+
 	@Override
 	public void setParticleRenderingPhase(ParticleRenderingPhase phase) {
 		this.phase = phase;
-	}
+	}*/
 }

@@ -1,9 +1,13 @@
 package net.irisshaders.iris.uniforms;
 
 import com.mojang.math.Axis;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.EndFlashState;
+import net.minecraft.world.level.Level;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
@@ -15,6 +19,7 @@ import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
  * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#celestial-bodies">Uniforms: Celestial bodies</a>
  */
 public final class CelestialUniforms {
+	private static final Vector4f ZERO = new Vector4f();
 	private final float sunPathRotation;
 
 	public CelestialUniforms(float sunPathRotation) {
@@ -79,6 +84,13 @@ public final class CelestialUniforms {
 			.uniformTruncated3f(PER_FRAME, "moonPosition", this::getMoonPosition)
 			.uniform1f(PER_FRAME, "shadowAngle", CelestialUniforms::getShadowAngle)
 			.uniformTruncated3f(PER_FRAME, "shadowLightPosition", this::getShadowLightPosition)
+			.uniformTruncated3f(PER_FRAME, "endFlashPosition", () -> {
+				if (Minecraft.getInstance().level.dimension() == Level.END) {
+					return getEndFlashPosition();
+				} else {
+					return ZERO;
+				}
+			})
 			.uniformTruncated3f(PER_FRAME, "upPosition", CelestialUniforms::getUpPosition);
 	}
 
@@ -90,12 +102,45 @@ public final class CelestialUniforms {
 		return getCelestialPosition(-100.0F);
 	}
 
+	private Vector4f getEndFlashPosition() {
+		EndFlashState state = Minecraft.getInstance().level.endFlashState();
+		float h = state.getYAngle(); // yaw around Y
+		float g = state.getXAngle(); // this feels silly
+
+		Vector4f pos = new Vector4f(0f, 100f, 0f, 0f);
+
+		Matrix4f m = new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferModelView());
+		m.rotate(Axis.YP.rotationDegrees(180.0F - h));
+		m.rotate(Axis.XP.rotationDegrees(-90.0F - g));
+		return m.transform(pos);
+	}
+
+	private Vector4f getEndFlashPositionInWorldSpace() {
+		EndFlashState state = Minecraft.getInstance().level.endFlashState();
+		float h = state.getYAngle();
+		float g = state.getXAngle();
+
+		Vector4f pos = new Vector4f(0f, 100f, 0f, 0f);
+		Matrix4f m = new Matrix4f();
+		m.identity();
+		m.rotate(Axis.YP.rotationDegrees(180.0F - h));
+		m.rotate(Axis.XP.rotationDegrees(-90.0F - g));
+		return m.transform(pos);
+	}
+
 	public Vector4f getShadowLightPosition() {
+		if (Minecraft.getInstance().level.dimension() == Level.END && Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::supportsEndFlash).orElse(false)) {
+			return getEndFlashPosition();
+		}
 		return isDay() ? getSunPosition() : getMoonPosition();
 	}
 
 	public Vector4f getShadowLightPositionInWorldSpace() {
-		return isDay() ? getCelestialPositionInWorldSpace(100.0F) : getCelestialPositionInWorldSpace(-100.0F);
+		if (Minecraft.getInstance().level.dimension() == Level.END && Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::supportsEndFlash).orElse(false)) {
+			return getEndFlashPositionInWorldSpace();
+		}
+		return isDay() ? getCelestialPositionInWorldSpace(100.0F)
+			: getCelestialPositionInWorldSpace(-100.0F);
 	}
 
 	private Vector4f getCelestialPositionInWorldSpace(float y) {
