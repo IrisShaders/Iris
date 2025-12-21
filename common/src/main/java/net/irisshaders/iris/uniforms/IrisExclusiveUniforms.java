@@ -1,15 +1,19 @@
 package net.irisshaders.iris.uniforms;
 
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.helpers.JomlConversions;
 import net.irisshaders.iris.mixin.GameRendererAccessor;
+import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
@@ -47,6 +51,13 @@ public class IrisExclusiveUniforms {
 		});
 
 		//All Iris-exclusive uniforms (uniforms which do not exist in either OptiFine or ShadersMod) should be registered here.
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "is_inShallowWater", IrisExclusiveUniforms::getIsInShallowWater);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "is_swimming", IrisExclusiveUniforms::getIsSwimming);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "is_passenger", IrisExclusiveUniforms::getIsPassenger);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "vehicleInShallowWater", IrisExclusiveUniforms::getVehicleInShallowWater);
+		uniforms.uniform1i(UniformUpdateFrequency.PER_TICK, "vehicleId", IrisExclusiveUniforms::getVehicleId);
+		uniforms.uniform3d(PER_FRAME, "vehicleLookVector", IrisExclusiveUniforms::getVehicleLookVector);
+		uniforms.uniform3d(PER_FRAME, "relativeVehiclePosition", IrisExclusiveUniforms::getRelativeVehiclePosition);
 		uniforms.uniform1f(PER_FRAME, "thunderStrength", IrisExclusiveUniforms::getThunderStrength);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerHealth", IrisExclusiveUniforms::getCurrentHealth);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "heavyFog", IrisExclusiveUniforms::isHeavyFog);
@@ -87,6 +98,68 @@ public class IrisExclusiveUniforms {
 				return zero;
 			}
 		});
+	}
+
+	private static int getVehicleId() {
+		if (Minecraft.getInstance().player == null) return 0;
+		if (Minecraft.getInstance().player.getVehicle() == null) return 0;
+
+		Object2IntFunction<NamespacedId> entityId = WorldRenderingSettings.INSTANCE.getEntityIds();
+		if (entityId == null) return 0;
+
+		Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(Minecraft.getInstance().player.getVehicle().getType());
+		if (id == null) return 0;
+
+		return entityId.applyAsInt(new NamespacedId(id.getNamespace(), id.getPath()));
+	}
+
+	private static Vector3d getVehicleLookVector() {
+		if (Minecraft.getInstance().player == null) return ZERO;
+		if (Minecraft.getInstance().player.getVehicle() == null) return ZERO;
+
+		return JomlConversions.fromVec3(Minecraft.getInstance().player.getVehicle().getForward());
+	}
+
+	private static Vector3d getRelativeVehiclePosition() {
+		if (Minecraft.getInstance().player == null) return ZERO;
+		if (Minecraft.getInstance().player.getVehicle() == null) return ZERO;
+		
+		Vec3 vehiclePos = Minecraft.getInstance().player.getVehicle().getPosition(CapturedRenderingState.INSTANCE.getTickDelta());
+
+		Vector3d pos = new Vector3d(vehiclePos.x, vehiclePos.y, vehiclePos.z);
+
+		return CameraUniforms.getUnshiftedCameraPosition().sub(pos);
+	}
+
+	private static boolean getVehicleInShallowWater() {
+		if (Minecraft.getInstance().player == null) return false;
+		if (Minecraft.getInstance().player.getVehicle() == null) return false;
+
+		return Minecraft.getInstance().player.getVehicle().isInShallowWater();
+	}
+
+	private static boolean getIsInShallowWater() {
+		if (Minecraft.getInstance().player == null) {
+			return false;
+		}
+
+		return Minecraft.getInstance().player.isInShallowWater();
+	}
+
+	private static boolean getIsSwimming() {
+		if (Minecraft.getInstance().player == null) {
+			return false;
+		}
+
+		return Minecraft.getInstance().player.isSwimming();
+	}
+
+	private static boolean getIsPassenger() {
+		if (Minecraft.getInstance().player == null) {
+			return false;
+		}
+
+		return Minecraft.getInstance().player.isPassenger();
 	}
 
 	private static boolean isHeavyFog() {
