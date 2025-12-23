@@ -46,7 +46,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.ARBParallelShaderCompile;
@@ -623,19 +623,19 @@ public class Iris {
 				return dimensionId;
 			}
 
-			// Check if the dimension type of the current level has custom effects set (end sky or nether).
-			// This is minecraft:overworld by default, but can also be minecraft:the_nether or minecraft:the_end.
+			// Check if the dimension type of the current level has a custom skybox set (end sky or overworld).
+			// This is OVERWORLD by default, but can also be END or NONE.
 			// The appropriate shader for the dimension should be used by default in order to prevent buggy results.
 			// More information at https://minecraft.wiki/w/Dimension_type
 			// https://github.com/IrisShaders/Iris/issues/2200
-			Identifier effects = level.dimension().identifier();
+			DimensionType.Skybox skybox = level.dimensionType().skybox();
 
-			if (Level.END.identifier().equals(effects)) {
+			if (skybox == DimensionType.Skybox.END) {
 				return DimensionId.END;
 			}
 
-			if (Level.NETHER.identifier().equals(effects)) {
-				return DimensionId.NETHER;
+			if (skybox == DimensionType.Skybox.OVERWORLD) {
+				return DimensionId.OVERWORLD;
 			}
 
 			return dimensionId;
