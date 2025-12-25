@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -61,7 +61,8 @@ public class MixinClientLanguage {
 		languageCodes.clear();
 
 		// Reverse order due to how minecraft has English and then the primary language in the language definitions list
-		new LinkedList<>(definitions).descendingIterator().forEachRemaining(languageCodes::add);
+		languageCodes.addAll(definitions);
+		Collections.reverse(languageCodes);
 	}
 
 	@Inject(method = "getOrDefault", at = @At("HEAD"), cancellable = true)

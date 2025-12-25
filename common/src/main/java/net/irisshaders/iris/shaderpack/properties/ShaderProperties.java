@@ -32,9 +32,9 @@ import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
+import org.apache.commons.io.input.CharSequenceReader;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -142,8 +142,8 @@ public class ShaderProperties {
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
 		try {
-			preprocessed.load(new StringReader(preprocessedContents));
-			original.load(new StringReader(contents));
+			preprocessed.load(new CharSequenceReader(preprocessedContents));
+			original.load(new CharSequenceReader(contents));
 		} catch (IOException e) {
 			Iris.logger.error("Error loading shaders.properties!", e);
 		}

@@ -19,11 +19,11 @@ import net.irisshaders.iris.shaderpack.materialmap.TagEntry;
 import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.preprocessor.PropertiesPreprocessor;
+import org.apache.commons.io.input.CharSequenceReader;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -104,7 +104,7 @@ public class IdMap {
 
 		// TODO: This is the worst code I have ever made. Do not do this.
 		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines).replaceAll("\\\\\\n\\s*\\n", " ").replaceAll("\\S *block\\.", "\nblock.");
-		StringReader propertiesReader = new StringReader(processed);
+		CharSequenceReader propertiesReader = new CharSequenceReader(processed);
 		warnMissingBackslashInPropertiesFile(processed, name);
 
 		// Note: ordering of properties is significant
