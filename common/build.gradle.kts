@@ -61,7 +61,7 @@ dependencies {
 
     modImplementation(SODIUM_DEPENDENCY_FABRIC)
     modCompileOnly("org.antlr:antlr4-runtime:4.13.1")
-    modCompileOnly("io.github.douira:glsl-transformer:2.0.1")
+    modCompileOnly("io.github.douira:glsl-transformer:3.0.0-pre3")
     modCompileOnly("org.anarres:jcpp:1.4.14")
 
     compileOnly(files(rootDir.resolve("DHApi.jar")))

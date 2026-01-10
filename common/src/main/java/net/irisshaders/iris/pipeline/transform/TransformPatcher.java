@@ -92,6 +92,7 @@ public class TransformPatcher {
 		transformer = new EnumASTTransformer<>(PatchShaderType.class) {
 			{
 				setRootSupplier(RootSupplier.PREFIX_UNORDERED_ED_EXACT);
+				setParsingCacheStrategy(ParsingCacheStrategy.TWO_TIER);
 			}
 
 			@Override
