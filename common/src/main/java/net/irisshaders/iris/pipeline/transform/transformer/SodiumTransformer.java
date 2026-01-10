@@ -149,9 +149,8 @@ vec3 oct_to_vec3(vec2 e) {
 			"""
 vec4 tangent_decode(vec2 e) {
 	vec2 oct_compressed = e;
-	oct_compressed.y *= 127.0f / 64.0f;
-	float r_sign = abs(oct_compressed.y) >= 1.0f ? -1.0f : 1.0f;
-	oct_compressed.y = fract(oct_compressed.y) * (64.0f / 63.0f);
+	float r_sign = oct_compressed.y > 0.0 ? 1.0 : -1.0;
+	oct_compressed.y = oct_compressed.y * (127.0f / 63.0f) + r_sign * (-64.0f / 63.0f);
 	vec3 res = oct_to_vec3(oct_compressed.xy);
 	return vec4(res, r_sign);
 }
