@@ -66,16 +66,16 @@ public abstract class NormalHelper {
 
 	public static void tangentEncode(Vector2f output, Vector4f tangent) {
 		octahedronEncode(output, tangent.x, tangent.y, tangent.z);
-		float y_sign = output.y >= 0.0f ? 64.0f / 127.0f : -64.0f / 127.0f;
-		output.y *= 63.0f / 127.0f;
-		output.y = tangent.w >= 0.0f ? output.y : output.y + y_sign;
+		output.y = output.y * (63.0f / 127.0f) - (64.5f / 127.0f);
+		if (tangent.w > 0.0f) {
+			output.y += (129.0f / 127.0f);
+		}
 	}
 
 	static Vector4f octahedron_tangent_decode(Vector2f p_oct) {
 		Vector2f oct_compressed = new Vector2f(p_oct);
-		oct_compressed.y = oct_compressed.y * 127.0f / 64.0f;
-		float r_sign = Math.abs(oct_compressed.y) >= 1.0f ? -1.0f : 1.0f;
-		oct_compressed.y = oct_compressed.y % 1.0f;
+		float r_sign = oct_compressed.y > 0.0f ? 1.0f : -1.0f;
+		oct_compressed.y = oct_compressed.y * (127.0f / 63.0f) + r_sign * (-64.0f / 63.0f);
 		Vector3f res = octahedron_decode(oct_compressed.x, oct_compressed.y);
 		return new Vector4f(res.x, res.y, res.z, r_sign);
 	}
