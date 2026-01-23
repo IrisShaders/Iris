@@ -86,7 +86,6 @@ public class Iris {
 	public static final boolean IS_FOOL;
 	private static final Map<String, String> shaderPackOptionQueue = new HashMap<>();
 	// Change this for snapshots!
-	private static final String backupVersionNumber = "1.21.9";
 	public static NamespacedId lastDimension = null;
 	public static boolean testing = false;
 	private static Path shaderpacksDirectory;
@@ -738,13 +737,9 @@ public class Iris {
 	 * @return Release target
 	 */
 	public static String getReleaseTarget() {
-		// If this is a snapshot, you must change backupVersionNumber!
 		SharedConstants.tryDetectVersion();
-		return SharedConstants.getCurrentVersion().stable() ? SharedConstants.getCurrentVersion().name() : backupVersionNumber;
-	}
-
-	public static String getBackupVersionNumber() {
-		return backupVersionNumber;
+		// Since 26.1 snapshot names now also contain the current MC version, we just have to remove everything after the first space. "26.1 Snapshot 1" -> "26.1"
+		return SharedConstants.getCurrentVersion().name().replaceFirst("\\s.*", "");
 	}
 
 	public static Path getShaderpacksDirectory() {

@@ -137,13 +137,6 @@ public class StandardMacros {
 		} else {
 			return formattedVersion;
 		}
-		String backupVersion = Iris.getBackupVersionNumber();
-		String formattedBackupVersion = formatVersionString(backupVersion);
-		if (formattedBackupVersion == null) {
-			throw new IllegalArgumentException("Could not parse backup game version \"" + version + "\"");
-		} else {
-			return formattedBackupVersion;
-		}
 	}
 
 
