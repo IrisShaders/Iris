@@ -676,7 +676,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	public boolean isDisplayingComment() {
-		return this.hoveredElementCommentTimer > 20 &&
+		return this.hoveredElementCommentTimer > 10 &&
 			this.hoveredElementCommentTitle.isPresent() &&
 			!this.hoveredElementCommentBody.isEmpty();
 	}
