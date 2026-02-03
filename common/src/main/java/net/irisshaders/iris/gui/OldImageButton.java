@@ -1,14 +1,17 @@
 package net.irisshaders.iris.gui;
 
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class OldImageButton extends Button {
-	protected final ResourceLocation resourceLocation;
+	protected final Identifier Identifier;
 	protected final int xTexStart;
 	protected final int yTexStart;
 	protected final int yDiffTex;
@@ -16,9 +19,9 @@ public class OldImageButton extends Button {
 	protected final int textureHeight;
 
 	public OldImageButton(
-		int pImageButton0, int pInt1, int pInt2, int pInt3, int pInt4, int pInt5, ResourceLocation pResourceLocation6, Button.OnPress pButton$OnPress7
+		int pImageButton0, int pInt1, int pInt2, int pInt3, int pInt4, int pInt5, Identifier pIdentifier6, Button.OnPress pButton$OnPress7
 	) {
-		this(pImageButton0, pInt1, pInt2, pInt3, pInt4, pInt5, pInt3, pResourceLocation6, 256, 256, pButton$OnPress7);
+		this(pImageButton0, pInt1, pInt2, pInt3, pInt4, pInt5, pInt3, pIdentifier6, 256, 256, pButton$OnPress7);
 	}
 
 	public OldImageButton(
@@ -29,10 +32,10 @@ public class OldImageButton extends Button {
 		int pInt4,
 		int pInt5,
 		int pInt6,
-		ResourceLocation pResourceLocation7,
+		Identifier pIdentifier7,
 		Button.OnPress pButton$OnPress8
 	) {
-		this(pImageButton0, pInt1, pInt2, pInt3, pInt4, pInt5, pInt6, pResourceLocation7, 256, 256, pButton$OnPress8);
+		this(pImageButton0, pInt1, pInt2, pInt3, pInt4, pInt5, pInt6, pIdentifier7, 256, 256, pButton$OnPress8);
 	}
 
 	public OldImageButton(
@@ -43,12 +46,12 @@ public class OldImageButton extends Button {
 		int pInt4,
 		int pInt5,
 		int pInt6,
-		ResourceLocation pResourceLocation7,
+		Identifier pIdentifier7,
 		int pInt8,
 		int pInt9,
 		Button.OnPress pButton$OnPress10
 	) {
-		this(pImageButton0, pInt1, pInt2, pInt3, pInt4, pInt5, pInt6, pResourceLocation7, pInt8, pInt9, pButton$OnPress10, CommonComponents.EMPTY);
+		this(pImageButton0, pInt1, pInt2, pInt3, pInt4, pInt5, pInt6, pIdentifier7, pInt8, pInt9, pButton$OnPress10, CommonComponents.EMPTY);
 	}
 
 	public OldImageButton(
@@ -59,7 +62,7 @@ public class OldImageButton extends Button {
 		int pInt4,
 		int pInt5,
 		int pInt6,
-		ResourceLocation pResourceLocation7,
+		Identifier pIdentifier7,
 		int pInt8,
 		int pInt9,
 		Button.OnPress pButton$OnPress10,
@@ -71,14 +74,14 @@ public class OldImageButton extends Button {
 		this.xTexStart = pInt4;
 		this.yTexStart = pInt5;
 		this.yDiffTex = pInt6;
-		this.resourceLocation = pResourceLocation7;
+		this.Identifier = pIdentifier7;
 	}
 
 	@Override
-	public void renderWidget(GuiGraphics pImageButton0, int pInt1, int pInt2, float pFloat3) {
+	public void renderContents(GuiGraphics pImageButton0, int pInt1, int pInt2, float pFloat3) {
 		this.renderTexture(
 			pImageButton0,
-			this.resourceLocation,
+			this.Identifier,
 			this.getX(),
 			this.getY(),
 			this.xTexStart,
@@ -93,7 +96,7 @@ public class OldImageButton extends Button {
 
 	public void renderTexture(
 		GuiGraphics pAbstractWidget0,
-		ResourceLocation pResourceLocation1,
+		Identifier pIdentifier1,
 		int pInt2,
 		int pInt3,
 		int pInt4,
@@ -111,7 +114,7 @@ public class OldImageButton extends Button {
 			lvInt12 = pInt5 + pInt6;
 		}
 
-		RenderSystem.enableDepthTest();
-		pAbstractWidget0.blit(pResourceLocation1, pInt2, pInt3, (float) pInt4, (float) lvInt12, pInt7, pInt8, pInt9, pInt10);
+		GlStateManager._enableDepthTest();
+		pAbstractWidget0.blit(RenderPipelines.GUI_TEXTURED, pIdentifier1, pInt2, pInt3, (float) pInt4, (float) lvInt12, pInt7, pInt8, pInt9, pInt10);
 	}
 }

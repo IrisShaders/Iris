@@ -1,12 +1,14 @@
 package net.irisshaders.iris.mixin.sky;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
+import net.minecraft.client.renderer.SkyRenderer;
 import net.minecraft.world.level.material.FogType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
@@ -16,20 +18,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * takes a far more conservative approach and only disables specific parts of sky rendering in high-fog
  * situations.
  */
-@Mixin(DimensionSpecialEffects.class)
+@Mixin(SkyRenderer.class)
 public class MixinDimensionSpecialEffects {
-	@Inject(method = "getSunriseColor", at = @At("HEAD"), cancellable = true)
-	private void iris$getSunriseColor(float timeOfDay, float partialTicks, CallbackInfoReturnable<float[]> cir) {
+	@Inject(method = "renderSunriseAndSunset", at = @At("HEAD"), cancellable = true)
+	private void iris$getSunriseColor(PoseStack poseStack, float f, int i, CallbackInfo ci) {
 		boolean blockSky = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).invokeDoesMobEffectBlockSky(Minecraft.getInstance().gameRenderer.getMainCamera());
 
 		if (blockSky) {
-			cir.setReturnValue(null);
+			ci.cancel();
 		}
 
 		FogType fogType = Minecraft.getInstance().gameRenderer.getMainCamera().getFluidInCamera();
 
 		if (fogType != FogType.NONE) {
-			cir.setReturnValue(null);
+			ci.cancel();
 		}
 	}
 }

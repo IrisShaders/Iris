@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.7.3")
+    id("fabric-loom") version ("1.14.4")
 }
 
 val MINECRAFT_VERSION: String by rootProject.extra
@@ -12,6 +12,7 @@ val SODIUM_DEPENDENCY_FABRIC: Any by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 repositories {
+    mavenLocal()
     exclusiveContent {
         forRepository {
             maven {
@@ -59,14 +60,14 @@ dependencies {
     addEmbeddedFabricModule("fabric-api-base")
     addEmbeddedFabricModule("fabric-key-binding-api-v1")
     addRuntimeFabricModule("fabric-block-view-api-v2")
-    addRuntimeFabricModule("fabric-renderer-api-v1")
-    addRuntimeFabricModule("fabric-rendering-data-attachment-v1")
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
+    addRuntimeFabricModule("fabric-lifecycle-events-v1")
+    addRuntimeFabricModule("fabric-renderer-api-v1")
 
     modImplementation(SODIUM_DEPENDENCY_FABRIC)
     implementAndInclude("org.antlr:antlr4-runtime:4.13.1")
-    implementAndInclude("io.github.douira:glsl-transformer:2.0.1")
+    implementAndInclude("io.github.douira:glsl-transformer:3.0.0-pre3")
     implementAndInclude("org.anarres:jcpp:1.4.14")
 
     implementation(project.project(":common").sourceSets.getByName("vendored").output)
@@ -90,7 +91,10 @@ loom {
         accessWidenerPath.set(project(":common").file("src/main/resources/iris.accesswidener"))
 
     @Suppress("UnstableApiUsage")
-    mixin { defaultRefmapName.set("iris-fabric.refmap.json") }
+    mixin {
+        defaultRefmapName.set("iris-fabric.refmap.json")
+        useLegacyMixinAp = false
+    }
 
     runs {
         named("client") {
@@ -98,6 +102,17 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
+           // vmArgs("-Dmixin.debug.export=true")
+           // vmArg("-XX:+AllowEnhancedClassRedefinition")
+        }
+        create("clientWithRenderdoc") {
+            client()
+            configName = "Fabric Client"
+            ideConfigGenerated(true)
+            runDir("run")
+            environmentVariable("LD_PRELOAD", "/home/ims/renderdoc/build/lib/librenderdoc.so")
+            vmArgs("-DMC_DEBUG_ENABLED=true", "-DMC_DEBUG_DUMP_TEXTURE_ATLAS=true")
+            programArgs("--renderDebugLabels")
         }
     }
 }

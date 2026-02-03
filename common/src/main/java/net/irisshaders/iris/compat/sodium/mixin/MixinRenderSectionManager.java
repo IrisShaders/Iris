@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.mixin;
 
-import net.caffeinemc.mods.sodium.client.gui.SodiumGameOptions;
+import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.Iris;
@@ -28,13 +28,13 @@ public class MixinRenderSectionManager {
 
 	@Redirect(method = "getSearchDistance", remap = false,
 		at = @At(value = "FIELD",
-			target = "Lnet/caffeinemc/mods/sodium/client/gui/SodiumGameOptions$PerformanceSettings;useFogOcclusion:Z",
+			target = "Lnet/caffeinemc/mods/sodium/client/gui/SodiumOptions$PerformanceSettings;useFogOcclusion:Z",
 			remap = false))
-	private boolean iris$disableFogOcclusion(SodiumGameOptions.PerformanceSettings settings) {
+	private boolean iris$disableFogOcclusion(SodiumOptions.PerformanceSettings instance) {
 		if (Iris.getCurrentPack().isPresent()) {
 			return false;
 		} else {
-			return settings.useFogOcclusion;
+			return instance.useFogOcclusion;
 		}
 	}
 }

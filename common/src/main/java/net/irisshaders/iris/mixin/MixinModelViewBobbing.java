@@ -5,6 +5,7 @@ import net.irisshaders.iris.Iris;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
@@ -39,8 +40,6 @@ public abstract class MixinModelViewBobbing {
 	@Shadow
 	@Final
 	private Camera mainCamera;
-	@Shadow
-	private int confusionAnimationTick;
 	@Unique
 	private Matrix4fc bobbingEffectsModel;
 	@Unique
@@ -51,6 +50,12 @@ public abstract class MixinModelViewBobbing {
 
 	@Shadow
 	protected abstract void bobHurt(PoseStack pGameRenderer0, float pFloat1);
+
+	@Shadow
+	private float spinningEffectTime;
+
+	@Shadow
+	private float spinningEffectSpeed;
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
 	private void iris$saveShadersOn(DeltaTracker deltaTracker, CallbackInfo ci) {
@@ -114,18 +119,20 @@ public abstract class MixinModelViewBobbing {
 
 		instance.set(stack.last().pose());
 
+		LocalPlayer localPlayer = minecraft.player;
 		float f = deltaTracker.getGameTimeDeltaPartialTick(false);
-		float h = this.minecraft.options.screenEffectScale().get().floatValue();
-		float i = Mth.lerp(f, this.minecraft.player.oSpinningEffectIntensity, this.minecraft.player.spinningEffectIntensity) * h * h;
-		if (i > 0.0F) {
-			int j = this.minecraft.player.hasEffect(MobEffects.CONFUSION) ? 7 : 20;
-			float k = 5.0F / (i * i + 5.0F) - i * 0.04F;
-			k *= k;
+		float i = ((Double)this.minecraft.options.screenEffectScale().get()).floatValue();
+		float j = Mth.lerp(f, localPlayer.oPortalEffectIntensity, localPlayer.portalEffectIntensity);
+		float k = localPlayer.getEffectBlendFactor(MobEffects.NAUSEA, f);
+		float l = Math.max(j, k) * i * i;
+		if (l > 0.0F) {
+			float m = 5.0F / (l * l + 5.0F) - l * 0.04F;
+			m *= m;
 			Vector3f vector3f = new Vector3f(0.0F, Mth.SQRT_OF_TWO / 2.0F, Mth.SQRT_OF_TWO / 2.0F);
-			float l = ((float) this.confusionAnimationTick + f) * (float) j * (float) (Math.PI / 180.0);
-			instance.rotate(l, vector3f);
-			instance.scale(1.0F / k, 1.0F, 1.0F);
-			instance.rotate(-l, vector3f);
+			float n = (this.spinningEffectTime + f * this.spinningEffectSpeed) * ((float)Math.PI / 180F);
+			instance.rotate(n, vector3f);
+			instance.scale(1.0F / m, 1.0F, 1.0F);
+			instance.rotate(-n, vector3f);
 		}
 
 		instance.rotate(quat);

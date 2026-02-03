@@ -3,11 +3,16 @@ package net.irisshaders.iris.shadows;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.blending.BlendModeOverride;
+import net.irisshaders.iris.gl.blending.BlendModeStorage;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
@@ -19,7 +24,9 @@ import net.irisshaders.iris.gl.program.ProgramSamplers;
 import net.irisshaders.iris.gl.program.ProgramUniforms;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.texture.TextureAccess;
+import net.irisshaders.iris.mixinterface.CustomPass;
 import net.irisshaders.iris.pathways.FullScreenQuadRenderer;
+import net.irisshaders.iris.pipeline.CompositeRenderer;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
@@ -45,6 +52,7 @@ import org.lwjgl.opengl.GL43C;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.Set;
 
 public class ShadowCompositeRenderer {
@@ -102,7 +110,9 @@ public class ShadowCompositeRenderer {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
 
+			pass.name = source.getName();
 			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, renderTargets);
+			pass.blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(null);
 			if (computes.length > 0) {
 				pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, renderTargets, holder);
 			} else {
@@ -183,55 +193,60 @@ public class ShadowCompositeRenderer {
 	}
 
 	public void renderAll() {
-		RenderSystem.disableBlend();
+		GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).getBuffer(6);
+		VertexFormat.IndexType type = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).type();
 
-		FullScreenQuadRenderer.INSTANCE.begin();
+		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Shadow composites", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty())) {
+			pass.setPipeline(CompositeRenderer.COMPOSITE_PIPELINE);
+			pass.setVertexBuffer(0, FullScreenQuadRenderer.INSTANCE.getQuad());
+			pass.setIndexBuffer(indices, type);
 
-		for (Pass renderPass : passes) {
-			boolean ranCompute = false;
-			for (ComputeProgram computeProgram : renderPass.computes) {
-				if (computeProgram != null) {
-					ranCompute = true;
-					computeProgram.use();
-					this.customUniforms.push(computeProgram);
-					com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
-					computeProgram.dispatch(main.width, main.height);
+			for (Pass renderPass : passes) {
+				boolean ranCompute = false;
+				for (ComputeProgram computeProgram : renderPass.computes) {
+					if (computeProgram != null) {
+						ranCompute = true;
+						computeProgram.use();
+						this.customUniforms.push(computeProgram);
+						com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+						computeProgram.dispatch(main.width, main.height);
+					}
 				}
-			}
 
-			if (ranCompute) {
-				IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
-			}
-
-			Program.unbind();
-
-			if (renderPass instanceof ComputeOnlyPass) {
-				continue;
-			}
-
-			if (!renderPass.mipmappedBuffers.isEmpty()) {
-				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
-
-				for (int index : renderPass.mipmappedBuffers) {
-					setupMipmapping(renderTargets.get(index), renderPass.stageReadsFromAlt.contains(index));
+				if (ranCompute) {
+					IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 				}
+
+				Program.unbind();
+
+				if (renderPass instanceof ComputeOnlyPass) {
+					continue;
+				}
+
+				if (!renderPass.mipmappedBuffers.isEmpty()) {
+					GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
+
+					for (int index : renderPass.mipmappedBuffers) {
+						setupMipmapping(renderTargets.get(index), renderPass.stageReadsFromAlt.contains(index));
+					}
+				}
+
+				pass.iris$setCustomPass(renderPass);
+
+				float scaledWidth = renderTargets.getResolution() * renderPass.viewportScale.scale();
+				float scaledHeight = renderTargets.getResolution() * renderPass.viewportScale.scale();
+				int beginWidth = (int) (renderTargets.getResolution() * renderPass.viewportScale.viewportX());
+				int beginHeight = (int) (renderTargets.getResolution() * renderPass.viewportScale.viewportY());
+				GlStateManager._viewport(beginWidth, beginHeight, (int) scaledWidth, (int) scaledHeight);
+
+				renderPass.framebuffer.bind();
+				renderPass.program.use();
+
+				this.customUniforms.push(renderPass.program);
+
+				pass.drawIndexed(0, 0, 6, 1);
 			}
-
-			float scaledWidth = renderTargets.getResolution() * renderPass.viewportScale.scale();
-			float scaledHeight = renderTargets.getResolution() * renderPass.viewportScale.scale();
-			int beginWidth = (int) (renderTargets.getResolution() * renderPass.viewportScale.viewportX());
-			int beginHeight = (int) (renderTargets.getResolution() * renderPass.viewportScale.viewportY());
-			RenderSystem.viewport(beginWidth, beginHeight, (int) scaledWidth, (int) scaledHeight);
-
-			renderPass.framebuffer.bind();
-			renderPass.program.use();
-
-			this.customUniforms.push(renderPass.program);
-
-			FullScreenQuadRenderer.INSTANCE.renderQuad();
 		}
-
-		FullScreenQuadRenderer.INSTANCE.end();
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		ProgramUniforms.clearActiveUniforms();
@@ -247,7 +262,7 @@ public class ShadowCompositeRenderer {
 		}
 		 */
 
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
 	}
 
 	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
@@ -344,8 +359,10 @@ public class ShadowCompositeRenderer {
 		}
 	}
 
-	private static class Pass {
+	private static class Pass implements CustomPass {
+		String name;
 		Program program;
+		BlendModeOverride blendModeOverride;
 		GlFramebuffer framebuffer;
 		ImmutableSet<Integer> flippedAtLeastOnce;
 		ImmutableSet<Integer> stageReadsFromAlt;
@@ -359,6 +376,17 @@ public class ShadowCompositeRenderer {
 				if (compute != null) {
 					compute.destroy();
 				}
+			}
+		}
+
+		@Override
+		public void setupState() {
+			framebuffer.bind();
+			if (blendModeOverride != null) {
+				blendModeOverride.apply();
+			} else {
+				BlendModeStorage.restoreBlend();
+				GlStateManager._disableBlend();
 			}
 		}
 	}

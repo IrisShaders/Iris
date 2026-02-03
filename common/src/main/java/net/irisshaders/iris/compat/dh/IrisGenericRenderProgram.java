@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.dh;
 
 import com.google.common.primitives.Ints;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiGenericObjectShaderProgram;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderableBoxGroup;
@@ -39,6 +39,7 @@ import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
@@ -208,7 +209,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 			matrix.get(buffer);
 			buffer.rewind();
 
-			RenderSystem.glUniformMatrix4(index, false, buffer);
+			GL46C.glUniformMatrix4fv(index, false, buffer);
 		}
 	}
 
@@ -220,7 +221,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 			matrix.get(buffer);
 			buffer.rewind();
 
-			RenderSystem.glUniformMatrix3(index, false, buffer);
+			IrisRenderSystem.uniformMatrix3fv(index, false, buffer);
 		}
 	}
 
@@ -239,8 +240,6 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 		setUniform(projectionUniform, toJOML(renderParam.dhProjectionMatrix));
 		setUniform(projectionInverseUniform, toJOML(renderParam.dhModelViewMatrix).invert());
 		setUniform(normalMatrix3fUniform, toJOML(renderParam.dhModelViewMatrix).invert().transpose3x3(new Matrix3f()));
-		Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
-		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
 		this.setUniform(this.instancedShaderProjectionModelViewMatrixUniform, toJOML(renderParam.dhProjectionMatrix).mul(toJOML(renderParam.dhModelViewMatrix)));
 
 		samplers.update();
@@ -281,8 +280,8 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 
 	public void fillIndirectUniformData(DhApiRenderParam dhApiRenderParam, DhApiRenderableBoxGroupShading dhApiRenderableBoxGroupShading, IDhApiRenderableBoxGroup boxGroup, DhApiVec3d camPos) {
 		bind(dhApiRenderParam);
-		RenderSystem.enableDepthTest();
-		RenderSystem.depthFunc(GL30C.GL_LEQUAL);
+		GlStateManager._enableDepthTest();
+		GlStateManager._depthFunc(GL30C.GL_LEQUAL);
 		this.setUniform(this.instancedShaderOffsetChunkUniform,
 			new DhApiVec3i(
 				getChunkPosFromDouble(boxGroup.getOriginBlockPos().x),

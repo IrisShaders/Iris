@@ -16,17 +16,19 @@ public class ShaderAttributeInputs {
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines, boolean glint, boolean text, boolean ie) {
-		if (format == DefaultVertexFormat.POSITION_COLOR_NORMAL && !isLines) {
-			newLines = true;
-		}
-
 		this.ie = ie;
 		this.text = text;
 		this.glint = glint;
 
+		this.newLines = isLines;
+
 		format.getElementAttributeNames().forEach(name -> {
 			if ("Color".equals(name)) {
 				color = true;
+			}
+
+			if ("LineWidth".equals(name)) {
+				newLines = true;
 			}
 
 			if ("UV0".equals(name)) {

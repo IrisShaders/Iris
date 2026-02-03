@@ -58,15 +58,6 @@ public class HardcodedCustomUniforms {
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "eyeBrightnessM", new SmoothedFloat(5, 5, HardcodedCustomUniforms::getEyeBrightnessM, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "rainFactor", rainStrengthS);
 
-		// The following uniforms are Sildur's specific.
-		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "inSwamp", new SmoothedFloat(5, 5, () -> {
-			if (storedBiome == null) {
-				return 0;
-			} else {
-				// Easiest way to check for "swamp" on 1.19.
-				return storedBiome.is(BiomeTags.HAS_CLOSER_WATER_FOG) ? 1 : 0;
-			}
-		}, updateNotifier));
 		holder.uniform1f(UniformUpdateFrequency.PER_FRAME, "BiomeTemp", () -> {
 			if (storedBiome == null) {
 				return 0;
@@ -119,12 +110,12 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getEyeSkyBrightness() {
-		if (client.cameraEntity == null || client.level == null) {
+		if (client.getCameraEntity() == null || client.level == null) {
 			return 0;
 		}
 
-		Vec3 feet = client.cameraEntity.position();
-		Vec3 eyes = new Vec3(feet.x, client.cameraEntity.getEyeY(), feet.z);
+		Vec3 feet = client.getCameraEntity().position();
+		Vec3 eyes = new Vec3(feet.x, client.getCameraEntity().getEyeY(), feet.z);
 		BlockPos eyeBlockPos = BlockPos.containing(eyes);
 
 		int skyLight = client.level.getBrightness(LightLayer.SKY, eyeBlockPos);
@@ -158,7 +149,7 @@ public class HardcodedCustomUniforms {
 	private static int getWorldDayTime() {
 		Level level = Minecraft.getInstance().level;
 		long timeOfDay = level.getDayTime();
-		long dayTime = level.dimensionType().fixedTime().orElse(timeOfDay % 24000L);
+		long dayTime = level.dimensionType().hasFixedTime() ? 0 : (timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}
@@ -172,7 +163,7 @@ public class HardcodedCustomUniforms {
 	}
 
 	private static float getShadowFade() {
-		return (float) Math.clamp(0.0, 1.0, 1.0 - (java.lang.Math.abs(java.lang.Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.23) * 100.0);
+		return (float) Math.clamp(0.0, 1.0, 1.0 - (java.lang.Math.abs(java.lang.Math.abs(CelestialUniforms.getSunAngle(CelestialUniforms.isDay()) - 0.5) - 0.25) - 0.23) * 100.0);
 	}
 
 	private static SmoothedFloat rainStrengthS(FrameUpdateNotifier updateNotifier, float halfLifeUp, float halfLifeDown) {
@@ -183,7 +174,7 @@ public class HardcodedCustomUniforms {
 		if (storedBiome == null) {
 			return 0;
 		}
-		Biome.Precipitation precipitation = storedBiome.value().getPrecipitationAt(Minecraft.getInstance().cameraEntity.blockPosition());
+		Biome.Precipitation precipitation = storedBiome.value().getPrecipitationAt(Minecraft.getInstance().getCameraEntity().blockPosition(), Minecraft.getInstance().level.getSeaLevel());
 		return switch (precipitation) {
 			case RAIN -> 1;
 			case SNOW -> 2;
@@ -218,6 +209,6 @@ public class HardcodedCustomUniforms {
 
 
 	private static float getShdFade() {
-		return (float) Math.clamp(0.0, 1.0, 1.0 - (Math.abs(Math.abs(CelestialUniforms.getSunAngle() - 0.5) - 0.25) - 0.225) * 40.0);
+		return (float) Math.clamp(0.0, 1.0, 1.0 - (Math.abs(Math.abs(CelestialUniforms.getSunAngle(true) - 0.5) - 0.25) - 0.225) * 40.0);
 	}
 }

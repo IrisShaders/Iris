@@ -1,8 +1,12 @@
 package net.irisshaders.iris.gl.texture;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.AddressMode;
+import com.mojang.blaze3d.textures.FilterMode;
 import net.irisshaders.iris.gl.GlResource;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.shaderpack.texture.TextureFilteringData;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
@@ -15,6 +19,8 @@ import java.util.function.IntSupplier;
 
 public class GlTexture extends GlResource implements TextureAccess {
 	private final TextureType target;
+	private final boolean shouldBlur;
+	private final boolean shouldClamp;
 
 	public GlTexture(TextureType target, int sizeX, int sizeY, int sizeZ, int internalFormat, int format, int pixelType, byte[] pixels, TextureFilteringData filteringData) {
 		super(GlStateManager._genTexture());
@@ -33,6 +39,8 @@ public class GlTexture extends GlResource implements TextureAccess {
 		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_MIN_FILTER, filteringData.shouldBlur() ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
 		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_MAG_FILTER, filteringData.shouldBlur() ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
 		IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_WRAP_S, filteringData.shouldClamp() ? GL13C.GL_CLAMP_TO_EDGE : GL13C.GL_REPEAT);
+		this.shouldBlur = filteringData.shouldBlur();
+		this.shouldClamp = filteringData.shouldClamp();
 
 		if (sizeY > 0) {
 			IrisRenderSystem.texParameteri(texture, target.getGlType(), GL11C.GL_TEXTURE_WRAP_T, filteringData.shouldClamp() ? GL13C.GL_CLAMP_TO_EDGE : GL13C.GL_REPEAT);
@@ -68,6 +76,23 @@ public class GlTexture extends GlResource implements TextureAccess {
 	@Override
 	public IntSupplier getTextureId() {
 		return this::getGlId;
+	}
+
+	@Override
+	public GlSampler getSampling() {
+		if (shouldClamp) {
+			if (shouldBlur) {
+				return GlSampler.LINEAR;
+			} else {
+				return GlSampler.NEAREST;
+			}
+		} else {
+			if (shouldBlur) {
+				return GlSampler.LINEAR_REPEAT;
+			} else {
+				return GlSampler.NEAREST_REPEAT;
+			}
+		}
 	}
 
 	@Override

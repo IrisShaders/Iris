@@ -1,8 +1,10 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.platform.GlConst;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import net.irisshaders.iris.gl.IrisRenderSystem;
+import org.joml.Vector4i;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL46C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,38 +17,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(GlStateManager.class)
 public class MixinGlStateManager_FramebufferBinding {
-	@Unique
-	private static int iris$drawFramebuffer = 0;
-	@Unique
-	private static int iris$readFramebuffer = 0;
-	@Unique
-	private static int iris$program = 0;
+	private static int iris$program;
 
-	@Inject(method = "_glBindFramebuffer(II)V", at = @At("HEAD"), cancellable = true, remap = false)
-	private static void iris$avoidRedundantBind(int target, int framebuffer, CallbackInfo ci) {
-		if (target == GlConst.GL_FRAMEBUFFER) {
-			if (iris$drawFramebuffer == target && iris$readFramebuffer == target) {
-				ci.cancel();
-			} else {
-				iris$drawFramebuffer = framebuffer;
-				iris$readFramebuffer = framebuffer;
-			}
-		} else if (target == GL30C.GL_DRAW_FRAMEBUFFER) {
-			if (iris$drawFramebuffer == target) {
-				ci.cancel();
-			} else {
-				iris$drawFramebuffer = framebuffer;
-			}
-		} else if (target == GL30C.GL_READ_FRAMEBUFFER) {
-			if (iris$readFramebuffer == target) {
-				ci.cancel();
-			} else {
-				iris$readFramebuffer = framebuffer;
-			}
-		} else {
-			throw new IllegalStateException("Invalid framebuffer target: " + target);
-		}
-	}
+	private static Vector4i iris$viewport = new Vector4i();
 
 	@Inject(method = "_glUseProgram", at = @At("HEAD"), cancellable = true, remap = false)
 	private static void iris$avoidRedundantBind2(int pInt0, CallbackInfo ci) {
@@ -54,17 +27,23 @@ public class MixinGlStateManager_FramebufferBinding {
 			ci.cancel();
 		}
 
+		IrisRenderSystem.onProgramUse();
+
 		iris$program = pInt0;
 	}
 
-	@Inject(method = "_glDeleteFramebuffers(I)V", at = @At("HEAD"), remap = false)
-	private static void iris$trackFramebufferDelete(int framebuffer, CallbackInfo ci) {
-		if (iris$drawFramebuffer == framebuffer) {
-			iris$drawFramebuffer = 0;
-		}
+	@Inject(method = "_activeTexture", at = @At("HEAD"))
+	private static void iris$checkActiveTexture(int i, CallbackInfo ci) {
+		int tex = i - GL46C.GL_TEXTURE0;
+		if (tex < 0 || tex > 128) throw new IllegalArgumentException("Texture " + tex + " out of range");
+	}
 
-		if (iris$readFramebuffer == framebuffer) {
-			iris$readFramebuffer = 0;
+	@Inject(method = "_viewport", at = @At("HEAD"), cancellable = true)
+	private static void iris$avoidRedundantBind1(int x, int y, int width, int height, CallbackInfo ci) {
+		if (iris$viewport.x == x && iris$viewport.y == y && iris$viewport.z == width && iris$viewport.w == height) {
+			ci.cancel();
+		} else {
+			iris$viewport.set(x, y, width, height);
 		}
 	}
 }

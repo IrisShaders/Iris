@@ -13,22 +13,28 @@ public class VanillaParameters extends GeometryInfoParameters {
 	public final ShaderAttributeInputs inputs;
 	public final boolean hasChunkOffset;
 	private final boolean isLines;
+	private final boolean isClouds;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public VanillaParameters(
 		Patch patch,
 		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
-		AlphaTest alpha, boolean isLines, boolean hasChunkOffset,
+		AlphaTest alpha, boolean isLines, boolean isClouds, boolean hasChunkOffset,
 		ShaderAttributeInputs inputs, boolean hasGeometry, boolean hasTesselation) {
 		super(patch, textureMap, hasGeometry, hasTesselation);
 		this.alpha = alpha;
 		this.isLines = isLines;
+		this.isClouds = isClouds;
 		this.hasChunkOffset = hasChunkOffset;
 		this.inputs = inputs;
 	}
 
 	public boolean isLines() {
 		return isLines;
+	}
+
+	public boolean isClouds() {
+		return isClouds;
 	}
 
 	@Override
@@ -49,6 +55,7 @@ public class VanillaParameters extends GeometryInfoParameters {
 		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
 		result = prime * result + (hasChunkOffset ? 1231 : 1237);
 		result = prime * result + (isLines ? 1231 : 1237);
+		result = prime * result + (isClouds ? 1231 : 1237);
 		return result;
 	}
 
@@ -72,6 +79,8 @@ public class VanillaParameters extends GeometryInfoParameters {
 		} else if (!inputs.equals(other.inputs))
 			return false;
 		if (hasChunkOffset != other.hasChunkOffset)
+			return false;
+		if (isClouds != other.isClouds)
 			return false;
 		return isLines == other.isLines;
 	}

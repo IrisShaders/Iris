@@ -5,19 +5,20 @@ import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
 import net.irisshaders.iris.gl.texture.TextureType;
 
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class SamplerBinding {
 	private final int textureUnit;
 	private final IntSupplier texture;
 	private final ValueUpdateNotifier notifier;
 	private final TextureType textureType;
-	private final int sampler;
+	private final Supplier<GlSampler> sampler;
 
-	public SamplerBinding(TextureType type, int textureUnit, IntSupplier texture, GlSampler sampler, ValueUpdateNotifier notifier) {
+	public SamplerBinding(TextureType type, int textureUnit, IntSupplier texture, Supplier<GlSampler> sampler, ValueUpdateNotifier notifier) {
 		this.textureType = type;
 		this.textureUnit = textureUnit;
 		this.texture = texture;
-		this.sampler = sampler == null ? 0 : sampler.getId();
+		this.sampler = sampler;
 		this.notifier = notifier;
 	}
 
@@ -30,7 +31,8 @@ public class SamplerBinding {
 	}
 
 	private void updateSampler() {
-		IrisRenderSystem.bindSamplerToUnit(textureUnit, sampler);
+		GlSampler sampler2 = sampler == null ? null : sampler.get();
+		IrisRenderSystem.bindSamplerToUnit(textureUnit, sampler2 == null ? 0 : sampler2.getId());
 		IrisRenderSystem.bindTextureToUnit(textureType.getGlType(), textureUnit, texture.getAsInt());
 	}
 }

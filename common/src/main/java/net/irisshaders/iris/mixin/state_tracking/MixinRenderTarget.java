@@ -39,7 +39,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(RenderTarget.class)
 public class MixinRenderTarget {
 	@SuppressWarnings("ConstantValue")
-	@Inject(method = "bindWrite(Z)V", at = @At("RETURN"))
+	// TODO 1.21.5 1.21.5
+	//@Inject(method = "bindWrite(Z)V", at = @At("RETURN"))
 	private void iris$onBindFramebuffer(boolean bl, CallbackInfo ci) {
 		// IntelliJ is wrong here. It doesn't understand how Mixin works.
 		boolean mainBound = this == (Object) Minecraft.getInstance().getMainRenderTarget();

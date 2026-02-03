@@ -1,6 +1,6 @@
 package net.irisshaders.iris.layer;
 
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
 
 import java.util.function.Function;
 

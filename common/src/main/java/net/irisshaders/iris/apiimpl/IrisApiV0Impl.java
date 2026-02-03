@@ -1,12 +1,17 @@
 package net.irisshaders.iris.apiimpl;
 
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.api.v0.IrisApiConfig;
+import net.irisshaders.iris.api.v0.IrisProgram;
 import net.irisshaders.iris.api.v0.IrisTextVertexSink;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
+import net.irisshaders.iris.pipeline.IrisPipelines;
 import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.irisshaders.iris.pipeline.programs.ShaderKey;
+import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.vertices.IrisTextVertexSinkImpl;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,7 +25,7 @@ public class IrisApiV0Impl implements IrisApi {
 
 	@Override
 	public int getMinorApiRevision() {
-		return 2;
+		return 3;
 	}
 
 	@Override
@@ -68,5 +73,10 @@ public class IrisApiV0Impl implements IrisApi {
 		}
 
 		return pipeline.getSunPathRotation();
+	}
+
+	@Override
+	public void assignPipeline(RenderPipeline pipeline, IrisProgram program) {
+		IrisPipelines.assignPipeline(pipeline, ShaderKey.findBestMatch(pipeline, ProgramId.fromAPI(program)));
 	}
 }

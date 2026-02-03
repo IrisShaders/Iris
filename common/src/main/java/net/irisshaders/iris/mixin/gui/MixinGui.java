@@ -51,10 +51,6 @@ public class MixinGui {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null && !pipeline.shouldRenderVignette()) {
-			// we need to set up the GUI render state ourselves if we cancel the vignette
-			RenderSystem.enableDepthTest();
-			RenderSystem.defaultBlendFunc();
-
 			ci.cancel();
 		}
 	}

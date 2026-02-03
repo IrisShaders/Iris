@@ -4,59 +4,40 @@ import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
+import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
+import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.server.level.BlockDestructionProgress;
+import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.SortedSet;
 
 @Mixin(SodiumWorldRenderer.class)
 public class MixinSodiumWorldRenderer {
 	@Unique
-	private static boolean renderLightsOnly = false;
-	@Unique
-	private static int beList = 0;
-
-	static {
-		ShadowRenderingState.setBlockEntityRenderFunction((shadowRenderer, bufferSource, modelView, camera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, lightsOnly) -> {
-			renderLightsOnly = lightsOnly;
-
-			SodiumWorldRenderer.instance().renderBlockEntities(modelView, bufferSource, ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).getDestructionProgress(), camera, tickDelta, null);
-
-			int finalBeList = beList;
-
-			beList = 0;
-
-			return finalBeList;
-		});
-	}
-
-	@Unique
 	private float lastSunAngle;
 
-	@Inject(method = "renderBlockEntity", at = @At("HEAD"), cancellable = true)
-	private static void checkRenderShadow(PoseStack matrices, RenderBuffers bufferBuilders, Long2ObjectMap<SortedSet<BlockDestructionProgress>> blockBreakingProgressions, float tickDelta, MultiBufferSource.BufferSource immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity, LocalPlayer player, LocalBooleanRef isGlowing, CallbackInfo ci) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			if (renderLightsOnly && entity.getBlockState().getLightEmission() == 0) {
-				ci.cancel();
-			}
-			beList++;
-		}
-	}
 
 	@Redirect(method = "setupTerrain", remap = false,
 		at = @At(value = "INVOKE",
@@ -64,7 +45,7 @@ public class MixinSodiumWorldRenderer {
 			remap = false))
 	private boolean iris$forceChunkGraphRebuildInShadowPass(RenderSectionManager instance) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			float sunAngle = Minecraft.getInstance().level.getSunAngle(CapturedRenderingState.INSTANCE.getTickDelta());
+			float sunAngle = Minecraft.getInstance().gameRenderer.getMainCamera().attributeProbe().getValue(EnvironmentAttributes.SUN_ANGLE, CapturedRenderingState.INSTANCE.getTickDelta());
 			if (lastSunAngle != sunAngle) {
 				lastSunAngle = sunAngle;
 				return true;
@@ -85,5 +66,10 @@ public class MixinSodiumWorldRenderer {
 		} else {
 			return instance.needsUpdate();
 		}
+	}
+
+	@Inject(method = "isEntityVisible", at = @At("HEAD"), cancellable = true)
+	private <T extends Entity, S extends EntityRenderState> void iris$skipEntityCheck(EntityRenderer<T, S> renderer, T entity, CallbackInfoReturnable<Boolean> cir) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) cir.setReturnValue(true);
 	}
 }

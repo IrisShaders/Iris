@@ -2,13 +2,17 @@ package net.irisshaders.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.image.GlImage;
@@ -17,11 +21,13 @@ import net.irisshaders.iris.gl.program.Program;
 import net.irisshaders.iris.gl.program.ProgramBuilder;
 import net.irisshaders.iris.gl.program.ProgramSamplers;
 import net.irisshaders.iris.gl.program.ProgramUniforms;
+import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerLimits;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
+import net.irisshaders.iris.mixinterface.CustomPass;
 import net.irisshaders.iris.pathways.CenterDepthSampler;
 import net.irisshaders.iris.pathways.FullScreenQuadRenderer;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
@@ -51,13 +57,21 @@ import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Supplier;
 
 public class FinalPassRenderer {
+	private static final CustomPass STATE = new CustomPass() {
+		@Override
+		public void setupState() {
+
+		}
+	};
 	private final RenderTargets renderTargets;
 
 	@Nullable
@@ -116,7 +130,7 @@ public class FinalPassRenderer {
 		// passes that write to framebuffers).
 		this.baseline = renderTargets.createGbufferFramebuffer(flippedBuffers, new int[]{0});
 		this.colorHolder = new GlFramebuffer();
-		this.lastColorTextureId = Minecraft.getInstance().getMainRenderTarget().getColorTextureId();
+		this.lastColorTextureId = Minecraft.getInstance().getMainRenderTarget().getColorTexture().iris$getGlId();
 		this.lastColorTextureVersion = ((Blaze3dRenderTargetExt) Minecraft.getInstance().getMainRenderTarget()).iris$getColorBufferVersion();
 		this.colorHolder.addColorAttachment(0, lastColorTextureId);
 
@@ -168,33 +182,19 @@ public class FinalPassRenderer {
 		// unlikely that this issue occurs in practice with most shader packs.
 		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
 
-		int filter = GL20C.GL_LINEAR_MIPMAP_LINEAR;
-		if (target.getInternalFormat().getPixelFormat().isInteger()) {
-			filter = GL20C.GL_NEAREST_MIPMAP_NEAREST;
-		}
-
-		IrisRenderSystem.texParameteri(texture, GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
+		target.turnOnMips(readFromAlt);
 	}
 
 	private static void resetRenderTarget(RenderTarget target) {
 		if (target == null) return;
 		// Resets the sampling mode of the given render target and then unbinds it to prevent accidental sampling of it
 		// elsewhere.
-		int filter = GL20C.GL_LINEAR;
-		if (target.getInternalFormat().getPixelFormat().isInteger()) {
-			filter = GL20C.GL_NEAREST;
-		}
+		target.turnOffMips(true);
+		target.turnOffMips(false);
 
-		IrisRenderSystem.texParameteri(target.getMainTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
-		IrisRenderSystem.texParameteri(target.getAltTexture(), GL20C.GL_TEXTURE_2D, GL20C.GL_TEXTURE_MIN_FILTER, filter);
-
-		RenderSystem.bindTexture(0);
 	}
 
 	public void renderFinalPass() {
-		RenderSystem.disableBlend();
-		RenderSystem.depthMask(false);
-
 		final com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
 		final int baseWidth = main.width;
 		final int baseHeight = main.height;
@@ -212,9 +212,9 @@ public class FinalPassRenderer {
 		//
 		// This is not a concern for depthtex1 / depthtex2 since the copy call extracts the depth values, and the
 		// shader pack only ever uses them to read the depth values.
-		if (((Blaze3dRenderTargetExt) main).iris$getColorBufferVersion() != lastColorTextureVersion || main.getColorTextureId() != lastColorTextureId) {
+		if (((Blaze3dRenderTargetExt) main).iris$getColorBufferVersion() != lastColorTextureVersion || main.getColorTexture().iris$getGlId() != lastColorTextureId) {
 			lastColorTextureVersion = ((Blaze3dRenderTargetExt) main).iris$getColorBufferVersion();
-			this.lastColorTextureId = main.getColorTextureId();
+			this.lastColorTextureId = main.getColorTexture().iris$getGlId();
 			colorHolder.addColorAttachment(0, lastColorTextureId);
 		}
 
@@ -222,10 +222,6 @@ public class FinalPassRenderer {
 			GLDebug.pushGroup(990, "final");
 			// If there is a final pass, we use the shader-based full screen quad rendering pathway instead
 			// of just copying the color buffer.
-
-			colorHolder.bind();
-
-			FullScreenQuadRenderer.INSTANCE.begin();
 
 			for (ComputeProgram computeProgram : finalPass.computes) {
 				if (computeProgram != null) {
@@ -238,21 +234,33 @@ public class FinalPassRenderer {
 			IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 
 			if (!finalPass.mipmappedBuffers.isEmpty()) {
-				RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+				GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
 
 				for (int index : finalPass.mipmappedBuffers) {
 					setupMipmapping(renderTargets.get(index), finalPass.stageReadsFromAlt.contains(index));
 				}
 			}
 
-			finalPass.program.use();
+			GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).getBuffer(6);
+			VertexFormat.IndexType type = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).type();
 
-			// program is the identifier for final :shrug:
-			this.customUniforms.push(finalPass.program);
+			try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Final pass", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty())) {
+				renderPass.setPipeline(CompositeRenderer.COMPOSITE_PIPELINE);
+				renderPass.setIndexBuffer(indices, type);
+				renderPass.setVertexBuffer(0, FullScreenQuadRenderer.INSTANCE.getQuad());
 
-			FullScreenQuadRenderer.INSTANCE.renderQuad();
+				renderPass.iris$setCustomPass(STATE);
 
-			FullScreenQuadRenderer.INSTANCE.end();
+				finalPass.program.use();
+
+				BlendModeOverride.restore();
+				GlStateManager._disableBlend();
+
+				// program is the identifier for final :shrug:
+				this.customUniforms.push(finalPass.program);
+
+				renderPass.drawIndexed(0, 0, 6, 1);
+			}
 			GLDebug.popGroup();
 		} else {
 			// If there are no passes, we somehow need to transfer the content of the Iris color render targets into
@@ -267,10 +275,10 @@ public class FinalPassRenderer {
 			// https://stackoverflow.com/a/23994979/18166885
 			this.baseline.bindAsReadBuffer();
 
-			IrisRenderSystem.copyTexSubImage2D(main.getColorTextureId(), GL11C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
+			IrisRenderSystem.copyTexSubImage2D(main.getColorTexture().iris$getGlId(), GL11C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, baseWidth, baseHeight);
 		}
 
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
 
 		for (int i = 0; i < renderTargets.getRenderTargetCount(); i++) {
 			// Reset mipmapping states at the end of the frame.
@@ -288,13 +296,12 @@ public class FinalPassRenderer {
 			// Also note that RenderTargets already calls readBuffer(0) for us.
 			swapPass.from.bind();
 
-			RenderSystem.bindTexture(swapPass.targetTexture);
-			GlStateManager._glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, swapPass.width, swapPass.height);
+			GlStateManager._bindTexture(swapPass.targetTexture);
+			GL46C.glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, swapPass.width, swapPass.height);
 		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
 		// Also bind the "main" framebuffer if it isn't already bound.
-		main.bindWrite(true);
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
 		GlStateManager._glUseProgram(0);
@@ -303,12 +310,12 @@ public class FinalPassRenderer {
 			// Unbind all textures that we may have used.
 			// NB: This is necessary for shader pack reloading to work properly
 			if (GlStateManagerAccessor.getTEXTURES()[i].binding != 0) {
-				RenderSystem.activeTexture(GL15C.GL_TEXTURE0 + i);
-				RenderSystem.bindTexture(0);
+				GlStateManager._activeTexture(GL15C.GL_TEXTURE0 + i);
+				GlStateManager._bindTexture(0);
 			}
 		}
 
-		RenderSystem.activeTexture(GL15C.GL_TEXTURE0);
+		GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
 	}
 
 	public void recalculateSwapPassSize() {
@@ -371,7 +378,7 @@ public class FinalPassRenderer {
 		}
 
 		// TODO: Don't duplicate this with CompositeRenderer
-		centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth"));
+		centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture,  GlSampler.NEAREST, "iris_centerDepthSmooth"));
 
 		Program build = builder.build();
 
@@ -426,7 +433,7 @@ public class FinalPassRenderer {
 				}
 
 				// TODO: Don't duplicate this with FinalPassRenderer
-				centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, "iris_centerDepthSmooth"));
+				centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture,  GlSampler.NEAREST, "iris_centerDepthSmooth"));
 
 				programs[i] = builder.buildCompute();
 

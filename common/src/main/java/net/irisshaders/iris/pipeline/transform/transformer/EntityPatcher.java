@@ -1,13 +1,18 @@
 package net.irisshaders.iris.pipeline.transform.transformer;
 
+import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.abstract_node.ASTNode;
+import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.parser.ParseShape;
+import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
 
@@ -125,7 +130,6 @@ public class EntityPatcher {
 		root.processMatches(t, uniformIntEntityId, ASTNode::detachAndDelete);
 		root.processMatches(t, uniformIntBlockEntityId, ASTNode::detachAndDelete);
 		root.processMatches(t, uniformIntCurrentRenderedItemId, ASTNode::detachAndDelete);
-
 
 		if (parameters.type.glShaderType == ShaderType.GEOMETRY) {
 			root.replaceReferenceExpressions(t, "entityId",

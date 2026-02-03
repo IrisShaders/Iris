@@ -3,7 +3,9 @@ package net.irisshaders.iris.shadows.frustum.fallback;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.phys.AABB;
+import org.joml.FrustumIntersection;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 
@@ -27,6 +29,26 @@ public class NonCullingFrustum extends Frustum implements ViewportProvider, net.
 	}
 
 	@Override
+	public int cubeInFrustum(BoundingBox boundingBox) {
+		return FrustumIntersection.INSIDE;
+	}
+
+	@Override
+	public double getCamX() {
+		return this.position.x;
+	}
+
+	@Override
+	public double getCamY() {
+		return this.position.y;
+	}
+
+	@Override
+	public double getCamZ() {
+		return this.position.z;
+	}
+
+	@Override
 	public void prepare(double d, double e, double f) {
 		this.position.set(d, e, f);
 	}
@@ -39,5 +61,10 @@ public class NonCullingFrustum extends Frustum implements ViewportProvider, net.
 	@Override
 	public boolean testAab(float v, float v1, float v2, float v3, float v4, float v5) {
 		return true;
+	}
+
+	@Override
+	public int intersectAab(float v, float v1, float v2, float v3, float v4, float v5) {
+		return FrustumIntersection.INSIDE;
 	}
 }

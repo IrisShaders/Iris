@@ -6,21 +6,15 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 
-public class IrisParticleRenderTypes {
-	public static final ParticleRenderType OPAQUE_TERRAIN = new ParticleRenderType() {
-		public BufferBuilder begin(Tesselator bufferBuilder, TextureManager textureManager) {
-			// Cutout is handled by the particle shader for us.
-			RenderSystem.disableBlend();
-			RenderSystem.depthMask(true);
-			RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_BLOCKS);
-			return bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
-		}
+import static net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS;
 
-		public String toString() {
-			return "OPAQUE_TERRAIN_SHEET";
-		}
-	};
+public class IrisParticleRenderTypes {
+	public static final SingleQuadParticle.Layer TERRAIN_OPAQUE = new SingleQuadParticle.Layer(false, LOCATION_BLOCKS, RenderPipelines.OPAQUE_PARTICLE);
+
+	//public static final SingleQuadParticle.Layer TERRAIN_OPAQUE = new ParticleRenderType("TERRAIN_OPAQUE", RenderType.opaqueParticle(LOCATION_BLOCKS));
 }

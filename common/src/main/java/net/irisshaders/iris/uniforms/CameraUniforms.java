@@ -40,7 +40,7 @@ public class CameraUniforms {
 	}
 
 	public static Vector3d getUnshiftedCameraPosition() {
-		return JomlConversions.fromVec3(client.gameRenderer.getMainCamera().getPosition());
+		return JomlConversions.fromVec3(client.gameRenderer.getMainCamera().position());
 	}
 
 	public static Vector3f getCameraPositionFract(Vector3d originalPos) {

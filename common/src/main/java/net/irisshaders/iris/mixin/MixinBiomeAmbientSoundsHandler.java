@@ -6,8 +6,9 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.BiomeAmbientSoundsHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.attribute.AmbientMoodSettings;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.biome.AmbientMoodSettings;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,15 +28,15 @@ public class MixinBiomeAmbientSoundsHandler implements BiomeAmbienceInterface {
 
 	@SuppressWarnings("UnresolvedMixinReference")
 	@Inject(method = {
-		"method_26271",
-		"lambda$tick$3"
+		"method_75840",
+		"lambda$tick$1"
 	}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBrightness(Lnet/minecraft/world/level/LightLayer;Lnet/minecraft/core/BlockPos;)I", ordinal = 0), require = 1)
-	private void calculateConstantMoodiness(AmbientMoodSettings ambientMoodSettings, CallbackInfo ci, @Local BlockPos blockPos) {
+	private void calculateConstantMoodiness(Level level, AmbientMoodSettings ambientMoodSettings, CallbackInfo ci, @Local BlockPos blockPos) {
 		int j = this.player.level().getBrightness(LightLayer.SKY, blockPos);
 		if (j > 0) {
-			this.constantMoodiness -= (float) j / (float) this.player.level().getMaxLightLevel() * 0.001F;
+			this.constantMoodiness -= (float) j / (float) 15 * 0.001F;
 		} else {
-			this.constantMoodiness -= (float) (this.player.level().getBrightness(LightLayer.BLOCK, blockPos) - 1) / (float) ambientMoodSettings.getTickDelay();
+			this.constantMoodiness -= (float) (this.player.level().getBrightness(LightLayer.BLOCK, blockPos) - 1) / (float) ambientMoodSettings.tickDelay();
 		}
 
 		this.constantMoodiness = Mth.clamp(constantMoodiness, 0.0f, 1.0f);

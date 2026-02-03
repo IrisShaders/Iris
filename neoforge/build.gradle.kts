@@ -1,6 +1,6 @@
 plugins {
     id("idea")
-    id("net.neoforged.moddev") version "2.0.28-beta"
+    id("net.neoforged.moddev") version "2.0.107"
     id("java-library")
 }
 
@@ -18,9 +18,17 @@ sourceSets {
 }
 
 repositories {
+    mavenLocal()
+    maven {
+        name = "caffeinemcRepositoryReleases"
+        url = uri("https://maven.caffeinemc.net/releases")
+    }
+    maven("https://maven.irisshaders.dev/releases")
+
     maven("https://maven.su5ed.dev/releases")
     maven("https://maven.neoforged.net/releases/")
 
+    maven("https://libraries.minecraft.net/")
     exclusiveContent {
         forRepository {
             maven {
@@ -30,6 +38,14 @@ repositories {
         }
         filter {
             includeGroup("maven.modrinth")
+        }
+    }
+    maven {
+        name = "Maven for PR #2639" // https://github.com/neoforged/NeoForge/pull/2639
+        url = uri("https://prmaven.neoforged.net/NeoForge/pr2639")
+        content {
+            includeModule("net.neoforged", "neoforge")
+            includeModule("net.neoforged", "testframework")
         }
     }
 }
@@ -45,6 +61,56 @@ tasks.jar {
     manifest.attributes["Main-Class"] = "net.irisshaders.iris.LaunchWarn"
 }
 
+tasks.jar.get().destinationDirectory = rootDir.resolve("build").resolve("libs")
+
+neoForge {
+    // Specify the version of NeoForge to use.
+    interfaceInjectionData.from(file("src/main/resources/interface_injections.json"))
+
+    version = NEOFORGE_VERSION
+
+    if (PARCHMENT_VERSION != null) {
+        parchment {
+            minecraftVersion = MINECRAFT_VERSION
+            mappingsVersion = PARCHMENT_VERSION
+        }
+    }
+
+    runs {
+        create("client") {
+            client()
+            jvmArgument("-Dneoforge.disableGlValidation=true")
+            //environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
+        }
+    }
+
+    mods {
+        create("iris") {
+            sourceSet(sourceSets.main.get())
+        }
+    }
+}
+
+fun includeDep(dependency: String, closure: Action<ExternalModuleDependency>) {
+    dependencies.implementation(dependency, closure)
+    dependencies.jarJar(dependency, closure)
+}
+
+fun includeDep(dependency: String) {
+    dependencies.implementation(dependency)
+    dependencies.jarJar(dependency)
+}
+
+fun includeAdditional(dependency: String) {
+    includeDep(dependency)
+    dependencies {
+        "additionalRuntimeClasspath"(dependency)
+    }
+}
+
+tasks.named("compileTestJava").configure {
+    enabled = false
+}
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code
 val notNeoTask: (Task) -> Boolean = { it: Task -> !it.name.startsWith("neo") && !it.name.startsWith("compileService") }
 
@@ -63,52 +129,6 @@ tasks.withType<ProcessResources>().matching(notNeoTask).configureEach {
     from(project(":common").sourceSets.main.get().resources)
 }
 
-tasks.jar.get().destinationDirectory = rootDir.resolve("build").resolve("libs")
-
-neoForge {
-    // Specify the version of NeoForge to use.
-    version = NEOFORGE_VERSION
-
-    if (PARCHMENT_VERSION != null) {
-        parchment {
-            minecraftVersion = MINECRAFT_VERSION
-            mappingsVersion = PARCHMENT_VERSION
-        }
-    }
-
-    runs {
-        create("client") {
-            client()
-            environment("LD_PRELOAD", "/usr/lib/librenderdoc.so")
-        }
-    }
-
-    mods {
-        create("sodium") {
-            sourceSet(sourceSets.main.get())
-        }
-    }
-}
-
-fun includeDep(dependency: String, closure: Action<ExternalModuleDependency>) {
-    dependencies.implementation(dependency, closure)
-    dependencies.jarJar(dependency, closure)
-}
-
-fun includeDep(dependency: String) {
-    dependencies.implementation(dependency)
-    dependencies.jarJar(dependency)
-}
-
-fun includeAdditional(dependency: String) {
-    includeDep(dependency)
-    dependencies.additionalRuntimeClasspath(dependency)
-}
-
-tasks.named("compileTestJava").configure {
-    enabled = false
-}
-
 dependencies {
     compileOnly(files(rootDir.resolve("DHApi.jar")))
 
@@ -116,14 +136,14 @@ dependencies {
     compileOnly(project.project(":common").sourceSets.getByName("vendored").output)
     compileOnly(project.project(":common").sourceSets.getByName("headers").output)
     compileOnly(project.project(":common").sourceSets.getByName("api").output)
-    includeDep("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
-    includeDep("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.0+acb05a3919")
-    includeDep("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
-    includeDep("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
+   /// runtimeOnly("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
+   // runtimeOnly("net.caffeinemc:fabric-renderer-api-v1:6.0.0")
 
-    implementation(SODIUM_DEPENDENCY_NEO)
-    includeAdditional("io.github.douira:glsl-transformer:2.0.1")
+    compileOnly(SODIUM_DEPENDENCY_NEO)
+    runtimeOnly((SODIUM_DEPENDENCY_NEO as String).replace("-mod", ""))
+    includeAdditional("io.github.douira:glsl-transformer:3.0.0-pre3")
     includeAdditional("org.anarres:jcpp:1.4.14")
+    includeAdditional("org.antlr:antlr4-runtime:4.13.1")
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)

@@ -1,11 +1,12 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version "1.7.3"
+    id("fabric-loom") version "1.14.4"
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
 repositories {
+    mavenLocal()
     maven("https://maven.parchmentmc.org/")
 
     exclusiveContent {
@@ -61,10 +62,17 @@ dependencies {
 
     modImplementation(SODIUM_DEPENDENCY_FABRIC)
     modCompileOnly("org.antlr:antlr4-runtime:4.13.1")
-    modCompileOnly("io.github.douira:glsl-transformer:2.0.1")
+    modCompileOnly("io.github.douira:glsl-transformer:3.0.0-pre3")
     modCompileOnly("org.anarres:jcpp:1.4.14")
 
     compileOnly(files(rootDir.resolve("DHApi.jar")))
+}
+
+afterEvaluate {
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.add("-Xmaxerrs")
+        options.compilerArgs.add("2000")
+    }
 }
 
 sourceSets {
@@ -112,7 +120,7 @@ sourceSets {
 loom {
     mixin {
         defaultRefmapName = "iris.refmap.json"
-        useLegacyMixinAp = true
+        useLegacyMixinAp = false
     }
 
     accessWidenerPath = file("src/main/resources/iris.accesswidener")
@@ -126,6 +134,11 @@ loom {
 }
 
 tasks {
+    processResources {
+        filesMatching("fabric.mod.json") {
+            expand(mapOf("version" to project.version))
+        }
+    }
     getByName<JavaCompile>("compileDesktopJava") {
         sourceCompatibility = JavaVersion.VERSION_1_8.toString()
         targetCompatibility = JavaVersion.VERSION_1_8.toString()

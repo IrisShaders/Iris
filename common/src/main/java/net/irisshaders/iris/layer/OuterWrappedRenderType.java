@@ -1,57 +1,40 @@
 package net.irisshaders.iris.layer;
 
-import net.irisshaders.batchedentityrendering.impl.BlendingStateHolder;
-import net.irisshaders.batchedentityrendering.impl.TransparencyType;
-import net.irisshaders.batchedentityrendering.impl.WrappableRenderType;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.mixin.rendertype.RenderTypeAccessor;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
 
-public class OuterWrappedRenderType extends RenderType implements WrappableRenderType, BlendingStateHolder {
-	private final RenderStateShard extra;
+public class OuterWrappedRenderType extends RenderType {
+	private static final RenderSetup FAKE_SETUP = RenderSetup.builder(RenderPipelines.GUI_TEXTURED).createRenderSetup();
+	private final RenderingWrapper extra;
 	private final RenderType wrapped;
 
-	public OuterWrappedRenderType(String name, RenderType wrapped, RenderStateShard extra) {
-		super(name, wrapped.format(), wrapped.mode(), wrapped.bufferSize(),
-			wrapped.affectsCrumbling(), shouldSortOnUpload(wrapped), wrapped::setupRenderState, wrapped::clearRenderState);
+	public OuterWrappedRenderType(String name, RenderType wrapped, RenderingWrapper extra) {
+		super(name, FAKE_SETUP);
 
 		this.extra = extra;
 		this.wrapped = wrapped;
 	}
 
-	public static OuterWrappedRenderType wrapExactlyOnce(String name, RenderType wrapped, RenderStateShard extra) {
-		if (wrapped instanceof OuterWrappedRenderType) {
+	public static OuterWrappedRenderType wrapExactlyOnce(String name, RenderType wrapped, RenderingWrapper extra) {
+		while (wrapped instanceof OuterWrappedRenderType) {
 			wrapped = ((OuterWrappedRenderType) wrapped).unwrap();
 		}
 
 		return new OuterWrappedRenderType(name, wrapped, extra);
 	}
 
-	private static boolean shouldSortOnUpload(RenderType type) {
-		return ((RenderTypeAccessor) type).shouldSortOnUpload();
-	}
-
-	@Override
-	public void setupRenderState() {
-		extra.setupRenderState();
-
-		super.setupRenderState();
-	}
-
-	@Override
-	public void clearRenderState() {
-		super.clearRenderState();
-
-		extra.clearRenderState();
-	}
-
-	@Override
-	public RenderType unwrap() {
-		return this.wrapped;
+	private RenderType unwrap() {
+		return wrapped;
 	}
 
 	@Override
@@ -62,6 +45,58 @@ public class OuterWrappedRenderType extends RenderType implements WrappableRende
 	@Override
 	public boolean isOutline() {
 		return this.wrapped.isOutline();
+	}
+
+	@Override
+	public RenderPipeline pipeline() {
+		return wrapped.pipeline();
+	}
+
+	@Override
+	public void draw(MeshData meshData) {
+		extra.setup();
+		wrapped.draw(meshData);
+		extra.clear();
+	}
+
+	@Override
+	public boolean sortOnUpload() {
+		return wrapped.sortOnUpload();
+	}
+
+	@Override
+	public RenderPipeline iris$getPipeline() {
+		return wrapped.iris$getPipeline();
+	}
+
+	@Override
+	public RenderTarget iris$getRenderTarget() {
+		return wrapped.iris$getRenderTarget();
+	}
+
+	@Override
+	public boolean canConsolidateConsecutiveGeometry() {
+		return wrapped.canConsolidateConsecutiveGeometry();
+	}
+
+	@Override
+	public boolean affectsCrumbling() {
+		return wrapped.affectsCrumbling();
+	}
+
+	@Override
+	public int bufferSize() {
+		return wrapped.bufferSize();
+	}
+
+	@Override
+	public VertexFormat format() {
+		return wrapped.format();
+	}
+
+	@Override
+	public VertexFormat.Mode mode() {
+		return wrapped.mode();
 	}
 
 	@Override
@@ -79,6 +114,8 @@ public class OuterWrappedRenderType extends RenderType implements WrappableRende
 		return Objects.equals(this.wrapped, other.wrapped) && Objects.equals(this.extra, other.extra);
 	}
 
+
+
 	@Override
 	public int hashCode() {
 		// Add one so that we don't have the exact same hash as the wrapped object.
@@ -89,15 +126,5 @@ public class OuterWrappedRenderType extends RenderType implements WrappableRende
 	@Override
 	public String toString() {
 		return "iris_wrapped:" + this.wrapped.toString();
-	}
-
-	@Override
-	public TransparencyType getTransparencyType() {
-		return ((BlendingStateHolder) wrapped).getTransparencyType();
-	}
-
-	@Override
-	public void setTransparencyType(TransparencyType transparencyType) {
-		((BlendingStateHolder) wrapped).setTransparencyType(transparencyType);
 	}
 }

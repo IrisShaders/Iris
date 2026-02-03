@@ -13,7 +13,7 @@ import java.util.Optional;
 public enum InternalTextureFormat {
 	// Default
 	// TODO: This technically shouldn't be exposed to shaders since it's not in the specification, it's the default anyways
-	RGBA(GL11C.GL_RGBA, GlVersion.GL_11, PixelFormat.RGBA),
+	RGBA(GL11C.GL_RGBA8, GlVersion.GL_11, PixelFormat.RGBA),
 	// 8-bit normalized
 	R8(GL30C.GL_R8, GlVersion.GL_30, PixelFormat.RED),
 	RG8(GL30C.GL_RG8, GlVersion.GL_30, PixelFormat.RG),

@@ -5,19 +5,21 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
+import java.util.Optional;
+
 @Mixin(AnimationMetadataSection.class)
 public interface AnimationMetadataSectionAccessor {
 	@Accessor("frameWidth")
-	int getFrameWidth();
+	Optional<Integer> getFrameWidth();
 
 	@Mutable
 	@Accessor("frameWidth")
-	void setFrameWidth(int frameWidth);
+	void setFrameWidth(Optional<Integer> frameWidth);
 
 	@Accessor("frameHeight")
-	int getFrameHeight();
+	Optional<Integer> getFrameHeight();
 
 	@Mutable
 	@Accessor("frameHeight")
-	void setFrameHeight(int frameHeight);
+	void setFrameHeight(Optional<Integer> frameHeight);
 }

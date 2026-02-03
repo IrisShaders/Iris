@@ -1,18 +1,34 @@
 package net.irisshaders.iris.pipeline.programs;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlBuffer;
+import com.mojang.blaze3d.opengl.GlSampler;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.AddressMode;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import net.caffeinemc.mods.sodium.client.gl.device.GLRenderDevice;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformBool;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat2v;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
+import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformInt;
 import net.caffeinemc.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.caffeinemc.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
+import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.impl.CompactChunkVertex;
+import net.caffeinemc.mods.sodium.client.util.FogParameters;
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendOverride;
+import net.irisshaders.iris.gl.blending.DepthColorStorage;
 import net.irisshaders.iris.gl.program.ProgramImages;
 import net.irisshaders.iris.gl.program.ProgramSamplers;
 import net.irisshaders.iris.gl.program.ProgramUniforms;
@@ -26,11 +42,14 @@ import net.irisshaders.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.TextureFilteringMethod;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL33C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.List;
 import java.util.Locale;
@@ -54,12 +73,19 @@ public class SodiumShader implements ChunkShaderInterface {
 	private final List<BufferBlendOverride> bufferBlendOverrides;
 	private final float alphaTest;
 	private final boolean containsTessellation;
+	private final boolean anisotropySupported;
+	private boolean isShadowPass;
+	private final GlUniformFloat2v uniformTexelSize;
+	private final GlUniformInt uniformCurrentTime;
+
+	private final GlUniformBlock uniformChunkData;
 
 	public SodiumShader(IrisRenderingPipeline pipeline, SodiumPrograms.Pass pass, ShaderBindingContext context,
 						int handle, BlendModeOverride blendModeOverride,
 						List<BufferBlendOverride> bufferBlendOverrides,
 						CustomUniforms customUniforms, Supplier<ImmutableSet<Integer>> flipState, float alphaTest,
 						boolean containsTessellation) {
+		this.anisotropySupported = pipeline.hasFeature(FeatureFlags.TEXTURE_FILTERING);
 		this.uniformModelViewMatrix = context.bindUniformOptional("iris_ModelViewMatrix", GlUniformMatrix4f::new);
 		this.uniformModelViewMatrixInv = context.bindUniformOptional("iris_ModelViewMatrixInverse", GlUniformMatrix4f::new);
 		this.uniformNormalMatrix = context.bindUniformOptional("iris_NormalMatrix", GlUniformMatrix3f::new);
@@ -68,10 +94,15 @@ public class SodiumShader implements ChunkShaderInterface {
 		this.uniformRegionOffset = context.bindUniformOptional("u_RegionOffset", GlUniformFloat3v::new);
 		this.uniformTexCoordShrink = context.bindUniformOptional("u_TexCoordShrink", GlUniformFloat2v::new);
 
+		this.uniformCurrentTime = context.bindUniformOptional("iris_CurrentTime", GlUniformInt::new);
+		this.uniformTexelSize = context.bindUniformOptional("iris_TexelSize", GlUniformFloat2v::new);
+
+		this.uniformChunkData = context.bindUniformBlockOptional("iris_ChunkData", 0);
+
 		this.alphaTest = alphaTest;
 		this.containsTessellation = containsTessellation;
 
-		boolean isShadowPass = pass == SodiumPrograms.Pass.SHADOW || pass == SodiumPrograms.Pass.SHADOW_CUTOUT;
+		isShadowPass = pass == SodiumPrograms.Pass.SHADOW || pass == SodiumPrograms.Pass.SHADOW_CUTOUT;
 
 		this.uniforms = buildUniforms(pass, handle, customUniforms);
 		this.customUniforms = customUniforms;
@@ -115,6 +146,12 @@ public class SodiumShader implements ChunkShaderInterface {
 	}
 
 	@Override
+	public void setChunkData(net.caffeinemc.mods.sodium.client.gl.buffer.GlBuffer data, int time) {
+		if (uniformChunkData != null) uniformChunkData.bindBuffer(data);
+		if (uniformCurrentTime != null) uniformCurrentTime.set(time);
+	}
+
+	@Override
 	public void setModelViewMatrix(Matrix4fc matrix) {
 		if (uniformModelViewMatrix != null) {
 			uniformModelViewMatrix.set(matrix);
@@ -146,11 +183,20 @@ public class SodiumShader implements ChunkShaderInterface {
 	}
 
 	@Override
-	public void setupState() {
+	public void setupState(TerrainRenderPass pass, FogParameters fogParameters, GpuSampler gpuSampler) {
+		DepthColorStorage.unlockDepthColor();
+
 		applyBlendModes();
+		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline irp) {
+			irp.onSetAlbedoTex(pass.getAtlas());
+		}
 		updateUniforms();
 		images.update();
-		bindTextures();
+
+
+		if (isShadowPass) {
+			GlStateManager._disableCull();
+		}
 
 		var textureAtlas = Minecraft.getInstance()
 			.getTextureManager()
@@ -169,14 +215,32 @@ public class SodiumShader implements ChunkShaderInterface {
 			);
 		}
 
+		if (uniformTexelSize != null) {
+			this.uniformTexelSize.set(
+				(float) (1.0d / textureAtlas.getTexture().getWidth(0)),
+				(float) (1.0d / textureAtlas.getTexture().getHeight(0))
+			);
+		}
+
+		int maxAnisotropy = Minecraft.getInstance().options.textureFiltering().get() == TextureFilteringMethod.ANISOTROPIC
+			? Minecraft.getInstance().options.maxAnisotropyValue()
+			: 1;
+		bindTextures(pass.getAtlas(), (GlSampler) IrisSamplers.getTerrainCache(maxAnisotropy)); // oh no
+
 		if (containsTessellation) {
 			ImmediateState.usingTessellation = true;
 		}
 	}
 
-	private void bindTextures() {
-		IrisRenderSystem.bindTextureToUnit(GL20C.GL_TEXTURE_2D, 0, RenderSystem.getShaderTexture(0));
-		IrisRenderSystem.bindTextureToUnit(GL20C.GL_TEXTURE_2D, 2, RenderSystem.getShaderTexture(2));
+	private void bindTextures(GpuTextureView atlas, GlSampler sampler) {
+		IrisRenderSystem.bindTextureToUnit(GL20C.GL_TEXTURE_2D, 0, atlas.texture().iris$getGlId());
+		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
+		GlStateManager._texParameter(3553, 33084, atlas.baseMipLevel());
+		GlStateManager._texParameter(3553, 33085, atlas.baseMipLevel() + atlas.mipLevels() - 1);
+		GL33C.glBindSampler(0, sampler.getId());
+
+		GpuTextureView lightmap = Minecraft.getInstance().gameRenderer.lightTexture().getTextureView();
+		IrisRenderSystem.bindTextureToUnit(GL20C.GL_TEXTURE_2D, 2, lightmap.texture().iris$getGlId());
 		GlStateManager._activeTexture(GL20C.GL_TEXTURE0 + IrisSamplers.LIGHTMAP_TEXTURE_UNIT);
 	}
 
@@ -193,13 +257,11 @@ public class SodiumShader implements ChunkShaderInterface {
 		uniforms.update();
 		customUniforms.push(this);
 	}
-
 	@Override
 	public void resetState() {
 		ProgramUniforms.clearActiveUniforms();
 		ProgramSamplers.clearActiveSamplers();
 		BlendModeOverride.restore();
-		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 		ImmediateState.usingTessellation = false;
 	}
 }

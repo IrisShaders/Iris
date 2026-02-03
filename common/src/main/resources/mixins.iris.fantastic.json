@@ -6,9 +6,13 @@
   "plugin": "net.irisshaders.iris.mixin.IrisMixinPlugin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "FeatureRenderDispatcherAccessor",
     "MixinFireworkSparkParticle",
     "MixinStationaryItemParticle",
-    "MixinTerrainParticle"
+    "MixinTerrainParticle",
+    "MixinParticleFeatureRenderer",
+    "MixinParticlesRenderState",
+    "MixinLevelRenderer"
   ],
   "injectors": {
     "defaultRequire": 1
