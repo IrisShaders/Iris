@@ -6,6 +6,7 @@
   "plugin": "net.irisshaders.iris.mixin.IrisMixinPlugin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "CloudRendererAccessor",
     "DimensionTypeAccessor",
     "EndFlashAccess",
     "GameRendererAccessor",
