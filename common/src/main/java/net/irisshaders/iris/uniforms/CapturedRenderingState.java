@@ -6,6 +6,7 @@ import org.joml.Matrix4fc;
 import org.joml.Vector3d;
 
 public class CapturedRenderingState {
+
 	public static final CapturedRenderingState INSTANCE = new CapturedRenderingState();
 
 	private static final Vector3d ZERO_VECTOR_3d = new Vector3d();
@@ -21,12 +22,12 @@ public class CapturedRenderingState {
 
 	private int currentRenderedEntity = -1;
 	private int currentRenderedItem = -1;
+	private int textureReloadCount = 0;
 
 	private float currentAlphaTest;
 	private float cloudTime;
 
-	private CapturedRenderingState() {
-	}
+	private CapturedRenderingState() {}
 
 	public Matrix4fc getGbufferModelView() {
 		return gbufferModelView;
@@ -126,5 +127,17 @@ public class CapturedRenderingState {
 
 	public void setCloudTime(float cloudTime) {
 		this.cloudTime = cloudTime;
+	}
+
+	public int getTextureReloadCount() {
+		return textureReloadCount;
+	}
+
+	public void incrementTextureReloadCount() {
+		this.textureReloadCount++;
+	}
+
+	public void resetTextureReloadCount() {
+		this.textureReloadCount = 0;
 	}
 }

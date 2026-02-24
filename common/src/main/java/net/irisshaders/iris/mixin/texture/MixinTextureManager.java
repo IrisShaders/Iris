@@ -2,6 +2,7 @@ package net.irisshaders.iris.mixin.texture;
 
 import net.irisshaders.iris.pbr.format.TextureFormatLoader;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
+import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Final;
@@ -30,6 +31,7 @@ public class MixinTextureManager {
 	private void iris$onTailReloadLambda(List list, Void void_, CallbackInfo ci) {
 		TextureFormatLoader.reload(this.resourceManager);
 		PBRTextureManager.INSTANCE.clear();
+		CapturedRenderingState.INSTANCE.incrementTextureReloadCount();
 	}
 
 	@Inject(method = "dumpAllSheets(Ljava/nio/file/Path;)V", at = @At("RETURN"))

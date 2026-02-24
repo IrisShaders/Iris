@@ -31,6 +31,7 @@ import net.irisshaders.iris.shaderpack.option.Profile;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import net.irisshaders.iris.shaderpack.option.values.OptionValues;
 import net.irisshaders.iris.shaderpack.programs.ProgramSet;
+import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.vertices.sodium.EntityToTerrainVertexSerializer;
 import net.irisshaders.iris.vertices.sodium.GlyphExtVertexSerializer;
@@ -564,6 +565,9 @@ public class Iris {
 	public static void reload() throws IOException {
 		// allows shaderpacks to be changed at runtime
 		irisConfig.initialize();
+
+		// Reset the texture reload counter
+		CapturedRenderingState.INSTANCE.resetTextureReloadCount();
 
 		// Destroy all allocated resources
 		destroyEverything();
