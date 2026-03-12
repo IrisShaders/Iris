@@ -103,6 +103,8 @@ public final class CelestialUniforms {
 
 	private Vector4f getEndFlashPosition() {
 		EndFlashState state = Minecraft.getInstance().level.endFlashState();
+		if (state == null) return ZERO;
+
 		float h = state.getYAngle(); // yaw around Y
 		float g = state.getXAngle(); // this feels silly
 
