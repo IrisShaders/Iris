@@ -22,6 +22,7 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.client.resources.metadata.animation.FrameSize;
+import net.minecraft.client.resources.metadata.texture.TextureMetadataSection;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -180,7 +181,7 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		protected final PBRType pbrType;
 
 		public PBRSpriteContents(Identifier name, FrameSize size, NativeImage image, ResourceMetadata metadata, PBRType pbrType) {
-			super(name, size, image);
+			super(name, size, image, metadata.getSection(AnimationMetadataSection.TYPE), List.of(), metadata.getSection(TextureMetadataSection.TYPE));
 			this.pbrType = pbrType;
 		}
 

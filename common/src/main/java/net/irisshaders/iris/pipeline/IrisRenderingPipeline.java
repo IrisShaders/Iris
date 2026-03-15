@@ -840,7 +840,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	@Override
 	public int getCurrentSpecularTexture() {
-		return currentNormalTexture == null ? 0 : currentSpecularTexture.getTexture().iris$getGlId();
+		return currentSpecularTexture == null ? 0 : currentSpecularTexture.getTexture().iris$getGlId();
 	}
 
 	@Override
