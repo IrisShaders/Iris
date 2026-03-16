@@ -143,7 +143,7 @@ public class IrisPipelines {
 
 		if (HandRenderer.INSTANCE.isActive()) {
 			// In 1.21.11+, held map uses this.
-			return (ShaderKey.HAND_TEXT);
+			return (HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_TEXT : ShaderKey.HAND_TEXT_TRANSLUCENT);
 		} else if (isBlockEntities(pipeline)) {
 			return (ShaderKey.TEXT_BE);
 		} else {
