@@ -55,9 +55,9 @@ public class BlendModeStorage {
 		} else {
 			IrisRenderSystem.enableBufferBlend(index);
 			IrisRenderSystem.blendFuncSeparatei(index, override.srcRgb(), override.dstRgb(), override.srcAlpha(), override.dstAlpha());
-			blendUnknown = true;
 		}
 
+		blendUnknown = true;
 		blendLocked = true;
 	}
 
