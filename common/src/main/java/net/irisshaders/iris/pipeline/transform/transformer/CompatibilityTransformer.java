@@ -48,7 +48,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -173,7 +172,7 @@ public class CompatibilityTransformer {
 		 */
 		Map<FunctionDefinition, Set<String>> constFunctions = new HashMap<>();
 		Set<String> processingSet = new HashSet<>();
-		List<FunctionDefinition> unusedFunctions = new LinkedList<>();
+		List<FunctionDefinition> unusedFunctions = new ArrayList<>();
 		for (FunctionDefinition definition : root.nodeIndex.get(FunctionDefinition.class)) {
 			// check if this function is ever used
 			FunctionPrototype prototype = definition.getFunctionPrototype();

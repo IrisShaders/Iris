@@ -45,13 +45,14 @@ import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import org.apache.commons.io.input.CharSequenceReader;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -120,16 +121,16 @@ public class ShaderPack {
 		dimensionIds = new ArrayList<>();
 		bufferObjects = new Int2ObjectArrayMap<>();
 
-		final boolean[] hasDimensionIds = {false}; // Thanks Java
+		MutableBoolean hasDimensionIds = new MutableBoolean(false); // Thanks Java
 
 		// This cannot be done in IDMap, as we do not have the include graph, and subsequently the shader settings.
 		List<String> dimensionIdCreator = loadProperties(root, "dimension.properties", environmentDefines).map(dimensionProperties -> {
-			hasDimensionIds[0] = !dimensionProperties.isEmpty();
+			hasDimensionIds.setValue(!dimensionProperties.isEmpty());
 			dimensionMap = parseDimensionMap(dimensionProperties, "dimension.", "dimension.properties");
 			return parseDimensionIds(dimensionProperties, "dimension.");
-		}).orElse(new ArrayList<>());
+		}).orElseGet(ArrayList::new);
 
-		if (!hasDimensionIds[0]) {
+		if (!hasDimensionIds.get()) {
 			dimensionMap = new Object2ObjectArrayMap<>();
 
 			if (Files.exists(root.resolve("world0"))) {
@@ -375,7 +376,7 @@ public class ShaderPack {
 
 		String processed = PropertiesPreprocessor.preprocessSource(fileContents, environmentDefines);
 
-		StringReader propertiesReader = new StringReader(processed);
+		CharSequenceReader propertiesReader = new CharSequenceReader(processed);
 
 		// Note: ordering of properties is significant
 		// See https://github.com/IrisShaders/Iris/issues/1327 and the relevant putIfAbsent calls in
