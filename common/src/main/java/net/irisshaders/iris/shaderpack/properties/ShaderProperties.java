@@ -468,7 +468,14 @@ public class ShaderProperties {
 					} else if (parts.length == 7) {
 						// 2D texture handling
 						type = TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT));
-						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+						TextureDefinition definition = new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new));
+						if(type == TextureType.TEXTURE_2D) {
+							customTexAmount--;
+							customTextures.computeIfAbsent(stage, _stage -> new Object2ObjectOpenHashMap<>())
+								.put(samplerName, definition);
+							return;
+						}
+						irisCustomTextures.put(newSamplerName, definition);
 					} else if (parts.length == 8) {
 						// 3D texture handling
 						type = TextureType.TEXTURE_3D;
