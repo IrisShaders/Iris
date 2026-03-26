@@ -1,6 +1,7 @@
 package net.irisshaders.iris.shadows;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.irisshaders.iris.Iris;
@@ -19,11 +20,12 @@ public class ShadowMatrices {
 
 	public static Matrix4f createOrthoMatrix(float halfPlaneLength, float nearPlane, float farPlane) {
 		//System.out.println("making a matrix with " + nearPlane + " / " + farPlane + " * " + halfPlaneLength);
-		return new Matrix4f().setOrthoSymmetric(halfPlaneLength * 2, halfPlaneLength * 2, nearPlane, farPlane);
+		return new Matrix4f().setOrthoSymmetric(halfPlaneLength * 2, halfPlaneLength * 2, nearPlane, farPlane, RenderSystem.getDevice().isZZeroToOne());
 	}
 
 	public static Matrix4f createPerspectiveMatrix(float fov) {
 		// This converts from degrees to radians.
+		boolean zZeroToOne = RenderSystem.getDevice().isZZeroToOne();
 		float yScale = (float) (1.0f / Math.tan(Math.toRadians(fov) * 0.5f));
 		return new Matrix4f(
 			// column 1
@@ -31,9 +33,9 @@ public class ShadowMatrices {
 			// column 2
 			0f, yScale, 0f, 0f,
 			// column 3
-			0f, 0f, (FAR + NEAR) / (NEAR - FAR), -1.0F,
+			0f, 0f,  (zZeroToOne ? FAR : (FAR + NEAR)) / (NEAR - FAR), -1.0F,
 			// column 4
-			0f, 0f, 2.0F * FAR * NEAR / (NEAR - FAR), 1f
+			0f, 0f, (RenderSystem.getDevice().isZZeroToOne() ? FAR : (2.0F * FAR)) * NEAR / (NEAR - FAR), 1f
 		);
 	}
 
