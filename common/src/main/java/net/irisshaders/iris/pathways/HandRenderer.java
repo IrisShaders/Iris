@@ -32,6 +32,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
@@ -81,8 +82,8 @@ public class HandRenderer {
 			|| Minecraft.getInstance().gameMode.getPlayerMode() == GameType.SPECTATOR);
 	}
 
-	public boolean isHandTranslucent(InteractionHand hand) {
-		Item item = Minecraft.getInstance().player.getItemBySlot(hand == InteractionHand.OFF_HAND ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND).getItem();
+	public boolean isHandTranslucent(ItemStack itemStack) {
+		Item item = itemStack.getItem();
 
 		if (item instanceof BlockItem) {
 			return Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(((BlockItem) item).getBlock().defaultBlockState()).hasMaterialFlag(BakedQuad.FLAG_TRANSLUCENT);
@@ -91,12 +92,8 @@ public class HandRenderer {
 		return false;
 	}
 
-	public boolean isAnyHandTranslucent() {
-		return isHandTranslucent(InteractionHand.MAIN_HAND) || isHandTranslucent(InteractionHand.OFF_HAND);
-	}
-
 	public void renderSolid(Matrix4fc modelMatrix, float tickDelta, Camera camera, CameraRenderState cameraState, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if (!canRender(camera, gameRenderer) || !Iris.isPackInUseQuick()) {
+		if (!canRender(camera, gameRenderer) || !gameRenderer.itemInHandRenderer.iris$isAnyHandSolid() || !Iris.isPackInUseQuick()) {
 			return;
 		}
 
@@ -134,7 +131,7 @@ public class HandRenderer {
 	}
 
 	public void renderTranslucent(Matrix4fc modelMatrix, float tickDelta, Camera camera, CameraRenderState cameraState, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if (!canRender(camera, gameRenderer) || !isAnyHandTranslucent() || !Iris.isPackInUseQuick()) {
+		if (!canRender(camera, gameRenderer) || !gameRenderer.itemInHandRenderer.iris$isAnyHandTranslucent() || !Iris.isPackInUseQuick()) {
 			submitNodeCollector.endFrame();
 			return;
 		}

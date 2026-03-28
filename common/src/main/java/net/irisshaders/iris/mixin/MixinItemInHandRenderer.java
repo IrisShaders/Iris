@@ -32,9 +32,7 @@ public abstract class MixinItemInHandRenderer implements ItemInHandInterface {
 	@Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
 	private void iris$skipTranslucentHands(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float h, ItemStack itemStack, float i, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int j, CallbackInfo ci) {
 		if (Iris.isPackInUseQuick()) {
-			if (HandRenderer.INSTANCE.isRenderingSolid() && HandRenderer.INSTANCE.isHandTranslucent(interactionHand)) {
-				ci.cancel();
-			} else if (!HandRenderer.INSTANCE.isRenderingSolid() && !HandRenderer.INSTANCE.isHandTranslucent(interactionHand)) {
+			if (HandRenderer.INSTANCE.isRenderingSolid() == HandRenderer.INSTANCE.isHandTranslucent(itemStack)) {
 				ci.cancel();
 			}
 		}
@@ -62,5 +60,20 @@ public abstract class MixinItemInHandRenderer implements ItemInHandInterface {
 		} else {
 			customRenderer.endRender();
 		}
+	}
+
+	@Shadow
+	private ItemStack mainHandItem;
+	@Shadow
+	private ItemStack offHandItem;
+
+	@Override
+	public boolean iris$isAnyHandTranslucent () {
+		return HandRenderer.INSTANCE.isHandTranslucent(mainHandItem) || HandRenderer.INSTANCE.isHandTranslucent(offHandItem);
+	}
+
+	@Override
+	public boolean iris$isAnyHandSolid () {
+		return !(HandRenderer.INSTANCE.isHandTranslucent(mainHandItem) && HandRenderer.INSTANCE.isHandTranslucent(offHandItem));
 	}
 }
