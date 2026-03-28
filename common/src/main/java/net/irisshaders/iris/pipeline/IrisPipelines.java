@@ -98,6 +98,8 @@ public class IrisPipelines {
 		assignToShadow(RenderPipelines.ITEM_CUTOUT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.ITEM_TRANSLUCENT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.ENTITY_TRANSLUCENT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
+		assignToShadow(RenderPipelines.ENTITY_CUTOUT_DISSOLVE, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
+		assignToShadow(RenderPipelines.ENTITY_TRANSLUCENT_CULL, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.END_CRYSTAL_BEAM, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.ENTITY_CUTOUT_Z_OFFSET, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.ENTITY_TRANSLUCENT_EMISSIVE, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
@@ -128,6 +130,9 @@ public class IrisPipelines {
 		assignToShadow(RenderPipelines.END_GATEWAY, p -> ShaderKey.SHADOW_BLOCK);
 		assignToShadow(RenderPipelines.ARMOR_TRANSLUCENT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.LIGHTNING, p -> ShaderKey.SHADOW_LIGHTNING);
+		assignToShadow(RenderPipelines.DRAGON_RAYS, p -> ShaderKey.SHADOW_LIGHTNING);
+		assignToShadow(RenderPipelines.DRAGON_RAYS_DEPTH, p -> ShaderKey.SHADOW_LIGHTNING);
+
 		// Check that all shaders are accounted for
 		//for (RenderPipeline pipeline : RenderPipelines.getStaticPipelines()) {
 		//	if (coreShaderMap.containsKey(pipeline) && !coreShaderMapShadow.containsKey(pipeline)) {
