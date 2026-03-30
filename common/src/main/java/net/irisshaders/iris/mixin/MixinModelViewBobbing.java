@@ -19,6 +19,7 @@ import net.minecraft.world.effect.MobEffects;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -71,6 +72,26 @@ public abstract class MixinModelViewBobbing {
 		}
 
 		this.bobStack = new Matrix4f(right);
+		return instance;
+	}
+
+	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;rotate(FLorg/joml/Vector3fc;)Lorg/joml/Matrix4f;"))
+	private Matrix4f iris$applySpinningRotate(Matrix4f instance, float angle, Vector3fc axis, Operation<Matrix4f> original) {
+		if (!areShadersOn) {
+			return original.call(instance, angle, axis);
+		}
+
+		((Matrix4f) bobStack).rotate(angle, axis);
+		return instance;
+	}
+
+	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;scale(FFF)Lorg/joml/Matrix4f;"))
+	private Matrix4f iris$applySpinningScale(Matrix4f instance, float x, float y, float z, Operation<Matrix4f> original) {
+		if (!areShadersOn) {
+			return original.call(instance, x, y, z);
+		}
+		
+		((Matrix4f) bobStack).scale(x, y, z);
 		return instance;
 	}
 
