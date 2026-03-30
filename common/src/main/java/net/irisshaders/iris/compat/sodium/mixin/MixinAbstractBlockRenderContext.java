@@ -1,7 +1,5 @@
 package net.irisshaders.iris.compat.sodium.mixin;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
@@ -15,10 +13,12 @@ import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 
@@ -46,35 +46,32 @@ public class MixinAbstractBlockRenderContext {
 		}
 	}
 
-	@WrapOperation(
+	@ModifyArg(
 		method = "bufferDefaultModel",
 		at = @At(
 			value = "INVOKE",
 			target = "Lnet/caffeinemc/mods/sodium/client/render/model/MutableQuadViewImpl;setRenderType(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayer;)Lnet/caffeinemc/mods/sodium/client/render/model/MutableQuadViewImpl;"
 		)
 	)
-	private MutableQuadViewImpl handleShaderPackTransparency(
-		MutableQuadViewImpl instance,
-		ChunkSectionLayer renderLayer,
-		Operation<MutableQuadViewImpl> original
+	private @Nullable ChunkSectionLayer handleShaderPackTransparency(
+		@Nullable ChunkSectionLayer renderLayer
 	) {
-		if ((Object)this instanceof BlockRenderer && WorldRenderingSettings.INSTANCE.getBlockTypeIds() != null) {
-			BlockState state = this.state;
-			if (state == null) {
-				return original.call(instance, renderLayer);
-			}
-			BlockRenderType blockRenderType = WorldRenderingSettings.INSTANCE.getBlockTypeIds().get(state.getBlock());
-			if (blockRenderType == null) {
-				return original.call(instance, renderLayer);
-			}
-			ChunkSectionLayer layer = switch (blockRenderType) {
-				case SOLID -> ChunkSectionLayer.SOLID;
-				case CUTOUT,CUTOUT_MIPPED -> ChunkSectionLayer.CUTOUT;
-				case TRANSLUCENT -> ChunkSectionLayer.TRANSLUCENT;
-			};
-			return original.call(instance, layer);
+		if (!((Object) this instanceof BlockRenderer) || WorldRenderingSettings.INSTANCE.getBlockTypeIds() == null) {
+			return renderLayer;
 		}
-		return original.call(instance, renderLayer);
+		BlockState state = this.state;
+		if (state == null) {
+			return renderLayer;
+		}
+		BlockRenderType blockRenderType = WorldRenderingSettings.INSTANCE.getBlockTypeIds().get(state.getBlock());
+		if (blockRenderType == null) {
+			return renderLayer;
+		}
+		return switch (blockRenderType) {
+			case SOLID -> ChunkSectionLayer.SOLID;
+			case CUTOUT, CUTOUT_MIPPED -> ChunkSectionLayer.CUTOUT;
+			case TRANSLUCENT -> ChunkSectionLayer.TRANSLUCENT;
+		};
 	}
 
 	@Inject(method = "bufferDefaultModel", at = @At(value = "TAIL"))
