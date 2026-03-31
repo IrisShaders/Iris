@@ -133,6 +133,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	@Override
+	protected void extractBlurredBackground(final GuiGraphicsExtractor graphics) {
+		float blurRadius = Math.min(this.minecraft.options.getMenuBackgroundBlurriness(), this.blurTransition.getAsFloat());
+		if (blurRadius >= 1.0F) {
+			graphics.blurBeforeThisStratum();
+		}
+	}
+
+	@Override
 	public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float delta) {
 		notifier.onNewFrame();
 		backgroundInit = 1.0f;
