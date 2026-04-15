@@ -1,5 +1,7 @@
 package net.irisshaders.iris.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.frustum.fallback.NonCullingFrustum;
@@ -8,6 +10,7 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,16 +20,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Camera.class)
 public class MixinCamera {
-	@Shadow
-	private Vec3 position;
+	@WrapOperation(
+		method = "prepareCullFrustum",
+		at = @At(
+			value = "NEW",
+			target = "Lnet/minecraft/client/renderer/culling/Frustum;"
+		)
+	)
+	private Frustum iris$disableFrustum(Matrix4fc modelViewMatrix, Matrix4f projectionMatrixForCulling, Operation<Frustum> original) {
+		Frustum frustum;
 
-	@Inject(method = "extractRenderState", at = @At("RETURN"), cancellable = true)
-	private void iris$disableFrustum(CameraRenderState cameraState, float partialTicks, CallbackInfo ci) {
 		if (Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::shouldDisableFrustumCulling).orElse(false)) {
-			NonCullingFrustum f = new NonCullingFrustum();
-			f.prepare(position.x, position.y, position.z);
-
-			cameraState.cullFrustum = f;
+			frustum = new NonCullingFrustum(modelViewMatrix, projectionMatrixForCulling);
+		} else {
+			frustum = original.call(modelViewMatrix, projectionMatrixForCulling);
 		}
-	}
+		
+		return frustum;
+   }
 }
