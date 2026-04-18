@@ -278,6 +278,7 @@ public class CompositeRenderer {
 		VertexFormat.IndexType type = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).type();
 
 		FullScreenQuadRenderer.INSTANCE.bind();
+		GlStateManager._colorMask(15);
 
 		for (int i = 0, passesSize = passes.size(); i < passesSize; i++) {
 			Pass compositePass = passes.get(i);
