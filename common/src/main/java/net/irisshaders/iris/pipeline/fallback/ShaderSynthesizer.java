@@ -157,7 +157,7 @@ public class ShaderSynthesizer {
 			shader.append("in ivec2 UV2;\n");
 			shader.append("out vec2 lightCoord;\n");
 
-			main.append("    lightCoord = clamp(UV2 / 256.0, vec2(0.5 / 16.0), vec2(15.5 / 16.0));\n");
+			main.append("    lightCoord = clamp(vec2(UV2 + 8) / 256.0, vec2(0.5 / 16.0), vec2(15.5 / 16.0));\n");
 		}
 
 
