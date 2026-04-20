@@ -81,8 +81,8 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 	}
 
 	private static int encodeLight(int light) {
-		int sky = Mth.clamp(light >>> 16 & 255, 8, 248);
-		int block = Mth.clamp(light >>> 0 & 255, 8, 248);
+		int sky = Mth.clamp(light >>> 16 & 255, 0, 240);
+		int block = Mth.clamp(light >>> 0 & 255, 0, 240);
 		return block << 0 | sky << 8;
 	}
 
