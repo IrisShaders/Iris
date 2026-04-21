@@ -253,6 +253,7 @@ public class CompositeRenderer {
 	public void renderAll() {
 		GLDebug.pushGroup(20 + compositePass.ordinal(), compositePass.name().toLowerCase(Locale.ROOT));
 		RenderSystem.disableBlend();
+		GlStateManager._colorMask(true, true, true, true);
 
 		FullScreenQuadRenderer.INSTANCE.begin();
 		com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
