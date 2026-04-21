@@ -3,7 +3,16 @@
 
 name: Java CI with Gradle
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_build:
+        description: "Build as release (-Dbuild.release=true)"
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -23,7 +32,12 @@ jobs:
           gradle-version: current
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.release_build }}" = "true" ]; then
+            ./gradlew :neoforge:build -Dbuild.release=true
+          else
+            ./gradlew build
+          fi
 
       - name: Upload built JAR
         uses: actions/upload-artifact@v4
