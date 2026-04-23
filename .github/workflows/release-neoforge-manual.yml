@@ -1,0 +1,72 @@
+name: Manual NeoForge Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Git tag to create/use (example: v1.8.12-ia3+1.21.1-neoforge)"
+        required: true
+        type: string
+      release_name:
+        description: "GitHub release title"
+        required: true
+        type: string
+      publish_mod_sites:
+        description: "Also publish to Modrinth/CurseForge via mc-publish secrets"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Build release artifacts
+        run: ./gradlew :neoforge:build -Dbuild.release=true
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: neoforge-release-jars
+          path: build/libs/iris-neoforge-*.jar
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag_name }}
+          name: ${{ inputs.release_name }}
+          generate_release_notes: true
+          files: build/libs/iris-neoforge-*.jar
+
+      - name: Publish to Modrinth/CurseForge
+        if: ${{ inputs.publish_mod_sites }}
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: YL57xq9U
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-featured: true
+          curseforge-id: 455508
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          files: build/libs/iris-neoforge-*.jar
+          version-type: release
+          loaders: neoforge
+          dependencies: sodium
