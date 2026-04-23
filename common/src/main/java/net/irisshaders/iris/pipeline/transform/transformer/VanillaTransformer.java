@@ -340,18 +340,9 @@ public class VanillaTransformer {
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
 			"(gl_ProjectionMatrix * gl_ModelViewMatrix)");
 
-		if (parameters.hasChunkOffset) {
-			boolean doInjection = root.replaceReferenceExpressionsReport(t, "gl_ModelViewMatrix",
-				"(iris_transforms.ModelViewMat * _iris_internal_translate(iris_transforms.ModelOffset))");
-			if (doInjection) {
-				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
-					"mat4 _iris_internal_translate(vec3 offset) {" +
-						"return mat4(1.0, 0.0, 0.0, 0.0," +
-						"0.0, 1.0, 0.0, 0.0," +
-						"0.0, 0.0, 1.0, 0.0," +
-						"offset.x, offset.y, offset.z, 1.0); }");
-			}
-		} else if (parameters.inputs.isNewLines()) {
+		StringBuilder transform = new StringBuilder("(");
+		// `hasChunkOffset` is always true currently. We need move this branch out to get correct line scale.
+		if (parameters.inputs.isNewLines()) {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 				"const float iris_VIEW_SHRINK = 1.0 - (1.0 / 256.0);",
 				"const mat4 iris_VIEW_SCALE = mat4(" +
@@ -359,11 +350,20 @@ public class VanillaTransformer {
 					"0.0, iris_VIEW_SHRINK, 0.0, 0.0," +
 					"0.0, 0.0, iris_VIEW_SHRINK, 0.0," +
 					"0.0, 0.0, 0.0, 1.0);");
-			root.replaceReferenceExpressions(t, "gl_ModelViewMatrix",
-				"(iris_VIEW_SCALE * iris_transforms.ModelViewMat)");
-		} else {
-			root.rename("gl_ModelViewMatrix", "iris_transforms.ModelViewMat");
+			transform.append("iris_VIEW_SCALE * ");
 		}
+		transform.append("iris_transforms.ModelViewMat");
+		if (parameters.hasChunkOffset) {
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
+				"mat4 _iris_internal_translate(vec3 offset) {" +
+					"return mat4(1.0, 0.0, 0.0, 0.0," +
+					"0.0, 1.0, 0.0, 0.0," +
+					"0.0, 0.0, 1.0, 0.0," +
+					"offset.x, offset.y, offset.z, 1.0); }");
+			transform.append(" * _iris_internal_translate(iris_transforms.ModelOffset)");
+		}
+		transform.append(")");
+		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", transform.toString());
 
 		root.rename("gl_ProjectionMatrix", "iris_ProjMat");
 	}
