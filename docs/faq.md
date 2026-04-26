@@ -25,7 +25,7 @@ See the [Driver Support](usage/drivers.md) document for more information.
 
 ## Why is (insert shader) not working?
 
-That shader likely isn't supported currently, but should be in the future. See the list of supported shaders [here](./supportedshaders.md)
+That shader likely isn't supported currently, but should be in the future. See the list of unsupported shaders [here](./unsupportedshaders.md)
 
 ## How do I disable my shaders?
 
@@ -43,10 +43,6 @@ There are a few possible reasons:
 ## Why are entities becoming invisible randomly?
 
 You probably have an outdated version of GraalVM installed. Install a normal version of Java or update to GraalVM 22.3 to fix the [issue](https://github.com/oracle/graal/issues/4849).
-
-## What shaders have been tested and are working with Iris?
-
-See [this](./supportedshaders.md) document for the list
 
 ## Will (insert feature) part of OptiFine be added to iris?
 

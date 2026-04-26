@@ -141,9 +141,7 @@ You can rebind these keyboard shortcuts to any other key you want in the Control
 
 ## Shader compatibility
 
-For a list of compatible shaders, check out the [supported shaders list](supportedshaders.md).
-
-Other shaders are considered **unsupported** at the moment. When using shaders which are not in this list, except them to have major visual problems, or even not run at all. More shaders will be added as supported as new features are being added to Iris.
+Iris supports almost all shaderpacks, but a list of unsupported shaderpacks is available [here](docs/unsupportedshaders.md).
 
 For a list of known bugs with certain shaders, check out the [shader pack bug list](ShaderpackBugs.md).
 
