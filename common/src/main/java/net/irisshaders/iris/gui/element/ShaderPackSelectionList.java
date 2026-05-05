@@ -197,28 +197,30 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		topButtonRow.allowEnableShadersButton = !names.isEmpty();
 
 		int index = 0;
+		String selectedName = Iris.getIrisConfig().getShaderPackName().orElse(null);
+		ShaderPackEntry selectedPack = null;
 
 		for (String name : names) {
 			index++;
-			addPackEntry(index, name);
+			ShaderPackEntry entry = addPackEntry(index, name);
+			if (name.equals(selectedName)) {
+				selectedPack = entry;
+			}
+		}
+		if (selectedPack != null) {
+			setSelected(selectedPack);
+			setFocused(selectedPack);
+			centerScrollOn(selectedPack);
+			setApplied(selectedPack);
 		}
 
 		this.addLabelEntries(PACK_LIST_LABEL);
 	}
 
-	public void addPackEntry(int index, String name) {
+	public ShaderPackEntry addPackEntry(int index, String name) {
 		ShaderPackEntry entry = new ShaderPackEntry(index, this, name);
-
-		Iris.getIrisConfig().getShaderPackName().ifPresent(currentPackName -> {
-			if (name.equals(currentPackName)) {
-				setSelected(entry);
-				setFocused(entry);
-				centerScrollOn(entry);
-				setApplied(entry);
-			}
-		});
-
 		this.addEntry(entry);
+		return entry;
 	}
 
 	public void addLabelEntries(Component... lines) {
