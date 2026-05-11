@@ -74,11 +74,27 @@ public class MixinTheEndPortalRenderer {
 			float ny = direction.getStepY();
 			float nz = direction.getStepZ();
 
-			for (Vector3fc faceVertex : FACES.get(direction)) {
-				buffer.addVertex(pose, faceVertex.x(), faceVertex.y(), faceVertex.z()).setColor(RED, GREEN, BLUE, 1.0f)
-					.setUv(0.0F + progress, 0.0F + progress).setOverlay(overlay).setLight(light)
-					.setNormal(pose, nx, ny, nz);
-			}
+			List<Vector3fc> vertices = FACES.get(direction);
+
+			Vector3fc vertex0 = vertices.get(0);
+			buffer.addVertex(pose, vertex0.x(), vertex0.y(), vertex0.z()).setColor(RED, GREEN, BLUE, 1.0f)
+				.setUv(0.0F + progress, 0.0F + progress).setOverlay(overlay).setLight(light)
+				.setNormal(pose, nx, ny, nz);
+
+			Vector3fc vertex1 = vertices.get(1);
+			buffer.addVertex(pose, vertex1.x(), vertex1.y(), vertex1.z()).setColor(RED, GREEN, BLUE, 1.0f)
+				.setUv(0.0F + progress, 0.2F + progress).setOverlay(overlay).setLight(light)
+				.setNormal(pose, nx, ny, nz);
+
+			Vector3fc vertex2 = vertices.get(2);
+			buffer.addVertex(pose, vertex2.x(), vertex2.y(), vertex2.z()).setColor(RED, GREEN, BLUE, 1.0f)
+				.setUv(0.2F + progress, 0.2F + progress).setOverlay(overlay).setLight(light)
+				.setNormal(pose, nx, ny, nz);
+
+			Vector3fc vertex3 = vertices.get(3);
+			buffer.addVertex(pose, vertex3.x(), vertex3.y(), vertex3.z()).setColor(RED, GREEN, BLUE, 1.0f)
+				.setUv(0.2F + progress, 0.0F + progress).setOverlay(overlay).setLight(light)
+				.setNormal(pose, nx, ny, nz);
 		}
 	}
 
