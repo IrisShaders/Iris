@@ -122,7 +122,7 @@ dependencies {
     includeDep("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
 
     implementation(SODIUM_DEPENDENCY_NEO)
-    includeAdditional("io.github.douira:glsl-transformer:2.0.1")
+    includeAdditional("io.github.douira:glsl-transformer:3.0.0-pre3")
     includeAdditional("org.anarres:jcpp:1.4.14")
 }
 
