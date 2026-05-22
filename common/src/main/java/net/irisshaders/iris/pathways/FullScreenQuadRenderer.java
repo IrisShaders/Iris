@@ -1,15 +1,20 @@
 package net.irisshaders.iris.pathways;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlBuffer;
+import com.mojang.blaze3d.opengl.GlDevice;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.helpers.VertexBufferHelper;
+import net.irisshaders.iris.mixin.GpuDeviceAccessor;
+import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL46C;
 
 /**
  * Renders a full-screen textured quad to the screen. Used in composite / deferred rendering.
@@ -17,7 +22,7 @@ import net.irisshaders.iris.helpers.VertexBufferHelper;
 public class FullScreenQuadRenderer {
 	public static final FullScreenQuadRenderer INSTANCE = new FullScreenQuadRenderer();
 
-	private final VertexBuffer quad;
+	private final GpuBuffer quad;
 
 	private FullScreenQuadRenderer() {
 		BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
@@ -27,42 +32,21 @@ public class FullScreenQuadRenderer {
 		bufferBuilder.addVertex(0.0F, 1.0F, 0.0F).setUv(0.0F, 1.0F);
 		MeshData meshData = bufferBuilder.build();
 
-		quad = new VertexBuffer(VertexBuffer.Usage.STATIC);
-		quad.bind();
-		quad.upload(meshData);
+		quad = RenderSystem.getDevice().createBuffer(() -> "Quad", GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_VERTEX, meshData.vertexBuffer());
+		meshData.close();
 		Tesselator.getInstance().clear();
-		VertexBuffer.unbind();
+
 	}
 
-	public void render() {
-		begin();
-
-		renderQuad();
-
-		end();
+	public static int init() {
+		return -1;
 	}
 
-	public void begin() {
-		((VertexBufferHelper) quad).saveBinding();
-		RenderSystem.disableDepthTest();
-		BufferUploader.reset();
-		quad.bind();
+	public GpuBuffer getQuad() {
+		return quad;
 	}
 
-	public void renderQuad() {
-		IrisRenderSystem.overridePolygonMode();
-		quad.draw();
-		IrisRenderSystem.restorePolygonMode();
-	}
-
-	public void end() {
-		// NB: No need to clear the buffer state by calling glDisableVertexAttribArray - this VAO will always
-		// have the same format, and buffer state is only associated with a given VAO, so we can keep it bound.
-		//
-		// Using quad.getFormat().clearBufferState() causes some Intel drivers to freak out:
-		// https://github.com/IrisShaders/Iris/issues/1214
-
-		RenderSystem.enableDepthTest();
-		((VertexBufferHelper) quad).restoreBinding();
+	public void bind() {
+		((GlDevice) ((GpuDeviceAccessor) RenderSystem.getDevice()).getBackend()).vertexArrayCache().bindVertexArray(DefaultVertexFormat.POSITION_TEX, (GlBuffer) quad);
 	}
 }

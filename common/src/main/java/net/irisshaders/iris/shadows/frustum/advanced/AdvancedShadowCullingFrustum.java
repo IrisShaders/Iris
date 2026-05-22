@@ -2,11 +2,13 @@ package net.irisshaders.iris.shadows.frustum.advanced;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
 import com.sun.management.VMOption;
+import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
+import org.joml.FrustumIntersection;
 import org.joml.Matrix4fc;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
@@ -34,7 +36,7 @@ import java.lang.management.ManagementFactory;
  * are not sensitive to the specific internal ordering of planes and corners, in order to avoid potential bugs at the
  * cost of slightly more computations.</p>
  */
-public class AdvancedShadowCullingFrustum extends Frustum implements net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum, ViewportProvider {
+public class AdvancedShadowCullingFrustum extends Frustum implements ViewportProvider, net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum {
 	private static final int MAX_CLIPPING_PLANES = 13;
 	protected final BoxCuller boxCuller;
 	/**
@@ -295,7 +297,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 			return false;
 		}
 
-		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ) != 0;
+		return this.isVisible(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ) != FrustumIntersection.OUTSIDE;
 	}
 
 	// For Sodium
@@ -373,7 +375,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 						Math.fma(plane[1], (plane[1] < 0 ? maxY : minY),
 							Math.fma(plane[2], (plane[2] < 0 ? maxZ : minZ), plane[3]))) >= 0;
 				} else {
-					return 0;
+					return FrustumIntersection.OUTSIDE;
 				}
 			} else {
 				if (safeFMA(plane[0], outsideBoundX, safeFMA(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) >= -plane[3]) {
@@ -381,12 +383,12 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 						safeFMA(plane[1], (plane[1] < 0 ? maxY : minY),
 							safeFMA(plane[2], (plane[2] < 0 ? maxZ : minZ), plane[3]))) >= 0;
 				} else {
-					return 0;
+					return FrustumIntersection.OUTSIDE;
 				}
 			}
 		}
 
-		return inside ? 1 : 2;
+		return inside ? FrustumIntersection.INSIDE : FrustumIntersection.INTERSECT;
 	}
 
 	/**
@@ -418,11 +420,89 @@ public class AdvancedShadowCullingFrustum extends Frustum implements net.caffein
 
 	@Override
 	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return (boxCuller == null || !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) && this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ) > 0;
+		return (boxCuller == null || !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) && this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ) != FrustumIntersection.OUTSIDE;
+	}
+
+	@Override
+	public int intersectAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
+		if (this.boxCuller == null) {
+			return this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ);
+		}
+
+		var distanceResult = this.boxCuller.intersectAab(minX, minY, minZ, maxX, maxY, maxZ);
+		if (distanceResult == FrustumIntersection.OUTSIDE) {
+			return FrustumIntersection.OUTSIDE;
+		}
+
+		var frustumResult = this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ);
+		if (frustumResult == FrustumIntersection.OUTSIDE) {
+			return FrustumIntersection.OUTSIDE;
+		}
+
+		if (frustumResult == FrustumIntersection.INSIDE && distanceResult == FrustumIntersection.INSIDE) {
+			return FrustumIntersection.INSIDE;
+		}
+
+		return FrustumIntersection.INTERSECT;
 	}
 
 	@Override
 	public Viewport sodium$createViewport() {
 		return new Viewport(this, position.set(x, y, z));
+	}
+
+	public static final float CHUNK_SECTION_RADIUS = 8.0f /* chunk bounds */;
+	public static final float CHUNK_SECTION_MARGIN = 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
+	public static final float SECTION_HALF_SIZE = CHUNK_SECTION_RADIUS + CHUNK_SECTION_MARGIN;
+
+
+	@Override
+	public boolean testSection(float x, float y, float z) {
+		float minX = x - SECTION_HALF_SIZE;
+		float maxX = x + SECTION_HALF_SIZE;
+		float minY = y - SECTION_HALF_SIZE;
+		float maxY = y + SECTION_HALF_SIZE;
+		float minZ = z - SECTION_HALF_SIZE;
+		float maxZ = z + SECTION_HALF_SIZE;
+
+		for (int i = 0; i < planeCount; ++i) {
+			float[] plane = planes[i];
+
+			float testX = (plane[0] < 0.0f) ? minX : maxX;
+			float testY = (plane[1] < 0.0f) ? minY : maxY;
+			float testZ = (plane[2] < 0.0f) ? minZ : maxZ;
+
+			if (Math.fma(plane[0], testX,
+				Math.fma(plane[1], testY,
+					plane[2] * testZ)) < -plane[3]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	@Override
+	public boolean testSectionExpanded(float originX, float originY, float originZ, float extend) {
+		float minX = originX - extend;
+		float maxX = originX + extend;
+		float minY = originY - extend;
+		float maxY = originY + extend;
+		float minZ = originZ - extend;
+		float maxZ = originZ + extend;
+
+		for (int i = 0; i < planeCount; ++i) {
+			float[] plane = planes[i];
+
+			float testX = (plane[0] < 0.0f) ? minX : maxX;
+			float testY = (plane[1] < 0.0f) ? minY : maxY;
+			float testZ = (plane[2] < 0.0f) ? minZ : maxZ;
+
+			if (Math.fma(plane[0], testX, Math.fma(plane[1], testY, plane[2] * testZ)) < -plane[3]) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

@@ -10,7 +10,7 @@ import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.entity.Entity;
@@ -31,8 +31,8 @@ public class MixinGui {
 	@Final
 	private DebugScreenOverlay debugOverlay;
 
-	@WrapMethod(method = "render")
-	public void iris$handleHudHidingScreens(GuiGraphics guiGraphics, DeltaTracker deltaTracker, Operation<Void> original) {
+	@WrapMethod(method = "extractRenderState")
+	public void iris$handleHudHidingScreens(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, Operation<Void> original) {
 		Screen screen = this.minecraft.screen;
 
 		if (screen instanceof HudHideable) {
@@ -46,15 +46,11 @@ public class MixinGui {
 		GLDebug.popGroup();
 	}
 
-	@Inject(method = "renderVignette", at = @At("HEAD"), cancellable = true)
-	private void iris$disableVignetteRendering(GuiGraphics pGui0, Entity pEntity1, CallbackInfo ci) {
+	@Inject(method = "extractVignette", at = @At("HEAD"), cancellable = true)
+	private void iris$disableVignetteRendering(GuiGraphicsExtractor pGui0, Entity pEntity1, CallbackInfo ci) {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline != null && !pipeline.shouldRenderVignette()) {
-			// we need to set up the GUI render state ourselves if we cancel the vignette
-			RenderSystem.enableDepthTest();
-			RenderSystem.defaultBlendFunc();
-
 			ci.cancel();
 		}
 	}

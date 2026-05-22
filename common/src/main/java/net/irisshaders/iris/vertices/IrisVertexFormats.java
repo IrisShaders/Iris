@@ -21,16 +21,16 @@ public class IrisVertexFormats {
 
 		for (int i = 0; i < VertexFormatElement.MAX_COUNT; i++) {
 			VertexFormatElement element = VertexFormatElement.byId(i);
-			if (element != null && element.usage() == VertexFormatElement.Usage.UV) {
+			if (element != null) {
 				LAST_UV = Math.max(LAST_UV, element.index());
 			}
 		}
 
-		ENTITY_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.SHORT, VertexFormatElement.Usage.GENERIC, 2);
-		ENTITY_ID_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), LAST_UV + 1, VertexFormatElement.Type.USHORT, VertexFormatElement.Usage.UV, 3);
-		MID_TEXTURE_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 2);
-		TANGENT_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 4);
-		MID_BLOCK_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.BYTE, VertexFormatElement.Usage.GENERIC, 3);
+		ENTITY_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.SHORT, false, 2);
+		ENTITY_ID_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 3, VertexFormatElement.Type.USHORT, false, 4);
+		MID_TEXTURE_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.FLOAT, false, 2);
+		TANGENT_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.BYTE, true, 4);
+		MID_BLOCK_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.BYTE, false, 3);
 
 		TERRAIN = VertexFormat.builder()
 			.add("Position", VertexFormatElement.POSITION)
@@ -69,7 +69,6 @@ public class IrisVertexFormats {
 			.add("iris_Entity", ENTITY_ID_ELEMENT)
 			.add("mc_midTexCoord", MID_TEXTURE_ELEMENT)
 			.add("at_tangent", TANGENT_ELEMENT)
-			.padding(1)
 			.build();
 
 		CLOUDS = VertexFormat.builder()
@@ -84,7 +83,7 @@ public class IrisVertexFormats {
 		Iris.logger.info("Vertex format: " + format + " with byte size " + format.getVertexSize());
 		int byteIndex = 0;
 		for (VertexFormatElement element : format.getElements()) {
-			Iris.logger.info(element + " @ " + byteIndex + " is " + element.type() + " " + element.usage());
+			Iris.logger.info(element + " @ " + byteIndex + " is " + element.type() + " " + element.normalized());
 			byteIndex += element.byteSize();
 		}
 	}

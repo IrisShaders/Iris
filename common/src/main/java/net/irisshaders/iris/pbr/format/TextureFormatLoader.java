@@ -1,7 +1,7 @@
 package net.irisshaders.iris.pbr.format;
 
 import net.irisshaders.iris.Iris;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.Nullable;
@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 public class TextureFormatLoader {
-	public static final ResourceLocation LOCATION = ResourceLocation.withDefaultNamespace("optifine/texture.properties");
+	public static final Identifier LOCATION = Identifier.withDefaultNamespace("optifine/texture.properties");
 
 	private static TextureFormat format;
 

@@ -1,11 +1,9 @@
 package net.irisshaders.iris.pbr.format;
 
-import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.pbr.mipmap.CustomMipmapGenerator;
 import net.irisshaders.iris.pbr.texture.PBRType;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,12 +44,7 @@ public interface TextureFormat {
 
 	default void setupTextureParameters(PBRType pbrType, AbstractTexture texture) {
 		if (!canInterpolateValues(pbrType)) {
-			int minFilter = IrisRenderSystem.getTexParameteri(texture.getId(), GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER);
-			// Non-mipped filters begin at 0x2600 whereas mipped filters begin at 0x2700,
-			// so this bit mask can be used to check if the filter is mipped or not
-			boolean mipmap = minFilter >= 0x2700;
-			IrisRenderSystem.texParameteri(texture.getId(), GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, mipmap ? GL11.GL_NEAREST_MIPMAP_NEAREST : GL11.GL_NEAREST);
-			IrisRenderSystem.texParameteri(texture.getId(), GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+			texture.getTexture().iris$markMipmapNonLinear();
 		}
 	}
 

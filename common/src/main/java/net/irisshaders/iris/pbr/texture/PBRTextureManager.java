@@ -1,8 +1,12 @@
 package net.irisshaders.iris.pbr.texture;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
@@ -14,7 +18,7 @@ import net.irisshaders.iris.targets.backed.NativeImageBackedSingleColorTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.Dumpable;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -26,6 +30,8 @@ public class PBRTextureManager {
 
 	private static Runnable normalTextureChangeListener;
 	private static Runnable specularTextureChangeListener;
+
+	private final IntSet toLoadNextFrame = new IntArraySet();
 
 	static {
 		StateUpdateNotifiers.normalTextureChangeNotifier = listener -> normalTextureChangeListener = listener;
@@ -53,7 +59,7 @@ public class PBRTextureManager {
 	private PBRTextureManager() {
 	}
 
-	private static void dumpTexture(Dumpable dumpable, ResourceLocation id, Path path) {
+	private static void dumpTexture(Dumpable dumpable, Identifier id, Path path) {
 		try {
 			dumpable.dumpContents(id, path);
 		} catch (IOException e) {
@@ -67,7 +73,18 @@ public class PBRTextureManager {
 		} catch (Exception e) {
 			//
 		}
-		texture.releaseId();
+	}
+
+	public void onNewFrame() {
+		if (!toLoadNextFrame.isEmpty()) {
+			var it = toLoadNextFrame.iterator();
+			while (it.hasNext()) {
+				int id = it.nextInt();
+				PBRTextureHolder holder = loadHolder(id);
+				holders.put(id, holder);
+			}
+			toLoadNextFrame.clear();
+		}
 	}
 
 	public static void notifyPBRTexturesChanged() {
@@ -93,11 +110,14 @@ public class PBRTextureManager {
 		return holder;
 	}
 
+	/**
+	 * will return next frame if there isn't any!
+	 */
 	public PBRTextureHolder getOrLoadHolder(int id) {
 		PBRTextureHolder holder = holders.get(id);
 		if (holder == null) {
-			holder = loadHolder(id);
-			holders.put(id, holder);
+			toLoadNextFrame.add(id);
+			return defaultHolder;
 		}
 		return holder;
 	}
@@ -115,7 +135,7 @@ public class PBRTextureManager {
 					loader.load(texture, Minecraft.getInstance().getResourceManager(), consumer);
 					return consumer.toHolder();
 				} catch (Exception e) {
-					Iris.logger.debug("Failed to load PBR textures for texture " + id, e);
+					Iris.logger.warn("Failed to load PBR textures for texture " + id, e);
 				} finally {
 					GlStateManager._bindTexture(previousTextureBinding);
 				}

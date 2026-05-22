@@ -6,6 +6,7 @@ import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
+import net.irisshaders.iris.vertices.MemoryAccess;
 import net.irisshaders.iris.vertices.NormI8;
 import net.irisshaders.iris.vertices.NormalHelper;
 import org.joml.Vector3f;
@@ -40,10 +41,10 @@ public class GlyphExtVertexSerializer implements VertexSerializer {
 		int tangent = NormalHelper.computeTangent(normalX, normalY, normalZ, quad);
 
 		for (long vertex = 0; vertex < 4; vertex++) {
-			MemoryUtil.memPutFloat(dst + OFFSET_MID_TEXTURE - STRIDE * vertex, uSum);
-			MemoryUtil.memPutFloat(dst + (OFFSET_MID_TEXTURE + 4) - STRIDE * vertex, vSum);
-			MemoryUtil.memPutInt(dst + OFFSET_NORMAL - STRIDE * vertex, normal);
-			MemoryUtil.memPutInt(dst + OFFSET_TANGENT - STRIDE * vertex, tangent);
+			MemoryAccess.setFloat(dst + OFFSET_MID_TEXTURE - STRIDE * vertex, uSum);
+			MemoryAccess.setFloat(dst + (OFFSET_MID_TEXTURE + 4) - STRIDE * vertex, vSum);
+			MemoryAccess.setInt(dst + OFFSET_NORMAL - STRIDE * vertex, normal);
+			MemoryAccess.setInt(dst + OFFSET_TANGENT - STRIDE * vertex, tangent);
 		}
 	}
 
@@ -52,17 +53,17 @@ public class GlyphExtVertexSerializer implements VertexSerializer {
 		float uSum = 0.0f, vSum = 0.0f;
 
 		for (int i = 0; i < vertexCount; i++) {
-			float u = MemoryUtil.memGetFloat(src + OFFSET_TEXTURE);
-			float v = MemoryUtil.memGetFloat(src + OFFSET_TEXTURE + 4);
+			float u = MemoryAccess.getFloat(src + OFFSET_TEXTURE);
+			float v = MemoryAccess.getFloat(src + OFFSET_TEXTURE + 4);
 
 			uSum += u;
 			vSum += v;
 
 			MemoryIntrinsics.copyMemory(src, dst, 28);
 
-			MemoryUtil.memPutShort(dst + 32, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
-			MemoryUtil.memPutShort(dst + 34, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
-			MemoryUtil.memPutShort(dst + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
+			MemoryAccess.setShort(dst + 32, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+			MemoryAccess.setShort(dst + 34, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
+			MemoryAccess.setShort(dst + 36, (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem());
 
 			if (i != 3) {
 				src += DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP.getVertexSize();

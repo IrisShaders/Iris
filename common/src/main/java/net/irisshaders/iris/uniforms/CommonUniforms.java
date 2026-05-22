@@ -1,13 +1,13 @@
 package net.irisshaders.iris.uniforms;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
-import net.irisshaders.iris.helpers.JomlConversions;
 import net.irisshaders.iris.layer.GbufferPrograms;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.mixin.statelisteners.BooleanStateAccessor;
@@ -21,16 +21,20 @@ import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.uniforms.transforms.SmoothedFloat;
 import net.irisshaders.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.TextureFilteringMethod;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.ARGB;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
@@ -75,7 +79,8 @@ public final class CommonUniforms {
 		// the shader will always be setup (and therefore uniforms will be re-uploaded)
 		// after the texture is changed and before rendering starts.
 		uniforms.uniform2i("atlasSize", () -> {
-			int glId = RenderSystem.getShaderTexture(0);
+			int glId = Iris.getPipelineManager().getPipeline().map(i -> i.getAlbedoTex()).orElse(0);
+			if (glId == 0) return ZERO_VECTOR_2i;
 
 			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
 			if (texture instanceof TextureAtlas atlas) {
@@ -86,6 +91,9 @@ public final class CommonUniforms {
 			return ZERO_VECTOR_2i;
 		}, listener -> {
 		});
+
+		uniforms.uniform1i("gtextureId", () -> GlStateManagerAccessor.getTEXTURES()[0].binding, StateUpdateNotifiers.bindTextureNotifier);
+		uniforms.uniform1i("textureReloadCount", CapturedRenderingState.INSTANCE::getTextureReloadCount, StateUpdateNotifiers.bindTextureNotifier);
 
 		uniforms.uniform2i("gtextureSize", () -> {
 			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
@@ -120,7 +128,7 @@ public final class CommonUniforms {
 		SystemTimeUniforms.addSystemTimeUniforms(uniforms);
 		BiomeUniforms.addBiomeUniforms(uniforms);
 		new CelestialUniforms(directives.getSunPathRotation()).addCelestialUniforms(uniforms);
-		IrisExclusiveUniforms.addIrisExclusiveUniforms(uniforms);
+		IrisExclusiveUniforms.addIrisExclusiveUniforms(uniforms, updateNotifier);
 		IrisTimeUniforms.addTimeUniforms(uniforms);
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		IdMapUniforms.addIdMapUniforms(updateNotifier, uniforms, idMap, directives.isOldHandLight());
@@ -154,6 +162,13 @@ public final class CommonUniforms {
 			.uniform4f(ONCE, "entityColor", () -> new Vector4f(0, 0, 0, 0))
 			.uniform1i(ONCE, "blockEntityId", () -> -1)
 			.uniform1i(ONCE, "currentRenderedItemId", () -> -1)
+			.uniform1i(PER_FRAME, "anisotropicFiltering", () -> {
+				if (Minecraft.getInstance().options.textureFiltering().get() == TextureFilteringMethod.ANISOTROPIC) {
+					return Minecraft.getInstance().options.maxAnisotropyValue();
+				} else {
+					return 0;
+				}
+			})
 			.uniform1f(ONCE, "pi", () -> Math.PI)
 			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform1f(PER_TICK, "constantMood", CommonUniforms::getConstantMood)
@@ -215,12 +230,14 @@ public final class CommonUniforms {
 	}
 
 	private static Vector3d getSkyColor() {
-		if (client.level == null || client.cameraEntity == null) {
+		if (client.level == null || client.getCameraEntity() == null) {
 			return ZERO_VECTOR_3d;
 		}
 
-		return JomlConversions.fromVec3(client.level.getSkyColor(client.cameraEntity.position(),
-			CapturedRenderingState.INSTANCE.getTickDelta()));
+		int skyColor = client.gameRenderer.getMainCamera().attributeProbe().getValue(EnvironmentAttributes.SKY_COLOR,
+			CapturedRenderingState.INSTANCE.getTickDelta());
+
+		return new Vector3d(ARGB.redFloat(skyColor), ARGB.greenFloat(skyColor), ARGB.blueFloat(skyColor));
 	}
 
 	static float getBlindness() {
@@ -258,21 +275,21 @@ public final class CommonUniforms {
 	}
 
 	private static float getPlayerMood() {
-		if (!(client.cameraEntity instanceof LocalPlayer)) {
+		if (!(client.getCameraEntity() instanceof LocalPlayer)) {
 			return 0.0F;
 		}
 
 		// This should always be 0 to 1 anyways but just making sure
-		return Math.clamp(0.0F, 1.0F, ((LocalPlayer) client.cameraEntity).getCurrentMood());
+		return Math.clamp(0.0F, 1.0F, ((LocalPlayer) client.getCameraEntity()).getCurrentMood());
 	}
 
 	private static float getConstantMood() {
-		if (!(client.cameraEntity instanceof LocalPlayer)) {
+		if (!(client.getCameraEntity() instanceof LocalPlayer)) {
 			return 0.0F;
 		}
 
 		// This should always be 0 to 1 anyways but just making sure
-		return Math.clamp(0.0F, 1.0F, ((LocalPlayerInterface) client.cameraEntity).getCurrentConstantMood());
+		return Math.clamp(0.0F, 1.0F, ((LocalPlayerInterface) client.getCameraEntity()).getCurrentConstantMood());
 	}
 
 	static float getRainStrength() {
@@ -286,12 +303,12 @@ public final class CommonUniforms {
 	}
 
 	private static Vector2i getEyeBrightness() {
-		if (client.cameraEntity == null || client.level == null) {
+		if (client.getCameraEntity() == null || client.level == null) {
 			return ZERO_VECTOR_2i;
 		}
 
-		Vec3 feet = client.cameraEntity.position();
-		Vec3 eyes = new Vec3(feet.x, client.cameraEntity.getEyeY(), feet.z);
+		Vec3 feet = client.getCameraEntity().position();
+		Vec3 eyes = new Vec3(feet.x, client.getCameraEntity().getEyeY(), feet.z);
 		BlockPos eyeBlockPos = BlockPos.containing(eyes);
 
 		int blockLight = client.level.getBrightness(LightLayer.BLOCK, eyeBlockPos);
@@ -351,10 +368,10 @@ public final class CommonUniforms {
 		// after all, disabling the overlay results in the intended effect of it not really looking like you're
 		// underwater on most shaderpacks. For now, I will leave this as-is, but it is something to keep in mind.
 		FogType submersionType = client.gameRenderer.getMainCamera().getFluidInCamera();
-
+		boolean isSpectator = client.player != null && client.player.isSpectator();
 		if (submersionType == FogType.WATER) {
 			return 1;
-		} else if (submersionType == FogType.LAVA) {
+		} else if (!isSpectator && submersionType == FogType.LAVA) {
 			return 2;
 		} else if (submersionType == FogType.POWDER_SNOW) {
 			return 3;

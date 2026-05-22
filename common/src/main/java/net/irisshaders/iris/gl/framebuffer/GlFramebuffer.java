@@ -1,6 +1,8 @@
 package net.irisshaders.iris.gl.framebuffer;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.blaze3d.textures.GpuTexture;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import net.irisshaders.iris.gl.GlResource;
@@ -24,17 +26,23 @@ public class GlFramebuffer extends GlResource {
 		this.hasDepthAttachment = false;
 	}
 
-	public void addDepthAttachment(int texture) {
-		int internalFormat = TextureInfoCache.INSTANCE.getInfo(texture).getInternalFormat();
-		DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromGlEnumOrDefault(internalFormat);
-
+	public void addDepthAttachment(GpuTexture texture) {
 		int fb = getGlId();
 
-		if (depthBufferFormat.isCombinedStencil()) {
-			IrisRenderSystem.framebufferTexture2D(fb, GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_STENCIL_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
-		} else {
-			IrisRenderSystem.framebufferTexture2D(fb, GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
-		}
+		// TODO: NeoForge 1.21.5
+		//if (texture.getFormat().hasStencilAspect()) {
+		//	IrisRenderSystem.framebufferTexture2D(fb, GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_STENCIL_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
+		//} else {
+			IrisRenderSystem.framebufferTexture2D(fb, GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D, ((GlTexture) texture).glId(), 0);
+		//}
+
+		this.hasDepthAttachment = true;
+	}
+
+	public void addDepthAttachmentBypass(int texture) {
+		int fb = getGlId();
+
+		IrisRenderSystem.framebufferTexture2D(fb, GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_TEXTURE_2D, texture, 0);
 
 		this.hasDepthAttachment = true;
 	}
@@ -100,7 +108,7 @@ public class GlFramebuffer extends GlResource {
 	public int getStatus() {
 		bind();
 
-		return GlStateManager.glCheckFramebufferStatus(GL30C.GL_FRAMEBUFFER);
+		return IrisRenderSystem.checkFramebufferStatus(GL30C.GL_FRAMEBUFFER);
 	}
 
 	public int getId() {

@@ -1,11 +1,18 @@
 package net.irisshaders.iris.layer;
 
-import net.minecraft.client.renderer.RenderStateShard;
-
-public final class BlockEntityRenderStateShard extends RenderStateShard {
+public final class BlockEntityRenderStateShard implements RenderingWrapper {
 	public static final BlockEntityRenderStateShard INSTANCE = new BlockEntityRenderStateShard();
 
 	private BlockEntityRenderStateShard() {
-		super("iris:is_block_entity", GbufferPrograms::beginBlockEntities, GbufferPrograms::endBlockEntities);
+	}
+
+	@Override
+	public void setup() {
+		GbufferPrograms.beginBlockEntities();
+	}
+
+	@Override
+	public void clear() {
+		GbufferPrograms.endBlockEntities();
 	}
 }

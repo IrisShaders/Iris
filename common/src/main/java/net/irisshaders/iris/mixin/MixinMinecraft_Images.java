@@ -7,7 +7,7 @@ import net.irisshaders.iris.shaderpack.texture.TextureFilteringData;
 import net.irisshaders.iris.targets.backed.NativeImageBackedCustomTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.io.IOUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,7 +26,7 @@ public class MixinMinecraft_Images {
 	private void iris$setupImages(GameConfig arg, CallbackInfo ci) {
 		if (!IrisPlatformHelpers.getInstance().isModLoaded("fabric-resource-loader-v0")) {
 			try {
-				Minecraft.getInstance().getTextureManager().register(ResourceLocation.fromNamespaceAndPath("iris", "textures/gui/widgets.png"), new NativeImageBackedCustomTexture(new CustomTextureData.PngData(new TextureFilteringData(false, false), IOUtils.toByteArray(Iris.class.getResourceAsStream("/assets/iris/textures/gui/widgets.png")))));
+				Minecraft.getInstance().getTextureManager().register(Identifier.fromNamespaceAndPath("iris", "textures/gui/widgets.png"), new NativeImageBackedCustomTexture(new CustomTextureData.PngData(new TextureFilteringData(false, false), IOUtils.toByteArray(Iris.class.getResourceAsStream("/assets/iris/textures/gui/widgets.png")))));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

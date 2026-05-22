@@ -1,5 +1,6 @@
 package net.irisshaders.iris.uniforms.custom.cached;
 
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.parsing.VectorType;
 import org.joml.Vector2f;
@@ -20,7 +21,7 @@ public class Float2VectorCachedUniform extends VectorCachedUniform<Vector2f> {
 
 	@Override
 	public void push(int location) {
-		GL21.glUniform2f(location, this.cached.x, this.cached.y);
+		IrisRenderSystem.uniform2f(location, this.cached.x, this.cached.y);
 	}
 
 	@Override

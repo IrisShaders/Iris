@@ -1,7 +1,9 @@
 package net.irisshaders.iris.targets.backed;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
@@ -15,8 +17,11 @@ import java.util.Objects;
 import java.util.function.IntSupplier;
 
 public class NativeImageBackedCustomTexture extends DynamicTexture implements TextureAccess {
+	private final boolean shouldBlur;
+	private final boolean shouldClamp;
+
 	public NativeImageBackedCustomTexture(CustomTextureData.PngData textureData) throws IOException {
-		super(create(textureData.getContent()));
+		super(() -> "PNG Texture", create(textureData.getContent()));
 
 		// By default, images are unblurred and not clamped.
 
@@ -29,6 +34,13 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
 			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
 		}
+
+		this.shouldBlur = textureData.getFilteringData().shouldBlur();
+		this.shouldClamp = textureData.getFilteringData().shouldClamp();
+	}
+
+	private int getId() {
+		return this.texture.iris$getGlId();
 	}
 
 	private static NativeImage create(byte[] content) throws IOException {
@@ -43,8 +55,7 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 	public void upload() {
 		NativeImage image = Objects.requireNonNull(getPixels());
 
-		bind();
-		image.upload(0, 0, 0, 0, 0, image.getWidth(), image.getHeight(), false, false, false, false);
+		RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, image);
 	}
 
 	@Override
@@ -55,5 +66,22 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 	@Override
 	public IntSupplier getTextureId() {
 		return this::getId;
+	}
+
+	@Override
+	public GlSampler getSampling() {
+		if (shouldClamp) {
+			if (shouldBlur) {
+				return GlSampler.LINEAR;
+			} else {
+				return GlSampler.NEAREST;
+			}
+		} else {
+			if (shouldBlur) {
+				return GlSampler.LINEAR_REPEAT;
+			} else {
+				return GlSampler.NEAREST_REPEAT;
+			}
+		}
 	}
 }

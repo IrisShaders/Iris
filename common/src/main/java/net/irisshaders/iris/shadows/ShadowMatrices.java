@@ -1,8 +1,18 @@
 package net.irisshaders.iris.shadows;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.mixin.EndFlashAccess;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.EndFlashState;
+import net.minecraft.world.level.Level;
 import org.joml.Matrix4f;
+import org.lwjgl.glfw.GLFW;
 
 public class ShadowMatrices {
 	public static final float NEAR = -100.05f;
@@ -10,11 +20,12 @@ public class ShadowMatrices {
 
 	public static Matrix4f createOrthoMatrix(float halfPlaneLength, float nearPlane, float farPlane) {
 		//System.out.println("making a matrix with " + nearPlane + " / " + farPlane + " * " + halfPlaneLength);
-		return new Matrix4f().setOrthoSymmetric(halfPlaneLength * 2, halfPlaneLength * 2, nearPlane, farPlane);
+		return new Matrix4f().setOrthoSymmetric(halfPlaneLength * 2, halfPlaneLength * 2, nearPlane, farPlane, RenderSystem.getDevice().isZZeroToOne());
 	}
 
 	public static Matrix4f createPerspectiveMatrix(float fov) {
 		// This converts from degrees to radians.
+		boolean zZeroToOne = RenderSystem.getDevice().isZZeroToOne();
 		float yScale = (float) (1.0f / Math.tan(Math.toRadians(fov) * 0.5f));
 		return new Matrix4f(
 			// column 1
@@ -22,27 +33,39 @@ public class ShadowMatrices {
 			// column 2
 			0f, yScale, 0f, 0f,
 			// column 3
-			0f, 0f, (FAR + NEAR) / (NEAR - FAR), -1.0F,
+			0f, 0f,  (zZeroToOne ? FAR : (FAR + NEAR)) / (NEAR - FAR), -1.0F,
 			// column 4
-			0f, 0f, 2.0F * FAR * NEAR / (NEAR - FAR), 1f
+			0f, 0f, (RenderSystem.getDevice().isZZeroToOne() ? FAR : (2.0F * FAR)) * NEAR / (NEAR - FAR), 1f
 		);
 	}
 
 	public static void createBaselineModelViewMatrix(PoseStack target, float shadowAngle, float sunPathRotation, float nearPlane, float farPlane) {
-		float skyAngle;
-
-		if (shadowAngle < 0.25f) {
-			skyAngle = shadowAngle + 0.75f;
-		} else {
-			skyAngle = shadowAngle - 0.25f;
-		}
-
 		target.last().normal().identity();
 		target.last().pose().identity();
 
-		target.mulPose(Axis.XP.rotationDegrees(90.0F));
-		target.mulPose(Axis.ZP.rotationDegrees(skyAngle * -360.0f));
-		target.mulPose(Axis.XP.rotationDegrees(sunPathRotation));
+		if (Minecraft.getInstance().level.dimension() == Level.END && Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::supportsEndFlash).orElse(false)) {
+
+			EndFlashState state = Minecraft.getInstance().level.endFlashState();
+			float skyAngle = state.getXAngle();
+
+			float h = state.getYAngle();
+
+			target.mulPose(Axis.XP.rotationDegrees(0.0F - skyAngle));
+
+			target.mulPose(Axis.YP.rotationDegrees(h));
+		} else {
+			float skyAngle;
+
+			if (shadowAngle < 0.25f) {
+				skyAngle = shadowAngle + 0.75f;
+			} else {
+				skyAngle = shadowAngle - 0.25f;
+			}
+
+			target.mulPose(Axis.XP.rotationDegrees(90.0F));
+			target.mulPose(Axis.ZP.rotationDegrees(skyAngle * -360.0f));
+			target.mulPose(Axis.XP.rotationDegrees(sunPathRotation));
+		}
 	}
 
 	public static void snapModelViewToGrid(PoseStack target, float shadowIntervalSize, double cameraX, double cameraY, double cameraZ) {

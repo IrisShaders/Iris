@@ -103,10 +103,12 @@ public class ShaderProperties {
 	private OptionalBoolean concurrentCompute = OptionalBoolean.DEFAULT;
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
+	private OptionalBoolean breaksAnisotropy = OptionalBoolean.DEFAULT;
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateEntityDraws = OptionalBoolean.DEFAULT;
 	private OptionalBoolean skipAllRendering = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
+	private OptionalBoolean supportsEndFlash = OptionalBoolean.DEFAULT;
 	private OptionalBoolean occlusionCulling = OptionalBoolean.DEFAULT;
 	private ShadowCullState shadowCulling = ShadowCullState.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
@@ -179,7 +181,7 @@ public class ShaderProperties {
 				switch (value) {
 					case "false" -> shadowCulling = ShadowCullState.DISTANCE;
 					case "true" -> shadowCulling = ShadowCullState.ADVANCED;
-					case "reversed" -> shadowCulling = ShadowCullState.REVERSED;
+					case "reversed", "safe_zone" -> shadowCulling = ShadowCullState.SAFE_ZONE;
 					case null, default -> Iris.logger.error("Unrecognized shadow culling setting: " + value);
 				}
 			}
@@ -207,12 +209,14 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "allowConcurrentCompute", bool -> concurrentCompute = bool);
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
+			handleBooleanDirective(key, value, "breaksAnisotropy", bool -> breaksAnisotropy = bool);
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
 			handleBooleanDirective(key, value, "separateEntityDraws", bool -> {
 				separateEntityDraws = bool;
 				particleRenderingSettings = ParticleRenderingSettings.MIXED;
 			});
 			handleBooleanDirective(key, value, "frustum.culling", bool -> frustumCulling = bool);
+			handleBooleanDirective(key, value, "endFlashShadows", bool -> supportsEndFlash = bool);
 			handleBooleanDirective(key, value, "occlusion.culling", bool -> occlusionCulling = bool);
 			handleBooleanDirective(key, value, "shadow.enabled", bool -> shadowEnabled = bool);
 			handleBooleanDirective(key, value, "skipAllRendering", bool -> skipAllRendering = bool);
@@ -400,8 +404,8 @@ public class ShaderProperties {
 						name = parts[1];
 					}
 
-					if (trueIndex > 8) {
-						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
+					if (trueIndex > 12) {
+						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 12, they're reserved!");
 						return;
 					}
 
@@ -424,8 +428,8 @@ public class ShaderProperties {
 						return;
 					}
 
-					if (trueIndex > 8) {
-						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 8, they're reserved!");
+					if (trueIndex > 12) {
+						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 12, they're reserved!");
 						return;
 					}
 
@@ -629,19 +633,19 @@ public class ShaderProperties {
 		}
 	}
 
-	private static void handleBooleanDirective(String key, String value, String expectedKey, Consumer<OptionalBoolean> handler) {
-		if (!expectedKey.equals(key)) {
-			return;
-		}
+		private static void handleBooleanDirective(String key, String value, String expectedKey, Consumer<OptionalBoolean> handler) {
+			if (!expectedKey.equals(key)) {
+				return;
+			}
 
-		if ("true".equals(value) || "1".equals(value)) {
-			handler.accept(OptionalBoolean.TRUE);
-		} else if ("false".equals(value) || "0".equals(value)) {
-			handler.accept(OptionalBoolean.FALSE);
-		} else {
-			Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
+			if ("true".equals(value) || "1".equals(value)) {
+				handler.accept(OptionalBoolean.TRUE);
+			} else if ("false".equals(value) || "0".equals(value)) {
+				handler.accept(OptionalBoolean.FALSE);
+			} else {
+				Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
+			}
 		}
-	}
 
 	private static boolean handleIntDirective(String key, String value, String expectedKey, Consumer<Integer> handler) {
 		if (!expectedKey.equals(key)) {
@@ -841,6 +845,10 @@ public class ShaderProperties {
 		return separateAo;
 	}
 
+	public OptionalBoolean breaksAnisotropy() {
+		return breaksAnisotropy;
+	}
+
 	public OptionalBoolean getVoxelizeLightBlocks() {
 		return voxelizeLightBlocks;
 	}
@@ -855,6 +863,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getFrustumCulling() {
 		return frustumCulling;
+	}
+
+	public OptionalBoolean supportsEndFlash() {
+		return supportsEndFlash;
 	}
 
 	public OptionalBoolean getOcclusionCulling() {

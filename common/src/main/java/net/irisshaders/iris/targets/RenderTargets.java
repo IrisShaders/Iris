@@ -1,11 +1,17 @@
 package net.irisshaders.iris.targets;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.AddressMode;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.TextureFormat;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
+import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;
 import org.joml.Vector2i;
@@ -19,15 +25,15 @@ import java.util.Map;
 
 public class RenderTargets {
 	private final RenderTarget[] targets;
-	private final DepthTexture noTranslucents;
-	private final DepthTexture noHand;
+	private GpuTexture noTranslucents;
+	private GpuTexture noHand;
 	private final GlFramebuffer depthSourceFb;
 	private final GlFramebuffer noTranslucentsDestFb;
 	private final GlFramebuffer noHandDestFb;
 	private final List<GlFramebuffer> ownedFramebuffers;
 	private final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> targetSettingsMap;
 	private final PackDirectives packDirectives;
-	private int currentDepthTexture;
+	private GpuTexture currentDepthTexture;
 	private DepthBufferFormat currentDepthFormat;
 	private DepthCopyStrategy copyStrategy;
 	private int cachedWidth;
@@ -39,7 +45,7 @@ public class RenderTargets {
 	private int cachedDepthBufferVersion;
 	private boolean destroyed;
 
-	public RenderTargets(int width, int height, int depthTexture, int depthBufferVersion, DepthBufferFormat depthFormat, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets, PackDirectives packDirectives) {
+	public RenderTargets(int width, int height, GpuTexture depthTexture, int depthBufferVersion, DepthBufferFormat depthFormat, Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets, PackDirectives packDirectives) {
 		targets = new RenderTarget[renderTargets.size()];
 
 		targetSettingsMap = renderTargets;
@@ -61,14 +67,16 @@ public class RenderTargets {
 
 		this.depthSourceFb = createFramebufferWritingToMain(new int[]{0});
 
-		this.noTranslucents = new DepthTexture("depthtex1", width, height, currentDepthFormat);
-		this.noHand = new DepthTexture("dephtex2", width, height, currentDepthFormat);
+		TextureFormat mojangDepthFormat = IrisPlatformHelpers.getInstance().mojangDepthFormat(depthFormat);
+
+		this.noTranslucents = RenderSystem.getDevice().createTexture("Depth / Opaque", GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING, mojangDepthFormat, width, height, 1, 1);
+		this.noHand = RenderSystem.getDevice().createTexture("Depth / Before Hand", GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING, mojangDepthFormat, width, height, 1, 1);
 
 		this.noTranslucentsDestFb = createFramebufferWritingToMain(new int[]{0});
-		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents.getTextureId());
+		this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents);
 
 		this.noHandDestFb = createFramebufferWritingToMain(new int[]{0});
-		this.noHandDestFb.addDepthAttachment(this.noHand.getTextureId());
+		this.noHandDestFb.addDepthAttachment(this.noHand);
 
 		this.translucentDepthDirty = true;
 		this.handDepthDirty = true;
@@ -87,8 +95,8 @@ public class RenderTargets {
 			}
 		}
 
-		noTranslucents.destroy();
-		noHand.destroy();
+		noTranslucents.close();
+		noHand.close();
 	}
 
 	public int getRenderTargetCount() {
@@ -128,11 +136,11 @@ public class RenderTargets {
 			.setPixelFormat(settings.getInternalFormat().getPixelFormat()).build();
 	}
 
-	public int getDepthTexture() {
+	public GpuTexture getDepthTexture() {
 		return currentDepthTexture;
 	}
 
-	public DepthTexture getDepthTextureNoTranslucents() {
+	public GpuTexture getDepthTextureNoTranslucents() {
 		if (destroyed) {
 			throw new IllegalStateException("Tried to use destroyed RenderTargets");
 		}
@@ -140,11 +148,11 @@ public class RenderTargets {
 		return noTranslucents;
 	}
 
-	public DepthTexture getDepthTextureNoHand() {
+	public GpuTexture getDepthTextureNoHand() {
 		return noHand;
 	}
 
-	public boolean resizeIfNeeded(int newDepthBufferVersion, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat, PackDirectives packDirectives) {
+	public boolean resizeIfNeeded(int newDepthBufferVersion, GpuTexture newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat, PackDirectives packDirectives) {
 		boolean recreateDepth = false;
 		if (cachedDepthBufferVersion != newDepthBufferVersion) {
 			recreateDepth = true;
@@ -161,6 +169,25 @@ public class RenderTargets {
 			copyStrategy = DepthCopyStrategy.fastest(currentDepthFormat.isCombinedStencil());
 		}
 
+		if (depthFormatChanged || sizeChanged) {
+			// Reallocate depth buffers
+			noTranslucents.close();
+			noHand.close();
+
+			this.noTranslucents = RenderSystem.getDevice().createTexture("Depth / Opaque", GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING, newDepthTextureId.getFormat(), newWidth, newHeight, 1, 1);
+			this.noHand = RenderSystem.getDevice().createTexture("Depth / Before Hand", GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING, newDepthTextureId.getFormat(), newWidth, newHeight, 1, 1);
+
+			// TODO: linear horrors
+
+			this.noTranslucentsDestFb.addDepthAttachment(this.noTranslucents);
+			this.noHandDestFb.addDepthAttachment(this.noHand);
+
+			this.translucentDepthDirty = true;
+			this.handDepthDirty = true;
+
+			recreateDepth = true;
+		}
+
 		if (recreateDepth) {
 			// Re-attach the depth textures with the new depth texture ID, since Minecraft re-creates
 			// the depth texture when resizing its render targets.
@@ -170,24 +197,10 @@ public class RenderTargets {
 			// based on what I've seen of the spec, though - it seems like deleting a texture
 			// automatically detaches it from its framebuffers.
 			for (GlFramebuffer framebuffer : ownedFramebuffers) {
-				if (framebuffer == noHandDestFb || framebuffer == noTranslucentsDestFb) {
-					// NB: Do not change the depth attachment of these framebuffers
-					// as it is intentionally different
-					continue;
-				}
-
 				if (framebuffer.hasDepthAttachment()) {
 					framebuffer.addDepthAttachment(newDepthTextureId);
 				}
 			}
-		}
-
-		if (depthFormatChanged || sizeChanged) {
-			// Reallocate depth buffers
-			noTranslucents.resize(newWidth, newHeight, newDepthFormat);
-			noHand.resize(newWidth, newHeight, newDepthFormat);
-			this.translucentDepthDirty = true;
-			this.handDepthDirty = true;
 		}
 
 		if (sizeChanged) {
@@ -209,11 +222,11 @@ public class RenderTargets {
 	public void copyPreTranslucentDepth() {
 		if (translucentDepthDirty) {
 			translucentDepthDirty = false;
-			RenderSystem.bindTexture(noTranslucents.getTextureId());
+			GlStateManager._bindTexture(noTranslucents.iris$getGlId());
 			depthSourceFb.bindAsReadBuffer();
 			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, currentDepthFormat.getGlInternalFormat(), 0, 0, cachedWidth, cachedHeight, 0);
 		} else {
-			copyStrategy.copy(depthSourceFb, getDepthTexture(), noTranslucentsDestFb, noTranslucents.getTextureId(),
+			copyStrategy.copy(depthSourceFb, getDepthTexture().iris$getGlId(), noTranslucentsDestFb, noTranslucents.iris$getGlId(),
 				getCurrentWidth(), getCurrentHeight());
 		}
 	}
@@ -221,11 +234,11 @@ public class RenderTargets {
 	public void copyPreHandDepth() {
 		if (handDepthDirty) {
 			handDepthDirty = false;
-			RenderSystem.bindTexture(noHand.getTextureId());
+			GlStateManager._bindTexture(noHand.iris$getGlId());
 			depthSourceFb.bindAsReadBuffer();
 			IrisRenderSystem.copyTexImage2D(GL20C.GL_TEXTURE_2D, 0, currentDepthFormat.getGlInternalFormat(), 0, 0, cachedWidth, cachedHeight, 0);
 		} else {
-			copyStrategy.copy(depthSourceFb, getDepthTexture(), noHandDestFb, noHand.getTextureId(),
+			copyStrategy.copy(depthSourceFb, getDepthTexture().iris$getGlId(), noHandDestFb, noHand.iris$getGlId(),
 				getCurrentWidth(), getCurrentHeight());
 		}
 	}

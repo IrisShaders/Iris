@@ -4,6 +4,7 @@ import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.phys.AABB;
+import org.joml.FrustumIntersection;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 
@@ -36,6 +37,21 @@ public class CullEverythingFrustum extends Frustum implements ViewportProvider, 
 
 	@Override
 	public boolean testAab(float v, float v1, float v2, float v3, float v4, float v5) {
+		return false;
+	}
+
+	@Override
+	public int intersectAab(float v, float v1, float v2, float v3, float v4, float v5) {
+		return FrustumIntersection.OUTSIDE;
+	}
+
+	@Override
+	public boolean testSection(float v, float v1, float v2) {
+		return false;
+	}
+
+	@Override
+	public boolean testSectionExpanded(float v, float v1, float v2, float v3) {
 		return false;
 	}
 }

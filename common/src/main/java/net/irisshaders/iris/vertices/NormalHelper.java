@@ -18,15 +18,14 @@ package net.irisshaders.iris.vertices;
 
 import net.irisshaders.iris.vertices.views.QuadView;
 import net.irisshaders.iris.vertices.views.TriView;
-import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import org.joml.Vector4f;
 
-import static java.lang.Math.abs;
-
 public abstract class NormalHelper {
+	private static final float EPS = 1e-20f;
+
 	private NormalHelper() {
 	}
 
@@ -40,53 +39,6 @@ public abstract class NormalHelper {
 		iz &= 255;
 
 		return (packed & 0xFF000000) | (iz << 16) | (iy << 8) | ix;
-	}
-
-	public static void octahedronEncode(Vector2f output, float x, float y, float z) {
-		float nX = x, nY = y, nZ = z;
-
-		float invL1 = 1.0f / (Math.abs(nX) + Math.abs(nY) + Math.abs(nZ));
-		nX *= invL1;
-		nY *= invL1;
-		nZ *= invL1;
-
-		float oX, oY;
-		if (nZ >= 0.0f) {
-			oX = nX;
-			oY = nY;
-		} else {
-			float absNX = Math.abs(nX);
-			float absNY = Math.abs(nY);
-			oX = (1.0f - absNY) * (nX >= 0.0f ? 1.0f : -1.0f);
-			oY = (1.0f - absNX) * (nY >= 0.0f ? 1.0f : -1.0f);
-		}
-
-		output.set(oX, oY);
-	}
-
-	public static void tangentEncode(Vector2f output, Vector4f tangent) {
-		octahedronEncode(output, tangent.x, tangent.y, tangent.z);
-		float y_sign = output.y >= 0.0f ? 64.0f / 127.0f : -64.0f / 127.0f;
-		output.y *= 63.0f / 127.0f;
-		output.y = tangent.w >= 0.0f ? output.y : output.y + y_sign;
-	}
-
-	static Vector4f octahedron_tangent_decode(Vector2f p_oct) {
-		Vector2f oct_compressed = new Vector2f(p_oct);
-		oct_compressed.y = oct_compressed.y * 127.0f / 64.0f;
-		float r_sign = Math.abs(oct_compressed.y) >= 1.0f ? -1.0f : 1.0f;
-		oct_compressed.y = oct_compressed.y % 1.0f;
-		Vector3f res = octahedron_decode(oct_compressed.x, oct_compressed.y);
-		return new Vector4f(res.x, res.y, res.z, r_sign);
-	}
-
-	private static Vector3f octahedron_decode(float inX, float inY) {
-		Vector2f f = new Vector2f(inX, inY);
-		Vector3f n = new Vector3f(f.x, f.y, 1.0f - Math.abs(f.x) - Math.abs(f.y));
-		float t = Mth.clamp(-n.z, 0.0f, 1.0f);
-		n.x += n.x >= 0 ? -t : t;
-		n.y += n.y >= 0 ? -t : t;
-		return n.normalize();
 	}
 
 	/**
@@ -111,7 +63,6 @@ public abstract class NormalHelper {
 
 		computeFaceNormalManual(saveTo, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
 	}
-
 
 	/**
 	 * Computes the face normal of the given quad and saves it in the provided non-null vector.
@@ -472,4 +423,100 @@ public abstract class NormalHelper {
 			return (float) (1.0 / Math.sqrt(value));
 		}
 	}
+
+	private static int snorm12(float v) {
+		float c = Math.max(-1.0f, Math.min(1.0f, v));
+		int q = Math.round(c * 2047.0f);
+		if (q == -2048) q = -2047;
+		return q;
+	}
+
+	private static float signNotZero(float v) {
+		return (v >= 0.0f) ? +1.0f : -1.0f;
+	}
+
+	public static int encodeNormal(float x, float y, float z) {
+        /*
+        Original GLSL from the paper:
+
+        // Project the sphere onto the octahedron, and then onto the xy plane
+        vec2 p = v.xy * (1.0 / (abs(v.x) + abs(v.y) + abs(v.z)));
+        // Reflect the folds of the lower hemisphere over the diagonals
+        return (v.z <= 0.0) ? ((1.0 - abs(p.yx)) * signNotZero(p)) : p;
+         */
+
+		float rev = 1.0f / (Math.abs(x) + Math.abs(y) + Math.abs(z));
+		float pX = x * rev;
+		float pY = y * rev;
+
+		float outX, outY;
+
+		if (z > 0.0f) {
+			outX = pX;
+			outY = pY;
+		} else {
+			outX = ((1.0f - Math.abs(pY)) * signNotZero(pX));
+			outY = ((1.0f - Math.abs(pX)) * signNotZero(pY));
+		}
+
+		int qx = snorm12(outX);
+		int qy = snorm12(outY);
+		return ((qx & 0xFFF) << 12) | (qy & 0xFFF);
+	}
+
+	// https://backend.orbit.dtu.dk/ws/portalfiles/portal/126824972/onb_frisvad_jgt2012_v2.pdf
+	private static void onbFromUnitNormal(float nx, float ny, float nz, Vector3f t1, Vector3f t2) {
+		float s = nz >= 0.0f ? 1.0f : -1.0f;
+		float a = -1.0f / (s + nz);
+		float b = nx * ny * a;
+
+		t1.set(1.0f + s * nx * nx * a, s * b, -s * nx).normalize();
+		t2.set(
+			ny * t1.z - nz * t1.y,
+			nz * t1.x - nx * t1.z,
+			nx * t1.y - ny * t1.x
+		);
+	}
+
+	private static float encodeDiamond(float px, float py) {
+		float denom = Math.abs(px) + Math.abs(py);
+		if (denom <= EPS) return 0.5f;
+		float x = px / denom;
+		float pys = (py >= 0.0f) ? 1.0f : -1.0f;
+		return -pys * 0.25f * x + 0.5f + pys * 0.25f;
+	}
+
+	public static int packDiamondByte(Vector3fc normal, Vector3fc tangent,
+									  Vector3f t1, Vector3f t2, Vector3f tp) {
+		t2.set(normal).normalize();
+		float nx = t2.x, ny = t2.y, nz = t2.z;
+
+		onbFromUnitNormal(nx, ny, nz, t1, t2); // This is what fixes problems with UV???
+
+		float NdT = nx * tangent.x() + ny * tangent.y() + nz * tangent.z();
+		tp.set(tangent).sub(nx * NdT, ny * NdT, nz * NdT);
+
+		if (tp.lengthSquared() > EPS) {
+			tp.normalize();
+		} else {
+			tp.set(t1);
+		}
+
+		float px = tp.dot(t1);
+		float py = tp.dot(t2);
+		float d = encodeDiamond(px, py);
+		int q = Math.min(256, Math.max(0, Math.round(d * 256.0f)));
+		return q & 0xFF;
+	}
+
+	public static int encodeNormalTangent(Vector3f normal, Vector3f tangent,
+										  Vector3f scratch1, Vector3f scratch2, Vector3f scratchOut) {
+		int encodedNormal = encodeNormal(normal.x, normal.y, normal.z);
+		int encodedTangent = packDiamondByte(normal, tangent, scratch1, scratch2, scratchOut);
+
+		// Bits 0-23: normal (12-bit x, 12-bit y)
+		// Bits 24-31: tangent
+		return (encodedTangent << 24) | encodedNormal;
+	}
+
 }

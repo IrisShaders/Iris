@@ -1,5 +1,6 @@
 package net.irisshaders.iris.mixin.statelisteners;
 
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,15 +21,11 @@ public class MixinRenderSystem {
 		StateUpdateNotifiers.fogEndNotifier = listener -> fogEndListener = listener;
 	}
 
-	@Inject(method = "setShaderFogStart", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderSystem;shaderFogStart:F", shift = At.Shift.AFTER))
-	private static void iris$onFogStart(float start, CallbackInfo ci) {
+	@Inject(method = "setShaderFog", at = @At(value = "HEAD"))
+	private static void iris$onFogStart(GpuBufferSlice gpuBufferSlice, CallbackInfo ci) {
 		if (fogStartListener != null) {
 			fogStartListener.run();
 		}
-	}
-
-	@Inject(method = "setShaderFogEnd", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderSystem;shaderFogEnd:F", shift = At.Shift.AFTER))
-	private static void iris$onFogEnd(float end, CallbackInfo ci) {
 		if (fogEndListener != null) {
 			fogEndListener.run();
 		}

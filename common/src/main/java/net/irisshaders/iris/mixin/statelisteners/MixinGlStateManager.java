@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin.statelisteners;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -17,15 +17,8 @@ public class MixinGlStateManager {
 		StateUpdateNotifiers.blendFuncNotifier = listener -> blendFuncListener = listener;
 	}
 
-	@Inject(method = "_blendFunc", at = @At("RETURN"), remap = false)
-	private static void iris$onBlendFunc(int srcRgb, int dstRgb, CallbackInfo ci) {
-		if (blendFuncListener != null) {
-			blendFuncListener.run();
-		}
-	}
-
 	@Inject(method = "_blendFuncSeparate", at = @At("RETURN"), remap = false)
-	private static void iris$onBlendFuncSeparate(int srcRgb, int dstRgb, int srcAlpha, int dstAlpha, CallbackInfo ci) {
+	private static void iris$onBlendFunc(int i, int j, int k, int l, CallbackInfo ci) {
 		if (blendFuncListener != null) {
 			blendFuncListener.run();
 		}

@@ -25,6 +25,7 @@ public class WorldRenderingSettings {
 	private boolean separateEntityDraws;
 	private boolean voxelizeLightBlocks;
 	private ChunkVertexType chunkVertexFormat;
+	private boolean breaksAnisotropy = false;
 
 	public WorldRenderingSettings() {
 		reloadRequired = false;
@@ -170,5 +171,13 @@ public class WorldRenderingSettings {
 
 	public boolean hasVillagerConversionId() {
 		return hasVillagerConversionId;
+	}
+
+	public void setBreaksAnisotropy(boolean b) {
+		this.breaksAnisotropy = b;
+	}
+
+	public boolean breaksAnisotropy() {
+		return breaksAnisotropy;
 	}
 }

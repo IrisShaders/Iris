@@ -1,18 +1,25 @@
 package net.irisshaders.iris.pathways;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.program.Program;
 import net.irisshaders.iris.gl.program.ProgramBuilder;
 import net.irisshaders.iris.gl.program.ProgramSamplers;
 import net.irisshaders.iris.gl.program.ProgramUniforms;
+import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.PixelType;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
+import net.irisshaders.iris.mixinterface.CustomPass;
+import net.irisshaders.iris.pipeline.CompositeRenderer;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.io.IOUtils;
@@ -22,10 +29,17 @@ import org.lwjgl.opengl.GL21C;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.function.IntSupplier;
 
 public class CenterDepthSampler {
 	private static final double LN2 = Math.log(2);
+	private static final CustomPass EMPTY_STATE = new CustomPass() {
+		@Override
+		public void setupState() {
+
+		}
+	};
 	private final Program program;
 	private final GlFramebuffer framebuffer;
 	private final int texture;
@@ -42,7 +56,7 @@ public class CenterDepthSampler {
 		InternalTextureFormat format = InternalTextureFormat.R32F;
 		setupColorTexture(texture, format);
 		setupColorTexture(altTexture, format);
-		RenderSystem.bindTexture(0);
+		GlStateManager._bindTexture(0);
 
 		this.framebuffer.addColorAttachment(0, texture);
 		ProgramBuilder builder;
@@ -56,8 +70,8 @@ public class CenterDepthSampler {
 			throw new RuntimeException(e);
 		}
 
-		builder.addDynamicSampler(depthSupplier, "depth");
-		builder.addDynamicSampler(() -> altTexture, "altDepth");
+		builder.addDynamicSampler(depthSupplier,  GlSampler.NEAREST, "depth");
+		builder.addDynamicSampler(() -> altTexture, GlSampler.NEAREST,  "altDepth");
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
 		builder.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> (1.0f / ((halfLife * 0.1) / LN2)));
 		// TODO: can we just do this for all composites?
@@ -74,21 +88,34 @@ public class CenterDepthSampler {
 
 		hasFirstSample = true;
 
-		this.framebuffer.bind();
-		this.program.use();
+		GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).getBuffer(6);
+		VertexFormat.IndexType type = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).type();
+		BlendModeOverride.restore();
 
-		RenderSystem.viewport(0, 0, 1, 1);
+		GlStateManager._disableBlend();
+		try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "centerDepthSmooth sampler", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty())) {
+			renderPass.setPipeline(CompositeRenderer.COMPOSITE_PIPELINE);
+			renderPass.setIndexBuffer(indices, type);
+			renderPass.setVertexBuffer(0, FullScreenQuadRenderer.INSTANCE.getQuad());
 
-		FullScreenQuadRenderer.INSTANCE.render();
+			renderPass.iris$setCustomPass(EMPTY_STATE);
 
-		ProgramUniforms.clearActiveUniforms();
-		ProgramSamplers.clearActiveSamplers();
+			this.framebuffer.bind();
+			this.program.use();
+
+			GlStateManager._viewport(0, 0, 1, 1);
+
+			renderPass.drawIndexed(0, 0, 6, 1);
+
+			ProgramUniforms.clearActiveUniforms();
+			ProgramSamplers.clearActiveSamplers();
+			BlendModeOverride.restore();
+
+		}
 
 		// The API contract of DepthCopyStrategy claims it can only copy depth, however the 2 non-stencil methods used are entirely capable of copying color as of now.
 		DepthCopyStrategy.fastest(false).copy(this.framebuffer, texture, null, altTexture, 1, 1);
 
-		//Reset viewport
-		Minecraft.getInstance().getMainRenderTarget().bindWrite(true);
 	}
 
 	public void setupColorTexture(int texture, InternalTextureFormat format) {

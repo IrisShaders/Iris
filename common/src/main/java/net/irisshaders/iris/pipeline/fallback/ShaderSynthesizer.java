@@ -14,20 +14,39 @@ public class ShaderSynthesizer {
 		shader.append("#version 150 core\n");
 
 		// Vertex Position
-		shader.append("uniform mat4 ModelViewMat;\n");
-		shader.append("uniform mat4 ProjMat;\n");
+		shader.append("""
+			layout(std140) uniform Projection {
+			    mat4 ProjMat;
+			};
+			""");
+		shader.append("""
+			layout(std140) uniform DynamicTransforms {
+			    mat4 ModelViewMat;
+			    vec4 ColorModulator;
+			    vec3 ModelOffset;
+			    mat4 TextureMat;
+			};
+			""");
+		shader.append("""
+			layout(std140) uniform Globals {
+			    vec2 ScreenSize;
+			    float GlintAlpha;
+			    float GameTime;
+			    int MenuBlurRadius;
+			};
+			""");
 		shader.append("in vec3 Position;\n");
 
 		String position;
 
 		if (hasChunkOffset) {
-			shader.append("uniform vec3 ChunkOffset;\n");
-			position = "Position + ChunkOffset";
+			position = "Position + ModelOffset";
 		} else {
 			position = "Position";
 		}
 
 		if (inputs.isNewLines()) {
+			shader.append("in float LineWidth;\n");
 			shader.append("const float VIEW_SHRINK = 1.0 - (1.0 / 256.0);\n" +
 				"const mat4 VIEW_SCALE = mat4(\n" +
 				"    VIEW_SHRINK, 0.0, 0.0, 0.0,\n" +
@@ -35,9 +54,6 @@ public class ShaderSynthesizer {
 				"    0.0, 0.0, VIEW_SHRINK, 0.0,\n" +
 				"    0.0, 0.0, 0.0, 1.0\n" +
 				");\n");
-
-			shader.append("uniform float LineWidth;\n" +
-				"uniform vec2 ScreenSize;\n");
 
 			main.append("vec4 linePosStart = ProjMat * VIEW_SCALE * ModelViewMat * vec4(" + position + ", 1.0);\n" +
 				"    vec4 linePosEnd = ProjMat * VIEW_SCALE * ModelViewMat * vec4(" + position + " + Normal, 1.0);\n" +
@@ -68,7 +84,6 @@ public class ShaderSynthesizer {
 			shader.append("flat ");
 		}
 		shader.append("out vec4 iris_vertexColor;\n");
-		shader.append("uniform vec4 ColorModulator;\n");
 
 		// Vertex Normal
 		if (inputs.hasNormal() && inputs.hasColor()) {
@@ -77,8 +92,11 @@ public class ShaderSynthesizer {
 			// TODO: Entity lighting without color? Only a theoretical possibility since all
 			//       entity shaders use vertex color.
 			if (entityLighting) {
-				shader.append("uniform vec3 Light0_Direction;\n");
-				shader.append("uniform vec3 Light1_Direction;\n");
+				shader.append("""
+					layout(std140) uniform Lighting {
+					    vec3 Light0_Direction;
+					    vec3 Light1_Direction;
+					};""");
 
 				// Copied from Mojang code.
 				shader.append("vec4 minecraft_mix_light(vec3 lightDir0, vec3 lightDir1, vec3 normal, vec4 color) {\n" +
@@ -110,11 +128,11 @@ public class ShaderSynthesizer {
 
 		// Overlay Color
 		if (inputs.hasOverlay()) {
-			shader.append("uniform sampler2D overlay;\n");
+			shader.append("uniform sampler2D Sampler1;\n");
 			shader.append("in ivec2 UV1;\n");
 			shader.append("out vec4 overlayColor;\n");
 
-			main.append("    overlayColor = texelFetch(overlay, UV1, 0);\n");
+			main.append("    overlayColor = texelFetch(Sampler1, UV1, 0);\n");
 		}
 
 		// Vertex Texture
@@ -122,7 +140,6 @@ public class ShaderSynthesizer {
 			shader.append("in vec2 UV0;\n");
 			shader.append("out vec2 texCoord;\n");
 
-			shader.append("uniform mat4 TextureMat;\n");
 			main.append("    texCoord = (TextureMat * vec4(UV0, 0.0, 1.0)).xy;\n");
 		}
 
@@ -140,7 +157,7 @@ public class ShaderSynthesizer {
 			shader.append("in ivec2 UV2;\n");
 			shader.append("out vec2 lightCoord;\n");
 
-			main.append("    lightCoord = clamp(UV2 / 256.0, vec2(0.5 / 16.0), vec2(15.5 / 16.0));\n");
+			main.append("    lightCoord = clamp(vec2(UV2 + 8) / 256.0, vec2(0.5 / 16.0), vec2(15.5 / 16.0));\n");
 		}
 
 
@@ -164,14 +181,18 @@ public class ShaderSynthesizer {
 			shader.append("flat ");
 		}
 		shader.append("in vec4 iris_vertexColor;\n");
-
+		shader.append("""
+			layout(std140) uniform Projection {
+			    mat4 ProjMat;
+			};
+			""");
 		main.append("float iris_vertexColorAlpha = iris_vertexColor.a;");
 
 		if (inputs.hasTex()) {
-			shader.append("uniform sampler2D gtexture;\n");
+			shader.append("uniform sampler2D Sampler0;\n");
 			shader.append("in vec2 texCoord;\n");
 
-			main.append("    vec4 color = texture(gtexture, texCoord)");
+			main.append("    vec4 color = texture(Sampler0, texCoord)");
 
 			if (intensityTex) {
 				main.append(".rrrr");
@@ -197,16 +218,23 @@ public class ShaderSynthesizer {
 		}
 
 		if (inputs.hasLight()) {
-			shader.append("uniform sampler2D lightmap;\n");
+			shader.append("uniform sampler2D Sampler2;\n");
 			shader.append("in vec2 lightCoord;\n");
 
-			main.append("    color *= texture(lightmap, lightCoord);\n");
+			main.append("    color *= texture(Sampler2, lightCoord);\n");
 		}
 
 		if (fogMode == FogMode.PER_VERTEX || fogMode == FogMode.PER_FRAGMENT) {
-			shader.append("uniform vec4 FogColor;\n");
-			shader.append("uniform float FogStart;\n");
-			shader.append("uniform float FogEnd;\n");
+			shader.append("""
+				layout(std140) uniform Fog {
+				    vec4 FogColor;
+				    float FogEnvironmentalStart;
+				    float FogEnvironmentalEnd;
+				    float FogRenderDistanceStart;
+				    float FogRenderDistanceEnd;
+				    float FogSkyEnd;
+				    float FogCloudsEnd;
+				};""");
 
 			if (fogMode == FogMode.PER_VERTEX) {
 				// Use vertex distances, close enough
@@ -214,7 +242,6 @@ public class ShaderSynthesizer {
 				main.append("float fragmentDistance = vertexDistance;\n");
 			} else /*if (fogMode == FogMode.PER_FRAGMENT)*/ {
 				// Use fragment distances since beam vertices are very far apart
-				shader.append("uniform mat4 ProjMat;\n");
 				main.append("float fragmentDistance = -ProjMat[3].z / ((gl_FragCoord.z) * -2.0 + 1.0 - ProjMat[2].z);\n");
 			}
 
@@ -227,7 +254,7 @@ public class ShaderSynthesizer {
 			main.append("        float x = fragmentDistance * FogDensity;\n");
 			main.append("        fogFactor = exp(-x * x);\n");
 			main.append("    } else {\n");
-			main.append("        fogFactor = (FogEnd - fragmentDistance) / (FogEnd - FogStart);\n");
+			main.append("        fogFactor = (FogRenderDistanceEnd - fragmentDistance) / (FogRenderDistanceEnd - FogRenderDistanceStart);\n");
 			main.append("    }\n");
 
 			main.append("    fogFactor = clamp(fogFactor, 0.0, 1.0);\n");

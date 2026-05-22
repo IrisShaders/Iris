@@ -1,8 +1,10 @@
 plugins {
     id("java")
     id("idea")
-    id("fabric-loom") version ("1.9-SNAPSHOT")
+    id("net.fabricmc.fabric-loom") version("1.15.4")
 }
+
+evaluationDependsOn(":common")
 
 val MINECRAFT_VERSION: String by rootProject.extra
 val PARCHMENT_VERSION: String? by rootProject.extra
@@ -12,6 +14,7 @@ val SODIUM_DEPENDENCY_FABRIC: Any by rootProject.extra
 val MOD_VERSION: String by rootProject.extra
 
 repositories {
+    mavenLocal()
     exclusiveContent {
         forRepository {
             maven {
@@ -31,48 +34,43 @@ base {
 
 dependencies {
     minecraft("com.mojang:minecraft:${MINECRAFT_VERSION}")
-    mappings(loom.layered {
-        officialMojangMappings()
-        if (PARCHMENT_VERSION != null) {
-            parchment("org.parchmentmc.data:parchment-${MINECRAFT_VERSION}:${PARCHMENT_VERSION}@zip")
-        }
-    })
-    modImplementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
+
+    implementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
     fun addRuntimeFabricModule(name: String) {
         val module = fabricApi.module(name, FABRIC_API_VERSION)
-        modRuntimeOnly(module)
+        runtimeOnly(module)
     }
 
     fun addEmbeddedFabricModule(name: String) {
         val module = fabricApi.module(name, FABRIC_API_VERSION)
-        modImplementation(module)
+        implementation(module)
         include(module)
     }
 
     fun implementAndInclude(name: String) {
-        modImplementation(name)
+        implementation(name)
         include(name)
     }
 
     // Fabric API modules
     addEmbeddedFabricModule("fabric-api-base")
-    addEmbeddedFabricModule("fabric-key-binding-api-v1")
-    addRuntimeFabricModule("fabric-block-view-api-v2")
-    addRuntimeFabricModule("fabric-renderer-api-v1")
-    addRuntimeFabricModule("fabric-rendering-data-attachment-v1")
+    addEmbeddedFabricModule("fabric-key-mapping-api-v1")
+    addRuntimeFabricModule("fabric-block-getter-api-v2")
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
+    addRuntimeFabricModule("fabric-lifecycle-events-v1")
+    addRuntimeFabricModule("fabric-renderer-api-v1")
 
-    modImplementation(SODIUM_DEPENDENCY_FABRIC)
+    implementation(SODIUM_DEPENDENCY_FABRIC)
     implementAndInclude("org.antlr:antlr4-runtime:4.13.1")
     implementAndInclude("io.github.douira:glsl-transformer:3.0.0-pre3")
     implementAndInclude("org.anarres:jcpp:1.4.14")
 
-    implementation(project.project(":common").sourceSets.getByName("vendored").output)
-    implementation(project.project(":common").sourceSets.getByName("api").output)
-    compileOnly(project.project(":common").sourceSets.getByName("headers").output)
-    implementation(project.project(":common").sourceSets.getByName("main").output)
+    implementation(project(":common"))
+    implementation(project(path = ":common", configuration = "vendoredJar"))
+    implementation(project(path = ":common", configuration = "apiJar"))
+    compileOnly(project(path = ":common", configuration = "headersJar"))
 
     compileOnly(files(rootDir.resolve("DHApi.jar")))
 }
@@ -90,7 +88,10 @@ loom {
         accessWidenerPath.set(project(":common").file("src/main/resources/iris.accesswidener"))
 
     @Suppress("UnstableApiUsage")
-    mixin { defaultRefmapName.set("iris-fabric.refmap.json") }
+    mixin {
+        defaultRefmapName.set("iris-fabric.refmap.json")
+        useLegacyMixinAp = false
+    }
 
     runs {
         named("client") {
@@ -98,6 +99,17 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
+           // vmArgs("-Dmixin.debug.export=true")
+           // vmArg("-XX:+AllowEnhancedClassRedefinition")
+        }
+        create("clientWithRenderdoc") {
+            client()
+            configName = "Fabric Client"
+            ideConfigGenerated(true)
+            runDir("run")
+            environmentVariable("LD_PRELOAD", "/home/ims/renderdoc/build/lib/librenderdoc.so")
+            vmArgs("-DMC_DEBUG_ENABLED=true", "-DMC_DEBUG_DUMP_TEXTURE_ATLAS=true")
+            programArgs("--renderDebugLabels")
         }
     }
 }
@@ -120,5 +132,5 @@ tasks {
         manifest.attributes["Main-Class"] = "net.irisshaders.iris.LaunchWarn"
     }
 
-    remapJar.get().destinationDirectory = rootDir.resolve("build").resolve("libs")
+    jar.get().destinationDirectory = rootDir.resolve("build").resolve("libs")
 }

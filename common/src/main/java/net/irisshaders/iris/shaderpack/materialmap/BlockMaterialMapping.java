@@ -7,9 +7,12 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -41,8 +44,8 @@ public class BlockMaterialMapping {
 	}
 
 	private static void addTag(TagEntry tagEntry, Object2IntMap<BlockState> idMap, int intId) {
-		List<TagKey<Block>> compatibleTags = BuiltInRegistries.BLOCK.getTagNames().filter(t -> t.location().getNamespace().equalsIgnoreCase(tagEntry.id().getNamespace()) &&
-			t.location().getPath().equalsIgnoreCase(tagEntry.id().getName())).toList();
+		List<HolderSet.Named<Block>> compatibleTags = BuiltInRegistries.BLOCK.getTags().filter(t -> t.key().location().getNamespace().equalsIgnoreCase(tagEntry.id().getNamespace()) &&
+			t.key().location().getPath().equalsIgnoreCase(tagEntry.id().getName())).toList();
 
 		if (compatibleTags.isEmpty()) {
 			if (IrisPlatformHelpers.getInstance().isDevelopmentEnvironment()) {
@@ -51,7 +54,7 @@ public class BlockMaterialMapping {
 		} else if (compatibleTags.size() > 1) {
 			Iris.logger.fatal("You've broke the system; congrats. More than one tag matched " + tagEntry.id());
 		} else {
-			BuiltInRegistries.BLOCK.getTag(compatibleTags.getFirst()).get().forEach((block) -> {
+			BuiltInRegistries.BLOCK.getTagOrEmpty(compatibleTags.getFirst().key()).forEach((block) -> {
 					Map<String, String> propertyPredicates = tagEntry.propertyPredicates();
 
 					if (propertyPredicates.isEmpty()) {
@@ -77,7 +80,7 @@ public class BlockMaterialMapping {
 
 						if (property == null) {
 							Iris.logger.warn("Error while parsing the block ID map entry for tag \"" + "block." + intId + "\":");
-							Iris.logger.warn("- The block " + block.unwrapKey().get().location() + " has no property with the name " + key + ", ignoring!");
+							Iris.logger.warn("- The block " + block.unwrapKey().get().identifier() + " has no property with the name " + key + ", ignoring!");
 
 							return;
 						}
@@ -106,9 +109,9 @@ public class BlockMaterialMapping {
 		Map<Block, BlockRenderType> blockTypeIds = new Reference2ReferenceOpenHashMap<>();
 
 		blockPropertiesMap.forEach((id, blockType) -> {
-			ResourceLocation resourceLocation = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), id.getName());
+			Identifier identifier = Identifier.fromNamespaceAndPath(id.getNamespace(), id.getName());
 
-			Block block = BuiltInRegistries.BLOCK.get(resourceLocation);
+			Block block = BuiltInRegistries.BLOCK.get(identifier).map(Holder::value).orElse(Blocks.AIR);
 
 			blockTypeIds.put(block, blockType);
 		});
@@ -116,32 +119,30 @@ public class BlockMaterialMapping {
 		return blockTypeIds;
 	}
 
-	public static RenderType convertBlockToRenderType(BlockRenderType type) {
+	public static ChunkSectionLayer convertBlockToRenderType(BlockRenderType type) {
 		if (type == null) {
 			return null;
 		}
 
 		return switch (type) {
-			case SOLID -> RenderType.solid();
-			case CUTOUT -> RenderType.cutout();
-			case CUTOUT_MIPPED -> RenderType.cutoutMipped();
-			case TRANSLUCENT -> RenderType.translucent();
+			case SOLID -> ChunkSectionLayer.SOLID;
+			case CUTOUT -> ChunkSectionLayer.CUTOUT;
+			case CUTOUT_MIPPED -> ChunkSectionLayer.CUTOUT;
+			case TRANSLUCENT -> ChunkSectionLayer.TRANSLUCENT;
 		};
 	}
 
 	private static void addBlockStates(BlockEntry entry, Object2IntMap<BlockState> idMap, int intId) {
 		NamespacedId id = entry.id();
-		ResourceLocation resourceLocation;
+		Identifier identifier;
 		try {
-			resourceLocation = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), id.getName());
+			identifier = Identifier.fromNamespaceAndPath(id.getNamespace(), id.getName());
 		} catch (Exception exception) {
 			throw new IllegalStateException("Failed to get entry for " + intId, exception);
 		}
 
-		Block block = BuiltInRegistries.BLOCK.get(resourceLocation);
+		Block block = BuiltInRegistries.BLOCK.get(identifier).map(Holder::value).orElse(Blocks.AIR);
 
-		// If the block doesn't exist, by default the registry will return AIR. That probably isn't what we want.
-		// TODO: Assuming that Registry.BLOCK.getDefaultId() == "minecraft:air" here
 		if (block == Blocks.AIR) {
 			return;
 		}
@@ -171,7 +172,7 @@ public class BlockMaterialMapping {
 
 			if (property == null) {
 				Iris.logger.warn("Error while parsing the block ID map entry for \"" + "block." + intId + "\":");
-				Iris.logger.warn("- The block " + resourceLocation + " has no property with the name " + key + ", ignoring!");
+				Iris.logger.warn("- The block " + identifier + " has no property with the name " + key + ", ignoring!");
 
 				return;
 			}

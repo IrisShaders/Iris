@@ -15,7 +15,7 @@ import net.irisshaders.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -23,10 +23,15 @@ import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,14 +47,14 @@ import java.util.List;
 import java.util.Properties;
 
 public class ShaderPackOptionList extends IrisContainerObjectSelectionList<ShaderPackOptionList.BaseEntry> {
-	private static final ResourceLocation MENU_LIST_BACKGROUND = ResourceLocation.withDefaultNamespace("textures/gui/menu_background.png");
+	private static final Identifier MENU_LIST_BACKGROUND = Identifier.withDefaultNamespace("textures/gui/menu_background.png");
 	private final List<AbstractElementWidget<?>> elementWidgets = new ArrayList<>();
 	private final ShaderPackScreen screen;
 	private final NavigationController navigation;
 	private OptionMenuContainer container;
 
 	public ShaderPackOptionList(ShaderPackScreen screen, NavigationController navigation, ShaderPack pack, Minecraft client, int width, int height, int top, int bottom, int left, int right) {
-		super(client, width, bottom, top, bottom, left, right, 24);
+		super(client, width, bottom, top + 4, bottom, left, right, 24);
 		this.navigation = navigation;
 		this.screen = screen;
 
@@ -76,39 +81,35 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 	}
 
 	@Override
-	protected void renderListBackground(GuiGraphics pAbstractSelectionList0) {
-		if (screen.listTransition.getAsFloat() < 0.02f) return;
-		RenderSystem.enableBlend();
-		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, screen.listTransition.getAsFloat());
-		pAbstractSelectionList0.blit(
+	protected void extractListBackground(GuiGraphicsExtractor pAbstractSelectionList0) {
+		float transition = screen.listTransition.getAsFloat();
+		//RenderSystem.enableBlend();
+		// TODO 1.21.6
+		//RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, Math.max(screen.listTransition.getAsFloat(), 0.01f));
+		pAbstractSelectionList0.blit(RenderPipelines.GUI_TEXTURED,
 			MENU_LIST_BACKGROUND,
-			this.getX(),
-			this.getY() + 3,
-			(float) this.getRight(),
-			(float) (this.getBottom() + (int) this.getScrollAmount()),
-			this.getWidth(),
-			this.getHeight(),
-			32,
-			32
+			this.getX(), this.getY(), (float)this.getRight(), (float)(this.getBottom() + (int)this.scrollAmount()), this.getWidth(), this.getHeight(), 32, 32
 		);
+		//if (transition < 0.99f) pAbstractSelectionList0.flush();
 
-		RenderSystem.disableBlend();
-		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+		//RenderSystem.disableBlend();
+		//RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
 	@Override
-	protected void renderListSeparators(GuiGraphics pAbstractSelectionList0) {
-		RenderSystem.enableBlend();
-		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, screen.listTransition.getAsFloat());
-		pAbstractSelectionList0.blit(CreateWorldScreen.HEADER_SEPARATOR, this.getX(), this.getY() + 2, 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
-		pAbstractSelectionList0.blit(CreateWorldScreen.FOOTER_SEPARATOR, this.getX(), this.getBottom(), 0.0F, 0.0F, this.getWidth(), 2, 32, 2);
-		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-		RenderSystem.disableBlend();
-	}
-
-	@Override
-	protected boolean isValidMouseClick(int i) {
-		return i == GLFW.GLFW_MOUSE_BUTTON_1 || i == GLFW.GLFW_MOUSE_BUTTON_2;
+	protected void extractListSeparators(GuiGraphicsExtractor pAbstractSelectionList0) {
+		float transition = screen.listTransition.getAsFloat();
+		if (transition < 0.02f) return;
+		//if (transition < 0.99f) pAbstractSelectionList0.flush();
+		// TODO 1.21.6
+		//RenderSystem.enableBlend();
+		//RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, Math.max(screen.listTransition.getAsFloat(), 0.01f));
+		int col = ARGB.colorFromFloat(transition, 1.0f, 1.0f, 1.0f);
+		pAbstractSelectionList0.blit(RenderPipelines.GUI_TEXTURED, CreateWorldScreen.HEADER_SEPARATOR, this.getX(), this.getY() - 2, 0.0F, 0.0F, this.getWidth(), 2, 32, 2, col);
+		pAbstractSelectionList0.blit(RenderPipelines.GUI_TEXTURED, CreateWorldScreen.FOOTER_SEPARATOR, this.getX(), this.getBottom(), 0.0F, 0.0F, this.getWidth(), 2, 32, 2, col);
+		//if (transition < 0.99f) pAbstractSelectionList0.flush();
+		//RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+		//RenderSystem.disableBlend();
 	}
 
 	public void addHeader(Component text, boolean backButton) {
@@ -164,12 +165,12 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		}
 
 		@Override
-		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-			this.cachedWidth = entryWidth;
-			this.cachedPosX = x;
+		public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean isHovered, float tickDelta) {
+			this.cachedWidth = getContentWidth();
+			this.cachedPosX = getContentX();
 
 			// The amount of space widgets will occupy, excluding margins. Will be divided up between widgets.
-			int totalWidthWithoutMargins = entryWidth - (2 * (widgets.size() - 1));
+			int totalWidthWithoutMargins = getContentWidth() - (2 * (widgets.size() - 1));
 
 			totalWidthWithoutMargins -= 3; // Centers it for some reason
 
@@ -178,9 +179,9 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 
 			for (int i = 0; i < widgets.size(); i++) {
 				AbstractElementWidget<?> widget = widgets.get(i);
-				boolean widgetHovered = (hovered && (getHoveredWidget(mouseX) == i)) || getFocused() == widget;
+				boolean widgetHovered = (isHovered && (getHoveredWidget(mouseX) == i)) || getFocused() == widget;
 
-				widget.bounds = new ScreenRectangle(x + (int) ((singleWidgetWidth + 2) * i), y, (int) singleWidgetWidth, entryHeight + 2);
+				widget.bounds = new ScreenRectangle(getContentX() + (int) ((singleWidgetWidth + 2) * i), getContentY(), (int) singleWidgetWidth, getContentHeight() + 2);
 				widget.render(guiGraphics, mouseX, mouseY, tickDelta, widgetHovered);
 
 				screen.setElementHoveredStatus(widget, widgetHovered);
@@ -194,13 +195,13 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		}
 
 		@Override
-		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			return this.widgets.get(getHoveredWidget((int) mouseX)).mouseClicked(mouseX, mouseY, button);
+		public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
+			return this.widgets.get(getHoveredWidget((int) event.x())).mouseClicked(event, bl2);
 		}
 
 		@Override
-		public boolean mouseReleased(double mouseX, double mouseY, int button) {
-			return this.widgets.get(getHoveredWidget((int) mouseX)).mouseReleased(mouseX, mouseY, button);
+		public boolean mouseReleased(MouseButtonEvent event) {
+			return this.widgets.get(getHoveredWidget((int) event.x())).mouseReleased(event);
 		}
 
 		@Override
@@ -222,9 +223,9 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		public static final MutableComponent RESET_HOLD_SHIFT_TOOLTIP = Component.translatable("options.iris.reset.tooltip.holdShift").withStyle(ChatFormatting.GOLD);
 		public static final MutableComponent RESET_TOOLTIP = Component.translatable("options.iris.reset.tooltip").withStyle(ChatFormatting.RED);
 		public static final MutableComponent IMPORT_TOOLTIP = Component.translatable("options.iris.importSettings.tooltip")
-			.withStyle(style -> style.withColor(TextColor.fromRgb(0x4da6ff)));
+			.withStyle(style -> style.withColor(TextColor.fromRgb(0xFF4da6ff)));
 		public static final MutableComponent EXPORT_TOOLTIP = Component.translatable("options.iris.exportSettings.tooltip")
-			.withStyle(style -> style.withColor(TextColor.fromRgb(0xfc7d3d)));
+			.withStyle(style -> style.withColor(TextColor.fromRgb(0xFFfc7d3d)));
 
 		private static final int MIN_SIDE_BUTTON_WIDTH = 42;
 		private static final int BUTTON_HEIGHT = 16;
@@ -266,30 +267,35 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		}
 
 		@Override
-		public void render(GuiGraphics guiGraphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+		public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean isHovered, float tickDelta) {
 			// Draw dividing line
+			int x = getX();
+			int y = getY();
+			int entryWidth = getWidth();
+			int entryHeight = getHeight();
 			guiGraphics.fill(x - 3, (y + entryHeight) - 2, x + entryWidth, (y + entryHeight) - 1, 0x66BEBEBE);
 
 			Font font = Minecraft.getInstance().font;
 
 			// Draw header text
-			renderScrollingString(guiGraphics, font, text, x + (int) (entryWidth * 0.5), x + 5, y + 5, ((x + entryWidth) - 10) - utilityButtons.getWidth(), y + 15, 0xFFFFFF);
+			// TODO
+			guiGraphics.textRenderer().acceptScrolling(text, x + (int) (entryWidth * 0.5), x + 5, ((x + entryWidth) - 10) - utilityButtons.getWidth(), y + 5, y + 15);
 
 			GuiUtil.bindIrisWidgetsTexture();
 
 			// Draw back button if present
 			if (this.backButton != null) {
-				backButton.render(guiGraphics, x, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, hovered);
+				backButton.render(guiGraphics, x, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, isHovered);
 			}
 
-			boolean shiftDown = Screen.hasShiftDown();
+			boolean shiftDown = Minecraft.getInstance().hasShiftDown();
 
 			// Set the appearance of the reset button
 			this.resetButton.disabled = !shiftDown && !resetButton.isFocused();
 			this.resetButton.text = !resetButton.disabled ? RESET_BUTTON_TEXT_ACTIVE : RESET_BUTTON_TEXT_INACTIVE;
 
 			// Draw the utility buttons
-			this.utilityButtons.renderRightAligned(guiGraphics, (x + entryWidth) - 3, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, hovered);
+			this.utilityButtons.renderRightAligned(guiGraphics, (x + entryWidth) - 3, y, BUTTON_HEIGHT, mouseX, mouseY, tickDelta, isHovered);
 
 			// Draw the reset button's tooltip
 			if (this.resetButton.isHovered() || this.resetButton.isFocused()) {
@@ -305,7 +311,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 			}
 		}
 
-		private void queueBottomRightAnchoredTooltip(GuiGraphics guiGraphics, int x, int y, Font font, Component text) {
+		private void queueBottomRightAnchoredTooltip(GuiGraphicsExtractor guiGraphics, int x, int y, Font font, Component text) {
 			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(
 				font, guiGraphics, text,
 				x - (font.width(text) + 10), y - 16
@@ -320,20 +326,20 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		}
 
 		@Override
-		public boolean mouseClicked(double mouseX, double mouseY, int button) {
-			boolean backButtonResult = backButton != null && backButton.mouseClicked(mouseX, mouseY, button);
-			boolean utilButtonResult = utilityButtons.mouseClicked(mouseX, mouseY, button);
+		public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
+			boolean backButtonResult = backButton != null && backButton.mouseClicked(event, bl2);
+			boolean utilButtonResult = utilityButtons.mouseClicked(event, bl2);
 
 			return backButtonResult || utilButtonResult;
 		}
 
 		@Override
-		public boolean keyPressed(int keycode, int scancode, int modifiers) {
-			if (backButton != null && backButton.keyPressed(keycode, scancode, modifiers)) {
+		public boolean keyPressed(KeyEvent event) {
+			if (backButton != null && backButton.keyPressed(event)) {
 				return true;
 			}
 
-			return utilityButtons.keyPressed(keycode, scancode, modifiers);
+			return utilityButtons.keyPressed(event);
 		}
 
 		@Override
@@ -349,7 +355,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 		}
 
 		private boolean resetButtonClicked(IrisElementRow.TextButtonElement button) {
-			if (Screen.hasShiftDown()) {
+			if (Minecraft.getInstance().hasShiftDown()) {
 				Iris.resetShaderPackOptionsOnNextReload();
 				this.screen.applyChanges();
 				GuiUtil.playButtonClickSound();

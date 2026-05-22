@@ -2,7 +2,7 @@ package net.irisshaders.iris.pbr.util;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.io.FilenameUtils;
 
@@ -17,10 +17,11 @@ public class TextureExporter {
 		}
 	}
 
+	// TODO: Doesn't actually work on 1.21.5
 	public static void exportTexture(String directory, String filename, int textureId, int level, int width, int height) {
 		NativeImage nativeImage = new NativeImage(width, height, false);
-		RenderSystem.bindTexture(textureId);
-		nativeImage.downloadTexture(level, false);
+		//GlSt.bindTexture(textureId);
+		//nativeImage.downloadTexture(level, false);
 
 		File dir = new File(Minecraft.getInstance().gameDirectory, directory);
 		dir.mkdirs();

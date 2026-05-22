@@ -2,7 +2,7 @@ package net.irisshaders.iris.gl.program;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.gl.IrisRenderSystem;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class ProgramSamplers {
 	private static ProgramSamplers active;
@@ -63,7 +64,7 @@ public class ProgramSamplers {
 
 		if (initializer != null) {
 			for (GlUniform1iCall call : initializer) {
-				RenderSystem.glUniform1i(call.location(), call.value());
+				GlStateManager._glUniform1i(call.location(), call.value());
 			}
 
 			initializer = null;
@@ -77,7 +78,7 @@ public class ProgramSamplers {
 			samplerBinding.update();
 		}
 
-		RenderSystem.activeTexture(GL20C.GL_TEXTURE0 + activeTexture);
+		GlStateManager._activeTexture(GL20C.GL_TEXTURE0 + activeTexture);
 	}
 
 	public void removeListeners() {
@@ -151,7 +152,7 @@ public class ProgramSamplers {
 		}
 
 		@Override
-		public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
+		public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler, String... names) {
 			if (nextUnit != 0) {
 				// TODO: Relax this restriction!
 				throw new IllegalStateException("Texture unit 0 is already used.");
@@ -166,12 +167,12 @@ public class ProgramSamplers {
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
 		@Override
-		public boolean addDynamicSampler(TextureType type, IntSupplier texture, GlSampler sampler, String... names) {
+		public boolean addDynamicSampler(TextureType type, IntSupplier texture, Supplier<GlSampler> sampler, String... names) {
 			return addDynamicSampler(type, texture, sampler, false, null, names);
 		}
 
 		@Override
-		public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
+		public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler, String... names) {
 			return addDynamicSampler(type, texture, sampler, false, notifier, names);
 		}
 
@@ -180,7 +181,7 @@ public class ProgramSamplers {
 		 *
 		 * @return false if this sampler is not active, true if at least one of the names referred to an active sampler
 		 */
-		private boolean addDynamicSampler(TextureType type, IntSupplier texture, GlSampler sampler, boolean used, ValueUpdateNotifier notifier, String... names) {
+		private boolean addDynamicSampler(TextureType type, IntSupplier texture, Supplier<GlSampler> sampler, boolean used, ValueUpdateNotifier notifier, String... names) {
 			if (notifier != null) {
 				notifiersToReset.add(notifier);
 			}
@@ -252,25 +253,25 @@ public class ProgramSamplers {
 			this.deactivatedOverrides = deactivatedOverrides.build();
 		}
 
-		private IntSupplier getOverride(IntSupplier existing, String... names) {
+		private TextureAccess getOverride(String... names) {
 			for (String name : names) {
 				if (customTextureIds.containsKey(name) && !deactivatedOverrides.contains(name)) {
-					return customTextureIds.get(name).getTextureId();
+					return customTextureIds.get(name);
 				}
 			}
 
-			return existing;
+			return null;
 		}
 
 		@Override
 		public void addExternalSampler(int textureUnit, String... names) {
-			IntSupplier override = getOverride(null, names);
+			TextureAccess override = getOverride(names);
 
 			if (override != null) {
 				if (textureUnit == 0) {
-					samplerHolder.addDefaultSampler(override, names);
+					samplerHolder.addDefaultSampler(override.getType(), override.getTextureId(), null, () -> override.getSampling(), names);
 				} else {
-					samplerHolder.addDynamicSampler(override, names);
+					samplerHolder.addDynamicSampler(override.getType(), override.getTextureId(), null, () -> override.getSampling(), names);
 				}
 			} else {
 				samplerHolder.addExternalSampler(textureUnit, names);
@@ -284,41 +285,61 @@ public class ProgramSamplers {
 
 		@Override
 		public boolean addDefaultSampler(IntSupplier sampler, String... names) {
-			sampler = getOverride(sampler, names);
+			TextureAccess override = getOverride(names);
 
-			return samplerHolder.addDefaultSampler(sampler, names);
+			if (override != null) {
+				return samplerHolder.addDefaultSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
+			} else {
+				return samplerHolder.addDefaultSampler(sampler, names);
+			}
 		}
 
 		@Override
-		public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
-			texture = getOverride(texture, names);
+		public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler, String... names) {
+			TextureAccess override = getOverride(names);
 
-			return samplerHolder.addDefaultSampler(type, texture, notifier, sampler, names);
+			if (override != null) {
+				return samplerHolder.addDefaultSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
+			} else {
+				return samplerHolder.addDefaultSampler(type, texture, notifier, sampler, names);
+			}
 		}
 
 		@Override
-		public boolean addDynamicSampler(IntSupplier sampler, String... names) {
-			sampler = getOverride(sampler, names);
+		public boolean addDynamicSampler(IntSupplier sampler, GlSampler glSampler, String... names) {
+			TextureAccess override = getOverride(names);
 
-			return samplerHolder.addDynamicSampler(sampler, names);
+			if (override != null) {
+				return samplerHolder.addDynamicSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
+			} else {
+				return samplerHolder.addDynamicSampler(sampler, glSampler, names);
+			}
 		}
 
 		@Override
-		public boolean addDynamicSampler(TextureType type, IntSupplier texture, GlSampler sampler, String... names) {
-			texture = getOverride(texture, names);
+		public boolean addDynamicSampler(TextureType type, IntSupplier texture, Supplier<GlSampler> sampler, String... names) {
+			TextureAccess override = getOverride(names);
 
-			return samplerHolder.addDynamicSampler(type, texture, sampler, names);
+			if (override != null) {
+				return samplerHolder.addDynamicSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
+			} else {
+				return samplerHolder.addDynamicSampler(type, texture, sampler, names);
+			}
 		}
 
 		@Override
-		public boolean addDynamicSampler(IntSupplier sampler, ValueUpdateNotifier notifier, String... names) {
-			sampler = getOverride(sampler, names);
+		public boolean addDynamicSampler(IntSupplier sampler, GlSampler glSampler, ValueUpdateNotifier notifier, String... names) {
+			TextureAccess override = getOverride(names);
 
-			return samplerHolder.addDynamicSampler(sampler, notifier, names);
+			if (override != null) {
+				return samplerHolder.addDynamicSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
+			} else {
+				return samplerHolder.addDynamicSampler(sampler, glSampler, notifier, names);
+			}
 		}
 
 		@Override
-		public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, GlSampler sampler, String... names) {
+		public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler, String... names) {
 			return false;
 		}
 	}

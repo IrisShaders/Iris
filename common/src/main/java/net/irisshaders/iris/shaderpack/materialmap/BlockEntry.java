@@ -74,8 +74,8 @@ public record BlockEntry(NamespacedId id, Map<String, String> propertyPredicates
 
 		// Less trivial case: no states involved, just a namespace
 		//
-		// The first term MUST be a valid ResourceLocation component without an equals sign
-		// The second term, if it does not contain an equals sign, must be a valid ResourceLocation component.
+		// The first term MUST be a valid Identifier component without an equals sign
+		// The second term, if it does not contain an equals sign, must be a valid Identifier component.
 		if (splitStates.length == 2 && !splitStates[1].contains("=")) {
 			return new BlockEntry(new NamespacedId(splitStates[0], splitStates[1]), Collections.emptyMap());
 		}

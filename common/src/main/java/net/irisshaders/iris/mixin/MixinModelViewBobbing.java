@@ -1,25 +1,32 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import net.irisshaders.iris.Iris;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
-import org.joml.Quaternionfc;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
+import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -39,97 +46,61 @@ public abstract class MixinModelViewBobbing {
 	@Shadow
 	@Final
 	private Camera mainCamera;
-	@Shadow
-	private int confusionAnimationTick;
 	@Unique
 	private Matrix4fc bobbingEffectsModel;
 	@Unique
 	private boolean areShadersOn;
 
-	@Shadow
-	protected abstract void bobView(PoseStack pGameRenderer0, float pFloat1);
+	@Unique
+	private Matrix4fc bobStack;
 
 	@Shadow
-	protected abstract void bobHurt(PoseStack pGameRenderer0, float pFloat1);
+	private float spinningEffectTime;
+
+	@Shadow
+	private float spinningEffectSpeed;
 
 	@Inject(method = "renderLevel", at = @At("HEAD"))
 	private void iris$saveShadersOn(DeltaTracker deltaTracker, CallbackInfo ci) {
 		areShadersOn = Iris.isPackInUseQuick();
 	}
 
-	@ModifyArg(method = "renderLevel", index = 0,
-		at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"))
-	private PoseStack iris$separateViewBobbing(PoseStack stack) {
-		if (!areShadersOn) return stack;
-
-		stack.pushPose();
-		stack.last().pose().identity();
-
-		return stack;
-	}
-
-	@Redirect(method = "renderLevel",
-		at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/renderer/GameRenderer;bobView(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"))
-	private void iris$stopBobbing(GameRenderer instance, PoseStack pGameRenderer0, float pFloat1) {
-		if (!areShadersOn) this.bobView(pGameRenderer0, pFloat1);
-	}
-
-
-	@Redirect(method = "renderLevel",
-		at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"))
-	private void iris$saveBobbing(GameRenderer instance, PoseStack pGameRenderer0, float pFloat1) {
-		if (!areShadersOn) this.bobHurt(pGameRenderer0, pFloat1);
-	}
-
-
-	@Redirect(method = "renderLevel",
-		at = @At(value = "INVOKE",
-			target = "Ljava/lang/Double;floatValue()F"))
-	private float iris$disableConfusionWithShaders(Double instance) {
-		return areShadersOn ? 0.0f : instance.floatValue();
-	}
-
-	@Redirect(method = "renderLevel",
-		at = @At(value = "INVOKE",
-			target = "Lorg/joml/Matrix4f;rotation(Lorg/joml/Quaternionfc;)Lorg/joml/Matrix4f;", remap = false))
-	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, Quaternionfc quat, DeltaTracker deltaTracker) {
+	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;mul(Lorg/joml/Matrix4fc;)Lorg/joml/Matrix4f;"))
+	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, Matrix4fc right, Operation<Matrix4f> original, @Local(name = "cameraState") CameraRenderState cameraRenderState) {
 		if (!areShadersOn) {
-			instance.rotation(quat);
-
-			return instance;
+			return original.call(instance, right);
 		}
 
-		PoseStack stack = new PoseStack();
-		stack.last().pose().set(instance);
-
-		float tickDelta = this.mainCamera.getPartialTickTime();
-
-		this.bobHurt(stack, tickDelta);
-		if (this.minecraft.options.bobView().get()) {
-			this.bobView(stack, tickDelta);
-		}
-
-		instance.set(stack.last().pose());
-
-		float f = deltaTracker.getGameTimeDeltaPartialTick(false);
-		float h = this.minecraft.options.screenEffectScale().get().floatValue();
-		float i = Mth.lerp(f, this.minecraft.player.oSpinningEffectIntensity, this.minecraft.player.spinningEffectIntensity) * h * h;
-		if (i > 0.0F) {
-			int j = this.minecraft.player.hasEffect(MobEffects.CONFUSION) ? 7 : 20;
-			float k = 5.0F / (i * i + 5.0F) - i * 0.04F;
-			k *= k;
-			Vector3f vector3f = new Vector3f(0.0F, Mth.SQRT_OF_TWO / 2.0F, Mth.SQRT_OF_TWO / 2.0F);
-			float l = ((float) this.confusionAnimationTick + f) * (float) j * (float) (Math.PI / 180.0);
-			instance.rotate(l, vector3f);
-			instance.scale(1.0F / k, 1.0F, 1.0F);
-			instance.rotate(-l, vector3f);
-		}
-
-		instance.rotate(quat);
-
+		this.bobStack = new Matrix4f(right);
 		return instance;
+	}
+
+	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;rotate(FLorg/joml/Vector3fc;)Lorg/joml/Matrix4f;"))
+	private Matrix4f iris$applySpinningRotate(Matrix4f instance, float angle, Vector3fc axis, Operation<Matrix4f> original) {
+		if (!areShadersOn) {
+			return original.call(instance, angle, axis);
+		}
+
+		((Matrix4f) bobStack).rotate(angle, axis);
+		return instance;
+	}
+
+	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;scale(FFF)Lorg/joml/Matrix4f;"))
+	private Matrix4f iris$applySpinningScale(Matrix4f instance, float x, float y, float z, Operation<Matrix4f> original) {
+		if (!areShadersOn) {
+			return original.call(instance, x, y, z);
+		}
+		
+		((Matrix4f) bobStack).scale(x, y, z);
+		return instance;
+	}
+
+	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lorg/joml/Matrix4fc;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;)V"))
+	private void iris$renderLevel(LevelRenderer instance, GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, ChunkSectionsToRender chunkSectionsToRender, Operation<Void> original, @Local(name = "player") LocalPlayer player) {
+		if (areShadersOn) {
+			((Matrix4f) modelViewMatrix).mulLocal(bobStack); // need `bob * modelView` not `modelView * bob`
+		}
+
+		original.call(instance, resourceAllocator, deltaTracker, renderOutline, cameraState, modelViewMatrix, terrainFog, fogColor, shouldRenderSky, chunkSectionsToRender);
 	}
 }

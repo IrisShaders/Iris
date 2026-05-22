@@ -1,6 +1,7 @@
 package net.irisshaders.iris.gl.uniform;
 
 import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
+import org.joml.Matrix3fc;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -35,4 +36,5 @@ public interface DynamicUniformHolder extends UniformHolder {
 
 	DynamicUniformHolder uniformMatrix(String name, Supplier<Matrix4fc> value, ValueUpdateNotifier notifier);
 
+	DynamicUniformHolder uniformMatrix3(String name, Supplier<Matrix3fc> value, ValueUpdateNotifier notifier);
 }

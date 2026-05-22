@@ -5,6 +5,7 @@ import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EnderDragonRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,15 +20,15 @@ public class MixinEnderDragonRenderer {
 	@Unique
 	private static int previousE;
 
-	@Inject(method = "renderCrystalBeams", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V"))
-	private static void changeId(float f, float g, float h, float i, int j, PoseStack poseStack, MultiBufferSource multiBufferSource, int k, CallbackInfo ci) {
+	@Inject(method = "submitCrystalBeams", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V"))
+	private static void changeId(float f, float g, float h, float i, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int j, CallbackInfo ci) {
 		if (WorldRenderingSettings.INSTANCE.getEntityIds() == null) return;
 
 		previousE = CapturedRenderingState.INSTANCE.getCurrentRenderedEntity();
 		CapturedRenderingState.INSTANCE.setCurrentEntity(WorldRenderingSettings.INSTANCE.getEntityIds().applyAsInt(END_BEAM));
 	}
 
-	@Inject(method = "renderCrystalBeams", at = @At(value = "RETURN"))
+	@Inject(method = "submitCrystalBeams", at = @At(value = "RETURN"))
 	private static void changeId2(CallbackInfo ci) {
 		if (previousE != 0) {
 			CapturedRenderingState.INSTANCE.setCurrentEntity(previousE);

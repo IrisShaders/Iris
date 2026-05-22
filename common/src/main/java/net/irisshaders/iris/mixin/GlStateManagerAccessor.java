@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
@@ -12,7 +12,7 @@ public interface GlStateManagerAccessor {
 	}
 
 	@Accessor("COLOR_MASK")
-	static GlStateManager.ColorMask getCOLOR_MASK() {
+	static int getCOLOR_MASK() {
 		throw new UnsupportedOperationException("Not accessed");
 	}
 

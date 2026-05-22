@@ -28,6 +28,7 @@ import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
+import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -269,20 +270,22 @@ public class CommonTransformer {
 		// This must be defined and valid in all shader passes, including composite
 		// passes. A shader that relies on this behavior is SEUS v11 - it reads
 		// gl_Fog.color and breaks if it is not properly defined.
-		root.rename("gl_Fog", "iris_Fog");
-		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-			"uniform float iris_FogDensity;",
-			"uniform float iris_FogStart;",
-			"uniform float iris_FogEnd;",
-			"uniform vec4 iris_FogColor;",
-			"struct iris_FogParameters {" +
-				"vec4 color;" +
-				"float density;" +
-				"float start;" +
-				"float end;" +
-				"float scale;" +
-				"};",
-			"iris_FogParameters iris_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));");
+		root.rename("gl_Fog", "irisInt_Fog");
+		if (!(parameters instanceof VanillaParameters)) {
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+				"uniform float iris_FogDensity;",
+				"uniform float iris_FogStart;",
+				"uniform float iris_FogEnd;",
+				"uniform vec4 iris_FogColor;",
+				"struct iris_FogParameters {" +
+					"vec4 color;" +
+					"float density;" +
+					"float start;" +
+					"float end;" +
+					"float scale;" +
+					"};",
+				"iris_FogParameters irisInt_Fog = iris_FogParameters(iris_FogColor, iris_FogDensity, iris_FogStart, iris_FogEnd, 1.0 / (iris_FogEnd - iris_FogStart));");
+		}
 
 		// TODO: Add similar functions for all legacy texture sampling functions
 		renameFunctionCall(root, "texture2D", "texture");

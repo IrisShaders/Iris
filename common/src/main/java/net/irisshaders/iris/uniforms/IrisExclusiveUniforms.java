@@ -1,14 +1,20 @@
 package net.irisshaders.iris.uniforms;
 
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.helpers.JomlConversions;
 import net.irisshaders.iris.mixin.GameRendererAccessor;
+import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.GameType;
@@ -29,48 +35,149 @@ import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 public class IrisExclusiveUniforms {
 	private static final Vector3d ZERO = new Vector3d(0);
 
-	public static void addIrisExclusiveUniforms(UniformHolder uniforms) {
+	public static void addIrisExclusiveUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier) {
 		WorldInfoUniforms.addWorldInfoUniforms(uniforms);
+
+		EndFlashStorage endFlashStorage = new EndFlashStorage();
+		updateNotifier.addListener(endFlashStorage::tick);
 
 		uniforms.uniform1i(UniformUpdateFrequency.PER_TICK, "currentColorSpace", () -> IrisVideoSettings.colorSpace.ordinal());
 
+		uniforms.uniform1f(PER_FRAME, "chunkFadeTimeInv", () -> (float) (1.0 / (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000.0)));
+		uniforms.uniform1i(PER_FRAME, "textureFilteringMode", () -> switch (Minecraft.getInstance().options.textureFiltering().get()) {
+			case NONE -> 0;
+			case RGSS -> 1;
+			case ANISOTROPIC -> 2;
+		});
+
 		//All Iris-exclusive uniforms (uniforms which do not exist in either OptiFine or ShadersMod) should be registered here.
-		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "thunderStrength", IrisExclusiveUniforms::getThunderStrength);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "feetInWater", IrisExclusiveUniforms::getIsInShallowWater);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "inSwimmingAnimation", IrisExclusiveUniforms::getIsSwimming);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isRiding", IrisExclusiveUniforms::getIsPassenger);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isElytraFlying", IrisExclusiveUniforms::isElytraFlying);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "vehicleInWater", IrisExclusiveUniforms::getVehicleInShallowWater);
+		uniforms.uniform1i(UniformUpdateFrequency.PER_TICK, "vehicleId", IrisExclusiveUniforms::getVehicleId);
+		uniforms.uniform3d(PER_FRAME, "vehicleLookVector", IrisExclusiveUniforms::getVehicleLookVector);
+		uniforms.uniform3d(PER_FRAME, "relativeVehiclePosition", IrisExclusiveUniforms::getRelativeVehiclePosition);
+		uniforms.uniform1f(PER_FRAME, "thunderStrength", IrisExclusiveUniforms::getThunderStrength);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerHealth", IrisExclusiveUniforms::getCurrentHealth);
+		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "heavyFog", IrisExclusiveUniforms::isHeavyFog);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerHealth", IrisExclusiveUniforms::getMaxHealth);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerHunger", IrisExclusiveUniforms::getCurrentHunger);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerHunger", () -> 20);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "endFlashIntensity", endFlashStorage::getCurrentEndFlash);
+		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "previousEndFlashIntensity", endFlashStorage::getLastEndFlash);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerArmor", IrisExclusiveUniforms::getCurrentArmor);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerArmor", () -> 50);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerAir", IrisExclusiveUniforms::getCurrentAir);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerAir", IrisExclusiveUniforms::getMaxAir);
-		uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "firstPersonCamera", IrisExclusiveUniforms::isFirstPersonCamera);
+		uniforms.uniform1b(PER_FRAME, "firstPersonCamera", IrisExclusiveUniforms::isFirstPersonCamera);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isSpectator", IrisExclusiveUniforms::isSpectator);
 		uniforms.uniform1i(PER_FRAME, "currentSelectedBlockId", IrisExclusiveUniforms::getCurrentSelectedBlockId);
+		uniforms.uniform1i(PER_FRAME, "seaLevel", () -> Minecraft.getInstance().level == null ? 0 : Minecraft.getInstance().level.getSeaLevel());
 		uniforms.uniform3f(PER_FRAME, "currentSelectedBlockPos", IrisExclusiveUniforms::getCurrentSelectedBlockPos);
-		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "eyePosition", IrisExclusiveUniforms::getEyePosition);
+		uniforms.uniform3d(PER_FRAME, "eyePosition", IrisExclusiveUniforms::getEyePosition);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "cloudTime", CapturedRenderingState.INSTANCE::getCloudTime);
-		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "relativeEyePosition", () -> CameraUniforms.getUnshiftedCameraPosition().sub(getEyePosition()));
-		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "playerLookVector", () -> {
-			if (Minecraft.getInstance().cameraEntity instanceof LivingEntity livingEntity) {
+		uniforms.uniform3d(PER_FRAME, "relativeEyePosition", () -> CameraUniforms.getUnshiftedCameraPosition().sub(getEyePosition()));
+		uniforms.uniform3d(PER_FRAME, "playerLookVector", () -> {
+			if (Minecraft.getInstance().getCameraEntity() instanceof LivingEntity livingEntity) {
 				return JomlConversions.fromVec3(livingEntity.getViewVector(CapturedRenderingState.INSTANCE.getTickDelta()));
 			} else {
 				return ZERO;
 			}
 		});
-		uniforms.uniform3d(UniformUpdateFrequency.PER_FRAME, "playerBodyVector", () -> JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getForward()));
+		uniforms.uniform3d(PER_FRAME, "playerBodyVector", () -> JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getForward()));
 		Vector4f zero = new Vector4f(0, 0, 0, 0);
 		uniforms.uniform4f(UniformUpdateFrequency.PER_TICK, "lightningBoltPosition", () -> {
 			if (Minecraft.getInstance().level != null) {
 				return StreamSupport.stream(Minecraft.getInstance().level.entitiesForRendering().spliterator(), false).filter(bolt -> bolt instanceof LightningBolt).findAny().map(bolt -> {
 					Vector3d unshiftedCameraPosition = CameraUniforms.getUnshiftedCameraPosition();
-					Vec3 vec3 = bolt.getPosition(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true));
+					Vec3 vec3 = bolt.getPosition(Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true));
 					return new Vector4f((float) (vec3.x - unshiftedCameraPosition.x), (float) (vec3.y - unshiftedCameraPosition.y), (float) (vec3.z - unshiftedCameraPosition.z), 1);
 				}).orElse(zero);
 			} else {
 				return zero;
 			}
 		});
+	}
+
+	private static int getVehicleId() {
+		if (Minecraft.getInstance().player == null) return 0;
+		if (Minecraft.getInstance().player.getVehicle() == null) return 0;
+
+		Object2IntFunction<NamespacedId> entityId = WorldRenderingSettings.INSTANCE.getEntityIds();
+		if (entityId == null) return 0;
+
+		Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(Minecraft.getInstance().player.getVehicle().getType());
+		if (id == null) return 0;
+
+		return entityId.applyAsInt(new NamespacedId(id.getNamespace(), id.getPath()));
+	}
+
+	private static Vector3d getVehicleLookVector() {
+		if (Minecraft.getInstance().player == null) return ZERO;
+		if (Minecraft.getInstance().player.getVehicle() == null) return ZERO;
+
+		return JomlConversions.fromVec3(Minecraft.getInstance().player.getVehicle().getForward());
+	}
+
+	private static Vector3d getRelativeVehiclePosition() {
+		if (Minecraft.getInstance().player == null) return ZERO;
+		if (Minecraft.getInstance().player.getVehicle() == null) return ZERO;
+
+		Vec3 vehiclePos = Minecraft.getInstance().player.getVehicle().getPosition(CapturedRenderingState.INSTANCE.getTickDelta());
+
+		Vector3d pos = new Vector3d(vehiclePos.x, vehiclePos.y, vehiclePos.z);
+
+		return CameraUniforms.getUnshiftedCameraPosition().sub(pos);
+	}
+
+	private static boolean getVehicleInShallowWater() {
+		if (Minecraft.getInstance().player == null) return false;
+		if (Minecraft.getInstance().player.getVehicle() == null) return false;
+
+		return Minecraft.getInstance().player.getVehicle().isInShallowWater();
+	}
+
+	private static boolean getIsInShallowWater() {
+		if (Minecraft.getInstance().player == null) {
+			return false;
+		}
+
+		return Minecraft.getInstance().player.isInShallowWater();
+	}
+
+	private static boolean getIsSwimming() {
+		if (Minecraft.getInstance().player == null) {
+			return false;
+		}
+
+		return Minecraft.getInstance().player.isSwimming();
+	}
+
+	private static boolean getIsPassenger() {
+		if (Minecraft.getInstance().player == null) {
+			return false;
+		}
+
+		return Minecraft.getInstance().player.isPassenger();
+	}
+
+	private static boolean isElytraFlying() {
+		if (Minecraft.getInstance().player == null) {
+			return false;
+		}
+
+		return Minecraft.getInstance().player.isFallFlying();
+	}
+
+	private static boolean isHeavyFog() {
+		if (Minecraft.getInstance().level != null) {
+			Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+			return  Minecraft.getInstance().gui.getBossOverlay().shouldCreateWorldFog();
+		}
+
+		return false;
 	}
 
 	private static int getCurrentSelectedBlockId() {
@@ -90,7 +197,7 @@ public class IrisExclusiveUniforms {
 		HitResult hitResult = Minecraft.getInstance().hitResult;
 		if (Minecraft.getInstance().level != null && ((GameRendererAccessor) Minecraft.getInstance().gameRenderer).shouldRenderBlockOutlineA() && hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
 			BlockPos blockPos4 = ((BlockHitResult) hitResult).getBlockPos();
-			return blockPos4.getCenter().subtract(Minecraft.getInstance().gameRenderer.getMainCamera().getPosition()).toVector3f();
+			return blockPos4.getCenter().subtract(Minecraft.getInstance().gameRenderer.getMainCamera().position()).toVector3f();
 		}
 
 		return new Vector3f(-256.0f);
@@ -173,50 +280,50 @@ public class IrisExclusiveUniforms {
 		public static void addWorldInfoUniforms(UniformHolder uniforms) {
 			ClientLevel level = Minecraft.getInstance().level;
 			// TODO: Use level.dimensionType() coordinates for 1.18!
-			uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "bedrockLevel", () -> {
+			uniforms.uniform1i(PER_FRAME, "bedrockLevel", () -> {
 				if (level != null) {
 					return level.dimensionType().minY();
 				} else {
 					return 0;
 				}
 			});
-			uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "cloudHeight", () -> {
+			uniforms.uniform1f(PER_FRAME, "cloudHeight", () -> {
 				if (level != null) {
-					return level.effects().getCloudHeight();
+					return Minecraft.getInstance().gameRenderer.getMainCamera().attributeProbe().getValue(EnvironmentAttributes.CLOUD_HEIGHT, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false));
 				} else {
 					return 192.0;
 				}
 			});
 
-			uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "heightLimit", () -> {
+			uniforms.uniform1i(PER_FRAME, "heightLimit", () -> {
 				if (level != null) {
 					return level.dimensionType().height();
 				} else {
 					return 256;
 				}
 			});
-			uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "logicalHeightLimit", () -> {
+			uniforms.uniform1i(PER_FRAME, "logicalHeightLimit", () -> {
 				if (level != null) {
 					return level.dimensionType().logicalHeight();
 				} else {
 					return 256;
 				}
 			});
-			uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "hasCeiling", () -> {
+			uniforms.uniform1b(PER_FRAME, "hasCeiling", () -> {
 				if (level != null) {
 					return level.dimensionType().hasCeiling();
 				} else {
 					return false;
 				}
 			});
-			uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "hasSkylight", () -> {
+			uniforms.uniform1b(PER_FRAME, "hasSkylight", () -> {
 				if (level != null) {
 					return level.dimensionType().hasSkyLight();
 				} else {
 					return true;
 				}
 			});
-			uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "ambientLight", () -> {
+			uniforms.uniform1f(PER_FRAME, "ambientLight", () -> {
 				if (level != null) {
 					return level.dimensionType().ambientLight();
 				} else {
