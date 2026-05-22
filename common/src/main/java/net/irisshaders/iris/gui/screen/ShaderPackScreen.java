@@ -157,12 +157,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		if (!this.guiHidden) {
 			super.render(guiGraphics, mouseX, mouseY, delta);
-
-			if (optionMenuOpen && this.shaderOptionList != null) {
-				this.shaderOptionList.render(guiGraphics, mouseX, mouseY, delta);
-			} else {
-				this.shaderPackList.render(guiGraphics, mouseX, mouseY, delta);
-			}
 		} else {
 			this.renderBlurredBackground(delta);
 			this.showHideButton.render(guiGraphics, mouseX, mouseY, delta);
