@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.batchedentityrendering.impl.FullyBufferedMultiBufferSource;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.mixin.GameRendererAccessor;
+import net.irisshaders.iris.mixinterface.ItemInHandInterface;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -19,6 +20,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
@@ -59,9 +61,8 @@ public class HandRenderer {
 			|| Minecraft.getInstance().gameMode.getPlayerMode() == GameType.SPECTATOR);
 	}
 
-	public boolean isHandTranslucent(InteractionHand hand) {
-		Item item = Minecraft.getInstance().player.getItemBySlot(hand == InteractionHand.OFF_HAND ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND).getItem();
-
+	public boolean isHandTranslucent(ItemStack itemStack) {
+		Item item = itemStack.getItem();
 		if (item instanceof BlockItem) {
 			return ItemBlockRenderTypes.getChunkRenderType(((BlockItem) item).getBlock().defaultBlockState()) == RenderType.translucent();
 		}
@@ -69,12 +70,8 @@ public class HandRenderer {
 		return false;
 	}
 
-	public boolean isAnyHandTranslucent() {
-		return isHandTranslucent(InteractionHand.MAIN_HAND) || isHandTranslucent(InteractionHand.OFF_HAND);
-	}
-
 	public void renderSolid(Matrix4fc modelMatrix, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if (!canRender(camera, gameRenderer) || !Iris.isPackInUseQuick()) {
+		if (!canRender(camera, gameRenderer) || !((ItemInHandInterface)gameRenderer.itemInHandRenderer).iris$isAnyHandSolid() || !Iris.isPackInUseQuick()) {
 			return;
 		}
 
@@ -115,7 +112,7 @@ public class HandRenderer {
 	}
 
 	public void renderTranslucent(Matrix4fc modelMatrix, float tickDelta, Camera camera, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if (!canRender(camera, gameRenderer) || !isAnyHandTranslucent() || !Iris.isPackInUseQuick()) {
+		if (!canRender(camera, gameRenderer) || !((ItemInHandInterface)gameRenderer.itemInHandRenderer).iris$isAnyHandTranslucent() || !Iris.isPackInUseQuick()) {
 			return;
 		}
 
