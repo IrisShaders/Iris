@@ -5,7 +5,7 @@
   "iris.shaders.debug.enabled": "Налагодження ввімкнено, журнал налагодження буде більш докладним!",
   "iris.shaders.debug.disabled": "Налагодження вимкнено",
   "iris.shaders.debug.failure": "Не вдалося ввімкнути налагодження, ваш комп'ютер не підтримує функції налагодження",
-  "iris.shaders.debug.restart": "У вас немає контексту налагодження. Будь ласка, перезапустіть, аби ввімкнути клієнтське налагодження OpenGL",
+  "iris.shaders.debug.restart": "У вас немає контексту налагодження. Будь ласка, перезапустіть, щоб увімкнути клієнтське налагодження OpenGL",
   "iris.shaders.debug.restartNoDebug": "Налагодження пакета шейдерів увімкнено; Налагодження OpenGL не підтримується на NeoForge",
   "iris.load.failure.shader": "Не вдалося завантажити пакет шейдерів! Повідомте про помилку розробнику пакета шейдерів",
   "iris.load.failure.generic": "Виникла проблема під час спроби завантажити пакет шейдерів; повідомте про це розробникам Iris",
@@ -42,7 +42,7 @@
   "options.iris.shaderPackSelection.failedAdd": "Файли не були дійсними пакетами шейдерів",
   "options.iris.shaderPackSelection.failedAddSingle": "«%s» не є дійсним пакетом шейдерів",
   "options.iris.shaderPackSelection.copyError": "Не вдалося додати пакет шейдерів «%s»",
-  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "«%s» уже є у теці пакетів шейдерів!",
+  "options.iris.shaderPackSelection.copyErrorAlreadyExists": "«%s» уже є в теці пакетів шейдерів!",
   "options.iris.shaderPackOptions.tooManyFiles": "Не вдається імпортувати декілька файлів налаштувань шейдерів!",
   "options.iris.shaderPackOptions.failedImport": "Не вдалося імпортувати файл налаштувань шейдера «%s»",
   "options.iris.shaderPackOptions.importedSettings": "Імпортовано налаштування шейдерів із «%s»",
@@ -52,7 +52,7 @@
   "options.iris.back": "Назад",
   "options.iris.reset": "Скинути",
   "options.iris.reset.tooltip": "Скинути ВСІ налаштування та застосувати?",
-  "options.iris.reset.tooltip.holdShift": "Shift+ЛКМ, аби скинути",
+  "options.iris.reset.tooltip.holdShift": "Shift+ЛКМ, щоб скинути",
   "options.iris.importSettings.tooltip": "Імпортувати налаштування з файлу",
   "options.iris.exportSettings.tooltip": "Експортувати налаштування у файл",
   "options.iris.mustDisableFullscreen": "Будь ласка, спершу вимкніть повний екран!",
@@ -73,6 +73,6 @@
   "label.iris.true": "УВІМК.",
   "label.iris.false": "ВИМК.",
   "modmenu.summaryTranslation.iris": "Додає підтримку шейдерів.",
-  "modmenu.descriptionTranslation.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які уже існують для Optifine.",
-  "fml.menu.mods.info.description.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які уже існують для Optifine."
+  "modmenu.descriptionTranslation.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які вже існують для Optifine.",
+  "fml.menu.mods.info.description.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які вже існують для Optifine."
 }
