@@ -24,6 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.PreferredGraphicsApi;
 import net.minecraft.client.TextureFilteringMethod;
 import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -104,7 +105,7 @@ public class IrisConfig implements ConfigEntryPoint {
                                             PreferredGraphicsApi.class)
                                     .setBinding((value) -> {
                                         if (((GpuDeviceAccessor) RenderSystem.getDevice()).getBackend() instanceof GlDevice && value == PreferredGraphicsApi.VULKAN) {
-                                            VideoSettingsScreen s = (VideoSettingsScreen) Minecraft.getInstance().gui.screen();
+                                            Screen s = Minecraft.getInstance().gui.screen();
 
                                             Minecraft.getInstance().gui.setScreen(new ConfirmScreen(i -> {
                                                 if (i) {
