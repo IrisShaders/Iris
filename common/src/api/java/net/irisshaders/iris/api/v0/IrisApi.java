@@ -3,6 +3,8 @@ package net.irisshaders.iris.api.v0;
 import java.nio.ByteBuffer;
 import java.util.function.IntFunction;
 
+import net.irisshaders.iris.api.v0.virtualfluid.VirtualFluidProvider;
+
 /**
  * The entry point to the Iris API, major version 0. This is currently the latest
  * version of the API.
@@ -23,7 +25,7 @@ public interface IrisApi {
 	 * if they wish to check whether given API calls are available on
 	 * the currently installed Iris version.
 	 *
-	 * @return The current minor revision. Currently, revision 2.
+	 * @return The current minor revision. Currently, revision 3.
 	 */
 	int getMinorApiRevision();
 
@@ -113,4 +115,22 @@ public interface IrisApi {
 	 * @since API v0.2
 	 */
 	float getSunPathRotation();
+
+	/**
+	 * Registers a provider for client-side virtual fluid volumes.
+	 *
+	 * <p>This is experimental API v0.3. It is intended for mods that render
+	 * fluid volumes without creating real chunk {@code FluidState}s, such as
+	 * tanks, vessels, and industrial machines.</p>
+	 *
+	 * @since API v0.3
+	 */
+	void registerVirtualFluidProvider(VirtualFluidProvider provider);
+
+	/**
+	 * Unregisters a previously registered virtual fluid provider.
+	 *
+	 * @since API v0.3
+	 */
+	void unregisterVirtualFluidProvider(VirtualFluidProvider provider);
 }

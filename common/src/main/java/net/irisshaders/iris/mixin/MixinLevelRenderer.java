@@ -15,6 +15,7 @@ import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.frustum.fallback.NonCullingFrustum;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.IrisTimeUniforms;
+import net.irisshaders.iris.virtualfluid.VirtualFluidProviderRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -92,6 +93,7 @@ public class MixinLevelRenderer {
 		float fakeTickDelta = deltaTracker.getGameTimeDeltaPartialTick(false);
 		CapturedRenderingState.INSTANCE.setTickDelta(fakeTickDelta);
 		CapturedRenderingState.INSTANCE.setCloudTime((ticks + fakeTickDelta) * 0.03F);
+		VirtualFluidProviderRegistry.collect(this.minecraft.level, camera, fakeTickDelta);
 
 		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
 
@@ -146,6 +148,7 @@ public class MixinLevelRenderer {
 		if (Iris.shouldActivateWireframe() && this.minecraft.isLocalServer()) {
 			IrisRenderSystem.setPolygonMode(GL43C.GL_FILL);
 		}
+		VirtualFluidProviderRegistry.clearFrame();
 	}
 
 	// Setup shadow terrain & render shadows before the main terrain setup. We need to do things in this order to

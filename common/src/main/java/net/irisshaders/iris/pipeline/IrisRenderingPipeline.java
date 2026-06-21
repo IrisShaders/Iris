@@ -88,6 +88,7 @@ import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
+import net.irisshaders.iris.virtualfluid.VirtualFluidRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
@@ -1063,6 +1064,10 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
 		renderTargets.copyPreTranslucentDepth();
+
+		setPhase(WorldRenderingPhase.TERRAIN_TRANSLUCENT);
+		VirtualFluidRenderer.renderBeforeDeferred();
+		setPhase(WorldRenderingPhase.NONE);
 
 		deferredRenderer.renderAll();
 

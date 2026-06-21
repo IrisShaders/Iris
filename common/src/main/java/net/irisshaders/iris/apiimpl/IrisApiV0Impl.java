@@ -4,11 +4,13 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.api.v0.IrisApiConfig;
 import net.irisshaders.iris.api.v0.IrisTextVertexSink;
+import net.irisshaders.iris.api.v0.virtualfluid.VirtualFluidProvider;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.pipeline.VanillaRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.vertices.IrisTextVertexSinkImpl;
+import net.irisshaders.iris.virtualfluid.VirtualFluidProviderRegistry;
 import net.minecraft.client.gui.screens.Screen;
 
 import java.nio.ByteBuffer;
@@ -20,7 +22,7 @@ public class IrisApiV0Impl implements IrisApi {
 
 	@Override
 	public int getMinorApiRevision() {
-		return 2;
+		return 3;
 	}
 
 	@Override
@@ -68,5 +70,15 @@ public class IrisApiV0Impl implements IrisApi {
 		}
 
 		return pipeline.getSunPathRotation();
+	}
+
+	@Override
+	public void registerVirtualFluidProvider(VirtualFluidProvider provider) {
+		VirtualFluidProviderRegistry.registerProvider(provider);
+	}
+
+	@Override
+	public void unregisterVirtualFluidProvider(VirtualFluidProvider provider) {
+		VirtualFluidProviderRegistry.unregisterProvider(provider);
 	}
 }
