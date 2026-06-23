@@ -91,12 +91,51 @@ final class DebugVirtualFluidVolume implements VirtualFluidVolume {
 
 	@Override
 	public void forEachSurfaceQuad(VirtualFluidSurfaceConsumer consumer) {
+		float r = 0.20F, g = 0.55F, b = 0.95F, a = 0.55F;
+		
+		// Top Face
 		consumer.acceptQuad(
 			minX, maxY, minZ,
 			maxX, maxY, minZ,
 			maxX, maxY, maxZ,
 			minX, maxY, maxZ,
-			0.20F, 0.55F, 0.95F, 0.55F
+			r, g, b, a
+		);
+
+		// South Face (+Z)
+		consumer.acceptQuad(
+			minX, minY, maxZ,
+			maxX, minY, maxZ,
+			maxX, maxY, maxZ,
+			minX, maxY, maxZ,
+			r, g, b, a
+		);
+
+		// North Face (-Z)
+		consumer.acceptQuad(
+			maxX, minY, minZ,
+			minX, minY, minZ,
+			minX, maxY, minZ,
+			maxX, maxY, minZ,
+			r, g, b, a
+		);
+
+		// East Face (+X)
+		consumer.acceptQuad(
+			maxX, minY, maxZ,
+			maxX, minY, minZ,
+			maxX, maxY, minZ,
+			maxX, maxY, maxZ,
+			r, g, b, a
+		);
+
+		// West Face (-X)
+		consumer.acceptQuad(
+			minX, minY, minZ,
+			minX, minY, maxZ,
+			minX, maxY, maxZ,
+			minX, maxY, minZ,
+			r, g, b, a
 		);
 	}
 }

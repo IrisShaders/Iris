@@ -2,6 +2,8 @@ package net.irisshaders.iris.virtualfluid;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.irisshaders.iris.api.v0.virtualfluid.VirtualFluidType;
 import net.irisshaders.iris.api.v0.virtualfluid.VirtualFluidVolume;
 import net.irisshaders.iris.vertices.BlockSensitiveBufferBuilder;
@@ -32,7 +34,7 @@ public final class VirtualFluidRenderer {
 		}
 
 		MultiBufferSource.BufferSource buffer = minecraft.renderBuffers().bufferSource();
-		RenderType renderType = RenderType.translucent();
+		RenderType renderType = CustomRenderType.VIRTUAL_FLUID;
 		VertexConsumer consumer = buffer.getBuffer(renderType);
 		Vec3 camera = minecraft.gameRenderer.getMainCamera().getPosition();
 		PoseStack poseStack = new PoseStack();
@@ -44,7 +46,7 @@ public final class VirtualFluidRenderer {
 			if (volume.type() != VirtualFluidType.WATER_LIKE && volume.type() != VirtualFluidType.LAVA_LIKE) {
 				continue;
 			}
-			int materialId = volume.visualProperties().materialId();
+			int materialId = volume.type() == VirtualFluidType.WATER_LIKE ? 8 : volume.visualProperties().materialId();
 			volume.forEachSurfaceQuad((x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, red, green, blue, alpha) -> {
 				tryBeginFluidBlock(consumer, materialId, x0, y0, z0);
 				Vector3f normal = computeNormal(x0, y0, z0, x1, y1, z1, x2, y2, z2);
@@ -95,5 +97,27 @@ public final class VirtualFluidRenderer {
 			return new Vector3f(0.0F, 1.0F, 0.0F);
 		}
 		return normal.normalize();
+	}
+
+	private static class CustomRenderType extends RenderType {
+		private CustomRenderType(String string, VertexFormat vertexFormat, VertexFormat.Mode mode, int i, boolean bl, boolean bl2, Runnable runnable, Runnable runnable2) {
+			super(string, vertexFormat, mode, i, bl, bl2, runnable, runnable2);
+		}
+
+		public static final RenderType VIRTUAL_FLUID = create(
+			"iris_virtual_fluid",
+			DefaultVertexFormat.BLOCK,
+			VertexFormat.Mode.QUADS,
+			1536,
+			true,
+			true,
+			RenderType.CompositeState.builder()
+				.setLightmapState(LIGHTMAP)
+				.setShaderState(RENDERTYPE_TRANSLUCENT_SHADER)
+				.setTextureState(BLOCK_SHEET)
+				.setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+				.setWriteMaskState(COLOR_DEPTH_WRITE)
+				.createCompositeState(true)
+		);
 	}
 }
