@@ -24,7 +24,6 @@ public class SodiumCoreTransformer {
 		Root root,
 		SodiumParameters parameters) {
 		root.rename("alphaTestRef", "iris_currentAlphaTest");
-//		root.replaceExpressionMatches(t, modelViewMatrix, "");
 		root.processMatches(t, modelViewMatrix, ASTNode::detachAndDelete);
 		root.rename("modelViewMatrix", "u_ModelViewMatrix");
 		root.rename("modelViewMatrixInverse", "iris_ModelViewMatrixInverse");
