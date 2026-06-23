@@ -95,10 +95,10 @@ final class DebugVirtualFluidVolume implements VirtualFluidVolume {
 		
 		// Top Face
 		consumer.acceptQuad(
-			minX, maxY, minZ,
-			maxX, maxY, minZ,
-			maxX, maxY, maxZ,
 			minX, maxY, maxZ,
+			maxX, maxY, maxZ,
+			maxX, maxY, minZ,
+			minX, maxY, minZ,
 			r, g, b, a
 		);
 
