@@ -1,23 +1,37 @@
 package net.irisshaders.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
+import io.github.douira.glsl_transformer.ast.node.abstract_node.ASTNode;
+import io.github.douira.glsl_transformer.ast.node.expression.Expression;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
+import io.github.douira.glsl_transformer.ast.query.match.Matcher;
+import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.parser.ParseShape;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
 
 public class SodiumCoreTransformer {
+	public static final AutoHintedMatcher<ExternalDeclaration> modelViewMatrix = new AutoHintedMatcher<>(
+		"uniform mat4 modelViewMatrix;", ParseShape.EXTERNAL_DECLARATION);
+	public static final AutoHintedMatcher<ExternalDeclaration> projectionMatrix = new AutoHintedMatcher<>(
+		"uniform mat4 projectionMatrix;", ParseShape.EXTERNAL_DECLARATION);
 	public static void transform(
 		ASTParser t,
 		TranslationUnit tree,
 		Root root,
 		SodiumParameters parameters) {
 		root.rename("alphaTestRef", "iris_currentAlphaTest");
-		root.rename("modelViewMatrix", "iris_ModelViewMatrix");
+//		root.replaceExpressionMatches(t, modelViewMatrix, "");
+		root.processMatches(t, modelViewMatrix, ASTNode::detachAndDelete);
+		root.rename("modelViewMatrix", "u_ModelViewMatrix");
 		root.rename("modelViewMatrixInverse", "iris_ModelViewMatrixInverse");
-		root.rename("projectionMatrix", "iris_ProjectionMatrix");
+		root.processMatches(t, projectionMatrix, ASTNode::detachAndDelete);
+		root.rename("projectionMatrix", "u_ProjectionMatrix");
 		root.rename("projectionMatrixInverse", "iris_ProjectionMatrixInverse");
-		root.rename("normalMatrix", "iris_NormalMatrix");
+		root.rename("normalMatrix", "iris_NormalMat");
 		root.rename("chunkOffset", "u_RegionOffset");
 		if (parameters.type == PatchShaderType.VERTEX) {
 			boolean needsNormal = root.identifierIndex.has("vaNormal") || root.identifierIndex.has("at_tangent");
@@ -38,5 +52,21 @@ public class SodiumCoreTransformer {
 
 			SodiumTransformer.injectVertInit(t, tree, root, parameters, needsNormal);
 		}
+
+        tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
+            layout(std140) uniform u_Globals {
+                mat4 u_ProjectionMatrix;
+                mat4 u_ModelViewMatrix;
+
+                vec4 u_FogColor;
+                vec2 u_EnvironmentFog;
+                vec2 u_RenderFog;
+
+                vec2 u_TexelSize;
+                vec2 u_TexCoordShrink;
+
+                float u_FadePeriodInv;
+                bool u_UseRGSS;
+            };""");
 	}
 }

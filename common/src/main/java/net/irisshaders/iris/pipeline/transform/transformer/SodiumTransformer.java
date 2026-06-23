@@ -89,6 +89,7 @@ public class SodiumTransformer {
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 
 				// _draw_translation replaced with Chunks[_draw_id].offset.xyz
+				"uniform vec3 u_RegionOffset;",
 				"vec4 getVertexPosition() { return vec4(_vert_position + u_RegionOffset + _get_draw_translation(_draw_id), 1.0); }");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 
@@ -103,14 +104,14 @@ public class SodiumTransformer {
                         layout(std140) uniform u_Globals {
                               mat4 u_ProjectionMatrix;
                               mat4 u_ModelViewMatrix;
-                        
+
                               vec4 u_FogColor;
                               vec2 u_EnvironmentFog;
                               vec2 u_RenderFog;
-                        
+
                               vec2 u_TexelSize;
                               vec2 u_TexCoordShrink;
-                        
+
                               float u_FadePeriodInv;
                               bool u_UseRGSS;
                           };""");
@@ -134,7 +135,6 @@ public class SodiumTransformer {
 				"mc_chunkFade = (chunkFade < 0) ? 1.0 : fade;";
 
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-                "uniform vec3 u_RegionOffset;",
                 "uniform int u_CurrentTime;",
                 "uniform uint u_RegionID;",
 			// translated from sodium's chunk_vertex.glsl
