@@ -46,7 +46,7 @@ public final class VirtualFluidRenderer {
 			if (volume.type() != VirtualFluidType.WATER_LIKE && volume.type() != VirtualFluidType.LAVA_LIKE) {
 				continue;
 			}
-			int materialId = volume.type() == VirtualFluidType.WATER_LIKE ? 8 : volume.visualProperties().materialId();
+			int materialId = volume.visualProperties().materialId();
 			volume.forEachSurfaceQuad((x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, red, green, blue, alpha) -> {
 				tryBeginFluidBlock(consumer, materialId, x0, y0, z0);
 				Vector3f normal = computeNormal(x0, y0, z0, x1, y1, z1, x2, y2, z2);
