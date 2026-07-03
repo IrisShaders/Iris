@@ -257,6 +257,11 @@ public class IrisRenderSystem {
 		GL43C.glBindBufferBase(target, index, buffer);
 	}
 
+	public static void bindBufferRange(int target, int index, int buffer, long offset, long size) {
+		RenderSystem.assertOnRenderThread();
+		org.lwjgl.opengl.GL30C.glBindBufferRange(target, index, buffer, offset, size);
+	}
+
 	public static void vertexAttrib4f(int index, float v0, float v1, float v2, float v3) {
 		RenderSystem.assertOnRenderThread();
 		GL32C.glVertexAttrib4f(index, v0, v1, v2, v3);

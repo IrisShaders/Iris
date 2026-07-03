@@ -9,6 +9,7 @@ accessible  class   net/minecraft/world/level/biome/Biome$ClimateSettings
 accessible  class   net/minecraft/client/Options$FieldAccess
 accessible field com/mojang/blaze3d/opengl/GlRenderPass pipeline Lcom/mojang/blaze3d/opengl/GlRenderPipeline;
 accessible field com/mojang/blaze3d/opengl/GlRenderPass samplers Ljava/util/HashMap;
+accessible field com/mojang/blaze3d/opengl/GlRenderPass uniforms Ljava/util/HashMap;
 accessible class net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture
 accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
 accessible  class   net/minecraft/client/OptionInstance$ValueSet

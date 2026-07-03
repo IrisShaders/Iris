@@ -122,4 +122,39 @@ public interface IrisApi {
 	 * @since API v0.3
 	 */
 	void assignPipeline(RenderPipeline pipeline, IrisProgram program);
+
+	/**
+	 * Registers a custom std140 uniform block (UBO) that a mod binds to its own
+	 * {@code RenderPass} via {@code RenderPass.setUniform(blockName, buffer)}, so that
+	 * Iris forwards it to the program it substitutes for the given pipeline when a
+	 * shader pack is active.
+	 *
+	 * <p>Without this, when Iris substitutes its own program for a mod's terrain
+	 * pipeline (see {@link #assignPipeline}), the mod's custom uniform block is
+	 * silently dropped, because Iris's substituted program only declares Iris's own
+	 * uniform blocks. This is the mechanism requested by IrisShaders/Iris#2974 for
+	 * MaLiLib/Litematica's {@code ChunkFix} block.
+	 *
+	 * <p>The mod must:
+	 * <ol>
+	 *     <li>have already assigned the pipeline via {@link #assignPipeline};</li>
+	 *     <li>bind the block to its render pass each draw via
+	 *     {@code RenderPass.setUniform(blockName, gpuBuffer)}; and</li>
+	 *     <li>pass the exact std140 GLSL declaration of the block, so Iris can inject
+	 *     it into the substituted program's source (the mod cannot, since Iris
+	 *     generates that program from the active shader pack).</li>
+	 * </ol>
+	 *
+	 * <p>The binding is <em>optional at draw time</em>: Iris only binds the buffer for
+	 * draws that actually supply it on the pass, so unrelated draws that share the same
+	 * substituted program (e.g. vanilla terrain) are unaffected.
+	 *
+	 * @param pipeline        The mod render pipeline previously passed to {@link #assignPipeline}.
+	 * @param blockName       The std140 uniform block name (e.g. {@code "ChunkFix"}), matching the
+	 *                        name used in {@code RenderPass.setUniform} and in {@code glslDeclaration}.
+	 * @param glslDeclaration The full GLSL declaration of the block, e.g.
+	 *                        {@code "layout(std140) uniform ChunkFix { ivec2 TextureSize; float ChunkVisibility; int UseRgss; int hasShadersOn; };"}.
+	 * @since API v0.4
+	 */
+	void registerCustomUniformBlock(RenderPipeline pipeline, String blockName, String glslDeclaration);
 }

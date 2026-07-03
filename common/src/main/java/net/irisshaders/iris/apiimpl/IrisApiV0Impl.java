@@ -25,7 +25,7 @@ public class IrisApiV0Impl implements IrisApi {
 
 	@Override
 	public int getMinorApiRevision() {
-		return 3;
+		return 4;
 	}
 
 	@Override
@@ -78,5 +78,10 @@ public class IrisApiV0Impl implements IrisApi {
 	@Override
 	public void assignPipeline(RenderPipeline pipeline, IrisProgram program) {
 		IrisPipelines.assignPipeline(pipeline, ShaderKey.findBestMatch(pipeline, ProgramId.fromAPI(program)));
+	}
+
+	@Override
+	public void registerCustomUniformBlock(RenderPipeline pipeline, String blockName, String glslDeclaration) {
+		IrisPipelines.registerCustomUniformBlock(pipeline, blockName, glslDeclaration);
 	}
 }

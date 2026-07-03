@@ -1,5 +1,7 @@
 package net.irisshaders.iris.pipeline.programs;
 
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.opengl.GlBuffer;
 import com.mojang.blaze3d.opengl.GlProgram;
 import com.mojang.blaze3d.opengl.GlRenderPass;
 import com.mojang.blaze3d.opengl.GlStateManager;
@@ -29,6 +31,7 @@ import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.gl.uniform.DynamicLocationalUniformHolder;
 import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;
+import net.irisshaders.iris.pipeline.IrisPipelines;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.transform.Patch;
 import net.irisshaders.iris.samplers.IrisSamplers;
@@ -276,5 +279,39 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 	@Override
 	public boolean iris$isSetUp() {
 		return isSetup;
+	}
+
+	// Binding points 0..~7 are used by Iris's own uniform blocks (dynamic transforms, projection,
+	// fog, globals, ...); start mod-provided custom blocks well clear of those.
+	private static final int CUSTOM_UBO_BINDING_BASE = 12;
+
+	@Override
+	public void iris$bindCustomUniformBlocks(Map<String, GpuBufferSlice> passUniforms) {
+		java.util.Set<String> names = IrisPipelines.getCustomUniformBlockNames();
+		if (names.isEmpty() || passUniforms.isEmpty()) {
+			return;
+		}
+
+		int bindingPoint = CUSTOM_UBO_BINDING_BASE;
+		for (String name : names) {
+			GpuBufferSlice slice = passUniforms.get(name);
+			// Optional by design: only bind blocks this draw actually supplies. Vanilla terrain draws
+			// share this program but never setUniform("ChunkFix", ...), so they are left untouched.
+			if (slice == null || !(slice.buffer() instanceof GlBuffer glBuffer)) {
+				continue;
+			}
+
+			// The block only exists if it was injected into this program's source (i.e. it was
+			// registered for this ShaderKey). If not present, glGetUniformBlockIndex returns
+			// GL_INVALID_INDEX and we safely skip.
+			int blockIndex = GL46C.glGetUniformBlockIndex(getProgramId(), name);
+			if (blockIndex == GL46C.GL_INVALID_INDEX) {
+				continue;
+			}
+
+			IrisRenderSystem.uniformBlockBinding(getProgramId(), blockIndex, bindingPoint);
+			IrisRenderSystem.bindBufferRange(GL46C.GL_UNIFORM_BUFFER, bindingPoint, glBuffer.handle(), slice.offset(), slice.length());
+			bindingPoint++;
+		}
 	}
 }
