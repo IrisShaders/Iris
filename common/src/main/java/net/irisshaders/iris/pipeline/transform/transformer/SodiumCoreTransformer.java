@@ -26,10 +26,10 @@ public class SodiumCoreTransformer {
 		root.rename("alphaTestRef", "iris_currentAlphaTest");
 		root.processMatches(t, modelViewMatrix, ASTNode::detachAndDelete);
 		root.rename("modelViewMatrix", "u_ModelViewMatrix");
-		root.rename("modelViewMatrixInverse", "iris_ModelViewMatrixInverse");
+		root.rename("modelViewMatrixInverse", "iris_ModelViewMatInverse");
 		root.processMatches(t, projectionMatrix, ASTNode::detachAndDelete);
 		root.rename("projectionMatrix", "u_ProjectionMatrix");
-		root.rename("projectionMatrixInverse", "iris_ProjectionMatrixInverse");
+		root.rename("projectionMatrixInverse", "iris_ProjMatInverse");
 		root.rename("normalMatrix", "iris_NormalMat");
 		root.rename("chunkOffset", "u_RegionOffset");
 		if (parameters.type == PatchShaderType.VERTEX) {
