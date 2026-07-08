@@ -119,6 +119,16 @@ tasks.withType<JavaCompile>().matching(notNeoTask).configureEach {
     source(project(":common").sourceSets.getByName("desktop").allSource)
 }
 
+tasks {
+    processResources {
+        from(project.project(":common").sourceSets.main.get().resources)
+        inputs.property("version", project.version)
+
+        filesMatching("*neoforge.mods.toml") {
+            expand(mapOf("version" to project.version))
+        }
+    }
+}
 tasks.withType<Javadoc>().matching(notNeoTask).configureEach {
     source(project(":common").sourceSets.main.get().allJava)
 }

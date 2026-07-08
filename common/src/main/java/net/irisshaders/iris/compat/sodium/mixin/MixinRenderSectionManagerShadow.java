@@ -212,7 +212,7 @@ public abstract class MixinRenderSectionManagerShadow implements ShadowRenderLis
 	}
 
 	@Inject(method = "prepareRenderTrees", at = @At("HEAD"), cancellable = true, remap = false)
-	private void skipAsyncCullDuringShadow(Viewport viewport, FogParameters fogParameters, boolean spectator, CallbackInfo ci) {
+	private void skipAsyncCullDuringShadow(Viewport viewport, FogParameters fogParameters, boolean useOcclusionCulling, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			ci.cancel();
 		}
