@@ -1,6 +1,5 @@
 package net.irisshaders.iris.layer;
 
-import com.mojang.blaze3d.vertex.MeshData;
 import net.irisshaders.batchedentityrendering.impl.BlendingStateHolder;
 import net.irisshaders.batchedentityrendering.impl.TransparencyType;
 import net.irisshaders.batchedentityrendering.impl.WrappableRenderType;
@@ -85,11 +84,6 @@ public class OuterWrappedRenderType extends RenderType implements WrappableRende
 		// Add one so that we don't have the exact same hash as the wrapped object.
 		// This means that we won't have a guaranteed collision if we're inserted to a map alongside the unwrapped object.
 		return this.wrapped.hashCode() + 1;
-	}
-
-	@Override
-	public void draw(MeshData meshData) {
-		wrapped.draw(meshData);
 	}
 
 	@Override

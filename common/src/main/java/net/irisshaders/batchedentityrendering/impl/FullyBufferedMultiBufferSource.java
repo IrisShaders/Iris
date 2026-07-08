@@ -144,17 +144,22 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 
 			type.setupRenderState();
+			boolean previousMergeRendering = ImmediateState.mergeRendering;
+			RenderType previousMergedRenderType = ImmediateState.mergedRenderType;
 			ImmediateState.mergeRendering = true;
+			ImmediateState.mergedRenderType = type;
 
-
-			for (BufferSegment segment : segments) {
-				segment.type().draw(segment.meshData());
-				drawCalls += 1;
+			try {
+				for (BufferSegment segment : segments) {
+					segment.type().draw(segment.meshData());
+					drawCalls += 1;
+				}
+			} finally {
+				ImmediateState.mergeRendering = previousMergeRendering;
+				ImmediateState.mergedRenderType = previousMergedRenderType;
+				type.clearRenderState();
 			}
-
-			type.clearRenderState();
 		}
-		ImmediateState.mergeRendering = false;
 
 		int targetClearTime = getTargetClearTime();
 
@@ -192,19 +197,24 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 
 			type.setupRenderState();
+			boolean previousMergeRendering = ImmediateState.mergeRendering;
+			RenderType previousMergedRenderType = ImmediateState.mergedRenderType;
 			ImmediateState.mergeRendering = true;
+			ImmediateState.mergedRenderType = type;
 
-
-			for (BufferSegment segment : segments) {
-				segment.type().draw(segment.meshData());
-				drawCalls += 1;
+			try {
+				for (BufferSegment segment : segments) {
+					segment.type().draw(segment.meshData());
+					drawCalls += 1;
+				}
+			} finally {
+				ImmediateState.mergeRendering = previousMergeRendering;
+				ImmediateState.mergedRenderType = previousMergedRenderType;
+				type.clearRenderState();
 			}
 
 			typeToSegment.remove(type);
-
-			type.clearRenderState();
 		}
-		ImmediateState.mergeRendering = false;
 
 		profiler.popPush("reset type " + transparencyType);
 

@@ -1,6 +1,5 @@
 package net.irisshaders.iris.layer;
 
-import com.mojang.blaze3d.vertex.MeshData;
 import net.irisshaders.batchedentityrendering.impl.BlendingStateHolder;
 import net.irisshaders.batchedentityrendering.impl.TransparencyType;
 import net.irisshaders.batchedentityrendering.impl.WrappableRenderType;
@@ -90,11 +89,6 @@ public class InnerWrappedRenderType extends RenderType implements WrappableRende
 	@Override
 	public String toString() {
 		return "iris_wrapped:" + this.wrapped.toString();
-	}
-
-	@Override
-	public void draw(MeshData meshData) {
-		wrapped.draw(meshData);
 	}
 
 	@Override
