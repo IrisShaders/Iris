@@ -33,8 +33,8 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.ENTITY_CUTOUT_CULL, p -> getCutout(p));
 		assignToMain(RenderPipelines.ENTITY_CUTOUT_DISSOLVE, p -> getCutout(p));
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT_CULL, p -> getTranslucent(p));
-		assignToMain(RenderPipelines.ITEM_TRANSLUCENT, p -> getTranslucent(p));
-		assignToMain(RenderPipelines.ITEM_CUTOUT, p -> getCutout(p));
+		assignToMain(RenderPipelines.ITEM_TRANSLUCENT, p -> getItemTranslucent(p));
+		assignToMain(RenderPipelines.ITEM_CUTOUT, p -> getItemCutout(p));
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.ENTITY_SHADOW, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.LINES, p -> ShaderKey.LINES);
@@ -218,6 +218,22 @@ public class IrisPipelines {
 			return (ShaderKey.BE_TRANSLUCENT);
 		} else {
 			return (ShaderKey.ENTITIES_TRANSLUCENT);
+		}
+	}
+
+	private static ShaderKey getItemCutout(Object p) {
+		if (HandRenderer.INSTANCE.isActive()) {
+			return (HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE);
+		} else {
+			return ShaderKey.ITEM_CUTOUT;
+		}
+	}
+
+	private static ShaderKey getItemTranslucent(Object p) {
+		if (HandRenderer.INSTANCE.isActive()) {
+			return (HandRenderer.INSTANCE.isRenderingSolid() ? ShaderKey.HAND_CUTOUT_DIFFUSE : ShaderKey.HAND_WATER_DIFFUSE);
+		} else {
+			return ShaderKey.ITEM_TRANSLUCENT;
 		}
 	}
 
