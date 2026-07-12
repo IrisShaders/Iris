@@ -48,7 +48,7 @@ import static net.irisshaders.iris.pipeline.programs.ShaderOverrides.isBlockEnti
 @Mixin(GlDevice.class)
 public abstract class MixinShaderManager_Overrides {
 	@Unique
-	private Set<RenderPipeline> missingShaders = new HashSet<>();
+	private static final Set<RenderPipeline> missingShaders = new HashSet<>();
 
 	@Inject(method = "getOrCompilePipeline", at = @At(value = "HEAD"), cancellable = true)
 	private void redirectIrisProgram(RenderPipeline renderPipeline, CallbackInfoReturnable<GlRenderPipeline> cir) {
@@ -64,7 +64,7 @@ public abstract class MixinShaderManager_Overrides {
 
 			if (program != null) {
 				cir.setReturnValue(new GlRenderPipeline(renderPipeline, program));
-			} else if (missingShaders.add(renderPipeline)) {
+			} else if (!Iris.getIrisConfig().shouldSkip(renderPipeline.getLocation()) && missingShaders.add(renderPipeline)) {
 				if (renderPipeline.getLocation().getNamespace().equals("minecraft")) {
 					Iris.logger.fatal("Missing program " + renderPipeline.getLocation() + " in override list. This is likely an Iris bug!!!", new Throwable());
 				} else {
@@ -98,6 +98,10 @@ public abstract class MixinShaderManager_Overrides {
 	private static GlProgram override(IrisRenderingPipeline pipeline, RenderPipeline shaderProgram) {
 		ShaderKey shaderKey = IrisPipelines.getPipeline(pipeline, shaderProgram);
 
-		return shaderKey == null ? null : pipeline.getShaderMap().getShader(shaderKey);
+		if (shaderKey == null || Iris.getIrisConfig().shouldSkip(shaderProgram.getLocation())) {
+			return null;
+		}
+
+		return pipeline.getShaderMap().getShader(shaderKey);
 	}
 }

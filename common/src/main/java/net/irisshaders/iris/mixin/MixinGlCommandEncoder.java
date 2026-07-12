@@ -168,6 +168,16 @@ public class MixinGlCommandEncoder {
 			}
 			is.iris$setupState(glRenderPass.samplers, sam == null ? null : sam.view());
 			programsToClear.add(is);
+		} else if (ImmediateState.isRenderingLevel
+			&& !(glRenderPass.pipeline.program() instanceof IrisProgram)
+			&& Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline irp
+			&& irp.shouldOverrideShaders()) {
+			// Skipped vanilla shader; bind the gbuffer so it writes to colortex0 instead of the main framebuffer.
+			if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+				irp.bindDefaultShadow();
+			} else {
+				irp.bindDefault();
+			}
 		}
 	}
 

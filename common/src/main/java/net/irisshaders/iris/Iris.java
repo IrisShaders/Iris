@@ -236,6 +236,11 @@ public class Iris {
 			}
 		}
 
+		Minecraft minecraft = Minecraft.getInstance();
+		if (minecraft != null && minecraft.getResourceManager() != null) {
+			irisConfig.loadPackExclusions(minecraft.getResourceManager());
+		}
+
 		if (!irisConfig.areShadersEnabled()) {
 			logger.info("Shaders are disabled because enableShaders is set to false in iris.properties");
 

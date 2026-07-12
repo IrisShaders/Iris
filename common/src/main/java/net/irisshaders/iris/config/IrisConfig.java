@@ -9,10 +9,13 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.pathways.colorspace.ColorSpace;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -48,6 +51,10 @@ public class IrisConfig {
 	 * What shaders should be nuked.
 	 */
 	private List<Identifier> shadersToSkip = new ArrayList<>();
+	/**
+	 * What shaders resource packs have asked to skip, via assets/iris/excluded.json.
+	 */
+	private List<Identifier> packShadersToSkip = new ArrayList<>();
 	/**
 	 * If the update notification should be disabled or not.
 	 */
@@ -216,7 +223,33 @@ public class IrisConfig {
 	}
 
 	public boolean shouldSkip(Identifier value) {
-		return shadersToSkip.contains(value); // TODO
+		return shadersToSkip.contains(value) || packShadersToSkip.contains(value);
+	}
+
+	public void loadPackExclusions(ResourceManager resourceManager) {
+		List<Identifier> excluded = new ArrayList<>();
+
+		for (Resource resource : resourceManager.getResourceStack(Identifier.fromNamespaceAndPath("iris", "excluded.json"))) {
+			try (InputStream is = resource.open()) {
+				JsonArray json = JsonParser.parseString(new String(is.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonObject().getAsJsonArray("excluded");
+				for (int i = 0; i < json.size(); i++) {
+					Identifier resource1 = Identifier.tryParse(json.get(i).getAsString());
+					if (resource1 == null) {
+						Iris.logger.warn("Unknown shader " + json.get(i).getAsString() + " in " + resource.sourcePackId());
+					} else {
+						excluded.add(resource1);
+					}
+				}
+			} catch (Exception e) {
+				Iris.logger.warn("Failed to read excluded.json from a resource pack", e);
+			}
+		}
+
+		packShadersToSkip = excluded;
+
+		if (!excluded.isEmpty()) {
+			Iris.logger.info("Resource packs excluded " + excluded.size() + " pipeline(s) from Iris override: " + excluded);
+		}
 	}
 
 	public void setUnknown(boolean b) throws IOException {
