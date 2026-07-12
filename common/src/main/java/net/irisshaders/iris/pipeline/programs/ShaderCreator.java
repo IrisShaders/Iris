@@ -84,6 +84,10 @@ public class ShaderCreator {
 		String tessEval = transformed.get(PatchShaderType.TESS_EVAL);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
 
+		String[] injected = PackShaderInjector.apply(programId, name, vertex, fragment);
+		vertex = injected[0];
+		fragment = injected[1];
+
 		String shaderJsonString = String.format("""
 			    {
 			    "blend": {
@@ -311,6 +315,10 @@ public class ShaderCreator {
 		String tessControl = transformed.get(PatchShaderType.TESS_CONTROL);
 		String tessEval = transformed.get(PatchShaderType.TESS_EVAL);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
+
+		String[] injected = PackShaderInjector.apply(programId, name, vertex, fragment);
+		vertex = injected[0];
+		fragment = injected[1];
 
 		ShaderPrinter.printProgram(name).addSources(transformed).print();
 
