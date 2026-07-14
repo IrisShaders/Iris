@@ -2,7 +2,7 @@
 
 package net.irisshaders.iris.gl.shader;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import org.apache.logging.log4j.LogManager;

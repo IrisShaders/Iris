@@ -1,7 +1,7 @@
 package net.irisshaders.iris.pipeline;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;

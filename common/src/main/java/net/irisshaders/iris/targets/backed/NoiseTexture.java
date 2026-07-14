@@ -1,6 +1,6 @@
 package net.irisshaders.iris.targets.backed;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.GlResource;
 import net.irisshaders.iris.gl.IrisRenderSystem;

@@ -1,7 +1,7 @@
 package net.irisshaders.iris.pipeline.programs;
 
-import com.mojang.blaze3d.opengl.GlRenderPass;
-import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.renderpearl.backend.opengl.GlRenderPass;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 
 import java.util.HashMap;
 

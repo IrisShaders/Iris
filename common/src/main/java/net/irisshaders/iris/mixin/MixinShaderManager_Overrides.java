@@ -1,9 +1,9 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.opengl.GlDevice;
-import com.mojang.blaze3d.opengl.GlProgram;
-import com.mojang.blaze3d.opengl.GlRenderPipeline;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.backend.opengl.GlDevice;
+import com.mojang.renderpearl.backend.opengl.GlProgram;
+import com.mojang.renderpearl.backend.opengl.GlRenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.irisshaders.iris.Iris;

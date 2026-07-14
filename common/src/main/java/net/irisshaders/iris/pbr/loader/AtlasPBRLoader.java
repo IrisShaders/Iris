@@ -1,7 +1,7 @@
 package net.irisshaders.iris.pbr.loader;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.mixin.texture.AnimationMetadataSectionAccessor;
 import net.irisshaders.iris.mixin.texture.TextureAtlasAccessor;

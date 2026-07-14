@@ -1,6 +1,6 @@
 package net.irisshaders.iris.gl.program;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.GlResource;
 import net.irisshaders.iris.gl.IrisRenderSystem;

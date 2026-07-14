@@ -1,8 +1,8 @@
 package net.irisshaders.iris.vertices;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import net.irisshaders.iris.Iris;
 
 import java.util.HashMap;

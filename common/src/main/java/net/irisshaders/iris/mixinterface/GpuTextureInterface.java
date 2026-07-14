@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixinterface;
 
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 
 public interface GpuTextureInterface {
 	default int iris$getGlId() {

@@ -1,6 +1,6 @@
 package net.irisshaders.iris.pathways.colorspace;
 
-import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.renderpearl.backend.opengl.GlTexture;
 
 public interface ColorSpaceConverter {
 	void rebuildProgram(int width, int height, ColorSpace colorSpace);

@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.opengl.GlDevice;
-import com.mojang.blaze3d.systems.DeviceInfo;
+import com.mojang.renderpearl.backend.opengl.GlDevice;
+import com.mojang.renderpearl.api.device.DeviceInfo;
 import net.irisshaders.iris.Iris;
 import org.lwjgl.opengl.GLCapabilities;
 import org.spongepowered.asm.mixin.Mixin;

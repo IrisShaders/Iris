@@ -1,6 +1,6 @@
 package net.irisshaders.iris.api.v0;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 
 import java.nio.ByteBuffer;
 import java.util.function.IntFunction;

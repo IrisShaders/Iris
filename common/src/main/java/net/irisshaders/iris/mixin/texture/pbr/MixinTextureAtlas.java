@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin.texture.pbr;
 
-import com.mojang.blaze3d.opengl.GlTexture;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.backend.opengl.GlTexture;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import net.irisshaders.iris.pbr.TextureTracker;
 import net.irisshaders.iris.pbr.texture.PBRAtlasHolder;
 import net.irisshaders.iris.pbr.texture.TextureAtlasExtension;

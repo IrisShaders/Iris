@@ -1,6 +1,6 @@
 package net.irisshaders.iris.gl.texture;
 
-import com.mojang.blaze3d.GpuFormat;
+import com.mojang.renderpearl.api.GpuFormat;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;

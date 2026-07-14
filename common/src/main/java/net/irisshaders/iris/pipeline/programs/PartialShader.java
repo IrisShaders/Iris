@@ -1,6 +1,6 @@
 package net.irisshaders.iris.pipeline.programs;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 
 import java.util.Objects;

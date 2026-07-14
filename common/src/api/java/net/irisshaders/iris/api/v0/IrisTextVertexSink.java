@@ -1,6 +1,6 @@
 package net.irisshaders.iris.api.v0;
 
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 
 import java.nio.ByteBuffer;
 

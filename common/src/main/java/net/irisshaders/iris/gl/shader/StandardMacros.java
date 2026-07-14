@@ -1,7 +1,7 @@
 package net.irisshaders.iris.gl.shader;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.dh.DHCompat;

@@ -3,12 +3,12 @@ package net.irisshaders.iris.shadows;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.IrisRenderSystem;
@@ -196,7 +196,7 @@ public class ShadowCompositeRenderer {
 
 	public void renderAll() {
 		GpuBuffer indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).getBuffer(6);
-		com.mojang.blaze3d.IndexType type = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).type();
+		com.mojang.renderpearl.api.pipeline.IndexType type = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).type();
 
 		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Shadow composites", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty())) {
 			pass.setPipeline(CompositeRenderer.COMPOSITE_PIPELINE);

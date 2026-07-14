@@ -1,7 +1,7 @@
 package net.irisshaders.iris.pathways.colorspace;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.renderpearl.backend.opengl.GlTexture;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.program.ComputeProgram;
 import net.irisshaders.iris.gl.program.ProgramBuilder;

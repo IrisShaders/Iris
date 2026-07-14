@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.mixinterface.GpuTextureInterface;
 import org.spongepowered.asm.mixin.Mixin;
 

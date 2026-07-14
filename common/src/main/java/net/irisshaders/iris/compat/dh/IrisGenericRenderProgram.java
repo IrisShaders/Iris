@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.dh;
 
 import com.google.common.primitives.Ints;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiGenericObjectShaderProgram;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderableBoxGroup;

@@ -1,7 +1,7 @@
 package net.irisshaders.iris.pathways;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.irisshaders.iris.layer.LightningRenderStateShard;
 import net.irisshaders.iris.pipeline.programs.ShaderAccess;
 import net.minecraft.util.Util;

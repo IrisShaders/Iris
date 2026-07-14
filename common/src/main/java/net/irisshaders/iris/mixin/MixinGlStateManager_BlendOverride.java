@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.gl.blending.BlendModeStorage;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

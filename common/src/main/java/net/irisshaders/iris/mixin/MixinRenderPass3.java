@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.systems.RenderPass;
-import com.mojang.blaze3d.systems.RenderPassBackend;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.backend.api.RenderPassBackend;
 import net.irisshaders.iris.mixinterface.CustomPass;
 import net.irisshaders.iris.mixinterface.RenderPassInterface;
 import org.spongepowered.asm.mixin.Final;

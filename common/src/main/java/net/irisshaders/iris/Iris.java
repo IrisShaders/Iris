@@ -1,8 +1,8 @@
 package net.irisshaders.iris;
 
 import com.google.common.base.Throwables;
-import com.mojang.blaze3d.opengl.GlDebug;
-import com.mojang.blaze3d.opengl.GlDevice;
+import com.mojang.renderpearl.backend.opengl.GlDebug;
+import com.mojang.renderpearl.backend.opengl.GlDevice;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;

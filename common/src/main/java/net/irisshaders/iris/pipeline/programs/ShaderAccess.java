@@ -1,8 +1,8 @@
 package net.irisshaders.iris.pipeline.programs;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;

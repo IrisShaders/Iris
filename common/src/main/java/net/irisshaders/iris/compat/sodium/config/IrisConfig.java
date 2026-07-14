@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.config;
 
-import com.mojang.blaze3d.opengl.GlDevice;
+import com.mojang.renderpearl.backend.opengl.GlDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.ConfigState;

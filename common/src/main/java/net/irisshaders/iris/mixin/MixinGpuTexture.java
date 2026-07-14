@@ -1,8 +1,8 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.opengl.GlTexture;
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.backend.opengl.GlTexture;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.mixinterface.GpuTextureInterface;
 import org.lwjgl.opengl.GL46C;

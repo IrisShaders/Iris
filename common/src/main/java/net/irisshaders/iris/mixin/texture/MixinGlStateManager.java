@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin.texture;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.pbr.TextureInfoCache;
 import net.irisshaders.iris.pbr.TextureTracker;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;

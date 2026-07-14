@@ -1,11 +1,11 @@
 package net.irisshaders.iris.shadows;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.AddressMode;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.renderpearl.api.textures.AddressMode;
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;

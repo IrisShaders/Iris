@@ -1,34 +1,34 @@
 accessWidener	v1	official
 
-accessible  class   com/mojang/blaze3d/opengl/GlStateManager$BlendState
-accessible  class   com/mojang/blaze3d/opengl/GlStateManager$BooleanState
-accessible  class   com/mojang/blaze3d/opengl/GlStateManager$TextureState
-accessible  class   com/mojang/blaze3d/opengl/GlStateManager$DepthState
+accessible  class   com/mojang/renderpearl/backend/opengl/GlStateManager$BlendState
+accessible  class   com/mojang/renderpearl/backend/opengl/GlStateManager$BooleanState
+accessible  class   com/mojang/renderpearl/backend/opengl/GlStateManager$TextureState
+accessible  class   com/mojang/renderpearl/backend/opengl/GlStateManager$DepthState
 accessible  class   net/minecraft/client/renderer/texture/Stitcher$Holder
 accessible  class   net/minecraft/world/level/biome/Biome$ClimateSettings
 accessible  class   net/minecraft/client/Options$FieldAccess
-accessible field com/mojang/blaze3d/opengl/GlRenderPass pipeline Lcom/mojang/blaze3d/opengl/GlRenderPipeline;
-accessible field com/mojang/blaze3d/opengl/GlRenderPass samplers Ljava/util/HashMap;
+accessible field com/mojang/renderpearl/backend/opengl/GlRenderPass pipeline Lcom/mojang/renderpearl/backend/opengl/GlRenderPipeline;
+accessible field com/mojang/renderpearl/backend/opengl/GlRenderPass samplers Ljava/util/HashMap;
 accessible class net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture
 accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
 accessible  class   net/minecraft/client/OptionInstance$ValueSet
 extendable  class   net/minecraft/client/OptionInstance
-accessible method com/mojang/blaze3d/opengl/GlProgram <init> (ILjava/lang/String;)V
-accessible field com/mojang/blaze3d/opengl/GlProgram uniformsByName Ljava/util/Map;
+accessible method com/mojang/renderpearl/backend/opengl/GlProgram <init> (ILjava/lang/String;)V
+accessible field com/mojang/renderpearl/backend/opengl/GlProgram uniformsByName Ljava/util/Map;
 extendable  class   net/minecraft/core/RegistryAccess$RegistryEntry
 accessible field com/mojang/blaze3d/platform/NativeImage pixels J
 mutable field net/minecraft/client/renderer/LevelRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
 accessible class net/minecraft/client/gui/components/AbstractSelectionList$Entry
-accessible field com/mojang/blaze3d/opengl/GlStateManager$BooleanState enabled Z
+accessible field com/mojang/renderpearl/backend/opengl/GlStateManager$BooleanState enabled Z
 accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z
 accessible class net/minecraft/client/particle/ItemPickupParticleGroup$State
-accessible class com/mojang/blaze3d/opengl/GlRenderPass$TextureViewAndSampler
+accessible class com/mojang/renderpearl/backend/opengl/GlRenderPass$TextureViewAndSampler
 accessible field net/minecraft/client/renderer/rendertype/RenderSetup outputTarget Lnet/minecraft/client/renderer/rendertype/OutputTarget;
-accessible field net/minecraft/client/renderer/rendertype/RenderSetup pipeline Lcom/mojang/blaze3d/pipeline/RenderPipeline;
+accessible field net/minecraft/client/renderer/rendertype/RenderSetup pipeline Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;
 accessible method net/minecraft/client/renderer/rendertype/RenderType create (Ljava/lang/String;Lnet/minecraft/client/renderer/rendertype/RenderSetup;)Lnet/minecraft/client/renderer/rendertype/RenderType;
 accessible method net/minecraft/client/renderer/rendertype/RenderType <init> (Ljava/lang/String;Lnet/minecraft/client/renderer/rendertype/RenderSetup;)V
 accessible method net/minecraft/client/renderer/texture/TextureAtlasSprite isAnimated ()Z
-accessible class com/mojang/blaze3d/opengl/GlDevice
-accessible class com/mojang/blaze3d/opengl/GlCommandEncoder
-accessible field com/mojang/blaze3d/opengl/GlBuffer handle I
+accessible class com/mojang/renderpearl/backend/opengl/GlDevice
+accessible class com/mojang/renderpearl/backend/opengl/GlCommandEncoder
+accessible field com/mojang/renderpearl/backend/opengl/GlBuffer handle I
 accessible field net/minecraft/client/renderer/blockentity/state/BlockEntityRenderState blockState Lnet/minecraft/world/level/block/state/BlockState;

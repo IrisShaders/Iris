@@ -1,6 +1,6 @@
 package net.irisshaders.iris.pipeline;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.datafixers.types.Func;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;

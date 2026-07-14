@@ -1,14 +1,14 @@
 package net.irisshaders.iris.pipeline.programs;
 
-import com.mojang.blaze3d.opengl.GlProgram;
-import com.mojang.blaze3d.opengl.GlRenderPass;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.textures.GpuTextureView;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.mojang.renderpearl.backend.opengl.GlProgram;
+import com.mojang.renderpearl.backend.opengl.GlRenderPass;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.UniformType;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import net.irisshaders.iris.compat.SkipList;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;

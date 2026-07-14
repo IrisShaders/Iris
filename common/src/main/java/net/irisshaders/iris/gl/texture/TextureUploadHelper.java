@@ -1,6 +1,6 @@
 package net.irisshaders.iris.gl.texture;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import org.lwjgl.opengl.GL20C;
 
 public class TextureUploadHelper {

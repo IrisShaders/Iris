@@ -1,7 +1,7 @@
 package net.irisshaders.iris.compat.dh;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiGenericObjectShaderProgram;

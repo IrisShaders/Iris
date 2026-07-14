@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.systems.GpuDevice;
-import com.mojang.blaze3d.systems.GpuDeviceBackend;
+import com.mojang.renderpearl.api.device.GpuDevice;
+import com.mojang.renderpearl.backend.api.GpuDeviceBackend;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

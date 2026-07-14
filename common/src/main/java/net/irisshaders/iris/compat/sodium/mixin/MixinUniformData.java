@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.mixin;
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
 import net.irisshaders.iris.mixinterface.ShadowRenderListAccess;
 import net.minecraft.client.multiplayer.ClientLevel;

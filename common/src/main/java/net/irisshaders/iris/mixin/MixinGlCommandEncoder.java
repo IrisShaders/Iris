@@ -3,15 +3,15 @@ package net.irisshaders.iris.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.blaze3d.opengl.GlCommandEncoder;
-import com.mojang.blaze3d.opengl.GlConst;
-import com.mojang.blaze3d.opengl.GlProgram;
-import com.mojang.blaze3d.opengl.GlRenderPass;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.backend.opengl.GlCommandEncoder;
+import com.mojang.renderpearl.backend.opengl.GlConst;
+import com.mojang.renderpearl.backend.opengl.GlProgram;
+import com.mojang.renderpearl.backend.opengl.GlRenderPass;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.ScissorState;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
@@ -54,7 +54,7 @@ public class MixinGlCommandEncoder {
 	private List<IrisProgram> programsToClear = new ArrayList<>();
 
 	// Do not change the viewport in the shadow pass.
-	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlStateManager;_viewport(IIII)V"))
+	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_viewport(IIII)V"))
 	private void changeViewport(int i, int j, int k, int l) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			return;
@@ -63,7 +63,7 @@ public class MixinGlCommandEncoder {
 		}
 	}
 
-	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlStateManager;_scissorBox(IIII)V"))
+	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_scissorBox(IIII)V"))
 	private void changeViewport2(int i, int j, int k, int l) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             GlStateManager._scissorBox(0, 0, ShadowRenderer.RESOLUTION, ShadowRenderer.RESOLUTION);
@@ -85,7 +85,7 @@ public class MixinGlCommandEncoder {
 	}
 
 	// Do not change the viewport in the shadow pass.
-	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlStateManager;_glBindFramebuffer(II)V"))
+	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_glBindFramebuffer(II)V"))
 	private void changeFramebuffer(int i, int j) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() || ImmediateState.safeToMultiply) {
 			this.tempFBO = j;
@@ -96,7 +96,7 @@ public class MixinGlCommandEncoder {
 	}
 
 
-	@WrapOperation(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/pipeline/RenderPipeline;isCull()Z"))
+	@WrapOperation(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;isCull()Z"))
 	private boolean iris$redirectCull(RenderPipeline instance, Operation<Boolean> original) {
 		return !ShadowRenderingState.areShadowsCurrentlyBeingRendered() && original.call(instance);
 	}
@@ -200,7 +200,7 @@ public class MixinGlCommandEncoder {
 		}
 	}
 
-	@Redirect(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlStateManager;_colorMask(II)V"))
+	@Redirect(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_colorMask(II)V"))
 	private void iris$changeColorMask(int index, int writeMask, @Local ColorTargetState[] states) {
 		if (states.length == 1) {
 			GlStateManager._colorMask(writeMask);

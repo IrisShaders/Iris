@@ -2,7 +2,7 @@ package net.irisshaders.iris.targets.backed;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;

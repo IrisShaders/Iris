@@ -1,13 +1,13 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.opengl.FrameBufferAttachment;
-import com.mojang.blaze3d.opengl.GlConst;
-import com.mojang.blaze3d.opengl.GlDevice;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.renderpearl.backend.opengl.FrameBufferAttachment;
+import com.mojang.renderpearl.backend.opengl.GlConst;
+import com.mojang.renderpearl.backend.opengl.GlDevice;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlTexture;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.mixinterface.RenderTargetInterface;

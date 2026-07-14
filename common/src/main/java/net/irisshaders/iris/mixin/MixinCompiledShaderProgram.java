@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.opengl.GlProgram;
+import com.mojang.renderpearl.backend.opengl.GlProgram;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
 import net.irisshaders.iris.mixinterface.ShaderInstanceInterface;

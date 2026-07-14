@@ -1,7 +1,7 @@
 package net.irisshaders.iris.vertices.sodium.terrain;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectOpenHashMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;

@@ -1,12 +1,12 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.opengl.GlBackend;
+import com.mojang.renderpearl.backend.opengl.GlBackend;
 import com.mojang.blaze3d.platform.DisplayData;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.WindowEventHandler;
-import com.mojang.blaze3d.shaders.GpuDebugOptions;
-import com.mojang.blaze3d.shaders.ShaderSource;
-import com.mojang.blaze3d.systems.GpuBackend;
+import com.mojang.renderpearl.api.device.GpuDebugOptions;
+import com.mojang.renderpearl.api.pipeline.ShaderSource;
+import com.mojang.renderpearl.api.device.GpuBackend;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import net.irisshaders.iris.Iris;

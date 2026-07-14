@@ -1,17 +1,17 @@
 package net.irisshaders.iris.pathways;
 
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.opengl.GlBuffer;
-import com.mojang.blaze3d.opengl.GlDevice;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.backend.opengl.GlBuffer;
+import com.mojang.renderpearl.backend.opengl.GlDevice;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.helpers.VertexBufferHelper;
 import net.irisshaders.iris.mixin.GpuDeviceAccessor;

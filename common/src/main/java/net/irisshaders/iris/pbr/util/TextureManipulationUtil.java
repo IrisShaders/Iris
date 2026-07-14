@@ -1,6 +1,6 @@
 package net.irisshaders.iris.pbr.util;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL11;

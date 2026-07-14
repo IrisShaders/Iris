@@ -1,6 +1,6 @@
 package net.irisshaders.iris.platform;
 
-import com.mojang.blaze3d.GpuFormat;
+import com.mojang.renderpearl.api.GpuFormat;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;

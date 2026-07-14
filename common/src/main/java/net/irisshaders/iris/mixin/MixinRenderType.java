@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.irisshaders.iris.NeoLambdas;
 import net.irisshaders.iris.mixinterface.RenderTypeInterface;

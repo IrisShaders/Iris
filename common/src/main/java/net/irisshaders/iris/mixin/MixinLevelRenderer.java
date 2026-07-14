@@ -4,14 +4,14 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.framegraph.FrameGraphBuilder;
 import com.mojang.blaze3d.framegraph.FramePass;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
-import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.renderpearl.api.commands.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuSampler;
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuSampler;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.caffeinemc.mods.sodium.client.util.GameRendererStorage;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.MojLambdas;
@@ -89,7 +89,7 @@ public abstract class MixinLevelRenderer {
 	@Unique
 	private Matrix4f iris$modelMatrix = new Matrix4f();
 
-	@WrapOperation(method = "lambda$addAlwaysOnTopPass$0", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;clearDepthTexture(Lcom/mojang/blaze3d/textures/GpuTexture;D)V"))
+	@WrapOperation(method = "lambda$addAlwaysOnTopPass$0", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/CommandEncoder;clearDepthTexture(Lcom/mojang/renderpearl/api/textures/GpuTexture;D)V"))
 	private void skip(CommandEncoder instance, GpuTexture texture, double v, Operation<Void> original) {
 		if (!IrisApi.getInstance().isShaderPackInUse()) {
 			original.call(instance, texture, v);
@@ -146,7 +146,7 @@ public abstract class MixinLevelRenderer {
 	}
 
 
-	@WrapWithCondition(method = { MojLambdas.RENDER_MAIN_PASS, NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;Lcom/mojang/blaze3d/textures/GpuSampler;)V"))
+	@WrapWithCondition(method = { MojLambdas.RENDER_MAIN_PASS, NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;Lcom/mojang/renderpearl/api/textures/GpuSampler;)V"))
 	private boolean skipRenderChunks(ChunkSectionsToRender instance, ChunkSectionLayerGroup chunkSectionLayerGroup, GpuSampler gpuSampler) {
 		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline pipeline) {
 			return !pipeline.skipAllRendering();
@@ -180,7 +180,7 @@ public abstract class MixinLevelRenderer {
 
 	// Do this before main pass submission so shadow maps are ready before terrain draws.
 	@Group(name = "that", min = 1, max = 1)
-	@Inject(require = 0, method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;addMainPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/util/profiling/ProfilerFiller;Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;)V"))
+	@Inject(require = 0, method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;addMainPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/util/profiling/ProfilerFiller;Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;)V"))
 	private void iris$renderTerrainShadows(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {
 		if (Iris.isPackInUseQuick()) {
 			pipeline.renderShadows((LevelRendererAccessor) this, Minecraft.getInstance().gameRenderer.mainCamera(), this.levelRenderState.cameraRenderState);
@@ -188,7 +188,7 @@ public abstract class MixinLevelRenderer {
 	}
 
 	@Group(name = "that", min = 1, max = 1)
-	@Inject(require = 0, method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;addMainPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/util/profiling/ProfilerFiller;Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;Lorg/joml/Matrix4fc;)V"))
+	@Inject(require = 0, method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;addMainPass(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/util/profiling/ProfilerFiller;Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;Lorg/joml/Matrix4fc;)V"))
 	private void iris$renderTerrainShadows2(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {
 		if (Iris.isPackInUseQuick()) {
 			pipeline.renderShadows((LevelRendererAccessor) this, Minecraft.getInstance().gameRenderer.mainCamera(), this.levelRenderState.cameraRenderState);
@@ -227,7 +227,7 @@ public abstract class MixinLevelRenderer {
 	}
 
 
-	@WrapOperation(method = { MojLambdas.RENDER_MAIN_PASS, NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;Lcom/mojang/blaze3d/textures/GpuSampler;)V"))
+	@WrapOperation(method = { MojLambdas.RENDER_MAIN_PASS, NeoLambdas.NEO_RENDER_MAIN_PASS }, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;Lcom/mojang/renderpearl/api/textures/GpuSampler;)V"))
 	private void iris$beginTerrainLayer(ChunkSectionsToRender instance, ChunkSectionLayerGroup chunkSectionLayerGroup, GpuSampler gpuSampler, Operation<Void> original) {
 		pipeline.setPhase(WorldRenderingPhase.fromTerrainRenderType(chunkSectionLayerGroup));
 		original.call(instance, chunkSectionLayerGroup, gpuSampler);

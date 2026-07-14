@@ -3,9 +3,9 @@ package net.irisshaders.iris.samplers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.AddressMode;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.renderpearl.api.textures.AddressMode;
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuSampler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.gl.image.GlImage;
 import net.irisshaders.iris.gl.sampler.GlSampler;
@@ -257,7 +257,7 @@ public class IrisSamplers {
 	public static GlSampler getTerrainCacheIris(int i) {
 		if (WorldRenderingSettings.INSTANCE.breaksAnisotropy()) i = 1;
 		if (terrainS[i] == null) {
-			terrainS[i] = new GlSampler(((com.mojang.blaze3d.opengl.GlSampler) getTerrainCache(i)).getId());
+			terrainS[i] = new GlSampler(((com.mojang.renderpearl.backend.opengl.GlSampler) getTerrainCache(i)).getId());
 		}
 		return terrainS[i];
 	}

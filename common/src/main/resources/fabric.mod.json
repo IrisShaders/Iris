@@ -69,9 +69,9 @@
     },
     "loom:injected_interfaces": {
       "com/mojang/blaze3d/pipeline/RenderTarget": ["net/irisshaders/iris/mixinterface/RenderTargetInterface"],
-      "com/mojang/blaze3d/textures/GpuTexture": ["net/irisshaders/iris/mixinterface/GpuTextureInterface"],
-      "com/mojang/blaze3d/systems/RenderPassBackend": ["net/irisshaders/iris/mixinterface/RenderPassInterface"],
-      "com/mojang/blaze3d/systems/RenderPass": ["net/irisshaders/iris/mixinterface/RenderPassInterface"],
+      "com/mojang/renderpearl/api/textures/GpuTexture": ["net/irisshaders/iris/mixinterface/GpuTextureInterface"],
+      "com/mojang/renderpearl/backend/api/RenderPassBackend": ["net/irisshaders/iris/mixinterface/RenderPassInterface"],
+      "com/mojang/renderpearl/api/commands/RenderPass": ["net/irisshaders/iris/mixinterface/RenderPassInterface"],
       "net/minecraft/client/renderer/rendertype/RenderType": ["net/irisshaders/iris/mixinterface/RenderTypeInterface"],
       "net/minecraft/client/renderer/ItemInHandRenderer": ["net/irisshaders/iris/mixinterface/ItemInHandInterface"]
     }

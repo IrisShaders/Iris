@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin.texture;
 
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.mixinterface.AbstractTextureExtended;
 import net.irisshaders.iris.pbr.TextureTracker;

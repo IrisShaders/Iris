@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import org.joml.Vector4i;
 import org.lwjgl.opengl.GL30C;

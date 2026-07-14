@@ -2,9 +2,9 @@ package net.irisshaders.iris.pipeline.programs;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.IrisRenderSystem;

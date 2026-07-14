@@ -1,9 +1,9 @@
 package net.irisshaders.iris.gl;
 
 import com.mojang.blaze3d.ProjectionType;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.opengl.GlDevice;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.backend.opengl.GlDevice;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import it.unimi.dsi.fastutil.ints.IntArrayList;

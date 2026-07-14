@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.opengl.Uniform;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.Uniform;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
