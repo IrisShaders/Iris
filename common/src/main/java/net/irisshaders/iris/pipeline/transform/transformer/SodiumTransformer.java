@@ -61,22 +61,13 @@ public class SodiumTransformer {
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's
 		// computed on the CPU-side of things
-		root.replaceReferenceExpressions(t, "gl_NormalMatrix",
-			"iris_DefaultNormalMat");
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-			"uniform mat3 iris_DefaultNormalMat;");
-
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-			"uniform mat4 iris_DefaultModelViewMatrixInverse;");
-
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-			"uniform mat4 iris_DefaultProjectionMatrixInverse;");
+		root.replaceReferenceExpressions(t, "gl_NormalMatrix", "mat3(u_ModelViewMatrix)");
 
 		// TODO: All of the transformed variants of the input matrices, preferably
 		// computed on the CPU side...
 		root.rename("gl_ModelViewMatrix", "u_ModelViewMatrix");
-		root.rename("gl_ModelViewMatrixInverse", "iris_DefaultModelViewMatrixInverse");
-		root.rename("gl_ProjectionMatrixInverse", "iris_DefaultProjectionMatrixInverse");
+		root.replaceReferenceExpressions(t, "gl_ModelViewMatrixInverse", "inverse(u_ModelViewMatrix)");
+		root.replaceReferenceExpressions(t, "gl_ProjectionMatrixInverse", "inverse(u_ProjectionMatrix)");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to

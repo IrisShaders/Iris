@@ -177,6 +177,27 @@ public abstract class MixinRenderSectionManagerShadow implements ShadowRenderLis
 		this.shadowTaskLists = null;
 	}
 
+	@WrapMethod(method = "finalizeRenderLists", remap = false)
+	private void finalizeShadowRenderLists(Camera camera, Viewport viewport, FogParameters fogParameters, boolean updateChunksImmediately, Operation<Void> original) {
+		if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			original.call(camera, viewport, fogParameters, updateChunksImmediately);
+			return;
+		}
+
+		this.iris$swapToShadowRenderLists();
+
+		if (this.shadowNeedsRenderListUpdate) {
+			this.renderOutOfGraph(viewport, fogParameters);
+			this.shadowRenderLists = this.renderLists;
+			this.shadowTaskLists = this.taskLists;
+			this.shadowNeedsRenderListUpdate = false;
+		}
+
+		this.needsRenderListUpdate = false;
+		this.needsGraphUpdate = false;
+		this.cameraChanged = false;
+	}
+
 	@Inject(method = "markGraphDirty", at = @At("HEAD"), remap = false)
 	private void markShadowGraphDirty(CallbackInfo ci) {
 		this.shadowNeedsRenderListUpdate = true;
