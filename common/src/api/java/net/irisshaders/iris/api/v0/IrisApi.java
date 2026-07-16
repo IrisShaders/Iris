@@ -129,4 +129,11 @@ public interface IrisApi {
 	 * @since API v0.4
 	 */
 	void assignPipelineShadow(RenderPipeline pipeline, IrisShadowProgram program);
+
+	/**
+	 * Registers a callback invoked during the shadow pass, after opaque terrain.
+	 *
+	 * @since API v0.4
+	 */
+	void registerShadowRenderCallback(IrisShadowRenderCallback callback);
 }

@@ -86,6 +86,7 @@ public class ShadowRenderer {
 	public static int renderDistance;
 	public static Matrix4f MODELVIEW;
 	public static Matrix4f PROJECTION;
+
 	public static Frustum FRUSTUM;
 	private final float halfPlaneLength;
 	private final float nearPlane, farPlane;
@@ -509,6 +510,14 @@ public class ShadowRenderer {
 			sections.renderGroup(ChunkSectionLayerGroup.OPAQUE, theSampler);
 			pipeline.setPhase(WorldRenderingPhase.NONE);
 		}
+
+		if (!ShadowRenderCallbacks.isEmpty()) {
+			profiler.popPush("iris_shadow_callbacks");
+			pipeline.setPhase(WorldRenderingPhase.TERRAIN_CUTOUT);
+			ShadowRenderCallbacks.invoke(MODELVIEW, PROJECTION, cameraX, cameraY, cameraZ, CapturedRenderingState.INSTANCE.getTickDelta());
+			pipeline.setPhase(WorldRenderingPhase.NONE);
+		}
+
 		pipeline.setPhase(WorldRenderingPhase.ENTITIES);
 
 		// Reset our viewport in case Sodium overrode it
