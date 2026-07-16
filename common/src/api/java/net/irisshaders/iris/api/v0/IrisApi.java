@@ -122,4 +122,11 @@ public interface IrisApi {
 	 * @since API v0.3
 	 */
 	void assignPipeline(RenderPipeline pipeline, IrisProgram program);
+
+	/**
+	 * Assigns a render pipeline to an Iris shader key for the shadow pass.
+	 *
+	 * @since API v0.4
+	 */
+	void assignPipelineShadow(RenderPipeline pipeline, IrisShadowProgram program);
 }

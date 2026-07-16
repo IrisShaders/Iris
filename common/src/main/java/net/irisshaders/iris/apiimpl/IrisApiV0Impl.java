@@ -5,6 +5,7 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.api.v0.IrisApiConfig;
 import net.irisshaders.iris.api.v0.IrisProgram;
+import net.irisshaders.iris.api.v0.IrisShadowProgram;
 import net.irisshaders.iris.api.v0.IrisTextVertexSink;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.irisshaders.iris.pipeline.IrisPipelines;
@@ -25,7 +26,7 @@ public class IrisApiV0Impl implements IrisApi {
 
 	@Override
 	public int getMinorApiRevision() {
-		return 3;
+		return 4;
 	}
 
 	@Override
@@ -78,5 +79,10 @@ public class IrisApiV0Impl implements IrisApi {
 	@Override
 	public void assignPipeline(RenderPipeline pipeline, IrisProgram program) {
 		IrisPipelines.assignPipeline(pipeline, ShaderKey.findBestMatch(pipeline, ProgramId.fromAPI(program)));
+	}
+
+	@Override
+	public void assignPipelineShadow(RenderPipeline pipeline, IrisShadowProgram program) {
+		IrisPipelines.assignPipelineShadow(pipeline, ShaderKey.findBestMatch(pipeline, ProgramId.fromAPI(program)));
 	}
 }
