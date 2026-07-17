@@ -26,6 +26,7 @@ repositories {
 val MINECRAFT_VERSION: String by rootProject.extra
 val PARCHMENT_VERSION: String? by rootProject.extra
 val FABRIC_LOADER_VERSION: String by rootProject.extra
+val SODIUM_DEPENDENCY_FABRIC: Any by rootProject.extra
 val SODIUM_DEPENDENCY_NEO: Any by rootProject.extra
 val FABRIC_API_VERSION: String by rootProject.extra
 
@@ -54,7 +55,7 @@ dependencies {
 
     compileOnly("net.fabricmc.fabric-api:fabric-renderer-api-v1:3.2.9+1172e897d7")
 
-    implementation(SODIUM_DEPENDENCY_NEO)
+    implementation(SODIUM_DEPENDENCY_FABRIC)
     compileOnly("org.antlr:antlr4-runtime:4.13.1")
     compileOnly("io.github.douira:glsl-transformer:3.0.0-pre3")
     compileOnly("org.anarres:jcpp:1.4.14")

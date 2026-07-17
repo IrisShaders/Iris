@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
@@ -123,9 +124,9 @@ public class MixinRenderRegion implements ShadowRenderRegion {
 		}
 	}
 
-	@Inject(method = "clearAllCachedBatches", at = @At("HEAD"))
-	private void iris$clearAllBatches(CallbackInfo ci) {
-		this.iris$forceClearAllBatches();
+	@Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearAllCachedBatches()V"))
+	private void iris$clearAllBatchesForResourceDeletion(RenderRegion instance) {
+		((ShadowRenderRegion) instance).iris$forceClearAllBatches();
 	}
 
 	@Inject(method = "clearCachedBatchFor", at = @At("HEAD"))

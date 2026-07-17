@@ -12,7 +12,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.EndFlashState;
 import net.minecraft.world.level.Level;
 import org.joml.Matrix4f;
-import org.lwjgl.glfw.GLFW;
 
 public class ShadowMatrices {
 	public static final float NEAR = -100.05f;

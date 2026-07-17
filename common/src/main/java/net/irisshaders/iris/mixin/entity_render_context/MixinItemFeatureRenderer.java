@@ -14,12 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemFeatureRenderer.class)
 public class MixinItemFeatureRenderer {
 	@Inject(method = "prepareSubmit", at = @At(value = "HEAD"))
-	private void iris$set(ItemFeatureRenderer.Submit submit, boolean foil, CallbackInfo ci) {
+	private void iris$set(ItemFeatureRenderer.Submit submit, CallbackInfo ci) {
 		((ModelStorage) (Object) submit).iris$set();
 	}
 
 	@Inject(method = "prepareSubmit", at = @At("RETURN"))
-	private void iris$clear(ItemFeatureRenderer.Submit submit, boolean foil, CallbackInfo ci) {
+	private void iris$clear(ItemFeatureRenderer.Submit submit, CallbackInfo ci) {
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 		CapturedRenderingState.INSTANCE.setCurrentEntity(0);
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(0);

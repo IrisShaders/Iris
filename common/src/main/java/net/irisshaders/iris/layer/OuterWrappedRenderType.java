@@ -104,11 +104,6 @@ public class OuterWrappedRenderType extends RenderType {
 	}
 
 	@Override
-	public OutputTarget outputTarget() {
-		return wrapped.outputTarget();
-	}
-
-	@Override
 	public boolean equals(@Nullable Object object) {
 		if (object == null) {
 			return false;

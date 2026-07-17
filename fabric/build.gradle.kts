@@ -65,8 +65,7 @@ dependencies {
     addRuntimeFabricModule("fabric-block-getter-api-v2")
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
-    addRuntimeFabricModule("fabric-lifecycle-events-v1")
-    addRuntimeFabricModule("fabric-renderer-api-v1")
+    addCompileFabricModule("fabric-lifecycle-events-v1")
     addCompileFabricModule("fabric-renderer-api-v1")
 
     implementation(SODIUM_DEPENDENCY_FABRIC)

@@ -1,6 +1,7 @@
 package net.irisshaders.iris.shadows;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.textures.AddressMode;
@@ -78,6 +79,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 public class ShadowRenderer {
 	public static int RESOLUTION;
@@ -384,7 +387,7 @@ public class ShadowRenderer {
 		}
 
 		GpuSampler theSampler = RenderSystem.getSamplerCache().getSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, FilterMode.NEAREST, FilterMode.NEAREST, true);
-		playerCamera.extractRenderState(levelRenderState.cameraRenderState, CapturedRenderingState.INSTANCE.getTickDelta());
+		playerCamera.extractRenderState(levelRenderState.cameraRenderState, Minecraft.getInstance().getDeltaTracker());
 		Minecraft client = Minecraft.getInstance();
 
 		ProfilerFiller profiler = Profiler.get();
@@ -512,12 +515,16 @@ public class ShadowRenderer {
 			ChunkSectionsToRender sections = new ChunkSectionsToRender(null, null, 0, null);
 			((SodiumChunkSection) (Object) sections).sodium$setRendering(((LevelRendererExtension) levelRenderer).sodium$getWorldRenderer(),
 				((LevelRendererExtension) levelRenderer).sodium$getMatrices(), cameraX, cameraY, cameraZ);
+			SodiumWorldRenderer.instance().prepareTerrainRender(((LevelRendererExtension) levelRenderer).sodium$getMatrices(), this.levelRenderState.cameraRenderState.pos.x, this.levelRenderState.cameraRenderState.pos.y, this.levelRenderState.cameraRenderState.pos.z);
 
 			// Render all opaque terrain unless pack requests not to
 			if (shouldRenderTerrain) {
 				pipeline.setPhase(WorldRenderingPhase.TERRAIN_SOLID);
-				sections.renderGroup(ChunkSectionLayerGroup.OPAQUE, theSampler);
+				try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
+					sections.renderGroup(ChunkSectionLayerGroup.OPAQUE, renderPass, theSampler, false);
+				}
 				pipeline.setPhase(WorldRenderingPhase.NONE);
+
 			}
 			pipeline.setPhase(WorldRenderingPhase.ENTITIES);
 
@@ -581,8 +588,11 @@ public class ShadowRenderer {
 
 			profiler.popPush("draw entities");
 
-			featureRenderDispatcher.renderAllFeatures(submitNodeStorage);
-
+			var frame = featureRenderDispatcher.prepareFrame(submitNodeStorage);
+			try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
+				FeatureRenderDispatcher.renderAllFeatures(renderPass, frame);
+			}
+			frame.close();
 			buffers.endFrame();
 
 			copyPreTranslucentDepth(levelRenderer);
@@ -597,7 +607,9 @@ public class ShadowRenderer {
 			// Just something to watch out for, however...
 			if (shouldRenderTranslucent) {
 				pipeline.setPhase(WorldRenderingPhase.TERRAIN_TRANSLUCENT);
-				sections.renderGroup(ChunkSectionLayerGroup.TRANSLUCENT, theSampler);
+				try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
+					sections.renderGroup(ChunkSectionLayerGroup.TRANSLUCENT, renderPass, theSampler, false);
+				}
 				pipeline.setPhase(WorldRenderingPhase.NONE);
 			}
 		} finally {

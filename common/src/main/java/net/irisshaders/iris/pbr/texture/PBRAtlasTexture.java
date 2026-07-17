@@ -278,7 +278,7 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 				try (RenderPass renderPass = RenderSystem.getDevice()
 					.createCommandEncoder()
 					.createRenderPass(() -> "Animate " + this.location, this.mipViews[level], Optional.empty())) {
-					renderPass.setPipeline(RenderPipelines.ANIMATE_SPRITE_BLIT);
+					renderPass.setPipeline(RenderSystem.getCompiledPipeline(RenderPipelines.ANIMATE_SPRITE_BLIT));
 					renderPass.setIndexBuffer(RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).getBuffer(6), RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).type());
 					RenderSystem.bindDefaultUniforms(renderPass);
 

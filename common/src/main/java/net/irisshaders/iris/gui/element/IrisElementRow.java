@@ -14,7 +14,6 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -207,7 +206,7 @@ public class IrisElementRow {
 				return false;
 			}
 
-			if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
+			if (event.button() == 1) {
 				return this.onClick.apply((T) this);
 			}
 

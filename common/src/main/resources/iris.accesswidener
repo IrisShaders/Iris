@@ -8,6 +8,7 @@ accessible  class   net/minecraft/client/renderer/texture/Stitcher$Holder
 accessible  class   net/minecraft/world/level/biome/Biome$ClimateSettings
 accessible  class   net/minecraft/client/Options$FieldAccess
 accessible field com/mojang/renderpearl/backend/opengl/GlRenderPass pipeline Lcom/mojang/renderpearl/backend/opengl/GlRenderPipeline;
+accessible method com/mojang/renderpearl/backend/opengl/GlRenderPipeline <init> (Lcom/mojang/renderpearl/backend/opengl/GlDevice;Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lcom/mojang/renderpearl/backend/opengl/GlProgram;)V
 accessible field com/mojang/renderpearl/backend/opengl/GlRenderPass samplers Ljava/util/HashMap;
 accessible class net/minecraft/client/renderer/texture/SpriteContents$AnimatedTexture
 accessible class net/minecraft/client/renderer/texture/SpriteContents$FrameInfo
@@ -23,7 +24,6 @@ accessible field com/mojang/renderpearl/backend/opengl/GlStateManager$BooleanSta
 accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z
 accessible class net/minecraft/client/particle/ItemPickupParticleGroup$State
 accessible class com/mojang/renderpearl/backend/opengl/GlRenderPass$TextureViewAndSampler
-accessible field net/minecraft/client/renderer/rendertype/RenderSetup outputTarget Lnet/minecraft/client/renderer/rendertype/OutputTarget;
 accessible field net/minecraft/client/renderer/rendertype/RenderSetup pipeline Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;
 accessible method net/minecraft/client/renderer/rendertype/RenderType create (Ljava/lang/String;Lnet/minecraft/client/renderer/rendertype/RenderSetup;)Lnet/minecraft/client/renderer/rendertype/RenderType;
 accessible method net/minecraft/client/renderer/rendertype/RenderType <init> (Ljava/lang/String;Lnet/minecraft/client/renderer/rendertype/RenderSetup;)V

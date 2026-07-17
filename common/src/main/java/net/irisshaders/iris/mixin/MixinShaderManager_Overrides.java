@@ -1,5 +1,6 @@
 package net.irisshaders.iris.mixin;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.backend.opengl.GlDevice;
 import com.mojang.renderpearl.backend.opengl.GlProgram;
 import com.mojang.renderpearl.backend.opengl.GlRenderPipeline;
@@ -45,13 +46,13 @@ import static net.irisshaders.iris.compat.SkipList.NONE;
 import static net.irisshaders.iris.compat.SkipList.shouldSkipList;
 import static net.irisshaders.iris.pipeline.programs.ShaderOverrides.isBlockEntities;
 
-@Mixin(GlDevice.class)
+@Mixin(RenderSystem.class)
 public abstract class MixinShaderManager_Overrides {
 	@Unique
-	private Set<RenderPipeline> missingShaders = new HashSet<>();
+	private static Set<RenderPipeline> missingShaders = new HashSet<>();
 
-	@Inject(method = "getOrCompilePipeline", at = @At(value = "HEAD"), cancellable = true)
-	private void redirectIrisProgram(RenderPipeline renderPipeline, CallbackInfoReturnable<GlRenderPipeline> cir) {
+	@Inject(method = "getCompiledPipelineNullable", at = @At(value = "HEAD"), cancellable = true)
+	private static void redirectIrisProgram(RenderPipeline renderPipeline, CallbackInfoReturnable<GlRenderPipeline> cir) {
 		if (renderPipeline == CompositeRenderer.COMPOSITE_PIPELINE) return;
 		if (renderPipeline == RenderPipelines.ANIMATE_SPRITE_BLIT || renderPipeline == RenderPipelines.ANIMATE_SPRITE_INTERPOLATE) return;
 
@@ -63,7 +64,7 @@ public abstract class MixinShaderManager_Overrides {
 			GlProgram program = override(irisPipeline, newProgram);
 
 			if (program != null) {
-				cir.setReturnValue(new GlRenderPipeline(renderPipeline, program));
+				cir.setReturnValue(new GlRenderPipeline((GlDevice) ((GpuDeviceAccessor) RenderSystem.getDevice()).getBackend(), renderPipeline, program));
 			} else if (missingShaders.add(renderPipeline)) {
 				if (renderPipeline.getLocation().getNamespace().equals("minecraft")) {
 					Iris.logger.fatal("Missing program " + renderPipeline.getLocation() + " in override list. This is likely an Iris bug!!!", new Throwable());

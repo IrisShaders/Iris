@@ -38,7 +38,21 @@ public class UndoReverseZFive {
         if (!Iris.isPackInUseQuick()) {
             return original.call(descriptor);
         }
-		return original.call(descriptor.depthAttachment() != null && descriptor.depthAttachment().clearValue().isPresent() ? descriptor.withDepthAttachment(descriptor.depthAttachment().textureView(), OptionalDouble.of(saturate(1.0 - descriptor.depthAttachment.clearValue().getAsDouble()))) : descriptor);
+		if (descriptor.depthAttachment() != null && descriptor.depthAttachment().clearValue().isPresent()) {
+			var b = RenderPassDescriptor.builder(descriptor.label());
+			for (int i = 0; i < descriptor.colorAttachments().size(); i++) {
+				var x =  descriptor.colorAttachments().get(i);
+				if (x == null) b.withUnusedColorAttachment();
+				else b.withColorAttachment(x.textureView(), x.clearValue());
+			}
+
+			b.withDepthAttachment(descriptor.depthAttachment().textureView(), descriptor.depthAttachment().clearValue().isPresent() ? OptionalDouble.of(saturate(1.0 - descriptor.depthAttachment().clearValue().getAsDouble())) : OptionalDouble.empty());
+
+			b.withRenderArea(descriptor.renderArea());
+
+			return original.call(b.build());
+		}
+		return original.call((RenderPassDescriptor) descriptor);
 	}
 
 	@WrapOperation(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_polygonOffset(FF)V"))

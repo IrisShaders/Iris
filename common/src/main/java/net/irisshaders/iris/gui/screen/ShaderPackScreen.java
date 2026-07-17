@@ -36,7 +36,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -145,7 +144,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		notifier.onNewFrame();
 		backgroundInit = 1.0f;
 
-		if (Minecraft.getInstance().hasControlDown() && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_D)) {
+		if (Minecraft.getInstance().hasControlDown() && InputConstants.isKeyDown(InputConstants.KEY_D)) {
 			Minecraft.getInstance().gui.setScreen(new ConfirmScreen((option) -> {
 				Iris.setDebug(option);
 				Minecraft.getInstance().gui.setScreen(this);
@@ -155,7 +154,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				Component.literal("No")));
 		}
 
-		if (Minecraft.getInstance().hasControlDown() && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_G)) {
+		if (Minecraft.getInstance().hasControlDown() && InputConstants.isKeyDown(InputConstants.KEY_G)) {
 			Minecraft.getInstance().gui.setScreen(new ConfirmScreen((option) -> {
 				try {
 					Iris.getIrisConfig().setUnknown(option);
@@ -411,7 +410,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			}
 		} else if (event.isCycleFocus()) {
 			if (!optionMenuOpen) {
-				shaderPackList.keyPressed(new KeyEvent(GLFW.GLFW_KEY_ENTER, 0, 0));
+				shaderPackList.keyPressed(new KeyEvent(InputConstants.KEY_RETURN, 0, 0));
 			}
 
 			this.optionMenuOpen = !this.optionMenuOpen;
@@ -426,7 +425,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.init();
 
 			this.setFocused(null);
-		} else if (event.key() == GLFW.GLFW_KEY_F1 && this.showHideButton != null) {
+		} else if (event.key() == InputConstants.KEY_F1 && this.showHideButton != null) {
 			this.guiHidden = !guiHidden;
 			this.init();
 		}

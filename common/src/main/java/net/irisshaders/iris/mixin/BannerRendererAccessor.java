@@ -17,16 +17,7 @@ import net.minecraft.world.item.DyeColor;
 public interface BannerRendererAccessor {
 	// maDU59_ was here =D
 	@Invoker("submitPatternLayer")
-	static <S> void iris$invokeSubmitPatternLayer(final SpriteGetter sprites,
-	                                              final PoseStack poseStack,
-	                                              final OrderedSubmitNodeCollector submitNodeCollector,
-	                                              final int lightCoords,
-	                                              final int overlayCoords,
-	                                              final Model<S> model,
-	                                              final S state,
-	                                              final SpriteId sprite,
-	                                              final DyeColor color,
-	                                              final ModelFeatureRenderer.CrumblingOverlay breakProgress) {
+	static <S> void iris$invokeSubmitPatternLayer(final SpriteGetter sprites, final PoseStack poseStack, final OrderedSubmitNodeCollector submitNodeCollector, final int lightCoords, final int overlayCoords, final Model<S> model, final S state, final SpriteId sprite, final DyeColor color) {
 
 	}
 }

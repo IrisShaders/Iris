@@ -11,7 +11,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
 
 public class SliderElementWidget extends StringElementWidget {
 	private static final int PREVIEW_SLIDER_WIDTH = 4;
@@ -112,7 +111,7 @@ public class SliderElementWidget extends StringElementWidget {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
-		if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
+		if (event.button() == 1) {
 			if (Minecraft.getInstance().hasShiftDown()) {
 				if (this.applyOriginalValue()) {
 					this.navigation.refresh();
@@ -168,7 +167,7 @@ public class SliderElementWidget extends StringElementWidget {
 
 	@Override
 	public boolean mouseReleased(MouseButtonEvent event) {
-		if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
+		if (event.button() == 1) {
 			this.onReleased();
 
 			return true;

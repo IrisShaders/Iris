@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import net.caffeinemc.mods.sodium.client.util.GameRendererStorage;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.mixin.GameRendererAccessor;
@@ -37,6 +38,9 @@ import net.minecraft.world.level.GameType;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.joml.Matrix4fc;
+
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 public class HandRenderer {
 	public static final HandRenderer INSTANCE = new HandRenderer();
@@ -116,10 +120,12 @@ public class HandRenderer {
 		RenderSystem.getModelViewStack().set(poseStack.last().pose());
 
 		gameRenderer.itemInHandRenderer.iris$renderHandsWithCustomRenderer(this, tickDelta, new PoseStack(), this.submitNodeCollector, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.entity(), tickDelta));
-		featureRenderDispatcher.renderAllFeatures(submitNodeCollector);
-
+		var frame = featureRenderDispatcher.prepareFrame(submitNodeCollector);
+		try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
+			featureRenderDispatcher.renderAllFeatures(renderPass, frame);
+		}
 		Profiler.get().pop();
-
+		frame.close();
 		RenderSystem.restoreProjectionMatrix();
 
 		poseStack.popPose();
@@ -153,8 +159,11 @@ public class HandRenderer {
 		RenderSystem.getModelViewStack().set(poseStack.last().pose());
 
 		gameRenderer.itemInHandRenderer.iris$renderHandsWithCustomRenderer(this, tickDelta, new PoseStack(), submitNodeCollector, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.entity(), tickDelta));
-		featureRenderDispatcher.renderAllFeatures(submitNodeCollector);
-
+		var frame = featureRenderDispatcher.prepareFrame(submitNodeCollector);
+		try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
+			featureRenderDispatcher.renderAllFeatures(renderPass, frame);
+		}
+		frame.close();
 		poseStack.popPose();
 
 		Profiler.get().pop();

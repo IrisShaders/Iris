@@ -106,7 +106,7 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		var type = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).type();
 
 		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Color space", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty())) {
-			pass.setPipeline(COMPOSITE_PIPELINE);
+			pass.setPipeline(RenderSystem.getCompiledPipeline(COMPOSITE_PIPELINE));
 			pass.iris$setCustomPass(EMPTY);
 
 			program.use();

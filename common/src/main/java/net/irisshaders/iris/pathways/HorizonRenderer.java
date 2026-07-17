@@ -106,7 +106,7 @@ public class HorizonRenderer {
 
 			pass.setVertexBuffer(0, buffer.slice());
 			pass.setIndexBuffer(indexBuffer, indices.type());
-			pass.setPipeline(RenderPipelines.SKY);
+			pass.setPipeline(RenderSystem.getCompiledPipeline(RenderPipelines.SKY));
 			pass.drawIndexed(indexCount, 1, 0, 0, 0);
 		}
 	}

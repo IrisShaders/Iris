@@ -31,9 +31,6 @@ import java.util.List;
 @Mixin(RenderTarget.class)
 public class MixinRenderTarget implements Blaze3dRenderTargetExt, RenderTargetInterface {
 	@Shadow
-	@Final
-	public boolean useDepth;
-	@Shadow
 	@Nullable
 	protected GpuTexture colorTexture;
 	@Shadow

@@ -199,7 +199,7 @@ public class ShadowCompositeRenderer {
 		com.mojang.renderpearl.api.pipeline.IndexType type = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).type();
 
 		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Shadow composites", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty())) {
-			pass.setPipeline(CompositeRenderer.COMPOSITE_PIPELINE);
+			pass.setPipeline(RenderSystem.getCompiledPipeline(CompositeRenderer.COMPOSITE_PIPELINE));
 			pass.setVertexBuffer(0, FullScreenQuadRenderer.INSTANCE.getQuad().slice());
 			pass.setIndexBuffer(indices, type);
 

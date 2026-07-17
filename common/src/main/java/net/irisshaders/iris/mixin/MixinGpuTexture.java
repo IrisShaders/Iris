@@ -1,6 +1,7 @@
 package net.irisshaders.iris.mixin;
 
 import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.backend.common.BaseGpuTexture;
 import com.mojang.renderpearl.backend.opengl.GlTexture;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.gl.IrisRenderSystem;
@@ -14,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(GlTexture.class)
-public abstract class MixinGpuTexture extends GpuTexture implements GpuTextureInterface {
+public abstract class MixinGpuTexture extends BaseGpuTexture implements GpuTextureInterface {
 	@Unique
 	private boolean mipmapNonLinear;
 

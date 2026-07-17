@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Mixin(AbstractEndPortalRenderer.class)
 public class MixinTheEndPortalRenderer {
@@ -42,7 +43,7 @@ public class MixinTheEndPortalRenderer {
 	@Unique
 	private static final float BLUE = 0.2f;
 
-	@ModifyArg(method = "submitCube", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitCustomGeometry(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;Lnet/minecraft/client/renderer/SubmitNodeCollector$CustomGeometryRenderer;)V"))
+	@ModifyArg(method = "submitCube(Ljava/util/Collection;Lnet/minecraft/client/renderer/rendertype/RenderType;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Ljava/util/function/Consumer;)V", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitCustomGeometry(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;Lnet/minecraft/client/renderer/SubmitNodeCollector$CustomGeometryRenderer;)V"))
 	private static RenderType iris$renderType(RenderType par2) {
 		if (Iris.getCurrentPack().isPresent()) {
 			return (RenderTypes.entitySolid(TheEndPortalRenderer.END_PORTAL_LOCATION));
@@ -51,9 +52,9 @@ public class MixinTheEndPortalRenderer {
 	}
 
 	@Inject(method = {
-		"lambda$submitCube$0"
+		"lambda$submitCube$1"
 	}, at = @At("HEAD"), cancellable = true, require = 1)
-	private static <T extends TheEndPortalBlockEntity> void iris$onRender(Collection<Direction> facesToShow, PoseStack.Pose pose, VertexConsumer buffer, CallbackInfo ci) {
+	private static <T extends TheEndPortalBlockEntity> void iris$onRender(Collection<Direction> facesToShow, Consumer vertexDecorator, PoseStack.Pose pose, VertexConsumer buffer, CallbackInfo ci) {
 		if (Iris.getCurrentPack().isEmpty()) {
 			return;
 		}

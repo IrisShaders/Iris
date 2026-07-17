@@ -19,7 +19,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
 
@@ -168,14 +167,14 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
-		if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1 || event.button() == GLFW.GLFW_MOUSE_BUTTON_2) {
+		if (event.button() == 1 || event.button() == 2) {
 			boolean refresh = false;
 
 			if (Minecraft.getInstance().hasShiftDown()) {
 				refresh = applyOriginalValue();
 			}
 			if (!refresh) {
-				if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
+				if (event.button() == 1) {
 					refresh = applyNextValue();
 				} else {
 					refresh = applyPreviousValue();

@@ -22,7 +22,9 @@ import net.minecraft.client.renderer.SubmitNodeCollection;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.UvMapping;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.resources.model.geometry.ItemQuads;
 import net.minecraft.world.item.ItemDisplayContext;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,8 +37,7 @@ import java.util.List;
 @Mixin(SubmitNodeCollection.class)
 public class MixinModelStorageTrigger {
 	@Inject(method = "submitModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/rendertype/RenderTypes;waterMask()Lnet/minecraft/client/renderer/rendertype/RenderType;"))
-	private <S> void iris$capture(Model<? super S> model, S state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, @org.jspecify.annotations.Nullable TextureAtlasSprite sprite, int outlineColor, ModelFeatureRenderer.@org.jspecify.annotations.Nullable CrumblingOverlay crumblingOverlay, CallbackInfo ci,
-								  @Local ModelFeatureRenderer.Submit<S> submit) {
+	private <S> void iris$capture(Model<? super S> model, Object state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, UvMapping uvMapping, int outlineColor, CallbackInfo ci, @Local ModelFeatureRenderer.Submit<S> submit) {
 		((ModelStorage) (Object) submit).iris$capture();
 	}
 
@@ -54,12 +55,12 @@ public class MixinModelStorageTrigger {
 	}
 
 	@WrapMethod(method = "submitModel")
-	private <S> void iris$changeRenderType(Model<? super S> model, S object, PoseStack poseStack, RenderType renderType, int i, int j, int k, @Nullable TextureAtlasSprite textureAtlasSprite, int l, ModelFeatureRenderer.@Nullable CrumblingOverlay crumblingOverlay, Operation<Void> original) {
+	private <S> void iris$changeRenderType(Model<? super S> model, Object state, PoseStack poseStack, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, UvMapping uvMapping, int outlineColor, Operation<Void> original) {
 		if (ImmediateState.isRenderingBEs) {
 			renderType = OuterWrappedRenderType.wrapExactlyOnce("iris:block_entity", renderType, BlockEntityRenderStateShard.INSTANCE);
 		}
 
-		original.call(model, object, poseStack, renderType, i, j, k, textureAtlasSprite, l, crumblingOverlay);
+		original.call(model, state, poseStack, renderType, lightCoords, overlayCoords, tintedColor, uvMapping, outlineColor);
 	}
 
 	@WrapMethod(method = "submitCustomGeometry")
@@ -71,9 +72,10 @@ public class MixinModelStorageTrigger {
 		original.call(poseStack, renderType, customGeometryRenderer);
 	}
 
-	@Inject(method = "submitItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/ItemFeatureRenderer$Submit;hasTranslucency()Z"))
-	private <E> void iris$capture4(PoseStack poseStack, ItemDisplayContext displayContext, int lightCoords, int overlayCoords, int outlineColor, int[] tintLayers, List<BakedQuad> quads, ItemStackRenderState.FoilType foilType, CallbackInfo ci, @Local ItemFeatureRenderer.Submit submit) {
+	@WrapOperation(method = "submitItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/phase/SimpleFeatureRenderPhase;submit(Lnet/minecraft/client/renderer/feature/submit/SubmitNode;)V"))
+	private <E> void iris$capture4(SimpleFeatureRenderPhase instance, SubmitNode submit, Operation<Void> original) {
 		((ModelStorage) (Object) submit).iris$capture();
+		original.call(instance, submit);
 	}
 
 	@WrapOperation(method = "submitText", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/phase/SimpleFeatureRenderPhase;submit(Lnet/minecraft/client/renderer/feature/submit/SubmitNode;)V"))

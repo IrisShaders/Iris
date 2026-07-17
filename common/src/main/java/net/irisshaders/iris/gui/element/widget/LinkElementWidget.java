@@ -16,7 +16,6 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
 
@@ -72,7 +71,7 @@ public class LinkElementWidget extends CommentedElementWidget<OptionMenuLinkElem
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
-		if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
+		if (event.button() == 1) {
 			this.navigation.open(targetScreenId);
 			GuiUtil.playButtonClickSound();
 

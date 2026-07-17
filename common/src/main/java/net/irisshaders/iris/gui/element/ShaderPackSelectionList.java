@@ -24,7 +24,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -490,7 +489,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		@Override
 		public boolean mouseClicked(MouseButtonEvent event, boolean repeat) {
 			// Only do anything on left-click
-			if (event.button() != 0) {
+			if (event.button() != 1) {
 				return false;
 			}
 

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.irisshaders.iris.NeoLambdas;
 import net.irisshaders.iris.mixinterface.RenderTypeInterface;
 import net.irisshaders.iris.pipeline.programs.ShaderAccess;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import org.spongepowered.asm.mixin.Final;
@@ -22,7 +23,7 @@ public class MixinRenderType implements RenderTypeInterface {
 
 	@Override
 	public RenderTarget iris$getRenderTarget() {
-		return this.state.outputTarget.getRenderTarget();
+		return Minecraft.getInstance().gameRenderer.mainRenderTarget();
 	}
 
 	@Override

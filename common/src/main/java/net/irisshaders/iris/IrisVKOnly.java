@@ -6,7 +6,6 @@ import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 public class IrisVKOnly {
     public static final KeyMapping.Category irisKeybindCategory = KeyMapping.Category.register(
@@ -14,7 +13,7 @@ public class IrisVKOnly {
     private static KeyMapping shaderpackScreenKeybind;
 
     public static void run() {
-        shaderpackScreenKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_I, irisKeybindCategory));
+        shaderpackScreenKeybind = IrisPlatformHelpers.getInstance().registerKeyBinding(new KeyMapping("iris.keybind.shaderPackSelection", InputConstants.Type.KEYBOARD, InputConstants.KEY_I, irisKeybindCategory));
 
     }
 

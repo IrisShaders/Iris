@@ -10,7 +10,7 @@ import com.mojang.renderpearl.api.device.GpuBackend;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import net.irisshaders.iris.Iris;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.sdl.SDLVideo;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -26,8 +26,8 @@ public class MixinWindow {
 	@Inject(method = "setWindowHints", at = @At(value = "RETURN"))
 	private void iris$enableDebugContext(CallbackInfo ci) {
 		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
-			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE);
-			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_NO_ERROR, GLFW.GLFW_FALSE);
+			SDLVideo.SDL_GL_SetAttribute(SDLVideo.SDL_GL_CONTEXT_DEBUG_FLAG, 1);
+			SDLVideo.SDL_GL_SetAttribute(SDLVideo.SDL_GL_CONTEXT_NO_ERROR, 0);
 			Iris.logger.info("OpenGL debug context activated.");
 			if (SodiumClientMod.options().performance.useNoErrorGLContext) {
 				TinyFileDialogs.tinyfd_messageBox("Iris", "Due to a configuration issue, Iris may crash on this launch. This has been fixed automatically for the next launch.", "ok", "warning", 0);

@@ -35,6 +35,8 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT_CULL, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.ITEM_TRANSLUCENT, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.ITEM_CUTOUT, p -> getCutout(p));
+		assignToMain(RenderPipelines.ITEM_CUTOUT_GLINT, p -> getCutout(p));
+		assignToMain(RenderPipelines.ITEM_CUTOUT_GLINT_SPECIAL, p -> getCutout(p));
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.ENTITY_SHADOW, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.LINES, p -> ShaderKey.LINES);
@@ -49,10 +51,10 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.WATER_MASK, p -> ShaderKey.BASIC);
 		assignToMain(RenderPipelines.GLINT, p -> ShaderKey.GLINT);
 		assignToMain(RenderPipelines.ARMOR_CUTOUT_NO_CULL, p -> getCutout(p));
+		assignToMain(RenderPipelines.ARMOR_CUTOUT_NO_CULL_GLINT, p -> getCutout(p));
 		assignToMain(RenderPipelines.EYES, p -> ShaderKey.ENTITIES_EYES);
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT_EMISSIVE, p -> ShaderKey.ENTITIES_EYES_TRANS);
 		assignToMain(RenderPipelines.ARMOR_DECAL_CUTOUT_NO_CULL, p -> getCutout(p));
-		assignToMain(RenderPipelines.ARMOR_TRANSLUCENT, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.BREEZE_WIND, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.ENTITY_SOLID, p -> getSolid(p));
 		assignToMain(RenderPipelines.ENTITY_SOLID_Z_OFFSET_FORWARD, p -> getSolid(p));
@@ -66,8 +68,6 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.BEACON_BEAM_TRANSLUCENT, p -> ShaderKey.BEACON);
 		assignToMain(RenderPipelines.END_PORTAL, p -> ShaderKey.BLOCK_ENTITY);
 		assignToMain(RenderPipelines.END_SKY, p -> ShaderKey.SKY_TEXTURED);
-		assignToMain(RenderPipelines.WEATHER_DEPTH_WRITE, p -> ShaderKey.WEATHER);
-		assignToMain(RenderPipelines.WEATHER_NO_DEPTH_WRITE, p -> ShaderKey.WEATHER);
 		assignToMain(RenderPipelines.TEXT, p -> getText(p));
 		assignToMain(RenderPipelines.TEXT_POLYGON_OFFSET, p -> getText(p));
 		assignToMain(RenderPipelines.TEXT_SEE_THROUGH, p -> getText(p));
@@ -108,8 +108,6 @@ public class IrisPipelines {
 
 		assignToShadow(RenderPipelines.ENERGY_SWIRL, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.GLINT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
-		assignToShadow(RenderPipelines.WEATHER_DEPTH_WRITE, p -> ShaderKey.SHADOW_PARTICLES);
-		assignToShadow(RenderPipelines.WEATHER_NO_DEPTH_WRITE, p -> ShaderKey.SHADOW_PARTICLES);
 		assignToShadow(RenderPipelines.OPAQUE_PARTICLE, p -> ShaderKey.SHADOW_PARTICLES);
 		assignToShadow(RenderPipelines.TRANSLUCENT_PARTICLE, p -> ShaderKey.SHADOW_PARTICLES);
 		assignToShadow(RenderPipelines.LINES, p -> ShaderKey.SHADOW_LINES);
@@ -127,7 +125,6 @@ public class IrisPipelines {
 		assignToShadow(RenderPipelines.BEACON_BEAM_TRANSLUCENT, p -> ShaderKey.SHADOW_BEACON_BEAM);
 		assignToShadow(RenderPipelines.END_PORTAL, p -> ShaderKey.SHADOW_BLOCK);
 		assignToShadow(RenderPipelines.END_GATEWAY, p -> ShaderKey.SHADOW_BLOCK);
-		assignToShadow(RenderPipelines.ARMOR_TRANSLUCENT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.LIGHTNING, p -> ShaderKey.SHADOW_LIGHTNING);
 		assignToShadow(RenderPipelines.DRAGON_RAYS, p -> ShaderKey.SHADOW_LIGHTNING);
 
@@ -222,7 +219,7 @@ public class IrisPipelines {
 	@Nullable
 	public static ShaderKey getPipeline(IrisRenderingPipeline pipeline, RenderPipeline shader) {
         if (shader.getLocation().getNamespace().contains("sodium")) {
-            if (shader.getColorTargetState().blendFunction().isPresent()) {
+            if (shader.getColorTargetStates()[0].blendFunction().isPresent()) {
                 return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_SODIUM_TERRAIN_TRANSLUCENT : ShaderKey.SODIUM_TERRAIN_TRANSLUCENT;
             } else if (shader.getShaderDefines().asSourceDirectives().contains("CUTOUT")) {
                 return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_SODIUM_TERRAIN_CUTOUT : ShaderKey.SODIUM_TERRAIN_CUTOUT;

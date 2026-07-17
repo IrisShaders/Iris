@@ -156,9 +156,9 @@ public class MixinGlCommandEncoder {
 					GlStateManager._disableCull();
 				}
 
-				if (pipeline.getColorTargetState().blendFunction().isPresent()) {
+				if (pipeline.getColorTargetStates()[0].blendFunction().isPresent()) {
 					GlStateManager._enableBlend(0);
-					BlendFunction blendFunction = (BlendFunction)pipeline.getColorTargetState().blendFunction().get();
+					BlendFunction blendFunction = (BlendFunction)pipeline.getColorTargetStates()[0].blendFunction().get();
 					GlStateManager._blendFuncSeparate(
 						GlConst.toGl(blendFunction.color().sourceFactor()),
 						GlConst.toGl(blendFunction.color().destFactor()),
@@ -170,7 +170,7 @@ public class MixinGlCommandEncoder {
 				}
 
 				GlStateManager._polygonMode(1032, GlConst.toGl(pipeline.getPolygonMode()));
-				GlStateManager._colorMask(pipeline.getColorTargetState().writeMask());
+				GlStateManager._colorMask(pipeline.getColorTargetStates()[0].writeMask());
 			}
 		}
 	}
