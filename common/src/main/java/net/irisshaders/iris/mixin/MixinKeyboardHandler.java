@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(KeyboardHandler.class)
 public class MixinKeyboardHandler {
-    @Inject(method = "handleDebugKeys", at = @At("RETURN"))
+    @Inject(method = "handleDebugKeys", at = @At("RETURN"), cancellable = true)
     private void iris$handleDebugKeys(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
-        Iris.handleDebugKeys(event);
+		cir.setReturnValue(Iris.handleDebugKeys(event));
     }
 }

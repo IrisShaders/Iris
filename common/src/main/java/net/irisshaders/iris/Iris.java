@@ -755,7 +755,7 @@ public class Iris {
 		return getVersion().split("\\+")[0];
 	}
 
-    public static void handleDebugKeys(KeyEvent event) {
+    public static boolean handleDebugKeys(KeyEvent event) {
         if (reloadKeybind.matches(event)) {
             try {
                 reload();
@@ -771,7 +771,9 @@ public class Iris {
                     Minecraft.getInstance().player.sendSystemMessage(Component.translatable("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED));
                 }
             }
+			return true;
         }
+		return false;
     }
 
     /**
