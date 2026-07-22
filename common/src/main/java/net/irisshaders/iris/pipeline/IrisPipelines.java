@@ -10,6 +10,7 @@ import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -19,6 +20,8 @@ import static net.irisshaders.iris.pipeline.programs.ShaderOverrides.isBlockEnti
 public class IrisPipelines {
 	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMap = new Object2ObjectArrayMap<>();
 	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMapShadow = new Object2ObjectArrayMap<>();
+	private static final Map<Identifier, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMapByLocation = new Object2ObjectArrayMap<>();
+	private static final Map<Identifier, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMapShadowByLocation = new Object2ObjectArrayMap<>();
 	private static final Function<IrisRenderingPipeline, ShaderKey> FAKE_FUNCTION = p -> null;
 
 	static {
@@ -173,6 +176,7 @@ public class IrisPipelines {
 		}
 
 		coreShaderMap.put(pipeline, o);
+		coreShaderMapByLocation.put(pipeline.getLocation(), o);
 	}
 
 	private static void assignToShadow(RenderPipeline pipeline, Function<IrisRenderingPipeline, ShaderKey> o) {
@@ -181,6 +185,7 @@ public class IrisPipelines {
 		}
 
 		coreShaderMapShadow.put(pipeline, o);
+		coreShaderMapShadowByLocation.put(pipeline.getLocation(), o);
 	}
 
 	private static ShaderKey getCutout(Object p) {
@@ -231,27 +236,42 @@ public class IrisPipelines {
             }
         }
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			return coreShaderMapShadow.getOrDefault(shader, FAKE_FUNCTION).apply(pipeline);
+			return getMappedShader(coreShaderMapShadow, coreShaderMapShadowByLocation, shader).apply(pipeline);
 		} else {
-			return coreShaderMap.getOrDefault(shader, FAKE_FUNCTION).apply(pipeline);
+			return getMappedShader(coreShaderMap, coreShaderMapByLocation, shader).apply(pipeline);
 		}
+	}
+
+	private static Function<IrisRenderingPipeline, ShaderKey> getMappedShader(
+		Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> pipelineMap,
+		Map<Identifier, Function<IrisRenderingPipeline, ShaderKey>> locationMap,
+		RenderPipeline shader
+	) {
+		Function<IrisRenderingPipeline, ShaderKey> mappedShader = pipelineMap.get(shader);
+		return mappedShader != null ? mappedShader : locationMap.getOrDefault(shader.getLocation(), FAKE_FUNCTION);
 	}
 
 	public static void assignPipeline(RenderPipeline pipeline, ShaderKey programId) {
 		if (coreShaderMap.containsKey(pipeline)) {
 			throw new IllegalStateException("Shader already assigned: " + pipeline.getLocation() + ": " + programId);
 		} else {
-			coreShaderMap.put(pipeline, p -> programId);
+			Function<IrisRenderingPipeline, ShaderKey> mapping = p -> programId;
+			coreShaderMap.put(pipeline, mapping);
+			coreShaderMapByLocation.put(pipeline.getLocation(), mapping);
 		}
 	}
 
 	public static void copyPipeline(RenderPipeline pipelineToCopy, RenderPipeline returnValue) {
 		if (coreShaderMap.containsKey(pipelineToCopy)) {
-			coreShaderMap.put(returnValue, coreShaderMap.get(pipelineToCopy));
+			Function<IrisRenderingPipeline, ShaderKey> mapping = coreShaderMap.get(pipelineToCopy);
+			coreShaderMap.put(returnValue, mapping);
+			coreShaderMapByLocation.put(returnValue.getLocation(), mapping);
 		}
 
 		if (coreShaderMapShadow.containsKey(pipelineToCopy)) {
-			coreShaderMapShadow.put(returnValue, coreShaderMapShadow.get(pipelineToCopy));
+			Function<IrisRenderingPipeline, ShaderKey> mapping = coreShaderMapShadow.get(pipelineToCopy);
+			coreShaderMapShadow.put(returnValue, mapping);
+			coreShaderMapShadowByLocation.put(returnValue.getLocation(), mapping);
 		}
 	}
 }
