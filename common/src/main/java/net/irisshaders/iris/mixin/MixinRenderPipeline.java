@@ -33,6 +33,8 @@ public class MixinRenderPipeline {
 				cir.setReturnValue(IrisVertexFormats.TERRAIN);
 			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
 				cir.setReturnValue(IrisVertexFormats.GLYPH);
+			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR)) {
+				cir.setReturnValue(IrisVertexFormats.GLYPH);
 			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
 				cir.setReturnValue(IrisVertexFormats.ENTITY);
 			} else if (Objects.equals(vf, ChunkMeshFormats.COMPACT.getVertexFormat())) {
@@ -48,6 +50,8 @@ public class MixinRenderPipeline {
 			if (Objects.equals(vf, DefaultVertexFormat.BLOCK)) {
 				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.TERRAIN });
 			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
+				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.GLYPH });
+			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR)) {
 				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.GLYPH });
 			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
 				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.ENTITY });
