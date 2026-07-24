@@ -23,12 +23,14 @@ import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.vertices.ImmediateState;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL33C;
+import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL46C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -213,5 +215,21 @@ public class MixinGlCommandEncoder {
 	private void iris$clearState(CallbackInfo ci) {
 		programsToClear.forEach(IrisProgram::iris$clearState);
 		programsToClear.clear();
+	}
+
+	@ModifyArg(method = "executeDraws", index = 0, at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;nglMultiDrawElementsBaseVertex(IJIJIJ)V"))
+	private int iris$terrainTessShaderCompat(int mode) {
+		if (mode == GL43C.GL_TRIANGLES && ImmediateState.usingTessellation) {
+			mode = GL43C.GL_PATCHES;
+		}
+		return mode;
+	}
+
+	@ModifyArg(method = "drawFromBuffers", index = 0, at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glDrawElementsInstancedBaseVertex(IIIJII)V"))
+	private int iris$entityTessShaderCompat(int mode) {
+		if (mode == GL43C.GL_TRIANGLES && ImmediateState.usingTessellation) {
+			mode = GL43C.GL_PATCHES;
+		}
+		return mode;
 	}
 }
