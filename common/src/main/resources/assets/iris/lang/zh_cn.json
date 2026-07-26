@@ -62,7 +62,7 @@
   "options.iris.shadowDistance": "最大阴影距离",
   "options.iris.shadowDistance.enabled": "允许更改阴影的最远距离。超出此距离的地形和实体不会投射阴影。降低阴影距离可以显著提高性能。",
   "options.iris.shadowDistance.disabled": "当前的光影包已经预设好阴影渲染距离，您无法改变它。",
-  "options.iris.shadowDistance.sodium_tooltip": "阴影渲染距离控制阴影渲染过程中可能渲染的地形距离。距离越短，渲染的地形越少，从而提高帧率。对于明确指定了阴影渲染距离的光影包，此选项无法更改。实际的阴影渲染距离受渲染距离设置的限制",
+  "options.iris.shadowDistance.sodium_tooltip": "阴影渲染距离控制阴影渲染过程中可能渲染的地形距离。距离越短，渲染的地形越少，帧率越高。对于明确指定了阴影渲染距离的光影包，此选项无法更改。实际的阴影渲染距离受渲染距离的限制",
   "options.iris.colorSpace": "色彩空间",
   "options.iris.colorSpace.sodium_tooltip": "The color space to transform the screen to. Works on top of shader packs. Use SRGB if unsure.",
   "options.iris.gui.hide": "隐藏 GUI",
