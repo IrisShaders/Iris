@@ -12,7 +12,7 @@
   "iris.shaders.ssbofailure": "光影请求了您的 GPU 所不支持的特定功能（SSBO），可能无法正常工作。",
   "iris.keybind.reload": "重新加载光影包",
   "iris.keybind.shaderPackSelection": "光影包选择界面",
-  "iris.keybind.wireframe": "Wireframe (仅 SP)",
+  "iris.keybind.wireframe": "线框模式（仅单人游戏下）",
   "iris.keybind.toggleShaders": "启用/禁用光影",
   "iris.keybinds": "Iris",
   "iris.shaders.reloaded.failure": "重新加载光影包失败！原因：%s",
