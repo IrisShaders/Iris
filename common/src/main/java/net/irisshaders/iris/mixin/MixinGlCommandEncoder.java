@@ -192,9 +192,6 @@ public class MixinGlCommandEncoder {
             if (sam == null) {
                 sam = glRenderPass.samplers.get("u_BlockTex");
             }
-			if (sam != null && Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline irp) {
-				irp.onSetAlbedoTex(sam.view());
-			}
 			is.iris$setupState(glRenderPass.samplers, sam == null ? null : sam.view());
 			programsToClear.add(is);
 		}
