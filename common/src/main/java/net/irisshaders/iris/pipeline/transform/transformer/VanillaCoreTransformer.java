@@ -96,6 +96,8 @@ public class VanillaCoreTransformer {
 		CommonTransformer.upgradeStorageQualifiers(t, tree, root, parameters);
 
 		if (parameters.type == PatchShaderType.VERTEX) {
+			CommonTransformer.patchIntegerAttribute(t, tree, root, "mc_Entity", "iris_Entity", parameters.inputs.getEntityComponents());
+
 			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(iris_Position, 1.0)");
 			root.rename("vaPosition", "iris_Position");
 			if (parameters.inputs.hasColor()) {
