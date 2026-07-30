@@ -340,7 +340,7 @@ public class ShaderProperties {
 						return;
 					}
 
-					String[] modeArray = value.split(" ");
+					String[] modeArray = value.trim().split("\\s+");
 					int[] modes = new int[modeArray.length];
 
 					int i = 0;
@@ -349,7 +349,12 @@ public class ShaderProperties {
 						i++;
 					}
 
-					bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendInformation(index, new BlendMode(modes[0], modes[1], modes[2], modes[3])));
+					int srcRgb = modes[0];
+					int dstRgb = modes.length > 1 ? modes[1] : modes[0];
+					int srcAlpha = modes.length > 2 ? modes[2] : srcRgb;
+					int dstAlpha = modes.length > 3 ? modes[3] : dstRgb;
+
+					bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendInformation(index, new BlendMode(srcRgb, dstRgb, srcAlpha, dstAlpha)));
 
 					return;
 				}
@@ -359,7 +364,7 @@ public class ShaderProperties {
 					return;
 				}
 
-				String[] modeArray = value.split(" ");
+				String[] modeArray = value.trim().split("\\s+");
 				int[] modes = new int[modeArray.length];
 
 				int i = 0;
@@ -368,7 +373,12 @@ public class ShaderProperties {
 					i++;
 				}
 
-				blendModeOverrides.put(pass, new BlendModeOverride(new BlendMode(modes[0], modes[1], modes[2], modes[3])));
+				int srcRgb = modes[0];
+				int dstRgb = modes.length > 1 ? modes[1] : modes[0];
+				int srcAlpha = modes.length > 2 ? modes[2] : srcRgb;
+				int dstAlpha = modes.length > 3 ? modes[3] : dstRgb;
+
+				blendModeOverrides.put(pass, new BlendModeOverride(new BlendMode(srcRgb, dstRgb, srcAlpha, dstAlpha)));
 			});
 
 			handlePassDirective("indirect.", key, value, pass -> {
