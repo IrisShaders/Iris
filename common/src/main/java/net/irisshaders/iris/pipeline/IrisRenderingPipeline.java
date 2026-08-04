@@ -269,9 +269,11 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			.map(ImageClearPass::create)
 			.collect(ImmutableList.toImmutableList());
 
+		boolean separateEntityDraws = programSet.getPackDirectives().shouldUseSeparateEntityDraws().orElse(programSet.get(ProgramId.EntitiesTrans).isPresent() || programSet.get(ProgramId.BlockTrans).isPresent());
+
 		if (programSet.getPackDirectives().getParticleRenderingSettings() != ParticleRenderingSettings.UNSET) {
 			this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings();
-		} else if (programSet.getComposite(ProgramArrayId.Deferred).length > 0 && !programSet.getPackDirectives().shouldUseSeparateEntityDraws()) {
+		} else if (programSet.getComposite(ProgramArrayId.Deferred).length > 0 && !separateEntityDraws) {
 			this.particleRenderingSettings = ParticleRenderingSettings.AFTER;
 		} else {
 			this.particleRenderingSettings = ParticleRenderingSettings.MIXED;
@@ -446,7 +448,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		WorldRenderingSettings.INSTANCE.setUseSeparateAo(programSet.getPackDirectives().shouldUseSeparateAo());
 		WorldRenderingSettings.INSTANCE.setBreaksAnisotropy(programSet.getPackDirectives().breaksAnisotropy());
 		WorldRenderingSettings.INSTANCE.setVoxelizeLightBlocks(programSet.getPackDirectives().shouldVoxelizeLightBlocks());
-		WorldRenderingSettings.INSTANCE.setSeparateEntityDraws(programSet.getPackDirectives().shouldUseSeparateEntityDraws());
+		WorldRenderingSettings.INSTANCE.setSeparateEntityDraws(separateEntityDraws);
 
 		if (shadowRenderTargets != null) {
 			GlProgram shader = shaderMap.getShader(ShaderKey.SHADOW_TERRAIN_CUTOUT);
