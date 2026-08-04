@@ -149,6 +149,12 @@ public class TransformPatcher {
 								versionStatement.version = Version.GLSL33;
 							}
 
+							// lines shaders are forced through VanillaCoreTransformer regardless of
+							// their declared profile, so ensure the output profile is core
+							if (isLine && profile != Profile.CORE) {
+								versionStatement.profile = Profile.CORE;
+							}
+
 							switch (parameters.patch) {
 								case COMPOSITE:
 									CompositeCoreTransformer.transform(transformer, tree, root, parameters);
