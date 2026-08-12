@@ -9,6 +9,7 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.ShaderDefines;
 import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Final;
@@ -33,7 +34,7 @@ public class MixinRenderPipeline {
 				cir.setReturnValue(IrisVertexFormats.TERRAIN);
 			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
 				cir.setReturnValue(IrisVertexFormats.GLYPH);
-			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR)) {
+			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR) && thiss.equals(RenderPipelines.TEXT_SEE_THROUGH)) {
 				cir.setReturnValue(IrisVertexFormats.GLYPH);
 			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
 				cir.setReturnValue(IrisVertexFormats.ENTITY);
@@ -51,7 +52,7 @@ public class MixinRenderPipeline {
 				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.TERRAIN });
 			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
 				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.GLYPH });
-			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR)) {
+			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR) && thiss.equals(RenderPipelines.TEXT_SEE_THROUGH)) {
 				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.GLYPH });
 			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
 				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.ENTITY });
