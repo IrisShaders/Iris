@@ -201,7 +201,7 @@ public class SodiumShader implements ChunkShaderInterface {
 		float y = getCameraTranslation(region.getOriginY(), camera.intY, camera.fracY);
 		float z = getCameraTranslation(region.getOriginZ(), camera.intZ, camera.fracZ);
 
-		this.regionUniform.set(x, y, z);
+		if (this.regionUniform != null) this.regionUniform.set(x, y, z);
 		if (this.timeUniform != null) this.timeUniform.set(Math.toIntExact(System.currentTimeMillis() - region.getCreationTime()));
 		if (this.idUniform != null) this.idUniform.set(region.getId());
 	}
