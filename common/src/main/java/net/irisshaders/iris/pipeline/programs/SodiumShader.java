@@ -76,7 +76,7 @@ public class SodiumShader implements ChunkShaderInterface {
 						boolean containsTessellation) {
 		this.anisotropySupported = pipeline.hasFeature(FeatureFlags.TEXTURE_FILTERING);
 
-		this.regionUniform = context.bindUniform("u_RegionOffset", GlUniformFloat3v::new);
+		this.regionUniform = context.bindUniformOptional("u_RegionOffset", GlUniformFloat3v::new);
 		this.timeUniform = context.bindUniformOptional("u_CurrentTime", GlUniformInt::new);
 		this.idUniform = context.bindUniformOptional("u_RegionID", GlUniformUnsignedInt::new);
 
