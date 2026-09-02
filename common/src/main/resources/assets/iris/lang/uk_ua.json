@@ -74,5 +74,6 @@
   "label.iris.false": "ВИМК.",
   "modmenu.summaryTranslation.iris": "Додає підтримку шейдерів.",
   "modmenu.descriptionTranslation.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які вже існують для Optifine.",
-  "fml.menu.mods.info.description.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які вже існують для Optifine."
+  "fml.menu.mods.info.description.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які вже існують для Optifine.",
+  "neoforge.screen.mods.info.description.iris": "Додає новітню підтримку шейдерів, яка має бути сумісною з пакетами шейдерів, які вже існують для Optifine."
 }
