@@ -198,6 +198,9 @@ public class MixinGlCommandEncoder {
 				irp.onSetAlbedoTex(sam.view());
 			}
 			is.iris$setupState(glRenderPass.samplers, sam == null ? null : sam.view());
+			// IrisShaders/Iris#2974: forward any mod-registered custom uniform blocks (e.g. ChunkFix)
+			// that this render pass supplies to the substituted program.
+			is.iris$bindCustomUniformBlocks(glRenderPass.uniforms);
 			programsToClear.add(is);
 		}
 	}

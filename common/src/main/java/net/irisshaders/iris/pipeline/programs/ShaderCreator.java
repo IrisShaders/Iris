@@ -18,6 +18,7 @@ import net.irisshaders.iris.gl.blending.BufferBlendOverride;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
+import net.irisshaders.iris.pipeline.IrisPipelines;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.fallback.ShaderSynthesizer;
@@ -96,6 +97,20 @@ public class ShaderCreator {
 		String tessControl = transformed.get(PatchShaderType.TESS_CONTROL);
 		String tessEval = transformed.get(PatchShaderType.TESS_EVAL);
 		String fragment = transformed.get(PatchShaderType.FRAGMENT);
+
+		// IrisShaders/Iris#2974: inject any mod-registered custom uniform block declarations
+		// (e.g. MaLiLib's "ChunkFix") into the substituted program's source, so the block exists
+		// and the mod-provided buffer can be forwarded to it at draw time. The block is only bound
+		// for draws that actually supply it, so unrelated draws sharing this program are unaffected.
+		List<IrisPipelines.CustomUniformBlock> customBlocks = IrisPipelines.getCustomUniformBlocks(shaderKey);
+		if (!customBlocks.isEmpty()) {
+			StringBuilder decls = new StringBuilder();
+			for (IrisPipelines.CustomUniformBlock b : customBlocks) {
+				decls.append('\n').append(b.glslDeclaration()).append('\n');
+			}
+			vertex = injectAfterVersion(vertex, decls.toString());
+			fragment = injectAfterVersion(fragment, decls.toString());
+		}
 
 		String shaderJsonString = String.format("""
 			    {
@@ -205,6 +220,26 @@ public class ShaderCreator {
 
 			return new PartialShader(i, vertexS, fragS, geometryS, tessContS, tessEvalS);
 		}
+	}
+
+	/**
+	 * Inserts {@code injection} immediately after the {@code #version} line of a GLSL source (or at
+	 * the top if there is none), so declarations land at global scope after the version/extension
+	 * preamble. No-op on null sources.
+	 */
+	private static String injectAfterVersion(String src, String injection) {
+		if (src == null) {
+			return null;
+		}
+		int v = src.indexOf("#version");
+		if (v < 0) {
+			return injection + src;
+		}
+		int nl = src.indexOf('\n', v);
+		if (nl < 0) {
+			return src + injection;
+		}
+		return src.substring(0, nl + 1) + injection + src.substring(nl + 1);
 	}
 
 	private static void attachIfValid(int i, int s) {

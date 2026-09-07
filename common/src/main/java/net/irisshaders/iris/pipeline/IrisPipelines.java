@@ -12,7 +12,11 @@ import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.renderer.RenderPipelines;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static net.irisshaders.iris.pipeline.programs.ShaderOverrides.isBlockEntities;
 
@@ -20,6 +24,19 @@ public class IrisPipelines {
 	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMap = new Object2ObjectArrayMap<>();
 	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMapShadow = new Object2ObjectArrayMap<>();
 	private static final Function<IrisRenderingPipeline, ShaderKey> FAKE_FUNCTION = p -> null;
+
+	/**
+	 * Custom mod-provided std140 uniform blocks (see IrisShaders/Iris#2974), keyed by the Iris
+	 * {@link ShaderKey} that the mod's pipeline resolves to, so that {@code ShaderCreator} can
+	 * inject their GLSL declarations into the substituted program's source.
+	 */
+	private static final Map<ShaderKey, List<CustomUniformBlock>> customUniformBlocks = new Object2ObjectArrayMap<>();
+	/** Flat set of all registered custom block names, for the per-draw binding fast path. */
+	private static final Set<String> customUniformBlockNames = new HashSet<>();
+
+	/** A mod-registered custom uniform block: its GLSL name and full std140 declaration. */
+	public record CustomUniformBlock(String name, String glslDeclaration) {
+	}
 
 	static {
 		assignToMain(RenderPipelines.SOLID_BLOCK, p -> ShaderKey.TERRAIN_SOLID);
@@ -243,6 +260,41 @@ public class IrisPipelines {
 		} else {
 			coreShaderMap.put(pipeline, p -> programId);
 		}
+	}
+
+	/**
+	 * Registers a mod-provided custom uniform block for the substituted program of the given
+	 * pipeline. See {@link net.irisshaders.iris.api.v0.IrisApi#registerCustomUniformBlock}.
+	 */
+	public static void registerCustomUniformBlock(RenderPipeline pipeline, String blockName, String glslDeclaration) {
+		Function<IrisRenderingPipeline, ShaderKey> fn = coreShaderMap.get(pipeline);
+		if (fn == null) {
+			Iris.logger.warn("registerCustomUniformBlock: pipeline " + pipeline.getLocation()
+				+ " was not assigned via assignPipeline; ignoring custom block '" + blockName + "'.");
+			return;
+		}
+		ShaderKey key = fn.apply(null);
+		if (key == null) {
+			// The pipeline resolves to no substituted program (e.g. IrisProgram.TERRAIN), so Iris
+			// keeps the mod's own program, which binds the block itself. Nothing to forward.
+			Iris.logger.info("registerCustomUniformBlock: pipeline " + pipeline.getLocation()
+				+ " is not substituted by Iris; custom block '" + blockName + "' is left to the mod's own program.");
+			return;
+		}
+		customUniformBlocks.computeIfAbsent(key, k -> new ArrayList<>()).add(new CustomUniformBlock(blockName, glslDeclaration));
+		customUniformBlockNames.add(blockName);
+		Iris.logger.info("Registered custom uniform block '" + blockName + "' for ShaderKey " + key
+			+ " (pipeline " + pipeline.getLocation() + ").");
+	}
+
+	/** The custom uniform blocks whose GLSL declarations must be injected into this key's program. */
+	public static List<CustomUniformBlock> getCustomUniformBlocks(ShaderKey key) {
+		return customUniformBlocks.getOrDefault(key, List.of());
+	}
+
+	/** All registered custom block names, for the per-draw optional-binding fast path. */
+	public static Set<String> getCustomUniformBlockNames() {
+		return customUniformBlockNames;
 	}
 
 	public static void copyPipeline(RenderPipeline pipelineToCopy, RenderPipeline returnValue) {
