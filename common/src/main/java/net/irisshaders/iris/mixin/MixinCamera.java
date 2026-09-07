@@ -5,7 +5,9 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.frustum.fallback.NonCullingFrustum;
+import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.phys.Vec3;
@@ -39,10 +41,14 @@ public class MixinCamera {
 		return frustum;
     }
 
-	// Undo reverse z when updating camera. This will generate projection matrix that used in sodium, and then CapturedRenderingState
-    @WrapOperation(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setupPerspective(FFFFF)V"))
-	private void iris$undoReverseZ(Camera instance, float zNear, float zFar, float fov, float width, float height, Operation<Void> original) {
-		boolean isShader = Iris.isPackInUseQuick();
-		original.call(instance, isShader ? zFar : zNear, isShader? zNear : zFar, fov, width, height);
+	// Set isRenderingLevel for trigger isMatrixDirty. This is the place setup projection data for each frame
+    @Inject(method = "update", at = @At(value = "HEAD"))
+	private void iris$undoReverseZ(DeltaTracker deltaTracker, CallbackInfo ci) {
+		ImmediateState.isRenderingLevel = true;
+	}
+
+	@Inject(method = "update", at = @At(value = "RETURN"))
+	private void iris$restoreReverseZ(DeltaTracker deltaTracker, CallbackInfo ci) {
+		ImmediateState.isRenderingLevel = false;
 	}
 }
