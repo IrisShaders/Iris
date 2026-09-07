@@ -24,19 +24,19 @@ import java.util.function.Supplier;
 public class UndoReverseZFive {
 	@WrapMethod(method = "clearColorAndDepthTextures(Lcom/mojang/blaze3d/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/blaze3d/textures/GpuTexture;D)V")
 	private void iris$change(GpuTexture colorTexture, Vector4fc clearColor, GpuTexture depthTexture, double clearDepth, Operation<Void> original) {
-		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() && !ImmediateState.ALWAYS_REVERSE ? 1.0 - clearDepth : clearDepth));
+		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel ? 1.0 - clearDepth : clearDepth));
 	}
 	@WrapMethod(method = "clearColorAndDepthTextures(Lcom/mojang/blaze3d/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/blaze3d/textures/GpuTexture;DIIII)V")
 	private void iris$change3(GpuTexture colorTexture, Vector4fc clearColor, GpuTexture depthTexture, double clearDepth, int regionX, int regionY, int regionWidth, int regionHeight, Operation<Void> original) {
-		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() && !ImmediateState.ALWAYS_REVERSE ? 1.0 - clearDepth : clearDepth), regionX, regionY, regionWidth, regionHeight);
+		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel ? 1.0 - clearDepth : clearDepth), regionX, regionY, regionWidth, regionHeight);
 	}
 	@WrapMethod(method = "clearDepthTexture")
 	private void iris$change2(GpuTexture depthTexture, double clearDepth, Operation<Void> original) {
-		original.call(depthTexture, saturate(Iris.isPackInUseQuick() && !ImmediateState.ALWAYS_REVERSE ? 1.0 - clearDepth : clearDepth));
+		original.call(depthTexture, saturate(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel ? 1.0 - clearDepth : clearDepth));
 	}
 	@WrapMethod(method = "createRenderPass")
 	private RenderPassBackend iris$change4(RenderPassDescriptor descriptor, Operation<RenderPassBackend> original) {
-        if (!Iris.isPackInUseQuick() || ImmediateState.ALWAYS_REVERSE) {
+        if (!(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel)) {
             return original.call(descriptor);
         }
 		return original.call(descriptor.depthAttachment() != null && descriptor.depthAttachment().clearValue().isPresent() ? descriptor.withDepthAttachment(descriptor.depthAttachment().textureView(), OptionalDouble.of(saturate(1.0 - descriptor.depthAttachment.clearValue().getAsDouble()))) : descriptor);
@@ -44,7 +44,7 @@ public class UndoReverseZFive {
 
 	@WrapOperation(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlStateManager;_polygonOffset(FF)V"))
 	private void iris$revertPolygonOffset(float factor, float units, Operation<Void> original) {
-		if (Iris.isPackInUseQuick() && !ImmediateState.ALWAYS_REVERSE) {
+		if (Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel) {
 			original.call(-factor, -units);
 		} else {
 			original.call(factor, units);

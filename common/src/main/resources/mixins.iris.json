@@ -36,7 +36,6 @@
     "MixinFogRenderer",
     "MixinGameRenderer",
     "MixinGameRenderer_NightVisionCompat",
-    "MixinGuiItemAtlas",
     "MixinGlCommandEncoder",
     "MixinGlProgram",
     "MixinGlStateManager",
