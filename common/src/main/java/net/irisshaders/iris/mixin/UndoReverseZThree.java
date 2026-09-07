@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class UndoReverseZThree {
 	@Inject(method = "toGl(Lcom/mojang/blaze3d/platform/CompareOp;)I", at = @At("HEAD"), cancellable = true)
 	private static void iris$to(CompareOp compareOp, CallbackInfoReturnable<Integer> cir) {
-        if (!Iris.isPackInUseQuick() || ImmediateState.ALWAYS_REVERSE) return;
+        if (!(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel)) return;
 
 		cir.setReturnValue(switch (compareOp) {
 			case ALWAYS_PASS -> 519;
