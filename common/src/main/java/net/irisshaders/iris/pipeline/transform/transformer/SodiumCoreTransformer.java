@@ -28,7 +28,8 @@ public class SodiumCoreTransformer {
 		root.rename("modelViewMatrix", "u_ModelViewMatrix");
 		root.rename("modelViewMatrixInverse", "iris_ModelViewMatInverse");
 		root.processMatches(t, projectionMatrix, ASTNode::detachAndDelete);
-		root.rename("projectionMatrix", "u_ProjectionMatrix");
+		CommonTransformer.injectForwardZProjection(t, tree);
+		root.replaceReferenceExpressions(t, "projectionMatrix", "iris_undoRevZ(u_ProjectionMatrix)");
 		root.rename("projectionMatrixInverse", "iris_ProjMatInverse");
 		root.rename("normalMatrix", "iris_NormalMat");
 		root.rename("chunkOffset", "u_RegionOffset");

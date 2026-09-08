@@ -281,7 +281,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 	public void fillIndirectUniformData(DhApiRenderParam dhApiRenderParam, DhApiRenderableBoxGroupShading dhApiRenderableBoxGroupShading, IDhApiRenderableBoxGroup boxGroup, DhApiVec3d camPos) {
 		bind(dhApiRenderParam);
 		GlStateManager._enableDepthTest();
-		GlStateManager._depthFunc(GL30C.GL_LEQUAL);
+		GlStateManager._depthFunc(GL30C.GL_GEQUAL);
 		this.setUniform(this.instancedShaderOffsetChunkUniform,
 			new DhApiVec3i(
 				getChunkPosFromDouble(boxGroup.getOriginBlockPos().x),

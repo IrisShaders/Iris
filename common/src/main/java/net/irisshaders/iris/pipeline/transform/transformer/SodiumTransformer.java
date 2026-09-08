@@ -32,7 +32,7 @@ public class SodiumTransformer {
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "mat4(1.0)");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_FUNCTIONS, "uniform mat4 iris_LightmapTextureMatrix;");
-		root.rename("gl_ProjectionMatrix", "u_ProjectionMatrix");
+		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix", "iris_undoRevZ(u_ProjectionMatrix)");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
@@ -117,7 +117,9 @@ public class SodiumTransformer {
                           };""");
 
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
-			"(u_ProjectionMatrix * u_ModelViewMatrix)");
+			"(iris_undoRevZ(u_ProjectionMatrix) * u_ModelViewMatrix)");
+
+		CommonTransformer.injectForwardZProjection(t, tree);
 
 		CommonTransformer.applyIntelHd4000Workaround(root);
 	}

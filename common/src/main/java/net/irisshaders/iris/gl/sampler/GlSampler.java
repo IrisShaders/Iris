@@ -40,6 +40,7 @@ public class GlSampler extends GlResource {
 
 		if (hardwareShadow) {
 			IrisRenderSystem.samplerParameteri(getId(), GL20C.GL_TEXTURE_COMPARE_MODE, GL30C.GL_COMPARE_REF_TO_TEXTURE);
+			IrisRenderSystem.samplerParameteri(getId(), GL20C.GL_TEXTURE_COMPARE_FUNC, GL11C.GL_LEQUAL);
 		}
 	}
 
