@@ -39,9 +39,7 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 
 	@Override
 	public void beginLevelRendering() {
-        if (GL.getCapabilities().GL_ARB_clip_control) {
-            ARBClipControl.glClipControl(ARBClipControl.GL_LOWER_LEFT, ARBClipControl.GL_ZERO_TO_ONE);
-        }
+
 		// Use the default Minecraft framebuffer and ensure that no programs are in use
 		GlStateManager._glUseProgram(0);
 	}

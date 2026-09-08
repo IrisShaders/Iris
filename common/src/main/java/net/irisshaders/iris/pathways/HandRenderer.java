@@ -64,7 +64,9 @@ public class HandRenderer {
 		final PoseStack poseStack = new PoseStack();
 
 		// We need to scale the matrix by 0.125 so the hand doesn't clip through blocks.
-		Matrix4f scaleMatrix = new Matrix4f().scale(1F, 1F, DEPTH);
+		Matrix4f scaleMatrix = new Matrix4f()
+			.m22(DEPTH)
+			.m32((1.0F - DEPTH) * 0.5F);
 		this.projection.setupPerspective(0.05F, camera.depthFar, camera.hudFov, Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight());
 		scaleMatrix.mul(this.projection.getMatrix(new Matrix4f()));
 
