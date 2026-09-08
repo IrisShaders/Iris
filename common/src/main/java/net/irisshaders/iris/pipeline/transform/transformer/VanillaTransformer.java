@@ -367,7 +367,7 @@ public class VanillaTransformer {
 		}
 		transform.append(")");
 		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", transform.toString());
-
-		root.rename("gl_ProjectionMatrix", "iris_ProjMat");
+		CommonTransformer.injectForwardZProjection(t, tree);
+		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix", "iris_undoRevZ(iris_ProjMat)");
 	}
 }

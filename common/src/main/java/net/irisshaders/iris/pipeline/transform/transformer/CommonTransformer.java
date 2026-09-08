@@ -1,5 +1,6 @@
 package net.irisshaders.iris.pipeline.transform.transformer;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
@@ -28,12 +29,16 @@ import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
+import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
+import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
+import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -93,6 +98,28 @@ public class CommonTransformer {
 		inputDeclarationTemplateLayout.markLocalReplacement(
 			inputDeclarationTemplateLayout.getSourceRoot().nodeIndex.getOne(BuiltinNumericTypeSpecifier.class));
 		inputDeclarationTemplateLayout.markIdentifierReplacement("__name");
+	}
+
+	static void injectForwardZProjection(ASTParser t, TranslationUnit tree) {
+		DepthTransformer.injectForwardZProjection(t, tree, RenderSystem.getDevice().getDeviceInfo().isZZeroToOne());
+	}
+
+	public static void transformDepth(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
+		DepthTransformer.transform(t, tree, root, parameters.type, isShadowPass(parameters, parameters.name),
+			RenderSystem.getDevice().getDeviceInfo().isZZeroToOne());
+	}
+
+	public static void transformDepthPosition(ASTParser t, Map<PatchShaderType, TranslationUnit> trees, Parameters parameters) {
+		DepthTransformer.transformPosition(t, trees, RenderSystem.getDevice().getDeviceInfo().isZZeroToOne(),
+			isShadowPass(parameters, parameters.name));
+	}
+
+	public static boolean isShadowPass(Parameters parameters, String name) {
+		if (parameters instanceof SodiumParameters sodium) {
+			return sodium.shadow;
+		}
+		return parameters.getTextureStage() == TextureStage.GBUFFERS_AND_SHADOW && name != null
+			&& (name.equals("shadow") || name.startsWith("shadow_") || name.endsWith("_shadow") || name.startsWith("dh_shadow_"));
 	}
 
 	static void renameFunctionCall(Root root, String oldName, String newName) {

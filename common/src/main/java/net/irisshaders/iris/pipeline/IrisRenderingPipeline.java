@@ -864,9 +864,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	@Override
 	public void beginLevelRendering() {
-        if (GL.getCapabilities().GL_ARB_clip_control) {
-            ARBClipControl.glClipControl(ARBClipControl.GL_LOWER_LEFT, ARBClipControl.GL_NEGATIVE_ONE_TO_ONE);
-        }
+
 		isRenderingWorld = true;
 
 		if (!initializedBlockIds) {
@@ -897,7 +895,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				}
 			} else {
 				// Clear depth first, regardless of any color clearing.
-                RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(shadowRenderTargets.getDepthTexture(), 0.0f);
+                RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(shadowRenderTargets.getDepthTexture(), 1.0f);
 
 				ImmutableList<ClearPass> passes;
 

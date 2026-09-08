@@ -1,5 +1,6 @@
 package net.irisshaders.iris.pipeline.transform;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.douira.glsl_transformer.ast.node.Profile;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.Version;
@@ -198,6 +199,7 @@ public class TransformPatcher {
 					}
 					TextureTransformer.transform(transformer, tree, root,
 						parameters.getTextureStage(), parameters.getTextureMap());
+					CommonTransformer.transformDepth(transformer, tree, root, parameters);
 					CompatibilityTransformer.transformEach(transformer, tree, root, parameters);
 				});
 			}
@@ -208,6 +210,7 @@ public class TransformPatcher {
 			if (IrisLimits.VK_CONFORMANCE) {
 				LayoutTransformer.transformGrouped(transformer, trees, parameters);
 			}
+			CommonTransformer.transformDepthPosition(transformer, trees, parameters);
 		});
 		transformer.setTokenFilter(parseTokenFilter);
 	}
@@ -238,7 +241,7 @@ public class TransformPatcher {
 		CacheKey key;
 		Map<PatchShaderType, String> result = null;
 		if (useCache) {
-			key = new CacheKey(parameters, vertex, geometry, tessControl, tessEval, fragment);
+			key = new CacheKey(parameters, name, vertex, geometry, tessControl, tessEval, fragment);
 			if (cache.containsKey(key)) {
 				result = cache.get(key);
 			}
@@ -272,7 +275,7 @@ public class TransformPatcher {
 		CacheKey key;
 		Map<PatchShaderType, String> result = null;
 		if (useCache) {
-			key = new CacheKey(parameters, compute);
+			key = new CacheKey(parameters, name, compute);
 			if (cache.containsKey(key)) {
 				result = cache.get(key);
 			}
@@ -343,6 +346,8 @@ public class TransformPatcher {
 	}
 
 	private static class CacheKey {
+		final boolean zZeroToOne = RenderSystem.getDevice().getDeviceInfo().isZZeroToOne();
+		final boolean shadow;
 		final Parameters parameters;
 		final String vertex;
 		final String geometry;
@@ -351,8 +356,9 @@ public class TransformPatcher {
 		final String fragment;
 		final String compute;
 
-		public CacheKey(Parameters parameters, String vertex, String geometry, String tessControl, String tessEval, String fragment) {
+		public CacheKey(Parameters parameters, String name, String vertex, String geometry, String tessControl, String tessEval, String fragment) {
 			this.parameters = parameters;
+			this.shadow = CommonTransformer.isShadowPass(parameters, name);
 			this.vertex = vertex;
 			this.geometry = geometry;
 			this.tessControl = tessControl;
@@ -361,8 +367,9 @@ public class TransformPatcher {
 			this.compute = null;
 		}
 
-		public CacheKey(Parameters parameters, String compute) {
+		public CacheKey(Parameters parameters, String name, String compute) {
 			this.parameters = parameters;
+			this.shadow = CommonTransformer.isShadowPass(parameters, name);
 			this.vertex = null;
 			this.geometry = null;
 			this.tessControl = null;
@@ -375,6 +382,8 @@ public class TransformPatcher {
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
+			result = prime * result + Boolean.hashCode(zZeroToOne);
+			result = prime * result + Boolean.hashCode(shadow);
 			result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
 			result = prime * result + ((vertex == null) ? 0 : vertex.hashCode());
 			result = prime * result + ((geometry == null) ? 0 : geometry.hashCode());
@@ -394,6 +403,8 @@ public class TransformPatcher {
 			if (getClass() != obj.getClass())
 				return false;
 			CacheKey other = (CacheKey) obj;
+			if (zZeroToOne != other.zZeroToOne || shadow != other.shadow)
+				return false;
 			if (parameters == null) {
 				if (other.parameters != null)
 					return false;

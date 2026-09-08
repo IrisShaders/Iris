@@ -19,6 +19,7 @@ import net.irisshaders.iris.NeoLambdas;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.helpers.MatrixUtils;
 import net.irisshaders.iris.layer.IsOutlineRenderStateShard;
 import net.irisshaders.iris.layer.OuterWrappedRenderType;
 import net.irisshaders.iris.pathways.HandRenderer;
@@ -107,7 +108,8 @@ public abstract class MixinLevelRenderer {
 
 		IrisTimeUniforms.updateTime();
 		CapturedRenderingState.INSTANCE.setGbufferModelView(modelViewMatrix);
-		CapturedRenderingState.INSTANCE.setGbufferProjection(new Matrix4f(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix()));
+		CapturedRenderingState.INSTANCE.setGbufferProjection(
+			MatrixUtils.undoRevZ(new Matrix4f(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix())));
 		float fakeTickDelta = deltaTracker.getGameTimeDeltaPartialTick(false);
 		CapturedRenderingState.INSTANCE.setTickDelta(fakeTickDelta);
 		if (((CloudRendererAccessor) this.cloudRenderer).getTexture() != null) {
