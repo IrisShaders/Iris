@@ -25,6 +25,7 @@ import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.state.level.FirstPersonHandsAndItemsRenderState;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.world.InteractionHand;
@@ -98,7 +99,8 @@ public class HandRenderer {
 	}
 
 	public void renderSolid(Matrix4fc modelMatrix, float tickDelta, Camera camera, CameraRenderState cameraState, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
-		if (!canRender(camera, gameRenderer) || !gameRenderer.itemInHandRenderer.iris$isAnyHandSolid() || !Iris.isPackInUseQuick()) {
+		var state = gameRenderer.gameRenderState().levelRenderState.playerRenderState.firstPersonHandsAndItems;
+		if (!canRender(camera, gameRenderer) || !iris$isAnyHandSolid(state) || !Iris.isPackInUseQuick()) {
 			return;
 		}
 
@@ -119,7 +121,7 @@ public class HandRenderer {
 		RenderSystem.getModelViewStack().pushMatrix();
 		RenderSystem.getModelViewStack().set(poseStack.last().pose());
 
-		gameRenderer.itemInHandRenderer.iris$renderHandsWithCustomRenderer(this, tickDelta, new PoseStack(), this.submitNodeCollector, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.entity(), tickDelta));
+		gameRenderer.firstPersonHandsAndItemsRenderer.submitHandsWithItems(tickDelta, new PoseStack(), submitNodeCollector, gameRenderer.gameRenderState().levelRenderState.playerRenderState, state);
 		var frame = featureRenderDispatcher.prepareFrame(submitNodeCollector);
 		try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
 			featureRenderDispatcher.renderAllFeatures(renderPass, frame);
@@ -137,7 +139,13 @@ public class HandRenderer {
 		ACTIVE = false;
 	}
 
+	private boolean iris$isAnyHandSolid(FirstPersonHandsAndItemsRenderState state) {
+		return !isHandTranslucent(state.mainHandItem) || !isHandTranslucent(state.offHandItem);
+	}
+
 	public void renderTranslucent(Matrix4fc modelMatrix, float tickDelta, Camera camera, CameraRenderState cameraState, GameRenderer gameRenderer, WorldRenderingPipeline pipeline) {
+		var state = gameRenderer.gameRenderState().levelRenderState.playerRenderState.firstPersonHandsAndItems;
+
 		if (!canRender(camera, gameRenderer) || !Iris.isPackInUseQuick()) {
 			bufferSource.endFrame();
 			return;
@@ -158,7 +166,7 @@ public class HandRenderer {
 		RenderSystem.getModelViewStack().pushMatrix();
 		RenderSystem.getModelViewStack().set(poseStack.last().pose());
 
-		gameRenderer.itemInHandRenderer.iris$renderHandsWithCustomRenderer(this, tickDelta, new PoseStack(), submitNodeCollector, Minecraft.getInstance().player, Minecraft.getInstance().getEntityRenderDispatcher().getPackedLightCoords(camera.entity(), tickDelta));
+		gameRenderer.firstPersonHandsAndItemsRenderer.submitHandsWithItems(tickDelta, new PoseStack(), submitNodeCollector, gameRenderer.gameRenderState().levelRenderState.playerRenderState, state);
 		var frame = featureRenderDispatcher.prepareFrame(submitNodeCollector);
 		try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
 			featureRenderDispatcher.renderAllFeatures(renderPass, frame);

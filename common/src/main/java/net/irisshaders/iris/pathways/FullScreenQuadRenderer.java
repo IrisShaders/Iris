@@ -5,6 +5,7 @@ import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.backend.opengl.GlBuffer;
 import com.mojang.renderpearl.backend.opengl.GlDevice;
+import com.mojang.renderpearl.backend.opengl.GlRenderPipeline;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -12,9 +13,12 @@ import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.renderpearl.frontend.FrontendRenderPipeline;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.helpers.VertexBufferHelper;
 import net.irisshaders.iris.mixin.GpuDeviceAccessor;
+import net.irisshaders.iris.mixinterface.GlRenderPipelineAccess;
+import net.minecraft.client.renderer.RenderPipelines;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL46C;
 
@@ -49,6 +53,8 @@ public class FullScreenQuadRenderer {
 	}
 
 	public void bind() {
-		((GlDevice) ((GpuDeviceAccessor) RenderSystem.getDevice()).getBackend()).vertexArrayCache().bindVertexArray(new VertexFormat[] { DefaultVertexFormat.POSITION_TEX }, new GpuBufferSlice[] { quad.slice() }, null);
+		var frontend = ((FrontendRenderPipeline) RenderSystem.getCompiledPipeline(RenderPipelines.CELESTIAL));
+		var backend = ((GlRenderPipeline) frontend.backendRenderPipeline());
+		backend.vertexArray().bind(new GpuBufferSlice[] { quad.slice() });
 	}
 }

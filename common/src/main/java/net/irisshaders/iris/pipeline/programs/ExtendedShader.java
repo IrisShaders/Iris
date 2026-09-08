@@ -12,6 +12,7 @@ import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import com.mojang.logging.LogUtils;
+import com.mojang.renderpearl.util.TextureViewAndSampler;
 import net.caffeinemc.mods.sodium.client.render.chunk.ShaderChunkRenderer;
 import net.irisshaders.iris.compat.SkipList;
 import net.irisshaders.iris.gl.GLDebug;
@@ -118,7 +119,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 		if (vertexFormat.contains("UV2") || vertexFormat.contains("a_LightAndData")) {
 			has2 = true;
 		}
-        List<BindGroupLayout> layouts = new ArrayList<>();
+        List<BindGroupLayout.UniformDescription> layouts = new ArrayList<>();
 
 		if (patch == Patch.VANILLA) {
             BindGroupLayout samplr = null;
@@ -137,14 +138,14 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
                 }
             }
 
-            if (samplr != null) layouts.add(samplr);
-            layouts.add(BindGroupLayouts.DYNAMIC_TRANSFORMS);
-            layouts.add(BindGroupLayouts.CLOUD_INFO);
-            layouts.add(BindGroupLayouts.PROJECTION);
-            layouts.add(BindGroupLayouts.GLOBALS);
-            layouts.add(BindGroupLayouts.FOG);
+            if (samplr != null) layouts.addAll(samplr.uniforms());
+            layouts.addAll(BindGroupLayouts.DYNAMIC_TRANSFORMS.uniforms());
+            layouts.addAll(BindGroupLayouts.CLOUD_INFO.uniforms());
+            layouts.addAll(BindGroupLayouts.PROJECTION.uniforms());
+            layouts.addAll(BindGroupLayouts.GLOBALS.uniforms());
+            layouts.addAll(BindGroupLayouts.FOG.uniforms());
         } else {
-            layouts.add(ShaderChunkRenderer.BIND_GROUP);
+            layouts.addAll(ShaderChunkRenderer.BIND_GROUP.uniforms());
         }
 
 		super.setupBindGroupLayouts(layouts);
@@ -196,7 +197,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 	private float[] tempF = new float[9];
 
 	@Override
-	public void iris$setupState(HashMap<String, GlRenderPass.TextureViewAndSampler> samplers, GpuTextureView albedoTex) {
+	public void iris$setupState(List<BindGroupLayout.UniformDescription> samplers) {
 		isSetup = true;
 		DepthColorStorage.unlockDepthColor();
 
@@ -217,12 +218,6 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 		if (projectionInverse > -1) {
 			// TODO: This is wrong. (1.21.6)
 			IrisRenderSystem.uniformMatrix4fv(projectionInverse, false, (ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShadowRenderer.PROJECTION : CapturedRenderingState.INSTANCE.getGbufferProjection()).invert(tempMatrix4f).get(tempFloats));
-		}
-
-		if (intensitySwizzle && albedoTex != null) {
-			IrisRenderSystem.addUnswizzle(albedoTex.texture().iris$getGlId());
-			IrisRenderSystem.texParameteriv(albedoTex.texture().iris$getGlId(), TextureType.TEXTURE_2D.getGlType(), ARBTextureSwizzle.GL_TEXTURE_SWIZZLE_RGBA,
-				new int[]{GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED, GL30C.GL_RED});
 		}
 
 		ImmediateState.usingTessellation = usesTessellation;
@@ -254,11 +249,6 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 		} else {
 			writingToAfterTranslucent.bind();
 		}
-	}
-
-	@Override
-	public Map<String, Uniform> getUniforms() {
-		return super.getUniforms();
 	}
 
 	public boolean hasActiveImages() {

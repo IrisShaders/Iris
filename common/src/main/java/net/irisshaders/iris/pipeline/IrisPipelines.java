@@ -72,8 +72,6 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.TEXT_POLYGON_OFFSET, p -> getText(p));
 		assignToMain(RenderPipelines.TEXT_SEE_THROUGH, p -> getText(p));
 		assignToMain(RenderPipelines.TEXT_GRAYSCALE_SEE_THROUGH, p -> getTextIntensity(p));
-		assignToMain(RenderPipelines.TEXT_BACKGROUND, p -> ShaderKey.TEXT_BG);
-		assignToMain(RenderPipelines.TEXT_BACKGROUND_SEE_THROUGH, p -> ShaderKey.TEXT_BG);
 		assignToMain(RenderPipelines.TEXT_GRAYSCALE, p -> getTextIntensity(p));
 		assignToMain(RenderPipelines.CRUMBLING, p -> ShaderKey.CRUMBLING);
 		assignToMain(RenderPipelines.LEASH, p -> ShaderKey.LEASH);
@@ -117,8 +115,6 @@ public class IrisPipelines {
 		assignToShadow(RenderPipelines.TEXT_POLYGON_OFFSET, p -> ShaderKey.SHADOW_TEXT);
 		assignToShadow(RenderPipelines.TEXT_SEE_THROUGH, p -> ShaderKey.SHADOW_TEXT);
 		assignToShadow(RenderPipelines.TEXT_GRAYSCALE_SEE_THROUGH, p -> ShaderKey.SHADOW_TEXT_INTENSITY);
-		assignToShadow(RenderPipelines.TEXT_BACKGROUND, p -> ShaderKey.SHADOW_TEXT_BG);
-		assignToShadow(RenderPipelines.TEXT_BACKGROUND_SEE_THROUGH, p -> ShaderKey.SHADOW_TEXT_BG);
 		assignToShadow(RenderPipelines.TEXT_GRAYSCALE, p -> ShaderKey.SHADOW_TEXT_INTENSITY);
 		assignToShadow(RenderPipelines.WATER_MASK, p -> ShaderKey.SHADOW_BASIC);
 		assignToShadow(RenderPipelines.BEACON_BEAM_OPAQUE, p -> ShaderKey.SHADOW_BEACON_BEAM);
@@ -219,7 +215,7 @@ public class IrisPipelines {
 	@Nullable
 	public static ShaderKey getPipeline(IrisRenderingPipeline pipeline, RenderPipeline shader) {
         if (shader.getLocation().getNamespace().contains("sodium")) {
-            if (shader.getColorTargetStates()[0].blendFunction().isPresent()) {
+            if (shader.getColorTargetStates().get(0).blendFunction().isPresent()) {
                 return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_SODIUM_TERRAIN_TRANSLUCENT : ShaderKey.SODIUM_TERRAIN_TRANSLUCENT;
             } else if (shader.getShaderDefines().asSourceDirectives().contains("CUTOUT")) {
                 return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_SODIUM_TERRAIN_CUTOUT : ShaderKey.SODIUM_TERRAIN_CUTOUT;

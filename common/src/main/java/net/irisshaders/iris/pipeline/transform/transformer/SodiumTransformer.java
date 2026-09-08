@@ -12,6 +12,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
+import net.irisshaders.iris.pipeline.programs.IrisBindings;
 
 import static net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
@@ -87,10 +88,7 @@ public class SodiumTransformer {
 					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 			}
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-
-				// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-				"uniform vec3 u_RegionOffset;",
-				"vec4 getVertexPosition() { return vec4(_vert_position + u_RegionOffset + _get_draw_translation(_draw_id), 1.0); }");
+				"vec4 getVertexPosition() { return vec4(_vert_position + iris_RegionOffset + _get_draw_translation(_draw_id), 1.0); }");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 
 			// inject here so that _vert_position is available to the above. (injections
@@ -101,7 +99,7 @@ public class SodiumTransformer {
 		}
 
         tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
-                        layout(std140) uniform u_Globals {
+                        layout(std140, binding = %d) uniform u_Globals {
                               mat4 u_ProjectionMatrix;
                               mat4 u_ModelViewMatrix;
 
@@ -114,12 +112,13 @@ public class SodiumTransformer {
 
                               float u_FadePeriodInv;
                               bool u_UseRGSS;
-                          };""");
+                          };""".formatted(IrisBindings.SODIUM_GLOBALS));
 
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
 			"(u_ProjectionMatrix * u_ModelViewMatrix)");
 
 		CommonTransformer.applyIntelHd4000Workaround(root);
+		CommonTransformer.addExplicitBindings(t, tree, root);
 	}
 
 	public static void injectVertInit(
@@ -130,13 +129,18 @@ public class SodiumTransformer {
 		String chunkFadeDeclaration = parameters.shadow ? "const float mc_chunkFade = -1.0;" : "float mc_chunkFade;";
 		String chunkFadeSetup = parameters.shadow ? "" :
 			"int chunkId = int(_draw_id);" +
-				"int chunkFade = texelFetch(u_SectionTimeInfo, int((u_RegionID * 256u) + uint(chunkId))).r;" +
-				"float fade = clamp(float(u_CurrentTime - chunkFade) * u_FadePeriodInv, 0.0, 1.0);" +
+				"int chunkFade = texelFetch(u_SectionTimeInfo, int((iris_RegionID * 256u) + uint(chunkId))).r;" +
+				"float fade = clamp(float(iris_CurrentTime - chunkFade) * u_FadePeriodInv, 0.0, 1.0);" +
 				"mc_chunkFade = (chunkFade < 0) ? 1.0 : fade;";
 
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-                "uniform int u_CurrentTime;",
-                "uniform uint u_RegionID;",
+			"""
+				layout(std140, binding = %d) uniform iris_SodiumPushConstants {
+				    vec3 iris_RegionOffset;
+				    int iris_CurrentTime;
+				    uint iris_RegionID;
+				};
+				""".formatted(IrisBindings.PUSH_CONSTANTS),
 			// translated from sodium's chunk_vertex.glsl
 			"vec3 _vert_position;",
 			"vec2 _vert_tex_diffuse_coord;",
@@ -224,9 +228,7 @@ vec4 decode_diamond_tangent_with_sign(vec3 normal, int qByte, bool signPositive)
 			"float _material_mip_bias(uint material) {\n" +
 				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
 				"}",
-			"""
-				uniform isamplerBuffer u_SectionTimeInfo;
-				""",
+			"layout(binding = " + IrisBindings.AUX_TEXTURE + ") uniform isamplerBuffer u_SectionTimeInfo;",
 			"void _vert_init() {" +
 				"_vert_position = ((_deinterleave_u20x3(a_Position) * VERTEX_SCALE) + VERTEX_OFFSET);" +
 				"_vert_tex_diffuse_coord = _get_texcoord();" +

@@ -1,10 +1,13 @@
 package net.irisshaders.iris.compat.sodium.mixin;
 
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
 import net.irisshaders.iris.mixinterface.ShadowRenderListAccess;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.DynamicUniformStorage;
+import net.minecraft.client.renderer.DynamicGpuDataStorage;
+import net.minecraft.client.renderer.DynamicGpuDataStorageMapped;
+import net.minecraft.client.renderer.DynamicGpuDataStorageNonMapped;
 import net.minecraft.client.renderer.MappableRingBuffer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,11 +25,11 @@ public class MixinUniformData implements ShadowRenderListAccess {
 	@Mutable
 	@Shadow
 	@Final
-	private DynamicUniformStorage<?> uniformStorage;
+	private DynamicGpuDataStorage<?> uniformStorage;
 	@Shadow
 	private GpuBufferSlice uniformData;
 	@Unique
-	private DynamicUniformStorage<?> shadowUbo;
+	private DynamicGpuDataStorage<?> shadowUbo;
 	@Unique
 	private GpuBufferSlice shadowUboSlice;
 
@@ -38,7 +41,7 @@ public class MixinUniformData implements ShadowRenderListAccess {
 
 	@Inject(method = "<init>", at = @At("RETURN"))
 	private void iris$init(ClientLevel level, int renderDistance, CallbackInfo ci) {
-		this.shadowUbo = new DynamicUniformStorage("Sodium terrain uniforms (Shadow)", 256, 8);
+		this.shadowUbo = new DynamicGpuDataStorageMapped<>("Sodium terrain uniforms (Shadow)", 256, GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_UNIFORM, 8);
 	}
 
 	@Inject(method = "endFrame", at = @At("HEAD"))

@@ -26,9 +26,17 @@ public class UndoReverseZFive {
 	private void iris$change(GpuTexture colorTexture, Vector4fc clearColor, GpuTexture depthTexture, double clearDepth, Operation<Void> original) {
 		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel ? 1.0 - clearDepth : clearDepth));
 	}
-	@WrapMethod(method = "clearColorAndDepthTextures(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/renderpearl/api/textures/GpuTexture;DIIII)V")
-	private void iris$change3(GpuTexture colorTexture, Vector4fc clearColor, GpuTexture depthTexture, double clearDepth, int regionX, int regionY, int regionWidth, int regionHeight, Operation<Void> original) {
-		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel ? 1.0 - clearDepth : clearDepth), regionX, regionY, regionWidth, regionHeight);
+	@WrapMethod(method = "clearColorAndDepthTextures(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/renderpearl/api/textures/GpuTexture;DIIIII)V")
+	private void iris$change3(GpuTexture colorTexture,
+	                          Vector4fc clearColor,
+	                          GpuTexture depthTexture,
+	                          double clearDepth, int regionX,
+	                          int regionY, int regionWidth,
+	                          int regionHeight, int mipLevel,
+	                          Operation<Void> original) {
+		original.call(colorTexture, clearColor, depthTexture,
+					  saturate(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel ? 1.0 - clearDepth : clearDepth), regionX, regionY, regionWidth,
+		              regionHeight, mipLevel);
 	}
 	@WrapMethod(method = "clearDepthTexture")
 	private void iris$change2(GpuTexture depthTexture, double clearDepth, Operation<Void> original) {
@@ -55,16 +63,6 @@ public class UndoReverseZFive {
 		}
 		return original.call((RenderPassDescriptor) descriptor);
 	}
-
-	@WrapOperation(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_polygonOffset(FF)V"))
-	private void iris$revertPolygonOffset(float factor, float units, Operation<Void> original) {
-		if (Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel) {
-			original.call(-factor, -units);
-		} else {
-			original.call(factor, units);
-		}
-	}
-
 	@Unique
 	private double saturate(double v) {
 		return Math.clamp(v, 0.0, 1.0);

@@ -54,12 +54,6 @@ public abstract class MixinModelViewBobbing {
 	@Unique
 	private Matrix4fc bobStack;
 
-	@Shadow
-	private float spinningEffectTime;
-
-	@Shadow
-	private float spinningEffectSpeed;
-
 	@Inject(method = "renderLevel", at = @At("HEAD"))
 	private void iris$saveShadersOn(CallbackInfo ci) {
 		areShadersOn = Iris.isPackInUseQuick();
@@ -96,7 +90,7 @@ public abstract class MixinModelViewBobbing {
 	}
 
 	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZZ)V"))
-	private void iris$renderLevel(LevelRenderer instance, GraphicsResourceAllocator graphicsResourceAllocator, boolean y, CameraRenderState cameraRenderState, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean b, boolean x, Operation<Void> original, @Local(name = "player") LocalPlayer player) {
+	private void iris$renderLevel(LevelRenderer instance, GraphicsResourceAllocator graphicsResourceAllocator, boolean y, CameraRenderState cameraRenderState, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean b, boolean x, Operation<Void> original) {
 		if (areShadersOn) {
 			((Matrix4f) cameraRenderState.viewRotationMatrix).mulLocal(bobStack); // need `bob * modelView` not `modelView * bob`
 		}

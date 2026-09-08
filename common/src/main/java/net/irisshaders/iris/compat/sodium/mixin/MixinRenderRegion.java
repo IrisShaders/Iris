@@ -124,23 +124,35 @@ public class MixinRenderRegion implements ShadowRenderRegion {
 		}
 	}
 
-	@Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearAllCachedBatches()V"))
-	private void iris$clearAllBatchesForResourceDeletion(RenderRegion instance) {
+	@Override
+	public void iris$forceClearBatchFor(TerrainRenderPass pass) {
+		if (this.regularCachedBatches != null) {
+			MultiDrawBatch batch = this.regularCachedBatches.get(pass);
+			if (batch != null) {
+				batch.clear();
+			}
+		}
+		if (this.shadowCachedBatches != null) {
+			MultiDrawBatch batch = this.shadowCachedBatches.get(pass);
+			if (batch != null) {
+				batch.clear();
+			}
+		}
+		if (this.cachedBatches != null) {
+			MultiDrawBatch batch = this.cachedBatches.get(pass);
+			if (batch != null) {
+				batch.clear();
+			}
+		}
+	}
+
+	@Redirect(method = { "onGeometryBufferChange", "onGeometrySegmentChange", "update" }, at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearAllCachedBatches()V"))
+	private void iris$clearAllBatchesAfterGeometryChange(RenderRegion instance) {
 		((ShadowRenderRegion) instance).iris$forceClearAllBatches();
 	}
 
-	@Inject(method = "clearCachedBatchFor", at = @At("HEAD"))
-	private void iris$clearBatchFor(CallbackInfo ci) {
-		if (this.regularCachedBatches != null) {
-			for(MultiDrawBatch batch : this.regularCachedBatches.values()) {
-				batch.clear();
-			}
-		}
-
-		if (this.shadowCachedBatches != null) {
-			for(MultiDrawBatch batch : this.shadowCachedBatches.values()) {
-				batch.clear();
-			}
-		}
+	@Redirect(method = { "onIndexBufferChange", "onIndexSegmentChange" }, at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearCachedBatchFor(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)V"))
+	private void iris$clearBatchAfterIndexChange(RenderRegion instance, TerrainRenderPass pass) {
+		((ShadowRenderRegion) instance).iris$forceClearBatchFor(pass);
 	}
 }

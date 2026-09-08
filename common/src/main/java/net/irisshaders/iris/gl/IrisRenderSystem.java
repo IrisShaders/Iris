@@ -338,13 +338,13 @@ public class IrisRenderSystem {
 	public static void disableBufferBlend(int buffer) {
 		RenderSystem.assertOnRenderThread();
 		GL32C.glDisablei(GL32C.GL_BLEND, buffer);
-		((BooleanStateExtended) GlStateManagerAccessor.getBLEND()[0].mode).setUnknownState();
+		GlStateManagerAccessor.getBLEND_ENABLE()[buffer] = false;
 	}
 
 	public static void enableBufferBlend(int buffer) {
 		RenderSystem.assertOnRenderThread();
 		GL32C.glEnablei(GL32C.GL_BLEND, buffer);
-		((BooleanStateExtended) GlStateManagerAccessor.getBLEND()[0].mode).setUnknownState();
+		GlStateManagerAccessor.getBLEND_ENABLE()[buffer] = true;
 	}
 
 	public static void blendFuncSeparatei(int buffer, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {

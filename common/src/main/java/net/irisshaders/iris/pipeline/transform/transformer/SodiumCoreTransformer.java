@@ -12,6 +12,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
+import net.irisshaders.iris.pipeline.programs.IrisBindings;
 
 public class SodiumCoreTransformer {
 	public static final AutoHintedMatcher<ExternalDeclaration> modelViewMatrix = new AutoHintedMatcher<>(
@@ -31,7 +32,8 @@ public class SodiumCoreTransformer {
 		root.rename("projectionMatrix", "u_ProjectionMatrix");
 		root.rename("projectionMatrixInverse", "iris_ProjMatInverse");
 		root.rename("normalMatrix", "iris_NormalMat");
-		root.rename("chunkOffset", "u_RegionOffset");
+		root.replaceReferenceExpressions(t, "chunkOffset", "iris_RegionOffset");
+		root.replaceReferenceExpressions(t, "u_RegionOffset", "iris_RegionOffset");
 		if (parameters.type == PatchShaderType.VERTEX) {
 			boolean needsNormal = root.identifierIndex.has("vaNormal") || root.identifierIndex.has("at_tangent");
 			// _draw_translation replaced with Chunks[_draw_id].offset.xyz
@@ -53,7 +55,7 @@ public class SodiumCoreTransformer {
 		}
 
         tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
-            layout(std140) uniform u_Globals {
+            layout(std140, binding = %d) uniform u_Globals {
                 mat4 u_ProjectionMatrix;
                 mat4 u_ModelViewMatrix;
 
@@ -66,6 +68,7 @@ public class SodiumCoreTransformer {
 
                 float u_FadePeriodInv;
                 bool u_UseRGSS;
-            };""");
+            };""".formatted(IrisBindings.SODIUM_GLOBALS));
+		CommonTransformer.addExplicitBindings(t, tree, root);
 	}
 }

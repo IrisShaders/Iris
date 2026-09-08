@@ -9,6 +9,7 @@ import com.mojang.renderpearl.api.pipeline.UniformType;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import com.mojang.renderpearl.api.vertex.VertexFormatElement;
+import com.mojang.renderpearl.util.TextureViewAndSampler;
 import net.irisshaders.iris.compat.SkipList;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
@@ -74,13 +75,13 @@ public class FallbackShader extends GlProgram implements IrisProgram {
 			}
 		}
 
-		List<BindGroupLayout> layouts = new ArrayList<>();
-		if (samplr != null) layouts.add(samplr);
-		layouts.add(BindGroupLayouts.DYNAMIC_TRANSFORMS);
-		layouts.add(BindGroupLayouts.CLOUD_INFO);
-		layouts.add(BindGroupLayouts.PROJECTION);
-		layouts.add(BindGroupLayouts.GLOBALS);
-		layouts.add(BindGroupLayouts.FOG);
+		List<BindGroupLayout.UniformDescription> layouts = new ArrayList<>();
+		if (samplr != null) layouts.addAll(samplr.uniforms());
+		layouts.addAll(BindGroupLayouts.DYNAMIC_TRANSFORMS.uniforms());
+		layouts.addAll(BindGroupLayouts.CLOUD_INFO.uniforms());
+		layouts.addAll(BindGroupLayouts.PROJECTION.uniforms());
+		layouts.addAll(BindGroupLayouts.GLOBALS.uniforms());
+		layouts.addAll(BindGroupLayouts.FOG.uniforms());
 
 		super.setupBindGroupLayouts(layouts);
 
@@ -126,7 +127,7 @@ public class FallbackShader extends GlProgram implements IrisProgram {
 	}
 
 	@Override
-	public void iris$setupState(HashMap<String, GlRenderPass.TextureViewAndSampler> samplers, GpuTextureView albedoTex) {
+	public void iris$setupState(List<BindGroupLayout.UniformDescription> samplers) {
 		isSetUp = true;
 		DepthColorStorage.unlockDepthColor();
 

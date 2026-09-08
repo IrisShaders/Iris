@@ -104,9 +104,9 @@ public final class CommonUniforms {
 		}, StateUpdateNotifiers.bindTextureNotifier);
 
 		uniforms.uniform4i("blendFunc", () -> {
-			GlStateManager.BlendState blend = GlStateManagerAccessor.getBLEND()[0];
+			GlStateManager.BlendState blend = GlStateManagerAccessor.getBLEND();
 
-			if (((BooleanStateAccessor) blend.mode).isEnabled()) {
+			if (GlStateManagerAccessor.getBLEND_ENABLE()[0]) {
 				return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
 			} else {
 				return ZERO_VECTOR_4i;
@@ -234,10 +234,10 @@ public final class CommonUniforms {
 			return ZERO_VECTOR_3d;
 		}
 
-		int skyColor = client.gameRenderer.mainCamera().attributeProbe().getValue(EnvironmentAttributes.SKY_COLOR,
+		var skyColor = client.gameRenderer.mainCamera().attributeProbe().getValue(EnvironmentAttributes.SKY_COLOR,
 			CapturedRenderingState.INSTANCE.getTickDelta());
 
-		return new Vector3d(ARGB.redFloat(skyColor), ARGB.greenFloat(skyColor), ARGB.blueFloat(skyColor));
+		return new Vector3d(skyColor.x(), skyColor.y(), skyColor.z());
 	}
 
 	static float getBlindness() {

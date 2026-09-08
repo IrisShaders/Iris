@@ -7,7 +7,12 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(value = GlStateManager.class, remap = false)
 public interface GlStateManagerAccessor {
 	@Accessor("BLEND")
-	static GlStateManager.BlendState[] getBLEND() {
+	static GlStateManager.BlendState getBLEND() {
+		throw new UnsupportedOperationException("Not accessed");
+	}
+
+	@Accessor("BLEND_ENABLE")
+	static boolean[] getBLEND_ENABLE() {
 		throw new UnsupportedOperationException("Not accessed");
 	}
 

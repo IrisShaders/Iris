@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,7 +28,7 @@ import java.util.Optional;
 public class MixinRenderPipeline {
 	@Inject(method = "getVertexFormatBinding", at = @At("RETURN"), cancellable = true)
 	private void iris$change(CallbackInfoReturnable<VertexFormat> cir) {
-		if (Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel) {
+		if (Iris.isPackInUseQuick() && Thread.currentThread().getName().contains("Render") && ImmediateState.isRenderingLevel && !ImmediateState.skipExtension.get()) {
 			VertexFormat vf = cir.getReturnValue();
 			RenderPipeline thiss = (RenderPipeline) (Object) this;
 			if (Objects.equals(vf, DefaultVertexFormat.BLOCK)) {
@@ -44,20 +45,20 @@ public class MixinRenderPipeline {
 		}
 	}
 	@Inject(method = "getVertexFormatBindings", at = @At("RETURN"), cancellable = true)
-	private void iris$change2(CallbackInfoReturnable<VertexFormat[]> cir) {
-		if (Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel) {
-			VertexFormat vf = cir.getReturnValue()[0];
+	private void iris$change2(CallbackInfoReturnable<List<VertexFormat>> cir) {
+		if (Iris.isPackInUseQuick() && Thread.currentThread().getName().contains("Render") && ImmediateState.isRenderingLevel && !ImmediateState.skipExtension.get()) {
+			VertexFormat vf = cir.getReturnValue().get(0);
 			RenderPipeline thiss = (RenderPipeline) (Object) this;
 			if (Objects.equals(vf, DefaultVertexFormat.BLOCK)) {
-				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.TERRAIN });
+				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.TERRAIN}));
 			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
-				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.GLYPH });
+				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.GLYPH}));
 			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR) && thiss.equals(RenderPipelines.TEXT_SEE_THROUGH)) {
-				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.GLYPH });
+				cir.setReturnValue(List.of(new VertexFormat[] { IrisVertexFormats.GLYPH }));
 			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
-				cir.setReturnValue(new VertexFormat[] { IrisVertexFormats.ENTITY });
+				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.ENTITY}));
 			} else if (Objects.equals(vf, ChunkMeshFormats.COMPACT.getVertexFormat())) {
-                cir.setReturnValue(new VertexFormat[] { WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat() });
+                cir.setReturnValue(List.of(new VertexFormat[]{WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat()}));
             }
 		}
 	}

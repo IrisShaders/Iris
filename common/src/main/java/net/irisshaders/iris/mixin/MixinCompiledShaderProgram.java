@@ -45,12 +45,6 @@ public abstract class MixinCompiledShaderProgram implements ShaderInstanceInterf
 		shouldSkipList.put(FallbackShader.class, NONE);
 	}
 
-	@Redirect(method = "setupBindGroupLayouts", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V"))
-	private void iris$silence(Logger instance, String s, Object o, Object o1) {
-		if (!isKnownShader()) {
-			instance.warn(s, o, o1);
-		}
-	}
 
 	@Override
 	public void setShouldSkip(MethodHandle s) {

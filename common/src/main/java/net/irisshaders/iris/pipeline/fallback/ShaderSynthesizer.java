@@ -3,6 +3,7 @@ package net.irisshaders.iris.pipeline.fallback;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.AlphaTests;
 import net.irisshaders.iris.gl.state.FogMode;
+import net.irisshaders.iris.pipeline.programs.IrisBindings;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 
 public class ShaderSynthesizer {
@@ -11,30 +12,33 @@ public class ShaderSynthesizer {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
-		shader.append("#version 150 core\n");
+		shader.append("#version 150 core\n#extension GL_ARB_shading_language_420pack : require\n");
 
 		// Vertex Position
 		shader.append("""
-			layout(std140) uniform Projection {
+			layout(std140, binding = %d) uniform Projection {
 			    mat4 ProjMat;
 			};
-			""");
+			""".formatted(IrisBindings.PROJECTION));
 		shader.append("""
-			layout(std140) uniform DynamicTransforms {
+			layout(std140, binding = %d) uniform DynamicTransforms {
 			    mat4 ModelViewMat;
+			    mat4 TextureMat;
 			    vec4 ColorModulator;
 			    vec3 ModelOffset;
-			    mat4 TextureMat;
 			};
-			""");
+			""".formatted(IrisBindings.DYNAMIC_TRANSFORMS));
 		shader.append("""
-			layout(std140) uniform Globals {
-			    vec2 ScreenSize;
+			layout(std140, binding = %d) uniform Globals {
+			    ivec3 CameraBlockPos;
 			    float GlintAlpha;
+			    vec3 CameraOffset;
 			    float GameTime;
+			    vec2 ScreenSize;
 			    int MenuBlurRadius;
+			    int UseRgss;
 			};
-			""");
+			""".formatted(IrisBindings.GLOBALS));
 		shader.append("in vec3 Position;\n");
 
 		String position;
@@ -93,10 +97,10 @@ public class ShaderSynthesizer {
 			//       entity shaders use vertex color.
 			if (entityLighting) {
 				shader.append("""
-					layout(std140) uniform Lighting {
+					layout(std140, binding = %d) uniform Lighting {
 					    vec3 Light0_Direction;
 					    vec3 Light1_Direction;
-					};""");
+					};""".formatted(IrisBindings.LIGHTING));
 
 				// Copied from Mojang code.
 				shader.append("vec4 minecraft_mix_light(vec3 lightDir0, vec3 lightDir1, vec3 normal, vec4 color) {\n" +
@@ -128,7 +132,7 @@ public class ShaderSynthesizer {
 
 		// Overlay Color
 		if (inputs.hasOverlay()) {
-			shader.append("uniform sampler2D Sampler1;\n");
+			shader.append("layout(binding = " + IrisBindings.OVERLAY_TEXTURE + ") uniform sampler2D Sampler1;\n");
 			shader.append("in ivec2 UV1;\n");
 			shader.append("out vec4 overlayColor;\n");
 
@@ -173,7 +177,7 @@ public class ShaderSynthesizer {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
-		shader.append("#version 150 core\n");
+		shader.append("#version 150 core\n#extension GL_ARB_shading_language_420pack : require\n");
 
 		shader.append("out vec4 fragColor;\n");
 		shader.append("uniform float AlphaTestValue;\n");
@@ -182,14 +186,14 @@ public class ShaderSynthesizer {
 		}
 		shader.append("in vec4 iris_vertexColor;\n");
 		shader.append("""
-			layout(std140) uniform Projection {
+			layout(std140, binding = %d) uniform Projection {
 			    mat4 ProjMat;
 			};
-			""");
+			""".formatted(IrisBindings.PROJECTION));
 		main.append("float iris_vertexColorAlpha = iris_vertexColor.a;");
 
 		if (inputs.hasTex()) {
-			shader.append("uniform sampler2D Sampler0;\n");
+			shader.append("layout(binding = " + IrisBindings.ALBEDO_TEXTURE + ") uniform sampler2D Sampler0;\n");
 			shader.append("in vec2 texCoord;\n");
 
 			main.append("    vec4 color = texture(Sampler0, texCoord)");
@@ -218,7 +222,7 @@ public class ShaderSynthesizer {
 		}
 
 		if (inputs.hasLight()) {
-			shader.append("uniform sampler2D Sampler2;\n");
+			shader.append("layout(binding = " + IrisBindings.LIGHTMAP_TEXTURE + ") uniform sampler2D Sampler2;\n");
 			shader.append("in vec2 lightCoord;\n");
 
 			main.append("    color *= texture(Sampler2, lightCoord);\n");
@@ -226,7 +230,7 @@ public class ShaderSynthesizer {
 
 		if (fogMode == FogMode.PER_VERTEX || fogMode == FogMode.PER_FRAGMENT) {
 			shader.append("""
-				layout(std140) uniform Fog {
+				layout(std140, binding = %d) uniform Fog {
 				    vec4 FogColor;
 				    float FogEnvironmentalStart;
 				    float FogEnvironmentalEnd;
@@ -234,7 +238,7 @@ public class ShaderSynthesizer {
 				    float FogRenderDistanceEnd;
 				    float FogSkyEnd;
 				    float FogCloudsEnd;
-				};""");
+				};""".formatted(IrisBindings.FOG));
 
 			if (fogMode == FogMode.PER_VERTEX) {
 				// Use vertex distances, close enough

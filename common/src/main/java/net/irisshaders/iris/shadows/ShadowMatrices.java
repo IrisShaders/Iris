@@ -49,9 +49,9 @@ public class ShadowMatrices {
 
 			float h = state.getYAngle();
 
-			target.mulPose(Axis.XP.rotationDegrees(0.0F - skyAngle));
+			target.rotateDegrees(Axis.XP, (0.0F - skyAngle));
 
-			target.mulPose(Axis.YP.rotationDegrees(h));
+			target.rotateDegrees(Axis.YP, (h));
 		} else {
 			float skyAngle;
 
@@ -61,9 +61,9 @@ public class ShadowMatrices {
 				skyAngle = shadowAngle - 0.25f;
 			}
 
-			target.mulPose(Axis.XP.rotationDegrees(90.0F));
-			target.mulPose(Axis.ZP.rotationDegrees(skyAngle * -360.0f));
-			target.mulPose(Axis.XP.rotationDegrees(sunPathRotation));
+			target.rotateDegrees(Axis.XP, (90.0F));
+			target.rotateDegrees(Axis.ZP, (skyAngle * -360.0f));
+			target.rotateDegrees(Axis.XP, (sunPathRotation));
 		}
 	}
 

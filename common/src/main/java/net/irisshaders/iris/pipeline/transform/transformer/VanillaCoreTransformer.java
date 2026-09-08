@@ -8,6 +8,7 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
+import net.irisshaders.iris.pipeline.programs.IrisBindings;
 
 import static net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
@@ -28,7 +29,7 @@ public class VanillaCoreTransformer {
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 			"const float mc_chunkFade = -1.0;",
 			"""
-				layout(std140) uniform iris_Fog {
+				layout(std140, binding = %d) uniform iris_Fog {
 				    vec4 FogColor;
 				    float FogEnvironmentalStart;
 				    float FogEnvironmentalEnd;
@@ -37,7 +38,7 @@ public class VanillaCoreTransformer {
 				    float FogSkyEnd;
 				    float FogCloudsEnd;
 				} iris_fogP;
-				""",
+				""".formatted(IrisBindings.FOG),
 			"struct iris_FogParameters {" +
 				"vec4 color;" +
 				"float density;" +
@@ -48,28 +49,29 @@ public class VanillaCoreTransformer {
 			"iris_FogParameters irisInt_Fog = iris_FogParameters(iris_fogP.FogColor, 0.0, iris_fogP.FogEnvironmentalStart, iris_fogP.FogEnvironmentalEnd, 1.0 / (iris_fogP.FogEnvironmentalEnd - iris_fogP.FogEnvironmentalStart));");
 
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
-			layout(std140) uniform iris_DynamicTransforms {
+			layout(std140, binding = %d) uniform iris_DynamicTransforms {
 			    mat4 ModelViewMat;
+			    mat4 TextureMat;
 			    vec4 ColorModulator;
 			    vec3 ModelOffset;
-			    mat4 TextureMat;
 			} iris_transforms;
-			""",
+			""".formatted(IrisBindings.DYNAMIC_TRANSFORMS),
 			"""
-				layout(std140) uniform iris_Projection {
+				layout(std140, binding = %d) uniform iris_Projection {
 				    mat4 iris_ProjMat;
 				};
-				""",
+				""".formatted(IrisBindings.PROJECTION),
 			"""
-				layout(std140) uniform iris_Globals {
+				layout(std140, binding = %d) uniform iris_Globals {
     ivec3 CameraBlockPos;
-    vec3 CameraOffset;
-    vec2 ScreenSize;
     float GlintAlpha;
+    vec3 CameraOffset;
     float GameTime;
+    vec2 ScreenSize;
     int MenuBlurRadius;
+    int UseRgss;
 				} iris_globalInfo;
-				""");
+				""".formatted(IrisBindings.GLOBALS));
 
 		CommonTransformer.transform(t, tree, root, parameters, true);
 		CommonTransformer.replaceMidBlock(t, tree, root, parameters);
@@ -128,5 +130,7 @@ public class VanillaCoreTransformer {
 			addIfNotExists(root, t, tree, "iris_UV1", Type.F32VEC2, StorageType.IN);
 			addIfNotExists(root, t, tree, "iris_UV2", Type.F32VEC2, StorageType.IN);
 		}
+
+		CommonTransformer.addExplicitBindings(t, tree, root);
 	}
 }

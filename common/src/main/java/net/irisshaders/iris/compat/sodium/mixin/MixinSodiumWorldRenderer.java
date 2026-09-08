@@ -187,7 +187,7 @@ public class MixinSodiumWorldRenderer implements ShadowRenderListAccess {
 	}
 
 	@Inject(method = "isEntityVisible", at = @At("HEAD"), cancellable = true)
-	private <T extends Entity, S extends EntityRenderState> void iris$skipEntityCheck(EntityRenderer<T, S> renderer, T entity, CallbackInfoReturnable<Boolean> cir) {
+	private <T extends Entity, S extends EntityRenderState> void iris$skipEntityCheck(EntityRenderer<T, S> renderer, Entity entity, float partialTicks, CallbackInfoReturnable<Boolean> cir) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) cir.setReturnValue(true);
 	}
 }

@@ -7,6 +7,7 @@ import com.mojang.renderpearl.backend.opengl.GlCommandEncoder;
 import com.mojang.renderpearl.backend.opengl.GlConst;
 import com.mojang.renderpearl.backend.opengl.GlProgram;
 import com.mojang.renderpearl.backend.opengl.GlRenderPass;
+import com.mojang.renderpearl.backend.opengl.GlRenderPipeline;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
@@ -25,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL33C;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL46C;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -43,7 +45,7 @@ import java.util.List;
 public class MixinGlCommandEncoder {
 	@Shadow
 	@Nullable
-	private RenderPipeline lastPipeline;
+	private GlRenderPipeline lastPipeline;
 
 	@Shadow
 	@Nullable
@@ -97,17 +99,19 @@ public class MixinGlCommandEncoder {
 		}
 	}
 
-
-	@WrapOperation(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;isCull()Z"))
-	private boolean iris$redirectCull(RenderPipeline instance, Operation<Boolean> original) {
-		return !ShadowRenderingState.areShadowsCurrentlyBeingRendered() && original.call(instance);
+	@Redirect(method = "createRenderPass", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glDrawBuffers([I)V"))
+	private void iris$changeDrawBuffers(int[] buffers) {
+		if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !ImmediateState.safeToMultiply) {
+			GL33C.glDrawBuffers(buffers);
+		}
 	}
+
 
 	@Unique
 	private static GlRenderPass lastPass;
 
-	@Inject(method = "trySetup", at = @At("HEAD"), cancellable = true)
-	private void iris$bypassSetup(GlRenderPass glRenderPass, Collection<String> collection, CallbackInfoReturnable<Boolean> cir) {
+	@Inject(method = "setupDraw", at = @At(value = "FIELD", target = "Lcom/mojang/renderpearl/backend/opengl/GlCommandEncoder;lastPipeline:Lcom/mojang/renderpearl/backend/opengl/GlRenderPipeline;", opcode = Opcodes.GETFIELD), cancellable = true)
+	private void iris$bypassSetup(GlRenderPass glRenderPass, CallbackInfo cir) {
 		DepthColorStorage.unlockDepthColor();
 
 		if (ImmediateState.safeToMultiply && !(glRenderPass.pipeline.program() instanceof ExtendedShader)) {
@@ -119,11 +123,10 @@ public class MixinGlCommandEncoder {
 		if (glRenderPass.iris$getCustomPass() != null) {
 			this.lastProgram = null;
 
-			cir.setReturnValue(true);
+			cir.cancel();
 
 			glRenderPass.iris$getCustomPass().setupState();
 
-			RenderPipeline pipeline = glRenderPass.pipeline.info();
 
 			if (glRenderPass.isScissorEnabled()) {
 				GlStateManager._enableScissorTest();
@@ -132,79 +135,19 @@ public class MixinGlCommandEncoder {
 				GlStateManager._disableScissorTest();
 			}
 
-			if (this.lastPipeline != pipeline) {
-				this.lastPipeline = pipeline;
-
-				DepthStencilState depthStencilState = pipeline.getDepthStencilState();
-				if (depthStencilState != null) {
-					GlStateManager._enableDepthTest();
-					GlStateManager._depthFunc(GlConst.toGl(depthStencilState.depthTest()));
-					GlStateManager._depthMask(depthStencilState.writeDepth());
-					if (depthStencilState.depthBiasConstant() == 0.0F && depthStencilState.depthBiasScaleFactor() == 0.0F) {
-						GlStateManager._disablePolygonOffset();
-					} else {
-						GlStateManager._polygonOffset(depthStencilState.depthBiasScaleFactor(), depthStencilState.depthBiasConstant());
-						GlStateManager._enablePolygonOffset();
-					}
-				} else {
-					GlStateManager._disableDepthTest();
-					GlStateManager._depthMask(false);
-					GlStateManager._disablePolygonOffset();
-				}
-
-				if (pipeline.isCull() && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-					GlStateManager._enableCull();
-				} else {
-					GlStateManager._disableCull();
-				}
-
-				if (pipeline.getColorTargetStates()[0].blendFunction().isPresent()) {
-					GlStateManager._enableBlend(0);
-					BlendFunction blendFunction = (BlendFunction)pipeline.getColorTargetStates()[0].blendFunction().get();
-					GlStateManager._blendFuncSeparate(
-						GlConst.toGl(blendFunction.color().sourceFactor()),
-						GlConst.toGl(blendFunction.color().destFactor()),
-						GlConst.toGl(blendFunction.alpha().sourceFactor()),
-						GlConst.toGl(blendFunction.alpha().destFactor())
-					);
-				} else {
-					GlStateManager._disableBlend(0);
-				}
-
-				GlStateManager._polygonMode(1032, GlConst.toGl(pipeline.getPolygonMode()));
-				GlStateManager._colorMask(pipeline.getColorTargetStates()[0].writeMask());
-			}
+			GlStateManager._disableDepthTest();
+			GlStateManager._depthMask(false);
+			GlStateManager._disablePolygonOffset();
+			GlStateManager._disableCull();
+			GlStateManager._disableBlend(0);
+			GlStateManager._colorMask(15);
 		}
 	}
 
-	@Redirect(method = "trySetup", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glDrawBuffers([I)V"))
-	private void iris$skipShadowDrawBuffers(int[] buffers, @Local GlRenderPass glRenderPass) {
-		if (glRenderPass.pipeline.program() instanceof IrisProgram is) {
-			return;
-		} else {
-            GL33C.glDrawBuffers(buffers);
-        }
-	}
-
-	@Inject(method = "trySetup", at = @At("RETURN"))
-	private void iris$setupState(GlRenderPass glRenderPass, Collection<String> collection, CallbackInfoReturnable<Boolean> cir) {
-		if (glRenderPass.pipeline.program() instanceof IrisProgram is && !is.iris$isSetUp()) {
-			GlRenderPass.TextureViewAndSampler sam = glRenderPass.samplers.get("Sampler0");
-
-            if (sam == null) {
-                sam = glRenderPass.samplers.get("u_BlockTex");
-            }
-			is.iris$setupState(glRenderPass.samplers, sam == null ? null : sam.view());
-			programsToClear.add(is);
-		}
-	}
-
-	@Redirect(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_colorMask(II)V"))
-	private void iris$changeColorMask(int index, int writeMask, @Local ColorTargetState[] states) {
-		if (states.length == 1) {
-			GlStateManager._colorMask(writeMask);
-		} else {
-			GlStateManager._colorMask(index, writeMask);
+	@Inject(method = "setupDraw", at = @At("RETURN"))
+	private void iris$trackProgram(GlRenderPass glRenderPass, CallbackInfo ci) {
+		if (glRenderPass.pipeline.program() instanceof IrisProgram irisProgram && !this.programsToClear.contains(irisProgram)) {
+			this.programsToClear.add(irisProgram);
 		}
 	}
 
@@ -222,7 +165,7 @@ public class MixinGlCommandEncoder {
 		return mode;
 	}
 
-	@ModifyArg(method = "drawFromBuffers", index = 0, at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glDrawElementsInstancedBaseVertex(IIIJII)V"))
+	@ModifyArg(method = "executeDraw", index = 0, at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glDrawElementsInstancedBaseVertex(IIIJII)V"))
 	private int iris$entityTessShaderCompat(int mode) {
 		if (mode == GL43C.GL_TRIANGLES && ImmediateState.usingTessellation) {
 			mode = GL43C.GL_PATCHES;

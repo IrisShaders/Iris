@@ -3,6 +3,7 @@ package net.irisshaders.iris.mixin.texture;
 import net.irisshaders.iris.pbr.format.TextureFormatLoader;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Final;
@@ -28,8 +29,9 @@ public class MixinTextureManager {
 		"lambda$reload$2",
 		"lambda$reload$3"
 	}, at = @At("TAIL"), require = 1)
-	private void iris$onTailReloadLambda(List list, Void void_, CallbackInfo ci) {
-		TextureFormatLoader.reload(this.resourceManager);
+	private static void iris$onTailReloadLambda(List list, Void void_,
+	                                            CallbackInfo ci) {
+		TextureFormatLoader.reload(Minecraft.getInstance().getResourceManager());
 		PBRTextureManager.INSTANCE.clear();
 		CapturedRenderingState.INSTANCE.incrementTextureReloadCount();
 	}

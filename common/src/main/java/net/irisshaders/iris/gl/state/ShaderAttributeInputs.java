@@ -32,7 +32,7 @@ public class ShaderAttributeInputs {
 		format.getElements().forEach(n -> {
 			var name = n.name();
 
-			if ("Color".equals(name)) {
+			if ("Color".equals(name) || "a_Color".equals(name)) {
 				color = true;
 			}
 
@@ -40,7 +40,7 @@ public class ShaderAttributeInputs {
 				newLines = true;
 			}
 
-			if ("UV0".equals(name)) {
+			if ("UV0".equals(name) || "a_TexCoord".equals(name)) {
 				tex = true;
 			}
 
@@ -48,11 +48,11 @@ public class ShaderAttributeInputs {
 				overlay = true;
 			}
 
-			if ("UV2".equals(name) && !isFullbright) {
+			if (("UV2".equals(name) || "a_LightAndData".equals(name)) && !isFullbright) {
 				light = true;
 			}
 
-			if ("Normal".equals(name)) {
+			if ("Normal".equals(name) || "iris_Normal".equals(name)) {
 				normal = true;
 			}
 		});

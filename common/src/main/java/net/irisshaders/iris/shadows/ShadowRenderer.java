@@ -58,6 +58,7 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.core.BlockPos;
+import net.minecraft.data.AtlasIds;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -512,16 +513,16 @@ public class ShadowRenderer {
 			// TODO: Better way of preventing light from leaking into places where it shouldn't
 			GlStateManager._disableCull();
 
-			ChunkSectionsToRender sections = new ChunkSectionsToRender(null, null, 0, null);
-			((SodiumChunkSection) (Object) sections).sodium$setRendering(((LevelRendererExtension) levelRenderer).sodium$getWorldRenderer(),
+			ChunkSectionsToRender sections = new SodiumChunkSection(((LevelRendererExtension) levelRenderer).sodium$getWorldRenderer(),
 				((LevelRendererExtension) levelRenderer).sodium$getMatrices(), cameraX, cameraY, cameraZ);
-			SodiumWorldRenderer.instance().prepareTerrainRender(((LevelRendererExtension) levelRenderer).sodium$getMatrices(), this.levelRenderState.cameraRenderState.pos.x, this.levelRenderState.cameraRenderState.pos.y, this.levelRenderState.cameraRenderState.pos.z);
+			SodiumWorldRenderer.instance().prepareChunkRendering(((LevelRendererExtension) levelRenderer).sodium$getMatrices(), this.levelRenderState.cameraRenderState.pos.x, this.levelRenderState.cameraRenderState.pos.y, this.levelRenderState.cameraRenderState.pos.z);
 
+			var atlas = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.BLOCKS).getTextureView();
 			// Render all opaque terrain unless pack requests not to
 			if (shouldRenderTerrain) {
 				pipeline.setPhase(WorldRenderingPhase.TERRAIN_SOLID);
 				try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
-					sections.renderGroup(ChunkSectionLayerGroup.OPAQUE, renderPass, theSampler, false);
+					sections.renderGroup(ChunkSectionLayerGroup.OPAQUE, renderPass, theSampler, atlas, false);
 				}
 				pipeline.setPhase(WorldRenderingPhase.NONE);
 
@@ -608,7 +609,7 @@ public class ShadowRenderer {
 			if (shouldRenderTranslucent) {
 				pipeline.setPhase(WorldRenderingPhase.TERRAIN_TRANSLUCENT);
 				try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
-					sections.renderGroup(ChunkSectionLayerGroup.TRANSLUCENT, renderPass, theSampler, false);
+					sections.renderGroup(ChunkSectionLayerGroup.TRANSLUCENT, renderPass, theSampler, atlas,false);
 				}
 				pipeline.setPhase(WorldRenderingPhase.NONE);
 			}
@@ -716,9 +717,9 @@ public class ShadowRenderer {
 		for(Entity entity : Minecraft.getInstance().level.entitiesForRendering()) {
 			if (entity instanceof AbstractClientPlayer acp && acp.isSpectator()) continue;
 
-			if (Minecraft.getInstance().getEntityRenderDispatcher().shouldRender(entity, frustum, d, e, f) || entity.hasIndirectPassenger(Minecraft.getInstance().player)) {
+			if (Minecraft.getInstance().getEntityRenderDispatcher().shouldRender(entity, frustum, d, e, f, levelRenderState.worldPartialTicks) || entity.hasIndirectPassenger(Minecraft.getInstance().player)) {
 				BlockPos blockPos = entity.blockPosition();
-				if ((Minecraft.getInstance().level.isOutsideBuildHeight(blockPos.getY()) || Minecraft.getInstance().levelRenderer.isSectionCompiledAndVisible(blockPos))) {
+				if ((Minecraft.getInstance().level.isOutsideBuildHeight(blockPos.getY()) || Minecraft.getInstance().levelRenderer.isSectionCompiledAndVisible(blockPos, 0))) {
 					if (entity.tickCount == 0) {
 						entity.xOld = entity.getX();
 						entity.yOld = entity.getY();
@@ -740,7 +741,7 @@ public class ShadowRenderer {
 
 		int shadowEntities = 0;
 
-		if (!dispatcher.shouldRender(player, frustum, cameraX, cameraY, cameraZ) || player.isSpectator()) {
+		if (!dispatcher.shouldRender(player, frustum, cameraX, cameraY, cameraZ, tickDelta) || player.isSpectator()) {
 			Profiler.get().pop();
 			return 0;
 		}

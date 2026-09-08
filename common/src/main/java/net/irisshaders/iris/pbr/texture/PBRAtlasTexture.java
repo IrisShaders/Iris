@@ -283,7 +283,7 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 					RenderSystem.bindDefaultUniforms(renderPass);
 
 					for (int n = 0; n < staticSprites.size(); n++) {
-						renderPass.bindTexture("Sprite", scratchTextures.get(n)[level], gpuSampler);
+						renderPass.setUniform("Sprite", scratchTextures.get(n)[level], gpuSampler);
 						renderPass.setUniform("SpriteAnimationInfo", gpuBuffer.slice((long) n * uboBlockSize + (long) level * spriteUboSize, SpriteContents.UBO_SIZE));
 						renderPass.draw(6, 1, 0, 0);
 					}

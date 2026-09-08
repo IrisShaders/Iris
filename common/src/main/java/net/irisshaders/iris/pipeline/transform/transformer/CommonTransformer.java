@@ -10,14 +10,19 @@ import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression
 import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.ExtensionDirective;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier.BuiltinType.TypeKind;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.query.RootSupplier;
 import io.github.douira.glsl_transformer.ast.query.match.AutoHintedMatcher;
 import io.github.douira.glsl_transformer.ast.query.match.Matcher;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
@@ -29,14 +34,81 @@ import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
+import net.irisshaders.iris.pipeline.programs.IrisBindings;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 public class CommonTransformer {
+	public static void addExplicitBindings(ASTParser t, TranslationUnit tree, Root root) {
+		boolean hasExtension = root.nodeIndex.get(ExtensionDirective.class).stream()
+			.anyMatch(extension -> extension.getName().equals("GL_ARB_shading_language_420pack"));
+
+		if (!hasExtension) {
+			tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS,
+				t.parseExternalDeclaration(root, "#extension GL_ARB_shading_language_420pack : require\n"));
+		}
+
+		addSamplerBinding(t, root, IrisBindings.ALBEDO_TEXTURE, "tex", "texture", "gtexture", "u_MainSampler", "Sampler0", "u_BlockTex");
+		addSamplerBinding(t, root, IrisBindings.OVERLAY_TEXTURE, "iris_overlay", "Sampler1");
+		addSamplerBinding(t, root, IrisBindings.LIGHTMAP_TEXTURE, "lightmap", "Sampler2", "u_LightTex");
+	}
+
+	private static void addSamplerBinding(ASTParser t, Root root, int binding, String... names) {
+		Set<TypeAndInitDeclaration> declarations = new LinkedHashSet<>();
+
+		for (String name : names) {
+			for (Identifier identifier : root.identifierIndex.get(name)) {
+				if (identifier.getParent() instanceof DeclarationMember member && member.getName() == identifier
+					&& member.getParent() instanceof TypeAndInitDeclaration declaration) {
+					declarations.add(declaration);
+				}
+			}
+		}
+
+		for (TypeAndInitDeclaration declaration : declarations) {
+			if (declaration.getMembers().size() != 1
+				|| !(declaration.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier specifier)
+				|| specifier.type.kind != TypeKind.SAMPLER) {
+				continue;
+			}
+
+			TypeQualifier qualifier = declaration.getType().getTypeQualifier();
+			if (qualifier == null || qualifier.getParts().stream().noneMatch(part -> part instanceof StorageQualifier storage
+				&& storage.storageType == StorageType.UNIFORM)) {
+				continue;
+			}
+
+			boolean updated = false;
+			for (var part : qualifier.getParts()) {
+				if (part instanceof LayoutQualifier layout) {
+					for (var layoutPart : layout.getParts()) {
+						if (layoutPart instanceof NamedLayoutQualifierPart named && named.getName().getName().equals("binding")) {
+							named.setExpression(t.parseExpression(root, Integer.toString(binding)));
+							updated = true;
+						}
+					}
+				}
+			}
+
+			if (!updated) {
+				DeclarationExternalDeclaration bindingDeclaration = (DeclarationExternalDeclaration) t.parseExternalDeclaration(
+					RootSupplier.DEFAULT, "layout(binding = " + binding + ") uniform sampler2D iris_binding;");
+				TypeAndInitDeclaration bindingType = (TypeAndInitDeclaration) bindingDeclaration.getDeclaration();
+				LayoutQualifier layout = bindingType.getType().getTypeQualifier().getParts().stream()
+					.filter(LayoutQualifier.class::isInstance)
+					.map(LayoutQualifier.class::cast)
+					.findFirst()
+					.orElseThrow();
+				qualifier.getParts().add(0, layout.cloneInto(root));
+			}
+		}
+	}
+
 	public static final AutoHintedMatcher<Expression> glTextureMatrix0 = new AutoHintedMatcher<>(
 		"gl_TextureMatrix[0]", ParseShape.EXPRESSION);
 	public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(

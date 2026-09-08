@@ -78,7 +78,7 @@ public class MixinModelStorageTrigger {
 		original.call(instance, submit);
 	}
 
-	@WrapOperation(method = "submitText", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/phase/SimpleFeatureRenderPhase;submit(Lnet/minecraft/client/renderer/feature/submit/SubmitNode;)V"))
+	@WrapOperation(method = "submitTextPart", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/phase/SimpleFeatureRenderPhase;submit(Lnet/minecraft/client/renderer/feature/submit/SubmitNode;)V"))
 	private <E> void iris$capture5(SimpleFeatureRenderPhase instance, SubmitNode submit, Operation<Void> original) {
 		((ModelStorage) (Object) submit).iris$capture();
 

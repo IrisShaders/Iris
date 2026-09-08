@@ -8,12 +8,10 @@ import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
-import net.irisshaders.iris.gl.blending.BlendModeStorage;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
@@ -54,7 +52,6 @@ import org.lwjgl.opengl.GL43C;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 
 public class ShadowCompositeRenderer {
@@ -389,7 +386,6 @@ public class ShadowCompositeRenderer {
 			if (blendModeOverride != null) {
 				blendModeOverride.apply();
 			} else {
-				BlendModeStorage.restoreBlend();
 				GlStateManager._disableBlend(0);
 			}
 		}
