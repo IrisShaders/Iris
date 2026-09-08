@@ -2,8 +2,6 @@ package net.irisshaders.iris.mixinterface;
 
 import net.minecraft.world.level.block.state.BlockState;
 
-public interface SulfurCubeStateExtension {
+public interface BlockModelRenderStateExtension {
 	void setBlock(BlockState block);
-
-	BlockState getBlock();
 }

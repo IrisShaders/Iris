@@ -10,16 +10,19 @@ import org.lwjgl.system.MemoryUtil;
 import java.nio.ByteBuffer;
 import java.util.function.IntFunction;
 
+import static net.irisshaders.iris.vertices.IrisVertexFormats.MID_TEXTURE_ATTRIBUTE;
+import static net.irisshaders.iris.vertices.IrisVertexFormats.TANGENT_ATTRIBUTE;
+
 public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	static final VertexFormat format = IrisVertexFormats.GLYPH;
 	private static final int STRIDE = IrisVertexFormats.GLYPH.getVertexSize();
-	private static final int OFFSET_POSITION = 0;
-	private static final int OFFSET_COLOR = 12;
-	private static final int OFFSET_TEXTURE = 16;
-	private static final int OFFSET_MID_TEXTURE = 38;
-	private static final int OFFSET_LIGHT = 24;
-	private static final int OFFSET_NORMAL = 28;
-	private static final int OFFSET_TANGENT = 46;
+	private static final int OFFSET_POSITION = getOffset("Position");
+	private static final int OFFSET_COLOR = getOffset("Color");
+	private static final int OFFSET_TEXTURE = getOffset("UV0");
+	private static final int OFFSET_MID_TEXTURE = getOffset(MID_TEXTURE_ATTRIBUTE);
+	private static final int OFFSET_LIGHT = getOffset("UV2");
+	private static final int OFFSET_NORMAL = getOffset("Normal");
+	private static final int OFFSET_TANGENT = getOffset(TANGENT_ATTRIBUTE);
 	private final ByteBuffer buffer;
 	private final TextQuadView quad = new TextQuadView();
 	private final Vector3f saveNormal = new Vector3f();
@@ -31,6 +34,12 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	public IrisTextVertexSinkImpl(int maxQuadCount, IntFunction<ByteBuffer> buffer) {
 		this.buffer = buffer.apply(format.getVertexSize() * 4 * maxQuadCount);
 		this.elementOffset = MemoryUtil.memAddress(this.buffer);
+	}
+
+	private static int getOffset(String name) {
+		var element = IrisVertexFormats.GLYPH.getElement(name);
+		if (element == null) throw new IllegalArgumentException("Cannot find element " + name);
+		return element.offset();
 	}
 
 	@Override

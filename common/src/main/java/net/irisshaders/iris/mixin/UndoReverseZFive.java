@@ -9,6 +9,7 @@ import com.mojang.renderpearl.api.commands.RenderPassDescriptor;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.vertices.ImmediateState;
 import org.joml.Vector4fc;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,19 +24,19 @@ import java.util.function.Supplier;
 public class UndoReverseZFive {
 	@WrapMethod(method = "clearColorAndDepthTextures(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/renderpearl/api/textures/GpuTexture;D)V")
 	private void iris$change(GpuTexture colorTexture, Vector4fc clearColor, GpuTexture depthTexture, double clearDepth, Operation<Void> original) {
-		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() ? 1.0 - clearDepth : clearDepth));
+		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel ? 1.0 - clearDepth : clearDepth));
 	}
 	@WrapMethod(method = "clearColorAndDepthTextures(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lorg/joml/Vector4fc;Lcom/mojang/renderpearl/api/textures/GpuTexture;DIIII)V")
 	private void iris$change3(GpuTexture colorTexture, Vector4fc clearColor, GpuTexture depthTexture, double clearDepth, int regionX, int regionY, int regionWidth, int regionHeight, Operation<Void> original) {
-		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() ? 1.0 - clearDepth : clearDepth), regionX, regionY, regionWidth, regionHeight);
+		original.call(colorTexture, clearColor, depthTexture, saturate(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel ? 1.0 - clearDepth : clearDepth), regionX, regionY, regionWidth, regionHeight);
 	}
 	@WrapMethod(method = "clearDepthTexture")
 	private void iris$change2(GpuTexture depthTexture, double clearDepth, Operation<Void> original) {
-		original.call(depthTexture, saturate(Iris.isPackInUseQuick() ? 1.0 - clearDepth : clearDepth));
+		original.call(depthTexture, saturate(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel ? 1.0 - clearDepth : clearDepth));
 	}
 	@WrapMethod(method = "createRenderPass")
 	private RenderPassBackend iris$change4(RenderPassDescriptor descriptor, Operation<RenderPassBackend> original) {
-        if (!Iris.isPackInUseQuick()) {
+        if (!(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel)) {
             return original.call(descriptor);
         }
 		if (descriptor.depthAttachment() != null && descriptor.depthAttachment().clearValue().isPresent()) {
@@ -57,7 +58,7 @@ public class UndoReverseZFive {
 
 	@WrapOperation(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_polygonOffset(FF)V"))
 	private void iris$revertPolygonOffset(float factor, float units, Operation<Void> original) {
-		if (Iris.isPackInUseQuick()) {
+		if (Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel) {
 			original.call(-factor, -units);
 		} else {
 			original.call(factor, units);

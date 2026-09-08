@@ -1,6 +1,9 @@
 package net.irisshaders.iris.mixin;
 
 import com.google.common.collect.Lists;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.Iris;
@@ -15,6 +18,7 @@ import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
+import net.minecraft.client.Camera;
 import net.minecraft.client.gui.components.debug.DebugEntrySystemSpecs;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.util.Util;
@@ -83,5 +87,17 @@ public class MixinGameRenderer {
 	@Inject(method = "renderLevel", at = @At("TAIL"))
 	private void iris$runColorSpace(CallbackInfo ci) {
 		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::finalizeGameRendering);
+	}
+
+	// Set isRenderingLevel to trigger undo reverse z in other mixin.
+	// This is the place where vanilla generate projection matrix from data, then captured by sodium and iris.
+	@Inject(method = "extract", at = @At(value = "HEAD"))
+	private void iris$undoReverseZ(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
+		ImmediateState.isRenderingLevel = true;
+	}
+
+	@Inject(method = "extract", at = @At(value = "RETURN"))
+	private void iris$restoreReverseZ(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
+		ImmediateState.isRenderingLevel = false;
 	}
 }

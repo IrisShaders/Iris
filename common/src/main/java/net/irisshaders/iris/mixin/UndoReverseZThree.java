@@ -3,6 +3,7 @@ package net.irisshaders.iris.mixin;
 import com.mojang.renderpearl.backend.opengl.GlConst;
 import com.mojang.renderpearl.api.pipeline.CompareOp;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.vertices.ImmediateState;
 import org.lwjgl.opengl.GL43;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class UndoReverseZThree {
 	@Inject(method = "toGl(Lcom/mojang/renderpearl/api/pipeline/CompareOp;)I", at = @At("HEAD"), cancellable = true)
 	private static void iris$to(CompareOp compareOp, CallbackInfoReturnable<Integer> cir) {
-        if (!Iris.isPackInUseQuick()) return;
+        if (!(Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel)) return;
 
 		cir.setReturnValue(switch (compareOp) {
 			case ALWAYS_PASS -> 519;

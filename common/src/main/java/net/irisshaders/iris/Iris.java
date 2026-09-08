@@ -178,6 +178,24 @@ public class Iris {
 			Iris.loadShaderpack();
 		}
 
+		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
+			if (reloadKeybind.consumeClick()) {
+				try {
+					reload();
+
+					if (Minecraft.getInstance().player != null) {
+						Minecraft.getInstance().player.sendSystemMessage(Component.translatable("iris.shaders.reloaded"));
+					}
+
+				} catch (Exception e) {
+					logger.error("Error while reloading Shaders for Iris!", e);
+
+					if (Minecraft.getInstance().player != null) {
+						Minecraft.getInstance().player.sendSystemMessage(Component.translatable("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED));
+					}
+				}
+			}
+		}
 		if (toggleShadersKeybind.consumeClick()) {
 			try {
 				toggleShaders(minecraft, !irisConfig.areShadersEnabled());
@@ -755,7 +773,7 @@ public class Iris {
 		return getVersion().split("\\+")[0];
 	}
 
-    public static void handleDebugKeys(KeyEvent event) {
+    public static boolean handleDebugKeys(KeyEvent event) {
         if (reloadKeybind.matches(event)) {
             try {
                 reload();
@@ -771,7 +789,9 @@ public class Iris {
                     Minecraft.getInstance().player.sendSystemMessage(Component.translatable("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED));
                 }
             }
+			return true;
         }
+		return false;
     }
 
     /**

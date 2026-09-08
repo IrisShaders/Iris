@@ -1,6 +1,7 @@
 package net.irisshaders.iris.mixin;
 
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.renderer.Projection;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,28 +21,30 @@ public class UndoReverseZFour {
 
     @Inject(method = "setupPerspective", at = @At("HEAD"))
     private void iris$cache(float zNear, float zFar, float fov, float width, float height, CallbackInfo ci) {
-        if (lastShader != Iris.isPackInUseQuick()) {
-            lastShader = Iris.isPackInUseQuick();
+        boolean shader = Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel;
+        if (lastShader != shader) {
+            lastShader = shader;
             this.isMatrixDirty = true;
         }
     }
 
     @Inject(method = "setupOrtho", at = @At("HEAD"))
     private void iris$cache2(float zNear, float zFar, float width, float height, boolean invertY, CallbackInfo ci) {
-        if (lastShader != Iris.isPackInUseQuick()) {
-            lastShader = Iris.isPackInUseQuick();
+        boolean shader = Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel;
+        if (lastShader != shader) {
+            lastShader = shader;
             this.isMatrixDirty = true;
         }
     }
 	@Redirect(method = "getMatrix", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;setPerspective(FFFFZ)Lorg/joml/Matrix4f;"))
 	private Matrix4f iris$setPerspective(Matrix4f instance, float fovy, float aspect, float zNear, float zFar, boolean zZeroToOne) {
-        boolean shader = Iris.isPackInUseQuick();
+        boolean shader = Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel;
 
         return instance.setPerspective(fovy, aspect, shader ? zFar : zNear, shader ? zNear : zFar, zZeroToOne && !shader);
 	}
 	@Redirect(method = "getMatrix", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;setOrtho(FFFFFFZ)Lorg/joml/Matrix4f;"))
 	private Matrix4f iris$setOrtho(Matrix4f instance, float left, float right, float bottom, float top, float zNear, float zFar, boolean zZeroToOne) {
-        boolean shader = Iris.isPackInUseQuick();
+        boolean shader = Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel;
 
 		return instance.setOrtho(left, right, bottom, top, shader ? zFar : zNear, shader ? zNear : zFar, zZeroToOne && !shader);
 	}
