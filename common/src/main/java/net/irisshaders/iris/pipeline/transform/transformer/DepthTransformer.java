@@ -171,7 +171,8 @@ class DepthTransformer {
 				call.replaceBy(wrapper);
 				root.indexBuildSession(() -> wrapper.getParameters().add(
 					new SubtractionExpression(new LiteralExpression(Type.FLOAT32, 1.0),
-						new MemberAccessExpression(call, new Identifier("x")))));
+						call.getFunctionName().getName().startsWith("textureGather")
+							? call : new MemberAccessExpression(call, new Identifier("x")))));
 			});
 	}
 

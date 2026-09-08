@@ -2,11 +2,14 @@ package net.irisshaders.iris.compat.sodium.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
+import net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer;
+import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.DefaultTerrainRenderPasses;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
@@ -48,4 +51,15 @@ public class MixinDefaultChunkRenderer {
 	                               Operation<Void> original) {
 		original.call(instance, terrainRenderPass, fogParameters, Iris.isPackInUseQuick() ? RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST, true) : gpuSampler, oitStage);
 	}
+	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch;isEmpty()Z"), require = 1, remap = false)
+	private boolean iris$checkPreparedBatch(MultiDrawBatch batch, Operation<Boolean> original,
+	                                       @Local RenderRegion region, @Local(argsOnly = true) TerrainRenderPass renderPass) {
+		if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !batch.isFilled) {
+			throw new IllegalStateException("Iris: unprepared main-world terrain batch at region ("
+				+ region.getOriginX() + ", " + region.getOriginY() + ", " + region.getOriginZ()
+				+ "), pass index " + DefaultTerrainRenderPasses.getPassIndex(renderPass) + ", batch size " + batch.size);
+		}
+		return original.call(batch);
+	}
+
 }

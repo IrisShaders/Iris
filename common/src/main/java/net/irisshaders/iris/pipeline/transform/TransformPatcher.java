@@ -197,9 +197,9 @@ public class TransformPatcher {
 							}
 						}
 					}
-					CommonTransformer.transformDepth(transformer, tree, root, parameters);
 					TextureTransformer.transform(transformer, tree, root,
 						parameters.getTextureStage(), parameters.getTextureMap());
+					CommonTransformer.transformDepth(transformer, tree, root, parameters);
 					CompatibilityTransformer.transformEach(transformer, tree, root, parameters);
 				});
 			}

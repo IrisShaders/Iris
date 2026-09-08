@@ -218,7 +218,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 
 		if (projectionInverse > -1) {
 			// TODO: This is wrong. (1.21.6)
-			IrisRenderSystem.uniformMatrix4fv(projectionInverse, false, (ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? MatrixUtils.undoRevZ(ShadowRenderer.PROJECTION) : CapturedRenderingState.INSTANCE.getGbufferProjection()).invert(tempMatrix4f).get(tempFloats));
+			IrisRenderSystem.uniformMatrix4fv(projectionInverse, false, (ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? MatrixUtils.toMinusOneToOne(ShadowRenderer.PROJECTION) : CapturedRenderingState.INSTANCE.getGbufferProjection()).invert(tempMatrix4f).get(tempFloats));
 		}
 
 		ImmediateState.usingTessellation = usesTessellation;
