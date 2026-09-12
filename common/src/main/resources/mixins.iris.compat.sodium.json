@@ -11,6 +11,7 @@
     "EnumOptionBuilderImplAccessor",
     "IntegerOptionBuilderImplAccessor",
     "MixinSodiumOptions",
+    "MixinArenaAggregator",
     "MixinBlockRenderer",
     "MixinChunkVertexConsumer",
     "MixinChunkMeshBuildTask",
