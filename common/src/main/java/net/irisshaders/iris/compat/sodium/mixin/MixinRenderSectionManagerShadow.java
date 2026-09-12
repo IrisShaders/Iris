@@ -7,7 +7,6 @@ import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
-import net.caffeinemc.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.DeferredTaskList;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.SortedRenderLists;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.SectionTree;
@@ -32,7 +31,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(RenderSectionManager.class)
 public abstract class MixinRenderSectionManagerShadow implements ShadowRenderListAccess {
@@ -73,9 +71,6 @@ public abstract class MixinRenderSectionManagerShadow implements ShadowRenderLis
 
 	@Unique
 	private DeferredTaskList shadowTaskLists;
-
-	@Unique
-	private boolean shadowNeedsRenderListUpdate = true;
 
 	@Unique
 	private boolean renderListStateIsShadow;
@@ -177,26 +172,6 @@ public abstract class MixinRenderSectionManagerShadow implements ShadowRenderLis
 		this.shadowTaskLists = null;
 	}
 
-	@Inject(method = "markGraphDirty", at = @At("HEAD"), remap = false)
-	private void markShadowGraphDirty(CallbackInfo ci) {
-		this.shadowNeedsRenderListUpdate = true;
-	}
-
-	@Inject(method = "notifyChangedCamera", at = @At("HEAD"), remap = false)
-	private void markShadowCameraDirty(CallbackInfo ci) {
-		this.shadowNeedsRenderListUpdate = true;
-	}
-
-	@Inject(method = "updateSectionInfo", at = @At("HEAD"), remap = false)
-	private void updateSectionInfo(RenderSection render, BuiltSectionInfo info, CallbackInfoReturnable<Integer> cir) {
-		this.shadowNeedsRenderListUpdate = true;
-	}
-
-	@Inject(method = "onSectionRemoved", at = @At("HEAD"), remap = false)
-	private void onSectionRemoved(int x, int y, int z, CallbackInfo ci) {
-		this.shadowNeedsRenderListUpdate = true;
-	}
-
 	@Redirect(method = "onSectionAdded", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegionManager;createForChunk(III)Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;"), remap = false)
 	private RenderRegion createRegionForCurrentRenderListState(RenderRegionManager regions, int x, int y, int z) {
 		RenderRegion region = regions.createForChunk(x, y, z);
@@ -252,12 +227,9 @@ public abstract class MixinRenderSectionManagerShadow implements ShadowRenderLis
 
 		this.iris$swapToShadowRenderLists();
 
-		if (this.shadowNeedsRenderListUpdate) {
-			this.renderOutOfGraph(viewport, fogParameters);
-			this.shadowRenderLists = this.renderLists;
-			this.shadowTaskLists = this.taskLists;
-			this.shadowNeedsRenderListUpdate = false;
-		}
+		this.renderOutOfGraph(viewport, fogParameters);
+		this.shadowRenderLists = this.renderLists;
+		this.shadowTaskLists = this.taskLists;
 
 		this.needsRenderListUpdate = false;
 		this.needsGraphUpdate = false;
