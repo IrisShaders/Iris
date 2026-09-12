@@ -274,6 +274,10 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 		return GL46C.glGetUniformBlockIndex(program, "iris_" + uniformBlockName);
 	}
 
+	public boolean usesTessellation() {
+		return usesTessellation;
+	}
+
 	@Override
 	public boolean iris$isSetUp() {
 		return isSetup;

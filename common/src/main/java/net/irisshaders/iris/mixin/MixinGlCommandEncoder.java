@@ -225,6 +225,9 @@ public class MixinGlCommandEncoder {
 			is.iris$setupState(glRenderPass.samplers, sam == null ? null : sam.view());
 			programsToClear.add(is);
 		}
+		if (glRenderPass.pipeline.program() instanceof ExtendedShader shader) {
+			ImmediateState.usingTessellation = shader.usesTessellation();
+		}
 	}
 
 	@Redirect(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlStateManager;_colorMask(II)V"))
