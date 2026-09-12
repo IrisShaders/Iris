@@ -9,15 +9,15 @@ val NEOFORGE_VERSION by extra { "26.2.0.0-beta" }
 val FABRIC_LOADER_VERSION by extra { "0.19.2" }
 val FABRIC_API_VERSION by extra { "0.152.1+26.2" }
 
-val SODIUM_DEPENDENCY_FABRIC by extra { "net.caffeinemc:sodium-fabric:0.9.1+mc26.2" }
-val SODIUM_DEPENDENCY_NEO by extra { "net.caffeinemc:sodium-neoforge-mod:0.9.1+mc26.2" }
+val SODIUM_DEPENDENCY_FABRIC by extra { "net.caffeinemc:sodium-fabric:0.9.2+mc26.2" }
+val SODIUM_DEPENDENCY_NEO by extra { "net.caffeinemc:sodium-neoforge-mod:0.9.2+mc26.2" }
 
 // This value can be set to null to disable Parchment.
 // TODO: Re-add Parchment
 val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.11.2" }
+val MOD_VERSION by extra { "1.11.4" }
 
 allprojects {
     apply(plugin = "java")

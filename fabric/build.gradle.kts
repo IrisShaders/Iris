@@ -27,6 +27,10 @@ repositories {
             includeGroup("maven.modrinth")
         }
     }
+    maven {
+        name = "caffeinemcRepositoryReleases"
+        url = uri("https://maven.caffeinemc.net/releases")
+    }
 }
 
 base {

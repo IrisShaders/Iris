@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
+import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import net.caffeinemc.mods.sodium.client.util.SodiumChunkSection;
 import net.caffeinemc.mods.sodium.client.util.FogStorage;
@@ -22,6 +23,7 @@ import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.mixinterface.ShadowRenderListAccess;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
+import net.irisshaders.iris.mixinterface.ShadowRenderListAccess;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
@@ -86,6 +88,7 @@ public class ShadowRenderer {
 	public static int renderDistance;
 	public static Matrix4f MODELVIEW;
 	public static Matrix4f PROJECTION;
+
 	public static Frustum FRUSTUM;
 	private final float halfPlaneLength;
 	private final float nearPlane, farPlane;
@@ -471,7 +474,10 @@ public class ShadowRenderer {
 		// TODO: Only schedule a terrain update if the sun / moon is moving, or the shadow map camera moved.
 		// We have to ensure that we don't regenerate clouds every frame, since that's what needsUpdate ends up doing.
 		// This took up to 10% of the frame time before we applied this fix! That's really bad!
-
+		SodiumWorldRenderer sodiumWorldRenderer = ((LevelRendererExtension) levelRenderer).sodium$getWorldRenderer();
+		if (sodiumWorldRenderer instanceof ShadowRenderListAccess shadowRenderListAccess) {
+			shadowRenderListAccess.iris$beginShadowRenderListScope();
+		}
 		// TODO IMS 24w35a determine clouds
 		SodiumWorldRenderer sodiumWorldRenderer = ((LevelRendererExtension) levelRenderer).sodium$getWorldRenderer();
 		if (sodiumWorldRenderer instanceof ShadowRenderListAccess shadowRenderListAccess) {
@@ -519,7 +525,14 @@ public class ShadowRenderer {
 				sections.renderGroup(ChunkSectionLayerGroup.OPAQUE, theSampler);
 				pipeline.setPhase(WorldRenderingPhase.NONE);
 			}
-			pipeline.setPhase(WorldRenderingPhase.ENTITIES);
+	if (!ShadowRenderCallbacks.isEmpty()) {
+			profiler.popPush("iris_shadow_callbacks");
+			pipeline.setPhase(WorldRenderingPhase.TERRAIN_CUTOUT);
+			ShadowRenderCallbacks.invoke(MODELVIEW, PROJECTION, cameraX, cameraY, cameraZ, CapturedRenderingState.INSTANCE.getTickDelta());
+			pipeline.setPhase(WorldRenderingPhase.NONE);
+		}
+
+		pipeline.setPhase(WorldRenderingPhase.ENTITIES);
 
 			// Reset our viewport in case Sodium overrode it
 			GlStateManager._viewport(0, 0, resolution, resolution);
@@ -625,6 +638,10 @@ public class ShadowRenderer {
 
 		if (levelRenderer instanceof CullingDataCache) {
 			((CullingDataCache) levelRenderer).restoreState();
+		}
+
+		if (sodiumWorldRenderer instanceof ShadowRenderListAccess shadowRenderListAccess) {
+			shadowRenderListAccess.iris$endShadowRenderListScope();
 		}
 
 		pipeline.removePhaseIfNeeded();

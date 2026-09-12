@@ -2,6 +2,9 @@ package net.irisshaders.iris.gl.state;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
+
+import java.util.List;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 
@@ -15,6 +18,7 @@ public class ShaderAttributeInputs {
 	private boolean newLines;
 	private boolean glint;
 	private boolean text;
+	private int entityComponents;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines, boolean glint, boolean text, boolean ie) {
@@ -56,6 +60,23 @@ public class ShaderAttributeInputs {
 				normal = true;
 			}
 		});
+
+		// Packs declare mc_Entity as a float, so it reads back zero and the transformer has to
+		// redeclare it. Zero here means there is nothing to fix.
+		List<String> names = format.getElementAttributeNames();
+		List<VertexFormatElement> elements = format.getElements();
+		for (int index = 0; index < names.size(); index++) {
+			VertexFormatElement element = elements.get(index);
+			String name = names.get(index);
+
+			if (element.normalized() || element.type() == VertexFormatElement.Type.FLOAT) {
+				continue;
+			}
+
+			if ("mc_Entity".equals(name)) {
+				entityComponents = element.count();
+			}
+		}
 	}
 
 	public ShaderAttributeInputs(boolean color, boolean tex, boolean overlay, boolean light, boolean normal) {
@@ -94,6 +115,10 @@ public class ShaderAttributeInputs {
 		return glint;
 	}
 
+	public int getEntityComponents() {
+		return entityComponents;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -106,6 +131,7 @@ public class ShaderAttributeInputs {
 		result = prime * result + (newLines ? 1231 : 1237);
 		result = prime * result + (glint ? 1231 : 1237);
 		result = prime * result + (text ? 1231 : 1237);
+		result = prime * result + entityComponents;
 		return result;
 	}
 
@@ -132,7 +158,9 @@ public class ShaderAttributeInputs {
 			return false;
 		if (glint != other.glint)
 			return false;
-		return text == other.text;
+		if (text != other.text)
+			return false;
+		return entityComponents == other.entityComponents;
 	}
 
 	public boolean isText() {
