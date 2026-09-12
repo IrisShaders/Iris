@@ -63,6 +63,7 @@ public class StandardMacros {
 
 		if (IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons") && DHCompat.hasRenderingEnabled()) {
 			define(standardDefines, "DISTANT_HORIZONS");
+			define(standardDefines, "DISTANT_HORIZONS_TEXTURES");
 		}
 
 		if (IrisPlatformHelpers.getInstance().isModLoaded("continuity")) {
