@@ -1,6 +1,6 @@
 package net.irisshaders.iris.compat.sodium.mixin;
 
-import net.caffeinemc.mods.sodium.client.gl.arena.ArenaAggregator;
+import net.caffeinemc.mods.sodium.client.gpu.arena.ArenaAggregator;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.irisshaders.iris.Iris;

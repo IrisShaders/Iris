@@ -1,6 +1,5 @@
 package net.irisshaders.iris.compat.sodium.mixin;
 
-import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.BuilderTaskOutput;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegionManager;

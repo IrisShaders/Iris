@@ -478,11 +478,6 @@ public class ShadowRenderer {
 		if (sodiumWorldRenderer instanceof ShadowRenderListAccess shadowRenderListAccess) {
 			shadowRenderListAccess.iris$beginShadowRenderListScope();
 		}
-		// TODO IMS 24w35a determine clouds
-		SodiumWorldRenderer sodiumWorldRenderer = ((LevelRendererExtension) levelRenderer).sodium$getWorldRenderer();
-		if (sodiumWorldRenderer instanceof ShadowRenderListAccess shadowRenderListAccess) {
-			shadowRenderListAccess.iris$beginShadowRenderListScope();
-		}
 		try {
 			sodiumWorldRenderer.scheduleTerrainUpdate();
 

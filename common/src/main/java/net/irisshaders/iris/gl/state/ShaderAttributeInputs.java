@@ -1,5 +1,6 @@
 package net.irisshaders.iris.gl.state;
 
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
@@ -63,18 +64,13 @@ public class ShaderAttributeInputs {
 
 		// Packs declare mc_Entity as a float, so it reads back zero and the transformer has to
 		// redeclare it. Zero here means there is nothing to fix.
-		List<String> names = format.getElementAttributeNames();
 		List<VertexFormatElement> elements = format.getElements();
-		for (int index = 0; index < names.size(); index++) {
+		for (int index = 0; index < elements.size(); index++) {
 			VertexFormatElement element = elements.get(index);
-			String name = names.get(index);
+			String name = element.name();
 
-			if (element.normalized() || element.type() == VertexFormatElement.Type.FLOAT) {
-				continue;
-			}
-
-			if ("mc_Entity".equals(name)) {
-				entityComponents = element.count();
+			if ("mc_Entity".equals(name) && (element.format().componentType() == GpuFormat.ComponentType.SINT_16 || element.format().componentType() == GpuFormat.ComponentType.SINT_32)) {
+				entityComponents = element.format().componentCount();
 			}
 		}
 	}
