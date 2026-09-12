@@ -139,10 +139,11 @@ public class MixinGlCommandEncoder {
 		}
 
 		lastPass = glRenderPass;
+		if (Iris.isPackInUseQuick() || glRenderPass.iris$getCustomPass() != null) {
+			this.lastProgram = null;
+		}
 
 		if (glRenderPass.iris$getCustomPass() != null) {
-			this.lastProgram = null;
-
 			cir.setReturnValue(true);
 
 			glRenderPass.iris$getCustomPass().setupState();
