@@ -33,7 +33,7 @@ import java.util.Set;
 
 class DepthTransformer {
 	private static final Set<String> DEPTH_SAMPLERS = Set.of(
-		"depthtex0", "depthtex1", "depthtex2", "gdepthtex");
+		"depthtex0", "depthtex1", "depthtex2", "gdepthtex", "dhDepthTex", "dhDepthTex0", "dhDepthTex1");
 	private static final Set<String> TEXTURE_READ_FUNCTIONS = Set.of(
 		"texture", "textureProj", "textureLod", "textureOffset", "textureProjOffset",
 		"textureLodOffset", "textureProjLod", "textureProjLodOffset", "textureGrad",

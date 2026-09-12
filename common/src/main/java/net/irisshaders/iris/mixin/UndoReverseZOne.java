@@ -13,8 +13,5 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DeviceInfo.class)
 public class UndoReverseZOne {
-	@Inject(method = "isZZeroToOne", at = @At("HEAD"), cancellable = true)
-    private void iris$force(CallbackInfoReturnable<Boolean> cir) {
-        if (Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel) cir.setReturnValue(false);
-    }
+
 }

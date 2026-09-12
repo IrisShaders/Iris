@@ -136,4 +136,6 @@ public interface IrisApi {
 	 * @since API v0.4
 	 */
 	void registerShadowRenderCallback(IrisShadowRenderCallback callback);
+
+	boolean isReverseZDuringShaders();
 }
