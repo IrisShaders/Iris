@@ -92,4 +92,9 @@ public class IrisApiV0Impl implements IrisApi {
 	public void registerShadowRenderCallback(IrisShadowRenderCallback callback) {
 		ShadowRenderCallbacks.register(callback);
 	}
+
+	@Override
+	public boolean isReverseZDuringShaders() {
+		return false;
+	}
 }
