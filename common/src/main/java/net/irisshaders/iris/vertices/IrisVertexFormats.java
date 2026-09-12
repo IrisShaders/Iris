@@ -30,7 +30,7 @@ public class IrisVertexFormats {
 		ENTITY_ID_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 3, VertexFormatElement.Type.USHORT, false, 4);
 		MID_TEXTURE_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.FLOAT, false, 2);
 		TANGENT_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.BYTE, true, 4);
-		MID_BLOCK_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.BYTE, false, 3);
+		MID_BLOCK_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, VertexFormatElement.Type.BYTE, false, 4);
 
 		TERRAIN = VertexFormat.builder()
 			.add("Position", VertexFormatElement.POSITION)
@@ -43,7 +43,6 @@ public class IrisVertexFormats {
 			.add("mc_midTexCoord", MID_TEXTURE_ELEMENT)
 			.add("at_tangent", TANGENT_ELEMENT)
 			.add("at_midBlock", MID_BLOCK_ELEMENT)
-			.padding(1)
 			.build();
 
 		ENTITY = VertexFormat.builder()
