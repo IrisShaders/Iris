@@ -9,6 +9,7 @@ import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.RootSupplier;
 import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.SingleASTTransformer;
 import io.github.douira.glsl_transformer.ast.transform.TransformationException;
 import io.github.douira.glsl_transformer.parser.ParsingException;
 import io.github.douira.glsl_transformer.token_filter.ChannelFilter;
@@ -20,6 +21,7 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisLimits;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
+import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
@@ -35,6 +37,7 @@ import net.irisshaders.iris.pipeline.transform.transformer.CompositeCoreTransfor
 import net.irisshaders.iris.pipeline.transform.transformer.CompositeTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DHGenericTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DHTerrainTransformer;
+import net.irisshaders.iris.pipeline.transform.transformer.DepthTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumCoreTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumTransformer;
@@ -293,6 +296,30 @@ public class TransformPatcher {
 			}
 		}
 		return result;
+	}
+
+	public static String patchDepth(String input, ShaderType type) {
+		if (input == null) {
+			return null;
+		}
+
+		Matcher matcher = versionPattern.matcher(input);
+		if (!matcher.find()) {
+			throw new IllegalArgumentException("No #version directive found in source code!");
+		}
+
+		PatchShaderType patchType = PatchShaderType.fromGlShaderType(type)[0];
+		boolean zZeroToOne = RenderSystem.getDevice().getDeviceInfo().isZZeroToOne();
+		SingleASTTransformer<Parameters> depthTransformer = new SingleASTTransformer<>();
+		depthTransformer.setRootSupplier(RootSupplier.PREFIX_UNORDERED_ED_EXACT);
+		depthTransformer.setTokenFilter(parseTokenFilter);
+		depthTransformer.setPrintType(PrintType.SIMPLE);
+		depthTransformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
+		depthTransformer.setTransformation((tree, root) -> root.indexBuildSession(() -> {
+			DepthTransformer.transform(depthTransformer, tree, root, patchType, false, zZeroToOne);
+			DepthTransformer.transformPosition(depthTransformer, Map.of(patchType, tree), zZeroToOne, false);
+		}));
+		return depthTransformer.transform(input);
 	}
 
 	public static Map<PatchShaderType, String> patchVanilla(

@@ -31,9 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-class DepthTransformer {
+public class DepthTransformer {
 	private static final Set<String> DEPTH_SAMPLERS = Set.of(
-		"depthtex0", "depthtex1", "depthtex2", "gdepthtex", "dhDepthTex", "dhDepthTex0", "dhDepthTex1");
+		"depthtex0", "depthtex1", "depthtex2", "gdepthtex", "dhDepthTex", "dhDepthTex0", "dhDepthTex1", "vxDepthTexOpaque", "vxDepthTexTrans");
 	private static final Set<String> TEXTURE_READ_FUNCTIONS = Set.of(
 		"texture", "textureProj", "textureLod", "textureOffset", "textureProjOffset",
 		"textureLodOffset", "textureProjLod", "textureProjLodOffset", "textureGrad",
