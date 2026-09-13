@@ -177,8 +177,14 @@ public class CommonTransformer {
 	}
 
 	public static void transformDepth(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
+		Set<String> textureOverrides = new HashSet<>(parameters.getTextureOverrides());
+		if (parameters.getTextureStage() != TextureStage.GBUFFERS_AND_SHADOW
+			&& (textureOverrides.contains("depthtex0") || textureOverrides.contains("gdepthtex"))) {
+			textureOverrides.add("depthtex0");
+			textureOverrides.add("gdepthtex");
+		}
 		DepthTransformer.transform(t, tree, root, parameters.type, isShadowPass(parameters, parameters.name),
-			RenderSystem.getDevice().getDeviceInfo().isZZeroToOne());
+			RenderSystem.getDevice().getDeviceInfo().isZZeroToOne(), textureOverrides);
 	}
 
 	public static void transformDepthPosition(ASTParser t, Map<PatchShaderType, TranslationUnit> trees, Parameters parameters) {

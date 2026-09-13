@@ -61,7 +61,14 @@ public class DepthTransformer {
 
 	public static void transform(ASTParser t, TranslationUnit tree, Root root, PatchShaderType type,
 							 boolean shadow, boolean zZeroToOne) {
-		invertDepthReads(t, tree, root);
+		transform(t, tree, root, type, shadow, zZeroToOne, Set.of());
+	}
+
+	public static void transform(ASTParser t, TranslationUnit tree, Root root, PatchShaderType type,
+							 boolean shadow, boolean zZeroToOne, Set<String> textureOverrides) {
+		Set<String> depthSamplers = new HashSet<>(DEPTH_SAMPLERS);
+		depthSamplers.removeAll(textureOverrides);
+		invertDepthReads(t, tree, root, depthSamplers);
 		if (shadow && root.process(root.nodeIndex.getStream(FunctionDefinition.class)
 			.filter(definition -> definition.getFunctionPrototype().getName().getName().equals("iris_undoRevZ")),
 			FunctionDefinition::detachAndDelete)) {
@@ -163,10 +170,10 @@ public class DepthTransformer {
 		return expression instanceof ReferenceExpression reference && reference.getIdentifier().getName().equals(name);
 	}
 
-	private static void invertDepthReads(ASTParser t, TranslationUnit tree, Root root) {
-		Set<FunctionParameter> depthParameters = specializeDepthFunctions(tree, root);
+	private static void invertDepthReads(ASTParser t, TranslationUnit tree, Root root, Set<String> depthSamplers) {
+		Set<FunctionParameter> depthParameters = specializeDepthFunctions(tree, root, depthSamplers);
 		root.process(root.nodeIndex.getStream(FunctionCallExpression.class)
-			.filter(call -> isDepthRead(call, depthParameters)), call -> {
+			.filter(call -> isDepthRead(call, depthParameters, depthSamplers)), call -> {
 				FunctionCallExpression wrapper = (FunctionCallExpression) t.parseExpression(root, "vec4()");
 				call.replaceBy(wrapper);
 				root.indexBuildSession(() -> wrapper.getParameters().add(
@@ -186,7 +193,7 @@ public class DepthTransformer {
 		}
 	}
 
-	private static Set<FunctionParameter> specializeDepthFunctions(TranslationUnit tree, Root root) {
+	private static Set<FunctionParameter> specializeDepthFunctions(TranslationUnit tree, Root root, Set<String> depthSamplers) {
 		var declarations = List.copyOf(tree.getChildren());
 		List<FunctionDefinition> definitions = declarations.stream()
 			.filter(FunctionDefinition.class::isInstance).map(FunctionDefinition.class::cast).toList();
@@ -201,7 +208,7 @@ public class DepthTransformer {
 			}
 			List<Integer> indices = new ArrayList<>();
 			for (int i = 0; i < call.getParameters().size(); i++) {
-				if (isDepthSampler(call.getParameters().get(i), depthParameters)) {
+				if (isDepthSampler(call.getParameters().get(i), depthParameters, depthSamplers)) {
 					indices.add(i);
 				}
 			}
@@ -260,9 +267,9 @@ public class DepthTransformer {
 			.findFirst().orElse(null);
 	}
 
-	private static boolean isDepthSampler(Expression expression, Set<FunctionParameter> depthParameters) {
+	private static boolean isDepthSampler(Expression expression, Set<FunctionParameter> depthParameters, Set<String> depthSamplers) {
 		FunctionParameter parameter = getSamplerParameter(expression);
-		return parameter != null ? depthParameters.contains(parameter) : DEPTH_SAMPLERS.contains(getReferenceName(expression));
+		return parameter != null ? depthParameters.contains(parameter) : depthSamplers.contains(getReferenceName(expression));
 	}
 
 	private static String getReferenceName(Expression sampler) {
@@ -272,7 +279,7 @@ public class DepthTransformer {
 		return sampler instanceof ReferenceExpression reference ? reference.getIdentifier().getName() : "";
 	}
 
-	private static boolean isDepthRead(FunctionCallExpression call, Set<FunctionParameter> depthParameters) {
+	private static boolean isDepthRead(FunctionCallExpression call, Set<FunctionParameter> depthParameters, Set<String> depthSamplers) {
 		if (call.getFunctionName() == null || call.getParameters().isEmpty()) {
 			return false;
 		}
@@ -283,7 +290,7 @@ public class DepthTransformer {
 		if (!TEXTURE_READ_FUNCTIONS.contains(name)) {
 			return false;
 		}
-		return isDepthSampler(call.getParameters().getFirst(), depthParameters);
+		return isDepthSampler(call.getParameters().getFirst(), depthParameters, depthSamplers);
 	}
 
 }

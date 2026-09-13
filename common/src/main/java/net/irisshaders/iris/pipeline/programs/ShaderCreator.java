@@ -27,6 +27,7 @@ import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
@@ -80,7 +81,7 @@ public class ShaderCreator {
                     source.getTessControlSource().orElse(null),
                     source.getTessEvalSource().orElse(null),
                     source.getFragmentSource().orElseThrow(RuntimeException::new),
-                    alpha, pipeline.getTextureMap(), false);
+                    alpha, pipeline.getTextureMap(), pipeline.getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW), false);
         } else {
             transformed = TransformPatcher.patchVanilla(
                     name,
@@ -89,7 +90,7 @@ public class ShaderCreator {
                     source.getTessControlSource().orElse(null),
                     source.getTessEvalSource().orElse(null),
                     source.getFragmentSource().orElseThrow(RuntimeException::new),
-                    alpha, isLines, shaderKey == ShaderKey.CLOUDS, true, inputs, pipeline.getTextureMap());
+                    alpha, isLines, shaderKey == ShaderKey.CLOUDS, true, inputs, pipeline.getTextureMap(), pipeline.getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW));
         }
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
@@ -334,7 +335,7 @@ public class ShaderCreator {
                     source.getTessControlSource().orElse(null),
                     source.getTessEvalSource().orElse(null),
                     source.getFragmentSource().orElseThrow(RuntimeException::new),
-                    alpha, pipeline.getTextureMap(), true);
+                    alpha, pipeline.getTextureMap(), pipeline.getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW), true);
         } else {
             transformed = TransformPatcher.patchVanilla(
                     name,
@@ -343,7 +344,7 @@ public class ShaderCreator {
                     source.getTessControlSource().orElse(null),
                     source.getTessEvalSource().orElse(null),
                     source.getFragmentSource().orElseThrow(RuntimeException::new),
-                    alpha, isLines, shaderKey == ShaderKey.CLOUDS, true, inputs, pipeline.getTextureMap());
+                    alpha, isLines, shaderKey == ShaderKey.CLOUDS, true, inputs, pipeline.getTextureMap(), pipeline.getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW));
         }
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String geometry = transformed.get(PatchShaderType.GEOMETRY);
