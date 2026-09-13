@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom") version("1.16-SNAPSHOT")
+    id("net.fabricmc.fabric-loom") version("1.17.20")
 }
 
 evaluationDependsOn(":common")
@@ -26,6 +26,10 @@ repositories {
         filter {
             includeGroup("maven.modrinth")
         }
+    }
+    maven {
+        name = "caffeinemcRepositoryReleases"
+        url = uri("https://maven.caffeinemc.net/releases")
     }
 }
 
@@ -65,7 +69,8 @@ dependencies {
     addRuntimeFabricModule("fabric-block-getter-api-v2")
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
-    addCompileFabricModule("fabric-lifecycle-events-v1")
+    addRuntimeFabricModule("fabric-lifecycle-events-v1")
+    addRuntimeFabricModule("fabric-renderer-api-v1")
     addCompileFabricModule("fabric-renderer-api-v1")
 
     implementation(SODIUM_DEPENDENCY_FABRIC)

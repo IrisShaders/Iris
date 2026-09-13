@@ -80,8 +80,9 @@ public class VanillaCoreTransformer {
 		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", "iris_transforms.ModelViewMat");
 		root.rename("modelViewMatrixInverse", "iris_ModelViewMatInverse");
 		root.rename("gl_ModelViewMatrixInverse", "iris_ModelViewMatInverse");
-		root.replaceReferenceExpressions(t, "projectionMatrix", "iris_ProjMat");
-		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix", "iris_ProjMat");
+		CommonTransformer.injectForwardZProjection(t, tree);
+		root.replaceReferenceExpressions(t, "projectionMatrix", "iris_undoRevZ(iris_ProjMat)");
+		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix", "iris_undoRevZ(iris_ProjMat)");
 		root.rename("projectionMatrixInverse", "iris_ProjMatInverse");
 		root.rename("gl_ProjectionMatrixInverse", "iris_ProjMatInverse");
 		root.replaceReferenceExpressions(t, "textureMatrix", "iris_transforms.TextureMat");
@@ -99,6 +100,8 @@ public class VanillaCoreTransformer {
 		CommonTransformer.upgradeStorageQualifiers(t, tree, root, parameters);
 
 		if (parameters.type == PatchShaderType.VERTEX) {
+			CommonTransformer.patchIntegerAttribute(t, tree, root, "mc_Entity", "iris_Entity", parameters.inputs.getEntityComponents());
+
 			root.replaceReferenceExpressions(t, "gl_Vertex", "vec4(iris_Position, 1.0)");
 			root.rename("vaPosition", "iris_Position");
 			if (parameters.inputs.hasColor()) {

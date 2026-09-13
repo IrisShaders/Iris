@@ -42,6 +42,17 @@ public class DHGenericTransformer {
 			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
 		}
 
+		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+
+									 """
+										bool dh_hasTexture() { return false; }""", """
+										vec4 dh_sampleTexture() {
+											return vec4(1.0);
+										 }
+										 """);
+		}
+
 		root.rename("gl_Color", "_vert_color");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {

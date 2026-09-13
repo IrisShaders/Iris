@@ -1,5 +1,6 @@
 package net.irisshaders.iris.gl.uniform;
 
+import org.joml.Matrix3fc;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -113,6 +114,13 @@ public interface LocationalUniformHolder extends UniformHolder {
 	@Override
 	default LocationalUniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4fc> value) {
 		location(name, UniformType.MAT4).ifPresent(id -> addUniform(updateFrequency, new MatrixUniform(id, value)));
+
+		return this;
+	}
+
+	@Override
+	default LocationalUniformHolder uniformMatrix3(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix3fc> value) {
+		location(name, UniformType.MAT3).ifPresent(id -> addUniform(updateFrequency, new Matrix3Uniform(id, value)));
 
 		return this;
 	}

@@ -36,6 +36,7 @@ public class ClearPass {
 		}
 
 		IrisRenderSystem.clearColor(color.x, color.y, color.z, color.w);
+		GlStateManager._disableScissorTest();
 		GlStateManager._clear(clearFlags);
 	}
 

@@ -1,16 +1,16 @@
 
 plugins {
     id("java")
-    id("net.fabricmc.fabric-loom") version("1.16-SNAPSHOT") apply(false)
+    id("net.fabricmc.fabric-loom") version("1.17.20") apply(false)
 }
 
-val MINECRAFT_VERSION by extra { "26.3-pre-2" }
+val MINECRAFT_VERSION by extra { "26.2" }
 val NEOFORGE_VERSION by extra { "26.2.0.0-beta" }
-val FABRIC_LOADER_VERSION by extra { "0.19.3" }
-val FABRIC_API_VERSION by extra { "0.160.0+26.3" }
+val FABRIC_LOADER_VERSION by extra { "0.19.2" }
+val FABRIC_API_VERSION by extra { "0.152.1+26.2" }
 
-val SODIUM_DEPENDENCY_FABRIC by extra { files(rootDir.resolve("custom_sodium").resolve("sodium-fabric-0.9.2-SNAPSHOT+mc26.3p1-local.jar")) }
-val SODIUM_DEPENDENCY_NEO by extra { "net.caffeinemc:sodium-neoforge-mod:0.9.1+mc26.2" }
+val SODIUM_DEPENDENCY_FABRIC by extra { "net.caffeinemc:sodium-fabric:0.9.2+mc26.2" }
+val SODIUM_DEPENDENCY_NEO by extra { "net.caffeinemc:sodium-neoforge-mod:0.9.2+mc26.2" }
 
 // This value can be set to null to disable Parchment.
 // TODO: Re-add Parchment

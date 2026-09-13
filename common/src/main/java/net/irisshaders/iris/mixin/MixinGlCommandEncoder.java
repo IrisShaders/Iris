@@ -13,10 +13,13 @@ import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
 import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.systems.ScissorState;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
+import net.irisshaders.iris.pipeline.IrisPipelines;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.ExtendedShader;
 import net.irisshaders.iris.pipeline.programs.IrisProgram;
 import net.irisshaders.iris.shadows.ShadowRenderer;
@@ -107,6 +110,27 @@ public class MixinGlCommandEncoder {
 	}
 
 
+	@WrapOperation(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlConst;toGl(Lcom/mojang/blaze3d/platform/CompareOp;)I"))
+	private int iris$pass(CompareOp compareOp,
+	                      Operation<Integer> original, @Local(argsOnly = true) RenderPipeline pipeline) {
+		WorldRenderingPipeline p = Iris.getPipelineManager().getPipelineNullable();
+
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && p instanceof IrisRenderingPipeline irisPipeline && irisPipeline.shouldOverrideShaders() && !ImmediateState.bypass && IrisPipelines.getPipeline(irisPipeline, pipeline) != null) {
+			return switch (compareOp) {
+				case ALWAYS_PASS -> 519;
+				case LESS_THAN -> GL46C.GL_GREATER;
+				case LESS_THAN_OR_EQUAL -> GL46C.GL_GEQUAL;
+				case EQUAL -> 514;
+				case NOT_EQUAL -> 517;
+				case GREATER_THAN_OR_EQUAL -> GL46C.GL_LEQUAL;
+				case GREATER_THAN -> GL46C.GL_LESS;
+				case NEVER_PASS -> 512;
+			};
+		} else {
+			return original.call(compareOp);
+		}
+	}
+
 	@Unique
 	private static GlRenderPass lastPass;
 
@@ -119,10 +143,11 @@ public class MixinGlCommandEncoder {
 		}
 
 		lastPass = glRenderPass;
+		if (Iris.isPackInUseQuick() || glRenderPass.iris$getCustomPass() != null) {
+			this.lastProgram = null;
+		}
 
 		if (glRenderPass.iris$getCustomPass() != null) {
-			this.lastProgram = null;
-
 			cir.cancel();
 
 			glRenderPass.iris$getCustomPass().setupState();
@@ -141,6 +166,9 @@ public class MixinGlCommandEncoder {
 			GlStateManager._disableCull();
 			GlStateManager._disableBlend(0);
 			GlStateManager._colorMask(15);
+		}
+		if (glRenderPass.pipeline.program() instanceof ExtendedShader shader) {
+			ImmediateState.usingTessellation = shader.usesTessellation();
 		}
 	}
 

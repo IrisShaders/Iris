@@ -75,6 +75,8 @@ public class VanillaTransformer {
 				} iris_globalInfo;
 				""".formatted(IrisBindings.GLOBALS));
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
+			CommonTransformer.patchIntegerAttribute(t, tree, root, "mc_Entity", "iris_Entity", parameters.inputs.getEntityComponents());
+
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
 			// See https://github.com/IrisShaders/Iris/issues/1149
 			root.rename("gl_MultiTexCoord2", "gl_MultiTexCoord1");
@@ -367,8 +369,8 @@ public class VanillaTransformer {
 		}
 		transform.append(")");
 		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", transform.toString());
-
-		root.rename("gl_ProjectionMatrix", "iris_ProjMat");
+		CommonTransformer.injectForwardZProjection(t, tree);
+		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix", "iris_undoRevZ(iris_ProjMat)");
 		CommonTransformer.addExplicitBindings(t, tree, root);
 	}
 }

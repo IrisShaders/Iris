@@ -238,6 +238,14 @@ public class IrisPipelines {
 		}
 	}
 
+	public static void assignPipelineShadow(RenderPipeline pipeline, ShaderKey programId) {
+		if (coreShaderMapShadow.containsKey(pipeline)) {
+			throw new IllegalStateException("Shadow shader already assigned: " + pipeline.getLocation() + ": " + programId);
+		} else {
+			coreShaderMapShadow.put(pipeline, p -> programId);
+		}
+	}
+
 	public static void copyPipeline(RenderPipeline pipelineToCopy, RenderPipeline returnValue) {
 		if (coreShaderMap.containsKey(pipelineToCopy)) {
 			coreShaderMap.put(returnValue, coreShaderMap.get(pipelineToCopy));
