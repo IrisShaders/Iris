@@ -37,6 +37,7 @@ bin/
 # fabric
 
 run/
+run-vulkan/
 /logs/latest.log
 
 # macOS

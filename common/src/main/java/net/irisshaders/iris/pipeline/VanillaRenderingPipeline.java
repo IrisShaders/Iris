@@ -1,6 +1,5 @@
 package net.irisshaders.iris.pipeline;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
@@ -16,13 +15,9 @@ import net.irisshaders.iris.shaderpack.properties.ParticleRenderingSettings;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import org.lwjgl.opengl.ARBClipControl;
-import org.lwjgl.opengl.GL;
 
-import java.util.List;
 import java.util.OptionalInt;
 
 public class VanillaRenderingPipeline implements WorldRenderingPipeline {
@@ -40,8 +35,6 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	@Override
 	public void beginLevelRendering() {
 
-		// Use the default Minecraft framebuffer and ensure that no programs are in use
-		GlStateManager._glUseProgram(0);
 	}
 
 	@Override

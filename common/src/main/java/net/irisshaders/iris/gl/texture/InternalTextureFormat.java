@@ -1,5 +1,6 @@
 package net.irisshaders.iris.gl.texture;
 
+import com.mojang.renderpearl.api.GpuFormat;
 import net.irisshaders.iris.gl.GlVersion;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
@@ -105,6 +106,40 @@ public enum InternalTextureFormat {
 		} catch (IllegalArgumentException e) {
 			return Optional.empty();
 		}
+	}
+
+	public GpuFormat toGpuFormat() {
+		return switch (this) {
+			case RGBA -> GpuFormat.RGBA8_UNORM;
+			case RGB10_A2 -> GpuFormat.RGB10A2_UNORM;
+			case RGB10_A2UI -> GpuFormat.RGB10A2_UINT;
+			case R11F_G11F_B10F -> GpuFormat.RG11B10_FLOAT;
+			case RGBA2, RGBA4, R3_G3_B2, RGB5_A1, RGB565, RGB9_E5 ->
+				throw new UnsupportedOperationException("RenderPearl cannot represent shader-pack format " + this);
+			default -> {
+				// Three-channel formats are not portable Vulkan color attachments.
+				String name = expectedPixelFormat == PixelFormat.RGB || expectedPixelFormat == PixelFormat.RGB_INTEGER
+					? name().replaceFirst("^RGB", "RGBA") : name();
+
+				if (name.endsWith("_SNORM")) {
+					yield GpuFormat.valueOf(name);
+				}
+
+				if (name.endsWith("UI")) {
+					yield GpuFormat.valueOf(name.substring(0, name.length() - 2) + "_UINT");
+				}
+
+				if (name.endsWith("I")) {
+					yield GpuFormat.valueOf(name.substring(0, name.length() - 1) + "_SINT");
+				}
+
+				if (name.endsWith("F")) {
+					yield GpuFormat.valueOf(name.substring(0, name.length() - 1) + "_FLOAT");
+				}
+
+				yield GpuFormat.valueOf(name + "_UNORM");
+			}
+		};
 	}
 
 	public int getGlFormat() {

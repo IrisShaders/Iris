@@ -32,6 +32,7 @@ public enum DepthBufferFormat {
 
 	public static DepthBufferFormat fromGlEnumOrDefault(int glenum) {
 		DepthBufferFormat format = fromGlEnum(glenum);
+
 		return Objects.requireNonNullElse(format, DepthBufferFormat.DEPTH32F);
 	}
 
@@ -61,6 +62,16 @@ public enum DepthBufferFormat {
 
 	public boolean isCombinedStencil() {
 		return combinedStencil;
+	}
+
+	public static DepthBufferFormat fromMojang(GpuFormat format) {
+		for (var depth : values()) {
+			if (depth.toMojang() == format) {
+				return depth;
+			}
+		}
+
+		throw new IllegalArgumentException("Unsupported depth format: " + format);
 	}
 
 	public GpuFormat toMojang() {

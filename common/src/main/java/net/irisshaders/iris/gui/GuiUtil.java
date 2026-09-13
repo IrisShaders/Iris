@@ -1,15 +1,9 @@
 package net.irisshaders.iris.gui;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.textures.AddressMode;
-import com.mojang.renderpearl.api.textures.FilterMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
@@ -42,7 +36,9 @@ public final class GuiUtil {
 	 * used for succeeding draw calls.
 	 */
 	public static void bindIrisWidgetsTexture() {
-		//RenderSystem.setShaderTexture(0, Minecraft.getInstance().getTextureManager().getTexture(IRIS_WIDGETS_TEX).getTextureView(), RenderSystem.getSamplerCache().getSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, FilterMode.NEAREST, FilterMode.NEAREST));
+		//RenderSystem.setShaderTexture(0, Minecraft.getInstance().getTextureManager().getTexture(IRIS_WIDGETS_TEX).getTextureView(),
+		// RenderSystem.getSamplerCache().getSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, FilterMode.NEAREST, FilterMode
+		// .NEAREST));
 	}
 
 	/**
@@ -56,7 +52,8 @@ public final class GuiUtil {
 	 * @param hovered  Whether the button is being hovered over with the mouse
 	 * @param disabled Whether the button should use the "disabled" texture
 	 */
-	public static void drawButton(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, boolean hovered, boolean disabled) {
+	public static void drawButton(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, boolean hovered,
+		boolean disabled) {
 		// Create variables for half of the width and height.
 		// Will not be exact when width and height are odd, but
 		// that case is handled within the draw calls.
@@ -69,11 +66,14 @@ public final class GuiUtil {
 		// Top left section
 		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x, y, 0, vOffset, halfWidth, halfHeight, 256, 256);
 		// Top right section
-		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x + halfWidth, y, 200 - (width - halfWidth), vOffset, width - halfWidth, halfHeight, 256, 256);
+		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x + halfWidth, y, 200 - (width - halfWidth), vOffset,
+			width - halfWidth, halfHeight, 256, 256);
 		// Bottom left section
-		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x, y + halfHeight, 0, vOffset + (20 - (height - halfHeight)), halfWidth, height - halfHeight, 256, 256);
+		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x, y + halfHeight, 0, vOffset + (20 - (height - halfHeight)),
+			halfWidth, height - halfHeight, 256, 256);
 		// Bottom right section
-		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x + halfWidth, y + halfHeight, 200 - (width - halfWidth), vOffset + (20 - (height - halfHeight)), width - halfWidth, height - halfHeight, 256, 256);
+		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, IRIS_WIDGETS_TEX, x + halfWidth, y + halfHeight, 200 - (width - halfWidth),
+			vOffset + (20 - (height - halfHeight)), width - halfWidth, height - halfHeight, 256, 256);
 	}
 
 	/**
@@ -126,8 +126,10 @@ public final class GuiUtil {
 	 */
 	public static MutableComponent shortenText(Font font, MutableComponent text, int width) {
 		if (font.width(text) > width) {
-			return Component.literal(font.plainSubstrByWidth(text.getString(), width - font.width(ELLIPSIS))).append(ELLIPSIS).setStyle(text.getStyle());
+			return Component.literal(font.plainSubstrByWidth(text.getString(), width - font.width(ELLIPSIS))).append(ELLIPSIS)
+				.setStyle(text.getStyle());
 		}
+
 		return text;
 	}
 
@@ -145,6 +147,7 @@ public final class GuiUtil {
 		if (Language.getInstance().has(translationDesc)) {
 			return Component.translatable(translationDesc, format);
 		}
+
 		return defaultText;
 	}
 

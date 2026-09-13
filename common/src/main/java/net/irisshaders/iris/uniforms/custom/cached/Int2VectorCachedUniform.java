@@ -5,7 +5,6 @@ import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.parsing.VectorType;
 import org.joml.Vector2i;
-import org.lwjgl.opengl.GL21;
 
 import java.util.function.Supplier;
 

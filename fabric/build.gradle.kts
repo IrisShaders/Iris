@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom") version("1.17.20")
+    id("net.fabricmc.fabric-loom") version ("1.17.20")
 }
 
 evaluationDependsOn(":common")
@@ -26,6 +26,10 @@ repositories {
         filter {
             includeGroup("maven.modrinth")
         }
+    }
+    maven {
+        name = "caffeinemcRepositoryReleases"
+        url = uri("https://maven.caffeinemc.net/releases")
     }
 }
 
@@ -65,7 +69,8 @@ dependencies {
     addRuntimeFabricModule("fabric-block-getter-api-v2")
     addRuntimeFabricModule("fabric-rendering-fluids-v1")
     addRuntimeFabricModule("fabric-resource-loader-v0")
-    addCompileFabricModule("fabric-lifecycle-events-v1")
+    addRuntimeFabricModule("fabric-lifecycle-events-v1")
+    addRuntimeFabricModule("fabric-renderer-api-v1")
     addCompileFabricModule("fabric-renderer-api-v1")
 
     implementation(SODIUM_DEPENDENCY_FABRIC)
@@ -90,8 +95,9 @@ tasks.named("test").configure {
 }
 
 loom {
-    if (project(":common").file("src/main/resources/iris.accesswidener").exists())
+    if (project(":common").file("src/main/resources/iris.accesswidener").exists()) {
         accessWidenerPath.set(project(":common").file("src/main/resources/iris.accesswidener"))
+    }
 
     @Suppress("UnstableApiUsage")
     mixin {
@@ -105,8 +111,9 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
-           // vmArgs("-Dmixin.debug.export=true")
-           // vmArg("-XX:+AllowEnhancedClassRedefinition")
+            environmentVariable("SDL_VIDEODRIVER", "x11")
+            // vmArgs("-Dmixin.debug.export=true")
+            // vmArg("-XX:+AllowEnhancedClassRedefinition")
         }
     }
 }

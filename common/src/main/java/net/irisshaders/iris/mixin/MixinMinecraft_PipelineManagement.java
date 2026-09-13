@@ -1,6 +1,9 @@
 package net.irisshaders.iris.mixin;
 
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.pathways.HandRenderer;
+import net.irisshaders.iris.samplers.IrisSamplers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -12,6 +15,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
 public class MixinMinecraft_PipelineManagement {
+	@Inject(method = "close", at = @At("HEAD"))
+	private void iris$closePipelines(CallbackInfo ci) {
+		Iris.getPipelineManager().destroyPipeline();
+		IrisRenderSystem.destroyRenderer();
+		HandRenderer.closeInstance();
+		IrisSamplers.closeTerrainSamplers();
+	}
+
 	/**
 	 * Should run before the Minecraft.level field is updated after disconnecting from a server or leaving a singleplayer world
 	 */

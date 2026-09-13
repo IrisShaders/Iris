@@ -1,15 +1,17 @@
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom") version("1.17.20")
+    id("net.fabricmc.fabric-loom") version ("1.17.20")
     id("com.github.gmazzo.buildconfig") version "5.3.5"
 }
 
 repositories {
     mavenLocal()
     maven("https://maven.parchmentmc.org/")
-    maven("https://maven.caffeinemc.net/releases")
-
+    maven {
+        name = "caffeinemcRepositoryReleases"
+        url = uri("https://maven.caffeinemc.net/releases")
+    }
     exclusiveContent {
         forRepository {
             maven {
@@ -26,7 +28,6 @@ repositories {
 val MINECRAFT_VERSION: String by rootProject.extra
 val PARCHMENT_VERSION: String? by rootProject.extra
 val FABRIC_LOADER_VERSION: String by rootProject.extra
-val SODIUM_DEPENDENCY_FABRIC: Any by rootProject.extra
 val SODIUM_DEPENDENCY_NEO: Any by rootProject.extra
 val FABRIC_API_VERSION: String by rootProject.extra
 
@@ -53,9 +54,11 @@ dependencies {
 
     implementation("net.fabricmc:fabric-loader:$FABRIC_LOADER_VERSION")
 
-    compileOnly("net.fabricmc.fabric-api:fabric-renderer-api-v1:3.2.9+1172e897d7")
+    compileOnly(fabricApi.module("fabric-resource-loader-v1", FABRIC_API_VERSION))
+    compileOnly(fabricApi.module("fabric-block-getter-api-v2", FABRIC_API_VERSION))
+    compileOnly(fabricApi.module("fabric-renderer-api-v1", FABRIC_API_VERSION))
 
-    implementation(SODIUM_DEPENDENCY_FABRIC)
+    implementation(SODIUM_DEPENDENCY_NEO)
     compileOnly("org.antlr:antlr4-runtime:4.13.1")
     compileOnly("io.github.douira:glsl-transformer:3.0.0-pre3")
     compileOnly("org.anarres:jcpp:1.4.14")
@@ -197,4 +200,51 @@ tasks {
 // This trick hides common tasks in the IDEA list.
 tasks.configureEach {
     group = null
+}
+
+val vulkanTest = sourceSets.create("vulkanTest") {
+    compileClasspath += sourceSets["main"].compileClasspath + sourceSets["main"].output
+    runtimeClasspath += compileClasspath
+}
+
+tasks.register<JavaExec>("validateVulkanConformance") {
+    description = "Checks Vulkan shader lowering with glslangValidator and spirv-val, and verifies UBO data."
+    dependsOn(vulkanTest.classesTaskName)
+    classpath = vulkanTest.runtimeClasspath
+    mainClass.set("net.irisshaders.iris.pipeline.transform.transformer.VulkanConformanceTest")
+    args(layout.buildDirectory.dir("vulkan-conformance").get().asFile.absolutePath)
+}
+
+tasks.register<JavaExec>("validateVulkanHeapGpu") {
+    description = "Renders the sampler heap fixtures offscreen with Vulkan validation enabled."
+    dependsOn("validateVulkanConformance")
+    classpath = vulkanTest.runtimeClasspath + sourceSets["main"].runtimeClasspath
+    mainClass.set("net.irisshaders.iris.pipeline.transform.transformer.VulkanHeapGpuTest")
+    args(
+        layout.buildDirectory.dir("vulkan-conformance").get().asFile.absolutePath,
+        providers.gradleProperty("iris.vulkanTestDevice").getOrElse("0")
+    )
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
+tasks.register<JavaExec>("validateVulkanRenderTargets") {
+    description = "Validates Iris render targets and UBOs through Minecraft's Vulkan encoder."
+    dependsOn(vulkanTest.classesTaskName)
+    classpath = vulkanTest.runtimeClasspath + sourceSets["main"].runtimeClasspath
+    mainClass.set("com.mojang.renderpearl.backend.vulkan.IrisRenderTargetGpuTest")
+    environment("VK_VALIDATION_VALIDATE_SYNC", "1")
+    args(providers.gradleProperty("iris.vulkanTestDevice").getOrElse("0"))
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
+tasks.register<JavaExec>("validateVulkanPackShaders") {
+    description = "Lowers and validates a real Iris patched_shaders export for Vulkan."
+    dependsOn(vulkanTest.classesTaskName)
+    classpath = vulkanTest.runtimeClasspath + sourceSets["main"].runtimeClasspath
+    mainClass.set("net.irisshaders.iris.pipeline.transform.transformer.VulkanPackShaderTest")
+    args(
+        providers.gradleProperty("iris.vulkanShaderExport").getOrElse(rootDir.resolve("fabric/run/patched_shaders").absolutePath),
+        layout.buildDirectory.dir("vulkan-pack-shaders").get().asFile.absolutePath
+    )
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }

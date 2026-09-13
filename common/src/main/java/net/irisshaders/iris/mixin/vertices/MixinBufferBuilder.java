@@ -39,17 +39,11 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	@Unique
 	private static final int IRIS$UNKNOWN_OFFSET = -1;
 	@Unique
-	private static final int IRIS$NORMAL_SEMANTIC_ID = 5;
-	@Unique
-	private static final int IRIS$NORMAL_MASK = 1 << IRIS$NORMAL_SEMANTIC_ID;
-	@Unique
 	private final BufferBuilderPolygonView polygon = new BufferBuilderPolygonView();
 	@Unique
 	private final Vector3f normal = new Vector3f();
 	@Unique
 	private final long[] vertexOffsets = new long[4];
-	@Shadow
-	private int elementsToFill;
 	@Unique
 	private boolean skipEndVertexOnce;
 	@Shadow
@@ -181,7 +175,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 			return;
 		}
 
-		if (injectNormalAndUV1 && (this.elementsToFill & IRIS$NORMAL_MASK) != 0) {
+		if (injectNormalAndUV1) {
 			this.setNormal(0, 1, 0);
 		}
 

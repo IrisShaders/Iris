@@ -2,6 +2,8 @@ package net.irisshaders.iris.vertices;
 
 import net.minecraft.util.Mth;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
+import org.joml.Vector4fc;
 
 /**
  * Provides some utilities for working with packed normal vectors. Each normal component provides 8 bits of
@@ -108,5 +110,9 @@ public class NormI8 {
 	 */
 	public static float unpackW(int norm) {
 		return ((byte) ((norm >> W_COMPONENT_OFFSET) & 0xFF)) * NORM;
+	}
+
+	public static Vector4fc unpack4(int defaultValue) {
+		return new Vector4f(unpackX(defaultValue), unpackY(defaultValue), unpackZ(defaultValue), unpackW(defaultValue));
 	}
 }

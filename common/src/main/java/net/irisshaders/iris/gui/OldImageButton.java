@@ -1,11 +1,8 @@
 package net.irisshaders.iris.gui;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -51,7 +48,8 @@ public class OldImageButton extends Button {
 		int pInt9,
 		Button.OnPress pButton$OnPress10
 	) {
-		this(pImageButton0, pInt1, pInt2, pInt3, pInt4, pInt5, pInt6, pIdentifier7, pInt8, pInt9, pButton$OnPress10, CommonComponents.EMPTY);
+		this(pImageButton0, pInt1, pInt2, pInt3, pInt4, pInt5, pInt6, pIdentifier7, pInt8, pInt9, pButton$OnPress10,
+			CommonComponents.EMPTY);
 	}
 
 	public OldImageButton(
@@ -108,13 +106,15 @@ public class OldImageButton extends Button {
 		int pInt10
 	) {
 		int lvInt12 = pInt5;
+
 		if (!this.isActive()) {
 			lvInt12 = pInt5 + pInt6 * 2;
 		} else if (this.isHoveredOrFocused()) {
 			lvInt12 = pInt5 + pInt6;
 		}
 
-		GlStateManager._enableDepthTest();
-		pAbstractWidget0.blit(RenderPipelines.GUI_TEXTURED, pIdentifier1, pInt2, pInt3, (float) pInt4, (float) lvInt12, pInt7, pInt8, pInt9, pInt10);
+		pAbstractWidget0.blit(RenderPipelines.GUI_TEXTURED, pIdentifier1, pInt2, pInt3, (float) pInt4, (float) lvInt12, pInt7, pInt8,
+			pInt9,
+			pInt10);
 	}
 }

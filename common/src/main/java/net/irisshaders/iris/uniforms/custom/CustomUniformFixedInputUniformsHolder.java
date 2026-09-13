@@ -11,6 +11,7 @@ import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.uniforms.custom.cached.BooleanCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Float2VectorCachedUniform;
+import net.irisshaders.iris.uniforms.custom.cached.Float3MatrixCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Float3VectorCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Float4MatrixCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Float4VectorCachedUniform;
@@ -18,6 +19,7 @@ import net.irisshaders.iris.uniforms.custom.cached.FloatCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Int2VectorCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.Int3VectorCachedUniform;
 import net.irisshaders.iris.uniforms.custom.cached.IntCachedUniform;
+import org.joml.Matrix3fc;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
@@ -168,6 +170,12 @@ public class CustomUniformFixedInputUniformsHolder {
 		public UniformHolder uniformMatrix(
 			UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4fc> value) {
 			return this.put(name, new Float4MatrixCachedUniform(name, updateFrequency, value));
+		}
+
+		@Override
+		public UniformHolder uniformMatrix3(
+			UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix3fc> value) {
+			return this.put(name, new Float3MatrixCachedUniform(name, updateFrequency, value));
 		}
 
 		@Override

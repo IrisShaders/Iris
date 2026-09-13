@@ -1,7 +1,6 @@
 package net.irisshaders.iris.targets;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;
@@ -18,12 +17,11 @@ import java.util.Map;
 
 public class ClearPassCreator {
 	public static ImmutableList<ClearPass> createClearPasses(RenderTargets renderTargets, boolean fullClear,
-															 PackRenderTargetDirectives renderTargetDirectives) {
-		final int maxDrawBuffers = GlStateManager._getInteger(GL21C.GL_MAX_DRAW_BUFFERS);
+		PackRenderTargetDirectives renderTargetDirectives) {
+		final int maxDrawBuffers = renderTargets.maxDrawBuffers();
 
 		// Sort buffers by their clear color so we can group up glClear calls.
 		Map<Vector2i, Map<ClearPassInformation, IntList>> clearByColor = new HashMap<>();
-
 		renderTargetDirectives.getRenderTargetSettings().forEach((bufferI, settings) -> {
 			// unboxed
 			final int buffer = bufferI;
@@ -43,14 +41,19 @@ public class ClearPassCreator {
 				}
 
 				RenderTarget target = renderTargets.get(buffer);
-				if (target == null) return;
+
+				if (target == null) {
+					return;
+				}
+
 				Vector4f clearColor = settings.getClearColor().orElse(defaultClearColor);
-				clearByColor.computeIfAbsent(new Vector2i(target.getWidth(), target.getHeight()), size -> new HashMap<>()).computeIfAbsent(new ClearPassInformation(clearColor, target.getWidth(), target.getHeight()), color -> new IntArrayList()).add(buffer);
+				clearByColor.computeIfAbsent(new Vector2i(target.getWidth(), target.getHeight()), size -> new HashMap<>())
+					.computeIfAbsent(new ClearPassInformation(clearColor, target.getWidth(), target.getHeight()),
+						color -> new IntArrayList()).add(buffer);
 			}
 		});
 
 		List<ClearPass> clearPasses = new ArrayList<>();
-
 		clearByColor.forEach((passSize, vector4fIntListMap) -> vector4fIntListMap.forEach((clearInfo, buffers) -> {
 			int startIndex = 0;
 
@@ -78,12 +81,12 @@ public class ClearPassCreator {
 	}
 
 	public static ImmutableList<ClearPass> createShadowClearPasses(ShadowRenderTargets renderTargets, boolean fullClear,
-																   PackShadowDirectives renderTargetDirectives) {
+		PackShadowDirectives renderTargetDirectives) {
 		if (renderTargets == null) {
 			return ImmutableList.of();
 		}
 
-		final int maxDrawBuffers = GlStateManager._getInteger(GL21C.GL_MAX_DRAW_BUFFERS);
+		final int maxDrawBuffers = renderTargets.maxDrawBuffers();
 
 		// Sort buffers by their clear color so we can group up glClear calls.
 		Map<Vector4f, IntList> clearByColor = new HashMap<>();

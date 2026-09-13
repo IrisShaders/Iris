@@ -1,9 +1,13 @@
 package net.irisshaders.iris.pathways.colorspace;
 
-import com.mojang.renderpearl.backend.opengl.GlTexture;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 
-public interface ColorSpaceConverter {
+public interface ColorSpaceConverter extends AutoCloseable {
+	@Override
+	default void close() {
+	}
+
 	void rebuildProgram(int width, int height, ColorSpace colorSpace);
 
-	void process(GlTexture target);
+	void process(GpuTextureView target);
 }

@@ -1,15 +1,8 @@
 package net.irisshaders.iris.pbr.texture;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
-import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntSet;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
-import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.pbr.TextureTracker;
 import net.irisshaders.iris.pbr.loader.PBRTextureLoader;
 import net.irisshaders.iris.pbr.loader.PBRTextureLoader.PBRTextureConsumer;
@@ -23,6 +16,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class PBRTextureManager {
 	public static final PBRTextureManager INSTANCE = new PBRTextureManager();
@@ -31,14 +29,14 @@ public class PBRTextureManager {
 	private static Runnable normalTextureChangeListener;
 	private static Runnable specularTextureChangeListener;
 
-	private final IntSet toLoadNextFrame = new IntArraySet();
+	private final Set<GpuTexture> toLoadNextFrame = Collections.newSetFromMap(new IdentityHashMap<>());
 
 	static {
 		StateUpdateNotifiers.normalTextureChangeNotifier = listener -> normalTextureChangeListener = listener;
 		StateUpdateNotifiers.specularTextureChangeNotifier = listener -> specularTextureChangeListener = listener;
 	}
 
-	private final Int2ObjectMap<PBRTextureHolder> holders = new Int2ObjectOpenHashMap<>();
+	private final Map<GpuTexture, PBRTextureHolder> holders = new IdentityHashMap<>();
 	private final PBRTextureConsumerImpl consumer = new PBRTextureConsumerImpl();
 
 	private NativeImageBackedSingleColorTexture defaultNormalTexture;
@@ -77,13 +75,21 @@ public class PBRTextureManager {
 
 	public void onNewFrame() {
 		if (!toLoadNextFrame.isEmpty()) {
-			var it = toLoadNextFrame.iterator();
+			var pending = List.copyOf(toLoadNextFrame);
+			toLoadNextFrame.clear();
+
+			var it = pending.iterator();
+
 			while (it.hasNext()) {
-				int id = it.nextInt();
+				GpuTexture id = it.next();
+
+				if (id.isClosed()) {
+					continue;
+				}
+
 				PBRTextureHolder holder = loadHolder(id);
 				holders.put(id, holder);
 			}
-			toLoadNextFrame.clear();
 		}
 	}
 
@@ -102,50 +108,61 @@ public class PBRTextureManager {
 		defaultSpecularTexture = new NativeImageBackedSingleColorTexture(PBRType.SPECULAR.getDefaultValue());
 	}
 
-	public PBRTextureHolder getHolder(int id) {
+	public PBRTextureHolder getHolder(GpuTexture id) {
 		PBRTextureHolder holder = holders.get(id);
+
 		if (holder == null) {
 			return defaultHolder;
 		}
+
 		return holder;
 	}
 
 	/**
 	 * will return next frame if there isn't any!
 	 */
-	public PBRTextureHolder getOrLoadHolder(int id) {
+	public PBRTextureHolder getOrLoadHolder(GpuTexture id) {
 		PBRTextureHolder holder = holders.get(id);
+
 		if (holder == null) {
 			toLoadNextFrame.add(id);
+
 			return defaultHolder;
 		}
+
 		return holder;
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private PBRTextureHolder loadHolder(int id) {
+	private PBRTextureHolder loadHolder(GpuTexture id) {
 		AbstractTexture texture = TextureTracker.INSTANCE.getTexture(id);
+
 		if (texture != null) {
 			Class<? extends AbstractTexture> clazz = texture.getClass();
 			PBRTextureLoader loader = PBRTextureLoaderRegistry.INSTANCE.getLoader(clazz);
+
 			if (loader != null) {
-				int previousTextureBinding = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 				consumer.clear();
+
 				try {
 					loader.load(texture, Minecraft.getInstance().getResourceManager(), consumer);
+
 					return consumer.toHolder();
 				} catch (Exception e) {
 					Iris.logger.warn("Failed to load PBR textures for texture " + id, e);
-				} finally {
-					GlStateManager._bindTexture(previousTextureBinding);
+
 				}
 			}
 		}
+
 		return defaultHolder;
 	}
 
-	public void onDeleteTexture(int id) {
+	public void onDeleteTexture(GpuTexture id) {
+		toLoadNextFrame.remove(id);
+
 		PBRTextureHolder holder = holders.remove(id);
+
 		if (holder != null) {
 			closeHolder(holder);
 		}
@@ -162,20 +179,28 @@ public class PBRTextureManager {
 	private void dumpHolder(PBRTextureHolder holder, Path path) {
 		AbstractTexture normalTexture = holder.normalTexture();
 		AbstractTexture specularTexture = holder.specularTexture();
+
 		if (normalTexture != defaultNormalTexture && normalTexture instanceof PBRDumpable dumpable) {
 			dumpTexture(dumpable, dumpable.getDefaultDumpLocation(), path);
 		}
+
 		if (specularTexture != defaultSpecularTexture && specularTexture instanceof PBRDumpable dumpable) {
 			dumpTexture(dumpable, dumpable.getDefaultDumpLocation(), path);
 		}
 	}
 
 	public void clear() {
-		for (PBRTextureHolder holder : holders.values()) {
+		toLoadNextFrame.clear();
+
+		var previous = List.copyOf(holders.values());
+		holders.clear();
+
+		for (PBRTextureHolder holder : previous) {
 			if (holder != defaultHolder) {
 				closeHolder(holder);
 			}
 		}
+
 		holders.clear();
 	}
 
@@ -188,16 +213,18 @@ public class PBRTextureManager {
 	private void closeHolder(PBRTextureHolder holder) {
 		AbstractTexture normalTexture = holder.normalTexture();
 		AbstractTexture specularTexture = holder.specularTexture();
+
 		if (normalTexture != defaultNormalTexture) {
 			closeTexture(normalTexture);
 		}
+
 		if (specularTexture != defaultSpecularTexture) {
 			closeTexture(specularTexture);
 		}
 	}
 
 	private record PBRTextureHolderImpl(AbstractTexture normalTexture,
-										AbstractTexture specularTexture) implements PBRTextureHolder {
+		AbstractTexture specularTexture) implements PBRTextureHolder {
 		@Override
 		public @NotNull AbstractTexture normalTexture() {
 			return normalTexture;

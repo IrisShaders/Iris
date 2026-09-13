@@ -1,20 +1,29 @@
 package net.irisshaders.iris.gl.sampler;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import net.irisshaders.iris.gl.IrisRenderSystem;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL45C;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.irisshaders.iris.vulkan.VulkanCommandBridge;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.vulkan.VK10;
+import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
 
-public class SamplerLimits {
+public final class SamplerLimits {
 	private static SamplerLimits instance;
 	private final int maxTextureUnits;
 	private final int maxDrawBuffers;
 	private final int maxShaderStorageUnits;
 
 	private SamplerLimits() {
-		this.maxTextureUnits = GlStateManager._getInteger(GL20C.GL_MAX_TEXTURE_IMAGE_UNITS);
-		this.maxDrawBuffers = GlStateManager._getInteger(GL20C.GL_MAX_DRAW_BUFFERS);
-		this.maxShaderStorageUnits = IrisRenderSystem.supportsSSBO() ? GlStateManager._getInteger(GL45C.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS) : 0;
+		var device = VulkanCommandBridge.device(RenderSystem.getDevice());
+
+		try (var stack = MemoryStack.stackPush()) {
+			var properties = VkPhysicalDeviceProperties.calloc(stack);
+			VK10.vkGetPhysicalDeviceProperties(device.vkDevice().getPhysicalDevice(), properties);
+
+			var limits = properties.limits();
+			maxTextureUnits = Math.min(limits.maxPerStageDescriptorSamplers(), limits.maxPerStageDescriptorSampledImages());
+			maxDrawBuffers = limits.maxColorAttachments();
+			maxShaderStorageUnits = limits.maxPerStageDescriptorStorageBuffers();
+		}
 	}
 
 	public static SamplerLimits get() {

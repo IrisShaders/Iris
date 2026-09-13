@@ -2,14 +2,11 @@ package net.irisshaders.iris.targets.backed;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL13C;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -22,18 +19,6 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 
 	public NativeImageBackedCustomTexture(CustomTextureData.PngData textureData) throws IOException {
 		super(() -> "PNG Texture", create(textureData.getContent()));
-
-		// By default, images are unblurred and not clamped.
-
-		if (textureData.getFilteringData().shouldBlur()) {
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
-		}
-
-		if (textureData.getFilteringData().shouldClamp()) {
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-			IrisRenderSystem.texParameteri(getId(), GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
-		}
 
 		this.shouldBlur = textureData.getFilteringData().shouldBlur();
 		this.shouldClamp = textureData.getFilteringData().shouldClamp();
@@ -54,7 +39,6 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 	@Override
 	public void upload() {
 		NativeImage image = Objects.requireNonNull(getPixels());
-
 		RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, image);
 	}
 

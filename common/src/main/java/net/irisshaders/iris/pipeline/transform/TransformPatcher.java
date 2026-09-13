@@ -9,6 +9,7 @@ import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.query.RootSupplier;
 import io.github.douira.glsl_transformer.ast.transform.EnumASTTransformer;
+import io.github.douira.glsl_transformer.ast.transform.SingleASTTransformer;
 import io.github.douira.glsl_transformer.ast.transform.TransformationException;
 import io.github.douira.glsl_transformer.parser.ParsingException;
 import io.github.douira.glsl_transformer.token_filter.ChannelFilter;
@@ -20,6 +21,7 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.IrisLimits;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
+import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.helpers.Tri;
@@ -35,12 +37,14 @@ import net.irisshaders.iris.pipeline.transform.transformer.CompositeCoreTransfor
 import net.irisshaders.iris.pipeline.transform.transformer.CompositeTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DHGenericTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DHTerrainTransformer;
+import net.irisshaders.iris.pipeline.transform.transformer.DepthTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumCoreTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.TextureTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.VanillaCoreTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.VanillaTransformer;
+import net.irisshaders.iris.pipeline.transform.vulkan.VulkanResourceTransformer;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import org.antlr.v4.runtime.Token;
 import org.apache.logging.log4j.LogManager;
@@ -50,6 +54,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -79,6 +84,7 @@ public class TransformPatcher {
 				throw new IllegalArgumentException("Unparsed preprocessor directives such as '" + token.getText()
 					+ "' may not be present at this stage of shader processing!");
 			}
+
 			return true;
 		}
 	};
@@ -101,10 +107,12 @@ public class TransformPatcher {
 				// parse #version directive using an efficient regex before parsing so that the
 				// parser can be set to the correct version
 				Matcher matcher = versionPattern.matcher(input);
+
 				if (!matcher.find()) {
 					throw new IllegalArgumentException(
 						"No #version directive found in source code! See debugging.md for more information.");
 				}
+
 				transformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
 
 				return super.parseTranslationUnit(rootInstance, input);
@@ -113,12 +121,15 @@ public class TransformPatcher {
 		transformer.setTransformation((trees, parameters) -> {
 			for (PatchShaderType type : PatchShaderType.values()) {
 				TranslationUnit tree = trees.get(type);
+
 				if (tree == null) {
 					continue;
 				}
+
 				tree.outputOptions.enablePrintInfo();
 
 				parameters.type = type;
+
 				Root root = tree.getRoot();
 
 				// check for illegal references to internal Iris shader interfaces
@@ -127,18 +138,23 @@ public class TransformPatcher {
 					.findAny()
 					.ifPresent(id -> {
 						throw new IllegalArgumentException(
-							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and moj_import). This isn't currently supported. Violation: "
+							"Detected a potential reference to unstable and internal Iris shader interfaces (iris_, irisMain and " +
+								"moj_import). This isn't currently supported. Violation: "
 								+ id.getName() + ". See debugging.md for more information.");
 					});
 
 				root.indexBuildSession(() -> {
 					VersionStatement versionStatement = tree.getVersionStatement();
+
 					if (versionStatement == null) {
 						throw new IllegalStateException("Missing the version statement!");
 					}
+
 					Profile profile = versionStatement.profile;
 					Version version = versionStatement.version;
-					if (Objects.requireNonNull(parameters.patch) == Patch.COMPUTE) {// we can assume the version is at least 400 because it's a compute shader
+
+					if (Objects.requireNonNull(parameters.patch) ==
+						Patch.COMPUTE) {// we can assume the version is at least 400 because it's a compute shader
 						versionStatement.profile = Profile.CORE;
 						CommonTransformer.transform(transformer, tree, root, parameters, true);
 					} else {// handling of Optifine's special core profile mode
@@ -173,6 +189,7 @@ public class TransformPatcher {
 							if (version.number < 330) {
 								versionStatement.version = Version.GLSL33;
 							}
+
 							versionStatement.profile = Profile.CORE;
 
 							switch (parameters.patch) {
@@ -197,6 +214,7 @@ public class TransformPatcher {
 							}
 						}
 					}
+
 					TextureTransformer.transform(transformer, tree, root,
 						parameters.getTextureStage(), parameters.getTextureMap());
 					CommonTransformer.transformDepth(transformer, tree, root, parameters);
@@ -209,7 +227,9 @@ public class TransformPatcher {
 
 			if (IrisLimits.VK_CONFORMANCE) {
 				LayoutTransformer.transformGrouped(transformer, trees, parameters);
+				VulkanResourceTransformer.transform(transformer, trees);
 			}
+
 			CommonTransformer.transformDepthPosition(transformer, trees, parameters);
 		});
 		transformer.setTokenFilter(parseTokenFilter);
@@ -222,16 +242,19 @@ public class TransformPatcher {
 		try {
 			// set shader name
 			parameters.name = name;
+
 			return transformer.transform(inputs, parameters);
 		} catch (TransformationException | ParsingException | IllegalStateException | IllegalArgumentException e) {
 			// print the offending programs and rethrow to stop the loading process
 			ShaderPrinter.printProgram("errored_" + name).addSources(inputs).print();
+
 			throw new ShaderCompileException(name, e);
 		}
 	}
 
-	private static Map<PatchShaderType, String> transform(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,
-														  Parameters parameters) {
+	private static Map<PatchShaderType, String> transform(String name, String vertex, String geometry, String tessControl, String tessEval,
+		String fragment,
+		Parameters parameters) {
 		// stop if all are null
 		if (vertex == null && geometry == null && tessControl == null && tessEval == null && fragment == null) {
 			return null;
@@ -240,8 +263,10 @@ public class TransformPatcher {
 		// check if this has been cached
 		CacheKey key;
 		Map<PatchShaderType, String> result = null;
+
 		if (useCache) {
 			key = new CacheKey(parameters, name, vertex, geometry, tessControl, tessEval, fragment);
+
 			if (cache.containsKey(key)) {
 				result = cache.get(key);
 			}
@@ -250,6 +275,7 @@ public class TransformPatcher {
 		// if there is no cache result, transform the shaders
 		if (result == null) {
 			transformer.setPrintType(Iris.getIrisConfig().areDebugOptionsEnabled() ? PrintType.INDENTED : PrintType.SIMPLE);
+
 			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
 			inputs.put(PatchShaderType.VERTEX, vertex);
 			inputs.put(PatchShaderType.GEOMETRY, geometry);
@@ -258,10 +284,12 @@ public class TransformPatcher {
 			inputs.put(PatchShaderType.FRAGMENT, fragment);
 
 			result = transformInternal(name, inputs, parameters);
+
 			if (useCache) {
 				cache.put(key, result);
 			}
 		}
+
 		return result;
 	}
 
@@ -274,8 +302,10 @@ public class TransformPatcher {
 		// check if this has been cached
 		CacheKey key;
 		Map<PatchShaderType, String> result = null;
+
 		if (useCache) {
 			key = new CacheKey(parameters, name, compute);
+
 			if (cache.containsKey(key)) {
 				result = cache.get(key);
 			}
@@ -284,15 +314,42 @@ public class TransformPatcher {
 		// if there is no cache result, transform the shaders
 		if (result == null) {
 			transformer.setPrintType(Iris.getIrisConfig().areDebugOptionsEnabled() ? PrintType.INDENTED : PrintType.SIMPLE);
+
 			EnumMap<PatchShaderType, String> inputs = new EnumMap<>(PatchShaderType.class);
 			inputs.put(PatchShaderType.COMPUTE, compute);
 
 			result = transformInternal(name, inputs, parameters);
+
 			if (useCache) {
 				cache.put(key, result);
 			}
 		}
+
 		return result;
+	}
+
+	public static String patchDepth(String input, ShaderType type) {
+		if (input == null) {
+			return null;
+		}
+
+		Matcher matcher = versionPattern.matcher(input);
+		if (!matcher.find()) {
+			throw new IllegalArgumentException("No #version directive found in source code!");
+		}
+
+		PatchShaderType patchType = PatchShaderType.fromGlShaderType(type)[0];
+		boolean zZeroToOne = RenderSystem.getDevice().getDeviceInfo().isZZeroToOne();
+		SingleASTTransformer<Parameters> depthTransformer = new SingleASTTransformer<>();
+		depthTransformer.setRootSupplier(RootSupplier.PREFIX_UNORDERED_ED_EXACT);
+		depthTransformer.setTokenFilter(parseTokenFilter);
+		depthTransformer.setPrintType(PrintType.SIMPLE);
+		depthTransformer.getLexer().version = Version.fromNumber(Integer.parseInt(matcher.group(1)));
+		depthTransformer.setTransformation((tree, root) -> root.indexBuildSession(() -> {
+			DepthTransformer.transform(depthTransformer, tree, root, patchType, false, zZeroToOne);
+			DepthTransformer.transformPosition(depthTransformer, Map.of(patchType, tree), zZeroToOne, false);
+		}));
+		return depthTransformer.transform(input);
 	}
 
 	public static Map<PatchShaderType, String> patchVanilla(
@@ -300,48 +357,48 @@ public class TransformPatcher {
 		AlphaTest alpha, boolean isLines, boolean isClouds,
 		boolean hasChunkOffset,
 		ShaderAttributeInputs inputs,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, isClouds, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
+			new VanillaParameters(Patch.VANILLA, textureMap, textureOverrides, alpha, isLines, isClouds, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
 	}
 
 
 	public static Map<PatchShaderType, String> patchDHTerrain(
 		String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new DHParameters(Patch.DH_TERRAIN, textureMap));
+			new DHParameters(Patch.DH_TERRAIN, textureMap, textureOverrides));
 	}
 
 
 	public static Map<PatchShaderType, String> patchDHGeneric(
 		String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new DHParameters(Patch.DH_GENERIC, textureMap));
+			new DHParameters(Patch.DH_GENERIC, textureMap, textureOverrides));
 
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,
 														   AlphaTest alpha,
-														   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+														   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides,
 														   boolean shadow) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new SodiumParameters(Patch.SODIUM, textureMap, alpha, shadow));
+			new SodiumParameters(Patch.SODIUM, textureMap, textureOverrides, alpha, shadow));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(
 		String name, String vertex, String geometry, String fragment,
 		TextureStage stage,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(name, vertex, geometry, null, null, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap));
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
+		return transform(name, vertex, geometry, null, null, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap, textureOverrides));
 	}
 
 	public static String patchCompute(
 		String name, String compute,
 		TextureStage stage,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transformCompute(name, compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap))
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
+		return transformCompute(name, compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap, textureOverrides))
 			.getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 
@@ -356,7 +413,8 @@ public class TransformPatcher {
 		final String fragment;
 		final String compute;
 
-		public CacheKey(Parameters parameters, String name, String vertex, String geometry, String tessControl, String tessEval, String fragment) {
+		public CacheKey(Parameters parameters, String name, String vertex, String geometry, String tessControl, String tessEval,
+			String fragment) {
 			this.parameters = parameters;
 			this.shadow = CommonTransformer.isShadowPass(parameters, name);
 			this.vertex = vertex;
@@ -391,53 +449,83 @@ public class TransformPatcher {
 			result = prime * result + ((tessEval == null) ? 0 : tessEval.hashCode());
 			result = prime * result + ((fragment == null) ? 0 : fragment.hashCode());
 			result = prime * result + ((compute == null) ? 0 : compute.hashCode());
+
 			return result;
 		}
 
 		@Override
 		public boolean equals(Object obj) {
-			if (this == obj)
+			if (this == obj) {
 				return true;
-			if (obj == null)
+			}
+
+			if (obj == null) {
 				return false;
-			if (getClass() != obj.getClass())
+			}
+
+			if (getClass() != obj.getClass()) {
 				return false;
+			}
+
 			CacheKey other = (CacheKey) obj;
-			if (zZeroToOne != other.zZeroToOne || shadow != other.shadow)
+
+			if (zZeroToOne != other.zZeroToOne || shadow != other.shadow) {
 				return false;
+			}
+
 			if (parameters == null) {
-				if (other.parameters != null)
+				if (other.parameters != null) {
 					return false;
-			} else if (!parameters.equals(other.parameters))
+				}
+			} else if (!parameters.equals(other.parameters)) {
 				return false;
+			}
+
 			if (vertex == null) {
-				if (other.vertex != null)
+				if (other.vertex != null) {
 					return false;
-			} else if (!vertex.equals(other.vertex))
+				}
+			} else if (!vertex.equals(other.vertex)) {
 				return false;
+			}
+
 			if (geometry == null) {
-				if (other.geometry != null)
+				if (other.geometry != null) {
 					return false;
-			} else if (!geometry.equals(other.geometry))
+				}
+			} else if (!geometry.equals(other.geometry)) {
 				return false;
+			}
+
 			if (tessControl == null) {
-				if (other.tessControl != null)
+				if (other.tessControl != null) {
 					return false;
-			} else if (!tessControl.equals(other.tessControl))
+				}
+			} else if (!tessControl.equals(other.tessControl)) {
 				return false;
+			}
+
 			if (tessEval == null) {
-				if (other.tessEval != null)
+				if (other.tessEval != null) {
 					return false;
-			} else if (!tessEval.equals(other.tessEval))
+				}
+			} else if (!tessEval.equals(other.tessEval)) {
 				return false;
+			}
+
 			if (fragment == null) {
-				if (other.fragment != null)
+				if (other.fragment != null) {
 					return false;
-			} else if (!fragment.equals(other.fragment))
+				}
+			} else if (!fragment.equals(other.fragment)) {
 				return false;
+			}
+
 			if (compute == null) {
 				return other.compute == null;
-			} else return compute.equals(other.compute);
+			} else {
+				return compute.equals(other.compute);
+			}
 		}
 	}
 }

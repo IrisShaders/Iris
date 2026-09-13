@@ -21,16 +21,17 @@ import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.parsing.IrisFunctions;
 import net.irisshaders.iris.parsing.IrisOptions;
 import net.irisshaders.iris.parsing.VectorType;
+import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
 import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
 
 public class CustomUniforms implements FunctionContext {
 	private final Map<String, CachedUniform> variables = new Object2ObjectLinkedOpenHashMap<>();
@@ -39,18 +40,26 @@ public class CustomUniforms implements FunctionContext {
 	private final List<CachedUniform> uniformOrder;
 	private final Map<Object, Object2IntMap<CachedUniform>> locationMap = new Object2ObjectOpenHashMap<>();
 	private final Map<CachedUniform, List<CachedUniform>> dependsOn;
+	private final Map<BufferUniformHolder, Set<CachedUniform>> bufferBindings = new IdentityHashMap<>();
 
 	private CustomUniforms(CustomUniformFixedInputUniformsHolder inputHolder, Map<String, Builder.Variable> variables) {
 		this.inputHolder = inputHolder;
+
 		ExpressionResolver resolver = new ExpressionResolver(
 			IrisFunctions.functions,
 			(name) -> {
 				Type type = this.inputHolder.getType(name);
-				if (type != null)
+
+				if (type != null) {
 					return type;
+				}
+
 				Builder.Variable variable = variables.get(name);
-				if (variable != null)
+
+				if (variable != null) {
 					return variable.type;
+				}
+
 				return null;
 			},
 			true);
@@ -61,6 +70,7 @@ public class CustomUniforms implements FunctionContext {
 				CachedUniform cachedUniform = CachedUniform
 					.forExpression(variable.name, variable.type, expression, this);
 				this.addVariable(expression, cachedUniform);
+
 				if (variable.uniform) {
 					List<CachedUniform> uniforms = new ArrayList<>();
 					uniforms.add(cachedUniform);
@@ -77,6 +87,7 @@ public class CustomUniforms implements FunctionContext {
 			// toposort
 
 			this.dependsOn = new Object2ObjectOpenHashMap<>();
+
 			Map<CachedUniform, List<CachedUniform>> requiredBy = new Object2ObjectOpenHashMap<>();
 			Object2IntMap<CachedUniform> dependsOnCount = new Object2IntOpenHashMap<>();
 
@@ -96,6 +107,7 @@ public class CustomUniforms implements FunctionContext {
 				requires.clear();
 
 				entry.getValue().listVariables(requires);
+
 				if (requires.isEmpty()) {
 					continue;
 				}
@@ -103,8 +115,10 @@ public class CustomUniforms implements FunctionContext {
 				CachedUniform uniform = this.variables.get(entry.getKey());
 
 				List<CachedUniform> dependencies = new ArrayList<>();
+
 				for (VariableExpression v : requires) {
 					Expression evaluated = v.partialEval(this, functionReturn);
+
 					if (evaluated instanceof CachedUniform) {
 						dependencies.add((CachedUniform) evaluated);
 					} else {
@@ -139,6 +153,7 @@ public class CustomUniforms implements FunctionContext {
 
 			while (!free.isEmpty()) {
 				CachedUniform pop = free.removeLast();
+
 				if (!brokenUniforms.contains(pop)) {
 					// only add those that aren't broken
 					ordered.add(pop);
@@ -146,9 +161,12 @@ public class CustomUniforms implements FunctionContext {
 					// mark all those that rely on use as broken too
 					brokenUniforms.addAll(requiredBy.get(pop));
 				}
+
 				for (CachedUniform dependent : requiredBy.get(pop)) {
 					int count = dependsOnCount.mergeInt(dependent, -1, Integer::sum);
+
 					assert count >= 0;
+
 					if (count == 0) {
 						free.add(dependent);
 						dependsOnCount.removeInt(dependent);
@@ -177,10 +195,14 @@ public class CustomUniforms implements FunctionContext {
 
 	private void addVariable(Expression expression, CachedUniform uniform) throws Exception {
 		String name = uniform.getName();
-		if (this.variables.containsKey(name))
+
+		if (this.variables.containsKey(name)) {
 			throw new Exception("Duplicated variable: " + name);
-		if (this.inputHolder.containsKey(name))
+		}
+
+		if (this.inputHolder.containsKey(name)) {
 			throw new Exception("Variable shadows build in uniform: " + name);
+		}
 
 		this.variables.put(name, uniform);
 		this.variablesExpressions.put(name, expression);
@@ -188,9 +210,11 @@ public class CustomUniforms implements FunctionContext {
 
 	public void assignTo(LocationalUniformHolder targetHolder) {
 		Object2IntMap<CachedUniform> locations = new Object2IntOpenHashMap<>();
+
 		for (CachedUniform uniform : this.uniformOrder) {
 			try {
 				OptionalInt location = targetHolder.location(uniform.getName(), Type.convert(uniform.getType()));
+
 				if (location.isPresent()) {
 					locations.put(uniform, location.getAsInt());
 				}
@@ -198,7 +222,24 @@ public class CustomUniforms implements FunctionContext {
 				throw new RuntimeException(uniform.getName(), e);
 			}
 		}
+
 		this.locationMap.put(targetHolder, locations);
+	}
+
+	public List<CachedUniform> frameUniforms() {
+		return List.copyOf(uniformOrder);
+	}
+
+	public void assignTo(BufferUniformHolder targetHolder) {
+		Set<CachedUniform> used = new ObjectOpenHashSet<>();
+
+		for (CachedUniform uniform : this.uniformOrder) {
+			if (targetHolder.bindCachedUniform(uniform)) {
+				used.add(uniform);
+			}
+		}
+
+		bufferBindings.put(targetHolder, used);
 	}
 
 	public void mapholderToPass(LocationalUniformHolder holder, Object pass) {
@@ -214,6 +255,7 @@ public class CustomUniforms implements FunctionContext {
 
 	public void push(Object pass) {
 		Object2IntMap<CachedUniform> uniforms = this.locationMap.get(pass);
+
 		if (uniforms != null) {
 			uniforms.forEach(CachedUniform::pushIfChanged);
 		}
@@ -257,15 +299,23 @@ public class CustomUniforms implements FunctionContext {
 			}
 		}
 
+		for (Set<CachedUniform> uniforms : bufferBindings.values()) {
+			for (CachedUniform uniform : uniforms) {
+				dependedByCount.mergeInt(uniform, 1, Integer::sum);
+			}
+		}
 
 		Set<CachedUniform> unused = new ObjectOpenHashSet<>();
+
 		for (int i = this.uniformOrder.size() - 1; i >= 0; i--) {
 			CachedUniform uniform = this.uniformOrder.get(i);
+
 			if (!dependedByCount.containsKey(uniform)) {
 				// not used
 				unused.add(uniform);
 				// remove dependencies
 				List<CachedUniform> dependencies = this.dependsOn.get(uniform);
+
 				if (dependencies != null) {
 					for (CachedUniform dependency : dependencies) {
 						// reduce count by 1
@@ -287,11 +337,17 @@ public class CustomUniforms implements FunctionContext {
 	public Expression getVariable(String name) {
 		// TODO: Make the simplify just return these ones
 		final CachedUniform inputUniform = this.inputHolder.getUniform(name);
-		if (inputUniform != null)
+
+		if (inputUniform != null) {
 			return inputUniform;
+		}
+
 		final CachedUniform customUniform = this.variables.get(name);
-		if (customUniform != null)
+
+		if (customUniform != null) {
 			return customUniform;
+		}
+
 		throw new RuntimeException("Unknown variable: " + name);
 	}
 
@@ -309,12 +365,15 @@ public class CustomUniforms implements FunctionContext {
 		public void addVariable(String type, String name, String expression, boolean isUniform) {
 			if (variables.containsKey(name)) {
 				Iris.logger.warn("Ignoring duplicated custom uniform name: " + name);
+
 				return;
 			}
 
 			Type parsedType = types.get(type);
+
 			if (parsedType == null) {
 				Iris.logger.warn("Ignoring invalid uniform type: " + type + " of " + name);
+
 				return;
 			}
 
@@ -337,9 +396,11 @@ public class CustomUniforms implements FunctionContext {
 			Consumer<UniformHolder>... uniforms
 		) {
 			CustomUniformFixedInputUniformsHolder.Builder inputs = new CustomUniformFixedInputUniformsHolder.Builder();
+
 			for (Consumer<UniformHolder> uniform : uniforms) {
 				uniform.accept(inputs);
 			}
+
 			return this.build(inputs.build());
 		}
 

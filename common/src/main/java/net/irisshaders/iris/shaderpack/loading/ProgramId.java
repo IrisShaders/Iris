@@ -1,6 +1,7 @@
 package net.irisshaders.iris.shaderpack.loading;
 
 import net.irisshaders.iris.api.v0.IrisProgram;
+import net.irisshaders.iris.api.v0.IrisShadowProgram;
 import net.irisshaders.iris.gl.blending.BlendMode;
 import net.irisshaders.iris.gl.blending.BlendModeFunction;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
@@ -44,7 +45,9 @@ public enum ProgramId {
 	EntitiesGlowing(ProgramGroup.Gbuffers, "entities_glowing", Entities),
 	ArmorGlint(ProgramGroup.Gbuffers, "armor_glint", Textured),
 	SpiderEyes(ProgramGroup.Gbuffers, "spidereyes", Textured,
-		new BlendModeOverride(new BlendMode(BlendModeFunction.SRC_ALPHA.getGlId(), BlendModeFunction.ONE.getGlId(), BlendModeFunction.ZERO.getGlId(), BlendModeFunction.ONE.getGlId()))),
+		new BlendModeOverride(
+			new BlendMode(BlendModeFunction.SRC_ALPHA.getVkId(), BlendModeFunction.ONE.getVkId(), BlendModeFunction.ZERO.getVkId(),
+				BlendModeFunction.ONE.getVkId()))),
 
 	Hand(ProgramGroup.Gbuffers, "hand", TexturedLit),
 	Weather(ProgramGroup.Gbuffers, "weather", TexturedLit),
@@ -114,6 +117,17 @@ public enum ProgramId {
 			case EMISSIVE_ENTITIES -> SpiderEyes;
 			case BEACON_BEAM -> BeaconBeam;
 			case LINES -> Line;
+		};
+	}
+
+	public static ProgramId fromAPI(IrisShadowProgram program) {
+		return switch (program) {
+			case SHADOW -> Shadow;
+			case SHADOW_TERRAIN_CUTOUT -> ShadowCutout;
+			case SHADOW_TRANSLUCENT -> ShadowWater;
+			case SHADOW_ENTITIES -> ShadowEntities;
+			case SHADOW_LIGHTNING -> ShadowLightning;
+			case SHADOW_BLOCK -> ShadowBlock;
 		};
 	}
 

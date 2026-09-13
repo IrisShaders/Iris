@@ -42,6 +42,34 @@ public class DHTerrainTransformer {
 			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
 		}
 
+		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
+									 "in vec3 iris_vBlockPos;",
+									 "flat in uvec2 iris_TexId;",
+									 "uniform sampler2D dhBlockAtlas;",
+									 """
+										bool dh_hasTexture() { return iris_TexId.x != 0u; }""", """
+										vec2 dh_blockFaceUv() {
+											vec3 pos = fract(iris_vBlockPos);
+										      switch (iris_TexId.y)
+										      {
+										          case 0u: return vec2(pos.x, 1.0 - pos.z); // down
+										          case 1u: return vec2(pos.x, pos.z); // up
+										          case 2u: return vec2(1.0 - pos.x, 1.0 - pos.y); // north
+										          case 3u: return vec2(pos.x, 1.0 - pos.y); // south
+										          case 4u: return vec2(pos.z, 1.0 - pos.y); // west
+										          default: return vec2(1.0 - pos.z, 1.0 - pos.y); // east
+										      }
+										}""", """
+										vec4 dh_sampleTexture() {
+											ivec2 atlasSize = textureSize(dhBlockAtlas, 0);
+										          vec2 tileOrigin = vec2(float(iris_TexId.x % 256u), float(iris_TexId.x / 256u)) * 16.0;
+										          vec2 uv = (tileOrigin + dh_blockFaceUv() * 16.0) / vec2(atlasSize);
+										          return texture(dhBlockAtlas, uv);
+										 }
+										 """);
+		}
+
 		root.rename("gl_Color", "_vert_color");
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
@@ -114,6 +142,8 @@ public class DHTerrainTransformer {
 			"vec3 _vert_normal;",
 			"uniform float mircoOffset;",
 			"uniform vec3 modelOffset;",
+			"out vec3 iris_vBlockPos;",
+			"flat out uvec2 iris_TexId;",
 			"const vec3 irisNormals[6] = vec3[](vec3(0,-1,0),vec3(0,1,0),vec3(0,0,-1),vec3(0,0,1),vec3(-1,0,0),vec3(1,0,0));",
 			"void _vert_init() {" +
 				"    uint meta = vPosition.a;\n" +
@@ -133,6 +163,8 @@ public class DHTerrainTransformer {
 				"_vert_normal = irisNormals[irisExtra.y];" +
 				"dhMaterialId = int(irisExtra.x);" +
 				"_vert_tex_light_coord = vec2((float(lights/16u)+0.5) / 16.0, (mod(float(lights), 16.0)+0.5) / 16.0);" +
+				"iris_vBlockPos = vec3(vPosition.xyz);" +
+				"iris_TexId =  uvec2(irisExtra.z | (irisExtra.w << 8u), irisExtra.y);" +
 				"_vert_color = iris_color; }");
 		addIfNotExists(root, t, tree, "iris_color", Type.F32VEC4, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "vPosition", Type.U32VEC4, StorageQualifier.StorageType.IN);

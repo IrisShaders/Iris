@@ -1,42 +1,63 @@
 package net.irisshaders.iris.pbr;
 
-import com.mojang.renderpearl.api.textures.GpuTextureView;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.gl.IrisRenderSystem;
+import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
-import net.irisshaders.iris.gl.texture.TextureType;
-import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.jetbrains.annotations.Nullable;
 
-public class TextureTracker {
-	public static final TextureTracker INSTANCE = new TextureTracker();
+import java.util.IdentityHashMap;
+import java.util.Map;
 
+public final class TextureTracker {
+	public static final TextureTracker INSTANCE = new TextureTracker();
 	private static Runnable bindTextureListener;
 
 	static {
 		StateUpdateNotifiers.bindTextureNotifier = listener -> bindTextureListener = listener;
 	}
 
-	private final Int2ObjectMap<AbstractTexture> textures = new Int2ObjectOpenHashMap<>();
+	private final Map<GpuTexture, AbstractTexture> textures = new IdentityHashMap<>();
+	private GpuTexture boundTexture;
+	private final Map<GpuTexture, Integer> identities = new IdentityHashMap<>();
+	private int nextIdentity = 1;
 
-	private boolean lockBindCallback;
+	public int identity(GpuTexture texture) {
+		return texture == null ? 0 : identities.computeIfAbsent(texture, unused -> nextIdentity++);
+	}
 
 	private TextureTracker() {
 	}
 
-	public void trackTexture(int id, AbstractTexture texture) {
-		textures.put(id, texture);
+	public void trackTexture(GpuTexture texture, AbstractTexture owner) {
+		textures.put(texture, owner);
 	}
 
-	@Nullable
-	public AbstractTexture getTexture(int id) {
-		return textures.get(id);
+	public @Nullable AbstractTexture getTexture(GpuTexture texture) {
+		return textures.get(texture);
 	}
 
-	public void onDeleteTexture(int id) {
-		textures.remove(id);
+	public @Nullable GpuTexture getBoundTexture() {
+		return boundTexture;
+	}
+
+	public void bindTexture(@Nullable GpuTexture texture) {
+		if (boundTexture == texture) {
+			return;
+		}
+
+		boundTexture = texture;
+
+		if (bindTextureListener != null) {
+			bindTextureListener.run();
+		}
+	}
+
+	public void onDeleteTexture(GpuTexture texture) {
+		textures.remove(texture);
+		identities.remove(texture);
+
+		if (boundTexture == texture) {
+			bindTexture(null);
+		}
 	}
 }

@@ -50,8 +50,12 @@ public class DHCompat {
 			return new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
 		}
 
+		return getProjection(getNearPlane(), getFarPlane());
+	}
+
+	static Matrix4f getProjection(float nearPlane, float farPlane) {
 		Matrix4f projection = new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
-		return new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), DHCompat.getNearPlane(), DHCompat.getFarPlane());
+		return new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), nearPlane, farPlane);
 	}
 
 	public static void run() {

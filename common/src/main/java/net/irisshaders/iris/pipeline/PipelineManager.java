@@ -1,13 +1,11 @@
 package net.irisshaders.iris.pipeline;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL20C;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -83,7 +81,6 @@ public class PipelineManager {
 	public void destroyPipeline() {
 		pipelinesPerDimension.forEach((dimensionId, pipeline) -> {
 			Iris.logger.info("Destroying pipeline {}", dimensionId);
-			resetTextureState();
 			pipeline.destroy();
 		});
 
@@ -92,22 +89,4 @@ public class PipelineManager {
 		versionCounterForSodiumShaderReload++;
 	}
 
-	private void resetTextureState() {
-		// Unbind all textures
-		//
-		// This is necessary because we don't want destroyed render target textures to remain bound to certain texture
-		// units. Vanilla appears to properly rebind all textures as needed, and we do so too, so this does not cause
-		// issues elsewhere.
-		//
-		// Without this code, there will be weird issues when reloading certain shaderpacks.
-		for (int i = 0; i < 16; i++) {
-			GlStateManager._activeTexture(GL20C.GL_TEXTURE0 + i);
-			GlStateManager._bindTexture(0);
-		}
-
-		// Set the active texture unit to unit 0
-		//
-		// This seems to be what most code expects. It's a sane default in any case.
-		GlStateManager._activeTexture(GL20C.GL_TEXTURE0);
-	}
 }

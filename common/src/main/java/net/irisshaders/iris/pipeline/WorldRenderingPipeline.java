@@ -16,6 +16,7 @@ import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 
 import java.util.OptionalInt;
+import java.util.Set;
 
 public interface WorldRenderingPipeline {
 	void beginLevelRendering();
@@ -27,6 +28,10 @@ public interface WorldRenderingPipeline {
 	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
 
 	Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> getTextureMap();
+
+	default Set<String> getTextureOverrides(TextureStage stage) {
+		return Set.of();
+	}
 
 	WorldRenderingPhase getPhase();
 

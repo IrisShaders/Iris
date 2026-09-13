@@ -29,45 +29,45 @@ public class IrisVertexFormats {
 		//MID_BLOCK_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, GpuFormat.RGB8_SINT);
 
 		TERRAIN = VertexFormat.builder(0)
-			.addAttribute("Position", GpuFormat.RGB32_FLOAT)
-			.addAttribute("Color", GpuFormat.RGBA8_UNORM)
-			.addAttribute("UV0", GpuFormat.RG32_FLOAT)
-			.addAttribute("UV2", GpuFormat.RG16_SINT)
-			.addAttribute("Normal", GpuFormat.RGBA8_SNORM)
-			.addAttribute(ENTITY_ATTRIBUTE, GpuFormat.RG16_SINT)
-			.addAttribute(MID_TEXTURE_ATTRIBUTE, GpuFormat.RG32_FLOAT)
-			.addAttribute(TANGENT_ATTRIBUTE, GpuFormat.RGBA8_SNORM)
-			.addAttribute(MID_BLOCK_ATTRIBUTE, GpuFormat.RGBA8_SNORM)
-			.build();
+							  .addAttribute("Position", GpuFormat.RGB32_FLOAT)
+							  .addAttribute("Color", GpuFormat.RGBA8_UNORM)
+							  .addAttribute("UV0", GpuFormat.RG32_FLOAT)
+							  .addAttribute("UV2", GpuFormat.RG16_SINT)
+							  .addAttribute("Normal", GpuFormat.RGBA8_SNORM)
+							  .addAttribute(ENTITY_ATTRIBUTE, GpuFormat.RG16_SINT)
+							  .addAttribute(MID_TEXTURE_ATTRIBUTE, GpuFormat.RG32_FLOAT)
+							  .addAttribute(TANGENT_ATTRIBUTE, GpuFormat.RGBA8_SNORM)
+							  .addAttribute(MID_BLOCK_ATTRIBUTE, GpuFormat.RGBA8_SNORM)
+							  .build();
 
 		ENTITY = VertexFormat.builder(0)
-			.addAttribute("Position", GpuFormat.RGB32_FLOAT)
-			.addAttribute("Color", GpuFormat.RGBA8_UNORM)
-			.addAttribute("UV0", GpuFormat.RG32_FLOAT)
-			.addAttribute("UV1", GpuFormat.RG16_SINT)
-			.addAttribute("UV2", GpuFormat.RG16_SINT)
-			.addAttribute("Normal", GpuFormat.RGBA8_SNORM)
-			.addAttribute(ENTITY_ID_ATTRIBUTE, GpuFormat.RGBA16_UINT)
-			.addAttribute(MID_TEXTURE_ATTRIBUTE, GpuFormat.RG32_FLOAT)
-			.addAttribute(TANGENT_ATTRIBUTE, GpuFormat.RGBA8_SNORM)
-			.build();
+							 .addAttribute("Position", GpuFormat.RGB32_FLOAT)
+							 .addAttribute("Color", GpuFormat.RGBA8_UNORM)
+							 .addAttribute("UV0", GpuFormat.RG32_FLOAT)
+							 .addAttribute("UV1", GpuFormat.RG16_SINT)
+							 .addAttribute("UV2", GpuFormat.RG16_SINT)
+							 .addAttribute("Normal", GpuFormat.RGBA8_SNORM)
+							 .addAttribute(ENTITY_ID_ATTRIBUTE, GpuFormat.RGBA16_UINT)
+							 .addAttribute(MID_TEXTURE_ATTRIBUTE, GpuFormat.RG32_FLOAT)
+							 .addAttribute(TANGENT_ATTRIBUTE, GpuFormat.RGBA8_SNORM)
+							 .build();
 
 		GLYPH = VertexFormat.builder(0)
-			.addAttribute("Position", GpuFormat.RGB32_FLOAT)
-			.addAttribute("UV0", GpuFormat.RG32_FLOAT)
-			.addAttribute("UV2", GpuFormat.RG16_SINT)
-			.addAttribute("Color", GpuFormat.RGBA8_UNORM)
-			.addAttribute("Normal", GpuFormat.RGBA8_SNORM)
-			.addAttribute(ENTITY_ID_ATTRIBUTE, GpuFormat.RGBA16_UINT)
-			.addAttribute(MID_TEXTURE_ATTRIBUTE, GpuFormat.RG32_FLOAT)
-			.addAttribute(TANGENT_ATTRIBUTE, GpuFormat.RGBA8_SNORM)
-			.build();
+							.addAttribute("Position", GpuFormat.RGB32_FLOAT)
+							.addAttribute("UV0", GpuFormat.RG32_FLOAT)
+							.addAttribute("UV2", GpuFormat.RG16_SINT)
+							.addAttribute("Color", GpuFormat.RGBA8_UNORM)
+							.addAttribute("Normal", GpuFormat.RGBA8_SNORM)
+							.addAttribute(ENTITY_ID_ATTRIBUTE, GpuFormat.RGBA16_UINT)
+							.addAttribute(MID_TEXTURE_ATTRIBUTE, GpuFormat.RG32_FLOAT)
+							.addAttribute(TANGENT_ATTRIBUTE, GpuFormat.RGBA8_SNORM)
+							.build();
 
 		CLOUDS = VertexFormat.builder(0)
-			.addAttribute("Position", GpuFormat.RGB32_FLOAT)
-			.addAttribute("Color", GpuFormat.RGBA8_UNORM)
-			.addAttribute("Normal", GpuFormat.RGBA8_SNORM)
-			.build();
+							 .addAttribute("Position", GpuFormat.RGB32_FLOAT)
+							 .addAttribute("Color", GpuFormat.RGBA8_UNORM)
+							 .addAttribute("Normal", GpuFormat.RGBA8_SNORM)
+							 .build();
 	}
 
 	private static void debug(VertexFormat format) {

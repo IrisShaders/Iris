@@ -6,14 +6,16 @@ import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.Patch;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 
+import java.util.Set;
+
 public abstract class GeometryInfoParameters extends Parameters {
 	public final boolean hasGeometry;
 	public final boolean hasTesselation;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public GeometryInfoParameters(Patch patch,
-								  Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, boolean hasGeometry, boolean hasTesselation) {
-		super(patch, textureMap);
+								  Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides, boolean hasGeometry, boolean hasTesselation) {
+		super(patch, textureMap, textureOverrides);
 		this.hasGeometry = hasGeometry;
 		this.hasTesselation = hasTesselation;
 	}

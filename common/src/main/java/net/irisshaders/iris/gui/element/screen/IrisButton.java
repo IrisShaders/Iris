@@ -1,7 +1,5 @@
 package net.irisshaders.iris.gui.element.screen;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.gl.uniform.FloatSupplier;
 import net.irisshaders.iris.gui.GuiUtil;
 import net.minecraft.client.Minecraft;
@@ -9,13 +7,13 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
 public class IrisButton extends Button {
 	private final FloatSupplier alphaSupplier;
 
-	public IrisButton(int pButton0, int pInt1, int pInt2, int pInt3, Component pComponent4, OnPress pButton$OnPress5, CreateNarration pButton$CreateNarration6, FloatSupplier alpha) {
+	public IrisButton(int pButton0, int pInt1, int pInt2, int pInt3, Component pComponent4, OnPress pButton$OnPress5,
+		CreateNarration pButton$CreateNarration6, FloatSupplier alpha) {
 		super(pButton0, pInt1, pInt2, pInt3, pComponent4, pButton$OnPress5, pButton$CreateNarration6);
 		this.alphaSupplier = alpha;
 	}
@@ -34,11 +32,11 @@ public class IrisButton extends Button {
 		Minecraft lvMinecraft5 = Minecraft.getInstance();
 		//guiGraphics.flush();
 		// TODO 1.21.6
-		//RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.isHoveredOrFocused() ? this.alphaSupplier.getAsFloat() * 1.8f : this.alphaSupplier.getAsFloat());
-		GlStateManager._enableBlend(0);
-		GlStateManager._enableDepthTest();
+		//RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.isHoveredOrFocused() ? this.alphaSupplier.getAsFloat() * 1.8f : this
+		// .alphaSupplier.getAsFloat());
 		GuiUtil.bindIrisWidgetsTexture();
-		GuiUtil.drawButton(guiGraphics, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.isHoveredOrFocused(), !this.isActive());
+		GuiUtil.drawButton(guiGraphics, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.isHoveredOrFocused(),
+			!this.isActive());
 		//guiGraphics.flush();
 		//RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alphaSupplier.getAsFloat());
 		int lvInt6 = this.active ? 16777215 : 10526880;
@@ -69,17 +67,20 @@ public class IrisButton extends Button {
 		public IrisButton.Builder pos(int pButton$Builder0, int pInt1) {
 			this.x = pButton$Builder0;
 			this.y = pInt1;
+
 			return this;
 		}
 
 		public IrisButton.Builder width(int pButton$Builder0) {
 			this.width = pButton$Builder0;
+
 			return this;
 		}
 
 		public IrisButton.Builder size(int pButton$Builder0, int pInt1) {
 			this.width = pButton$Builder0;
 			this.height = pInt1;
+
 			return this;
 		}
 
@@ -89,18 +90,23 @@ public class IrisButton extends Button {
 
 		public IrisButton.Builder tooltip(@Nullable Tooltip pButton$Builder0) {
 			this.tooltip = pButton$Builder0;
+
 			return this;
 		}
 
 		public IrisButton.Builder createNarration(Button.CreateNarration pButton$Builder0) {
 			this.createNarration = pButton$Builder0;
+
 			return this;
 		}
 
 		public IrisButton build() {
-			IrisButton lvButton1 = new IrisButton(this.x, this.y, this.width, this.height, this.message, this.onPress, this.createNarration, this.alpha);
+			IrisButton lvButton1 = new IrisButton(this.x, this.y, this.width, this.height, this.message, this.onPress,
+				this.createNarration,
+				this.alpha);
 			lvButton1.setTooltip(this.tooltip);
 			lvButton1.active = true;
+
 			return lvButton1;
 		}
 	}

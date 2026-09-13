@@ -1,20 +1,14 @@
 package net.irisshaders.iris.uniforms;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
+import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.layer.GbufferPrograms;
-import net.irisshaders.iris.mixin.GlStateManagerAccessor;
-import net.irisshaders.iris.mixin.statelisteners.BooleanStateAccessor;
 import net.irisshaders.iris.mixin.texture.TextureAtlasAccessor;
 import net.irisshaders.iris.mixinterface.LocalPlayerInterface;
-import net.irisshaders.iris.pbr.TextureInfoCache;
-import net.irisshaders.iris.pbr.TextureInfoCache.TextureInfo;
 import net.irisshaders.iris.pbr.TextureTracker;
 import net.irisshaders.iris.shaderpack.IdMap;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
@@ -27,14 +21,12 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.ARGB;
 import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
@@ -44,10 +36,6 @@ import org.joml.Vector2i;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
 import org.joml.Vector4i;
-
-import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.ONCE;
-import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
-import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public final class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
@@ -70,7 +58,8 @@ public final class CommonUniforms {
 		IrisInternalUniforms.addFogUniforms(uniforms, fogMode);
 
 		// This is a fallback for when entityId via attributes cannot be used. (lightning)
-		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity, StateUpdateNotifiers.fallbackEntityNotifier);
+		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity,
+			StateUpdateNotifiers.fallbackEntityNotifier);
 
 		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
 		//       but we do. How will custom uniforms depending on atlasSize work?
@@ -79,12 +68,17 @@ public final class CommonUniforms {
 		// the shader will always be setup (and therefore uniforms will be re-uploaded)
 		// after the texture is changed and before rendering starts.
 		uniforms.uniform2i("atlasSize", () -> {
-			int glId = Iris.getPipelineManager().getPipeline().map(i -> i.getAlbedoTex()).orElse(0);
-			if (glId == 0) return ZERO_VECTOR_2i;
+			var glId = TextureTracker.INSTANCE.getBoundTexture();
+
+			if (glId == null) {
+				return ZERO_VECTOR_2i;
+			}
 
 			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
+
 			if (texture instanceof TextureAtlas atlas) {
 				TextureAtlasAccessor atlasAccessor = (TextureAtlasAccessor) atlas;
+
 				return new Vector2i(atlasAccessor.callGetWidth(), atlasAccessor.callGetHeight());
 			}
 
@@ -92,36 +86,31 @@ public final class CommonUniforms {
 		}, listener -> {
 		});
 
-		uniforms.uniform1i("gtextureId", () -> GlStateManagerAccessor.getTEXTURES()[0].binding, StateUpdateNotifiers.bindTextureNotifier);
-		uniforms.uniform1i("textureReloadCount", CapturedRenderingState.INSTANCE::getTextureReloadCount, StateUpdateNotifiers.bindTextureNotifier);
+		uniforms.uniform1i("gtextureId", () -> TextureTracker.INSTANCE.identity(TextureTracker.INSTANCE.getBoundTexture()),
+			StateUpdateNotifiers.bindTextureNotifier);
+		uniforms.uniform1i("textureReloadCount", CapturedRenderingState.INSTANCE::getTextureReloadCount,
+			StateUpdateNotifiers.bindTextureNotifier);
 
 		uniforms.uniform2i("gtextureSize", () -> {
-			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
+			var texture = TextureTracker.INSTANCE.getBoundTexture();
 
-			TextureInfo info = TextureInfoCache.INSTANCE.getInfo(glId);
-			return new Vector2i(info.getWidth(), info.getHeight());
+			return texture == null ? ZERO_VECTOR_2i : new Vector2i(texture.getWidth(0), texture.getHeight(0));
 
 		}, StateUpdateNotifiers.bindTextureNotifier);
 
-		uniforms.uniform4i("blendFunc", () -> {
-			GlStateManager.BlendState blend = GlStateManagerAccessor.getBLEND();
-
-			if (GlStateManagerAccessor.getBLEND_ENABLE()[0]) {
-				return new Vector4i(blend.srcRgb, blend.dstRgb, blend.srcAlpha, blend.dstAlpha);
-			} else {
-				return ZERO_VECTOR_4i;
-			}
-		}, StateUpdateNotifiers.blendFuncNotifier);
+		uniforms.uniform4i("blendFunc", CapturedRenderingState.INSTANCE::getBlendFunction, StateUpdateNotifiers.blendFuncNotifier);
 
 		uniforms.uniform1i("renderStage", () -> GbufferPrograms.getCurrentPhase().ordinal(), StateUpdateNotifiers.phaseChangeNotifier);
 	}
 
-	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier, FogMode fogMode) {
+	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives,
+		FrameUpdateNotifier updateNotifier, FogMode fogMode) {
 		CommonUniforms.addNonDynamicUniforms(uniforms, idMap, directives, updateNotifier);
 		CommonUniforms.addDynamicUniforms(uniforms, fogMode);
 	}
 
-	public static void addNonDynamicUniforms(UniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier) {
+	public static void addNonDynamicUniforms(UniformHolder uniforms, IdMap idMap, PackDirectives directives,
+		FrameUpdateNotifier updateNotifier) {
 		CameraUniforms.addCameraUniforms(uniforms, updateNotifier);
 		ViewportUniforms.addViewportUniforms(uniforms);
 		WorldTimeUniforms.addWorldTimeUniforms(uniforms);
@@ -133,56 +122,60 @@ public final class CommonUniforms {
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		IdMapUniforms.addIdMapUniforms(updateNotifier, uniforms, idMap, directives.isOldHandLight());
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier, directives);
+		IrisInternalUniforms.addOtherUniforms(uniforms, updateNotifier, directives);
 	}
 
 	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier, PackDirectives directives) {
 		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
 
-		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(directives.getEyeBrightnessHalfLife(), directives.getEyeBrightnessHalfLife(), CommonUniforms::getEyeBrightness, updateNotifier);
-
+		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(directives.getEyeBrightnessHalfLife(), directives.getEyeBrightnessHalfLife(),
+			CommonUniforms::getEyeBrightness, updateNotifier);
 		uniforms
-			.uniform1b(PER_FRAME, "hideGUI", client.gui.hud::isHidden)
-			.uniform1b(PER_FRAME, "isRightHanded", () -> client.options.mainHand().get() == HumanoidArm.RIGHT)
-			.uniform1i(PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
-			.uniform1f(PER_FRAME, "blindness", CommonUniforms::getBlindness)
-			.uniform1f(PER_FRAME, "darknessFactor", CommonUniforms::getDarknessFactor)
-			.uniform1f(PER_FRAME, "darknessLightFactor", CapturedRenderingState.INSTANCE::getDarknessLightFactor)
-			.uniform1f(PER_FRAME, "nightVision", CommonUniforms::getNightVision)
-			.uniform1b(PER_FRAME, "is_sneaking", CommonUniforms::isSneaking)
-			.uniform1b(PER_FRAME, "is_sprinting", CommonUniforms::isSprinting)
-			.uniform1b(PER_FRAME, "is_hurt", CommonUniforms::isHurt)
-			.uniform1b(PER_FRAME, "is_invisible", CommonUniforms::isInvisible)
-			.uniform1b(PER_FRAME, "is_burning", CommonUniforms::isBurning)
-			.uniform1b(PER_FRAME, "is_on_ground", CommonUniforms::isOnGround)
+			.uniform1b(UniformUpdateFrequency.PER_FRAME, "hideGUI", client.gui.hud::isHidden)
+			.uniform1b(UniformUpdateFrequency.PER_FRAME, "isRightHanded", () -> client.options.mainHand().get() == HumanoidArm.RIGHT)
+			.uniform1i(UniformUpdateFrequency.PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
+			.uniform1f(UniformUpdateFrequency.PER_FRAME, "blindness", CommonUniforms::getBlindness)
+			.uniform1f(UniformUpdateFrequency.PER_FRAME, "darknessFactor", CommonUniforms::getDarknessFactor)
+			.uniform1f(UniformUpdateFrequency.PER_FRAME, "darknessLightFactor", CapturedRenderingState.INSTANCE::getDarknessLightFactor)
+			.uniform1f(UniformUpdateFrequency.PER_FRAME, "nightVision", CommonUniforms::getNightVision)
+			.uniform1b(UniformUpdateFrequency.PER_FRAME, "is_sneaking", CommonUniforms::isSneaking)
+			.uniform1b(UniformUpdateFrequency.PER_FRAME, "is_sprinting", CommonUniforms::isSprinting)
+			.uniform1b(UniformUpdateFrequency.PER_FRAME, "is_hurt", CommonUniforms::isHurt)
+			.uniform1b(UniformUpdateFrequency.PER_FRAME, "is_invisible", CommonUniforms::isInvisible)
+			.uniform1b(UniformUpdateFrequency.PER_FRAME, "is_burning", CommonUniforms::isBurning)
+			.uniform1b(UniformUpdateFrequency.PER_FRAME, "is_on_ground", CommonUniforms::isOnGround)
 			// TODO: Do we need to clamp this to avoid fullbright breaking shaders? Or should shaders be able to detect
 			//       that the player is trying to turn on fullbright?
-			.uniform1f(PER_FRAME, "screenBrightness", () -> client.options.gamma().get())
+			.uniform1f(UniformUpdateFrequency.PER_FRAME, "screenBrightness", () -> client.options.gamma().get())
 			// just a dummy value for shaders where entityColor isn't supplied through a vertex attribute (and thus is
 			// not available) - suppresses warnings. See AttributeShaderTransformer for the actual entityColor code.
-			.uniform4f(ONCE, "entityColor", () -> new Vector4f(0, 0, 0, 0))
-			.uniform1i(ONCE, "blockEntityId", () -> -1)
-			.uniform1i(ONCE, "currentRenderedItemId", () -> -1)
-			.uniform1i(PER_FRAME, "anisotropicFiltering", () -> {
+			.uniform4f(UniformUpdateFrequency.ONCE, "entityColor", () -> new Vector4f(0, 0, 0, 0))
+			.uniform1i(UniformUpdateFrequency.ONCE, "blockEntityId", () -> -1)
+			.uniform1i(UniformUpdateFrequency.ONCE, "currentRenderedItemId", () -> -1)
+			.uniform1i(UniformUpdateFrequency.PER_FRAME, "anisotropicFiltering", () -> {
 				if (Minecraft.getInstance().options.textureFiltering().get() == TextureFilteringMethod.ANISOTROPIC) {
 					return Minecraft.getInstance().options.maxAnisotropyValue();
 				} else {
 					return 0;
 				}
 			})
-			.uniform1f(ONCE, "pi", () -> Math.PI)
-			.uniform1f(PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
-			.uniform1f(PER_TICK, "constantMood", CommonUniforms::getConstantMood)
-			.uniform2i(PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
-			.uniform2i(PER_FRAME, "eyeBrightnessSmooth", () -> {
+			.uniform1f(UniformUpdateFrequency.ONCE, "pi", () -> Math.PI)
+			.uniform1f(UniformUpdateFrequency.PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
+			.uniform1f(UniformUpdateFrequency.PER_TICK, "constantMood", CommonUniforms::getConstantMood)
+			.uniform2i(UniformUpdateFrequency.PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
+			.uniform2i(UniformUpdateFrequency.PER_FRAME, "eyeBrightnessSmooth", () -> {
 				Vector2f smoothed = eyeBrightnessSmooth.get();
+
 				return new Vector2i((int) smoothed.x(), (int) smoothed.y());
 			})
-			.uniform1f(PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
-			.uniform1f(PER_TICK, "wetness", new SmoothedFloat(directives.getWetnessHalfLife(), directives.getDrynessHalfLife(), CommonUniforms::getRainStrength, updateNotifier))
-			.uniform3d(PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
-			.uniform1f(PER_FRAME, "dhFarPlane", DHCompat::getFarPlane)
-			.uniform1f(PER_FRAME, "dhNearPlane", DHCompat::getNearPlane)
-			.uniform1i(PER_FRAME, "dhRenderDistance", DHCompat::getRenderDistance);
+			.uniform1f(UniformUpdateFrequency.PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
+			.uniform1f(UniformUpdateFrequency.PER_TICK, "wetness",
+				new SmoothedFloat(directives.getWetnessHalfLife(), directives.getDrynessHalfLife(), CommonUniforms::getRainStrength,
+					updateNotifier))
+			.uniform3d(UniformUpdateFrequency.PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
+			.uniform1f(UniformUpdateFrequency.PER_FRAME, "dhFarPlane", DHCompat::getFarPlane)
+			.uniform1f(UniformUpdateFrequency.PER_FRAME, "dhNearPlane", DHCompat::getNearPlane)
+			.uniform1i(UniformUpdateFrequency.PER_FRAME, "dhRenderDistance", DHCompat::getRenderDistance);
 	}
 
 	private static boolean isOnGround() {
@@ -369,6 +362,7 @@ public final class CommonUniforms {
 		// underwater on most shaderpacks. For now, I will leave this as-is, but it is something to keep in mind.
 		FogType submersionType = client.gameRenderer.mainCamera().getFluidInCamera();
 		boolean isSpectator = client.player != null && client.player.isSpectator();
+
 		if (submersionType == FogType.WATER) {
 			return 1;
 		} else if (!isSpectator && submersionType == FogType.LAVA) {

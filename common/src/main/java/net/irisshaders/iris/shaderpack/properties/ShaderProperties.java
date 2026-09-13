@@ -68,7 +68,8 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, IndirectPointer> indirectPointers = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, ArrayList<BufferBlendInformation>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> customTextures = new EnumMap<>(TextureStage.class);
-	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching = new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching =
+		new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureDefinition> irisCustomTextures = new Object2ObjectOpenHashMap<>();
 	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
 	private final Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects = new Int2ObjectArrayMap<>();
@@ -142,6 +143,7 @@ public class ShaderProperties {
 
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
+
 		try {
 			preprocessed.load(new StringReader(preprocessedContents));
 			original.load(new StringReader(contents));
@@ -155,6 +157,7 @@ public class ShaderProperties {
 
 			if ("texture.noise".equals(key)) {
 				noiseTexturePath = value;
+
 				return;
 			}
 
@@ -238,7 +241,9 @@ public class ShaderProperties {
 			// TODO: Custom uniforms
 
 			handlePassDirective("scale.", key, value, pass -> {
-				float scale, offsetX = 0.0f, offsetY = 0.0f;
+				float scale;
+				float offsetX = 0.0f;
+				float offsetY = 0.0f;
 				String[] parts = value.split(" ");
 
 				try {
@@ -250,6 +255,7 @@ public class ShaderProperties {
 					}
 				} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 					Iris.logger.error("Unable to parse scale directive for " + pass + ": " + value, e);
+
 					return;
 				}
 
@@ -258,7 +264,6 @@ public class ShaderProperties {
 
 			if ("weather".equals(key)) {
 				String[] parts = value.split(" ");
-
 				weather = parts[0].equals("true") ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
 
 				if (parts.length > 1) {
@@ -271,6 +276,7 @@ public class ShaderProperties {
 
 				if (parts.length != 2) {
 					Iris.logger.error("Unable to parse size.buffer directive for " + pass + ": " + value);
+
 					return;
 				}
 
@@ -280,6 +286,7 @@ public class ShaderProperties {
 			handlePassDirective("alphaTest.", key, value, pass -> {
 				if ("off".equals(value) || "false".equals(value)) {
 					alphaTestOverrides.put(pass, AlphaTest.ALWAYS);
+
 					return;
 				}
 
@@ -289,13 +296,16 @@ public class ShaderProperties {
 					Iris.logger.warn("Weird alpha test directive for " + pass + " contains more parts than we expected: " + value);
 				} else if (parts.length < 2) {
 					Iris.logger.error("Invalid alpha test directive for " + pass + ": " + value);
+
 					return;
 				}
 
 				Optional<AlphaTestFunction> function = AlphaTestFunction.fromString(parts[0]);
 
 				if (function.isEmpty()) {
-					Iris.logger.error("Unable to parse alpha test directive for " + pass + ", unknown alpha test function " + parts[0] + ": " + value);
+					Iris.logger.error(
+						"Unable to parse alpha test directive for " + pass + ", unknown alpha test function " + parts[0] + ": " + value);
+
 					return;
 				}
 
@@ -305,6 +315,7 @@ public class ShaderProperties {
 					reference = Float.parseFloat(parts[1]);
 				} catch (NumberFormatException e) {
 					Iris.logger.error("Unable to parse alpha test directive for " + pass + ": " + value, e);
+
 					return;
 				}
 
@@ -315,7 +326,8 @@ public class ShaderProperties {
 				if (pass.contains(".")) {
 
 					if (!IrisRenderSystem.supportsBufferBlending()) {
-						throw new RuntimeException("Buffer blending is not supported on this platform, however it was attempted to be used!");
+						throw new RuntimeException(
+							"Buffer blending is not supported on this platform, however it was attempted to be used!");
 					}
 
 					String[] parts = pass.split("\\.");
@@ -336,7 +348,9 @@ public class ShaderProperties {
 					}
 
 					if ("off".equals(value)) {
-						bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendInformation(index, null));
+						bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>())
+							.add(new BufferBlendInformation(index, null));
+
 						return;
 					}
 
@@ -344,18 +358,21 @@ public class ShaderProperties {
 					int[] modes = new int[modeArray.length];
 
 					int i = 0;
+
 					for (String modeName : modeArray) {
-						modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
+						modes[i] = BlendModeFunction.fromString(modeName).get().getVkId();
 						i++;
 					}
 
-					bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>()).add(new BufferBlendInformation(index, new BlendMode(modes[0], modes[1], modes[2], modes[3])));
+					bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>())
+						.add(new BufferBlendInformation(index, new BlendMode(modes[0], modes[1], modes[2], modes[3])));
 
 					return;
 				}
 
 				if ("off".equals(value)) {
 					blendModeOverrides.put(pass, BlendModeOverride.OFF);
+
 					return;
 				}
 
@@ -363,8 +380,9 @@ public class ShaderProperties {
 				int[] modes = new int[modeArray.length];
 
 				int i = 0;
+
 				for (String modeName : modeArray) {
-					modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
+					modes[i] = BlendModeFunction.fromString(modeName).get().getVkId();
 					i++;
 				}
 
@@ -374,7 +392,6 @@ public class ShaderProperties {
 			handlePassDirective("indirect.", key, value, pass -> {
 				try {
 					String[] locations = value.split(" ");
-
 					indirectPointers.put(pass, new IndirectPointer(Integer.parseInt(locations[0]), Long.parseLong(locations[1])));
 				} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 					Iris.logger.fatal("Failed to parse indirect command for " + pass + "! " + value);
@@ -387,14 +404,17 @@ public class ShaderProperties {
 				int trueIndex;
 				long trueSize;
 				boolean isRelative;
-				float scaleX, scaleY;
+				float scaleX;
+				float scaleY;
 				String[] parts = value.split(" ");
+
 				if (parts.length <= 2) {
 					try {
 						trueIndex = Integer.parseInt(index);
 						trueSize = Long.parseLong(parts[0]);
 					} catch (NumberFormatException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size!", e);
+
 						return;
 					}
 
@@ -406,6 +426,7 @@ public class ShaderProperties {
 
 					if (trueIndex > 12) {
 						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 12, they're reserved!");
+
 						return;
 					}
 
@@ -425,11 +446,13 @@ public class ShaderProperties {
 						scaleY = Float.parseFloat(parts[3]);
 					} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size, or not correct format!", e);
+
 						return;
 					}
 
 					if (trueIndex > 12) {
 						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 12, they're reserved!");
+
 						return;
 					}
 
@@ -451,6 +474,7 @@ public class ShaderProperties {
 
 				if (optionalTextureStage.isEmpty()) {
 					Iris.logger.warn("Unknown texture stage " + "\"" + stageName + "\"," + " ignoring custom texture directive for " + key);
+
 					return;
 				}
 
@@ -459,20 +483,36 @@ public class ShaderProperties {
 				if (parts.length > 1) {
 					String newSamplerName = "customtex" + customTexAmount;
 					customTexAmount++;
+
 					TextureType type = null;
 					// Raw texture handling
 					if (parts.length == 6) {
 						// 1D texture handling
 						type = TextureType.TEXTURE_1D;
-						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
+						irisCustomTextures.put(newSamplerName,
+							new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)),
+								InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new),
+								Integer.parseInt(parts[3]), 0, 0,
+								PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new),
+								PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
 					} else if (parts.length == 7) {
 						// 2D texture handling
 						type = TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT));
-						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+						irisCustomTextures.put(newSamplerName,
+							new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)),
+								InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new),
+								Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0,
+								PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new),
+								PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
 					} else if (parts.length == 8) {
 						// 3D texture handling
 						type = TextureType.TEXTURE_3D;
-						irisCustomTextures.put(newSamplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
+						irisCustomTextures.put(newSamplerName,
+							new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)),
+								InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new),
+								Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]),
+								PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new),
+								PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
 					} else {
 						Iris.logger.warn("Unknown texture directive for " + key + ": " + value);
 					}
@@ -494,13 +534,28 @@ public class ShaderProperties {
 					// Raw texture handling
 					if (parts.length == 6) {
 						// 1D texture handling
-						irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), 0, 0, PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
+						irisCustomTextures.put(samplerName,
+							new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)),
+								InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new),
+								Integer.parseInt(parts[3]), 0, 0,
+								PixelFormat.fromString(parts[4]).orElseThrow(IllegalArgumentException::new),
+								PixelType.fromString(parts[5]).orElseThrow(IllegalArgumentException::new)));
 					} else if (parts.length == 7) {
 						// 2D texture handling
-						irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0, PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
+						irisCustomTextures.put(samplerName,
+							new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)),
+								InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new),
+								Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), 0,
+								PixelFormat.fromString(parts[5]).orElseThrow(IllegalArgumentException::new),
+								PixelType.fromString(parts[6]).orElseThrow(IllegalArgumentException::new)));
 					} else if (parts.length == 8) {
 						// 3D texture handling
-						irisCustomTextures.put(samplerName, new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)), InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new), Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]), PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new), PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
+						irisCustomTextures.put(samplerName,
+							new TextureDefinition.RawDefinition(parts[0], TextureType.valueOf(parts[1].toUpperCase(Locale.ROOT)),
+								InternalTextureFormat.fromString(parts[2]).orElseThrow(IllegalArgumentException::new),
+								Integer.parseInt(parts[3]), Integer.parseInt(parts[4]), Integer.parseInt(parts[5]),
+								PixelFormat.fromString(parts[6]).orElseThrow(IllegalArgumentException::new),
+								PixelType.fromString(parts[7]).orElseThrow(IllegalArgumentException::new)));
 					} else {
 						Iris.logger.warn("Unknown texture directive for " + key + ": " + value);
 					}
@@ -517,21 +572,26 @@ public class ShaderProperties {
 
 				if (irisCustomImages.size() > 15) {
 					Iris.logger.error("Only up to 16 images are allowed, but tried to add another image! " + key);
+
 					return;
 				}
 
 				ImageInformation image;
 
 				String samplerName = parts[0];
+
 				if (samplerName.equals("none")) {
 					samplerName = null;
 				}
+
 				PixelFormat format = PixelFormat.fromString(parts[1]).orElse(null);
 				InternalTextureFormat internalFormat = InternalTextureFormat.fromString(parts[2]).orElse(null);
 				PixelType pixelType = PixelType.fromString(parts[3]).orElse(null);
 
 				if (format == null || internalFormat == null || pixelType == null) {
-					Iris.logger.error("Image " + key2 + " is invalid! Format: " + format + " Internal format: " + internalFormat + " Pixel type: " + pixelType);
+					Iris.logger.error(
+						"Image " + key2 + " is invalid! Format: " + format + " Internal format: " + internalFormat + " Pixel type: " +
+							pixelType);
 				}
 
 				boolean clear = Boolean.parseBoolean(parts[4]);
@@ -541,10 +601,14 @@ public class ShaderProperties {
 				if (relative) { // Is relative?
 					float relativeWidth = Float.parseFloat(parts[6]);
 					float relativeHeight = Float.parseFloat(parts[7]);
-					image = new ImageInformation(key2, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, 0, 0, 0, clear, true, relativeWidth, relativeHeight);
+					image = new ImageInformation(key2, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, 0, 0, 0,
+						clear, true, relativeWidth, relativeHeight);
 				} else {
 					TextureType type;
-					int width, height, depth;
+					int width;
+					int height;
+					int depth;
+
 					if (parts.length == 7) {
 						type = TextureType.TEXTURE_1D;
 						width = Integer.parseInt(parts[6]);
@@ -562,21 +626,27 @@ public class ShaderProperties {
 						depth = Integer.parseInt(parts[8]);
 					} else {
 						Iris.logger.error("Unknown image type! " + key2 + " = " + value);
+
 						return;
 					}
-					image = new ImageInformation(key2, samplerName, type, format, internalFormat, pixelType, width, height, depth, clear, false, 0, 0);
+
+					image = new ImageInformation(key2, samplerName, type, format, internalFormat, pixelType, width, height, depth, clear,
+						false, 0, 0);
 				}
 
 				irisCustomImages.add(image);
 			});
 
-			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> handleBooleanValue(key, value, shouldFlip -> explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
-				.put(buffer, shouldFlip)));
+			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> handleBooleanValue(key, value,
+				shouldFlip -> explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
+					.put(buffer, shouldFlip)));
 
 			handlePassDirective("variable.", key, value, pass -> {
 				String[] parts = pass.split("\\.");
+
 				if (parts.length != 2) {
 					Iris.logger.warn("Custom variables should take the form of `variable.<type>.<name> = <expression>. Ignoring " + key);
+
 					return;
 				}
 
@@ -585,8 +655,10 @@ public class ShaderProperties {
 
 			handlePassDirective("uniform.", key, value, pass -> {
 				String[] parts = pass.split("\\.");
+
 				if (parts.length != 2) {
 					Iris.logger.warn("Custom uniforms should take the form of `uniform.<type>.<name> = <expression>. Ignoring " + key);
+
 					return;
 				}
 
@@ -597,11 +669,11 @@ public class ShaderProperties {
 			// TODO: Conditional program enabling directives
 		});
 
-		// We need to use a non-preprocessed property file here since we don't want any weird preprocessor changes to be applied to the screen/value layout.
+		// We need to use a non-preprocessed property file here since we don't want any weird preprocessor changes to be applied to the
+		// screen/value layout.
 		original.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
 			String value = (String) valueObject;
-
 			handleWhitespacedListDirective(key, value, "iris.features.required", options -> requiredFeatureFlags = options);
 			handleWhitespacedListDirective(key, value, "iris.features.optional", options -> optionalFeatureFlags = options);
 
@@ -629,23 +701,27 @@ public class ShaderProperties {
 		} else if ("false".equals(value) || "0".equals(value)) {
 			handler.accept(false);
 		} else {
-			Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
+			Iris.logger.warn(
+				"Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or " +
+					"false");
 		}
 	}
 
-		private static void handleBooleanDirective(String key, String value, String expectedKey, Consumer<OptionalBoolean> handler) {
-			if (!expectedKey.equals(key)) {
-				return;
-			}
-
-			if ("true".equals(value) || "1".equals(value)) {
-				handler.accept(OptionalBoolean.TRUE);
-			} else if ("false".equals(value) || "0".equals(value)) {
-				handler.accept(OptionalBoolean.FALSE);
-			} else {
-				Iris.logger.warn("Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or false");
-			}
+	private static void handleBooleanDirective(String key, String value, String expectedKey, Consumer<OptionalBoolean> handler) {
+		if (!expectedKey.equals(key)) {
+			return;
 		}
+
+		if ("true".equals(value) || "1".equals(value)) {
+			handler.accept(OptionalBoolean.TRUE);
+		} else if ("false".equals(value) || "0".equals(value)) {
+			handler.accept(OptionalBoolean.FALSE);
+		} else {
+			Iris.logger.warn(
+				"Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or " +
+					"false");
+		}
+	}
 
 	private static boolean handleIntDirective(String key, String value, String expectedKey, Consumer<Integer> handler) {
 		if (!expectedKey.equals(key)) {
@@ -654,16 +730,17 @@ public class ShaderProperties {
 
 		try {
 			int result = Integer.parseInt(value);
-
 			handler.accept(result);
 		} catch (NumberFormatException nex) {
-			Iris.logger.warn("Unexpected value for integer key " + key + " in shaders.properties: got " + value + ", but expected an integer");
+			Iris.logger.warn(
+				"Unexpected value for integer key " + key + " in shaders.properties: got " + value + ", but expected an integer");
 		}
 
 		return true;
 	}
 
-	private static boolean handleAffixedIntDirective(String prefix, String suffix, String key, String value, BiConsumer<String, Integer> handler) {
+	private static boolean handleAffixedIntDirective(String prefix, String suffix, String key, String value,
+		BiConsumer<String, Integer> handler) {
 		if (key.startsWith(prefix) && key.endsWith(suffix)) {
 			int substrBegin = prefix.length();
 			int substrEnd = key.length() - suffix.length();
@@ -676,10 +753,10 @@ public class ShaderProperties {
 
 			try {
 				int result = Integer.parseInt(value);
-
 				handler.accept(affixStrippedKey, result);
 			} catch (NumberFormatException nex) {
-				Iris.logger.warn("Unexpected value for integer key " + key + " in shaders.properties: got " + value + ", but expected an integer");
+				Iris.logger.warn(
+					"Unexpected value for integer key " + key + " in shaders.properties: got " + value + ", but expected an integer");
 			}
 
 			return true;
@@ -691,7 +768,6 @@ public class ShaderProperties {
 	private static void handlePassDirective(String prefix, String key, String value, Consumer<String> handler) {
 		if (key.startsWith(prefix)) {
 			String pass = key.substring(prefix.length());
-
 			handler.accept(pass);
 		}
 	}
@@ -699,7 +775,6 @@ public class ShaderProperties {
 	private static void handleProgramEnabledDirective(String prefix, String key, String value, Consumer<String> handler) {
 		if (key.startsWith(prefix)) {
 			String program = key.substring(prefix.length(), key.indexOf(".", prefix.length()));
-
 			handler.accept(program);
 		}
 	}
@@ -710,15 +785,14 @@ public class ShaderProperties {
 		}
 
 		String[] elements = value.split(" +");
-
 		handler.accept(Arrays.asList(elements));
 	}
 
-	private static void handlePrefixedWhitespacedListDirective(String prefix, String key, String value, BiConsumer<String, List<String>> handler) {
+	private static void handlePrefixedWhitespacedListDirective(String prefix, String key, String value,
+		BiConsumer<String, List<String>> handler) {
 		if (key.startsWith(prefix)) {
 			String prefixStrippedKey = key.substring(prefix.length());
 			String[] elements = value.split(" +");
-
 			handler.accept(prefixStrippedKey, Arrays.asList(elements));
 		}
 	}
@@ -728,7 +802,6 @@ public class ShaderProperties {
 			int endOfPassIndex = key.indexOf(".", prefix.length());
 			String stage = key.substring(prefix.length(), endOfPassIndex);
 			String sampler = key.substring(endOfPassIndex + 1);
-
 			handler.accept(stage, sampler);
 		}
 	}

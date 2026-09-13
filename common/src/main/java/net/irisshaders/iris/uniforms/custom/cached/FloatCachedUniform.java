@@ -5,7 +5,6 @@ import kroppeb.stareval.function.Type;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.uniform.FloatSupplier;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
-import org.lwjgl.opengl.GL21;
 
 public class FloatCachedUniform extends CachedUniform {
 
@@ -21,6 +20,7 @@ public class FloatCachedUniform extends CachedUniform {
 	protected boolean doUpdate() {
 		float prev = this.cached;
 		this.cached = this.supplier.getAsFloat();
+
 		return prev != cached;
 	}
 

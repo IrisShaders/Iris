@@ -1,108 +1,95 @@
 package net.irisshaders.iris.gl.buffer;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
-import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.gl.IrisRenderSystem;
-import net.irisshaders.iris.gl.sampler.SamplerLimits;
-import org.lwjgl.opengl.GL43C;
+import net.irisshaders.iris.vulkan.VulkanCommandBridge;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public class ShaderStorageBufferHolder {
-	private static final List<ShaderStorageBuffer> ACTIVE_BUFFERS = new ArrayList<>();
+public final class ShaderStorageBufferHolder implements AutoCloseable {
+	private static final ArrayList<ShaderStorageBufferHolder> ACTIVE = new ArrayList<>();
+	private final Map<Integer, ShaderStorageBuffer> buffers = new LinkedHashMap<>();
 	private int cachedWidth;
 	private int cachedHeight;
-	private ShaderStorageBuffer[] buffers;
-	private boolean destroyed;
-
+	private boolean closed;
 
 	public ShaderStorageBufferHolder(Int2ObjectArrayMap<BuiltShaderStorageInfo> overrides, int width, int height) {
-		destroyed = false;
+		this(VulkanCommandBridge.device(RenderSystem.getDevice()), overrides, width, height);
+	}
+
+	public ShaderStorageBufferHolder(VulkanDevice device, Int2ObjectArrayMap<BuiltShaderStorageInfo> overrides, int width, int height) {
 		cachedWidth = width;
 		cachedHeight = height;
-		buffers = new ShaderStorageBuffer[Collections.max(overrides.keySet()) + 1];
-		overrides.forEach((index, bufferInfo) -> {
-			if (bufferInfo.size() > IrisRenderSystem.getVRAM()) {
-				throw new OutOfVideoMemoryError("We only have " + toMib(IrisRenderSystem.getVRAM()) + "MiB of RAM to work with, but the pack is requesting " + bufferInfo.size() + "! Can't continue.");
-			}
 
-			if (index > SamplerLimits.get().getMaxShaderStorageUnits()) {
-				throw new IllegalStateException("We don't have enough SSBO units??? (index: " + index + ", max: " + SamplerLimits.get().getMaxShaderStorageUnits());
-			}
+		try {
+			overrides.forEach((index, info) -> {
+				if (index < 0) {
+					throw new IllegalArgumentException("Negative SSBO binding: " + index);
+				}
 
-			buffers[index] = new ShaderStorageBuffer(index, bufferInfo);
-			ACTIVE_BUFFERS.add(buffers[index]);
-			int buffer = buffers[index].getId();
+				buffers.put(index, new ShaderStorageBuffer(device, index, info, width, height));
+			});
+			ACTIVE.add(this);
+		} catch (RuntimeException | Error failure) {
+			close();
 
-			if (bufferInfo.relative()) {
-				buffers[index].resizeIfRelative(width, height);
-			} else {
-				buffers[index].createStatic();
-			}
-		});
-		GlStateManager._glBindBuffer(GL43C.GL_SHADER_STORAGE_BUFFER, 0);
-	}
-
-	private static long toMib(long x) {
-		return x / 1024L / 1024L;
-	}
-
-	public static void forceDeleteBuffers() {
-		if (!ACTIVE_BUFFERS.isEmpty()) {
-			Iris.logger.warn("Found " + ACTIVE_BUFFERS.size() + " stored buffers with a total size of " + ACTIVE_BUFFERS.stream().map(ShaderStorageBuffer::getSize).reduce(0L, Long::sum) + ", forcing them to be deleted.");
-			ACTIVE_BUFFERS.forEach(ShaderStorageBuffer::destroy);
-			ACTIVE_BUFFERS.clear();
+			throw failure;
 		}
+	}
+
+	public ShaderStorageBuffer getBuffer(int index) {
+		if (closed) {
+			throw new IllegalStateException("Storage buffers are closed");
+		}
+
+		var buffer = buffers.get(index);
+
+		if (buffer == null) {
+			throw new IllegalArgumentException("No bufferObject." + index + " declared by the shader pack");
+		}
+
+		return buffer;
 	}
 
 	public void hasResizedScreen(int width, int height) {
-		if (width != cachedWidth || height != cachedHeight) {
-			cachedWidth = width;
-			cachedHeight = height;
-			for (ShaderStorageBuffer buffer : buffers) {
-				if (buffer != null) {
-					buffer.resizeIfRelative(width, height);
-				}
-			}
+		if (closed) {
+			throw new IllegalStateException("Storage buffers are closed");
 		}
+
+		if (width == cachedWidth && height == cachedHeight) {
+			return;
+		}
+
+		for (var buffer : buffers.values()) {
+			buffer.resizeIfRelative(width, height);
+		}
+
+		cachedWidth = width;
+		cachedHeight = height;
 	}
 
-	public void setupBuffers() {
-		if (destroyed) {
-			throw new IllegalStateException("Tried to use destroyed buffer objects");
+	public static void forceDeleteBuffers() {
+		for (var holder : new ArrayList<>(ACTIVE)) {
+			holder.close();
 		}
-
-		for (ShaderStorageBuffer buffer : buffers) {
-			if (buffer != null) {
-				buffer.bind();
-			}
-		}
-	}
-
-	public int getBufferIndex(int index) {
-		if (buffers.length < index || buffers[index] == null)
-			throw new RuntimeException("Tried to query a buffer for indirect dispatch that doesn't exist!");
-
-		return buffers[index].getId();
 	}
 
 	public void destroyBuffers() {
-		for (ShaderStorageBuffer buffer : buffers) {
-			if (buffer != null) {
-				ACTIVE_BUFFERS.remove(buffer);
-				buffer.destroy();
-			}
-		}
-		buffers = null;
-		destroyed = true;
+		close();
 	}
 
-	private static class OutOfVideoMemoryError extends RuntimeException {
-		public OutOfVideoMemoryError(String s) {
-			super(s);
+	@Override
+	public void close() {
+		if (closed) {
+			return;
 		}
+
+		closed = true;
+		buffers.values().forEach(ShaderStorageBuffer::close);
+		buffers.clear();
+		ACTIVE.remove(this);
 	}
 }

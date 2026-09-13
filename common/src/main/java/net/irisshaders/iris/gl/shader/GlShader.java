@@ -2,6 +2,7 @@
 
 package net.irisshaders.iris.gl.shader;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.gl.GLDebug;
 import net.irisshaders.iris.gl.GlResource;
@@ -28,6 +29,10 @@ public class GlShader extends GlResource {
 	}
 
 	private static int createShader(ShaderType type, String name, String src) {
+		if (RenderSystem.getDevice().getDeviceInfo().backendName().equalsIgnoreCase("Vulkan")) {
+			throw new UnsupportedOperationException("The Iris program still uses the OpenGL compiler: " + name);
+		}
+
 		int handle = GlStateManager.glCreateShader(type.id);
 		ShaderWorkarounds.safeShaderSource(handle, src);
 		GlStateManager.glCompileShader(handle);

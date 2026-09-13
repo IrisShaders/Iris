@@ -1,383 +1,311 @@
 package net.irisshaders.iris.pipeline.transform.transformer;
 
-import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
-import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
+import io.github.douira.glsl_transformer.ast.node.declaration.InterfaceBlockDeclaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
-import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeReference;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructBody;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
-import io.github.douira.glsl_transformer.ast.query.match.Matcher;
-import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
-import io.github.douira.glsl_transformer.ast.transform.Template;
-import io.github.douira.glsl_transformer.parser.ParseShape;
-import io.github.douira.glsl_transformer.util.Type;
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.irisshaders.iris.pipeline.transform.vulkan.VulkanGlsl;
 
 import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
-public class LayoutTransformer {
-	private static final Logger LOGGER = LogManager.getLogger(LayoutTransformer.class);
+public final class LayoutTransformer {
+	private static final List<PatchShaderType> PIPELINE = List.of(PatchShaderType.VERTEX, PatchShaderType.TESS_CONTROL,
+		PatchShaderType.TESS_EVAL, PatchShaderType.GEOMETRY, PatchShaderType.FRAGMENT);
 
-	private static final ShaderType[] pipeline = {ShaderType.VERTEX, ShaderType.TESSELATION_CONTROL, ShaderType.TESSELATION_EVAL, ShaderType.GEOMETRY, ShaderType.FRAGMENT};
-	private static final Matcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(
-		StorageType.OUT);
-	private static final Matcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(
-		StorageType.IN);
-	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<>(
-		"out float name;",
-		ParseShape.EXTERNAL_DECLARATION) {
-		{
-			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
-			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*",
-				pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
-		}
-
-		@Override
-		public boolean matchesExtract(ExternalDeclaration tree) {
-			boolean result = super.matchesExtract(tree);
-			if (!result) {
-				return false;
-			}
-
-			// look for an out qualifier but no layout qualifier
-			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
-			var hasOutQualifier = false;
-			for (TypeQualifierPart part : qualifier.getParts()) {
-				if (part instanceof StorageQualifier storageQualifier) {
-					if (storageQualifier.storageType == StorageType.OUT) {
-						hasOutQualifier = true;
-					}
-				} else if (part instanceof LayoutQualifier) {
-					return false;
-				}
-			}
-			return hasOutQualifier;
-		}
-	};
-	private static final Matcher<ExternalDeclaration> nonLayoutInDeclarationMatcher = new Matcher<>(
-		"in float name;",
-		ParseShape.EXTERNAL_DECLARATION) {
-		{
-			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
-			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*",
-				pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
-		}
-
-		@Override
-		public boolean matchesExtract(ExternalDeclaration tree) {
-			boolean result = super.matchesExtract(tree);
-			if (!result) {
-				return false;
-			}
-
-			// look for an out qualifier but no layout qualifier
-			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
-			var hasOutQualifier = false;
-			for (TypeQualifierPart part : qualifier.getParts()) {
-				if (part instanceof StorageQualifier storageQualifier) {
-					if (storageQualifier.storageType == StorageType.IN) {
-						hasOutQualifier = true;
-					}
-				} else if (part instanceof LayoutQualifier) {
-					return false;
-				}
-			}
-			return hasOutQualifier;
-		}
-	};
-	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
-		.withExternalDeclaration("out __type __name;");
-	private static final Template<ExternalDeclaration> layoutedInDeclarationTemplate = Template
-		.withExternalDeclaration("in __type __name;");
-	private static final String attachTargetPrefix = "outColor";
-	private static final List<String> reservedWords = List.of("texture");
-
-	static {
-		layoutedOutDeclarationTemplate.markLocalReplacement(
-			layoutedOutDeclarationTemplate.getSourceRoot().nodeIndex.getOne(TypeQualifier.class));
-		layoutedOutDeclarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
-		layoutedOutDeclarationTemplate.markLocalReplacement("__name", DeclarationMember.class);
-		layoutedInDeclarationTemplate.markLocalReplacement(
-			layoutedInDeclarationTemplate.getSourceRoot().nodeIndex.getOne(TypeQualifier.class));
-		layoutedInDeclarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
-		layoutedInDeclarationTemplate.markLocalReplacement("__name", DeclarationMember.class);
+	private LayoutTransformer() {
 	}
 
-	private static StorageQualifier getConstQualifier(TypeQualifier qualifier) {
-		if (qualifier == null) {
-			return null;
-		}
-		for (TypeQualifierPart constQualifier : qualifier.getChildren()) {
-			if (constQualifier instanceof StorageQualifier storageQualifier) {
-				if (storageQualifier.storageType == StorageType.CONST) {
-					return storageQualifier;
-				}
-			}
-		}
-		return null;
-	}
+	public static void transformGrouped(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, Parameters parameters) {
+		List<Variable> previous = List.of();
 
-	private static TypeQualifier makeQualifierOut(TypeQualifier typeQualifier) {
-		for (TypeQualifierPart qualifierPart : typeQualifier.getParts()) {
-			if (qualifierPart instanceof StorageQualifier storageQualifier) {
-				if (storageQualifier.storageType == StorageType.IN) {
-					storageQualifier.storageType = StorageType.OUT;
-				}
-			}
-		}
-		return typeQualifier;
-	}
+		for (PatchShaderType stage : PIPELINE) {
+			TranslationUnit tree = trees.get(stage);
 
-	// does transformations that require cross-shader type data
-	public static void transformGrouped(
-		ASTParser t,
-		Map<PatchShaderType, TranslationUnit> trees,
-		Parameters parameters) {
-		/*
-		  find attributes that are declared as "in" in geometry or fragment but not
-		  declared as "out" in the previous stage. The missing "out" declarations for
-		  these attributes are added and initialized.
-
-		  It doesn't bother with array specifiers because they are only legal in
-		  geometry shaders, but then also only as an in declaration. The out
-		  declaration in the vertex shader is still just a single value. Missing out
-		  declarations in the geometry shader are also just normal.
-
-		  TODO:
-		  - fix issues where Iris' own declarations are detected and patched like
-		  iris_FogFragCoord if there are geometry shaders present
-		  - improved geometry shader support? They use funky declarations
-		 */
-		ShaderType prevType = null;
-		final AtomicReference<Object2IntMap<String>> lastMap = new AtomicReference<>();
-		for (ShaderType type : pipeline) {
-			PatchShaderType[] patchTypes = PatchShaderType.fromGlShaderType(type);
-
-			// check if the patch types have sources and continue if not
-			boolean hasAny = false;
-			for (PatchShaderType currentType : patchTypes) {
-				if (trees.get(currentType) != null) {
-					hasAny = true;
-				}
-			}
-
-			if (!hasAny) {
+			if (tree == null) {
 				continue;
 			}
 
-
-			TranslationUnit currentTree = trees.get(patchTypes[0]);
-			if (currentTree == null) {
-				continue;
-			}
-			Root currentRoot = currentTree.getRoot();
-
-
-			currentRoot.indexBuildSession((root) -> {
-				if (root != null) {
-					if (lastMap.get() != null) {
-						transformIn(lastMap.get(), t, currentTree, root, parameters);
-					}
-
-					lastMap.set(transformOut(t, currentTree, root, parameters));
-				}
-			});
-
+			List<Variable> inputs = collect(tree, stage, StorageType.IN);
+			assign(previous, inputs);
+			previous = collect(tree, stage, StorageType.OUT);
 		}
+
+		assign(previous, List.of());
 	}
 
-	public static Object2IntMap<String> transformOut(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
-		// do layout attachment (attaches a location(layout = 4) to the out declaration
-		// outColor4 for example)
-
-		// iterate the declarations
-		ArrayList<NewDeclarationData> newDeclarationData = new ArrayList<>();
-		int location = 0;
-
-		Object2IntMap<String> map = new Object2IntArrayMap<>();
-		ArrayList<ExternalDeclaration> declarationsToRemove = new ArrayList<>();
-		for (DeclarationExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
-			if (!nonLayoutOutDeclarationMatcher.matchesExtract(declaration)) {
-				continue;
-			}
-
-			// find the matching outColor members
-			List<DeclarationMember> members = nonLayoutOutDeclarationMatcher
-				.getNodeMatch("name*", DeclarationMember.class)
-				.getAncestor(TypeAndInitDeclaration.class)
-				.getMembers();
-			TypeQualifier typeQualifier = nonLayoutOutDeclarationMatcher.getNodeMatch("qualifier", TypeQualifier.class);
-			BuiltinNumericTypeSpecifier typeSpecifier = nonLayoutOutDeclarationMatcher.getNodeMatch("type",
-				BuiltinNumericTypeSpecifier.class);
-			int addedDeclarations = 0;
-			for (DeclarationMember member : members) {
-				String name = member.getName().getName();
-
-				map.put(name, location);
-
-				Iris.logger.warn("Found a declaration named " + name);
-				newDeclarationData.add(new NewDeclarationData(typeQualifier, typeSpecifier, member, location++, name));
-				addedDeclarations++;
-			}
-
-			// if the member list is now empty, remove the declaration
-			if (addedDeclarations == members.size()) {
-				declarationsToRemove.add(declaration);
-			}
-		}
-		tree.getChildren().removeAll(declarationsToRemove);
-		for (ExternalDeclaration declaration : declarationsToRemove) {
-			declaration.detachParent();
-		}
-
-		// generate new declarations with layout qualifiers for each outColor member
-		ArrayList<ExternalDeclaration> newDeclarations = new ArrayList<>();
-
-		// Note: since everything is wrapped in a big Root.indexBuildSession, we don't
-		// need to do it manually here
-		for (NewDeclarationData data : newDeclarationData) {
-			DeclarationMember member = data.member;
-			member.detach();
-			TypeQualifier newQualifier = data.qualifier.cloneInto(root);
-			newQualifier.getChildren()
-				.add(0, new LayoutQualifier(Stream.of(new NamedLayoutQualifierPart(
-					new Identifier("location"),
-					new LiteralExpression(Type.INT32, data.location)))));
-			ExternalDeclaration newDeclaration = layoutedOutDeclarationTemplate.getInstanceFor(root,
-				newQualifier,
-				data.type.cloneInto(root),
-				member);
-			newDeclarations.add(newDeclaration);
-		}
-		tree.injectNodes(ASTInjectionPoint.BEFORE_DECLARATIONS, newDeclarations);
-
-		return map;
-	}
-
-	public static void transformIn(Object2IntMap<String> map, ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
-		// do layout attachment (attaches a location(layout = 4) to the out declaration
-		// outColor4 for example)
-
-		// iterate the declarations
-		ArrayList<NewDeclarationData> newDeclarationData = new ArrayList<>();
-
-		ArrayList<ExternalDeclaration> declarationsToRemove = new ArrayList<>();
-		for (DeclarationExternalDeclaration declaration : root.nodeIndex.get(DeclarationExternalDeclaration.class)) {
-			if (!nonLayoutInDeclarationMatcher.matchesExtract(declaration)) {
-				continue;
-			}
-
-			// find the matching outColor members
-			List<DeclarationMember> members = nonLayoutInDeclarationMatcher
-				.getNodeMatch("name*", DeclarationMember.class)
-				.getAncestor(TypeAndInitDeclaration.class)
-				.getMembers();
-			TypeQualifier typeQualifier = nonLayoutInDeclarationMatcher.getNodeMatch("qualifier", TypeQualifier.class);
-			BuiltinNumericTypeSpecifier typeSpecifier = nonLayoutInDeclarationMatcher.getNodeMatch("type",
-				BuiltinNumericTypeSpecifier.class);
-			int addedDeclarations = 0;
-			for (DeclarationMember member : members) {
-				String name = member.getName().getName();
-				Iris.logger.warn("Found a member with name " + name);
-
-				if (!map.containsKey(name)) {
+	private static List<Variable> collect(TranslationUnit tree, PatchShaderType stage, StorageType direction) {
+		List<Variable> variables = new ArrayList<>();
+		Root root = tree.getRoot();
+		root.indexBuildSession(() -> {
+			for (var external : List.copyOf(tree.getChildren())) {
+				if (!(external instanceof DeclarationExternalDeclaration declaration)) {
 					continue;
 				}
 
-				newDeclarationData.add(new NewDeclarationData(typeQualifier, typeSpecifier, member, map.getInt(name), name));
-				addedDeclarations++;
-			}
+				if (declaration.getDeclaration() instanceof TypeAndInitDeclaration typed) {
+					var qualifier = typed.getType().getTypeQualifier();
 
-			// if the member list is now empty, remove the declaration
-			if (addedDeclarations == members.size()) {
-				declarationsToRemove.add(declaration);
-			}
-		}
-		tree.getChildren().removeAll(declarationsToRemove);
-		for (ExternalDeclaration declaration : declarationsToRemove) {
-			declaration.detachParent();
-		}
-
-		// generate new declarations with layout qualifiers for each outColor member
-		ArrayList<ExternalDeclaration> newDeclarations = new ArrayList<>();
-
-		// Note: since everything is wrapped in a big Root.indexBuildSession, we don't
-		// need to do it manually here
-		for (NewDeclarationData data : newDeclarationData) {
-			DeclarationMember member = data.member;
-			member.detach();
-			TypeQualifier newQualifier = data.qualifier.cloneInto(root);
-			newQualifier.getChildren()
-				.add(0, new LayoutQualifier(Stream.of(new NamedLayoutQualifierPart(
-					new Identifier("location"),
-					new LiteralExpression(Type.INT32, data.location)))));
-			ExternalDeclaration newDeclaration = layoutedInDeclarationTemplate.getInstanceFor(root,
-				newQualifier,
-				data.type.cloneInto(root),
-				member);
-			newDeclarations.add(newDeclaration);
-		}
-		tree.injectNodes(ASTInjectionPoint.BEFORE_DECLARATIONS, newDeclarations);
-	}
-
-	private static class DeclarationMatcher extends Matcher<ExternalDeclaration> {
-		private final StorageType storageType;
-
-		{
-			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
-			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*",
-				pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
-		}
-
-		public DeclarationMatcher(StorageType storageType) {
-			super("out float name;", ParseShape.EXTERNAL_DECLARATION);
-			this.storageType = storageType;
-		}
-
-		@Override
-		public boolean matchesExtract(ExternalDeclaration tree) {
-			boolean result = super.matchesExtract(tree);
-			if (!result) {
-				return false;
-			}
-			TypeQualifier qualifier = getNodeMatch("qualifier", TypeQualifier.class);
-			for (TypeQualifierPart part : qualifier.getParts()) {
-				if (part instanceof StorageQualifier storageQualifier) {
-					if (storageQualifier.storageType == storageType) {
-						return true;
+					if (!VulkanGlsl.hasStorage(qualifier, direction)) {
+						continue;
 					}
+
+					Integer explicit = location(qualifier, root);
+					int nextLocation = explicit == null ? 0 : explicit;
+
+					for (var member : List.copyOf(typed.getMembers())) {
+						if (member.getName().getName().startsWith("gl_")) {
+							continue;
+						}
+
+						var split = new TypeAndInitDeclaration(typed.getType().cloneInto(root), Stream.of(member.cloneInto(root)));
+						var splitQualifier = split.getType().getTypeQualifier();
+						int size = locations(typed.getType().getTypeSpecifier(), member.getArraySpecifier(), root,
+							perVertex(stage, direction, qualifier));
+
+						if (explicit != null) {
+							VulkanGlsl.setLayout(splitQualifier, "location", nextLocation);
+						}
+
+						variables.add(new Variable(member.getName().getName(), splitQualifier, size));
+						tree.getChildren().add(tree.getChildren().indexOf(declaration), new DeclarationExternalDeclaration(split));
+						nextLocation = Math.addExact(nextLocation, size);
+					}
+
+					if (typed.getMembers().stream().noneMatch(m -> m.getName().getName().startsWith("gl_"))) {
+						declaration.detachAndDelete();
+					}
+				} else if (declaration.getDeclaration() instanceof InterfaceBlockDeclaration block) {
+					var qualifier = block.getTypeQualifier();
+
+					if (!VulkanGlsl.hasStorage(qualifier, direction) || block.getBlockName().getName().startsWith("gl_")) {
+						continue;
+					}
+
+					int size = blockLocations(block.getStructBody(), root);
+					size = arrayLocations(size, root, perVertex(stage, direction, qualifier), block.getArraySpecifier());
+					variables.add(new Variable(block.getBlockName().getName(), qualifier, size));
 				}
 			}
+		});
+
+		return variables;
+	}
+
+	private static boolean perVertex(PatchShaderType stage, StorageType direction, TypeQualifier qualifier) {
+		if (VulkanGlsl.hasStorage(qualifier, StorageType.PATCH)) {
 			return false;
+		}
+
+		return direction == StorageType.IN &&
+			(stage == PatchShaderType.TESS_CONTROL || stage == PatchShaderType.TESS_EVAL || stage == PatchShaderType.GEOMETRY)
+			|| direction == StorageType.OUT && stage == PatchShaderType.TESS_CONTROL;
+	}
+
+	private static int locations(TypeSpecifier type, ArraySpecifier array, Root root, boolean perVertex) {
+		int size;
+
+		if (type instanceof BuiltinNumericTypeSpecifier numeric) {
+			int[] shape = numeric.type.getDimensions();
+			int columns = numeric.type.isMatrix() ? shape[0] : 1;
+			int rows = numeric.type.isScalar() ? 1 : shape[numeric.type.isMatrix() ? 1 : 0];
+			size = columns * ((Math.max(32, numeric.type.getBitDepth()) * rows + 127) / 128);
+		} else if (type instanceof StructSpecifier struct) {
+			size = blockLocations(struct.getStructBody(), root);
+		} else if (type instanceof TypeReference reference) {
+			var struct = root.nodeIndex.getStream(StructSpecifier.class)
+				.filter(s -> s.getName() != null && s.getName().getName().equals(reference.getReference().getName())).findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Missing interface struct: " + reference.getReference().getName()));
+			size = blockLocations(struct.getStructBody(), root);
+		} else {
+			throw new IllegalArgumentException("Unsupported stage interface type: " + type);
+		}
+
+		return arrayLocations(size, root, perVertex, array, type.getArraySpecifier());
+	}
+
+	private static int arrayLocations(int size, Root root, boolean skipOuter, ArraySpecifier... arrays) {
+		for (var array : arrays) {
+			if (array == null) {
+				continue;
+			}
+
+			for (var dimension : array.getDimensions()) {
+				if (skipOuter) {
+					skipOuter = false;
+					continue;
+				}
+
+				int length = VulkanGlsl.integer(dimension, root);
+
+				if (length <= 0) {
+					throw new IllegalArgumentException("Invalid interface array size");
+				}
+
+				size = Math.multiplyExact(size, length);
+			}
+		}
+
+		return size;
+	}
+
+	private static int blockLocations(StructBody body, Root root) {
+		int size = 0;
+
+		for (var member : body.getMembers()) {
+			if (VulkanGlsl.layout(member.getType().getTypeQualifier(), "location") != null) {
+				throw new IllegalArgumentException("Explicit interface block member locations need separate allocation");
+			}
+
+			for (var declarator : member.getDeclarators()) {
+				size = Math.addExact(size, locations(member.getType().getTypeSpecifier(), declarator.getArraySpecifier(), root, false));
+			}
+		}
+
+		return size;
+	}
+
+	private static Integer location(TypeQualifier qualifier, Root root) {
+		var part = VulkanGlsl.layout(qualifier, "location");
+
+		return part == null ? null : VulkanGlsl.integer(part.getExpression(), root);
+	}
+
+	private static void assign(List<Variable> outputs, List<Variable> inputs) {
+		Map<String, List<Variable>> groups = new TreeMap<>();
+		Map<String, BitSet> occupiedOutputs = new HashMap<>(), occupiedInputs = new HashMap<>();
+
+		for (var side : List.of(outputs, inputs)) {
+			Map<String, BitSet> occupied = side == outputs ? occupiedOutputs : occupiedInputs;
+
+			for (Variable variable : side) {
+				groups.computeIfAbsent(variable.namespace() + ":" + variable.name, ignored -> new ArrayList<>()).add(variable);
+
+				if (variable.location != null) {
+					reserve(occupied, variable, variable.location);
+				}
+			}
+		}
+		// Propagate explicit locations before allocating any implicit ones.
+		for (var group : groups.values()) {
+			Integer explicit = null;
+
+			for (Variable variable : group) {
+				if (variable.location == null) {
+					continue;
+				}
+
+				if (explicit != null && !explicit.equals(variable.location)) {
+					throw new IllegalArgumentException("Conflicting stage locations: " + variable.name);
+				}
+
+				explicit = variable.location;
+			}
+
+			if (explicit != null) {
+				assignGroup(group, outputs, occupiedOutputs, occupiedInputs, explicit);
+			}
+		}
+
+		for (var group : groups.values()) {
+			if (group.getFirst().location != null) {
+				continue;
+			}
+
+			int location = 0;
+
+			while (!fits(group, outputs, occupiedOutputs, occupiedInputs, location)) {
+				location++;
+			}
+
+			assignGroup(group, outputs, occupiedOutputs, occupiedInputs, location);
 		}
 	}
 
-	record NewDeclarationData(TypeQualifier qualifier, TypeSpecifier type, DeclarationMember member, int location,
-							  String name) {
+	private static boolean fits(List<Variable> group, List<Variable> outputs, Map<String, BitSet> out, Map<String, BitSet> in,
+		int location) {
+		for (var variable : group) {
+			var occupied = (outputs.contains(variable) ? out : in).computeIfAbsent(variable.namespace(), ignored -> new BitSet());
+			int start = Math.multiplyExact(location, 4);
+			int end = Math.addExact(start, Math.multiplyExact(variable.size, 4));
+			int used = occupied.nextSetBit(start);
+
+			if (used >= 0 && used < end) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static void assignGroup(List<Variable> group, List<Variable> outputs, Map<String, BitSet> out, Map<String, BitSet> in,
+		int location) {
+		for (var variable : group) {
+			if (variable.location != null) {
+				continue;
+			}
+
+			reserve(outputs.contains(variable) ? out : in, variable, location);
+			variable.qualifier.getRoot().indexBuildSession(() -> VulkanGlsl.setLayout(variable.qualifier, "location", location));
+			variable.location = location;
+		}
+	}
+
+	private static void reserve(Map<String, BitSet> map, Variable variable, int location) {
+		if (location < 0 || location > 65535) {
+			throw new IllegalArgumentException("Invalid interface location: " + location);
+		}
+
+		if (VulkanGlsl.layout(variable.qualifier, "component") != null) {
+			throw new IllegalArgumentException("Component-qualified interfaces need component allocation: " + variable.name);
+		}
+
+		var occupied = map.computeIfAbsent(variable.namespace(), ignored -> new BitSet());
+		int start = Math.multiplyExact(location, 4);
+		int end = Math.addExact(start, Math.multiplyExact(variable.size, 4));
+		int used = occupied.nextSetBit(start);
+
+		if (used >= 0 && used < end) {
+			throw new IllegalArgumentException("Overlapping interface locations: " + variable.name);
+		}
+
+		occupied.set(start, end);
+	}
+
+	private static final class Variable {
+		final String name;
+		final TypeQualifier qualifier;
+		final int size;
+		Integer location;
+
+		Variable(String name, TypeQualifier qualifier, int size) {
+			this.name = name;
+			this.qualifier = qualifier;
+			this.size = size;
+			this.location = location(qualifier, qualifier.getRoot());
+		}
+
+		String namespace() {
+			var index = VulkanGlsl.layout(qualifier, "index");
+
+			return Integer.toString(index == null ? 0 : VulkanGlsl.integer(index.getExpression(), qualifier.getRoot()));
+		}
 	}
 }

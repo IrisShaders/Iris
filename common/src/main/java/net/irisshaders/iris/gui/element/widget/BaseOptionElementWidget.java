@@ -167,14 +167,14 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
-		if (event.button() == 1 || event.button() == 2) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT || event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
 			boolean refresh = false;
 
 			if (Minecraft.getInstance().hasShiftDown()) {
 				refresh = applyOriginalValue();
 			}
 			if (!refresh) {
-				if (event.button() == 1) {
+				if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
 					refresh = applyNextValue();
 				} else {
 					refresh = applyPreviousValue();

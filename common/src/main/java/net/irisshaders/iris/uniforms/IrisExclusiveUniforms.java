@@ -61,6 +61,7 @@ public class IrisExclusiveUniforms {
 		uniforms.uniform3d(PER_FRAME, "vehicleLookVector", IrisExclusiveUniforms::getVehicleLookVector);
 		uniforms.uniform3d(PER_FRAME, "relativeVehiclePosition", IrisExclusiveUniforms::getRelativeVehiclePosition);
 		uniforms.uniform1f(PER_FRAME, "thunderStrength", IrisExclusiveUniforms::getThunderStrength);
+		uniforms.uniform1f(PER_FRAME, "glintAlpha", () -> Minecraft.getInstance().options.glintStrength().get());
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "currentPlayerHealth", IrisExclusiveUniforms::getCurrentHealth);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "heavyFog", IrisExclusiveUniforms::isHeavyFog);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "maxPlayerHealth", IrisExclusiveUniforms::getMaxHealth);

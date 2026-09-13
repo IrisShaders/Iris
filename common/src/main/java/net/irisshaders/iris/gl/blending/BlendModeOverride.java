@@ -13,6 +13,10 @@ public class BlendModeOverride {
 		BlendModeStorage.restoreBlend();
 	}
 
+	public BlendMode blendMode() {
+		return blendMode;
+	}
+
 	public void apply() {
 		BlendModeStorage.overrideBlend(this.blendMode);
 	}

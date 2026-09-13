@@ -6,13 +6,15 @@ import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.Patch;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 
+import java.util.Set;
+
 public class TextureStageParameters extends Parameters {
 	private final TextureStage stage;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public TextureStageParameters(Patch patch, TextureStage stage,
-								  Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		super(patch, textureMap);
+								  Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
+		super(patch, textureMap, textureOverrides);
 		this.stage = stage;
 	}
 

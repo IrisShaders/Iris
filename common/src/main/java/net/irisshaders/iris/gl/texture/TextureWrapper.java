@@ -1,14 +1,16 @@
 package net.irisshaders.iris.gl.texture;
 
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class TextureWrapper implements TextureAccess {
-	private final IntSupplier texture;
+	private final Supplier<GpuTextureView> texture;
 	private final TextureType type;
 
-	public TextureWrapper(IntSupplier texture, TextureType type) {
+	public TextureWrapper(Supplier<GpuTextureView> texture, TextureType type) {
 		this.texture = texture;
 		this.type = type;
 	}
@@ -20,7 +22,12 @@ public class TextureWrapper implements TextureAccess {
 
 	@Override
 	public IntSupplier getTextureId() {
-		return this.texture;
+		throw new UnsupportedOperationException("TextureWrapper uses Vulkan views");
+	}
+
+	@Override
+	public GpuTextureView getTextureView() {
+		return texture.get();
 	}
 
 	@Override

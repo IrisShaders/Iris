@@ -1,11 +1,9 @@
 package net.irisshaders.iris.uniforms.custom.cached;
 
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import kroppeb.stareval.function.FunctionReturn;
 import kroppeb.stareval.function.Type;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
-import org.lwjgl.opengl.GL21;
 
 import java.util.function.IntSupplier;
 
@@ -23,6 +21,7 @@ public class IntCachedUniform extends CachedUniform {
 	protected boolean doUpdate() {
 		int prev = this.cached;
 		this.cached = this.supplier.getAsInt();
+
 		return prev != cached;
 	}
 

@@ -3,45 +3,34 @@ package net.irisshaders.iris.pipeline;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
-import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.backend.opengl.GlBuffer;
-import com.mojang.renderpearl.backend.opengl.GlConst;
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.renderpearl.api.pipeline.ColorTargetState;
-import com.mojang.renderpearl.api.pipeline.DepthStencilState;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.api.pipeline.CompareOp;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
-import net.irisshaders.iris.gl.GLDebug;
-import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
-import net.irisshaders.iris.gl.image.GlImage;
-import net.irisshaders.iris.gl.program.ComputeProgram;
-import net.irisshaders.iris.gl.program.Program;
-import net.irisshaders.iris.gl.program.ProgramBuilder;
-import net.irisshaders.iris.gl.program.ProgramSamplers;
-import net.irisshaders.iris.gl.program.ProgramUniforms;
 import net.irisshaders.iris.gl.sampler.GlSampler;
-import net.irisshaders.iris.gl.sampler.SamplerLimits;
+import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.texture.TextureAccess;
-import net.irisshaders.iris.mixin.GlStateManagerAccessor;
-import net.irisshaders.iris.mixinterface.CustomPass;
 import net.irisshaders.iris.pathways.CenterDepthSampler;
-import net.irisshaders.iris.pathways.FullScreenQuadRenderer;
+import net.irisshaders.iris.pipeline.programs.CompositeProgram;
+import net.irisshaders.iris.pipeline.programs.ComputeProgram;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
+import net.irisshaders.iris.samplers.CustomTextureSamplerInterceptor;
 import net.irisshaders.iris.samplers.IrisImages;
 import net.irisshaders.iris.samplers.IrisSamplers;
+import net.irisshaders.iris.samplers.ProgramResources;
 import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
 import net.irisshaders.iris.shaderpack.programs.ComputeSource;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
@@ -51,36 +40,39 @@ import net.irisshaders.iris.shaderpack.properties.ProgramDirectives;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.targets.BufferFlipper;
+import net.irisshaders.iris.targets.ColorAttachmentPlan;
+import net.irisshaders.iris.targets.CustomImage;
 import net.irisshaders.iris.targets.RenderTarget;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
+import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
+import net.irisshaders.iris.vulkan.CompositeSynchronization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.opengl.GL15C;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL43C;
-import org.lwjgl.opengl.GL46C;
 
 import java.util.Arrays;
-import java.util.Locale;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
 public class CompositeRenderer {
-	public static final RenderPipeline COMPOSITE_PIPELINE = RenderPipeline.builder()
-		.withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
-		.withColorTargetState(ColorTargetState.DEFAULT)
-		.withLocation(Identifier.fromNamespaceAndPath("iris", "composite")).withVertexShader(Identifier.fromNamespaceAndPath("iris", "core/screenquad")).withFragmentShader("core/blit_screen").withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
-		.withVertexBinding(0, DefaultVertexFormat.POSITION_TEX)
-		.withPrimitiveTopology(PrimitiveTopology.QUADS)
-		.build();
+	public static final RenderPipeline COMPOSITE_PIPELINE =
+		RenderPipeline.builder()
+			.withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+			.withColorTargetState(ColorTargetState.DEFAULT)
+			.withLocation(Identifier.fromNamespaceAndPath("iris", "composite"))
+			.withVertexShader(Identifier.fromNamespaceAndPath("iris", "core/screenquad"))
+			.withFragmentShader("core/blit_screen")
+			.withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+			.withVertexBinding(0, DefaultVertexFormat.POSITION_TEX)
+			.withPrimitiveTopology(PrimitiveTopology.QUADS)
+			.build();
 
 	private final RenderTargets renderTargets;
 
@@ -91,17 +83,19 @@ public class CompositeRenderer {
 	private final ImmutableSet<Integer> flippedAtLeastOnceFinal;
 	private final CustomUniforms customUniforms;
 	private final Object2ObjectMap<String, TextureAccess> irisCustomTextures;
-	private final Set<GlImage> customImages;
+	private final Set<CustomImage> customImages;
 	private final TextureStage textureStage;
-	private final WorldRenderingPipeline pipeline;
+	private final IrisRenderingPipeline pipeline;
 	private final CompositePass compositePass;
 
-	public CompositeRenderer(WorldRenderingPipeline pipeline, CompositePass compositePass, PackDirectives packDirectives, ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets, ShaderStorageBufferHolder holder,
-							 TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
-							 CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
-							 Supplier<ShadowRenderTargets> shadowTargetsSupplier, TextureStage textureStage,
-							 Object2ObjectMap<String, TextureAccess> customTextureIds, Object2ObjectMap<String, TextureAccess> irisCustomTextures, Set<GlImage> customImages, ImmutableMap<Integer, Boolean> explicitPreFlips,
-							 CustomUniforms customUniforms) {
+	public CompositeRenderer(IrisRenderingPipeline pipeline, CompositePass compositePass, PackDirectives packDirectives,
+		ProgramSource[] sources, ComputeSource[][] computes, RenderTargets renderTargets,
+		ShaderStorageBufferHolder holder, TextureAccess noiseTexture, FrameUpdateNotifier updateNotifier,
+		CenterDepthSampler centerDepthSampler, BufferFlipper bufferFlipper,
+		Supplier<ShadowRenderTargets> shadowTargetsSupplier, TextureStage textureStage,
+		Object2ObjectMap<String, TextureAccess> customTextureIds,
+		Object2ObjectMap<String, TextureAccess> irisCustomTextures, Set<CustomImage> customImages,
+		ImmutableMap<Integer, Boolean> explicitPreFlips, CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
 		this.compositePass = compositePass;
 		this.noiseTexture = noiseTexture;
@@ -119,11 +113,9 @@ public class CompositeRenderer {
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 		final ImmutableSet.Builder<Integer> flippedAtLeastOnce = new ImmutableSet.Builder<>();
-
 		explicitPreFlips.forEach((buffer, shouldFlip) -> {
 			if (shouldFlip) {
 				bufferFlipper.flip(buffer);
-				// NB: Flipping deferred_pre or composite_pre does NOT cause the "flippedAtLeastOnce" flag to trigger
 			}
 		});
 
@@ -136,42 +128,62 @@ public class CompositeRenderer {
 			if (source == null || !source.isValid()) {
 				if (computes.length != 0 && computes[i] != null && computes[i].length > 0) {
 					ComputeOnlyPass pass = new ComputeOnlyPass();
-					pass.name = computes[i].length > 0 ? Arrays.stream(computes[i]).filter(Objects::nonNull).findFirst().map(ComputeSource::getName).orElse("unknown") : "unknown";
+					pass.name =
+						computes[i].length > 0
+							? Arrays.stream(computes[i]).filter(Objects::nonNull).findFirst().map(ComputeSource::getName).orElse("unknown")
+							: "unknown";
 					pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier, holder);
 					passes.add(pass);
 				}
+
 				continue;
 			}
 
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
-
 			pass.name = source.getName();
-			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier);
+
+			var writesToAlt = new HashSet<Integer>();
+
+			for (int target : directives.getDrawBuffers()) {
+				if (!flipped.contains(target)) {
+					writesToAlt.add(target);
+				}
+			}
+
+			pass.attachments =
+				new ColorAttachmentPlan.Builder().program(source.getName(), directives, writesToAlt).build(renderTargets.maxDrawBuffers());
+			pass.program = createProgram(source, flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier,
+				pass.attachments.program(source.getName()));
 			pass.blendModeOverride = source.getDirectives().getBlendModeOverride().orElse(null);
+
 			if (computes.length != 0) {
 				pass.computes = createComputes(computes[i], flipped, flippedAtLeastOnceSnapshot, shadowTargetsSupplier, holder);
 			} else {
 				pass.computes = new ComputeProgram[0];
 			}
+
 			int[] drawBuffers = directives.getDrawBuffers();
 
+			int passWidth = 0;
+			int passHeight = 0;
 
-			int passWidth = 0, passHeight = 0;
-			// Flip the buffers that this shader wrote to, and set pass width and height
 			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
 
-			GlFramebuffer framebuffer = renderTargets.createColorFramebuffer(flipped, drawBuffers);
+			GlFramebuffer framebuffer = renderTargets.createMergedFramebuffer(pass.attachments, false);
 
 			for (int buffer : drawBuffers) {
 				RenderTarget target = renderTargets.get(buffer);
+
 				if ((passWidth > 0 && passWidth != target.getWidth()) || (passHeight > 0 && passHeight != target.getHeight())) {
-					throw new IllegalStateException("Pass sizes must match for drawbuffers " + Arrays.toString(drawBuffers) + "\nOriginal width: " + passWidth + " New width: " + target.getWidth() + " Original height: " + passHeight + " New height: " + target.getHeight());
+					throw new IllegalStateException("Pass sizes must match for drawbuffers " + Arrays.toString(drawBuffers) +
+						"\nOriginal width: " + passWidth + " New width: " + target.getWidth() +
+						" Original height: " + passHeight + " New height: " + target.getHeight());
 				}
+
 				passWidth = target.getWidth();
 				passHeight = target.getHeight();
 
-				// compare with boxed Boolean objects to avoid NPEs
 				if (explicitFlips.get(buffer) == Boolean.FALSE) {
 					continue;
 				}
@@ -201,29 +213,14 @@ public class CompositeRenderer {
 
 		this.passes = passes.build();
 		this.flippedAtLeastOnceFinal = flippedAtLeastOnce.build();
-
-		GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, 0);
 	}
 
-	private static void setupMipmapping(net.irisshaders.iris.targets.RenderTarget target, boolean readFromAlt) {
-		if (target == null) return;
+	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
+		if (target == null) {
+			return;
+		}
 
-		int texture = readFromAlt ? target.getAltTexture() : target.getMainTexture();
-
-		// TODO: Only generate the mipmap if a valid mipmap hasn't been generated or if we've written to the buffer
-		// (since the last mipmap was generated)
-		//
-		// NB: We leave mipmapping enabled even if the buffer is written to again, this appears to match the
-		// behavior of ShadersMod/OptiFine, however I'm not sure if it's desired behavior. It's possible that a
-		// program could use mipmapped sampling with a stale mipmap, which probably isn't great. However, the
-		// sampling mode is always reset between frames, so this only persists after the first program to use
-		// mipmapping on this buffer.
-		//
-		// Also note that this only applies to one of the two buffers in a render target buffer pair - making it
-		// unlikely that this issue occurs in practice with most shader packs.
-		IrisRenderSystem.generateMipmaps(texture, GL20C.GL_TEXTURE_2D);
-
-		target.turnOnMips(readFromAlt);
+		target.generateMipmaps(readFromAlt);
 	}
 
 	private boolean hasComputes(ComputeSource[][] computes) {
@@ -252,203 +249,139 @@ public class CompositeRenderer {
 			if (pass instanceof ComputeOnlyPass) {
 				continue;
 			}
-			int passWidth = 0, passHeight = 0;
+
+			int passWidth = 0;
+			int passHeight = 0;
+
 			for (int buffer : pass.drawBuffers) {
 				RenderTarget target = renderTargets.get(buffer);
+
 				if ((passWidth > 0 && passWidth != target.getWidth()) || (passHeight > 0 && passHeight != target.getHeight())) {
 					throw new IllegalStateException("Pass widths must match");
 				}
+
 				passWidth = target.getWidth();
 				passHeight = target.getHeight();
 			}
+
 			renderTargets.destroyFramebuffer(pass.framebuffer);
-			pass.framebuffer = renderTargets.createColorFramebuffer(pass.stageReadsFromAlt, pass.drawBuffers);
+			pass.framebuffer = renderTargets.createMergedFramebuffer(pass.attachments, false);
 			pass.viewWidth = passWidth;
 			pass.viewHeight = passHeight;
 		}
 	}
 
 	public void renderAll() {
+		boolean previousIgnore = ImmediateState.temporarilyIgnorePass;
 		ImmediateState.temporarilyIgnorePass = true;
 
-		GLDebug.pushGroup(20 + compositePass.ordinal(), compositePass.name().toLowerCase(Locale.ROOT));
-
-		com.mojang.blaze3d.pipeline.RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
-
-		GpuBuffer indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).getBuffer(6);
-		var type = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).type();
-
-		FullScreenQuadRenderer.INSTANCE.bind();
-		GlStateManager._colorMask(15);
-
-		for (int i = 0, passesSize = passes.size(); i < passesSize; i++) {
-			Pass compositePass = passes.get(i);
-			GLDebug.pushGroup(20 * this.compositePass.ordinal() + i, compositePass.name);
-			boolean ranCompute = false;
-			for (ComputeProgram computeProgram : compositePass.computes) {
-				if (computeProgram != null) {
-					ranCompute = true;
-					computeProgram.use();
-					this.customUniforms.push(computeProgram);
-					computeProgram.dispatch(main.width, main.height);
+		try (var synchronization = CompositeSynchronization.begin(RenderSystem.getDevice())) {
+			for (Pass pass : passes) {
+				for (ComputeProgram compute : pass.computes) {
+					if (compute != null) {
+						compute.dispatch(renderTargets.getCurrentWidth(), renderTargets.getCurrentHeight());
+					}
 				}
-			}
 
-			if (ranCompute) {
-				IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
-			}
-
-			Program.unbind();
-
-			if (compositePass instanceof ComputeOnlyPass) {
-				GLDebug.popGroup();
-				continue;
-			}
-
-			if (!compositePass.mipmappedBuffers.isEmpty()) {
-				GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
-
-				for (int index : compositePass.mipmappedBuffers) {
-					setupMipmapping(CompositeRenderer.this.renderTargets.get(index), compositePass.stageReadsFromAlt.contains(index));
+				if (pass instanceof ComputeOnlyPass) {
+					continue;
 				}
+
+				for (int index : pass.mipmappedBuffers) {
+					setupMipmapping(renderTargets.get(index), pass.stageReadsFromAlt.contains(index));
+				}
+
+				var level = Minecraft.getInstance().level;
+				pass.program.draw(pass.framebuffer.colorViews(), pass.viewportScale, level == null ? 0 : level.getGameTime(),
+					SystemTimeUniforms.COUNTER.getAsInt());
 			}
-
-			compositePass.setupState();
-
-			float scaledWidth = compositePass.viewWidth * compositePass.viewportScale.scale();
-			float scaledHeight = compositePass.viewHeight * compositePass.viewportScale.scale();
-			int beginWidth = (int) (compositePass.viewWidth * compositePass.viewportScale.viewportX());
-			int beginHeight = (int) (compositePass.viewHeight * compositePass.viewportScale.viewportY());
-			GlStateManager._viewport(beginWidth, beginHeight, (int) scaledWidth, (int) scaledHeight);
-			GlStateManager._scissorBox(beginWidth, beginHeight, (int) scaledWidth, (int) scaledHeight);
-			GlStateManager._disableScissorTest();
-
-			compositePass.program.use();
-
-			// program is the identifier for composite :shrug:
-			this.customUniforms.push(compositePass.program);
-			GlStateManager._glBindBuffer(GL46C.GL_ELEMENT_ARRAY_BUFFER , ((GlBuffer) indices).handle);
-
-			GlStateManager._drawElements(GL46C.GL_TRIANGLES, 6, GlConst.toGl(type), 0);
-
-			BlendModeOverride.restore();
-			GLDebug.popGroup();
+		} finally {
+			ImmediateState.temporarilyIgnorePass = previousIgnore;
 		}
-
-
-		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
-		// Also bind the "main" framebuffer if it isn't already bound.
-		ProgramUniforms.clearActiveUniforms();
-		ProgramSamplers.clearActiveSamplers();
-		GlStateManager._glUseProgram(0);
-
-		// NB: Unbinding all of these textures is necessary for proper shaderpack reloading.
-		for (int i = 0; i < SamplerLimits.get().getMaxTextureUnits(); i++) {
-			// Unbind all textures that we may have used.
-			// NB: This is necessary for shader pack reloading to work propely
-			if (GlStateManagerAccessor.getTEXTURES()[i].binding != 0) {
-				GlStateManager._activeTexture(GL15C.GL_TEXTURE0 + i);
-				GlStateManager._bindTexture(0);
-			}
-		}
-
-		GlStateManager._activeTexture(GL15C.GL_TEXTURE0);
-
-		GLDebug.popGroup();
-
-		ImmediateState.temporarilyIgnorePass = false;
-
 	}
 
-	// TODO: Don't just copy this from DeferredWorldRenderingPipeline
-	private Program createProgram(ProgramSource source, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
-								  Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
-		// TODO: Properly handle empty shaders
-		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
-			source.getName(),
-			source.getVertexSource().orElseThrow(NullPointerException::new),
-			source.getGeometrySource().orElse(null),
-			source.getFragmentSource().orElseThrow(NullPointerException::new), textureStage, pipeline.getTextureMap());
-		String vertex = transformed.get(PatchShaderType.VERTEX);
-		String geometry = transformed.get(PatchShaderType.GEOMETRY);
-		String fragment = transformed.get(PatchShaderType.FRAGMENT);
+	private CompositeProgram createProgram(ProgramSource source, ImmutableSet<Integer> flipped,
+		ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
+		Supplier<ShadowRenderTargets> shadowTargetsSupplier, ColorAttachmentPlan.Program outputs) {
 
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
+			source.getName(), source.getVertexSource().orElseThrow(NullPointerException::new), source.getGeometrySource().orElse(null),
+			source.getFragmentSource().orElseThrow(NullPointerException::new), textureStage, pipeline.getTextureMap(), pipeline.getTextureOverrides(textureStage));
 		ShaderPrinter.printProgram(source.getName()).addSources(transformed).print();
 
-		Objects.requireNonNull(flipped);
-		ProgramBuilder builder;
+		var program = new CompositeProgram(RenderSystem.getDevice(), pipeline.packSamplers(), source.getName(), transformed, outputs,
+			outputs.blends(source.getDirectives(), null));
+		var builder = program.samplers();
+		builder.addStorageBuffers(pipeline.storageBuffers());
 
-		try {
-			builder = ProgramBuilder.begin(source.getName(), vertex, geometry, fragment,
-				IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
-		} catch (ShaderCompileException e) {
-			throw e;
-		} catch (RuntimeException e) {
-			// TODO: Better error handling
-			throw new RuntimeException("Shader compilation failed for " + source.getName() + "!", e);
-		}
+		program.uniforms().useFrameUniforms(pipeline.frameUniforms());
+		CommonUniforms.addDynamicUniforms(program.uniforms(), FogMode.OFF);
 
-
-		CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
-		this.customUniforms.assignTo(builder);
-
-		ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
-
+		CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
+			new CustomTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true, pipeline);
 		IrisSamplers.addCustomTextures(builder, irisCustomTextures);
 		IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
-
-		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
 		IrisImages.addCustomImages(builder, customImages);
+		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+
+		if (IrisImages.hasShadowImages(builder)) {
+			IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
+		}
 
 		IrisSamplers.addNoiseSampler(customTextureSamplerInterceptor, noiseTexture);
 		IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 		if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
-			IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
+			IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null,
+				pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 		}
 
-		// TODO: Don't duplicate this with FinalPassRenderer
-		centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, GlSampler.NEAREST, "iris_centerDepthSmooth"));
+		centerDepthSampler.setUsage(
+			builder.addTextureSampler(new SamplerHolder.TextureBinding(
+					"iris_centerDepthSmooth", centerDepthSampler::getCenterDepthTextureView, () -> GlSampler.NEAREST),
+				false, "iris_centerDepthSmooth"));
+		builder.finish();
 
-		Program build = builder.build();
-
-		// tell the customUniforms that those locations belong to this pass
-		// this is just an object to index the internal map
-		this.customUniforms.mapholderToPass(builder, build);
-
-		return build;
+		return program;
 	}
 
-	private ComputeProgram[] createComputes(ComputeSource[] compute, ImmutableSet<Integer> flipped, ImmutableSet<Integer> flippedAtLeastOnceSnapshot, Supplier<ShadowRenderTargets> shadowTargetsSupplier, ShaderStorageBufferHolder holder) {
+	private ComputeProgram[] createComputes(ComputeSource[] compute, ImmutableSet<Integer> flipped,
+		ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
+		Supplier<ShadowRenderTargets> shadowTargetsSupplier, ShaderStorageBufferHolder holder) {
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
+
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
+
 			if (source == null || source.getSource().isEmpty()) {
 			} else {
-				// TODO: Properly handle empty shaders
+
 				Objects.requireNonNull(flipped);
-				ProgramBuilder builder;
+
+				ProgramResources builder;
+				ComputeProgram program;
 
 				try {
-					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), textureStage, pipeline.getTextureMap());
+					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), textureStage, pipeline.getTextureMap(), pipeline.getTextureOverrides(textureStage));
 
 					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
 
-					builder = ProgramBuilder.beginCompute(source.getName(), transformed, IrisSamplers.COMPOSITE_RESERVED_TEXTURE_UNITS);
+					program = new ComputeProgram(RenderSystem.getDevice(), pipeline.packSamplers(), source.getName(), transformed);
+					builder = program.samplers();
+					builder.addStorageBuffers(pipeline.storageBuffers());
 				} catch (ShaderCompileException e) {
 					throw e;
 				} catch (RuntimeException e) {
-					// TODO: Better error handling
+
 					throw new RuntimeException("Shader compilation failed for compute " + source.getName() + "!", e);
 				}
 
-				ProgramSamplers.CustomTextureSamplerInterceptor customTextureSamplerInterceptor = ProgramSamplers.customTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
+				CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
+					new CustomTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
+				program.uniforms().useFrameUniforms(pipeline.frameUniforms());
+				CommonUniforms.addDynamicUniforms(program.uniforms(), FogMode.OFF);
 
-				CommonUniforms.addDynamicUniforms(builder, FogMode.OFF);
-
-				customUniforms.assignTo(builder);
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true, pipeline);
 				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
@@ -461,21 +394,23 @@ public class CompositeRenderer {
 				IrisSamplers.addCompositeSamplers(customTextureSamplerInterceptor, renderTargets);
 
 				if (IrisSamplers.hasShadowSamplers(customTextureSamplerInterceptor)) {
-					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null, pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
+					IrisSamplers.addShadowSamplers(customTextureSamplerInterceptor, shadowTargetsSupplier.get(), null,
+						pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 					IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
 				}
 
-				// TODO: Don't duplicate this with FinalPassRenderer
-				centerDepthSampler.setUsage(builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, GlSampler.NEAREST, "iris_centerDepthSmooth"));
+				centerDepthSampler.setUsage(builder.addTextureSampler(
+					new SamplerHolder.TextureBinding("iris_centerDepthSmooth", centerDepthSampler::getCenterDepthTextureView,
+						() -> GlSampler.NEAREST),
+					false, "iris_centerDepthSmooth"));
 
-				programs[i] = builder.buildCompute();
+				builder.finish();
+				programs[i] = program;
 
-				customUniforms.mapholderToPass(builder, programs[i]);
-
-				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups(), FilledIndirectPointer.basedOff(holder, source.getIndirectPointer()));
+				programs[i].setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups(),
+					FilledIndirectPointer.basedOff(holder, source.getIndirectPointer()));
 			}
 		}
-
 
 		return programs;
 	}
@@ -486,12 +421,13 @@ public class CompositeRenderer {
 		}
 	}
 
-	private static class Pass implements CustomPass {
+	private static class Pass {
 		int[] drawBuffers;
 		int viewWidth;
 		int viewHeight;
 		String name;
-		Program program;
+		CompositeProgram program;
+		ColorAttachmentPlan attachments;
 		BlendModeOverride blendModeOverride;
 		ComputeProgram[] computes;
 		GlFramebuffer framebuffer;
@@ -502,21 +438,11 @@ public class CompositeRenderer {
 
 		protected void destroy() {
 			this.program.destroy();
+
 			for (ComputeProgram compute : this.computes) {
 				if (compute != null) {
 					compute.destroy();
 				}
-			}
-		}
-
-		@Override
-		public void setupState() {
-			GlStateManager._colorMask(0xFFFFFFFF);
-			framebuffer.bind();
-			if (blendModeOverride != null) {
-				blendModeOverride.apply();
-			} else {
-				BlendModeOverride.OFF.apply();
 			}
 		}
 	}

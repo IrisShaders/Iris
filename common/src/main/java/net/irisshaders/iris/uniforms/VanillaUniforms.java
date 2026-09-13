@@ -1,17 +1,16 @@
 package net.irisshaders.iris.uniforms;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
+import net.irisshaders.iris.gl.uniform.UniformHolder;
+import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.minecraft.client.Minecraft;
 import org.joml.Vector2f;
 
 public class VanillaUniforms {
-	public static void addVanillaUniforms(DynamicUniformHolder uniforms) {
+	public static void addVanillaUniforms(UniformHolder uniforms) {
 		Vector2f cachedScreenSize = new Vector2f();
-		// listener -> {} dictates we want this to run on every shader update, not just on a new frame. These are dynamic.
 		// TODO 1.21.5: Not correct. Should be using viewport size.
-		uniforms.uniform2f("iris_ScreenSize", () -> cachedScreenSize.set(Minecraft.getInstance().gameRenderer.mainRenderTarget().width, Minecraft.getInstance().gameRenderer.mainRenderTarget().height), listener -> {
-		});
+		uniforms.uniform2f(UniformUpdateFrequency.PER_FRAME, "iris_ScreenSize",
+			() -> cachedScreenSize.set(Minecraft.getInstance().gameRenderer.mainRenderTarget().width,
+				Minecraft.getInstance().gameRenderer.mainRenderTarget().height));
 	}
 }

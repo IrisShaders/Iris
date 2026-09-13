@@ -1,27 +1,27 @@
 package net.irisshaders.iris.gl.blending;
 
 import net.irisshaders.iris.Iris;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.vulkan.VK10;
 
 import java.util.Optional;
 
 public enum BlendModeFunction {
-	ZERO(GL11.GL_ZERO),
-	ONE(GL11.GL_ONE),
-	SRC_COLOR(GL11.GL_SRC_COLOR),
-	ONE_MINUS_SRC_COLOR(GL11.GL_ONE_MINUS_SRC_COLOR),
-	DST_COLOR(GL11.GL_DST_COLOR),
-	ONE_MINUS_DST_COLOR(GL11.GL_ONE_MINUS_DST_COLOR),
-	SRC_ALPHA(GL11.GL_SRC_ALPHA),
-	ONE_MINUS_SRC_ALPHA(GL11.GL_ONE_MINUS_SRC_ALPHA),
-	DST_ALPHA(GL11.GL_DST_ALPHA),
-	ONE_MINUS_DST_ALPHA(GL11.GL_ONE_MINUS_DST_ALPHA),
-	SRC_ALPHA_SATURATE(GL11.GL_SRC_ALPHA_SATURATE);
+	ZERO(VK10.VK_BLEND_FACTOR_ZERO),
+	ONE(VK10.VK_BLEND_FACTOR_ONE),
+	SRC_COLOR(VK10.VK_BLEND_FACTOR_SRC_COLOR),
+	ONE_MINUS_SRC_COLOR(VK10.VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR),
+	DST_COLOR(VK10.VK_BLEND_FACTOR_DST_COLOR),
+	ONE_MINUS_DST_COLOR(VK10.VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR),
+	SRC_ALPHA(VK10.VK_BLEND_FACTOR_SRC_ALPHA),
+	ONE_MINUS_SRC_ALPHA(VK10.VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA),
+	DST_ALPHA(VK10.VK_BLEND_FACTOR_DST_ALPHA),
+	ONE_MINUS_DST_ALPHA(VK10.VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA),
+	SRC_ALPHA_SATURATE(VK10.VK_BLEND_FACTOR_SRC_ALPHA_SATURATE);
 
-	private final int glId;
+	private final int vkId;
 
-	BlendModeFunction(int glFormat) {
-		this.glId = glFormat;
+	BlendModeFunction(int vkFactor) {
+		this.vkId = vkFactor;
 	}
 
 	public static Optional<BlendModeFunction> fromString(String name) {
@@ -29,11 +29,12 @@ public enum BlendModeFunction {
 			return Optional.of(BlendModeFunction.valueOf(name));
 		} catch (IllegalArgumentException e) {
 			Iris.logger.warn("Invalid blend mode! " + name);
+
 			return Optional.empty();
 		}
 	}
 
-	public int getGlId() {
-		return glId;
+	public int getVkId() {
+		return vkId;
 	}
 }

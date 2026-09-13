@@ -7,8 +7,6 @@ import net.irisshaders.iris.mixinterface.ShadowRenderListAccess;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.DynamicGpuDataStorage;
 import net.minecraft.client.renderer.DynamicGpuDataStorageMapped;
-import net.minecraft.client.renderer.DynamicGpuDataStorageNonMapped;
-import net.minecraft.client.renderer.MappableRingBuffer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -41,7 +39,14 @@ public class MixinUniformData implements ShadowRenderListAccess {
 
 	@Inject(method = "<init>", at = @At("RETURN"))
 	private void iris$init(ClientLevel level, int renderDistance, CallbackInfo ci) {
-		this.shadowUbo = new DynamicGpuDataStorageMapped<>("Sodium terrain uniforms (Shadow)", 256, GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_UNIFORM, 8);
+		this.shadowUbo = new DynamicGpuDataStorageMapped<>("Sodium terrain uniforms (Shadow)", 256,
+			GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_UNIFORM, 8);
+	}
+
+	@Inject(method = "delete", at = @At("HEAD"))
+	private void iris$closeShadowUniforms(CallbackInfo ci) {
+		iris$endShadowRenderListScope();
+		shadowUbo.close();
 	}
 
 	@Inject(method = "endFrame", at = @At("HEAD"))
@@ -52,7 +57,10 @@ public class MixinUniformData implements ShadowRenderListAccess {
 
 	@Override
 	public void iris$beginShadowRenderListScope() {
-		if (isSwappedToShadow) return;
+		if (isSwappedToShadow) {
+			return;
+		}
+
 		isSwappedToShadow = true;
 
 		var x = this.uniformStorage;
@@ -70,7 +78,10 @@ public class MixinUniformData implements ShadowRenderListAccess {
 
 	@Override
 	public void iris$endShadowRenderListScope() {
-		if (!isSwappedToShadow) return;
+		if (!isSwappedToShadow) {
+			return;
+		}
+
 		isSwappedToShadow = false;
 
 		var x = this.uniformStorage;

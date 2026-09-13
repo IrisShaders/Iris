@@ -21,6 +21,7 @@ import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
@@ -47,6 +48,7 @@ public class IrisLodRenderProgram {
 	public final int modelViewInverseUniform;
 	public final int projectionUniform;
 	public final int projectionInverseUniform;
+	public final int dhBlockAtlas;
 	public final int normalMatrix3fUniform;
 	// Fog/Clip Uniforms
 	public final int clipDistanceUniform;
@@ -131,6 +133,7 @@ public class IrisLodRenderProgram {
 		modelViewUniform = tryGetUniformLocation2("iris_ModelViewMatrix");
 		modelViewInverseUniform = tryGetUniformLocation2("iris_ModelViewMatrixInverse");
 		normalMatrix3fUniform = tryGetUniformLocation2("iris_NormalMatrix");
+		dhBlockAtlas = tryGetUniformLocation2("dhBlockAtlas");
 
 		// Fog/Clip Uniforms
 		clipDistanceUniform = tryGetUniformLocation2("clipDistance");
@@ -144,7 +147,7 @@ public class IrisLodRenderProgram {
 			source.getTessEvalSource().orElse(null),
 			source.getGeometrySource().orElse(null),
 			source.getFragmentSource().orElseThrow(RuntimeException::new),
-			pipeline.getTextureMap());
+			pipeline.getTextureMap(), pipeline.getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW));
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String tessControl = transformed.get(PatchShaderType.TESS_CONTROL);
 		String tessEval = transformed.get(PatchShaderType.TESS_EVAL);
@@ -228,6 +231,7 @@ public class IrisLodRenderProgram {
 		setUniform(normalMatrix3fUniform, new Matrix4f(modelView).invert().transpose3x3(new Matrix3f()));
 
 		setUniform(mircoOffsetUniform, 0.01f); // 0.01 block offset
+		setUniform(dhBlockAtlas, 0);
 
 		// setUniform(skyLightUniform, skyLight);
 
@@ -243,6 +247,15 @@ public class IrisLodRenderProgram {
 		customUniforms.push(this);
 
 		images.update();
+
+		var out = DhApi.Delayed.renderProxy.getDhBlockRatioAtlasTextureGlId();
+
+		if (out.success) {
+			IrisRenderSystem.bindTextureToUnit(GL46C.GL_TEXTURE_2D, 0, out.payload);
+
+		} else {
+			System.out.println("WHY");
+		}
 	}
 
 	private void setUniform(int index, float value) {

@@ -1,50 +1,33 @@
 package net.irisshaders.iris.mixin;
 
-import com.google.common.collect.Lists;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
-import net.irisshaders.iris.pathways.HandRenderer;
-import net.irisshaders.iris.pipeline.ShaderRenderingPipeline;
-import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.pipeline.programs.ShaderKey;
-import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
-import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugEntrySystemSpecs;
 import net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.state.level.FirstPersonHandsAndItemsRenderState;
 import net.minecraft.client.renderer.state.level.PlayerRenderState;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.util.Util;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderBuffers;
-import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
-
-import java.util.ArrayList;
 
 @Mixin(GameRenderer.class)
 public class MixinGameRenderer {
@@ -61,14 +44,18 @@ public class MixinGameRenderer {
 	}
 
 	@Inject(method = "<init>", at = @At("TAIL"))
-	private void iris$logSystem(Minecraft minecraft, FirstPersonHandsAndItemsRenderer firstPersonHandsAndItemsRenderer, ModelManager modelManager, ItemModelResolver itemModelResolver, CallbackInfo ci) {
+	private void iris$logSystem(Minecraft minecraft, FirstPersonHandsAndItemsRenderer firstPersonHandsAndItemsRenderer,
+		ModelManager modelManager, ItemModelResolver itemModelResolver, CallbackInfo ci) {
 		Iris.logger.info("Hardware information:");
 		Iris.logger.info("CPU: " + DebugEntrySystemSpecs.getCpuInfo());
-		Iris.logger.info("GPU: " + RenderSystem.getDevice().getDeviceInfo().name() + " (Supports OpenGL " + RenderSystem.getDevice().getDeviceInfo().driverInfo() + ")");
+		Iris.logger.info(
+			"GPU: " + RenderSystem.getDevice().getDeviceInfo().name() + " (" + RenderSystem.getDevice().getDeviceInfo().backendName() +
+				" " + RenderSystem.getDevice().getDeviceInfo().driverInfo() + ")");
 		Iris.logger.info("OS: " + System.getProperty("os.name") + " (" + System.getProperty("os.version") + ")");
 	}
 
-	@ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlobalSettingsUniform;update(IIDJFILnet/minecraft/world/phys/Vec3;Z)V"))
+	@ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlobalSettingsUniform;update" +
+		"(IIDJFILnet/minecraft/world/phys/Vec3;Z)V"))
 	private void iris$modifyBlur(Args args) {
 		if (this.minecraft.gui.screen() instanceof ShaderPackScreen sps) {
 			// TODO 1.21.6
@@ -77,8 +64,12 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FirstPersonHandsAndItemsRenderer;submitHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/PlayerRenderState;Lnet/minecraft/client/renderer/state/level/FirstPersonHandsAndItemsRenderState;)V"))
-	private void iris$disableVanillaHandRendering(FirstPersonHandsAndItemsRenderer instance, float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state) {
+	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer" +
+		"/FirstPersonHandsAndItemsRenderer;submitHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;" +
+		"Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/PlayerRenderState;" +
+		"Lnet/minecraft/client/renderer/state/level/FirstPersonHandsAndItemsRenderState;)V"))
+	private void iris$disableVanillaHandRendering(FirstPersonHandsAndItemsRenderer instance, float frameInterp, PoseStack poseStack,
+		SubmitNodeCollector submitNodeCollector, PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state) {
 		if (Iris.isPackInUseQuick()) {
 			return;
 		}

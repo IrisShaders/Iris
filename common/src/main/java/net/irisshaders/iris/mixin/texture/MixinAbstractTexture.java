@@ -7,7 +7,6 @@ import net.irisshaders.iris.pbr.TextureTracker;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.ReloadableTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.util.TriState;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,7 +28,7 @@ public abstract class MixinAbstractTexture implements AbstractTextureExtended {
 	private void iris$afterGenerateId(CallbackInfoReturnable<GpuTexture> cir) {
 		if (lastChecked != cir.getReturnValue()) {
 			lastChecked = cir.getReturnValue();
-			TextureTracker.INSTANCE.trackTexture(lastChecked.iris$getGlId(), (AbstractTexture) (Object) this);
+			TextureTracker.INSTANCE.trackTexture(lastChecked, (AbstractTexture) (Object) this);
 
 		}
 	}
@@ -43,13 +42,13 @@ public abstract class MixinAbstractTexture implements AbstractTextureExtended {
 		if (!bl) {
 			if (((Object) this) instanceof ReloadableTexture rt) {
 				Iris.logger.warn(rt.resourceId() + " was set to nearest");
-			} else 	if (((Object) this) instanceof TextureAtlas rt) {
+			} else if (((Object) this) instanceof TextureAtlas rt) {
 				Iris.logger.warn(rt.location() + " was set to nearest");
 			}
 		} else {
 			if (((Object) this) instanceof ReloadableTexture rt) {
 				Iris.logger.warn(rt.resourceId() + " was set to linear");
-			} else 	if (((Object) this) instanceof TextureAtlas rt) {
+			} else if (((Object) this) instanceof TextureAtlas rt) {
 				Iris.logger.warn(rt.location() + " was set to linear");
 			}
 		}

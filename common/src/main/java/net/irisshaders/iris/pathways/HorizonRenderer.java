@@ -1,16 +1,15 @@
 package net.irisshaders.iris.pathways;
 
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
-import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
-import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderPipelines;
 import org.joml.Matrix4f;
@@ -20,7 +19,6 @@ import org.joml.Vector4f;
 
 import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.OptionalInt;
 
 /**
  * Renders the sky horizon. Vanilla Minecraft simply uses the "clear color" for its horizon, and then draws a plane
@@ -63,11 +61,11 @@ public class HorizonRenderer {
 		}
 
 		BufferBuilder buffer = new BufferBuilder(storage, PrimitiveTopology.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
-
 		buildHorizon(currentRenderDistance * 16, buffer);
-		MeshData meshData = buffer.buildOrThrow();
 
-		this.buffer = RenderSystem.getDevice().createBuffer(() -> "Horizon", GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, meshData.vertexBuffer());
+		MeshData meshData = buffer.buildOrThrow();
+		this.buffer = RenderSystem.getDevice()
+			.createBuffer(() -> "Horizon", GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, meshData.vertexBuffer());
 		this.indexCount = meshData.drawState().indexCount();
 		meshData.close();
 		storage.clear();
@@ -98,9 +96,12 @@ public class HorizonRenderer {
 
 		RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.TRIANGLE_FAN);
 		GpuBuffer indexBuffer = indices.getBuffer(indexCount);
-		GpuBufferSlice gpuBufferSlice = RenderSystem.getDynamicUniforms().writeTransform((Matrix4f) modelView, fogColor, new Vector3f(), new Matrix4f());
-		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Sky", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(),
-			Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
+		GpuBufferSlice gpuBufferSlice = RenderSystem.getDynamicUniforms()
+			.writeTransform((Matrix4f) modelView, fogColor, new Vector3f(), new Matrix4f());
+
+		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder()
+			.createRenderPass(() -> "Sky", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(),
+				Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
 			RenderSystem.bindDefaultUniforms(pass);
 			pass.setUniform("DynamicTransforms", gpuBufferSlice);
 
@@ -113,5 +114,6 @@ public class HorizonRenderer {
 
 	public void destroy() {
 		buffer.close();
+		storage.close();
 	}
 }

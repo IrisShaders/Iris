@@ -6,12 +6,14 @@ import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.pipeline.transform.Patch;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 
+import java.util.Set;
+
 public class ComputeParameters extends TextureStageParameters {
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public ComputeParameters(Patch patch, TextureStage stage,
-							 Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		super(patch, stage, textureMap);
+							 Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
+		super(patch, stage, textureMap, textureOverrides);
 	}
 
 	// since this class has no fields, hashCode() and equals() are inherited from

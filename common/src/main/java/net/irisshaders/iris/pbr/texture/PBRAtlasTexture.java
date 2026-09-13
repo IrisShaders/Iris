@@ -23,6 +23,7 @@ import net.irisshaders.iris.pbr.loader.AtlasPBRLoader.PBRTextureAtlasSprite;
 import net.irisshaders.iris.pbr.util.TextureManipulationUtil;
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.vertices.ImmediateState;
+import net.irisshaders.iris.vertices.NormI8;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -150,7 +151,7 @@ public class PBRAtlasTexture extends AbstractTexture implements PBRDumpable {
 		this.maxMipLevel = k;
 		this.mipLevelCount = k + 1;
 		this.mipViews = new GpuTextureView[this.mipLevelCount];
-		TextureManipulationUtil.fillWithColor((((GlTexture) texture)).glId(), maxMipLevel, type.getDefaultValue());
+		RenderSystem.getDevice().createCommandEncoder().clearColorTexture(texture, NormI8.unpack4(type.getDefaultValue()));
 
 		for (int l = 0; l <= this.maxMipLevel; l++) {
 			this.mipViews[l] = gpuDevice.createTextureView(this.texture, l, 1);

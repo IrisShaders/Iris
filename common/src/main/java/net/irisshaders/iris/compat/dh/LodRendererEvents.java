@@ -27,13 +27,12 @@ import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhAp
 import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.helpers.MatrixUtils;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
-import org.joml.Matrix4f;
-import org.joml.Matrix4fc;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL46C;
 
@@ -303,11 +302,10 @@ public class LodRendererEvents {
 					if (instance.shouldOverride) {
 						if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 							instance.getShadowShader().fillUniformData(
-								ShadowRenderer.PROJECTION, ShadowRenderer.MODELVIEW,
+								MatrixUtils.toMinusOneToOne(ShadowRenderer.PROJECTION), ShadowRenderer.MODELVIEW,
 								-1000, //MC.getWrappedClientLevel().getMinHeight(),
 								partialTicks);
 						} else {
-							Matrix4fc projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
 							//float nearClip = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);
 							//float farClip = (float) ((double) (DHCompatInternal.getDhBlockRenderDistance() + 512) * Math.sqrt(2.0));
 
@@ -315,7 +313,7 @@ public class LodRendererEvents {
 							//	" \niris near clip: "+nearClip+" iris far clip: "+farClip);
 
 							instance.getSolidShader().fillUniformData(
-								new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), event.value.nearClipPlane, event.value.farClipPlane),
+								DHCompat.getProjection(event.value.nearClipPlane, event.value.farClipPlane),
 								CapturedRenderingState.INSTANCE.getGbufferModelView(),
 								-1000, //MC.getWrappedClientLevel().getMinHeight(),
 								partialTicks);
@@ -340,7 +338,6 @@ public class LodRendererEvents {
 					if (instance.shouldOverride && instance.getTranslucentFB() != null) {
 						instance.copyTranslucents(textureWidth, textureHeight);
 						instance.getTranslucentShader().bind();
-						Matrix4fc projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
 						//float nearClip = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);
 						//float farClip = (float) ((double) (DHCompatInternal.getDhBlockRenderDistance() + 512) * Math.sqrt(2.0));
 						GL46C.glDisable(GL46C.GL_CULL_FACE);
@@ -348,7 +345,7 @@ public class LodRendererEvents {
 						//	" \niris near clip: "+nearClip+" iris far clip: "+farClip);
 
 						instance.getTranslucentShader().fillUniformData(
-							new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), event.value.nearClipPlane, event.value.farClipPlane),
+							DHCompat.getProjection(event.value.nearClipPlane, event.value.farClipPlane),
 							CapturedRenderingState.INSTANCE.getGbufferModelView(),
 							-1000, //MC.getWrappedClientLevel().getMinHeight(),
 							partialTicks);

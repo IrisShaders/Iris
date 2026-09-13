@@ -1,136 +1,201 @@
 package net.irisshaders.iris.pathways;
 
-import com.google.common.collect.ImmutableSet;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
-import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
-import net.irisshaders.iris.gl.IrisRenderSystem;
-import net.irisshaders.iris.gl.blending.BlendModeOverride;
-import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
-import net.irisshaders.iris.gl.program.Program;
-import net.irisshaders.iris.gl.program.ProgramBuilder;
-import net.irisshaders.iris.gl.program.ProgramSamplers;
-import net.irisshaders.iris.gl.program.ProgramUniforms;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.device.GpuDevice;
+import com.mojang.renderpearl.api.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
+import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
+import com.mojang.renderpearl.backend.vulkan.VulkanGpuTextureView;
 import net.irisshaders.iris.gl.sampler.GlSampler;
-import net.irisshaders.iris.gl.texture.DepthCopyStrategy;
-import net.irisshaders.iris.gl.texture.InternalTextureFormat;
-import net.irisshaders.iris.gl.texture.PixelType;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
-import net.irisshaders.iris.mixinterface.CustomPass;
-import net.irisshaders.iris.pipeline.CompositeRenderer;
+import net.irisshaders.iris.pipeline.transform.PatchShaderType;
+import net.irisshaders.iris.pipeline.transform.vulkan.VulkanShaderPatcher;
+import net.irisshaders.iris.samplers.SamplerBindingPlan;
+import net.irisshaders.iris.samplers.SamplerHeapLayout;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
-import net.minecraft.client.Minecraft;
-import org.apache.commons.io.IOUtils;
-import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL21C;
+import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
+import net.irisshaders.iris.vulkan.VulkanCommandBridge;
+import net.irisshaders.iris.vulkan.VulkanGraphicsPipeline;
+import net.irisshaders.iris.vulkan.VulkanResourceSets;
+import net.irisshaders.iris.vulkan.VulkanSamplerHeap;
+import net.irisshaders.iris.vulkan.VulkanShaderCompiler;
+import org.joml.Vector4f;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.vulkan.VK10;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.function.IntSupplier;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
-public class CenterDepthSampler {
-	private static final double LN2 = Math.log(2);
-	private static final CustomPass EMPTY_STATE = new CustomPass() {
-		@Override
-		public void setupState() {
-
-		}
-	};
-	private final Program program;
-	private final GlFramebuffer framebuffer;
-	private final int texture;
-	private final int altTexture;
+public final class CenterDepthSampler {
+	private final GpuDevice device;
+	private final Supplier<GpuTexture> depthSupplier;
+	private final GpuTexture texture, history;
+	private final GpuTextureView outputView, historyView;
+	private final GpuBuffer vertices;
+	private final VulkanSamplerHeap heap;
+	private final VulkanResourceSets uniformSets;
+	private final BufferUniformHolder uniforms;
+	private final VulkanGraphicsPipeline program;
+	private final SamplerHeapLayout.Slot depthSlot, historySlot;
+	private GpuTextureView depthView;
+	private float frameTime;
 	private boolean hasFirstSample;
 	private boolean everRetrieved;
 	private boolean destroyed;
+	private int samples;
 
-	public CenterDepthSampler(IntSupplier depthSupplier, float halfLife) {
-		this.texture = GlStateManager._genTexture();
-		this.altTexture = GlStateManager._genTexture();
-		this.framebuffer = new GlFramebuffer();
+	public CenterDepthSampler(Supplier<GpuTexture> depthSupplier, float halfLife) {
+		this(RenderSystem.getDevice(), VulkanCommandBridge.device(RenderSystem.getDevice()), depthSupplier, halfLife);
+	}
 
-		InternalTextureFormat format = InternalTextureFormat.R32F;
-		setupColorTexture(texture, format);
-		setupColorTexture(altTexture, format);
-		GlStateManager._bindTexture(0);
-
-		this.framebuffer.addColorAttachment(0, texture);
-		ProgramBuilder builder;
-
-		try {
-			String fsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.fsh"))), StandardCharsets.UTF_8);
-			String vsh = new String(IOUtils.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("/centerDepth.vsh"))), StandardCharsets.UTF_8);
-
-			builder = ProgramBuilder.begin("centerDepthSmooth", vsh, null, fsh, ImmutableSet.of(0, 1, 2));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+	public CenterDepthSampler(GpuDevice device, VulkanDevice backend, Supplier<GpuTexture> depthSupplier, float halfLife) {
+		if (!Float.isFinite(halfLife) || halfLife < 0) {
+			throw new IllegalArgumentException("Invalid center-depth half-life");
 		}
 
-		builder.addDynamicSampler(depthSupplier,  GlSampler.NEAREST, "depth");
-		builder.addDynamicSampler(() -> altTexture, GlSampler.NEAREST,  "altDepth");
-		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
-		builder.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> (1.0f / ((halfLife * 0.1) / LN2)));
-		// TODO: can we just do this for all composites?
-		builder.uniformMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0, 1));
-		this.program = builder.build();
+		this.device = device;
+		this.depthSupplier = depthSupplier;
+
+		var layout = new SamplerHeapLayout.Builder().add(SamplerHeapLayout.Type.SAMPLER2D, "depth", "nearest")
+			.add(SamplerHeapLayout.Type.SAMPLER2D, "history", "nearest").build();
+		depthSlot = layout.slot(SamplerHeapLayout.Type.SAMPLER2D, "depth", "nearest");
+		historySlot = layout.slot(SamplerHeapLayout.Type.SAMPLER2D, "history", "nearest");
+
+		var plan = new SamplerBindingPlan.Builder(layout).bind("depth", depthSlot).bind("altDepth", historySlot).build();
+		var shader = VulkanShaderPatcher.patch(Map.of(PatchShaderType.VERTEX,
+			"#version 450\nlayout(location=0)in vec3 iris_Position;void main(){gl_Position=vec4(iris_Position.xy*2.0-1.0,0,1);}",
+			PatchShaderType.FRAGMENT,
+			"#version 450\nuniform sampler2D depth;uniform sampler2D altDepth;uniform float lastFrameTime;uniform float decay;" +
+				"uniform" + " " +
+				"bool firstSample;layout(location=0)out float iris_fragColor;void main(){float currentDepth=1.0-texture(depth,vec2(0" +
+				".5)).r;float oldDepth=texture(altDepth,vec2(0.5)).r;float weight=decay<0.0?1.0:1.0-exp(-decay*lastFrameTime);" +
+				"iris_fragColor=firstSample||isnan(oldDepth)?currentDepth:mix(oldDepth,currentDepth,weight);}"), plan);
+		uniforms = new BufferUniformHolder(shader.layout());
+		uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", () -> frameTime);
+		uniforms.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> halfLife == 0 ? -1 : Math.log(2) / (halfLife * 0.1));
+		uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "firstSample", () -> !hasFirstSample);
+
+		var cleanup = new ArrayList<Runnable>();
+
+		try {
+			heap = new VulkanSamplerHeap(backend.vkDevice(), layout, 16);
+			cleanup.add(heap::close);
+
+			uniformSets = new VulkanResourceSets(backend.vkDevice(), shader.layout(), 16);
+			cleanup.add(uniformSets::close);
+
+			try (var compiler = new VulkanShaderCompiler()) {
+				var vertex = compiler.compile("centerDepth.vsh", PatchShaderType.VERTEX, shader.sources().get(PatchShaderType.VERTEX));
+
+				try {
+					var fragment = compiler.compile("centerDepth.fsh", PatchShaderType.FRAGMENT,
+						shader.sources().get(PatchShaderType.FRAGMENT));
+
+					try {
+						program = new VulkanGraphicsPipeline(backend.vkDevice(), heap, uniformSets, vertex, fragment,
+							VK10.VK_FORMAT_R32_SFLOAT, 12,
+							List.of(new VulkanGraphicsPipeline.Attribute(0, VK10.VK_FORMAT_R32G32B32_SFLOAT, 0)));
+					} finally {
+						MemoryUtil.memFree(fragment);
+					}
+				} finally {
+					MemoryUtil.memFree(vertex);
+				}
+			}
+
+			cleanup.add(program::close);
+
+			int usage = GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_COPY_DST |
+				GpuTexture.USAGE_RENDER_ATTACHMENT;
+			texture = device.createTexture("Center depth", usage, GpuFormat.R32_FLOAT, 1, 1, 1, 1);
+			cleanup.add(texture::close);
+			history = device.createTexture("Center depth history", usage, GpuFormat.R32_FLOAT, 1, 1, 1, 1);
+			cleanup.add(history::close);
+			outputView = device.createTextureView(texture);
+			cleanup.add(outputView::close);
+			historyView = device.createTextureView(history);
+			cleanup.add(historyView::close);
+			device.createCommandEncoder().clearColorTexture(history, new Vector4f());
+
+			try (var stack = MemoryStack.stackPush()) {
+				var data = stack.malloc(36).order(ByteOrder.nativeOrder());
+				data.asFloatBuffer().put(new float[]{0, 0, 0, 2, 0, 0, 0, 2, 0});
+				vertices = device.createBuffer(() -> "Center depth vertices", GpuBuffer.USAGE_VERTEX, data);
+				cleanup.add(vertices::close);
+			}
+		} catch (RuntimeException | Error failure) {
+			for (var close : cleanup.reversed()) {
+				try {
+					close.run();
+				} catch (RuntimeException | Error suppressed) {
+					failure.addSuppressed(suppressed);
+				}
+			}
+
+			throw failure;
+		}
 	}
 
 	public void sampleCenterDepth() {
-		if ((hasFirstSample && (!everRetrieved)) || destroyed) {
-			// If the shaderpack isn't reading center depth values, don't bother sampling it
-			// This improves performance with most shaderpacks
+		sampleCenterDepth(SystemTimeUniforms.TIMER.getLastFrameTime());
+	}
+
+	public void sampleCenterDepth(float lastFrameTime) {
+		if (destroyed || hasFirstSample && !everRetrieved) {
 			return;
 		}
 
-		hasFirstSample = true;
-
-		GpuBuffer indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).getBuffer(6);
-		var type = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).type();
-		BlendModeOverride.restore();
-
-		GlStateManager._disableBlend(0);
-		try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "centerDepthSmooth sampler", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty())) {
-			renderPass.setPipeline(RenderSystem.getCompiledPipeline(CompositeRenderer.COMPOSITE_PIPELINE));
-			renderPass.setIndexBuffer(indices, type);
-			renderPass.setVertexBuffer(0, FullScreenQuadRenderer.INSTANCE.getQuad().slice());
-
-			renderPass.iris$setCustomPass(EMPTY_STATE);
-
-			this.framebuffer.bind();
-			this.program.use();
-
-			GlStateManager._viewport(0, 0, 1, 1);
-
-			renderPass.drawIndexed(6, 1, 0, 0, 0);
-
-			ProgramUniforms.clearActiveUniforms();
-			ProgramSamplers.clearActiveSamplers();
-			BlendModeOverride.restore();
-
+		if (!Float.isFinite(lastFrameTime) || lastFrameTime < 0) {
+			throw new IllegalArgumentException("Invalid frame time");
 		}
 
-		// The API contract of DepthCopyStrategy claims it can only copy depth, however the 2 non-stencil methods used are entirely capable of copying color as of now.
-		DepthCopyStrategy.fastest(false).copy(this.framebuffer, texture, null, altTexture, 1, 1);
+		var depth = depthSupplier.get();
 
+		if (depthView == null || depthView.texture() != depth) {
+			var replacement = device.createTextureView(depth, 0, 1);
+
+			if (depthView != null) {
+				depthView.close();
+			}
+
+			depthView = replacement;
+		}
+
+		frameTime = lastFrameTime;
+		uniforms.update(samples, samples);
+		samples++;
+
+		long sampler = heap.sampler(GlSampler.NEAREST);
+		var snapshot = heap.snapshot(Map.of(depthSlot,
+			new VulkanSamplerHeap.ImageSampler(((VulkanGpuTextureView) depthView).vkImageView(), sampler, VK10.VK_IMAGE_LAYOUT_GENERAL),
+			historySlot,
+			new VulkanSamplerHeap.ImageSampler(((VulkanGpuTextureView) historyView).vkImageView(), sampler,
+				VK10.VK_IMAGE_LAYOUT_GENERAL)));
+		var encoder = device.createCommandEncoder();
+
+		try {
+			VulkanCommandBridge.draw(encoder, device.getDeviceInfo().limits().minUniformOffsetAlignment(), program, uniforms, uniformSets,
+				snapshot, outputView, vertices);
+		} finally {
+			VulkanCommandBridge.retire(encoder, snapshot::close);
+		}
+
+		encoder.copyTextureToTexture(texture, history, 0, 0, 0, 0, 0, 1, 1);
+		hasFirstSample = true;
 	}
 
-	public void setupColorTexture(int texture, InternalTextureFormat format) {
-		IrisRenderSystem.texImage2D(texture, GL21C.GL_TEXTURE_2D, 0, format.getGlFormat(), 1, 1, 0, format.getPixelFormat().getGlFormat(), PixelType.FLOAT.getGlFormat(), null);
-
-		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_MIN_FILTER, GL21C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_MAG_FILTER, GL21C.GL_LINEAR);
-		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_S, GL21C.GL_CLAMP_TO_EDGE);
-		IrisRenderSystem.texParameteri(texture, GL21C.GL_TEXTURE_2D, GL21C.GL_TEXTURE_WRAP_T, GL21C.GL_CLAMP_TO_EDGE);
+	public GpuTextureView getCenterDepthTextureView() {
+		return historyView;
 	}
 
 	public int getCenterDepthTexture() {
-		return altTexture;
+		throw new UnsupportedOperationException("Center depth is a Vulkan texture view; use getCenterDepthTextureView()");
 	}
 
 	public void setUsage(boolean usage) {
@@ -138,10 +203,25 @@ public class CenterDepthSampler {
 	}
 
 	public void destroy() {
-		GlStateManager._deleteTexture(texture);
-		GlStateManager._deleteTexture(altTexture);
-		framebuffer.destroy();
-		program.destroy();
+		if (destroyed) {
+			return;
+		}
+
 		destroyed = true;
+
+		var encoder = device.createCommandEncoder();
+		VulkanCommandBridge.retire(encoder, program::close);
+		VulkanCommandBridge.retire(encoder, uniformSets::close);
+		VulkanCommandBridge.retire(encoder, heap::close);
+
+		if (depthView != null) {
+			depthView.close();
+		}
+
+		outputView.close();
+		historyView.close();
+		texture.close();
+		history.close();
+		vertices.close();
 	}
 }
