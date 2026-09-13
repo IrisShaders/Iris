@@ -53,6 +53,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -327,48 +328,48 @@ public class TransformPatcher {
 		AlphaTest alpha, boolean isLines, boolean isClouds,
 		boolean hasChunkOffset,
 		ShaderAttributeInputs inputs,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new VanillaParameters(Patch.VANILLA, textureMap, alpha, isLines, isClouds, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
+			new VanillaParameters(Patch.VANILLA, textureMap, textureOverrides, alpha, isLines, isClouds, hasChunkOffset, inputs, geometry != null, tessControl != null || tessEval != null));
 	}
 
 
 	public static Map<PatchShaderType, String> patchDHTerrain(
 		String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new DHParameters(Patch.DH_TERRAIN, textureMap));
+			new DHParameters(Patch.DH_TERRAIN, textureMap, textureOverrides));
 	}
 
 
 	public static Map<PatchShaderType, String> patchDHGeneric(
 		String name, String vertex, String tessControl, String tessEval, String geometry, String fragment,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new DHParameters(Patch.DH_GENERIC, textureMap));
+			new DHParameters(Patch.DH_GENERIC, textureMap, textureOverrides));
 
 	}
 
 	public static Map<PatchShaderType, String> patchSodium(String name, String vertex, String geometry, String tessControl, String tessEval, String fragment,
 														   AlphaTest alpha,
-														   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+														   Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides,
 														   boolean shadow) {
 		return transform(name, vertex, geometry, tessControl, tessEval, fragment,
-			new SodiumParameters(Patch.SODIUM, textureMap, alpha, shadow));
+			new SodiumParameters(Patch.SODIUM, textureMap, textureOverrides, alpha, shadow));
 	}
 
 	public static Map<PatchShaderType, String> patchComposite(
 		String name, String vertex, String geometry, String fragment,
 		TextureStage stage,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transform(name, vertex, geometry, null, null, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap));
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
+		return transform(name, vertex, geometry, null, null, fragment, new TextureStageParameters(Patch.COMPOSITE, stage, textureMap, textureOverrides));
 	}
 
 	public static String patchCompute(
 		String name, String compute,
 		TextureStage stage,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
-		return transformCompute(name, compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap))
+		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
+		return transformCompute(name, compute, new ComputeParameters(Patch.COMPUTE, stage, textureMap, textureOverrides))
 			.getOrDefault(PatchShaderType.COMPUTE, null);
 	}
 

@@ -541,7 +541,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				ProgramBuilder builder;
 
 				try {
-					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), TextureStage.GBUFFERS_AND_SHADOW, customTextureMap);
+					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), TextureStage.GBUFFERS_AND_SHADOW, customTextureMap, getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW));
 
 					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
 
@@ -604,7 +604,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				ProgramBuilder builder;
 
 				try {
-					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), stage, customTextureMap);
+					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), stage, customTextureMap, getTextureOverrides(stage));
 
 					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
 
@@ -664,6 +664,11 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		return createShader(name, key, source.get(), key.getProgram(), key.getAlphaTest(), key.getVertexFormat(), key.getFogMode(),
 			key.isIntensity(), key.shouldIgnoreLightmap(), key.isGlint(), key.isText(), false, patch);
+	}
+
+	@Override
+	public Set<String> getTextureOverrides(TextureStage stage) {
+		return customTextureManager.getCustomTextureIdMap(stage).keySet();
 	}
 
 	@Override

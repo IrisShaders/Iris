@@ -9,18 +9,22 @@ import net.irisshaders.iris.pipeline.transform.Patch;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 
+import java.util.Set;
+
 public abstract class Parameters implements JobParameters {
 	public final Patch patch;
 	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
+	private final Set<String> textureOverrides;
 	public PatchShaderType type; // may only be set by TransformPatcher
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	// name of the shader, this should not be part of hash/equals
 	public String name; // set by TransformPatcher
 
-	public Parameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap) {
+	public Parameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
 		this.patch = patch;
 		this.textureMap = textureMap;
+		this.textureOverrides = Set.copyOf(textureOverrides);
 	}
 
 	public AlphaTest getAlphaTest() {
@@ -33,12 +37,17 @@ public abstract class Parameters implements JobParameters {
 		return textureMap;
 	}
 
+	public Set<String> getTextureOverrides() {
+		return textureOverrides;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((patch == null) ? 0 : patch.hashCode());
 		result = prime * result + ((textureMap == null) ? 0 : textureMap.hashCode());
+		result = prime * result + textureOverrides.hashCode();
 		return result;
 	}
 
@@ -52,6 +61,8 @@ public abstract class Parameters implements JobParameters {
 			return false;
 		Parameters other = (Parameters) obj;
 		if (patch != other.patch)
+			return false;
+		if (!textureOverrides.equals(other.textureOverrides))
 			return false;
 		if (textureMap == null) {
 			return other.textureMap == null;

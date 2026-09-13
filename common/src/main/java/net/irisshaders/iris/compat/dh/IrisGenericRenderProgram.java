@@ -29,6 +29,7 @@ import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.samplers.IrisSamplers;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
+import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
@@ -163,7 +164,7 @@ public class IrisGenericRenderProgram implements IDhApiGenericObjectShaderProgra
 			source.getTessEvalSource().orElse(null),
 			source.getGeometrySource().orElse(null),
 			source.getFragmentSource().orElseThrow(RuntimeException::new),
-			pipeline.getTextureMap());
+			pipeline.getTextureMap(), pipeline.getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW));
 		String vertex = transformed.get(PatchShaderType.VERTEX);
 		String tessControl = transformed.get(PatchShaderType.TESS_CONTROL);
 		String tessEval = transformed.get(PatchShaderType.TESS_EVAL);
