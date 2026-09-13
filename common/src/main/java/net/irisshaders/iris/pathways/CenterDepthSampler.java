@@ -94,7 +94,7 @@ public class CenterDepthSampler {
 		var type = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS).type();
 		BlendModeOverride.restore();
 
-		GlStateManager._disableBlend(0);
+		IrisRenderSystem.disableBlend();
 		try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "centerDepthSmooth sampler", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty())) {
 			renderPass.setPipeline(RenderSystem.getCompiledPipeline(CompositeRenderer.COMPOSITE_PIPELINE));
 			renderPass.setIndexBuffer(indices, type);

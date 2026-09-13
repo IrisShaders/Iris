@@ -256,7 +256,7 @@ public class FinalPassRenderer {
 				finalPass.program.use();
 
 				BlendModeOverride.restore();
-				GlStateManager._disableBlend(0);
+				IrisRenderSystem.disableBlend();
 
 				// program is the identifier for final :shrug:
 				this.customUniforms.push(finalPass.program);

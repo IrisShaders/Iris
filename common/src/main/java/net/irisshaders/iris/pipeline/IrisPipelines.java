@@ -81,6 +81,7 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.CLOUDS, p -> ShaderKey.CLOUDS);
 		assignToMain(RenderPipelines.FLAT_CLOUDS, p -> ShaderKey.CLOUDS);
 		assignToMain(RenderPipelines.BANNER_PATTERN, p -> getTranslucent(p));
+		assignToMain(RenderPipelines.WEATHER, p -> ShaderKey.WEATHER);
 
 		assignToShadow(RenderPipelines.SOLID_BLOCK, p -> ShaderKey.SHADOW_TERRAIN_CUTOUT);
 		assignToShadow(RenderPipelines.SOLID_TERRAIN, p -> ShaderKey.SHADOW_TERRAIN_CUTOUT);

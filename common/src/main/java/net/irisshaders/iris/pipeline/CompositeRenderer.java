@@ -516,7 +516,8 @@ public class CompositeRenderer {
 			if (blendModeOverride != null) {
 				blendModeOverride.apply();
 			} else {
-				GlStateManager._disableBlend(0);
+				BlendModeOverride.restore();
+				IrisRenderSystem.disableBlend();
 			}
 		}
 	}

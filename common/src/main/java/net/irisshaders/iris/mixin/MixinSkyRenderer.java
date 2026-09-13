@@ -93,7 +93,7 @@ public class MixinSkyRenderer {
 		setPhase(WorldRenderingPhase.VOID);
 	}
 
-	@Inject(method = "renderSunMoonAndStars", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;rotate(Lcom/mojang/math/Axis;F)V", ordinal = 0, shift = At.Shift.AFTER))
+	@Inject(method = "renderSunMoonAndStars", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;rotateDegrees(Lcom/mojang/math/Axis;F)V", ordinal = 0, shift = At.Shift.AFTER))
 	private void iris$renderSky$tiltSun(RenderPass renderPass,
 	                                    PoseStack poseStack,
 	                                    float sunAngle,

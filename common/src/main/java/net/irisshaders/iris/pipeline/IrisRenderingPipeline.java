@@ -40,6 +40,7 @@ import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.helpers.FakeChainedJsonException;
 import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.helpers.Tri;
+import net.irisshaders.iris.layer.GbufferPrograms;
 import net.irisshaders.iris.mixin.LevelRendererAccessor;
 import net.irisshaders.iris.pathways.CenterDepthSampler;
 import net.irisshaders.iris.pathways.FullScreenQuadRenderer;
@@ -811,11 +812,13 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			}
 		}
 		this.phase = phase;
+		GbufferPrograms.runPhaseChangeNotifier();
 	}
 
 	@Override
 	public void setOverridePhase(WorldRenderingPhase phase) {
 		this.overridePhase = phase;
+		GbufferPrograms.runPhaseChangeNotifier();
 	}
 
 	@Override

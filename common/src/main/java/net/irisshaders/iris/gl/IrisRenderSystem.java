@@ -335,6 +335,18 @@ public class IrisRenderSystem {
 		return GL.getCapabilities().GL_ARB_draw_buffers_blend || GL.getCapabilities().OpenGL40;
 	}
 
+	public static void disableBlend() {
+		for (int i = 0; i < GlStateManagerAccessor.getBLEND_ENABLE().length; i++) {
+			GlStateManager._disableBlend(i);
+		}
+	}
+
+	public static void enableBlend() {
+		for (int i = 0; i < GlStateManagerAccessor.getBLEND_ENABLE().length; i++) {
+			GlStateManager._enableBlend(i);
+		}
+	}
+
 	public static void disableBufferBlend(int buffer) {
 		RenderSystem.assertOnRenderThread();
 		GL32C.glDisablei(GL32C.GL_BLEND, buffer);

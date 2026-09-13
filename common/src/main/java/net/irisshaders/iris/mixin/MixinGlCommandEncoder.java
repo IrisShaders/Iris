@@ -15,6 +15,8 @@ import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.ScissorState;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
 import net.irisshaders.iris.pipeline.IrisPipelines;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
@@ -127,6 +129,8 @@ public class MixinGlCommandEncoder {
 		if (glRenderPass.iris$getCustomPass() != null) {
 			cir.cancel();
 
+			BlendModeOverride.restore();
+			IrisRenderSystem.disableBlend();
 			glRenderPass.iris$getCustomPass().setupState();
 
 
@@ -141,7 +145,6 @@ public class MixinGlCommandEncoder {
 			GlStateManager._depthMask(false);
 			GlStateManager._disablePolygonOffset();
 			GlStateManager._disableCull();
-			GlStateManager._disableBlend(0);
 			GlStateManager._colorMask(15);
 		}
 		if (glRenderPass.pipeline.program() instanceof ExtendedShader shader) {

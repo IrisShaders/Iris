@@ -10,6 +10,7 @@ import com.mojang.renderpearl.backend.opengl.GlProgram;
 import com.mojang.renderpearl.backend.opengl.GlRenderPipeline;
 import com.mojang.renderpearl.backend.opengl.VertexArray;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.mixinterface.GlProgramBindings;
 import net.irisshaders.iris.mixinterface.GlRenderPipelineAccess;
 import net.irisshaders.iris.pipeline.IrisPipelines;
@@ -71,6 +72,24 @@ public class MixinGlRenderPipeline implements GlRenderPipelineAccess {
 		}
 	}
 
+
+	@WrapOperation(method = "bind", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_enableBlend(I)V"))
+	private void iris$enableBlend(int index, Operation<Void> original) {
+		if (this.program instanceof IrisProgram && this.createInfo.colorTargetStates().size() == 1) {
+			IrisRenderSystem.enableBlend();
+		} else {
+			original.call(index);
+		}
+	}
+
+	@WrapOperation(method = "bind", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_disableBlend(I)V"))
+	private void iris$disableBlend(int index, Operation<Void> original) {
+		if (this.program instanceof IrisProgram && this.createInfo.colorTargetStates().size() == 1) {
+			IrisRenderSystem.disableBlend();
+		} else {
+			original.call(index);
+		}
+	}
 
 	@Inject(method = "bind", at = @At("RETURN"))
 	private void iris$bind(CallbackInfo ci) {

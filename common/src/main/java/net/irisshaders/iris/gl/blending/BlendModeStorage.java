@@ -3,10 +3,9 @@ package net.irisshaders.iris.gl.blending;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
-import net.irisshaders.iris.mixin.statelisteners.BooleanStateAccessor;
 
 public class BlendModeStorage {
-	private static boolean originalBlendEnable;
+	private static final boolean[] originalBlendEnable = new boolean[GlStateManagerAccessor.getBLEND_ENABLE().length];
 	private static BlendMode originalBlend;
 	private static boolean blendLocked;
 	private static boolean blendUnknown;
@@ -24,16 +23,16 @@ public class BlendModeStorage {
 			// Only save the previous state if the blend mode wasn't already locked
 			GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
 
-			originalBlendEnable = GlStateManagerAccessor.getBLEND_ENABLE()[0];
+			System.arraycopy(GlStateManagerAccessor.getBLEND_ENABLE(), 0, originalBlendEnable, 0, originalBlendEnable.length);
 			originalBlend = new BlendMode(blendState.srcRgb, blendState.dstRgb, blendState.srcAlpha, blendState.dstAlpha);
 		}
 
 		blendLocked = false;
 
 		if (override == null) {
-			GlStateManager._disableBlend(0);
+			IrisRenderSystem.disableBlend();
 		} else {
-			GlStateManager._enableBlend(0);
+			IrisRenderSystem.enableBlend();
 			GlStateManager._blendFuncSeparate(override.srcRgb(), override.dstRgb(), override.srcAlpha(), override.dstAlpha());
 			blendUnknown = false;
 		}
@@ -46,7 +45,7 @@ public class BlendModeStorage {
 			// Only save the previous state if the blend mode wasn't already locked
 			GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
 
-			originalBlendEnable = GlStateManagerAccessor.getBLEND_ENABLE()[0];
+			System.arraycopy(GlStateManagerAccessor.getBLEND_ENABLE(), 0, originalBlendEnable, 0, originalBlendEnable.length);
 			originalBlend = new BlendMode(blendState.srcRgb, blendState.dstRgb, blendState.srcAlpha, blendState.dstAlpha);
 		}
 
@@ -61,8 +60,8 @@ public class BlendModeStorage {
 		blendLocked = true;
 	}
 
-	public static void deferBlendModeToggle(boolean enabled) {
-		originalBlendEnable = enabled;
+	public static void deferBlendModeToggle(int index, boolean enabled) {
+		originalBlendEnable[index] = enabled;
 	}
 
 	public static void deferBlendFunc(int srcRgb, int dstRgb, int srcAlpha, int dstAlpha) {
@@ -76,10 +75,12 @@ public class BlendModeStorage {
 
 		blendLocked = false;
 
-		if (originalBlendEnable) {
-			GlStateManager._enableBlend(0);
-		} else {
-			GlStateManager._disableBlend(0);
+		for (int i = 0; i < originalBlendEnable.length; i++) {
+			if (originalBlendEnable[i]) {
+				GlStateManager._enableBlend(i);
+			} else {
+				GlStateManager._disableBlend(i);
+			}
 		}
 
 		GlStateManager._blendFuncSeparate(originalBlend.srcRgb(), originalBlend.dstRgb(),

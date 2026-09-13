@@ -18,7 +18,7 @@ import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.helpers.VertexBufferHelper;
 import net.irisshaders.iris.mixin.GpuDeviceAccessor;
 import net.irisshaders.iris.mixinterface.GlRenderPipelineAccess;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.irisshaders.iris.pipeline.CompositeRenderer;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL46C;
 
@@ -53,7 +53,7 @@ public class FullScreenQuadRenderer {
 	}
 
 	public void bind() {
-		var frontend = ((FrontendRenderPipeline) RenderSystem.getCompiledPipeline(RenderPipelines.CELESTIAL));
+		var frontend = ((FrontendRenderPipeline) RenderSystem.getCompiledPipeline(CompositeRenderer.COMPOSITE_PIPELINE));
 		var backend = ((GlRenderPipeline) frontend.backendRenderPipeline());
 		backend.vertexArray().bind(new GpuBufferSlice[] { quad.slice() });
 	}

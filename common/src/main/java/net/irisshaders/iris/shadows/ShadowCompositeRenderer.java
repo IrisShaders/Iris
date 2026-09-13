@@ -246,6 +246,7 @@ public class ShadowCompositeRenderer {
 				this.customUniforms.push(renderPass.program);
 
 				pass.drawIndexed(6, 1, 0, 0, 0);
+				BlendModeOverride.restore();
 			}
 		}
 
@@ -386,7 +387,8 @@ public class ShadowCompositeRenderer {
 			if (blendModeOverride != null) {
 				blendModeOverride.apply();
 			} else {
-				GlStateManager._disableBlend(0);
+				BlendModeOverride.restore();
+				IrisRenderSystem.disableBlend();
 			}
 		}
 	}
