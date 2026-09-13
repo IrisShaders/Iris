@@ -13,8 +13,4 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ArenaAggregator.class)
 public class MixinArenaAggregator {
 
-	@Redirect(method = "<init>", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkMeshFormats;COMPACT:Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;"))
-	private static ChunkVertexType getCurrent() {
-		return WorldRenderingSettings.INSTANCE.getVertexFormat();
-	}
 }

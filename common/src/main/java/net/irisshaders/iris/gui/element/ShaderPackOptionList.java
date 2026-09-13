@@ -375,7 +375,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 
 			// Displaying a dialog when the game is full-screened can cause severe issues
 			// https://github.com/IrisShaders/Iris/issues/1258
-			if (Minecraft.getInstance().getWindow().isFullscreen()) {
+			if (Minecraft.getInstance().options.fullscreen().get()) {
 				this.screen.displayNotification(
 					Component.translatable("options.iris.mustDisableFullscreen")
 						.withStyle(ChatFormatting.RED).withStyle(ChatFormatting.BOLD));
@@ -413,7 +413,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 
 			// Displaying a dialog when the game is full-screened can cause severe issues
 			// https://github.com/IrisShaders/Iris/issues/1258
-			if (Minecraft.getInstance().getWindow().isFullscreen()) {
+			if (Minecraft.getInstance().options.fullscreen().get()) {
 				this.screen.displayNotification(
 					Component.translatable("options.iris.mustDisableFullscreen")
 						.withStyle(ChatFormatting.RED).withStyle(ChatFormatting.BOLD));

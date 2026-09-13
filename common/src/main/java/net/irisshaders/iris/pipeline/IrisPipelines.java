@@ -35,8 +35,11 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT_CULL, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.ITEM_TRANSLUCENT, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.ITEM_CUTOUT, p -> getCutout(p));
-		assignToMain(RenderPipelines.ITEM_CUTOUT_GLINT, p -> getCutout(p));
-		assignToMain(RenderPipelines.ITEM_CUTOUT_GLINT_SPECIAL, p -> getCutout(p));
+		assignToMain(RenderPipelines.ITEM_CUTOUT_GLINT, p -> ShaderKey.ENTITIES_CUTOUT_GLINT);
+		assignToMain(RenderPipelines.ENTITY_SOLID_GLINT, p -> ShaderKey.ENTITIES_SOLID_GLINT);
+		assignToMain(RenderPipelines.ITEM_TRANSLUCENT_GLINT, p -> ShaderKey.ENTITIES_TRANSLUCENT_GLINT);
+		assignToMain(RenderPipelines.ITEM_TRANSLUCENT_GLINT_SPECIAL, p -> ShaderKey.ENTITIES_TRANSLUCENT_GLINT);
+		assignToMain(RenderPipelines.ITEM_CUTOUT_GLINT_SPECIAL, p -> ShaderKey.ENTITIES_CUTOUT_GLINT);
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.ENTITY_SHADOW, p -> getTranslucent(p));
 		assignToMain(RenderPipelines.LINES, p -> ShaderKey.LINES);
@@ -51,7 +54,7 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.WATER_MASK, p -> ShaderKey.BASIC);
 		assignToMain(RenderPipelines.GLINT, p -> ShaderKey.GLINT);
 		assignToMain(RenderPipelines.ARMOR_CUTOUT_NO_CULL, p -> getCutout(p));
-		assignToMain(RenderPipelines.ARMOR_CUTOUT_NO_CULL_GLINT, p -> getCutout(p));
+		assignToMain(RenderPipelines.ARMOR_CUTOUT_NO_CULL_GLINT, p -> ShaderKey.ENTITIES_CUTOUT_GLINT_ARMOR);
 		assignToMain(RenderPipelines.EYES, p -> ShaderKey.ENTITIES_EYES);
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT_EMISSIVE, p -> ShaderKey.ENTITIES_EYES_TRANS);
 		assignToMain(RenderPipelines.ARMOR_DECAL_CUTOUT_NO_CULL, p -> getCutout(p));

@@ -1,18 +1,11 @@
 package net.irisshaders.iris.pipeline.programs;
 
 import com.mojang.renderpearl.backend.opengl.GlProgram;
-import com.mojang.renderpearl.backend.opengl.GlRenderPass;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.renderpearl.backend.opengl.Uniform;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.api.pipeline.UniformType;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
-import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import com.mojang.logging.LogUtils;
-import com.mojang.renderpearl.util.TextureViewAndSampler;
 import net.caffeinemc.mods.sodium.client.render.chunk.ShaderChunkRenderer;
 import net.irisshaders.iris.compat.SkipList;
 import net.irisshaders.iris.gl.GLDebug;
@@ -41,20 +34,17 @@ import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
+import net.minecraft.client.renderer.feature.ItemFeatureRenderer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.ARBTextureSwizzle;
-import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL46C;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -97,7 +87,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 	public ExtendedShader(int programId, String string, VertexFormat vertexFormat, boolean usesTessellation,
                           GlFramebuffer writingToBeforeTranslucent, GlFramebuffer writingToAfterTranslucent,
                           BlendModeOverride blendModeOverride, AlphaTest alphaTest,
-                          Consumer<DynamicLocationalUniformHolder> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, boolean isIntensity,
+                          Consumer<DynamicLocationalUniformHolder> uniformCreator, BiConsumer<SamplerHolder, ImageHolder> samplerCreator, ShaderKey shaderKey,
                           IrisRenderingPipeline parent, @Nullable List<BufferBlendOverride> bufferBlendOverrides, CustomUniforms customUniforms, Patch patch) throws IOException {
 		super(programId, string);
 
@@ -158,6 +148,8 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 		this.normalMat = GlStateManager._glGetUniformLocation(programId, "iris_NormalMat");
 		ProgramImages.Builder builder = ProgramImages.builder(programId);
 		samplerCreator.accept(samplerBuilder, builder);
+		samplerBuilder.addDynamicSampler(TextureType.TEXTURE_2D,
+										 () -> getGlintSamplerFor(shaderKey, pipeline), null, "glintTexture");
 		customUniforms.mapholderToPass(uniformBuilder, this);
 		this.usesTessellation = usesTessellation;
 
@@ -176,7 +168,21 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 		this.modelViewInverse = GlStateManager._glGetUniformLocation(programId, "iris_ModelViewMatInverse");
 		this.projectionInverse = GlStateManager._glGetUniformLocation(programId, "iris_ProjMatInverse");
 
-		this.intensitySwizzle = isIntensity;
+		this.intensitySwizzle = shaderKey.isIntensity();
+	}
+
+	private int getGlintSamplerFor(ShaderKey shaderKey,
+								   IrisRenderingPipeline pipeline) {
+		if (shaderKey.isGlint() && shaderKey.getVertexFormat().contains("UV1")) {
+			if (shaderKey == ShaderKey.ENTITIES_CUTOUT_GLINT_ARMOR) {
+				return Minecraft.getInstance().getTextureManager().getTexture(
+					ItemFeatureRenderer.ENCHANTED_GLINT_ARMOR).getTexture().iris$getGlId();
+			} else {
+				return Minecraft.getInstance().getTextureManager().getTexture(
+					ItemFeatureRenderer.ENCHANTED_GLINT_ITEM).getTexture().iris$getGlId();
+			}
+		}
+		return pipeline.getWhitePixel().getTexture().iris$getGlId();
 	}
 
 	public boolean isIntensitySwizzle() {

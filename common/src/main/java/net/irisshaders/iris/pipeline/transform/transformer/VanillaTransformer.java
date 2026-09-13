@@ -110,12 +110,20 @@ public class VanillaTransformer {
 					"vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
+			if (parameters.inputs.hasOverlay() && parameters.inputs.isGlint()) {
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord4",
+					"(iris_transforms.TextureMat * vec4(iris_UV0, 0.0, 1.0))");
+			} else {
+				root.replaceReferenceExpressions(t, "gl_MultiTexCoord4",
+					"vec4(-1.0)");
+			}
+
 			CommonTransformer.patchMultiTexCoord3(t, tree, root, parameters);
 
 			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs (with
 			// gl_MultiTexCoord2 and gl_MultiTexCoord3 as aliases), other texture
 			// coordinates are not valid inputs.
-			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
+			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 5, 7);
 		}
 
 		if (parameters.inputs.hasColor() && parameters.type == PatchShaderType.VERTEX) {
@@ -134,9 +142,11 @@ public class VanillaTransformer {
 				tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 					"in vec4 iris_Color;");
 			}
-		} else if (parameters.inputs.isGlint()) {
+		} else if (parameters.inputs.isGlint() && !parameters.inputs.hasOverlay()) {
 			// iris_ColorModulator should be applied regardless of the alpha test state.
 			root.replaceReferenceExpressions(t, "gl_Color", "vec4(iris_transforms.ColorModulator.rgb, iris_transforms.ColorModulator.a * iris_globalInfo.GlintAlpha)");
+			//root.replaceReferenceExpressions(t, "gl_Color", "iris_transforms.ColorModulator");
+
 		} else {
 			// iris_ColorModulator should be applied regardless of the alpha test state.
 			root.replaceReferenceExpressions(t, "gl_Color", "iris_transforms.ColorModulator");
@@ -165,7 +175,7 @@ public class VanillaTransformer {
 			"uniform mat4 iris_LightmapTextureMatrix;");
 
 		// TODO: More solid way to handle texture matrices
-		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, "iris_transforms.TextureMat");
+		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix0, parameters.inputs.isGlint() && parameters.inputs.hasOverlay() ? "mat4(1.0)" : "iris_transforms.TextureMat");
 		root.replaceExpressionMatches(t, CommonTransformer.glTextureMatrix1, "iris_LightmapTextureMatrix");
 
 		// TODO: Should probably add the normal matrix as a proper uniform that's

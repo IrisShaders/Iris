@@ -13,7 +13,6 @@ import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
 import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.systems.ScissorState;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.blending.DepthColorStorage;
@@ -106,28 +105,6 @@ public class MixinGlCommandEncoder {
 	private void iris$changeDrawBuffers(int[] buffers) {
 		if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !ImmediateState.safeToMultiply) {
 			GL33C.glDrawBuffers(buffers);
-		}
-	}
-
-
-	@WrapOperation(method = "applyPipelineState", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/opengl/GlConst;toGl(Lcom/mojang/blaze3d/platform/CompareOp;)I"))
-	private int iris$pass(CompareOp compareOp,
-	                      Operation<Integer> original, @Local(argsOnly = true) RenderPipeline pipeline) {
-		WorldRenderingPipeline p = Iris.getPipelineManager().getPipelineNullable();
-
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && p instanceof IrisRenderingPipeline irisPipeline && irisPipeline.shouldOverrideShaders() && !ImmediateState.bypass && IrisPipelines.getPipeline(irisPipeline, pipeline) != null) {
-			return switch (compareOp) {
-				case ALWAYS_PASS -> 519;
-				case LESS_THAN -> GL46C.GL_GREATER;
-				case LESS_THAN_OR_EQUAL -> GL46C.GL_GEQUAL;
-				case EQUAL -> 514;
-				case NOT_EQUAL -> 517;
-				case GREATER_THAN_OR_EQUAL -> GL46C.GL_LEQUAL;
-				case GREATER_THAN -> GL46C.GL_LESS;
-				case NEVER_PASS -> 512;
-			};
-		} else {
-			return original.call(compareOp);
 		}
 	}
 

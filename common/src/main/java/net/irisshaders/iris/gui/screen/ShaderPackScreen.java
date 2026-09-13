@@ -1,5 +1,6 @@
 package net.irisshaders.iris.gui.screen;
 
+import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.api.v0.IrisApi;
@@ -233,10 +234,11 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		if (this.updateComponent != null && x < widthValue && y > (this.height - 10) && y < this.height) {
 			this.minecraft.gui.setScreen(new ConfirmLinkScreen(bl -> {
 				if (bl) {
-					Iris.getUpdateChecker().getUpdateLink().ifPresent(Util.getPlatform()::openUri);
+					Iris.getUpdateChecker().getUpdateLink().ifPresent(
+						Blaze3D::openUri);
 				}
 				this.minecraft.gui.setScreen(this);
-			}, Iris.getUpdateChecker().getUpdateLink().map(URI::toString).orElse(""), true));
+			}, Iris.getUpdateChecker().getUpdateLink().orElse(null), true));
 		}
 		return super.mouseClicked(event, bl2);
 	}
@@ -633,7 +635,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	}
 
 	private void openShaderPackFolder() {
-		CompletableFuture.runAsync(() -> Util.getPlatform().openUri(Iris.getShaderpacksDirectoryManager().getDirectoryUri()));
+		CompletableFuture.runAsync(() -> Blaze3D.openUri(Iris.getShaderpacksDirectoryManager().getDirectoryUri()));
 	}
 
 	// Let the screen know if an element is hovered or not, allowing for accurately updating which element is hovered

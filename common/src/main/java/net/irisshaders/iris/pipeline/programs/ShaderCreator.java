@@ -173,7 +173,7 @@ public class ShaderCreator {
 					VanillaUniforms.addVanillaUniforms(uniforms);
 				}, (samplerHolder, imageHolder) -> {
 					parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.hasTex(), inputs.hasLight(), inputs.hasOverlay());
-				}, isIntensity, parent, overrides, customUniforms, patch);
+				}, shaderKey, parent, overrides, customUniforms, patch);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -377,7 +377,7 @@ public class ShaderCreator {
 					VanillaUniforms.addVanillaUniforms(uniforms);
 				}, (samplerHolder, imageHolder) -> {
 					parent.addGbufferOrShadowSamplers(samplerHolder, imageHolder, flipped, isShadowPass, inputs.hasTex(), inputs.hasLight(), inputs.hasOverlay());
-				}, isIntensity, parent, overrides, customUniforms, patchType);
+				}, shaderKey, parent, overrides, customUniforms, patchType);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

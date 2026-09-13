@@ -2,6 +2,7 @@ package net.irisshaders.iris.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.backend.api.BackendRenderPipeline;
 import com.mojang.renderpearl.backend.opengl.GlDevice;
@@ -11,9 +12,13 @@ import com.mojang.renderpearl.backend.opengl.VertexArray;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.mixinterface.GlProgramBindings;
 import net.irisshaders.iris.mixinterface.GlRenderPipelineAccess;
+import net.irisshaders.iris.pipeline.IrisPipelines;
+import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.IrisProgram;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.vertices.ImmediateState;
+import org.lwjgl.opengl.GL46C;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,12 +49,25 @@ public class MixinGlRenderPipeline implements GlRenderPipelineAccess {
 		return !ShadowRenderingState.areShadowsCurrentlyBeingRendered() && original.call(instance);
 	}
 
-	@WrapOperation(method = "bind", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_polygonOffset(FF)V"))
-	private void iris$revertPolygonOffset(float factor, float units, Operation<Void> original) {
-		if (Iris.isPackInUseQuick() && ImmediateState.isRenderingLevel) {
-			original.call(-factor, -units);
+
+	@WrapOperation(method = "bind", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_depthFunc(I)V"))
+	private void iris$pass(int compareOp, Operation<Void> original) {
+		WorldRenderingPipeline p = Iris.getPipelineManager().getPipelineNullable();
+
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			original.call(switch (compareOp) {
+				case GL46C.GL_ALWAYS -> 519;
+				case GL46C.GL_LESS -> GL46C.GL_GREATER;
+				case GL46C.GL_LEQUAL -> GL46C.GL_GEQUAL;
+				case GL46C.GL_EQUAL -> 514;
+				case GL46C.GL_NOTEQUAL -> 517;
+				case GL46C.GL_GEQUAL -> GL46C.GL_LEQUAL;
+				case GL46C.GL_GREATER -> GL46C.GL_LESS;
+				case GL46C.GL_NEVER -> 512;
+				default -> throw new IllegalStateException("Unexpected value: " + compareOp);
+			});
 		} else {
-			original.call(factor, units);
+			original.call(compareOp);
 		}
 	}
 

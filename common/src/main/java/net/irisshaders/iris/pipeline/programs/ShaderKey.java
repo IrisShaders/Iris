@@ -53,15 +53,23 @@ public enum ShaderKey {
             Patch.VANILLA),
 	ENTITIES_SOLID(ProgramId.Entities, AlphaTests.OFF, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
             Patch.VANILLA),
+	ENTITIES_SOLID_GLINT(ProgramId.Entities, AlphaTests.OFF, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
+            Patch.VANILLA),
 	ENTITIES_SOLID_DIFFUSE(ProgramId.Entities, AlphaTests.OFF, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
             Patch.VANILLA),
 	ENTITIES_SOLID_BRIGHT(ProgramId.Entities, AlphaTests.OFF, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.FULLBRIGHT,
             Patch.VANILLA),
 	ENTITIES_CUTOUT(ProgramId.Entities, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
             Patch.VANILLA),
+	ENTITIES_CUTOUT_GLINT(ProgramId.Entities, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
+            Patch.VANILLA),
+	ENTITIES_CUTOUT_GLINT_ARMOR(ProgramId.Entities, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
+            Patch.VANILLA),
 	ENTITIES_CUTOUT_DIFFUSE(ProgramId.Entities, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
             Patch.VANILLA),
 	ENTITIES_TRANSLUCENT(ProgramId.EntitiesTrans, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
+            Patch.VANILLA),
+	ENTITIES_TRANSLUCENT_GLINT(ProgramId.EntitiesTrans, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
             Patch.VANILLA),
 	ENTITIES_EYES(ProgramId.SpiderEyes, AlphaTests.NON_ZERO_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.FULLBRIGHT,
             Patch.VANILLA),
@@ -229,7 +237,7 @@ public enum ShaderKey {
 	}
 
 	public boolean isGlint() {
-		return this == GLINT;
+		return this == GLINT || this == ENTITIES_CUTOUT_GLINT || this == ENTITIES_CUTOUT_GLINT_ARMOR || this == ENTITIES_TRANSLUCENT_GLINT || this == ENTITIES_SOLID_GLINT;
 	}
 
 	public boolean isText() {

@@ -1,5 +1,6 @@
 package net.irisshaders.iris.gui.element;
 
+import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.GuiUtil;
@@ -26,6 +27,7 @@ import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -54,10 +56,10 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
 		this.downloadButton = new PinnedEntry(Component.literal("Download Shaders"), () -> this.minecraft.gui.setScreen(new ConfirmLinkScreen(bl -> {
 			if (bl) {
-				Util.getPlatform().openUri("https://modrinth.com/shaders");
+				Blaze3D.openUri(URI.create("https://modrinth.com/shaders"));
 			}
 			this.minecraft.gui.setScreen(this.screen);
-		}, "https://modrinth.com/shaders", true)), this);
+		}, URI.create("https://modrinth.com/shaders"), true)), this);
 		try {
 			watcher1 = FileSystems.getDefault().newWatchService();
 			key1 = Iris.getShaderpacksDirectory().register(watcher1,
