@@ -13,6 +13,7 @@ import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallE
 import io.github.douira.glsl_transformer.ast.node.expression.unary.GroupingExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
+import io.github.douira.glsl_transformer.ast.node.type.initializer.NestedInitializer;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.PreciseQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.PrecisionQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
@@ -156,10 +157,39 @@ public final class VulkanShaderPatcher {
 		var result = new EnumMap<PatchShaderType, String>(PatchShaderType.class);
 
 		for (var entry : trees.entrySet()) {
+			initializeGlobals(parser, entry.getValue());
 			result.put(entry.getKey(), ASTPrinter.print(PrintType.INDENTED, entry.getValue()));
 		}
 
 		return new Result(result, layout, samplers, written);
+	}
+
+	private static void initializeGlobals(ASTParser parser, TranslationUnit tree) {
+		boolean initialized = false;
+
+		for (var external : List.copyOf(tree.getChildren())) {
+			if (!(external instanceof DeclarationExternalDeclaration declaration) ||
+				!(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) ||
+				variables.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier) {
+				continue;
+			}
+
+			var qualifier = variables.getType().getTypeQualifier();
+			if (qualifier != null && qualifier.getParts().stream().anyMatch(StorageQualifier.class::isInstance)) {
+				continue;
+			}
+
+			for (var member : variables.getMembers()) {
+				if (member.getInitializer() == null && !member.getName().getName().startsWith("gl_")) {
+					member.setInitializer(new NestedInitializer());
+					initialized = true;
+				}
+			}
+		}
+
+		if (initialized) {
+			tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_ALL, "#extension GL_EXT_null_initializer : require\n");
+		}
 	}
 
 	private static void removeUnreachableFunctions(TranslationUnit tree) {

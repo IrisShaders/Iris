@@ -5,6 +5,7 @@ import com.mojang.renderpearl.api.device.GpuDevice;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.backend.vulkan.VulkanConst;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.transform.JobParameters;
 import io.github.douira.glsl_transformer.ast.transform.SingleASTTransformer;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class CompositeProgram {
+	private static final int VERTEX_STRIDE = 56;
 	private final GpuDevice device;
 	private final PackSamplers pack;
 	private final String name;
@@ -119,7 +121,7 @@ public final class CompositeProgram {
 
 				pipeline = new VulkanGraphicsPipeline(backend.vkDevice(), pack.heap(), uniformSets, stages,
 					targets.stream().mapToInt(v -> VulkanConst.toVk(v.texture().getFormat())).toArray(),
-					20, attributes(shader.sources().get(PatchShaderType.VERTEX)), blends,
+					VERTEX_STRIDE, attributes(shader.sources().get(PatchShaderType.VERTEX)), blends,
 					shader.writtenAttachments(), null,
 					uniforms.frameUniforms() == null ? null : uniforms.frameUniforms().sets());
 			} finally {
@@ -129,8 +131,15 @@ public final class CompositeProgram {
 			cleanup.add(pipeline::close);
 
 			try (var stack = MemoryStack.stackPush()) {
-				var data = stack.malloc(80).order(ByteOrder.nativeOrder());
-				data.asFloatBuffer().put(new float[]{0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1});
+				var data = stack.calloc(4 * VERTEX_STRIDE).order(ByteOrder.nativeOrder());
+				float[] corners = {0, 0, 1, 0, 1, 1, 0, 1};
+				for (int vertex = 0; vertex < 4; vertex++) {
+					int offset = vertex * VERTEX_STRIDE;
+					data.putFloat(offset, corners[vertex * 2]);
+					data.putFloat(offset + 4, corners[vertex * 2 + 1]);
+					data.putFloat(offset + 12, corners[vertex * 2]);
+					data.putFloat(offset + 16, corners[vertex * 2 + 1]);
+				}
 				vertices = device.createBuffer(() -> "Iris composite vertices", GpuBuffer.USAGE_VERTEX, data);
 				cleanup.add(vertices::close);
 
@@ -167,11 +176,18 @@ public final class CompositeProgram {
 			for (var member : declaration.getMembers()) {
 				String name = member.getName().getName();
 
-				if (!name.equals("Position") && !name.equals("UV0")) {
-					throw new IllegalArgumentException("Unknown composite vertex input: " + name);
-				}
-
 				int location = VulkanGlsl.integer(VulkanGlsl.layout(qualifier, "location").getExpression(), tree.getRoot());
+				if (!name.equals("Position") && !name.equals("UV0")) {
+					var type = VulkanGlsl.uniformType((BuiltinNumericTypeSpecifier) declaration.getType().getTypeSpecifier(), member,
+						tree.getRoot());
+					int columns = type.dimensions().stream().reduce(type.columns(), Math::multiplyExact);
+					int locations = (type.rows() * type.scalarBytes() + 15) / 16;
+					for (int column = 0; column < columns; column++) {
+						attributes.add(new VulkanGraphicsPipeline.Attribute(location + column * locations,
+							WorldProgram.zeroAttributeFormat(type), 24));
+					}
+					continue;
+				}
 				attributes.add(new VulkanGraphicsPipeline.Attribute(
 					location, name.equals("Position") ? VK10.VK_FORMAT_R32G32B32_SFLOAT : VK10.VK_FORMAT_R32G32_SFLOAT,
 					name.equals("Position") ? 0 : 12));

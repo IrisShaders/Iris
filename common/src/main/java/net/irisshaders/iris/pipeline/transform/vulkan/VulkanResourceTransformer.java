@@ -7,6 +7,7 @@ import io.github.douira.glsl_transformer.ast.node.declaration.InterfaceBlockDecl
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.type.initializer.ExpressionInitializer;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
@@ -23,6 +24,7 @@ import net.irisshaders.iris.pipeline.transform.vulkan.VulkanResourceLayout.Unifo
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -145,11 +147,26 @@ public final class VulkanResourceTransformer {
 
 							declaration.detachAndDelete();
 						} else if (type instanceof BuiltinNumericTypeSpecifier numeric) {
-							for (var member : variables.getMembers()) {
+							for (var member : List.copyOf(variables.getMembers())) {
 								String name = member.getName().getName();
-								stageUniforms.computeIfAbsent(tree, ignored -> new LinkedHashSet<>()).add(name);
-
 								Std140Type uniformType = VulkanGlsl.uniformType(numeric, member, root);
+								var shared = frameLayout == null ? null : frameLayout.uniforms().get(name);
+
+								if (shared != null && !dynamic.test(name) && !compatibleSharedType(uniformType, shared.type())) {
+									var constantType = variables.getType().cloneInto(root);
+									var constantQualifier = constantType.getTypeQualifier();
+									constantQualifier.getParts().removeIf(StorageQualifier.class::isInstance);
+									constantQualifier.getParts().add(new StorageQualifier(StorageType.CONST));
+									VulkanGlsl.removeLayout(constantQualifier, "location", "set", "binding", "offset");
+									var constant = member.cloneInto(root);
+									constant.setInitializer(new ExpressionInitializer(parser.parseExpression(root, zeroConstant(uniformType))));
+									tree.getChildren().add(tree.getChildren().indexOf(declaration),
+										new DeclarationExternalDeclaration(new TypeAndInitDeclaration(constantType, Stream.of(constant))));
+									member.detachAndDelete();
+									continue;
+								}
+
+								stageUniforms.computeIfAbsent(tree, ignored -> new LinkedHashSet<>()).add(name);
 								Std140Type previous = types.putIfAbsent(name, uniformType);
 
 								if (previous != null && !previous.equals(uniformType)) {
@@ -207,11 +224,6 @@ public final class VulkanResourceTransformer {
 				}
 
 				var type = entry.getValue();
-
-				if (!type.equals(shared.type()) && !(Set.of("int", "bool").contains(type.glsl()) &&
-					Set.of("int", "bool").contains(shared.type().glsl()) && type.dimensions().isEmpty())) {
-					throw new IllegalArgumentException("Conflicting shared uniform type: " + entry.getKey());
-				}
 
 				frameTypes.put(entry.getKey(), type);
 				types.remove(entry.getKey());
@@ -374,6 +386,24 @@ public final class VulkanResourceTransformer {
 		}
 
 		return new VulkanResourceLayout(Std140Type.align(offset, alignment), uniforms, descriptors);
+	}
+
+	private static String zeroConstant(Std140Type type) {
+		String value = type.glsl() + "(0)";
+		String dimensions = "";
+
+		for (int i = type.dimensions().size() - 1; i >= 0; i--) {
+			int count = type.dimensions().get(i);
+			dimensions = "[" + count + "]" + dimensions;
+			value = type.glsl() + dimensions + "(" + String.join(",", Collections.nCopies(count, value)) + ")";
+		}
+
+		return value;
+	}
+
+	private static boolean compatibleSharedType(Std140Type type, Std140Type shared) {
+		return type.equals(shared) || Set.of("int", "bool").contains(type.glsl()) &&
+			Set.of("int", "bool").contains(shared.glsl()) && type.dimensions().isEmpty() && shared.dimensions().isEmpty();
 	}
 
 	private static void addResource(Map<String, Resource> resources, String name, Kind kind, String type, int count, String signature,
