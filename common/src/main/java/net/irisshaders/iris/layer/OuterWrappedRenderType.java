@@ -46,6 +46,11 @@ public class OuterWrappedRenderType extends RenderType {
 	}
 
 	@Override
+	public boolean forceSolidModelPhase() {
+		return wrapped.forceSolidModelPhase();
+	}
+
+	@Override
 	public Optional<RenderType> outline() {
 		return this.wrapped.outline();
 	}
