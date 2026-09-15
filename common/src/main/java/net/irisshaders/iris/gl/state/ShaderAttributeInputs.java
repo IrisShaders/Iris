@@ -19,6 +19,7 @@ public class ShaderAttributeInputs {
 	private boolean normal;
 	private boolean newLines;
 	private boolean glint;
+	private boolean specialGlint;
 	private boolean text;
 	private int entityComponents;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
@@ -34,6 +35,8 @@ public class ShaderAttributeInputs {
             // Sodium. Get current.
             format = WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat();
         }
+
+		this.specialGlint = glint && format.contains("UV3");
 
 		format.getElements().forEach(n -> {
 			var name = n.name();
@@ -112,6 +115,10 @@ public class ShaderAttributeInputs {
 		return glint;
 	}
 
+	public boolean isSpecialGlint() {
+		return specialGlint;
+	}
+
 	public int getEntityComponents() {
 		return entityComponents;
 	}
@@ -127,6 +134,7 @@ public class ShaderAttributeInputs {
 		result = prime * result + (normal ? 1231 : 1237);
 		result = prime * result + (newLines ? 1231 : 1237);
 		result = prime * result + (glint ? 1231 : 1237);
+		result = prime * result + (specialGlint ? 1231 : 1237);
 		result = prime * result + (text ? 1231 : 1237);
 		result = prime * result + entityComponents;
 		return result;
@@ -154,6 +162,8 @@ public class ShaderAttributeInputs {
 		if (newLines != other.newLines)
 			return false;
 		if (glint != other.glint)
+			return false;
+		if (specialGlint != other.specialGlint)
 			return false;
 		if (text != other.text)
 			return false;

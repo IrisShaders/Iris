@@ -17,6 +17,7 @@ public class IrisVertexFormats {
 	public static final String MID_BLOCK_ATTRIBUTE = "at_midBlock";
 	public static final VertexFormat TERRAIN;
 	public static final VertexFormat ENTITY;
+	public static final VertexFormat ENTITY_GLINT_SPECIAL;
 	public static final VertexFormat GLYPH;
 	public static final VertexFormat CLOUDS;
 	private static final Map<VertexFormat, Map<String, Integer>> OFFSET_CACHE = new ConcurrentHashMap<>();
@@ -51,6 +52,12 @@ public class IrisVertexFormats {
 							 .addAttribute(MID_TEXTURE_ATTRIBUTE, GpuFormat.RG32_FLOAT)
 							 .addAttribute(TANGENT_ATTRIBUTE, GpuFormat.RGBA8_SNORM)
 							 .build();
+
+		var specialGlint = VertexFormat.builder(0);
+		for (VertexFormatElement element : ENTITY.getElements()) {
+			specialGlint.addAttribute(element.name(), element.format());
+		}
+		ENTITY_GLINT_SPECIAL = specialGlint.addAttribute("UV3", GpuFormat.RG32_FLOAT).build();
 
 		GLYPH = VertexFormat.builder(0)
 							.addAttribute("Position", GpuFormat.RGB32_FLOAT)

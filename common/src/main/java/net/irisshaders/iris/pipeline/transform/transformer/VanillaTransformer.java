@@ -8,7 +8,6 @@ import net.irisshaders.iris.gl.blending.AlphaTests;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
-import net.irisshaders.iris.pipeline.programs.IrisBindings;
 
 public class VanillaTransformer {
 	public static void transform(
@@ -31,7 +30,7 @@ public class VanillaTransformer {
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 			"const float mc_chunkFade = -1.0;",
 			"""
-				layout(std140, binding = %d) uniform iris_Fog {
+				layout(std140) uniform iris_Fog {
 				    vec4 FogColor;
 				    float FogEnvironmentalStart;
 				    float FogEnvironmentalEnd;
@@ -40,7 +39,7 @@ public class VanillaTransformer {
 				    float FogSkyEnd;
 				    float FogCloudsEnd;
 				} iris_fogP;
-				""".formatted(IrisBindings.FOG),
+				""",
 			"struct iris_FogParameters {" +
 				"vec4 color;" +
 				"float density;" +
@@ -51,20 +50,20 @@ public class VanillaTransformer {
 			"iris_FogParameters irisInt_Fog = iris_FogParameters(iris_fogP.FogColor, 0.0, iris_fogP.FogEnvironmentalStart, iris_fogP.FogEnvironmentalEnd, 1.0 / (iris_fogP.FogEnvironmentalEnd - iris_fogP.FogEnvironmentalStart));");
 
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
-			layout(std140, binding = %d) uniform iris_DynamicTransforms {
+			layout(std140) uniform iris_DynamicTransforms {
 			    mat4 ModelViewMat;
 			    mat4 TextureMat;
 			    vec4 ColorModulator;
 			    vec3 ModelOffset;
 			} iris_transforms;
-			""".formatted(IrisBindings.DYNAMIC_TRANSFORMS),
+			""",
 			"""
-				layout(std140, binding = %d) uniform iris_Projection {
+				layout(std140) uniform iris_Projection {
 				    mat4 iris_ProjMat;
 				};
-				""".formatted(IrisBindings.PROJECTION),
+				""",
 			"""
-				layout(std140, binding = %d) uniform iris_Globals {
+				layout(std140) uniform iris_Globals {
     ivec3 CameraBlockPos;
     float GlintAlpha;
     vec3 CameraOffset;
@@ -73,7 +72,7 @@ public class VanillaTransformer {
     int MenuBlurRadius;
     int UseRgss;
 				} iris_globalInfo;
-				""".formatted(IrisBindings.GLOBALS));
+				""");
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
 			CommonTransformer.patchIntegerAttribute(t, tree, root, "mc_Entity", "iris_Entity", parameters.inputs.getEntityComponents());
 
@@ -110,20 +109,12 @@ public class VanillaTransformer {
 					"vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
-			if (parameters.inputs.hasOverlay() && parameters.inputs.isGlint()) {
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord4",
-					"(iris_transforms.TextureMat * vec4(iris_UV0, 0.0, 1.0))");
-			} else {
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord4",
-					"vec4(-1.0)");
-			}
-
 			CommonTransformer.patchMultiTexCoord3(t, tree, root, parameters);
 
 			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs (with
 			// gl_MultiTexCoord2 and gl_MultiTexCoord3 as aliases), other texture
 			// coordinates are not valid inputs.
-			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 5, 7);
+			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
 		}
 
 		if (parameters.inputs.hasColor() && parameters.type == PatchShaderType.VERTEX) {
@@ -237,12 +228,12 @@ public class VanillaTransformer {
 						"iris_widen_lines(linePosStart, linePosEnd);}");
 			} else if (parameters.isClouds()) {
 				tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
-					layout(std140, binding = %d) uniform iris_CloudInfo {
+					layout(std140) uniform iris_CloudInfo {
 					    vec4 CloudColor;
 					    vec3 CloudOffset;
 					    vec3 CellSize;
 					} iris_Clouds;
-					""".formatted(IrisBindings.CLOUD_INFO),
+					""",
 					"""
 						const vec3[] iris_cloudVertices = vec3[](
 						    // Bottom face
@@ -322,7 +313,7 @@ public class VanillaTransformer {
 					"const int FLAG_USE_TOP_COLOR = 1 << 5;",
 					"const int FLAG_EXTRA_Z = 1 << 6;",
 					"const int FLAG_EXTRA_X = 1 << 7;",
-					"layout(binding = " + IrisBindings.AUX_TEXTURE + ") uniform isamplerBuffer CloudFaces;",
+					"uniform isamplerBuffer CloudFaces;",
 					"""
 					void iris_cloudsMain() {
 					    int quadVertex = gl_VertexID % 4;
@@ -381,6 +372,5 @@ public class VanillaTransformer {
 		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", transform.toString());
 		CommonTransformer.injectForwardZProjection(t, tree);
 		root.replaceReferenceExpressions(t, "gl_ProjectionMatrix", "iris_undoRevZ(iris_ProjMat)");
-		CommonTransformer.addExplicitBindings(t, tree, root);
 	}
 }

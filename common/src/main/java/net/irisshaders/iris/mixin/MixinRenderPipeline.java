@@ -39,6 +39,8 @@ public class MixinRenderPipeline {
 				cir.setReturnValue(IrisVertexFormats.GLYPH);
 			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
 				cir.setReturnValue(IrisVertexFormats.ENTITY);
+			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY_GLINT_SPECIAL)) {
+				cir.setReturnValue(IrisVertexFormats.ENTITY_GLINT_SPECIAL);
 			} else if (Objects.equals(vf, ChunkMeshFormats.COMPACT.getVertexFormat())) {
 				cir.setReturnValue(WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat());
 			}
@@ -57,6 +59,8 @@ public class MixinRenderPipeline {
 				cir.setReturnValue(List.of(new VertexFormat[] { IrisVertexFormats.GLYPH }));
 			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
 				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.ENTITY}));
+			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY_GLINT_SPECIAL)) {
+				cir.setReturnValue(List.of(IrisVertexFormats.ENTITY_GLINT_SPECIAL));
 			} else if (Objects.equals(vf, ChunkMeshFormats.COMPACT.getVertexFormat())) {
                 cir.setReturnValue(List.of(new VertexFormat[]{WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat()}));
             }

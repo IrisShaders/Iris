@@ -25,6 +25,8 @@ public class MixinRenderType {
 				cir.setReturnValue(IrisVertexFormats.GLYPH);
 			} else if (vf.equals(DefaultVertexFormat.ENTITY)) {
 				cir.setReturnValue(IrisVertexFormats.ENTITY);
+			} else if (vf.equals(DefaultVertexFormat.ENTITY_GLINT_SPECIAL)) {
+				cir.setReturnValue(IrisVertexFormats.ENTITY_GLINT_SPECIAL);
 			}
 		}
 	}

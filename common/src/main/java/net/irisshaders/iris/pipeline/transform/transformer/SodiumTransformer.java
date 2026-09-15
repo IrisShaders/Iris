@@ -12,7 +12,6 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
-import net.irisshaders.iris.pipeline.programs.IrisBindings;
 
 import static net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
@@ -99,7 +98,7 @@ public class SodiumTransformer {
 		}
 
         tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
-                        layout(std140, binding = %d) uniform u_Globals {
+                        layout(std140) uniform u_Globals {
                               mat4 u_ProjectionMatrix;
                               mat4 u_ModelViewMatrix;
 
@@ -112,7 +111,7 @@ public class SodiumTransformer {
 
                               float u_FadePeriodInv;
                               bool u_UseRGSS;
-                          };""".formatted(IrisBindings.SODIUM_GLOBALS));
+                          };""");
 
 		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
 			"(iris_undoRevZ(u_ProjectionMatrix) * u_ModelViewMatrix)");
@@ -120,7 +119,6 @@ public class SodiumTransformer {
 		CommonTransformer.injectForwardZProjection(t, tree);
 
 		CommonTransformer.applyIntelHd4000Workaround(root);
-		CommonTransformer.addExplicitBindings(t, tree, root);
 	}
 
 	public static void injectVertInit(
@@ -137,12 +135,12 @@ public class SodiumTransformer {
 
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
 			"""
-				layout(std140, binding = %d) uniform iris_SodiumPushConstants {
+				layout(std140) uniform iris_SodiumPushConstants {
 				    vec3 iris_RegionOffset;
 				    int iris_CurrentTime;
 				    uint iris_RegionID;
 				};
-				""".formatted(IrisBindings.PUSH_CONSTANTS),
+				""",
 			// translated from sodium's chunk_vertex.glsl
 			"vec3 _vert_position;",
 			"vec2 _vert_tex_diffuse_coord;",
@@ -230,7 +228,7 @@ vec4 decode_diamond_tangent_with_sign(vec3 normal, int qByte, bool signPositive)
 			"float _material_mip_bias(uint material) {\n" +
 				"    return ((material >> MATERIAL_USE_MIP_OFFSET) & 1u) != 0u ? 0.0f : -4.0f;\n" +
 				"}",
-			"layout(binding = " + IrisBindings.AUX_TEXTURE + ") uniform isamplerBuffer u_SectionTimeInfo;",
+			"uniform isamplerBuffer u_SectionTimeInfo;",
 			"void _vert_init() {" +
 				"_vert_position = ((_deinterleave_u20x3(a_Position) * VERTEX_SCALE) + VERTEX_OFFSET);" +
 				"_vert_tex_diffuse_coord = _get_texcoord();" +
