@@ -12,7 +12,6 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
-import net.irisshaders.iris.pipeline.programs.IrisBindings;
 
 public class SodiumCoreTransformer {
 	public static final AutoHintedMatcher<ExternalDeclaration> modelViewMatrix = new AutoHintedMatcher<>(
@@ -56,7 +55,7 @@ public class SodiumCoreTransformer {
 		}
 
         tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
-            layout(std140, binding = %d) uniform u_Globals {
+            layout(std140) uniform u_Globals {
                 mat4 u_ProjectionMatrix;
                 mat4 u_ModelViewMatrix;
 
@@ -69,7 +68,6 @@ public class SodiumCoreTransformer {
 
                 float u_FadePeriodInv;
                 bool u_UseRGSS;
-            };""".formatted(IrisBindings.SODIUM_GLOBALS));
-		CommonTransformer.addExplicitBindings(t, tree, root);
+            };""");
 	}
 }

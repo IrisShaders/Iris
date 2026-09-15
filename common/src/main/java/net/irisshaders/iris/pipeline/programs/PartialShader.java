@@ -29,6 +29,7 @@ public final class PartialShader {
 	public int getFinally() {
 		if (!hasUnbound) {
 			hasUnbound = true;
+			IrisBindings.apply(program);
 			detachIfValid(program, vertexS);
 			detachIfValid(program, fragS);
 			detachIfValid(program, geometryS);
