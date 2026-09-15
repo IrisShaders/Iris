@@ -17,7 +17,7 @@ public class SodiumCoreTransformer {
 	public static final AutoHintedMatcher<ExternalDeclaration> modelViewMatrix = new AutoHintedMatcher<>(
 		"uniform mat4 modelViewMatrix;", ParseShape.EXTERNAL_DECLARATION);
 	public static final AutoHintedMatcher<ExternalDeclaration> normalMatrix = new AutoHintedMatcher<>(
-		"uniform mat4 normalMatrix;", ParseShape.EXTERNAL_DECLARATION);
+		"uniform mat3 normalMatrix;", ParseShape.EXTERNAL_DECLARATION);
 	public static final AutoHintedMatcher<ExternalDeclaration> projectionMatrix = new AutoHintedMatcher<>(
 		"uniform mat4 projectionMatrix;", ParseShape.EXTERNAL_DECLARATION);
 	public static void transform(
@@ -35,7 +35,7 @@ public class SodiumCoreTransformer {
 		root.processMatches(t, normalMatrix, ASTNode::detachAndDelete);
 		root.rename("projectionMatrix", "u_ProjectionMatrix");
 		root.rename("projectionMatrixInverse", "iris_" + objectType + "ProjectionMatrixInverse");
-		root.rename("normalMatrix", "mat3(u_ModelViewMatrix)");
+		root.replaceReferenceExpressions(t, "normalMatrix", "mat3(u_ModelViewMatrix)");
 		root.rename("chunkOffset", "u_RegionOffset");
 		if (parameters.type == PatchShaderType.VERTEX) {
 			boolean needsNormal = root.identifierIndex.has("vaNormal") || root.identifierIndex.has("at_tangent");
