@@ -72,6 +72,7 @@ public class HandRenderer {
 		}
 		scaleMatrix.mul(poseStack.last().pose());
 		RenderSystem.setProjectionMatrix(cachedProjectionMatrixBuffer.getBuffer(scaleMatrix), ProjectionType.PERSPECTIVE);
+		CapturedRenderingState.INSTANCE.setGbufferProjection(scaleMatrix);
 
 		return new PoseStack();
 	}
@@ -123,6 +124,7 @@ public class HandRenderer {
 		Profiler.get().pop();
 
 		RenderSystem.restoreProjectionMatrix();
+		CapturedRenderingState.INSTANCE.setGbufferProjection(new Matrix4f(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix()));
 
 		poseStack.popPose();
 		RenderSystem.getModelViewStack().popMatrix();
@@ -163,6 +165,7 @@ public class HandRenderer {
 		bufferSource.endFrame();
 
 		RenderSystem.restoreProjectionMatrix();
+		CapturedRenderingState.INSTANCE.setGbufferProjection(new Matrix4f(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix()));
 
 		RenderSystem.getModelViewStack().popMatrix();
 
