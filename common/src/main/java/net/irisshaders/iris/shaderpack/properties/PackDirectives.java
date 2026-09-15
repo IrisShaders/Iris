@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.texture.TextureScaleOverride;
 import net.irisshaders.iris.gl.texture.TextureType;
+import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.helpers.Tri;
 import net.irisshaders.iris.shaderpack.parsing.DirectiveHolder;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
@@ -41,7 +42,7 @@ public class PackDirectives {
 	private boolean separateAo;
 	private boolean breaksAnisotropy;
 	private boolean voxelizeLightBlocks;
-	private boolean separateEntityDraws;
+	private OptionalBoolean separateEntityDraws;
 	private boolean skipAllRendering;
 	private boolean frustumCulling;
 	private boolean supportsEndFlash;
@@ -84,7 +85,7 @@ public class PackDirectives {
 		separateAo = properties.getSeparateAo().orElse(false);
 		breaksAnisotropy = properties.breaksAnisotropy().orElse(false);
 		voxelizeLightBlocks = properties.getVoxelizeLightBlocks().orElse(false);
-		separateEntityDraws = properties.getSeparateEntityDraws().orElse(false);
+		separateEntityDraws = properties.getSeparateEntityDraws();
 		skipAllRendering = properties.skipAllRendering().orElse(false);
 		frustumCulling = properties.getFrustumCulling().orElse(true);
 		supportsEndFlash = properties.supportsEndFlash().orElse(false);
@@ -212,7 +213,7 @@ public class PackDirectives {
 		return voxelizeLightBlocks;
 	}
 
-	public boolean shouldUseSeparateEntityDraws() {
+	public OptionalBoolean shouldUseSeparateEntityDraws() {
 		return separateEntityDraws;
 	}
 
