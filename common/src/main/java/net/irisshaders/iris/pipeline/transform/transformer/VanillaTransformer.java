@@ -110,20 +110,12 @@ public class VanillaTransformer {
 					"vec4(240.0, 240.0, 0.0, 1.0)");
 			}
 
-			if (parameters.inputs.hasOverlay() && parameters.inputs.isGlint()) {
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord4",
-					"(iris_transforms.TextureMat * vec4(iris_UV0, 0.0, 1.0))");
-			} else {
-				root.replaceReferenceExpressions(t, "gl_MultiTexCoord4",
-					"vec4(-1.0)");
-			}
-
 			CommonTransformer.patchMultiTexCoord3(t, tree, root, parameters);
 
 			// gl_MultiTexCoord0 and gl_MultiTexCoord1 are the only valid inputs (with
 			// gl_MultiTexCoord2 and gl_MultiTexCoord3 as aliases), other texture
 			// coordinates are not valid inputs.
-			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 5, 7);
+			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 4, 7);
 		}
 
 		if (parameters.inputs.hasColor() && parameters.type == PatchShaderType.VERTEX) {

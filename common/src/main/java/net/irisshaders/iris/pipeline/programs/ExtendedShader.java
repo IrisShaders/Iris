@@ -174,7 +174,8 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 	private int getGlintSamplerFor(ShaderKey shaderKey,
 								   IrisRenderingPipeline pipeline) {
 		if (shaderKey.isGlint() && shaderKey.getVertexFormat().contains("UV1")) {
-			if (shaderKey == ShaderKey.ENTITIES_CUTOUT_GLINT_ARMOR) {
+			if (shaderKey == ShaderKey.ENTITIES_CUTOUT_GLINT_ARMOR || shaderKey == ShaderKey.HAND_CUTOUT_GLINT_ARMOR
+				|| shaderKey == ShaderKey.HAND_TRANSLUCENT_GLINT_ARMOR) {
 				return Minecraft.getInstance().getTextureManager().getTexture(
 					ItemFeatureRenderer.ENCHANTED_GLINT_ARMOR).getTexture().iris$getGlId();
 			} else {

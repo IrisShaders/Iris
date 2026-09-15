@@ -111,6 +111,9 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		} else if (format.equals(DefaultVertexFormat.ENTITY) || format.equals(IrisVertexFormats.ENTITY)) {
 			extending = true;
 			return IrisVertexFormats.ENTITY;
+		} else if (format.equals(DefaultVertexFormat.ENTITY_GLINT_SPECIAL) || format.equals(IrisVertexFormats.ENTITY_GLINT_SPECIAL)) {
+			extending = true;
+			return IrisVertexFormats.ENTITY_GLINT_SPECIAL;
 		} else if (format.equals(DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR) || format.equals(IrisVertexFormats.GLYPH)) {
 			extending = true;
 			injectNormalAndUV1 = true;

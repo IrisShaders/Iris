@@ -38,6 +38,7 @@ import net.irisshaders.iris.pipeline.transform.transformer.CompositeTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DHGenericTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DHTerrainTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DepthTransformer;
+import net.irisshaders.iris.pipeline.transform.transformer.GlintTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumCoreTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.SodiumTransformer;
@@ -201,12 +202,15 @@ public class TransformPatcher {
 							}
 						}
 					}
+					GlintTransformer.transform(transformer, tree, root, parameters);
 					TextureTransformer.transform(transformer, tree, root,
 						parameters.getTextureStage(), parameters.getTextureMap());
 					CommonTransformer.transformDepth(transformer, tree, root, parameters);
 					CompatibilityTransformer.transformEach(transformer, tree, root, parameters);
 				});
 			}
+
+			GlintTransformer.transformGrouped(transformer, trees, parameters);
 
 			// the compatibility transformer does a grouped transformation
 			CompatibilityTransformer.transformGrouped(transformer, trees, parameters);

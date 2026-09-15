@@ -63,6 +63,8 @@ public enum ShaderKey {
             Patch.VANILLA),
 	ENTITIES_CUTOUT_GLINT(ProgramId.Entities, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
             Patch.VANILLA),
+	ENTITIES_CUTOUT_GLINT_SPECIAL(ProgramId.Entities, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY_GLINT_SPECIAL, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
+            Patch.VANILLA),
 	ENTITIES_CUTOUT_GLINT_ARMOR(ProgramId.Entities, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
             Patch.VANILLA),
 	ENTITIES_CUTOUT_DIFFUSE(ProgramId.Entities, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
@@ -71,11 +73,21 @@ public enum ShaderKey {
             Patch.VANILLA),
 	ENTITIES_TRANSLUCENT_GLINT(ProgramId.EntitiesTrans, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
             Patch.VANILLA),
+	ENTITIES_TRANSLUCENT_GLINT_SPECIAL(ProgramId.EntitiesTrans, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY_GLINT_SPECIAL, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
+            Patch.VANILLA),
 	ENTITIES_EYES(ProgramId.SpiderEyes, AlphaTests.NON_ZERO_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.FULLBRIGHT,
             Patch.VANILLA),
 	ENTITIES_EYES_TRANS(ProgramId.SpiderEyes, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.FULLBRIGHT,
             Patch.VANILLA),
 	HAND_CUTOUT(ProgramId.Hand, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
+            Patch.VANILLA),
+	HAND_CUTOUT_GLINT(ProgramId.Hand, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
+            Patch.VANILLA),
+	HAND_CUTOUT_GLINT_DIFFUSE(ProgramId.Hand, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
+            Patch.VANILLA),
+	HAND_CUTOUT_GLINT_SPECIAL(ProgramId.Hand, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY_GLINT_SPECIAL, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
+            Patch.VANILLA),
+	HAND_CUTOUT_GLINT_ARMOR(ProgramId.Hand, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
             Patch.VANILLA),
 	HAND_CUTOUT_BRIGHT(ProgramId.Hand, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.FULLBRIGHT,
             Patch.VANILLA),
@@ -88,6 +100,14 @@ public enum ShaderKey {
 	HAND_TEXT_INTENSITY(ProgramId.Hand, AlphaTests.NON_ZERO_ALPHA, IrisVertexFormats.GLYPH, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
             Patch.VANILLA),
 	HAND_TRANSLUCENT(ProgramId.HandWater, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
+            Patch.VANILLA),
+	HAND_TRANSLUCENT_GLINT(ProgramId.HandWater, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
+            Patch.VANILLA),
+	HAND_TRANSLUCENT_GLINT_DIFFUSE(ProgramId.HandWater, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
+            Patch.VANILLA),
+	HAND_TRANSLUCENT_GLINT_SPECIAL(ProgramId.HandWater, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY_GLINT_SPECIAL, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
+            Patch.VANILLA),
+	HAND_TRANSLUCENT_GLINT_ARMOR(ProgramId.HandWater, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.DIFFUSE_LM,
             Patch.VANILLA),
 	HAND_WATER_BRIGHT(ProgramId.HandWater, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.FULLBRIGHT,
             Patch.VANILLA),
@@ -237,7 +257,13 @@ public enum ShaderKey {
 	}
 
 	public boolean isGlint() {
-		return this == GLINT || this == ENTITIES_CUTOUT_GLINT || this == ENTITIES_CUTOUT_GLINT_ARMOR || this == ENTITIES_TRANSLUCENT_GLINT || this == ENTITIES_SOLID_GLINT;
+		return switch (this) {
+			case GLINT, ENTITIES_CUTOUT_GLINT, ENTITIES_CUTOUT_GLINT_ARMOR, ENTITIES_TRANSLUCENT_GLINT, ENTITIES_SOLID_GLINT,
+				ENTITIES_CUTOUT_GLINT_SPECIAL, ENTITIES_TRANSLUCENT_GLINT_SPECIAL, HAND_CUTOUT_GLINT, HAND_TRANSLUCENT_GLINT,
+				HAND_CUTOUT_GLINT_DIFFUSE, HAND_TRANSLUCENT_GLINT_DIFFUSE, HAND_CUTOUT_GLINT_SPECIAL, HAND_TRANSLUCENT_GLINT_SPECIAL,
+				HAND_CUTOUT_GLINT_ARMOR, HAND_TRANSLUCENT_GLINT_ARMOR -> true;
+			default -> false;
+		};
 	}
 
 	public boolean isText() {

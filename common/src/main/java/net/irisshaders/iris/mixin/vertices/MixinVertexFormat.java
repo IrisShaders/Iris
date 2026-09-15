@@ -29,7 +29,7 @@ public abstract class MixinVertexFormat implements VertexFormatExtension {
 	public abstract List<VertexFormatElement> getElements();
 
 	@Unique
-	private static final ImmutableSet<String> ATTRIBUTE_LIST = ImmutableSet.of("Position", "Color", "Normal", "UV0", "UV1", "UV2", "LineWidth");
+	private static final ImmutableSet<String> ATTRIBUTE_LIST = ImmutableSet.of("Position", "Color", "Normal", "UV0", "UV1", "UV2", "UV3", "LineWidth");
 
 	@Override
 	public void bindAttributesIris(boolean isFallback, int i) {
