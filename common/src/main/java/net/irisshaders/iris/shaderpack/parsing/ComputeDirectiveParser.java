@@ -9,12 +9,14 @@ public class ComputeDirectiveParser {
 	public static void setComputeWorkGroups(ComputeSource source, ConstDirectiveParser.ConstDirective directive) {
 		if (!directive.getValue().startsWith("ivec3")) {
 			Iris.logger.error("Failed to process " + directive + ": value was not a valid ivec3 constructor");
+			return;
 		}
 
 		String ivec3Args = directive.getValue().substring("ivec3".length()).trim();
 
 		if (!ivec3Args.startsWith("(") || !ivec3Args.endsWith(")")) {
 			Iris.logger.error("Failed to process " + directive + ": value was not a valid ivec3 constructor");
+			return;
 		}
 
 		ivec3Args = ivec3Args.substring(1, ivec3Args.length() - 1);
@@ -28,6 +30,7 @@ public class ComputeDirectiveParser {
 		if (parts.length != 3) {
 			Iris.logger.error("Failed to process " + directive +
 				": expected 3 arguments to a ivec3 constructor, got " + parts.length);
+			return;
 		}
 
 		try {
@@ -43,12 +46,14 @@ public class ComputeDirectiveParser {
 	public static void setComputeWorkGroupsRelative(ComputeSource source, ConstDirectiveParser.ConstDirective directive) {
 		if (!directive.getValue().startsWith("vec2")) {
 			Iris.logger.error("Failed to process " + directive + ": value was not a valid vec2 constructor");
+			return;
 		}
 
 		String vec2Args = directive.getValue().substring("vec2".length()).trim();
 
 		if (!vec2Args.startsWith("(") || !vec2Args.endsWith(")")) {
 			Iris.logger.error("Failed to process " + directive + ": value was not a valid vec2 constructor");
+			return;
 		}
 
 		vec2Args = vec2Args.substring(1, vec2Args.length() - 1);
@@ -62,6 +67,7 @@ public class ComputeDirectiveParser {
 		if (parts.length != 2) {
 			Iris.logger.error("Failed to process " + directive +
 				": expected 2 arguments to a vec2 constructor, got " + parts.length);
+			return;
 		}
 
 		try {
