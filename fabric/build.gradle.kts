@@ -1,3 +1,6 @@
+import net.fabricmc.loom.task.RunGameTask
+import org.gradle.kotlin.dsl.named
+
 plugins {
     id("java")
     id("idea")
@@ -85,7 +88,50 @@ dependencies {
 
     compileOnly(files(rootDir.resolve("DHApi.jar")))
 }
+fun RunGameTask.buildJavaCommand(): Pair<String, String> {
+    val javaExe = javaLauncher.get().executablePath.asFile.absolutePath
+    val args = buildString {
+        allJvmArgs.forEach { append(it).append(' ') }
+        append("-cp ").append(classpath.asPath).append(' ')
+        append(mainClass.get())
+    }
+    return javaExe to args
+}
 
+fun Exec.inheritRunEnvironment(run: RunGameTask) {
+    run.environment.forEach { (k, v) ->
+        environment(k, v)
+    }
+    workingDir = run.workingDir
+    standardInput = System.`in`
+}
+tasks.register<Exec>("nsightGpuTrace") {
+    group = "profiling"
+    description = "Run under Nsight Graphics GPU Trace Profiler."
+    dependsOn("classes")
+
+    val runTask = tasks.named<RunGameTask>("runClient").get()
+    val (javaExe, javaArgs) = runTask.buildJavaCommand()
+
+
+    println(javaExe)
+    println("is")
+    println(javaArgs)
+    inheritRunEnvironment(runTask)
+
+    commandLine(
+        "/opt/nsight-graphics/NVIDIA-Nsight-Graphics-2026.3/host/linux-desktop-nomad-x64/ngfx",
+        "--activity=GPU Trace Profiler",
+        "--exe=$javaExe",
+        "--args=$javaArgs",
+        "--dir=/mnt/code/Iris/fabric/run",
+        "--start-after-hotkey",
+        "--real-time-shader-profiler",
+        "--multi-pass-metrics",
+        "--auto-export",
+        "--max-duration-ms=50"
+    )
+}
 tasks.named("compileTestJava").configure {
     enabled = false
 }

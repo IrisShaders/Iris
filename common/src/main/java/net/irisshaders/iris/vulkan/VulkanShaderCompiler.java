@@ -28,6 +28,7 @@ public final class VulkanShaderCompiler implements AutoCloseable {
 		Shaderc.shaderc_compile_options_set_target_env(options,
 			Shaderc.shaderc_target_env_vulkan,
 			Shaderc.shaderc_env_version_vulkan_1_2);
+		Shaderc.shaderc_compile_options_set_generate_debug_info(options);
 		Shaderc.shaderc_compile_options_set_target_spirv(options,
 			Shaderc.shaderc_spirv_version_1_5);
 	}

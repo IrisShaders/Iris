@@ -185,11 +185,11 @@ public class IrisPipelines {
 	}
 
 	private static ShaderKey getGlint(ShaderKey key) {
-		if (!HandRenderer.INSTANCE.isActive()) {
+		if (!HandRenderer.getInstance().isActive()) {
 			return key;
 		}
 
-		boolean solid = HandRenderer.INSTANCE.isRenderingSolid();
+		boolean solid = HandRenderer.getInstance().isRenderingSolid();
 		return switch (key) {
 			case ENTITIES_CUTOUT_GLINT_SPECIAL, ENTITIES_TRANSLUCENT_GLINT_SPECIAL ->
 				solid ? ShaderKey.HAND_CUTOUT_GLINT_SPECIAL : ShaderKey.HAND_TRANSLUCENT_GLINT_SPECIAL;
