@@ -108,6 +108,7 @@ public class IrisPipelines {
 		assignToShadow(RenderPipelines.BREEZE_WIND, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.EYES, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.BANNER_PATTERN, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
+		assignToShadow(RenderPipelines.WOLF_ARMOR_CRACKS, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 
 		assignToShadow(RenderPipelines.ENERGY_SWIRL, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.GLINT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
