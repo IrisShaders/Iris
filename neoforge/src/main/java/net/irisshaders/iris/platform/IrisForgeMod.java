@@ -22,8 +22,9 @@ public class IrisForgeMod {
 	public IrisForgeMod(IEventBus bus, ModContainer modContainer) {
 		bus.addListener(this::registerKeys);
 		modContainer.registerExtensionPoint(IConfigScreenFactory.class, (game, screen) -> new ShaderPackScreen(screen));
-		IrisApi.getInstance().assignPipeline(NeoForgeRenderPipelines.ENTITY_SMOOTH_CUTOUT_CULL, IrisProgram.ENTITIES);
-		IrisApi.getInstance().assignPipeline(NeoForgeRenderPipelines.ENTITY_TRANSLUCENT_CULL, IrisProgram.ENTITIES_TRANSLUCENT);
+		// NeoForge removed ENTITY_SMOOTH_CUTOUT_CULL and ENTITY_TRANSLUCENT_CULL from
+		// NeoForgeRenderPipelines in 26.3. The pipelines no longer exist, so nothing renders with them and
+		// there is nothing left to assign a shader program to. ENTITY_UNLIT_TRANSLUCENT still exists.
 		IrisApi.getInstance().assignPipeline(NeoForgeRenderPipelines.ENTITY_UNLIT_TRANSLUCENT, IrisProgram.ENTITIES_TRANSLUCENT);
 	}
 

@@ -1,6 +1,6 @@
 package net.irisshaders.iris.mixin.forge;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.irisshaders.iris.pipeline.IrisPipelines;
 import net.irisshaders.iris.platform.PipelineBuilderStorage;
 import org.spongepowered.asm.mixin.Mixin;
