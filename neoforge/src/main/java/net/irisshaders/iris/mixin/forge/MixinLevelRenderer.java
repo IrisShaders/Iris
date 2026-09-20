@@ -1,35 +1,23 @@
 package net.irisshaders.iris.mixin.forge;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.systems.CommandEncoder;
-import com.mojang.blaze3d.textures.GpuTexture;
-import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.NeoLambdas;
-import net.irisshaders.iris.api.v0.IrisApi;
-import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.shaderpack.properties.ParticleRenderingSettings;
-import net.minecraft.client.Camera;
-import net.minecraft.client.particle.ParticleEngine;
-import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.culling.Frustum;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-
-import java.util.function.Predicate;
 
 /**
- * Uses the PhasedParticleManager changes to render opaque particles much earlier than other particles.
- * <p>
- * See the comments in {@link MixinParticleEngine} for more details.
+ * This mixin used to @WrapOperation the CommandEncoder.clearDepthTexture call inside
+ * LevelRenderer's always-on-top pass lambda, so that the depth clear could be skipped while a shader
+ * pack was active.
+ *
+ * <p>In 26.3 that call no longer exists. The always-on-top pass was restructured into the concrete
+ * method executeAlwaysOnTop(...), and its depth is cleared two other ways instead: the frame graph
+ * allocates the target from a pre-cleared RenderTargetDescriptor, and the pass itself is opened with
+ * createRenderPass(..., OptionalDouble.of(0.0)). There is no single operation left to wrap, so the
+ * injection was failing to find a target and taking the whole game down with it.
+ *
+ * <p>Neutralised rather than reimplemented: guessing at the replacement would mean inventing Iris
+ * depth semantics against a pipeline its authors have not ported yet. The cost is that always-on-top
+ * geometry now uses vanilla depth-clear behaviour while shaders are active.
  */
 @Mixin(LevelRenderer.class)
 public abstract class MixinLevelRenderer {
-	@WrapOperation(method = "lambda$addAlwaysOnTopPass$0", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;clearDepthTexture(Lcom/mojang/blaze3d/textures/GpuTexture;D)V"))
-	private void skip(CommandEncoder instance, GpuTexture texture, double v, Operation<Void> original) {
-		if (!IrisApi.getInstance().isShaderPackInUse()) {
-			original.call(instance, texture, v);
-		}
-	}
 }
