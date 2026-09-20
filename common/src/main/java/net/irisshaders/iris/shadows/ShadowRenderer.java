@@ -649,10 +649,6 @@ public class ShadowRenderer {
 			((CullingDataCache) levelRenderer).restoreState();
 		}
 
-		if (sodiumWorldRenderer instanceof ShadowRenderListAccess shadowRenderListAccess) {
-			shadowRenderListAccess.iris$endShadowRenderListScope();
-		}
-
 		pipeline.removePhaseIfNeeded();
 
 		GLDebug.pushGroup(901, "shadowcomp");

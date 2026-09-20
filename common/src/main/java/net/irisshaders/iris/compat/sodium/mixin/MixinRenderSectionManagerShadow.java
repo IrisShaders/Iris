@@ -155,11 +155,11 @@ public abstract class MixinRenderSectionManagerShadow implements ShadowRenderLis
 
 	@Override
 	public void iris$endShadowRenderListScope() {
-		this.shadowRenderLists = this.renderLists;
-		this.shadowTaskLists = this.taskLists;
-		this.iris$swapToRegularRenderLists();
-
 		if (this.shadowScopeActive) {
+			this.shadowRenderLists = this.renderLists;
+			this.shadowTaskLists = this.taskLists;
+			this.iris$swapToRegularRenderLists();
+
 			this.renderLists = this.regularRenderLists;
             this.renderTree = this.regularTree;
 			this.taskLists = this.regularTaskLists;
