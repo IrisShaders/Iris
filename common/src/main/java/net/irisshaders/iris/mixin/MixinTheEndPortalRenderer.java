@@ -1,9 +1,13 @@
 package net.irisshaders.iris.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.AbstractEndPortalRenderer;
 import net.minecraft.client.renderer.blockentity.TheEndPortalRenderer;
 import net.minecraft.client.renderer.blockentity.state.EndPortalRenderState;
@@ -12,7 +16,6 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
 import net.minecraft.util.LightCoordsUtil;
-import net.minecraft.world.level.block.entity.TheEndPortalBlockEntity;
 import org.joml.Matrix3f;
 import org.joml.Vector3fc;
 import org.spongepowered.asm.mixin.Final;
@@ -20,14 +23,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 @Mixin(AbstractEndPortalRenderer.class)
 public class MixinTheEndPortalRenderer {
@@ -43,26 +42,21 @@ public class MixinTheEndPortalRenderer {
 	@Unique
 	private static final float BLUE = 0.2f;
 
-	@ModifyArg(method = "submitCube(Ljava/util/Collection;Lnet/minecraft/client/renderer/rendertype/RenderType;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Ljava/util/function/Consumer;)V", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitCustomGeometry(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;Lnet/minecraft/client/renderer/SubmitNodeCollector$CustomGeometryRenderer;)V"))
-	private static RenderType iris$renderType(RenderType par2) {
-		if (Iris.getCurrentPack().isPresent()) {
-			return (RenderTypes.entitySolid(TheEndPortalRenderer.END_PORTAL_LOCATION));
-		}
-		return par2;
-	}
-
-	@Inject(method = {
-		"lambda$submitCube$1"
-	}, at = @At("HEAD"), cancellable = true, require = 1)
-	private static <T extends TheEndPortalBlockEntity> void iris$onRender(Collection<Direction> facesToShow, Consumer vertexDecorator, PoseStack.Pose pose, VertexConsumer buffer, CallbackInfo ci) {
-		if (Iris.getCurrentPack().isEmpty()) {
+	@WrapOperation(method = "submitCube*", at = @At(value = "INVOKE", target = "submitCustomGeometry"))
+	private static void iris$submitCube(SubmitNodeCollector submitNodeCollector, PoseStack poseStack, RenderType renderType, SubmitNodeCollector.CustomGeometryRenderer customGeometryRenderer, Operation<Void> original, @Local(argsOnly = true) Collection<Direction> facesToShow) {
+		if (Iris.getCurrentPack().isEmpty() || renderType.isOutline()) {
+			original.call(submitNodeCollector, poseStack, renderType, customGeometryRenderer);
 			return;
 		}
 
+		original.call(submitNodeCollector, poseStack, RenderTypes.entitySolid(TheEndPortalRenderer.END_PORTAL_LOCATION),
+			(SubmitNodeCollector.CustomGeometryRenderer) (pose, buffer) -> iris$renderCube(facesToShow, pose, buffer));
+	}
+
+	@Unique
+	private static void iris$renderCube(Collection<Direction> facesToShow, PoseStack.Pose pose, VertexConsumer buffer) {
 		int overlay = OverlayTexture.NO_OVERLAY;
 		int light = LightCoordsUtil.FULL_BRIGHT;
-
-		ci.cancel();
 
 		Matrix3f normal = pose.normal();
 
