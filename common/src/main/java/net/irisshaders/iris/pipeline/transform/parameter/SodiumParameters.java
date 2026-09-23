@@ -17,10 +17,8 @@ public class SodiumParameters extends Parameters {
 	public final AlphaTest alpha;
 	public final boolean shadow;
 
-	public SodiumParameters(Patch patch,
-							Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides,
-							AlphaTest alpha,
-							boolean shadow) {
+	public SodiumParameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+		Set<String> textureOverrides, AlphaTest alpha, boolean shadow) {
 		super(patch, textureMap, textureOverrides);
 
 		this.alpha = alpha;

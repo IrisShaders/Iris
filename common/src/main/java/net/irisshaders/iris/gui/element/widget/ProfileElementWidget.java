@@ -19,7 +19,8 @@ import java.util.Optional;
 
 public class ProfileElementWidget extends BaseOptionElementWidget<OptionMenuProfileElement> {
 	private static final MutableComponent PROFILE_LABEL = Component.translatable("options.iris.profile");
-	private static final MutableComponent PROFILE_CUSTOM = Component.translatable("options.iris.profile.custom").withStyle(ChatFormatting.YELLOW);
+	private static final MutableComponent PROFILE_CUSTOM = Component.translatable("options.iris.profile.custom")
+		.withStyle(ChatFormatting.YELLOW);
 
 	private Profile next;
 	private Profile previous;
@@ -44,7 +45,8 @@ public class ProfileElementWidget extends BaseOptionElementWidget<OptionMenuProf
 		this.previous = result.previous;
 		Optional<String> profileName = result.current.map(p -> p.name);
 
-		this.profileLabel = profileName.map(name -> GuiUtil.translateOrDefault(Component.literal(name), "profile." + name)).orElse(PROFILE_CUSTOM);
+		this.profileLabel = profileName.map(name -> GuiUtil.translateOrDefault(Component.literal(name), "profile." + name))
+			.orElse(PROFILE_CUSTOM);
 	}
 
 	@Override

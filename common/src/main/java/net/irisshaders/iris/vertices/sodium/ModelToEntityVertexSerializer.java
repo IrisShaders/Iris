@@ -6,8 +6,8 @@ import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
-import org.lwjgl.system.MemoryUtil;
 import net.irisshaders.iris.vertices.NormalHelper;
+import org.lwjgl.system.MemoryUtil;
 
 public class ModelToEntityVertexSerializer implements VertexSerializer {
 
@@ -58,11 +58,8 @@ public class ModelToEntityVertexSerializer implements VertexSerializer {
 			final float v2u = MemoryUtil.memGetFloat(v2 + 16);
 			final float v2v = MemoryUtil.memGetFloat(v2 + 20);
 
-			final int tangent = NormalHelper.computeTangent(null, nx, ny, nz,
-				v0x, v0y, v0z, v0u, v0v,
-				v1x, v1y, v1z, v1u, v1v,
-				v2x, v2y, v2z, v2u, v2v
-			);
+			final int tangent = NormalHelper.computeTangent(null, nx, ny, nz, v0x, v0y, v0z, v0u, v0v, v1x, v1y, v1z, v1u, v1v, v2x, v2y,
+				v2z, v2u, v2v);
 
 			final float midU = (v0u + v1u + v2u + MemoryUtil.memGetFloat(v3 + 16)) * 0.25f;
 			final float midV = (v0v + v1v + v2v + MemoryUtil.memGetFloat(v3 + 20)) * 0.25f;
@@ -87,7 +84,7 @@ public class ModelToEntityVertexSerializer implements VertexSerializer {
 			}
 
 			src += SRC_STRIDE * 4;
-			dst += DST_STRIDE * 4;
+			dst += DST_STRIDE * 4L;
 		}
 	}
 }

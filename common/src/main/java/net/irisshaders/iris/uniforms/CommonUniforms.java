@@ -51,7 +51,6 @@ public final class CommonUniforms {
 		// no construction allowed
 	}
 
-	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
 	public static void addDynamicUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
 		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
 		FogUniforms.addFogUniforms(uniforms, fogMode);
@@ -75,10 +74,8 @@ public final class CommonUniforms {
 			}
 
 			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
-
 			if (texture instanceof TextureAtlas atlas) {
 				TextureAtlasAccessor atlasAccessor = (TextureAtlasAccessor) atlas;
-
 				return new Vector2i(atlasAccessor.callGetWidth(), atlasAccessor.callGetHeight());
 			}
 
@@ -130,8 +127,8 @@ public final class CommonUniforms {
 
 		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(directives.getEyeBrightnessHalfLife(), directives.getEyeBrightnessHalfLife(),
 			CommonUniforms::getEyeBrightness, updateNotifier);
-		uniforms
-			.uniform1b(UniformUpdateFrequency.PER_FRAME, "hideGUI", client.gui.hud::isHidden)
+
+		uniforms.uniform1b(UniformUpdateFrequency.PER_FRAME, "hideGUI", client.gui.hud::isHidden)
 			.uniform1b(UniformUpdateFrequency.PER_FRAME, "isRightHanded", () -> client.options.mainHand().get() == HumanoidArm.RIGHT)
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "isEyeInWater", CommonUniforms::isEyeInWater)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "blindness", CommonUniforms::getBlindness)
@@ -158,21 +155,17 @@ public final class CommonUniforms {
 				} else {
 					return 0;
 				}
-			})
-			.uniform1f(UniformUpdateFrequency.ONCE, "pi", () -> Math.PI)
+			}).uniform1f(UniformUpdateFrequency.ONCE, "pi", () -> Math.PI)
 			.uniform1f(UniformUpdateFrequency.PER_TICK, "playerMood", CommonUniforms::getPlayerMood)
 			.uniform1f(UniformUpdateFrequency.PER_TICK, "constantMood", CommonUniforms::getConstantMood)
 			.uniform2i(UniformUpdateFrequency.PER_FRAME, "eyeBrightness", CommonUniforms::getEyeBrightness)
 			.uniform2i(UniformUpdateFrequency.PER_FRAME, "eyeBrightnessSmooth", () -> {
 				Vector2f smoothed = eyeBrightnessSmooth.get();
-
 				return new Vector2i((int) smoothed.x(), (int) smoothed.y());
-			})
-			.uniform1f(UniformUpdateFrequency.PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
+			}).uniform1f(UniformUpdateFrequency.PER_TICK, "rainStrength", CommonUniforms::getRainStrength)
 			.uniform1f(UniformUpdateFrequency.PER_TICK, "wetness",
 				new SmoothedFloat(directives.getWetnessHalfLife(), directives.getDrynessHalfLife(), CommonUniforms::getRainStrength,
-					updateNotifier))
-			.uniform3d(UniformUpdateFrequency.PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
+					updateNotifier)).uniform3d(UniformUpdateFrequency.PER_FRAME, "skyColor", CommonUniforms::getSkyColor)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "dhFarPlane", DHCompat::getFarPlane)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "dhNearPlane", DHCompat::getNearPlane)
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "dhRenderDistance", DHCompat::getRenderDistance);
@@ -227,8 +220,8 @@ public final class CommonUniforms {
 			return ZERO_VECTOR_3d;
 		}
 
-		var skyColor = client.gameRenderer.mainCamera().attributeProbe().getValue(EnvironmentAttributes.SKY_COLOR,
-			CapturedRenderingState.INSTANCE.getTickDelta());
+		var skyColor = client.gameRenderer.mainCamera().attributeProbe()
+			.getValue(EnvironmentAttributes.SKY_COLOR, CapturedRenderingState.INSTANCE.getTickDelta());
 
 		return new Vector3d(skyColor.x(), skyColor.y(), skyColor.z());
 	}
@@ -291,8 +284,7 @@ public final class CommonUniforms {
 		}
 
 		// Note: Ensure this is in the range of 0 to 1 - some custom servers send out of range values.
-		return Math.clamp(0.0F, 1.0F,
-			client.level.getRainLevel(CapturedRenderingState.INSTANCE.getTickDelta()));
+		return Math.clamp(0.0F, 1.0F, client.level.getRainLevel(CapturedRenderingState.INSTANCE.getTickDelta()));
 	}
 
 	private static Vector2i getEyeBrightness() {
@@ -323,8 +315,7 @@ public final class CommonUniforms {
 				// like Origins.
 				//
 				// See: https://github.com/apace100/apoli/blob/320b0ef547fbbf703de7154f60909d30366f6500/src/main/java/io/github/apace100/apoli/mixin/GameRendererMixin.java#L153
-				float nightVisionStrength =
-					GameRenderer.nightVisionScale(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
+				float nightVisionStrength = GameRenderer.nightVisionScale(livingEntity, CapturedRenderingState.INSTANCE.getTickDelta());
 
 				if (nightVisionStrength > 0) {
 					// Just protecting against potential weird mod behavior
@@ -362,7 +353,6 @@ public final class CommonUniforms {
 		// underwater on most shaderpacks. For now, I will leave this as-is, but it is something to keep in mind.
 		FogType submersionType = client.gameRenderer.mainCamera().getFluidInCamera();
 		boolean isSpectator = client.player != null && client.player.isSpectator();
-
 		if (submersionType == FogType.WATER) {
 			return 1;
 		} else if (!isSpectator && submersionType == FogType.LAVA) {

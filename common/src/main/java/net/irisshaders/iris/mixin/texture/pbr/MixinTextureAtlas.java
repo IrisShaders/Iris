@@ -45,6 +45,6 @@ public abstract class MixinTextureAtlas extends AbstractTexture implements Textu
 
 	@Inject(method = "upload", at = @At("RETURN"))
 	private void iris$onUpload(CallbackInfo ci) {
-		TextureTracker.INSTANCE.trackTexture(texture, (AbstractTexture) (Object) this);
+		TextureTracker.INSTANCE.trackTexture(this.texture, (AbstractTexture) this);
 	}
 }

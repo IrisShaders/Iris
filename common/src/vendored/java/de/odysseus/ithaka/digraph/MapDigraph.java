@@ -102,8 +102,7 @@ public class MapDigraph<V> implements Digraph<V> {
 	 * @param edgeMapFactory   factory to create edge-target --> edge-value maps
 	 * @return map de.odysseus.ithaka.digraph factory
 	 */
-	public static <V> DigraphFactory<MapDigraph<V>> getMapDigraphFactory(
-		final VertexMapFactory<V> vertexMapFactory,
+	public static <V> DigraphFactory<MapDigraph<V>> getMapDigraphFactory(final VertexMapFactory<V> vertexMapFactory,
 		final EdgeMapFactory<V> edgeMapFactory) {
 		return () -> new MapDigraph<>(vertexMapFactory, edgeMapFactory);
 	}

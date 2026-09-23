@@ -30,8 +30,7 @@ public class XHFPModelVertexType implements ChunkVertexType {
 	}
 
 	public static int encodeOld(float u, float v) {
-		return ((Math.round(u * TEXTURE_MAX_VALUE) & 0xFFFF) << 0) |
-			((Math.round(v * TEXTURE_MAX_VALUE) & 0xFFFF) << 16);
+		return ((Math.round(u * TEXTURE_MAX_VALUE) & 0xFFFF) << 0) | ((Math.round(v * TEXTURE_MAX_VALUE) & 0xFFFF) << 16);
 	}
 
 	@Override

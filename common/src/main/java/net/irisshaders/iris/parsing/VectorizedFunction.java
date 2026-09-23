@@ -16,12 +16,11 @@ public class VectorizedFunction implements TypedFunction {
 	final Parameter[] parameters;
 
 	private final ElementAccessExpression[] vectorAccessors;
+	private final VectorType.ArrayVector.IntObjectObjectObjectConsumer<VectorizedFunction, FunctionContext, FunctionReturn> mapper = (i, self, ctx, fr) -> {
+		self.index = i;
+		self.inner.evaluateTo(self.vectorAccessors, ctx, fr);
+	};
 	private int index;
-	private final VectorType.ArrayVector.IntObjectObjectObjectConsumer<VectorizedFunction, FunctionContext, FunctionReturn> mapper =
-		(i, self, ctx, fr) -> {
-			self.index = i;
-			self.inner.evaluateTo(self.vectorAccessors, ctx, fr);
-		};
 
 	public VectorizedFunction(TypedFunction inner, int size) {
 		this.inner = inner;

@@ -1,12 +1,10 @@
 package net.irisshaders.iris.vertices.sodium;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
-import org.lwjgl.system.MemoryUtil;
 import net.irisshaders.iris.vertices.NormI8;
 import net.irisshaders.iris.vertices.NormalHelper;
 import org.joml.Vector3f;
@@ -16,9 +14,9 @@ public class GlyphExtVertexSerializer implements VertexSerializer {
 	private static final int OFFSET_POSITION = 0;
 
 	private static final int OFFSET_MID_TEXTURE = IrisVertexFormats.GLYPH.getElement("mc_midTexCoord").offset();
-	private static final int OFFSET_COLOR =  DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR.getElement("Color").offset();
-	private static final int OFFSET_TEXTURE =  DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR.getElement("UV0").offset();
-	private static final int OFFSET_LIGHT =  DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR.getElement("UV2").offset();
+	private static final int OFFSET_COLOR = DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR.getElement("Color").offset();
+	private static final int OFFSET_TEXTURE = DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR.getElement("UV0").offset();
+	private static final int OFFSET_LIGHT = DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR.getElement("UV2").offset();
 	private static final int OFFSET_NORMAL = IrisVertexFormats.GLYPH.getElement("Normal").offset();
 	private static final int OFFSET_TANGENT = IrisVertexFormats.GLYPH.getElement("at_tangent").offset();
 	private static final QuadViewEntity quad = new QuadViewEntity();

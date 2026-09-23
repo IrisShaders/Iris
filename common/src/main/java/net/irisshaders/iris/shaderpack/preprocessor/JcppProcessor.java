@@ -10,8 +10,7 @@ import org.anarres.cpp.Token;
 public class JcppProcessor {
 	// Derived from GlShader from Canvas, licenced under LGPL
 	public static String glslPreprocessSource(String source, Iterable<StringPair> environmentDefines) {
-		if (source.contains(GlslCollectingListener.VERSION_MARKER)
-			|| source.contains(GlslCollectingListener.EXTENSION_MARKER)) {
+		if (source.contains(GlslCollectingListener.VERSION_MARKER) || source.contains(GlslCollectingListener.EXTENSION_MARKER)) {
 			throw new RuntimeException("Some shader author is trying to exploit internal Iris implementation details, stop!");
 		}
 
@@ -55,8 +54,10 @@ public class JcppProcessor {
 		try {
 			for (; ; ) {
 				final Token tok = pp.token();
-				if (tok == null) break;
-				if (tok.getType() == Token.EOF) break;
+				if (tok == null)
+					break;
+				if (tok.getType() == Token.EOF)
+					break;
 				builder.append(tok.getText());
 			}
 		} catch (final Exception e) {

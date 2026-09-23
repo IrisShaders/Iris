@@ -8,22 +8,19 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.core.Holder;
-import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.FogType;
-import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FogRenderer.class)
 public class MixinFogRenderer {
 	@Inject(method = "setupFog", at = @At("HEAD"))
-	private void iris$setupLegacyWaterFog(Camera camera, int i, DeltaTracker deltaTracker, float f, ClientLevel clientLevel, CallbackInfoReturnable<FogData> cir) {
+	private void iris$setupLegacyWaterFog(Camera camera, int i, DeltaTracker deltaTracker, float f, ClientLevel clientLevel,
+		CallbackInfoReturnable<FogData> cir) {
 		if (camera.getFluidInCamera() == FogType.WATER) {
 			Entity entity = camera.entity();
 
@@ -46,7 +43,9 @@ public class MixinFogRenderer {
 	}
 
 	@Inject(method = "setupFog", at = @At("RETURN"))
-	private void render(Camera camera, int i, DeltaTracker deltaTracker, float f, ClientLevel clientLevel, CallbackInfoReturnable<FogData> cir) {
-		CapturedRenderingState.INSTANCE.setFogColor(cir.getReturnValue().color.x, cir.getReturnValue().color.y, cir.getReturnValue().color.z);
+	private void render(Camera camera, int i, DeltaTracker deltaTracker, float f, ClientLevel clientLevel,
+		CallbackInfoReturnable<FogData> cir) {
+		CapturedRenderingState.INSTANCE.setFogColor(cir.getReturnValue().color.x, cir.getReturnValue().color.y,
+			cir.getReturnValue().color.z);
 	}
 }

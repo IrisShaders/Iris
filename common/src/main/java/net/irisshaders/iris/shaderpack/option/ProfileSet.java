@@ -46,7 +46,8 @@ public class ProfileSet {
 		return new ProfileSet(profiles);
 	}
 
-	private static Profile parse(String name, List<String> parents, Map<String, List<String>> tree, OptionSet optionSet) throws IllegalArgumentException {
+	private static Profile parse(String name, List<String> parents, Map<String, List<String>> tree,
+		OptionSet optionSet) throws IllegalArgumentException {
 		Profile.Builder builder = new Profile.Builder(name);
 		List<String> options = tree.get(name);
 
@@ -61,8 +62,8 @@ public class ProfileSet {
 				String dependency = option.substring("profile.".length());
 
 				if (parents.contains(dependency)) {
-					throw new IllegalArgumentException("Error parsing profile \"" + name
-						+ "\", recursively included by: " + String.join(", ", parents));
+					throw new IllegalArgumentException(
+						"Error parsing profile \"" + name + "\", recursively included by: " + String.join(", ", parents));
 				}
 
 				parents.add(dependency);

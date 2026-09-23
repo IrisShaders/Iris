@@ -1,41 +1,34 @@
 package net.irisshaders.iris.uniforms.buffer;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.api.device.GpuDevice;
-import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import kroppeb.stareval.function.Type;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.uniform.UniformType;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
-import net.irisshaders.iris.pipeline.transform.vulkan.Std140Type;
-import net.irisshaders.iris.pipeline.transform.vulkan.VulkanResourceLayout;
+import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
+import net.irisshaders.iris.pipeline.transform.Std140Type;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
-import net.irisshaders.iris.vulkan.VulkanCommandBridge;
-import net.irisshaders.iris.vulkan.VulkanResourceSets;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 public final class FrameUniforms implements AutoCloseable {
-	private final GpuDevice device;
-	private final VulkanDevice backend;
-	private final VulkanResourceLayout layout;
+	private final ShaderResourceLayout layout;
 	private final BufferUniformHolder values;
-	private VulkanResourceSets sets;
-	private Slot current;
 	private final ArrayDeque<Slot> available = new ArrayDeque<>();
 	private final List<Slot> slots = new ArrayList<>();
+	private final List<Runnable> cleanup = new ArrayList<>();
+	private Slot current;
 	private boolean closed;
 	private int uploads;
 
-	public FrameUniforms(GpuDevice device, VulkanDevice backend, CustomUniforms custom) {
-		this.device = device;
-		this.backend = backend;
-
+	public FrameUniforms(CustomUniforms custom) {
 		var types = new TreeMap<String, Std140Type>();
 
 		for (var uniform : custom.frameUniforms()) {
@@ -62,118 +55,92 @@ public final class FrameUniforms implements AutoCloseable {
 				new Std140Type(glsl, 4, type == UniformType.MAT3 || type == UniformType.MAT4 ? rows : 1, rows, List.of()));
 		}
 
-		var uniforms = new LinkedHashMap<String, VulkanResourceLayout.Uniform>();
+		var uniforms = new LinkedHashMap<String, ShaderResourceLayout.Uniform>();
 		int offset = 0;
 
 		for (var entry : types.entrySet()) {
 			offset = Std140Type.align(offset, entry.getValue().alignment());
-			uniforms.put(entry.getKey(), new VulkanResourceLayout.Uniform(offset, entry.getValue()));
+			uniforms.put(entry.getKey(), new ShaderResourceLayout.Uniform(offset, entry.getValue()));
 			offset += entry.getValue().size();
 		}
 
-		layout = new VulkanResourceLayout(
-			Std140Type.align(offset, 16), uniforms,
-			List.of(new VulkanResourceLayout.Descriptor(VulkanResourceLayout.FRAME_BLOCK, VulkanResourceLayout.Kind.UNIFORM_BUFFER,
-				"block",
-				1, 2, 0, null, EnumSet.allOf(PatchShaderType.class))));
-		values = new BufferUniformHolder(layout);
-		custom.assignTo(values);
+		this.layout = new ShaderResourceLayout(Std140Type.align(offset, 16), uniforms, List.of(
+			new ShaderResourceLayout.Descriptor(ShaderResourceLayout.FRAME_BLOCK, ShaderResourceLayout.Kind.UNIFORM_BUFFER, "block", 1, 2,
+				0, null, EnumSet.allOf(PatchShaderType.class))));
+		this.values = new BufferUniformHolder(this.layout);
+		custom.assignTo(this.values);
 	}
 
-	public VulkanResourceLayout layout() {
-		return layout;
+	public void addCloseCallback(Runnable destructor) {
+		this.cleanup.add(destructor);
 	}
 
-	public int uploads() {
-		return uploads;
-	}
-
-	public VulkanResourceSets sets() {
-		if (closed) {
-			throw new IllegalStateException("Frame uniforms are closed");
-		}
-
-		if (sets == null) {
-			sets = new VulkanResourceSets(backend.vkDevice(), layout, 64, 2);
-		}
-
-		return sets;
+	public ShaderResourceLayout getLayout() {
+		return this.layout;
 	}
 
 	public void beginFrame() {
-		retireFrame();
-		snapshot();
+		this.retireFrame();
+		this.snapshot();
 	}
 
-	public VulkanResourceSets.Snapshot snapshot() {
-		if (closed) {
-			throw new IllegalStateException("Frame uniforms are closed");
+	public GpuBufferSlice snapshot() {
+		if (this.closed) {
+			throw new IllegalStateException("frame uniforms are closed");
 		}
 
-		if (current == null) {
-			current = available.pollFirst();
+		if (this.current == null) {
+			this.current = this.available.pollFirst();
 
-			if (current == null) {
-				var buffer = device.createBuffer(
-					() -> "Iris frame uniforms", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, layout.uniformBufferSize());
+			if (this.current == null) {
+				var buffer = RenderSystem.getDevice()
+					.createBuffer(() -> "Iris frame uniforms", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST,
+						this.layout.uniformBufferSize());
 
-				try {
-					var descriptor =
-						sets().snapshot(Map.of(VulkanResourceLayout.FRAME_BLOCK,
-							List.of(VulkanCommandBridge.bufferSlice(buffer.slice()))));
-					current = new Slot(buffer, descriptor);
-					slots.add(current);
-				} catch (RuntimeException | Error failure) {
-					buffer.close();
-
-					throw failure;
-				}
+				this.current = new Slot(buffer, buffer.slice());
+				this.slots.add(this.current);
 			}
 
-			values.update(0, uploads);
-			device.createCommandEncoder().writeToBuffer(current.buffer().slice(), values.data());
-			uploads++;
+			this.values.update(0, this.uploads);
+			RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.current.buffer().slice(), this.values.data());
+			this.uploads++;
 		}
 
-		return current.descriptor();
+		return this.current.slice();
 	}
 
 	private void retireFrame() {
-		if (current != null) {
-			var completed = current;
-			VulkanCommandBridge.retire(device.createCommandEncoder(), () -> {
-				if (!closed) {
-					available.addLast(completed);
+		if (this.current != null) {
+			var completed = this.current;
+			Iris.getRenderBackend().retire(() -> {
+				if (!this.closed) {
+					this.available.addLast(completed);
 				}
 			});
-			current = null;
+			this.current = null;
 		}
 	}
 
 	@Override
 	public void close() {
-		if (closed) {
+		if (this.closed) {
 			return;
 		}
 
-		closed = true;
+		this.closed = true;
+		this.cleanup.forEach(Iris.getRenderBackend()::retire);
+		this.cleanup.clear();
 
-		var encoder = device.createCommandEncoder();
+		for (var slot : this.slots) {
 
-		for (var slot : slots) {
-			VulkanCommandBridge.retire(encoder, slot.descriptor()::close);
 			slot.buffer().close();
 		}
 
-		if (sets != null) {
-			VulkanCommandBridge.retire(encoder, sets::close);
-		}
-
-		current = null;
-		available.clear();
-		slots.clear();
+		this.current = null;
+		this.available.clear();
+		this.slots.clear();
 	}
 
-	private record Slot(GpuBuffer buffer, VulkanResourceSets.Snapshot descriptor) {
+	private record Slot(GpuBuffer buffer, GpuBufferSlice slice) {
 	}
 }

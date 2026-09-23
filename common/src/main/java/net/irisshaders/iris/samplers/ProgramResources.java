@@ -1,36 +1,23 @@
 package net.irisshaders.iris.samplers;
 
-import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
-import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
-import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
+import net.irisshaders.iris.backend.IrisImage;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.image.ImageHolder;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
-import net.irisshaders.iris.gl.sampler.SamplerHolder.TextureBinding;
 import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.TextureType;
-import net.irisshaders.iris.pipeline.transform.PatchShaderType;
-import net.irisshaders.iris.pipeline.transform.vulkan.VulkanResourceLayout;
-import net.irisshaders.iris.vulkan.CompositeSynchronization;
-import net.irisshaders.iris.vulkan.VulkanCommandBridge;
-import net.irisshaders.iris.vulkan.VulkanResourceSets;
-import net.irisshaders.iris.vulkan.VulkanSamplerHeap;
-import org.lwjgl.vulkan.KHRSynchronization2;
-import org.lwjgl.vulkan.VK10;
+import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
@@ -38,105 +25,123 @@ import java.util.function.Supplier;
 
 public final class ProgramResources implements SamplerHolder, ImageHolder {
 	private final PackSamplers pack;
-	private final List<VulkanResourceLayout.Descriptor> storageDeclarations;
-	private ShaderStorageBufferHolder storageBuffers;
+	private final List<ShaderResourceLayout.Descriptor> storageDeclarations;
 	private final Map<PackSamplers.Reference, LongSupplier> texels = new LinkedHashMap<>();
-	private final Map<String, VulkanResourceLayout.Descriptor> declarations = new LinkedHashMap<>();
+	private final Map<String, ShaderResourceLayout.Descriptor> declarations = new LinkedHashMap<>();
 	private final Map<String, PackSamplers.Reference> references = new LinkedHashMap<>();
 	private final Map<PackSamplers.Reference, TextureBinding> textures = new LinkedHashMap<>();
-	private final Map<String, VulkanResourceLayout.Descriptor> imageDeclarations = new LinkedHashMap<>();
-	private final Map<String, LongSupplier> images = new LinkedHashMap<>();
-
-	public Map<String, List<Long>> imageViews() {
-		var result = new LinkedHashMap<String, List<Long>>();
-		images.forEach((name, view) -> result.put(name, List.of(view.getAsLong())));
-
-		return result;
-	}
-
+	private final Map<String, ShaderResourceLayout.Descriptor> imageDeclarations = new LinkedHashMap<>();
+	private final Map<String, InternalTextureFormat> imageFormats = new LinkedHashMap<>();
+	private final Map<String, Supplier<ImageBinding>> images = new LinkedHashMap<>();
+	private ShaderStorageBufferHolder storageBuffers;
+	private Supplier<Map<String, List<GpuBufferSlice>>> uniformBuffers = Map::of;
 	private TextureBinding fallback;
+	private boolean drawFallback;
 	private IntFunction<TextureBinding> externalBindings;
-	private ByteBuffer indices;
 	private SamplerBindingPlan plan;
-	private final Map<String, LongSupplier> imageResources = new LinkedHashMap<>();
-	private SamplerResource[] samplerResources;
 
-	public ProgramResources(PackSamplers pack, VulkanResourceLayout layout) {
+	public ProgramResources(PackSamplers pack, ShaderResourceLayout layout) {
 		this.pack = pack;
-		storageDeclarations = layout.descriptors().stream().filter(d -> d.kind() == VulkanResourceLayout.Kind.STORAGE_BUFFER).toList();
+		this.storageDeclarations = layout.descriptors().stream().filter(d -> d.kind() == ShaderResourceLayout.Kind.STORAGE_BUFFER).toList();
 
 		for (var descriptor : layout.descriptors()) {
-			if (descriptor.kind() == VulkanResourceLayout.Kind.IMAGE) {
-				imageDeclarations.put(descriptor.name(), descriptor);
-			}
-		}
-
-		for (var descriptor : layout.descriptors()) {
-			if (descriptor.kind() == VulkanResourceLayout.Kind.SAMPLER) {
-				declarations.put(descriptor.name(), descriptor);
+			if (descriptor.kind() == ShaderResourceLayout.Kind.IMAGE) {
+				this.imageDeclarations.put(descriptor.name(), descriptor);
+			} else if (descriptor.kind() == ShaderResourceLayout.Kind.SAMPLER) {
+				this.declarations.put(descriptor.name(), descriptor);
 			}
 		}
 	}
 
 	public void addStorageBuffers(ShaderStorageBufferHolder buffers) {
-		storageBuffers = buffers;
-		bufferBindings();
+		this.storageBuffers = buffers;
+		this.getBufferBindings();
 	}
 
-	public Map<String, List<GpuBufferSlice>> bufferBindings() {
+	public void setUniformBuffers(Supplier<Map<String, List<GpuBufferSlice>>> buffers) {
+		this.uniformBuffers = buffers;
+	}
+
+	public Map<String, List<GpuBufferSlice>> getBufferBindings() {
 		var result = new LinkedHashMap<String, List<GpuBufferSlice>>();
 
-		for (var descriptor : storageDeclarations) {
-			if (storageBuffers == null) {
-				throw new IllegalArgumentException("No buffer objects for storage block " + descriptor.name());
+		for (var descriptor : this.storageDeclarations) {
+			if (this.storageBuffers == null) {
+				throw new IllegalArgumentException("no buffer objects for storage block " + descriptor.name());
 			}
 
 			int first = descriptor.originalBinding() == null ? 0 : descriptor.originalBinding();
 			var slices = new ArrayList<GpuBufferSlice>();
 
 			for (int i = 0; i < descriptor.count(); i++) {
-				slices.add(storageBuffers.getBuffer(Math.addExact(first, i)).slice());
+				slices.add(this.storageBuffers.getBuffer(Math.addExact(first, i)).slice());
 			}
 
 			result.put(descriptor.name(), List.copyOf(slices));
 		}
 
+		result.putAll(this.uniformBuffers.get());
+
 		return result;
+	}
+
+	public Bindings resolve() {
+		return this.resolve(Map.of());
+	}
+
+	public Bindings resolve(Map<String, List<GpuBufferSlice>> supplied) {
+		var resolvedTextures = new LinkedHashMap<PackSamplers.Reference, TextureBinding.Resolved>();
+		this.textures.forEach((reference, binding) -> resolvedTextures.put(reference, binding.resolve(reference.type())));
+		var resolvedTexels = new LinkedHashMap<PackSamplers.Reference, Long>();
+		this.texels.forEach((reference, view) -> resolvedTexels.put(reference, view.getAsLong()));
+		var buffers = this.getBufferBindings();
+		buffers.putAll(supplied);
+		return new Bindings(resolvedTextures, resolvedTexels, buffers, this.getImages());
 	}
 
 	@Override
 	public boolean hasSampler(String name) {
-		return declarations.containsKey(name);
+		return this.declarations.containsKey(name);
 	}
 
 	@Override
 	public boolean addTextureSampler(TextureBinding binding, boolean defaultSampler, String... names) {
+		return this.addTextureSampler(binding, defaultSampler, false, names);
+	}
+
+	@Override
+	public boolean addDrawTextureSampler(TextureBinding binding, boolean defaultSampler, String... names) {
+		return this.addTextureSampler(binding, defaultSampler, true, names);
+	}
+
+	private boolean addTextureSampler(TextureBinding binding, boolean defaultSampler, boolean draw, String... names) {
 		if (defaultSampler) {
-			fallback = binding;
+			this.fallback = binding;
+			this.drawFallback = draw;
 		}
 
 		boolean used = false;
 
 		for (String name : names) {
-			var declaration = declarations.get(name);
+			var declaration = this.declarations.get(name);
 
 			if (declaration == null) {
 				continue;
 			}
 
 			if (declaration.count() != 1) {
-				throw new UnsupportedOperationException("Sampler array registration is not implemented: " + name);
+				throw new UnsupportedOperationException("sampler array registration is not implemented: " + name);
 			}
 
 			var type = SamplerHeapLayout.Type.valueOf(declaration.type());
 
 			if (type.texelBuffer()) {
-				throw new UnsupportedOperationException("Texel samplers require a buffer view: " + name);
+				throw new UnsupportedOperationException("texel samplers require a buffer view: " + name);
 			}
 
-			var reference = pack.register(type, binding.key());
-			references.put(name, reference);
-			textures.put(reference, binding);
+			var reference = this.pack.register(type, binding.key(), draw);
+			this.references.put(name, reference);
+			this.textures.put(reference, binding);
 			used = true;
 		}
 
@@ -144,7 +149,7 @@ public final class ProgramResources implements SamplerHolder, ImageHolder {
 	}
 
 	public void addTexelSampler(String name, Object key, LongSupplier view) {
-		var declaration = declarations.get(name);
+		var declaration = this.declarations.get(name);
 
 		if (declaration == null) {
 			return;
@@ -153,216 +158,154 @@ public final class ProgramResources implements SamplerHolder, ImageHolder {
 		var type = SamplerHeapLayout.Type.valueOf(declaration.type());
 
 		if (!type.texelBuffer() || declaration.count() != 1) {
-			throw new IllegalArgumentException("Expected scalar texel sampler: " + name);
+			throw new IllegalArgumentException("expected scalar texel sampler: " + name);
 		}
 
-		var reference = pack.register(type, key);
-		references.put(name, reference);
-		texels.put(reference, view);
+		var reference = this.pack.register(type, key, true);
+		this.references.put(name, reference);
+		this.texels.put(reference, view);
 	}
 
 	public void finish() {
-		bufferBindings();
+		this.getBufferBindings();
 
-		if (!images.keySet().equals(imageDeclarations.keySet())) {
-			throw new IllegalArgumentException("Missing storage image bindings: " + imageDeclarations.keySet());
+		if (!this.images.keySet().equals(this.imageDeclarations.keySet())) {
+			throw new IllegalArgumentException("missing storage image bindings: " + this.imageDeclarations.keySet());
 		}
 
-		for (String name : declarations.keySet()) {
-			if (!references.containsKey(name)) {
-				if (fallback == null || !declarations.get(name).type().equals("SAMPLER2D")) {
-					throw new IllegalArgumentException("No Vulkan sampler registered for " + name);
+		for (String name : this.declarations.keySet()) {
+			if (!this.references.containsKey(name)) {
+				if (this.fallback == null || !this.declarations.get(name).type().equals("SAMPLER2D")) {
+					throw new IllegalArgumentException("no sampler registered for " + name);
 				}
 
-				addTextureSampler(fallback, false, name);
+				this.addTextureSampler(this.fallback, false, this.drawFallback, name);
 			}
 		}
 
-		textures.keySet().retainAll(new HashSet<>(references.values()));
+		this.textures.keySet().retainAll(new HashSet<>(this.references.values()));
 	}
 
-	public SamplerBindingPlan plan() {
-		if (plan != null) {
-			return plan;
-		}
-
-		var builder = new SamplerBindingPlan.Builder(pack.layout());
-		references.forEach((name, reference) -> builder.bind(name, pack.slot(reference)));
-
-		var built = builder.build();
-		var resources = new HashMap<SamplerHeapLayout.Slot, SamplerResource>();
-		textures.forEach((reference, binding) -> resources.put(pack.slot(reference), new SamplerResource(reference.type(), binding,
-			null)));
-		texels.forEach((reference, view) -> resources.put(pack.slot(reference), new SamplerResource(reference.type(), null, view)));
-
-		var slots = built.indexSlots();
-		samplerResources = new SamplerResource[slots.size()];
-
-		for (int i = 0; i < slots.size(); i++) {
-			samplerResources[i] = Objects.requireNonNull(resources.get(slots.get(i)), "Missing sampler resource");
-		}
-
-		indices = ByteBuffer.allocateDirect(((slots.size() + 3) / 4) * 16).order(ByteOrder.nativeOrder());
-
-		return plan = new SamplerBindingPlan(built.heap(), built.bindings(), true);
+	public PackSamplers getPackSamplers() {
+		return this.pack;
 	}
 
-	public VulkanSamplerHeap.Snapshot snapshot() {
-		if (plan == null) {
-			plan();
-		}
-
-		for (int i = 0; i < samplerResources.length; i++) {
-			var resource = samplerResources[i];
-			var entry = resource.texture() == null ? new VulkanSamplerHeap.TexelBuffer(resource.texel().getAsLong())
-				: pack.resolve(resource.type(), resource.texture());
-			indices.putInt(i * 4, pack.frameIndex(resource.type(), entry));
-		}
-
-		return pack.frame().retain();
+	public Map<String, PackSamplers.Reference> getSamplerReferences() {
+		return Collections.unmodifiableMap(this.references);
 	}
 
-	private record SamplerResource(SamplerHeapLayout.Type type, TextureBinding texture, LongSupplier texel) {
+	public Map<PackSamplers.Reference, TextureBinding> getTextureBindings() {
+		return Collections.unmodifiableMap(this.textures);
 	}
 
-	public void addIndexBinding(VulkanCommandEncoder encoder, Map<String, List<VulkanResourceSets.BufferSlice>> bindings) {
-		var slice = uploadIndices(encoder);
-
-		if (slice != null) {
-			bindings.put(SamplerBindingPlan.INDEX_BLOCK, List.of(VulkanCommandBridge.bufferSlice(slice)));
-		}
+	public Map<PackSamplers.Reference, LongSupplier> getTexelBufferBindings() {
+		return Collections.unmodifiableMap(this.texels);
 	}
 
-	public GpuBufferSlice uploadIndices(VulkanCommandEncoder encoder) {
-		return indices == null || !indices.hasRemaining()
-			? null
-			: encoder.transientMemory().uploadGpu(indices, pack.uniformAlignment(), GpuBuffer.USAGE_UNIFORM);
+	public Map<String, ShaderResourceLayout.Descriptor> getSamplerDeclarations() {
+		return Collections.unmodifiableMap(this.declarations);
 	}
 
-	public List<CompositeSynchronization.Access> accesses() {
-		var accesses = new ArrayList<CompositeSynchronization.Access>();
-
-		for (var entry : references.entrySet()) {
-			var descriptor = declarations.get(entry.getKey());
-			var binding = textures.get(entry.getValue());
-
-			if (binding == null) {
-				accesses.add(new CompositeSynchronization.Access(new CompositeSynchronization.Resource(false, 0),
-					stages(descriptor.stages()), KHRSynchronization2.VK_ACCESS_2_SHADER_READ_BIT_KHR, false));
-			} else {
-				long image = binding.image() == null ? CompositeSynchronization.image(binding.texture().get().texture()).handle()
-					: binding.image().get().image();
-				accesses.add(CompositeSynchronization.shaderImage(image, stages(descriptor.stages()), false));
-			}
-		}
-
-		for (var descriptor : imageDeclarations.values()) {
-			var image = imageResources.get(descriptor.name());
-			accesses.add(CompositeSynchronization.shaderImage(image == null ? 0 : image.getAsLong(), stages(descriptor.stages()), true));
-		}
-
-		var buffers = bufferBindings();
-
-		for (var descriptor : storageDeclarations) {
-			for (var slice : buffers.get(descriptor.name())) {
-				accesses.add(new CompositeSynchronization.Access(
-					new CompositeSynchronization.Resource(false, ((VulkanGpuBuffer) slice.buffer()).vkBuffer()),
-					stages(descriptor.stages()),
-					KHRSynchronization2.VK_ACCESS_2_SHADER_READ_BIT_KHR | KHRSynchronization2.VK_ACCESS_2_SHADER_WRITE_BIT_KHR, true));
-			}
-		}
-
-		return accesses;
+	public Map<String, ShaderResourceLayout.Descriptor> getImageDeclarations() {
+		return Collections.unmodifiableMap(this.imageDeclarations);
 	}
 
-	private static long stages(Set<PatchShaderType> stages) {
-		long mask = 0;
+	public Map<String, InternalTextureFormat> getImageFormats() {
+		return Collections.unmodifiableMap(this.imageFormats);
+	}
 
-		for (var stage : stages) {
-			mask |= switch (stage) {
-				case VERTEX -> VK10.VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
-				case TESS_CONTROL -> VK10.VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;
-				case TESS_EVAL -> VK10.VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT;
-				case GEOMETRY -> VK10.VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;
-				case FRAGMENT -> VK10.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-				case COMPUTE -> VK10.VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-			};
+	private Map<String, List<ImageBinding>> getImages() {
+		var result = new LinkedHashMap<String, List<ImageBinding>>();
+		this.images.forEach((name, image) -> result.put(name, List.of(image.get())));
+
+		return result;
+	}
+
+	public List<ShaderResourceLayout.Descriptor> getStorageDeclarations() {
+		return this.storageDeclarations;
+	}
+
+	public SamplerBindingPlan getBindingPlan() {
+		if (this.plan == null) {
+			var builder = new SamplerBindingPlan.Builder(this.pack.getLayout());
+			this.references.forEach((name, reference) -> builder.bind(name, this.pack.getSlot(reference)));
+			this.plan = builder.build();
 		}
 
-		return mask;
+		return this.plan;
 	}
 
 	private boolean unsupported(String... names) {
 		for (String name : names) {
-			if (hasSampler(name)) {
-				throw new UnsupportedOperationException("Sampler still uses a GL texture name: " + name);
+			if (this.hasSampler(name)) {
+				throw new UnsupportedOperationException("sampler still uses a GL texture name: " + name);
 			}
 		}
 
 		return false;
 	}
 
-	public void externalBindings(IntFunction<TextureBinding> bindings) {
-		externalBindings = bindings;
+	public void setExternalBindings(IntFunction<TextureBinding> bindings) {
+		this.externalBindings = bindings;
 	}
 
 	@Override
 	public void addExternalSampler(int unit, String... names) {
-		if (externalBindings == null) {
-			unsupported(names);
+		if (this.externalBindings == null) {
+			this.unsupported(names);
 		} else {
-			addTextureSampler(externalBindings.apply(unit), unit == 0, names);
+			this.addDrawTextureSampler(this.externalBindings.apply(unit), unit == 0, names);
 		}
 	}
 
 	@Override
 	public boolean hasImage(String name) {
-		return imageDeclarations.containsKey(name);
+		return this.imageDeclarations.containsKey(name);
 	}
 
 	@Override
-	public void addTextureImage(LongSupplier view, LongSupplier image, InternalTextureFormat format, String name) {
-		addTextureImage(view, format, name);
-
-		if (hasImage(name)) {
-			imageResources.put(name, image);
-		}
+	public void addTextureImage(Supplier<GpuTextureView> texture, InternalTextureFormat format, String name) {
+		this.addImageBinding(() -> new ImageBinding(texture.get(), null), format, name);
 	}
 
 	@Override
-	public void addTextureImage(LongSupplier view, InternalTextureFormat format, String name) {
-		if (!hasImage(name)) {
+	public void addImage(Supplier<IrisImage> image, InternalTextureFormat format, String name) {
+		this.addImageBinding(() -> new ImageBinding(null, image.get()), format, name);
+	}
+
+	private void addImageBinding(Supplier<ImageBinding> image, InternalTextureFormat format, String name) {
+		if (!this.hasImage(name)) {
 			return;
 		}
 
-		if (imageDeclarations.get(name).count() != 1) {
-			throw new UnsupportedOperationException("Image arrays require element bindings: " + name);
+		if (this.imageDeclarations.get(name).count() != 1) {
+			throw new UnsupportedOperationException("image arrays require element bindings: " + name);
 		}
 
-		images.put(name, view);
-	}
-
-	@Override
-	public void addTextureImage(IntSupplier texture, InternalTextureFormat format, String name) {
-		if (hasImage(name)) {
-			throw new UnsupportedOperationException("Image binding requires a Vulkan view: " + name);
-		}
+		this.images.put(name, image);
+		this.imageFormats.put(name, format);
 	}
 
 	@Override
 	public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler,
 		String... names) {
-		return unsupported(names);
+		return this.unsupported(names);
 	}
 
 	@Override
 	public boolean addDynamicSampler(TextureType type, IntSupplier texture, Supplier<GlSampler> sampler, String... names) {
-		return unsupported(names);
+		return this.unsupported(names);
 	}
 
 	@Override
 	public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler,
 		String... names) {
-		return unsupported(names);
+		return this.unsupported(names);
+	}
+
+	public record Bindings(Map<PackSamplers.Reference, TextureBinding.Resolved> textures, Map<PackSamplers.Reference, Long> texels, Map<String, List<GpuBufferSlice>> buffers, Map<String, List<ImageBinding>> images) {
+	}
+
+	public record ImageBinding(GpuTextureView texture, IrisImage image) {
 	}
 }

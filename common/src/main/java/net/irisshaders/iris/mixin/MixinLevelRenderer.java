@@ -61,164 +61,28 @@ import java.util.OptionalDouble;
 @Mixin(LevelRenderer.class)
 public abstract class MixinLevelRenderer {
 	private static final String CLEAR = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V";
-	private static final String RENDER_SKY =
-		"Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;" +
-			"Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V";
-	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds" +
-		"(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;FDDD)V";
-	private static final String RENDER_WEATHER = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain" +
-		"(Lnet/minecraft/client/renderer/LightTexture;FDDD)V";
-
-
+	private static final String RENDER_SKY = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;" + "Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V";
+	private static final String RENDER_CLOUDS = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds" + "(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;FDDD)V";
+	private static final String RENDER_WEATHER = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain" + "(Lnet/minecraft/client/renderer/LightTexture;FDDD)V";
+	@Unique
+	private final Matrix4f iris$modelMatrix = new Matrix4f();
 	@Unique
 	private WorldRenderingPipeline pipeline;
-
 	@Shadow
 	private RenderBuffers renderBuffers;
-
 	@Shadow
 	@Final
 	private LevelTargetBundle targets;
 	@Shadow
 	@Final
 	private LevelRenderState levelRenderState;
-
 	@Shadow
 	@Final
 	private CloudRenderer cloudRenderer;
-
 	@Unique
 	private boolean warned;
-
 	@Unique
 	private boolean disableFrustumCulling;
-
-	@Unique
-	private Matrix4f iris$modelMatrix = new Matrix4f();
-
-	// Begin shader rendering after buffers have been cleared.
-	// At this point we've ensured that Minecraft's main framebuffer is cleared.
-	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
-	// all pixels.
-	@Inject(method = "render", at = @At("HEAD"))
-	private void iris$setupPipeline(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState,
-		GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci) {
-		DHCompat.checkFrame();
-
-		iris$modelMatrix.set(cameraState.viewRotationMatrix);
-
-		IrisTimeUniforms.updateTime();
-		CapturedRenderingState.INSTANCE.setGbufferModelView(cameraState.viewRotationMatrix);
-		CapturedRenderingState.INSTANCE.setGbufferProjection(
-			MatrixUtils.undoRevZ(new Matrix4f(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix())));
-
-		float fakeTickDelta = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
-		CapturedRenderingState.INSTANCE.setTickDelta(fakeTickDelta);
-
-		if (((CloudRendererAccessor) this.cloudRenderer).getTexture() != null) {
-			CapturedRenderingState.INSTANCE.setCloudTime(
-				(this.levelRenderState.gameTime % (((CloudRendererAccessor) this.cloudRenderer).getTexture().width() * 400) +
-					fakeTickDelta) * 0.03F);
-		} else {
-			CapturedRenderingState.INSTANCE.setCloudTime(0);
-		}
-
-		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
-
-		this.disableFrustumCulling = pipeline.shouldDisableFrustumCulling();
-
-		pipeline.beginLevelRendering();
-		pipeline.setPhase(WorldRenderingPhase.NONE);
-		IrisRenderSystem.backupAndDisableCullingState(pipeline.shouldDisableOcclusionCulling());
-
-		if (Iris.shouldActivateWireframe() && Minecraft.getInstance().isLocalServer()) {
-			IrisRenderSystem.setPolygonMode(GL43C.GL_LINE);
-		}
-	}
-
-	// Begin shader rendering after buffers have been cleared.
-	// At this point we've ensured that Minecraft's main framebuffer is cleared.
-	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
-	// all pixels.
-	@Inject(method = "render", at = @At(value = "INVOKE", target =
-		"Lcom/mojang/blaze3d/framegraph/FramePass;executes(Ljava/lang/Runnable;" +
-			")V", ordinal = 0, shift = At.Shift.AFTER))
-	private void iris$beginLevelRender(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState,
-		GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci,
-		@Local FrameGraphBuilder frameGraphBuilder, @Local(ordinal = 0) FramePass clearPass) {
-		FramePass framePass = frameGraphBuilder.addPass("iris_setup");
-		this.targets.main = framePass.readsAndWrites(this.targets.main);
-		framePass.requires(clearPass);
-		framePass.executes(() -> {
-			GpuBufferSlice params = RenderSystem.getShaderFog();
-			pipeline.onBeginClear();
-			RenderSystem.setShaderFog(params);
-		});
-	}
-
-
-	@WrapWithCondition(method = "executeSolid", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk" +
-		"/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;" +
-		"Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/textures/GpuSampler;" +
-		"Lcom/mojang/renderpearl/api/textures/GpuTextureView;Z)V"))
-	private boolean skipRenderChunks(ChunkSectionsToRender instance, ChunkSectionLayerGroup group, RenderPass renderPass,
-		GpuSampler sampler, GpuTextureView atlas, boolean renderWireframeTerrain) {
-		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline pipeline) {
-			return !pipeline.skipAllRendering();
-		} else {
-			return true;
-		}
-	}
-
-	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
-	// render their waypoint beams.
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4fStack;popMatrix()Lorg/joml/Matrix4fStack;"))
-	private void iris$endLevelRender(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState,
-		GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci) {
-		HandRenderer.getInstance().renderTranslucent(cameraState.viewRotationMatrix, cameraState.cameraEntityPartialTicks,
-			Minecraft.getInstance().gameRenderer.mainCamera(), levelRenderState.cameraRenderState, Minecraft.getInstance().gameRenderer,
-			pipeline);
-		Profiler.get().popPush("iris_final");
-
-		if (Iris.shouldActivateWireframe() && Minecraft.getInstance().isLocalServer()) {
-			IrisRenderSystem.setPolygonMode(GL43C.GL_FILL);
-		}
-
-		pipeline.finalizeLevelRendering();
-		pipeline = null;
-
-		if (!warned) {
-			warned = true;
-			Iris.getUpdateChecker().getBetaInfo().ifPresent(info ->
-				Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(
-					Component.literal("A new beta is out for Iris " + info.betaTag + ". Please redownload it.")
-						.withStyle(ChatFormatting.BOLD, ChatFormatting.RED)));
-		}
-
-		IrisRenderSystem.restoreCullingState();
-
-	}
-
-	// Do this before main pass submission so shadow maps are ready before terrain draws.
-	@Group(name = "that", min = 1, max = 1)
-	@Inject(require = 0, method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;" +
-		"addMainPass" +
-		"(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;" +
-		"Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;Z)V"))
-	private void iris$renderTerrainShadows(GraphicsResourceAllocator resourceAllocator, boolean renderOutline,
-		CameraRenderState cameraState, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky,
-		boolean consistentDepthRequired, CallbackInfo ci) {
-		if (Iris.isPackInUseQuick()) {
-			pipeline.renderShadows((LevelRendererAccessor) this, Minecraft.getInstance().gameRenderer.mainCamera(),
-				this.levelRenderState.cameraRenderState);
-		}
-	}
-
-	// TODO IMS 1.21.2
-	//@ModifyVariable(method = "renderSky", at = @At(value = "HEAD"), index = 5, argsOnly = true)
-	private boolean iris$alwaysRenderSky(boolean value) {
-		return false;
-	}
 
 	@Inject(method = {MojLambdas.RENDER_SKY, NeoLambdas.NEO_RENDER_SKY}, require = 1, at = @At(value = "HEAD"))
 	private static void iris$beginSky(CallbackInfo ci) {
@@ -235,11 +99,129 @@ public abstract class MixinLevelRenderer {
 		Iris.getPipelineManager().getPipeline().ifPresent(p -> p.setPhase(WorldRenderingPhase.NONE));
 	}
 
+	// Begin shader rendering after buffers have been cleared.
+	// At this point we've ensured that Minecraft's main framebuffer is cleared.
+	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
+	// all pixels.
+	@Inject(method = "render", at = @At("HEAD"))
+	private void iris$setupPipeline(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState,
+		GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci) {
+		DHCompat.checkFrame();
 
-	@WrapOperation(method = "executeSolid", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk" +
-		"/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;" +
-		"Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/textures/GpuSampler;" +
-		"Lcom/mojang/renderpearl/api/textures/GpuTextureView;Z)V"))
+		iris$modelMatrix.set(cameraState.viewRotationMatrix);
+
+		IrisTimeUniforms.updateTime();
+		CapturedRenderingState.INSTANCE.setGbufferModelView(cameraState.viewRotationMatrix);
+		CapturedRenderingState.INSTANCE.setGbufferProjection(
+			MatrixUtils.undoRevZ(new Matrix4f(((GameRendererStorage) Minecraft.getInstance().gameRenderer).sodium$getProjectionMatrix())));
+		float fakeTickDelta = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
+		CapturedRenderingState.INSTANCE.setTickDelta(fakeTickDelta);
+		if (((CloudRendererAccessor) this.cloudRenderer).getTexture() != null) {
+			CapturedRenderingState.INSTANCE.setCloudTime(
+				(this.levelRenderState.gameTime % (((CloudRendererAccessor) this.cloudRenderer).getTexture()
+					.width() * 400) + fakeTickDelta) * 0.03F);
+		} else {
+			CapturedRenderingState.INSTANCE.setCloudTime(0);
+		}
+
+		pipeline = Iris.getPipelineManager().preparePipeline(Iris.getCurrentDimension());
+
+		this.disableFrustumCulling = pipeline.shouldDisableFrustumCulling();
+
+		this.pipeline.beginLevelRendering();
+		pipeline.setPhase(WorldRenderingPhase.NONE);
+		IrisRenderSystem.backupAndDisableCullingState(pipeline.shouldDisableOcclusionCulling());
+
+		if (Iris.shouldActivateWireframe() && Minecraft.getInstance().isLocalServer()) {
+			IrisRenderSystem.setPolygonMode(GL43C.GL_LINE);
+		}
+	}
+
+	// Begin shader rendering after buffers have been cleared.
+	// At this point we've ensured that Minecraft's main framebuffer is cleared.
+	// This is important or else very odd issues will happen with shaders that have a final pass that doesn't write to
+	// all pixels.
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/framegraph/FramePass;executes(Ljava/lang/Runnable;" + ")V", ordinal = 0, shift = At.Shift.AFTER))
+	private void iris$beginLevelRender(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState,
+		GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci,
+		@Local FrameGraphBuilder frameGraphBuilder, @Local(ordinal = 0) FramePass clearPass) {
+		if (!(pipeline instanceof IrisRenderingPipeline)) {
+			return;
+		}
+
+		FramePass framePass = frameGraphBuilder.addPass("iris_setup");
+		this.targets.main = framePass.readsAndWrites(this.targets.main);
+		framePass.requires(clearPass);
+		framePass.executes(() -> {
+			GpuBufferSlice params = RenderSystem.getShaderFog();
+			pipeline.onBeginClear();
+			RenderSystem.setShaderFog(params);
+		});
+	}
+
+	@WrapWithCondition(method = "executeSolid", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk" + "/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;" + "Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/textures/GpuSampler;" + "Lcom/mojang/renderpearl/api/textures/GpuTextureView;Z)V"))
+	private boolean skipRenderChunks(ChunkSectionsToRender instance, ChunkSectionLayerGroup group, RenderPass renderPass,
+		GpuSampler sampler, GpuTextureView atlas, boolean renderWireframeTerrain) {
+		if (Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline pipeline) {
+			return !pipeline.skipAllRendering();
+		} else {
+			return true;
+		}
+	}
+
+	// Inject a bit early so that we can end our rendering before mods like VoxelMap (which inject at RETURN)
+	// render their waypoint beams.
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4fStack;popMatrix()Lorg/joml/Matrix4fStack;"))
+	private void iris$endLevelRender(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState,
+		GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci) {
+		HandRenderer.getInstance().renderTranslucent(cameraState.viewRotationMatrix, cameraState.cameraEntityPartialTicks,
+			Minecraft.getInstance().gameRenderer.mainCamera(), this.levelRenderState.cameraRenderState,
+			Minecraft.getInstance().gameRenderer, this.pipeline);
+		Profiler.get().popPush("iris_final");
+
+		if (Iris.shouldActivateWireframe() && Minecraft.getInstance().isLocalServer()) {
+			IrisRenderSystem.setPolygonMode(GL43C.GL_FILL);
+		}
+		pipeline.finalizeLevelRendering();
+		pipeline = null;
+
+		if (!warned) {
+			warned = true;
+			Iris.getUpdateChecker().getBetaInfo().ifPresent(info -> Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(
+				Component.literal("A new beta is out for Iris " + info.betaTag + ". Please redownload it.")
+					.withStyle(ChatFormatting.BOLD, ChatFormatting.RED)));
+		}
+
+		IrisRenderSystem.restoreCullingState();
+
+	}
+
+	// Do this before main pass submission so shadow maps are ready before terrain draws.
+	@Group(name = "that", min = 1, max = 1)
+	@Inject(require = 0, method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;" + "addMainPass" + "(Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;" + "Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;Z)V"))
+	private void iris$renderTerrainShadows(GraphicsResourceAllocator resourceAllocator, boolean renderOutline,
+		CameraRenderState cameraState, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky,
+		boolean consistentDepthRequired, CallbackInfo ci) {
+		if (Iris.isPackInUseQuick()) {
+			pipeline.renderShadows((LevelRendererAccessor) this, Minecraft.getInstance().gameRenderer.mainCamera(),
+				this.levelRenderState.cameraRenderState);
+		}
+	}
+
+	// TODO IMS 1.21.2
+	//@ModifyVariable(method = "renderSky", at = @At(value = "HEAD"), index = 5, argsOnly = true)
+	private boolean iris$alwaysRenderSky(boolean value) {
+		return false;
+	}
+
+	@Inject(method = "prepareTranslucents", at = @At("RETURN"))
+	private void iris$renderOpaqueLods(CallbackInfo ci) {
+		if (this.pipeline instanceof IrisRenderingPipeline) {
+			DHCompat.renderLods(false);
+		}
+	}
+
+	@WrapOperation(method = "executeSolid", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk" + "/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;" + "Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/textures/GpuSampler;" + "Lcom/mojang/renderpearl/api/textures/GpuTextureView;Z)V"))
 	private void iris$beginTerrainLayer(ChunkSectionsToRender instance, ChunkSectionLayerGroup group, RenderPass renderPass,
 		GpuSampler sampler, GpuTextureView atlas, boolean renderWireframeTerrain, Operation<Void> original) {
 		pipeline.setPhase(WorldRenderingPhase.fromTerrainRenderType(group));
@@ -253,9 +235,7 @@ public abstract class MixinLevelRenderer {
 	}
 
 
-	@Inject(method = "executeClassicTransparency", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer" +
-		"/WorldBorderRenderer;render(Lnet/minecraft/client/renderer/state/level/WorldBorderRenderState;" +
-		"Lcom/mojang/renderpearl/api/commands/RenderPass;Lnet/minecraft/world/phys/Vec3;D)V"))
+	@Inject(method = "executeClassicTransparency", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer" + "/WorldBorderRenderer;render(Lnet/minecraft/client/renderer/state/level/WorldBorderRenderState;" + "Lcom/mojang/renderpearl/api/commands/RenderPass;Lnet/minecraft/world/phys/Vec3;D)V"))
 	private void iris$beginWorldBorder(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.WORLD_BORDER);
 	}
@@ -279,35 +259,35 @@ public abstract class MixinLevelRenderer {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
-	@ModifyArg(method = "submitBlockOutline", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer" +
-		"/LevelRenderer;submitHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;" +
-		"Lnet/minecraft/client/renderer/rendertype/RenderType;Lnet/minecraft/client/renderer/state/level/BlockOutlineRenderState;IFZ)V"))
+	@ModifyArg(method = "submitBlockOutline", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer" + "/LevelRenderer;submitHitOutline(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;" + "Lnet/minecraft/client/renderer/rendertype/RenderType;Lnet/minecraft/client/renderer/state/level/BlockOutlineRenderState;IFZ)V"))
 	private RenderType iris$beginBlockOutline(RenderType type) {
 		return new OuterWrappedRenderType("iris:is_outline", type, IsOutlineRenderStateShard.INSTANCE);
 	}
 
 	// TODO this needs to be more consistent.
-	@WrapOperation(method = MojLambdas.RENDER_MAIN_PASS, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client" +
-		"/renderer" +
-		"/LevelRenderer;executeClassicTransparency(Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;" +
-		"Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;Lcom/mojang/renderpearl/api/commands/RenderPass;)V"))
+	@WrapOperation(method = MojLambdas.RENDER_MAIN_PASS, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client" + "/renderer" + "/LevelRenderer;executeClassicTransparency(Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;" + "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;Lcom/mojang/renderpearl/api/commands/RenderPass;)V"))
 	private void iris$beginTranslucents(LevelRenderer instance, ChunkSectionsToRender chunkSectionsToRender,
 		FeatureRenderDispatcher.PreparedFrame preparedFrame, RenderPass renderPass, Operation<Void> original,
 		@Local(name = "renderPass") LocalRef<RenderPass> pass) {
+		if (!(pipeline instanceof IrisRenderingPipeline)) {
+			original.call(instance, chunkSectionsToRender, preparedFrame, renderPass);
+			return;
+		}
+
 		pass.get().close();
 
 		pipeline.beginHand();
 		HandRenderer.getInstance()
 			.renderSolid(this.iris$modelMatrix, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true),
-				Minecraft.getInstance().gameRenderer.mainCamera(), levelRenderState.cameraRenderState,
-				Minecraft.getInstance().gameRenderer,
-				pipeline);
+				Minecraft.getInstance().gameRenderer.mainCamera(), this.levelRenderState.cameraRenderState,
+				Minecraft.getInstance().gameRenderer, this.pipeline);
 		Profiler.get().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 
 		var newPass = RenderSystem.getDevice().createCommandEncoder()
 			.createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(),
 				Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty());
+
 		original.call(instance, chunkSectionsToRender, preparedFrame, newPass);
 		newPass.close();
 	}

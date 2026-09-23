@@ -67,11 +67,11 @@ public class IdMap {
 	private Map<NamespacedId, BlockRenderType> blockRenderTypeMap;
 
 	IdMap(Path shaderPath, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
-		itemIdMap = loadProperties(shaderPath, "item.properties", shaderPackOptions, environmentDefines)
-			.map(IdMap::parseItemIdMap).orElse(Object2IntMaps.emptyMap());
+		itemIdMap = loadProperties(shaderPath, "item.properties", shaderPackOptions, environmentDefines).map(IdMap::parseItemIdMap)
+			.orElse(Object2IntMaps.emptyMap());
 
-		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions, environmentDefines)
-			.map(IdMap::parseEntityIdMap).orElse(Object2IntMaps.emptyMap());
+		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions, environmentDefines).map(IdMap::parseEntityIdMap)
+			.orElse(Object2IntMaps.emptyMap());
 		blockTagMap = new Int2ObjectLinkedOpenHashMap<>();
 
 		loadProperties(shaderPath, "block.properties", shaderPackOptions, environmentDefines).ifPresent(blockProperties -> {
@@ -96,14 +96,15 @@ public class IdMap {
 	 * Loads properties from a properties file in a shaderpack path
 	 */
 	private static Optional<Properties> loadProperties(Path shaderPath, String name, ShaderPackOptions shaderPackOptions,
-													   Iterable<StringPair> environmentDefines) {
+		Iterable<StringPair> environmentDefines) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
 		}
 
 		// TODO: This is the worst code I have ever made. Do not do this.
-		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines).replaceAll("\\\\\\n\\s*\\n", " ").replaceAll("\\S *block\\.", "\nblock.");
+		String processed = PropertiesPreprocessor.preprocessSource(fileContents, shaderPackOptions, environmentDefines)
+			.replaceAll("\\\\\\n\\s*\\n", " ").replaceAll("\\S *block\\.", "\nblock.");
 		StringReader propertiesReader = new StringReader(processed);
 		warnMissingBackslashInPropertiesFile(processed, name);
 
@@ -121,7 +122,8 @@ public class IdMap {
 
 		if (Iris.getIrisConfig().areDebugOptionsEnabled()) {
 			ShaderPrinter.deleteIfClearing();
-			try (OutputStream os = Files.newOutputStream(IrisPlatformHelpers.getInstance().getGameDir().resolve("patched_shaders").resolve(name))) {
+			try (OutputStream os = Files.newOutputStream(
+				IrisPlatformHelpers.getInstance().getGameDir().resolve("patched_shaders").resolve(name))) {
 				properties.store(new OutputStreamWriter(os, StandardCharsets.UTF_8), "Patched version of properties");
 			} catch (IOException e) {
 				throw new RuntimeException(e);
@@ -187,7 +189,8 @@ public class IdMap {
 			for (String part : value.split("\\s+")) {
 				if (part.contains("=")) {
 					// Avoid tons of logspam for now
-					Iris.logger.warn("Failed to parse an Identifier in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
+					Iris.logger.warn(
+						"Failed to parse an Identifier in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
 					continue;
 				}
 
@@ -205,7 +208,8 @@ public class IdMap {
 		return Object2IntMaps.unmodifiable(idMap);
 	}
 
-	private static Int2ObjectLinkedOpenHashMap<List<BlockEntry>> parseBlockMap(Properties properties, String keyPrefix, String fileName, Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap) {
+	private static Int2ObjectLinkedOpenHashMap<List<BlockEntry>> parseBlockMap(Properties properties, String keyPrefix, String fileName,
+		Int2ObjectLinkedOpenHashMap<List<TagEntry>> blockTagMap) {
 		Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockEntriesById = new Int2ObjectLinkedOpenHashMap<>();
 		Int2ObjectLinkedOpenHashMap<List<TagEntry>> tagEntriesById = new Int2ObjectLinkedOpenHashMap<>();
 
@@ -392,11 +396,9 @@ public class IdMap {
 
 		IdMap idMap = (IdMap) o;
 
-		return Objects.equals(itemIdMap, idMap.itemIdMap)
-			&& Objects.equals(entityIdMap, idMap.entityIdMap)
-			&& Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap)
-			&& Objects.equals(blockTagMap, idMap.blockTagMap)
-			&& Objects.equals(blockRenderTypeMap, idMap.blockRenderTypeMap);
+		return Objects.equals(itemIdMap, idMap.itemIdMap) && Objects.equals(entityIdMap, idMap.entityIdMap) && Objects.equals(
+			blockPropertiesMap, idMap.blockPropertiesMap) && Objects.equals(blockTagMap, idMap.blockTagMap) && Objects.equals(
+			blockRenderTypeMap, idMap.blockRenderTypeMap);
 	}
 
 	@Override
@@ -453,10 +455,10 @@ public class IdMap {
 
 				// Only log if we haven't reported this specific duplicate before AND debug is enabled
 				if (debugEnabled && !reportedDuplicates.contains(duplicateKey)) {
-					Iris.logger.warn("Duplicate {} in {}: '{}' in '{}' and '{}'",
-						itemType, fileName, displayValue, previousKey, key);
+					Iris.logger.warn("Duplicate {} in {}: '{}' in '{}' and '{}'", itemType, fileName, displayValue, previousKey, key);
 					reportedDuplicates.add(duplicateKey);
-				} else reportedDuplicates.add(duplicateKey); // Still add to avoid double counting
+				} else
+					reportedDuplicates.add(duplicateKey); // Still add to avoid double counting
 			}
 
 			// Always record the location (whether it's a duplicate or not)
@@ -467,10 +469,7 @@ public class IdMap {
 		public void reportSummary() {
 			if (debugEnabled && !duplicateCounts.isEmpty()) {
 				int totalDuplicates = duplicateCounts.values().stream().mapToInt(Integer::intValue).sum();
-				Iris.logger.warn("Found {} duplicate {} in {}.",
-					totalDuplicates,
-					itemType + (totalDuplicates > 1 ? "s" : ""),
-					fileName);
+				Iris.logger.warn("Found {} duplicate {} in {}.", totalDuplicates, itemType + (totalDuplicates > 1 ? "s" : ""), fileName);
 			}
 		}
 	}

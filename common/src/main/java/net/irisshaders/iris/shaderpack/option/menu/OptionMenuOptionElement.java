@@ -12,7 +12,8 @@ public abstract class OptionMenuOptionElement extends OptionMenuElement {
 
 	private final OptionValues packAppliedValues;
 
-	public OptionMenuOptionElement(String elementString, OptionMenuContainer container, ShaderProperties shaderProperties, OptionValues packAppliedValues) {
+	public OptionMenuOptionElement(String elementString, OptionMenuContainer container, ShaderProperties shaderProperties,
+		OptionValues packAppliedValues) {
 		this.slider = shaderProperties.getSliderOptions().contains(elementString);
 		this.container = container;
 		this.optionId = elementString;

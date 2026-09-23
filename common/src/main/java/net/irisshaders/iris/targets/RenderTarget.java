@@ -1,61 +1,30 @@
 package net.irisshaders.iris.targets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.device.GpuDevice;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
-import com.mojang.renderpearl.backend.vulkan.VulkanConst;
-import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
-import com.mojang.renderpearl.backend.vulkan.VulkanGpuTextureView;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.PixelFormat;
 import net.irisshaders.iris.gl.texture.PixelType;
-import net.irisshaders.iris.vulkan.VulkanTextureOps;
 import org.joml.Vector2i;
-import org.lwjgl.system.MemoryStack;
-import org.lwjgl.vulkan.VK10;
-import org.lwjgl.vulkan.VkImageViewCreateInfo;
-
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Objects;
 
 public class RenderTarget {
-	private static final Map<GpuTexture, Views> rgbTextures = new IdentityHashMap<>();
+
 	public static final int USAGE_STORAGE = 1 << 20;
-	private boolean storage;
-
-	public void enableStorage() {
-		requireValid();
-
-		if (storage) {
-			return;
-		}
-
-		storage = true;
-
-		try {
-			resizeGpuTextures(width, height);
-		} catch (RuntimeException | Error failure) {
-			storage = false;
-
-			throw failure;
-		}
-	}
-
 	private final InternalTextureFormat internalFormat;
 	private final PixelFormat format;
 	private final PixelType type;
-	private final GpuDevice gpuDevice;
+	private final String name;
+	private final boolean allowsLinear;
+	private boolean storage;
 	private GpuTexture mainGpuTexture, altGpuTexture;
 	private GpuTextureView mainView, altView;
 	private GpuTextureView mainMipView, altMipView;
 	private int width;
 	private int height;
 	private boolean isValid;
-	private String name;
-	private boolean allowsLinear;
 	private boolean mipmapsOnAlt;
 	private boolean mipmapsOnMain;
 
@@ -70,37 +39,56 @@ public class RenderTarget {
 		this.width = builder.width;
 		this.height = builder.height;
 
-		GpuDevice device = builder.device != null ? builder.device : RenderSystem.getDevice();
+		this.allowsLinear = !this.internalFormat.getPixelFormat().isInteger();
+		this.resizeGpuTextures(this.width, this.height);
+	}
 
-		if (!device.getDeviceInfo().backendName().equalsIgnoreCase("Vulkan")) {
-			throw new UnsupportedOperationException("Iris requires Vulkan");
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public void enableStorage() {
+		this.requireValid();
+
+		if (this.storage) {
+			return;
 		}
 
-		this.gpuDevice = device;
-		this.allowsLinear = !internalFormat.getPixelFormat().isInteger();
-		resizeGpuTextures(width, height);
+		this.storage = true;
+		if ((this.mainGpuTexture.usage() & USAGE_STORAGE) != 0) {
+			return;
+		}
+
+		try {
+			this.resizeGpuTextures(this.width, this.height);
+		} catch (RuntimeException | Error failure) {
+			this.storage = false;
+
+			throw failure;
+		}
 	}
 
 	private void resizeGpuTextures(int width, int height) {
 		int levels = 32 - Integer.numberOfLeadingZeros(Math.max(width, height));
-		int usage = (storage ? USAGE_STORAGE : 0) | GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_TEXTURE_BINDING |
-			GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_COPY_DST;
+		int usage = (this.storage ? USAGE_STORAGE : 0) | GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_COPY_DST;
+
+		if (levels > 1) {
+			usage |= Iris.getRenderBackend().getMipmapUsage(this.internalFormat.toGpuFormat());
+		}
+
 		GpuTexture newMain = null, newAlt = null;
 		GpuTextureView newMainView = null, newAltView = null, newMainMips = null, newAltMips = null;
 
 		try {
-			newMain = gpuDevice.createTexture(name + " main", usage, internalFormat.toGpuFormat(), width, height, 1, levels);
-			newAlt = gpuDevice.createTexture(name + " alt", usage, internalFormat.toGpuFormat(), width, height, 1, levels);
+			newMain = RenderSystem.getDevice()
+				.createTexture(this.name + " main", usage, this.internalFormat.toGpuFormat(), width, height, 1, levels);
+			newAlt = RenderSystem.getDevice()
+				.createTexture(this.name + " alt", usage, this.internalFormat.toGpuFormat(), width, height, 1, levels);
 
-			if (internalFormat.getPixelFormat() == PixelFormat.RGB || internalFormat.getPixelFormat() == PixelFormat.RGB_INTEGER) {
-				registerRgb(newMain);
-				registerRgb(newAlt);
-			}
-
-			newMainView = gpuDevice.createTextureView(newMain, 0, 1);
-			newAltView = gpuDevice.createTextureView(newAlt, 0, 1);
-			newMainMips = gpuDevice.createTextureView(newMain);
-			newAltMips = gpuDevice.createTextureView(newAlt);
+			newMainView = RenderSystem.getDevice().createTextureView(newMain, 0, 1);
+			newAltView = RenderSystem.getDevice().createTextureView(newAlt, 0, 1);
+			newMainMips = RenderSystem.getDevice().createTextureView(newMain);
+			newAltMips = RenderSystem.getDevice().createTextureView(newAlt);
 		} catch (RuntimeException | Error exception) {
 			if (newAltMips != null) {
 				newAltMips.close();
@@ -119,63 +107,55 @@ public class RenderTarget {
 			}
 
 			if (newAlt != null) {
-				releaseRgbViews(newAlt);
 				newAlt.close();
 			}
 
 			if (newMain != null) {
-				releaseRgbViews(newMain);
 				newMain.close();
 			}
 
 			throw new IllegalStateException(
-				"Could not allocate Iris target " + name + " (" + internalFormat + " as " + internalFormat.toGpuFormat() + ", " + width +
-					"x" + height + ", " + levels + " mips)", exception);
+				"could not allocate Iris target " + this.name + " (" + this.internalFormat + " as " + this.internalFormat.toGpuFormat() + ", " + width + "x" + height + ", " + levels + " mips)",
+				exception);
 		}
 
-		closeGpuTextures();
-		mainGpuTexture = newMain;
-		altGpuTexture = newAlt;
-		mainView = newMainView;
-		altView = newAltView;
-		mainMipView = newMainMips;
-		altMipView = newAltMips;
-		mipmapsOnMain = mipmapsOnAlt = false;
+		this.closeGpuTextures();
+		this.mainGpuTexture = newMain;
+		this.altGpuTexture = newAlt;
+		this.mainView = newMainView;
+		this.altView = newAltView;
+		this.mainMipView = newMainMips;
+		this.altMipView = newAltMips;
+		this.mipmapsOnMain = this.mipmapsOnAlt = false;
 	}
 
 	private void closeGpuTextures() {
-		if (mainView == null) {
+		if (this.mainView == null) {
 			return;
 		}
 
-		releaseRgbViews(mainGpuTexture);
-		releaseRgbViews(altGpuTexture);
-		mainMipView.close();
-		altMipView.close();
-		mainView.close();
-		altView.close();
-		mainGpuTexture.close();
-		altGpuTexture.close();
-		mainMipView = altMipView = mainView = altView = null;
-		mainGpuTexture = altGpuTexture = null;
+		this.mainMipView.close();
+		this.altMipView.close();
+		this.mainView.close();
+		this.altView.close();
+		this.mainGpuTexture.close();
+		this.altGpuTexture.close();
+		this.mainMipView = this.altMipView = this.mainView = this.altView = null;
+		this.mainGpuTexture = this.altGpuTexture = null;
 	}
 
 	public GpuTextureView getTextureView(boolean alt, boolean mipmapped) {
-		requireValid();
+		this.requireValid();
 
-		return alt ? (mipmapped ? altMipView : altView) : (mipmapped ? mainMipView : mainView);
+		return alt ? (mipmapped ? this.altMipView : this.altView) : (mipmapped ? this.mainMipView : this.mainView);
 	}
 
 	public boolean allowsLinearFiltering() {
-		return allowsLinear;
+		return this.allowsLinear;
 	}
 
 	public boolean hasMipmaps(boolean alt) {
-		return alt ? mipmapsOnAlt : mipmapsOnMain;
-	}
-
-	public static Builder builder() {
-		return new Builder();
+		return alt ? this.mipmapsOnAlt : this.mipmapsOnMain;
 	}
 
 	void resize(Vector2i textureScaleOverride) {
@@ -187,10 +167,10 @@ public class RenderTarget {
 		requireValid();
 
 		if (width <= 0 || height <= 0) {
-			throw new IllegalArgumentException("Invalid render target dimensions");
+			throw new IllegalArgumentException("invalid render target dimensions");
 		}
 
-		resizeGpuTextures(width, height);
+		this.resizeGpuTextures(width, height);
 		this.width = width;
 		this.height = height;
 	}
@@ -223,7 +203,7 @@ public class RenderTarget {
 		requireValid();
 		isValid = false;
 
-		closeGpuTextures();
+		this.closeGpuTextures();
 	}
 
 	private void requireValid() {
@@ -236,7 +216,6 @@ public class RenderTarget {
 		if (mipmapsOnAlt) {
 			return allowsLinear ? GlSampler.MIPPED_LINEAR : GlSampler.MIPPED_NEAREST;
 		}
-
 		return allowsLinear ? GlSampler.LINEAR : GlSampler.NEAREST;
 	}
 
@@ -244,14 +223,13 @@ public class RenderTarget {
 		if (mipmapsOnMain) {
 			return allowsLinear ? GlSampler.MIPPED_LINEAR : GlSampler.MIPPED_NEAREST;
 		}
-
 		return allowsLinear ? GlSampler.LINEAR : GlSampler.NEAREST;
 	}
 
 	public void generateMipmaps(boolean alt) {
-		requireValid();
-		VulkanTextureOps.generateMipmaps(gpuDevice, alt ? altGpuTexture : mainGpuTexture, allowsLinear);
-		turnOnMips(alt);
+		this.requireValid();
+		Iris.getRenderBackend().commands().generateMipmaps(alt ? this.altGpuTexture : this.mainGpuTexture, this.allowsLinear);
+		this.turnOnMips(alt);
 	}
 
 	public void turnOnMips(boolean alt) {
@@ -277,13 +255,6 @@ public class RenderTarget {
 		private PixelFormat format = PixelFormat.RGBA;
 		private PixelType type = PixelType.UNSIGNED_BYTE;
 		private String name = null;
-		private GpuDevice device;
-
-		public Builder setDevice(GpuDevice device) {
-			this.device = Objects.requireNonNull(device);
-
-			return this;
-		}
 
 		private Builder() {
 			// No-op
@@ -331,58 +302,5 @@ public class RenderTarget {
 		public RenderTarget build() {
 			return new RenderTarget(this);
 		}
-	}
-
-
-	private static void registerRgb(GpuTexture texture) {
-		rgbTextures.put(texture, new Views());
-	}
-
-	public static long sampledView(VulkanDevice device, VulkanGpuTextureView source) {
-		var views = rgbTextures.get(source.texture());
-
-		if (views == null) {
-			return source.vkImageView();
-		}
-
-		views.device = device;
-
-		return views.handles.computeIfAbsent(source, view -> {
-			try (var stack = MemoryStack.stackPush()) {
-				var info = VkImageViewCreateInfo.calloc(stack).sType$Default().image(view.texture().vkImage())
-					.viewType(VK10.VK_IMAGE_VIEW_TYPE_2D).format(VulkanConst.toVk(view.texture().getFormat()));
-				info.components().a(VK10.VK_COMPONENT_SWIZZLE_ONE);
-				info.subresourceRange().aspectMask(VK10.VK_IMAGE_ASPECT_COLOR_BIT).baseMipLevel(view.baseMipLevel())
-					.levelCount(view.mipLevels()).baseArrayLayer(0).layerCount(1);
-
-				var handle = stack.mallocLong(1);
-				int result = VK10.vkCreateImageView(device.vkDevice(), info, null, handle);
-
-				if (result != VK10.VK_SUCCESS) {
-					throw new IllegalStateException("Could not create RGB sampling view: " + result);
-				}
-
-				return handle.get(0);
-			}
-		});
-	}
-
-	private static void releaseRgbViews(GpuTexture texture) {
-		var views = rgbTextures.remove(texture);
-
-		if (views == null || views.handles.isEmpty()) {
-			return;
-		}
-
-		var encoder = views.device.createCommandEncoder();
-
-		for (long handle : views.handles.values()) {
-			encoder.queueForDestroy(() -> VK10.vkDestroyImageView(views.device.vkDevice(), handle, null));
-		}
-	}
-
-	private static final class Views {
-		final Map<VulkanGpuTextureView, Long> handles = new IdentityHashMap<>();
-		VulkanDevice device;
 	}
 }

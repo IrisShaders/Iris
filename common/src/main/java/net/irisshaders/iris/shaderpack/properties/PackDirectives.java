@@ -271,23 +271,19 @@ public class PackDirectives {
 		directives.acceptConstIntDirective("noiseTextureResolution",
 			noiseTextureResolution -> this.noiseTextureResolution = noiseTextureResolution);
 
-		directives.acceptConstFloatDirective("sunPathRotation",
-			sunPathRotation -> this.sunPathRotation = sunPathRotation);
+		directives.acceptConstFloatDirective("sunPathRotation", sunPathRotation -> this.sunPathRotation = sunPathRotation);
 
 		directives.acceptConstFloatDirective("ambientOcclusionLevel",
 			ambientOcclusionLevel -> this.ambientOcclusionLevel = clamp(ambientOcclusionLevel, 0.0f, 1.0f));
 
-		directives.acceptConstFloatDirective("wetnessHalflife",
-			wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
+		directives.acceptConstFloatDirective("wetnessHalflife", wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
 
-		directives.acceptConstFloatDirective("drynessHalflife",
-			wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
+		directives.acceptConstFloatDirective("drynessHalflife", wetnessHalfLife -> this.wetnessHalfLife = wetnessHalfLife);
 
 		directives.acceptConstFloatDirective("eyeBrightnessHalflife",
 			eyeBrightnessHalfLife -> this.eyeBrightnessHalfLife = eyeBrightnessHalfLife);
 
-		directives.acceptConstFloatDirective("centerDepthHalflife",
-			centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
+		directives.acceptConstFloatDirective("centerDepthHalflife", centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
 	}
 
 	public ImmutableMap<Integer, Boolean> getExplicitFlips(String pass) {
@@ -315,8 +311,7 @@ public class PackDirectives {
 			if (index != -1) {
 				explicitFlips.put(index, shouldFlip);
 			} else {
-				Iris.logger.warn("Unknown buffer with ID " + buffer + " specified in flip directive for pass "
-					+ pass);
+				Iris.logger.warn("Unknown buffer with ID " + buffer + " specified in flip directive for pass " + pass);
 			}
 		});
 

@@ -18,11 +18,13 @@ public class IrisTimeUniforms {
 		Vector3i date = new Vector3i();
 		Vector3i time = new Vector3i();
 		Vector2i yearTime = new Vector2i();
-		uniforms.uniform3i(UniformUpdateFrequency.PER_TICK, "currentDate", () -> date.set(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth()));
-		uniforms.uniform3i(UniformUpdateFrequency.PER_TICK, "currentTime", () -> time.set(dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond()));
+		uniforms.uniform3i(UniformUpdateFrequency.PER_TICK, "currentDate",
+			() -> date.set(dateTime.getYear(), dateTime.getMonthValue(), dateTime.getDayOfMonth()));
+		uniforms.uniform3i(UniformUpdateFrequency.PER_TICK, "currentTime",
+			() -> time.set(dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond()));
 		uniforms.uniform2i(UniformUpdateFrequency.PER_TICK, "currentYearTime", () -> yearTime.set(
 			((dateTime.getDayOfYear() - 1) * 86400) + (dateTime.getHour() * 3600) + (dateTime.getMinute() * 60) + dateTime.getSecond(),
-			(dateTime.toLocalDate().lengthOfYear() * 86400) - (((dateTime.getDayOfYear() - 1) * 86400) + (dateTime.getHour() * 3600) + (dateTime.getMinute() * 60) + dateTime.getSecond())
-		));
+			(dateTime.toLocalDate()
+				.lengthOfYear() * 86400) - (((dateTime.getDayOfYear() - 1) * 86400) + (dateTime.getHour() * 3600) + (dateTime.getMinute() * 60) + dateTime.getSecond())));
 	}
 }

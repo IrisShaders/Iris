@@ -10,12 +10,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public record LabPBRTextureFormat(String name, @Nullable String version) implements TextureFormat {
-	public static final ChannelMipmapGenerator SPECULAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(
-		LinearBlendFunction.INSTANCE,
-		new DiscreteBlendFunction(v -> v < 230 ? 0 : v - 229),
-		new DiscreteBlendFunction(v -> v < 65 ? 0 : 1),
-		new DiscreteBlendFunction(v -> v < 255 ? 0 : 1)
-	);
+	public static final ChannelMipmapGenerator SPECULAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(LinearBlendFunction.INSTANCE,
+		new DiscreteBlendFunction(v -> v < 230 ? 0 : v - 229), new DiscreteBlendFunction(v -> v < 65 ? 0 : 1),
+		new DiscreteBlendFunction(v -> v < 255 ? 0 : 1));
 
 
 	@Override

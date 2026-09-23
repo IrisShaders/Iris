@@ -24,8 +24,7 @@ public final class SystemTimeUniforms {
 	 * @param uniforms the program to make the uniforms available to
 	 */
 	public static void addSystemTimeUniforms(UniformHolder uniforms) {
-		uniforms
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "frameCounter", COUNTER)
+		uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "frameCounter", COUNTER)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTime", TIMER::getLastFrameTime)
 			.uniform1f(UniformUpdateFrequency.PER_FRAME, "frameTimeCounter", TIMER::getFrameTimeCounter);
 	}

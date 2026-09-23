@@ -217,8 +217,7 @@ public class IrisFunctions {
 				IrisFunctions.<F2FFunction>add("log10", (a) -> (float) Math.log10(a));
 
 				// TODO the base may be static so doing `log(2, x)` would be slower than `log(x)/log(2)`
-				IrisFunctions.<FF2FFunction>add("log",
-					(base, value) -> (float) (Math.log(value) / Math.log(base)));
+				IrisFunctions.<FF2FFunction>add("log", (base, value) -> (float) (Math.log(value) / Math.log(base)));
 
 				// cause I want consistency
 				IrisFunctions.<F2FFunction>add("exp10", (a) -> (float) Math.pow(10, a));
@@ -371,10 +370,8 @@ public class IrisFunctions {
 
 				// if max < min => undefined behaviour
 				// TODO: glsl has vecn mix(vecn x, float min, float max)
-				IrisFunctions.<III2IFunction>addVectorizable("clamp",
-					(val, min, max) -> Math.max(min, Math.min(max, val)));
-				IrisFunctions.<FFF2FFunction>add("clamp",
-					(val, min, max) -> Math.max(min, Math.min(max, val)));
+				IrisFunctions.<III2IFunction>addVectorizable("clamp", (val, min, max) -> Math.max(min, Math.min(max, val)));
+				IrisFunctions.<FFF2FFunction>add("clamp", (val, min, max) -> Math.max(min, Math.min(max, val)));
 				IrisFunctions.addTernaryOpJOML("clamp", VectorType.VEC2, (val, min, max, dest) -> {
 					val.min(max, dest);
 					dest.max(min);
@@ -431,8 +428,7 @@ public class IrisFunctions {
 
 					// random, random(float min, float max)
 					IrisFunctions.<V2FFunction>add("random", random::nextFloat);
-					IrisFunctions.<FF2FFunction>add("random", (min, max) ->
-						min + random.nextFloat() * (max - min));
+					IrisFunctions.<FF2FFunction>add("random", (min, max) -> min + random.nextFloat() * (max - min));
 				}
 				{
 					// IF
@@ -446,9 +442,7 @@ public class IrisFunctions {
 							public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 								params[0].evaluateTo(context, functionReturn);
 
-								params[
-									functionReturn.booleanReturn ? 1 : 2
-									].evaluateTo(context, functionReturn);
+								params[functionReturn.booleanReturn ? 1 : 2].evaluateTo(context, functionReturn);
 
 							}
 						});
@@ -460,9 +454,7 @@ public class IrisFunctions {
 							public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 								params[0].evaluateTo(context, functionReturn);
 
-								params[
-									functionReturn.booleanReturn ? 1 : 2
-									].evaluateTo(context, functionReturn);
+								params[functionReturn.booleanReturn ? 1 : 2].evaluateTo(context, functionReturn);
 
 							}
 						});
@@ -500,65 +492,39 @@ public class IrisFunctions {
 					// smooth
 
 					// smooth(target)
-					builder.addDynamicFunction("smooth", Type.Float, () ->
-						new AbstractTypedFunction(
-							Type.Float,
-							new Parameter[]{
-								new Parameter(Type.Float, false), // target
-							},
-							0,
-							false
-						) {
+					builder.addDynamicFunction("smooth", Type.Float,
+						() -> new AbstractTypedFunction(Type.Float, new Parameter[]{new Parameter(Type.Float, false), // target
+						}, 0, false) {
 							private final SmoothFloat smoothFloat = new SmoothFloat();
 
 							@Override
 							public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 								params[0].evaluateTo(context, functionReturn);
 								float target = functionReturn.floatReturn;
-								functionReturn.floatReturn = smoothFloat.updateAndGet(
-									target,
-									1,
-									1
-								);
+								functionReturn.floatReturn = smoothFloat.updateAndGet(target, 1, 1);
 							}
 						});
 
 					// smooth(id, target)
-					builder.addDynamicFunction("smooth", Type.Float, () ->
-						new AbstractTypedFunction(
-							Type.Float,
-							new Parameter[]{
-								new Parameter(Type.Float, true), // id for backward compat with optifine
-								new Parameter(Type.Float, false), // target
-							},
-							1,
-							false
-						) {
-							private final SmoothFloat smoothFloat = new SmoothFloat();
+					builder.addDynamicFunction("smooth", Type.Float, () -> new AbstractTypedFunction(Type.Float,
+						new Parameter[]{new Parameter(Type.Float, true), // id for backward compat with optifine
+							new Parameter(Type.Float, false), // target
+						}, 1, false) {
+						private final SmoothFloat smoothFloat = new SmoothFloat();
 
-							@Override
-							public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
-								params[1].evaluateTo(context, functionReturn);
-								float target = functionReturn.floatReturn;
-								functionReturn.floatReturn = smoothFloat.updateAndGet(
-									target,
-									1,
-									1
-								);
-							}
-						});
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[1].evaluateTo(context, functionReturn);
+							float target = functionReturn.floatReturn;
+							functionReturn.floatReturn = smoothFloat.updateAndGet(target, 1, 1);
+						}
+					});
 
 					// smooth(target, fadeTime)
-					builder.addDynamicFunction("smooth", Type.Float, () ->
-						new AbstractTypedFunction(
-							Type.Float,
-							new Parameter[]{
-								new Parameter(Type.Float, false), // target
-								new Parameter(Type.Float, false), // fadeTime
-							},
-							0,
-							false
-						) {
+					builder.addDynamicFunction("smooth", Type.Float,
+						() -> new AbstractTypedFunction(Type.Float, new Parameter[]{new Parameter(Type.Float, false), // target
+							new Parameter(Type.Float, false), // fadeTime
+						}, 0, false) {
 							private final SmoothFloat smoothFloat = new SmoothFloat();
 
 							@Override
@@ -569,56 +535,36 @@ public class IrisFunctions {
 								params[1].evaluateTo(context, functionReturn);
 								float fadeTime = functionReturn.floatReturn;
 
-								functionReturn.floatReturn = smoothFloat.updateAndGet(
-									target,
-									fadeTime,
-									fadeTime
-								);
+								functionReturn.floatReturn = smoothFloat.updateAndGet(target, fadeTime, fadeTime);
 							}
 						});
 
 					// smooth(id, target, fadeTime)
-					builder.addDynamicFunction("smooth", Type.Float, () ->
-						new AbstractTypedFunction(
-							Type.Float,
-							new Parameter[]{
-								new Parameter(Type.Float, true), // id for backward compat with optifine
-								new Parameter(Type.Float, false), // target
-								new Parameter(Type.Float, false), // fadeTime
-							},
-							1,
-							false
-						) {
-							private final SmoothFloat smoothFloat = new SmoothFloat();
+					builder.addDynamicFunction("smooth", Type.Float, () -> new AbstractTypedFunction(Type.Float,
+						new Parameter[]{new Parameter(Type.Float, true), // id for backward compat with optifine
+							new Parameter(Type.Float, false), // target
+							new Parameter(Type.Float, false), // fadeTime
+						}, 1, false) {
+						private final SmoothFloat smoothFloat = new SmoothFloat();
 
-							@Override
-							public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
-								params[1].evaluateTo(context, functionReturn);
-								float target = functionReturn.floatReturn;
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[1].evaluateTo(context, functionReturn);
+							float target = functionReturn.floatReturn;
 
-								params[2].evaluateTo(context, functionReturn);
-								float fadeTime = functionReturn.floatReturn;
+							params[2].evaluateTo(context, functionReturn);
+							float fadeTime = functionReturn.floatReturn;
 
-								functionReturn.floatReturn = smoothFloat.updateAndGet(
-									target,
-									fadeTime,
-									fadeTime
-								);
-							}
-						});
+							functionReturn.floatReturn = smoothFloat.updateAndGet(target, fadeTime, fadeTime);
+						}
+					});
 
 					// smooth(target, fadeUpTime, fadeDownTime)
-					builder.addDynamicFunction("smooth", Type.Float, () ->
-						new AbstractTypedFunction(
-							Type.Float,
-							new Parameter[]{
-								new Parameter(Type.Float, false), // target
-								new Parameter(Type.Float, false), // fadeUpTime
-								new Parameter(Type.Float, false), // fadeDownTime
-							},
-							0,
-							false
-						) {
+					builder.addDynamicFunction("smooth", Type.Float,
+						() -> new AbstractTypedFunction(Type.Float, new Parameter[]{new Parameter(Type.Float, false), // target
+							new Parameter(Type.Float, false), // fadeUpTime
+							new Parameter(Type.Float, false), // fadeDownTime
+						}, 0, false) {
 							private final SmoothFloat smoothFloat = new SmoothFloat();
 
 							@Override
@@ -631,46 +577,32 @@ public class IrisFunctions {
 								params[2].evaluateTo(context, functionReturn);
 								float fadeDownTime = functionReturn.floatReturn;
 
-								functionReturn.floatReturn = smoothFloat.updateAndGet(
-									target,
-									fadeUpTime,
-									fadeDownTime
-								);
+								functionReturn.floatReturn = smoothFloat.updateAndGet(target, fadeUpTime, fadeDownTime);
 							}
 						});
 
 					// smooth(id, target, fadeUpTime, fadeDownTime)
-					builder.addDynamicFunction("smooth", Type.Float, () ->
-						new AbstractTypedFunction(
-							Type.Float,
-							new Parameter[]{
-								new Parameter(Type.Float, true), // id for backward compat with optifine
-								new Parameter(Type.Float, false), // target
-								new Parameter(Type.Float, false), // fadeUpTime
-								new Parameter(Type.Float, false), // fadeDownTime
-							},
-							1,
-							false
-						) {
-							private final SmoothFloat smoothFloat = new SmoothFloat();
+					builder.addDynamicFunction("smooth", Type.Float, () -> new AbstractTypedFunction(Type.Float,
+						new Parameter[]{new Parameter(Type.Float, true), // id for backward compat with optifine
+							new Parameter(Type.Float, false), // target
+							new Parameter(Type.Float, false), // fadeUpTime
+							new Parameter(Type.Float, false), // fadeDownTime
+						}, 1, false) {
+						private final SmoothFloat smoothFloat = new SmoothFloat();
 
-							@Override
-							public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
-								params[1].evaluateTo(context, functionReturn);
-								float target = functionReturn.floatReturn;
+						@Override
+						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+							params[1].evaluateTo(context, functionReturn);
+							float target = functionReturn.floatReturn;
 
-								params[2].evaluateTo(context, functionReturn);
-								float fadeUpTime = functionReturn.floatReturn;
-								params[3].evaluateTo(context, functionReturn);
-								float fadeDownTime = functionReturn.floatReturn;
+							params[2].evaluateTo(context, functionReturn);
+							float fadeUpTime = functionReturn.floatReturn;
+							params[3].evaluateTo(context, functionReturn);
+							float fadeDownTime = functionReturn.floatReturn;
 
-								functionReturn.floatReturn = smoothFloat.updateAndGet(
-									target,
-									fadeUpTime,
-									fadeDownTime
-								);
-							}
-						});
+							functionReturn.floatReturn = smoothFloat.updateAndGet(target, fadeUpTime, fadeDownTime);
+						}
+					});
 				}
 			}
 		}
@@ -697,10 +629,7 @@ public class IrisFunctions {
 					Type[] params = new Type[length];
 					Arrays.fill(params, Type.Float);
 					int finalLength = length;
-					IrisFunctions.add("in", new AbstractTypedFunction(
-						Type.Boolean,
-						params
-					) {
+					IrisFunctions.add("in", new AbstractTypedFunction(Type.Boolean, params) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -725,17 +654,11 @@ public class IrisFunctions {
 				for (int size = 2; size <= 4; size++) {
 					TypedFunction function = new VectorConstructor(type, size);
 					// TODO make it possible to do `vec3(vec2(0),0)`
-					add(
-						Character.toLowerCase(
-							type.getClass().getSimpleName().charAt(0)
-						) + "vec" + size, function);
+					add(Character.toLowerCase(type.getClass().getSimpleName().charAt(0)) + "vec" + size, function);
 				}
 			}
 
-			add("vec2", new AbstractTypedFunction(
-				VectorType.VEC2,
-				new Type[]{Type.Float, Type.Float}
-			) {
+			add("vec2", new AbstractTypedFunction(VectorType.VEC2, new Type[]{Type.Float, Type.Float}) {
 				@Override
 				public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 					params[0].evaluateTo(context, functionReturn);
@@ -749,10 +672,7 @@ public class IrisFunctions {
 				}
 			});
 
-			add("vec3", new AbstractTypedFunction(
-				VectorType.VEC3,
-				new Type[]{Type.Float, Type.Float, Type.Float}
-			) {
+			add("vec3", new AbstractTypedFunction(VectorType.VEC3, new Type[]{Type.Float, Type.Float, Type.Float}) {
 				@Override
 				public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 					params[0].evaluateTo(context, functionReturn);
@@ -769,10 +689,7 @@ public class IrisFunctions {
 				}
 			});
 
-			add("vec4", new AbstractTypedFunction(
-				VectorType.VEC4,
-				new Type[]{Type.Float, Type.Float, Type.Float, Type.Float}
-			) {
+			add("vec4", new AbstractTypedFunction(VectorType.VEC4, new Type[]{Type.Float, Type.Float, Type.Float, Type.Float}) {
 				@Override
 				public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 					params[0].evaluateTo(context, functionReturn);
@@ -796,20 +713,12 @@ public class IrisFunctions {
 		// accessors
 		{
 			// is this the best way to do these?
-			String[][] accessNames = new String[][]{
-				new String[]{"0", "r", "x", "s"},
-				new String[]{"1", "g", "y", "t"},
-				new String[]{"2", "b", "z", "p"},
-				new String[]{"3", "a", "w", "q"}
-			};
+			String[][] accessNames = new String[][]{new String[]{"0", "r", "x", "s"}, new String[]{"1", "g", "y", "t"}, new String[]{"2", "b", "z", "p"}, new String[]{"3", "a", "w", "q"}};
 
 			{
 				// access$0
 				for (String access : accessNames[0]) {
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Float,
-						new Type[]{VectorType.VEC2}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Float, new Type[]{VectorType.VEC2}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -817,10 +726,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Int,
-						new Type[]{VectorType.I_VEC2}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Int, new Type[]{VectorType.I_VEC2}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -828,10 +734,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Float,
-						new Type[]{VectorType.VEC3}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Float, new Type[]{VectorType.VEC3}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -839,10 +742,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Int,
-						new Type[]{VectorType.I_VEC3}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Int, new Type[]{VectorType.I_VEC3}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -850,10 +750,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Float,
-						new Type[]{VectorType.VEC4}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Float, new Type[]{VectorType.VEC4}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -861,10 +758,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Int,
-						new Type[]{VectorType.I_VEC4}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Int, new Type[]{VectorType.I_VEC4}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -877,10 +771,7 @@ public class IrisFunctions {
 			{
 				// access$1
 				for (String access : accessNames[1]) {
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Float,
-						new Type[]{VectorType.VEC2}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Float, new Type[]{VectorType.VEC2}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -888,10 +779,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Int,
-						new Type[]{VectorType.I_VEC2}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Int, new Type[]{VectorType.I_VEC2}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -899,10 +787,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Float,
-						new Type[]{VectorType.VEC3}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Float, new Type[]{VectorType.VEC3}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -910,10 +795,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Int,
-						new Type[]{VectorType.I_VEC3}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Int, new Type[]{VectorType.I_VEC3}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -921,10 +803,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Float,
-						new Type[]{VectorType.VEC4}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Float, new Type[]{VectorType.VEC4}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -932,10 +811,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Int,
-						new Type[]{VectorType.I_VEC4}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Int, new Type[]{VectorType.I_VEC4}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -948,10 +824,7 @@ public class IrisFunctions {
 			{
 				// access$2
 				for (String access : accessNames[2]) {
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Float,
-						new Type[]{VectorType.VEC3}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Float, new Type[]{VectorType.VEC3}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -959,10 +832,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Int,
-						new Type[]{VectorType.I_VEC3}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Int, new Type[]{VectorType.I_VEC3}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -970,10 +840,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Float,
-						new Type[]{VectorType.VEC4}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Float, new Type[]{VectorType.VEC4}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -981,10 +848,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Int,
-						new Type[]{VectorType.I_VEC4}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Int, new Type[]{VectorType.I_VEC4}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -997,10 +861,7 @@ public class IrisFunctions {
 			{
 				// access$3
 				for (String access : accessNames[3]) {
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Float,
-						new Type[]{VectorType.VEC4}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Float, new Type[]{VectorType.VEC4}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -1008,10 +869,7 @@ public class IrisFunctions {
 						}
 					});
 
-					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-						Type.Int,
-						new Type[]{VectorType.I_VEC4}
-					) {
+					IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(Type.Int, new Type[]{VectorType.I_VEC4}) {
 						@Override
 						public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 							params[0].evaluateTo(context, functionReturn);
@@ -1026,16 +884,15 @@ public class IrisFunctions {
 				for (int i = 0; i < 4; i++) {
 					for (String access : accessNames[i]) {
 						int finalI = i;
-						IrisFunctions.add("<access$" + access + ">", new AbstractTypedFunction(
-							VectorType.VEC4,
-							new Type[]{MatrixType.MAT4}
-						) {
-							@Override
-							public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
-								params[0].evaluateTo(context, functionReturn);
-								functionReturn.objectReturn = ((Matrix4f) functionReturn.objectReturn).getColumn(finalI, new Vector4f());
-							}
-						});
+						IrisFunctions.add("<access$" + access + ">",
+							new AbstractTypedFunction(VectorType.VEC4, new Type[]{MatrixType.MAT4}) {
+								@Override
+								public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
+									params[0].evaluateTo(context, functionReturn);
+									functionReturn.objectReturn = ((Matrix4f) functionReturn.objectReturn).getColumn(finalI,
+										new Vector4f());
+								}
+							});
 					}
 				}
 			}
@@ -1072,10 +929,7 @@ public class IrisFunctions {
 	}
 
 	static <T> void addUnaryOpJOML(String name, VectorType.JOMLVector<T> type, BiConsumer<T, T> function) {
-		builder.add(name, new AbstractTypedFunction(
-			type,
-			new Type[]{type}
-		) {
+		builder.add(name, new AbstractTypedFunction(type, new Type[]{type}) {
 			final private T vector = type.create();
 
 			@SuppressWarnings("unchecked")
@@ -1091,10 +945,7 @@ public class IrisFunctions {
 	}
 
 	static <T> void addBinaryOpJOML(String name, VectorType.JOMLVector<T> type, TriConsumer<T, T, T> function) {
-		builder.add(name, new AbstractTypedFunction(
-			type,
-			new Type[]{type, type}
-		) {
+		builder.add(name, new AbstractTypedFunction(type, new Type[]{type, type}) {
 			final private T vector = type.create();
 
 			@SuppressWarnings("unchecked")
@@ -1113,10 +964,7 @@ public class IrisFunctions {
 	}
 
 	static <T> void addTernaryOpJOML(String name, VectorType.JOMLVector<T> type, QuadConsumer<T, T, T, T> function) {
-		builder.add(name, new AbstractTypedFunction(
-			type,
-			new Type[]{type, type, type}
-		) {
+		builder.add(name, new AbstractTypedFunction(type, new Type[]{type, type, type}) {
 			final private T vector = type.create();
 
 			@SuppressWarnings("unchecked")
@@ -1137,15 +985,9 @@ public class IrisFunctions {
 		});
 	}
 
-	static <T> void addBinaryToBooleanOpJOML(
-		String name,
-		VectorType.JOMLVector<T> type,
-		boolean inverted,
+	static <T> void addBinaryToBooleanOpJOML(String name, VectorType.JOMLVector<T> type, boolean inverted,
 		ObjectObject2BooleanFunction<T, T> function) {
-		builder.add(name, new AbstractTypedFunction(
-			type,
-			new Type[]{type, type}
-		) {
+		builder.add(name, new AbstractTypedFunction(type, new Type[]{type, type}) {
 			@SuppressWarnings("unchecked")
 			@Override
 			public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
@@ -1193,7 +1035,7 @@ public class IrisFunctions {
 		addCast("to" + to.getClass().getSimpleName(), from, to, function);
 	}
 
-	public static void main(String[] args) {
+	static void main(String[] args) {
 		functions.logAllFunctions();
 	}
 

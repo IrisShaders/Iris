@@ -5,11 +5,8 @@ import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.vertices.ExtendedDataHelper;
-import org.lwjgl.system.MemoryUtil;
-import net.irisshaders.iris.vertices.NormI8;
 import net.irisshaders.iris.vertices.NormalHelper;
 import net.minecraft.util.Mth;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
@@ -20,9 +17,11 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 	private static final float MODEL_ORIGIN = 8.0f;
 	private static final float MODEL_RANGE = 32.0f;
 	private static final int DEFAULT_NORMAL;
+	private static final int TANGENT_W_BIT = 16;
 
 	static {
-		DEFAULT_NORMAL = NormalHelper.encodeNormalTangent(new Vector3f(0, 1, 0), new Vector3f(0, 1, 0), new Vector3f(), new Vector3f(), new Vector3f());
+		DEFAULT_NORMAL = NormalHelper.encodeNormalTangent(new Vector3f(0, 1, 0), new Vector3f(0, 1, 0), new Vector3f(), new Vector3f(),
+			new Vector3f());
 	}
 
 	private final Vector3f normal = new Vector3f(0.0f, 1.0f, 0.0f);
@@ -91,12 +90,8 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 		return (x >>> 31);
 	}
 
-	private static final int TANGENT_W_BIT = 16;
-
 	private static int packLightAndData(int light, boolean tangentW, int section) {
-		return (light & 0xFFFF)
-			| (((tangentW ? 1 : 0) & 1) << TANGENT_W_BIT)
-			| ((section & 0xFF) << 24);
+		return (light & 0xFFFF) | (((tangentW ? 1 : 0) & 1) << TANGENT_W_BIT) | ((section & 0xFF) << 24);
 	}
 
 	private static int floorInt(float x) {
@@ -104,8 +99,7 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 	}
 
 	@Override
-	public long write(long ptr,
-					  int material, Vertex[] vertices, int section) {
+	public long write(long ptr, int material, Vertex[] vertices, int section) {
 		// Calculate the center point of the texture region which is mapped to the quad
 		float texCentroidU = 0.0f;
 		float texCentroidV = 0.0f;
@@ -121,14 +115,12 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 
 		int finalNorm;
 		if (normalOffset != 0) {
-			NormalHelper.computeFaceNormalManual(normal,
-				vertices[0].x, vertices[0].y, vertices[0].z,
-				vertices[1].x, vertices[1].y, vertices[1].z,
-				vertices[2].x, vertices[2].y, vertices[2].z,
-				vertices[3].x, vertices[3].y, vertices[3].z);
+			NormalHelper.computeFaceNormalManual(normal, vertices[0].x, vertices[0].y, vertices[0].z, vertices[1].x, vertices[1].y,
+				vertices[1].z, vertices[2].x, vertices[2].y, vertices[2].z, vertices[3].x, vertices[3].y, vertices[3].z);
 
 			int tangent = computeTangentForQuad(normal, vertices);
-			finalNorm = NormalHelper.encodeNormalTangent(normal, this.tangentSet.set(this.tangent), scratchValues[0], scratchValues[1], scratchValues[2]);
+			finalNorm = NormalHelper.encodeNormalTangent(normal, this.tangentSet.set(this.tangent), scratchValues[0], scratchValues[1],
+				scratchValues[2]);
 		} else {
 			finalNorm = DEFAULT_NORMAL;
 		}
@@ -148,7 +140,9 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 
 			MemoryUtil.memPutInt(ptr, packPositionHi(x, y, z));
 			MemoryUtil.memPutInt(ptr + 4L, packPositionLo(x, y, z));
-			MemoryUtil.memPutInt(ptr + 8L, WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? ColorABGR.withAlpha(vertex.color, vertex.ao) : ColorARGB.mulRGB(vertex.color, vertex.ao));
+			MemoryUtil.memPutInt(ptr + 8L,
+				WorldRenderingSettings.INSTANCE.shouldUseSeparateAo() ? ColorABGR.withAlpha(vertex.color, vertex.ao) : ColorARGB.mulRGB(
+					vertex.color, vertex.ao));
 			MemoryUtil.memPutInt(ptr + 12L, packTexture(u, v));
 			MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, this.tangent.w >= 0.0, section));
 
@@ -157,7 +151,9 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 			}
 
 			if (midBlockOffset != 0) {
-				MemoryUtil.memPutInt(ptr + midBlockOffset, extension.ignoreMidBlock() ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z, extension.getLocalPosX(), extension.getLocalPosY(), extension.getLocalPosZ()));
+				MemoryUtil.memPutInt(ptr + midBlockOffset,
+					extension.ignoreMidBlock() ? 0 : ExtendedDataHelper.computeMidBlock(vertex.x, vertex.y, vertex.z,
+						extension.getLocalPosX(), extension.getLocalPosY(), extension.getLocalPosZ()));
 				MemoryUtil.memPutByte(ptr + midBlockOffset + 3, extension.getBlockEmission());
 			}
 
@@ -176,17 +172,15 @@ public class XHFPTerrainVertex implements ChunkVertexEncoder {
 	}
 
 	private int computeTangentForQuad(Vector3f normal, Vertex[] vertices) {
-		int tangent = NormalHelper.computeTangent(this.tangent, normal.x, normal.y, normal.z,
-			vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v,
-			vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v,
-			vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v);
+		int tangent = NormalHelper.computeTangent(this.tangent, normal.x, normal.y, normal.z, vertices[0].x, vertices[0].y, vertices[0].z,
+			vertices[0].u, vertices[0].v, vertices[1].x, vertices[1].y, vertices[1].z, vertices[1].u, vertices[1].v, vertices[2].x,
+			vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v);
 
 		if (tangent == -1) {
 			// Try calculating the second triangle
-			tangent = NormalHelper.computeTangent(this.tangent, normal.x, normal.y, normal.z,
-				vertices[2].x, vertices[2].y, vertices[2].z, vertices[2].u, vertices[2].v,
-				vertices[3].x, vertices[3].y, vertices[3].z, vertices[3].u, vertices[3].v,
-				vertices[0].x, vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v);
+			tangent = NormalHelper.computeTangent(this.tangent, normal.x, normal.y, normal.z, vertices[2].x, vertices[2].y, vertices[2].z,
+				vertices[2].u, vertices[2].v, vertices[3].x, vertices[3].y, vertices[3].z, vertices[3].u, vertices[3].v, vertices[0].x,
+				vertices[0].y, vertices[0].z, vertices[0].u, vertices[0].v);
 		}
 
 		return tangent;

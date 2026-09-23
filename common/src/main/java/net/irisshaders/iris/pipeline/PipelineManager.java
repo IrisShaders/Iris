@@ -1,6 +1,7 @@
 package net.irisshaders.iris.pipeline;
 
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
@@ -42,6 +43,7 @@ public class PipelineManager {
 			pipeline = pipelinesPerDimension.get(currentDimension);
 		}
 
+		DHCompat.checkFrame();
 		return pipeline;
 	}
 
@@ -81,6 +83,7 @@ public class PipelineManager {
 	public void destroyPipeline() {
 		pipelinesPerDimension.forEach((dimensionId, pipeline) -> {
 			Iris.logger.info("Destroying pipeline {}", dimensionId);
+			Iris.getRenderBackend().resetBindings();
 			pipeline.destroy();
 		});
 

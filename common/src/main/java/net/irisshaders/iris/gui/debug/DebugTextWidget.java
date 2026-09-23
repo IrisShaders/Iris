@@ -13,8 +13,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
-public class DebugTextWidget
-	extends AbstractTextAreaWidget {
+public class DebugTextWidget extends AbstractTextAreaWidget {
 	private final Font font;
 	private final Content content;
 
@@ -42,9 +41,11 @@ public class DebugTextWidget
 
 		for (int i = 0; i < elements.length; ++i) {
 			StackTraceElement element = elements[i];
-			if (element == null) continue;
+			if (element == null)
+				continue;
 			lv.addLine(font, Component.literal(element.toString()));
-			if (i >= elements.length - 1) continue;
+			if (i >= elements.length - 1)
+				continue;
 			lv.addSpacer(this.font.lineHeight);
 		}
 		return lv.build();

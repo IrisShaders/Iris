@@ -55,33 +55,12 @@ public final class OptionAnnotatedSource {
 	private static final ImmutableSet<String> VALID_CONST_OPTION_NAMES;
 
 	static {
-		ImmutableSet.Builder<String> values = ImmutableSet.<String>builder().add(
-			"shadowMapResolution",
-			"shadowDistance",
-			"voxelDistance",
-			"shadowDistanceRenderMul",
-			"entityShadowDistanceMul",
-			"shadowIntervalSize",
-			"generateShadowMipmap",
-			"generateShadowColorMipmap",
-			"shadowHardwareFiltering",
-			"shadowtex0Mipmap",
-			"shadowtexMipmap",
-			"shadowtex1Mipmap",
-			"shadowtex0Nearest",
-			"shadowtexNearest",
-			"shadow0MinMagNearest",
-			"shadowtex1Nearest",
-			"shadow1MinMagNearest",
-			"wetnessHalflife",
-			"drynessHalflife",
-			"eyeBrightnessHalflife",
-			"centerDepthHalflife",
-			"sunPathRotation",
-			"ambientOcclusionLevel",
-			"superSamplingLevel",
-			"noiseTextureResolution"
-		);
+		ImmutableSet.Builder<String> values = ImmutableSet.<String>builder()
+			.add("shadowMapResolution", "shadowDistance", "voxelDistance", "shadowDistanceRenderMul", "entityShadowDistanceMul",
+				"shadowIntervalSize", "generateShadowMipmap", "generateShadowColorMipmap", "shadowHardwareFiltering", "shadowtex0Mipmap",
+				"shadowtexMipmap", "shadowtex1Mipmap", "shadowtex0Nearest", "shadowtexNearest", "shadow0MinMagNearest", "shadowtex1Nearest",
+				"shadow1MinMagNearest", "wetnessHalflife", "drynessHalflife", "eyeBrightnessHalflife", "centerDepthHalflife",
+				"sunPathRotation", "ambientOcclusionLevel", "superSamplingLevel", "noiseTextureResolution");
 
 		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS; i++) {
 			values.add("shadowcolor" + i + "Mipmap");
@@ -157,10 +136,7 @@ public final class OptionAnnotatedSource {
 
 	private static void parseLine(AnnotationsBuilder builder, int index, String lineText) {
 		// Check to see if this line contains anything of interest before we try to parse it.
-		if (!lineText.contains("#define")
-			&& !lineText.contains("const")
-			&& !lineText.contains("#ifdef")
-			&& !lineText.contains("#ifndef")) {
+		if (!lineText.contains("#define") && !lineText.contains("const") && !lineText.contains("#ifdef") && !lineText.contains("#ifndef")) {
 			// Nothing of interest.
 			return;
 		}
@@ -195,8 +171,7 @@ public final class OptionAnnotatedSource {
 			return;
 		}
 
-		builder.booleanDefineReferences
-			.computeIfAbsent(name, n -> new IntArrayList()).add(index);
+		builder.booleanDefineReferences.computeIfAbsent(name, n -> new IntArrayList()).add(index);
 	}
 
 	private static void parseConst(AnnotationsBuilder builder, int index, ParsedString line) {
@@ -214,9 +189,8 @@ public final class OptionAnnotatedSource {
 		} else if (line.takeLiteral("bool")) {
 			isString = false;
 		} else {
-			builder.diagnostics.put(index, "Unexpected type declaration after const. " +
-				"Expected int, float, or bool. " +
-				"Vector const declarations cannot be configured using shader options.");
+			builder.diagnostics.put(index,
+				"Unexpected type declaration after const. " + "Expected int, float, or bool. " + "Vector const declarations cannot be configured using shader options.");
 			return;
 		}
 
@@ -228,8 +202,8 @@ public final class OptionAnnotatedSource {
 		String name = line.takeWord();
 
 		if (name == null) {
-			builder.diagnostics.put(index, "Expected name of option after type declaration, " +
-				"but an unexpected character was detected first.");
+			builder.diagnostics.put(index,
+				"Expected name of option after type declaration, " + "but an unexpected character was detected first.");
 			return;
 		}
 
@@ -277,14 +251,13 @@ public final class OptionAnnotatedSource {
 			} else if ("false".equals(value)) {
 				booleanValue = false;
 			} else {
-				builder.diagnostics.put(index, "Expected true or false as the value of a boolean const option, but got "
-					+ value + ".");
+				builder.diagnostics.put(index, "Expected true or false as the value of a boolean const option, but got " + value + ".");
 				return;
 			}
 
 			if (!VALID_CONST_OPTION_NAMES.contains(name)) {
-				builder.diagnostics.put(index, "This was a valid const boolean option declaration, but " + name +
-					" was not recognized as being a name of one of the configurable const options.");
+				builder.diagnostics.put(index,
+					"This was a valid const boolean option declaration, but " + name + " was not recognized as being a name of one of the configurable const options.");
 				return;
 			}
 
@@ -293,8 +266,8 @@ public final class OptionAnnotatedSource {
 		}
 
 		if (!VALID_CONST_OPTION_NAMES.contains(name)) {
-			builder.diagnostics.put(index, "This was a valid const option declaration, but " + name +
-				" was not recognized as being a name of one of the configurable const options.");
+			builder.diagnostics.put(index,
+				"This was a valid const option declaration, but " + name + " was not recognized as being a name of one of the configurable const options.");
 			return;
 		}
 
@@ -303,8 +276,8 @@ public final class OptionAnnotatedSource {
 		if (option != null) {
 			builder.stringOptions.put(index, option);
 		} else {
-			builder.diagnostics.put(index, "Ignoring this const option because it is missing an allowed values list" +
-				"in a comment, but is not a boolean const option.");
+			builder.diagnostics.put(index,
+				"Ignoring this const option because it is missing an allowed values list" + "in a comment, but is not a boolean const option.");
 		}
 	}
 
@@ -317,15 +290,13 @@ public final class OptionAnnotatedSource {
 
 		if (!line.takeLiteral("#define")) {
 			builder.diagnostics.put(index,
-				"This line contains an occurrence of \"#define\" " +
-					"but it wasn't in a place we expected, ignoring it.");
+				"This line contains an occurrence of \"#define\" " + "but it wasn't in a place we expected, ignoring it.");
 			return;
 		}
 
 		if (!line.takeSomeWhitespace()) {
 			builder.diagnostics.put(index,
-				"This line properly starts with a #define statement but doesn't have " +
-					"any whitespace characters after the #define.");
+				"This line properly starts with a #define statement but doesn't have " + "any whitespace characters after the #define.");
 			return;
 		}
 
@@ -333,8 +304,7 @@ public final class OptionAnnotatedSource {
 
 		if (name == null) {
 			builder.diagnostics.put(index,
-				"Invalid syntax after #define directive. " +
-					"No alphanumeric or underscore characters detected.");
+				"Invalid syntax after #define directive. " + "No alphanumeric or underscore characters detected.");
 			return;
 		}
 
@@ -358,44 +328,39 @@ public final class OptionAnnotatedSource {
 		} else if (!tookWhitespace) {
 			// Invalid syntax.
 			builder.diagnostics.put(index,
-				"Invalid syntax after #define directive. Only alphanumeric or underscore " +
-					"characters are allowed in option names.");
+				"Invalid syntax after #define directive. Only alphanumeric or underscore " + "characters are allowed in option names.");
 
 			return;
 		}
 
 		if (hasLeadingComment) {
 			builder.diagnostics.put(index,
-				"Ignoring potential non-boolean #define option since it has a leading comment. " +
-					"Leading comments (//) are only allowed on boolean #define options.");
+				"Ignoring potential non-boolean #define option since it has a leading comment. " + "Leading comments (//) are only allowed on boolean #define options.");
 			return;
 		}
 
 		String value = line.takeWordOrNumber();
 
 		if (value == null) {
-			builder.diagnostics.put(index, "Ignoring this #define directive because it doesn't appear to be a boolean #define, " +
-				"and its potential value wasn't a valid number or a valid word.");
+			builder.diagnostics.put(index,
+				"Ignoring this #define directive because it doesn't appear to be a boolean #define, " + "and its potential value wasn't a valid number or a valid word.");
 			return;
 		}
 
 		tookWhitespace = line.takeSomeWhitespace();
 
 		if (line.isEnd()) {
-			builder.diagnostics.put(index, "Ignoring this #define because it doesn't have a comment containing" +
-				" a list of allowed values afterwards, but it has a value so is therefore not a boolean.");
+			builder.diagnostics.put(index,
+				"Ignoring this #define because it doesn't have a comment containing" + " a list of allowed values afterwards, but it has a value so is therefore not a boolean.");
 			return;
 		} else if (!tookWhitespace) {
 			if (!line.takeComments()) {
 				builder.diagnostics.put(index,
-					"Invalid syntax after value #define directive. " +
-						"Invalid characters after number or word.");
+					"Invalid syntax after value #define directive. " + "Invalid characters after number or word.");
 				return;
 			}
 		} else if (!line.takeComments()) {
-			builder.diagnostics.put(index,
-				"Invalid syntax after value #define directive. " +
-					"Only comments may come after the value.");
+			builder.diagnostics.put(index, "Invalid syntax after value #define directive. " + "Only comments may come after the value.");
 			return;
 		}
 
@@ -404,8 +369,8 @@ public final class OptionAnnotatedSource {
 		StringOption option = StringOption.create(OptionType.DEFINE, name, comment, value);
 
 		if (option == null) {
-			builder.diagnostics.put(index, "Ignoring this #define because it is missing an allowed values list" +
-				"in a comment, but is not a boolean define.");
+			builder.diagnostics.put(index,
+				"Ignoring this #define because it is missing an allowed values list" + "in a comment, but is not a boolean define.");
 			return;
 		}
 
@@ -508,7 +473,8 @@ public final class OptionAnnotatedSource {
 			} else if (booleanOption.getType() == OptionType.CONST) {
 				if (value != OptionalBoolean.DEFAULT) {
 					// Value will never be default here, but we're using orElse just to get a normal boolean out of it.
-					return editConst(existing, Boolean.toString(booleanOption.getDefaultValue()), Boolean.toString(value.orElse(booleanOption.getDefaultValue())));
+					return editConst(existing, Boolean.toString(booleanOption.getDefaultValue()),
+						Boolean.toString(value.orElse(booleanOption.getDefaultValue())));
 				} else {
 					return existing;
 				}

@@ -27,6 +27,7 @@ public class ItemStackStateMixin implements ItemContextState {
 	public Item getDisplayItem() {
 		return iris_displayStack;
 	}
+
 	public Identifier getDisplayItemModel() {
 		return iris_displayModelId;
 	}

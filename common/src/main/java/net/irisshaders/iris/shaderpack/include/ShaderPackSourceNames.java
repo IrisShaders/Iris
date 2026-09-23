@@ -17,8 +17,8 @@ import java.util.stream.Stream;
 public class ShaderPackSourceNames {
 	public static final ImmutableList<String> POTENTIAL_STARTS = findPotentialStarts();
 
-	public static boolean findPresentSources(ImmutableList.Builder<AbsolutePackPath> starts, Path packRoot,
-											 AbsolutePackPath directory, ImmutableList<String> candidates) throws IOException {
+	public static boolean findPresentSources(ImmutableList.Builder<AbsolutePackPath> starts, Path packRoot, AbsolutePackPath directory,
+		ImmutableList<String> candidates) throws IOException {
 		Path directoryPath = directory.resolved(packRoot);
 
 		if (!Files.exists(directoryPath)) {
@@ -29,9 +29,7 @@ public class ShaderPackSourceNames {
 
 		Set<String> found;
 		try (Stream<Path> stream = Files.list(directoryPath)) {
-			found = stream
-				.map(path -> path.getFileName().toString())
-				.collect(Collectors.toSet());
+			found = stream.map(path -> path.getFileName().toString()).collect(Collectors.toSet());
 		}
 
 		for (String candidate : candidates) {

@@ -1,22 +1,15 @@
 package net.irisshaders.iris.gl.image;
 
+import com.mojang.renderpearl.api.textures.GpuTextureView;
+import net.irisshaders.iris.backend.IrisImage;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 
-import java.util.function.IntSupplier;
-import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 
 public interface ImageHolder {
 	boolean hasImage(String name);
 
-	default void addTextureImage(LongSupplier view, LongSupplier image, InternalTextureFormat format, String name) {
-		addTextureImage(view, format, name);
-	}
+	void addTextureImage(Supplier<GpuTextureView> texture, InternalTextureFormat format, String name);
 
-	default void addTextureImage(LongSupplier view, InternalTextureFormat format, String name) {
-		if (hasImage(name)) {
-			throw new UnsupportedOperationException("Native storage image binding is unavailable: " + name);
-		}
-	}
-
-	void addTextureImage(IntSupplier textureID, InternalTextureFormat internalFormat, String name);
+	void addImage(Supplier<IrisImage> image, InternalTextureFormat format, String name);
 }

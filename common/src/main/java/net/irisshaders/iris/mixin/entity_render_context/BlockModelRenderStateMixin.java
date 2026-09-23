@@ -26,20 +26,23 @@ public class BlockModelRenderStateMixin implements BlockModelRenderStateExtensio
 	}
 
 	@Inject(method = "submit", at = @At("HEAD"))
-	private void onRender(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int externalLightCoords, int overlayCoords, int outlineColor, CallbackInfo ci, @Share("lastBState") LocalIntRef ref) {
+	private void onRender(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int externalLightCoords, int overlayCoords,
+		int outlineColor, CallbackInfo ci, @Share("lastBState") LocalIntRef ref) {
 		ref.set(CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
 		iris$setupId(this.block);
 	}
 
 	@Inject(method = "submit", at = @At("TAIL"))
-	private void onRenderEnd(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int externalLightCoords, int overlayCoords, int outlineColor, CallbackInfo ci, @Share("lastBState") LocalIntRef ref) {
+	private void onRenderEnd(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int externalLightCoords, int overlayCoords,
+		int outlineColor, CallbackInfo ci, @Share("lastBState") LocalIntRef ref) {
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(ref.get());
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 	}
 
 	@Unique
 	private void iris$setupId(BlockState state) {
-		if (WorldRenderingSettings.INSTANCE.getBlockStateIds() == null) return;
+		if (WorldRenderingSettings.INSTANCE.getBlockStateIds() == null)
+			return;
 
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(1);
 

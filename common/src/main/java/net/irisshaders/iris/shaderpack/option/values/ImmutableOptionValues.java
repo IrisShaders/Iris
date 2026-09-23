@@ -12,8 +12,7 @@ public class ImmutableOptionValues implements OptionValues {
 	private final ImmutableMap<String, Boolean> booleanValues;
 	private final ImmutableMap<String, String> stringValues;
 
-	ImmutableOptionValues(OptionSet options, ImmutableMap<String, Boolean> booleanValues,
-						  ImmutableMap<String, String> stringValues) {
+	ImmutableOptionValues(OptionSet options, ImmutableMap<String, Boolean> booleanValues, ImmutableMap<String, String> stringValues) {
 		this.options = options;
 		this.booleanValues = booleanValues;
 		this.stringValues = stringValues;

@@ -1,17 +1,12 @@
 package net.irisshaders.iris.mixin;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.debug.ChunkBorderRenderer;
-import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.Slice;
 
 @Mixin(ChunkBorderRenderer.class)
 public class MixinChunkBorderRenderer {
-	private VertexConsumer fakeConsumer = new VertexConsumer() {
+	private final VertexConsumer fakeConsumer = new VertexConsumer() {
 		@Override
 		public VertexConsumer addVertex(float x, float y, float z) {
 			return this;

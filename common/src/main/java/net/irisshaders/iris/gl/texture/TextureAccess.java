@@ -10,7 +10,7 @@ public interface TextureAccess {
 	TextureType getType();
 
 	default GpuTextureView getTextureView() {
-		throw new UnsupportedOperationException("Texture has not been ported to Vulkan: " + getClass().getSimpleName());
+		throw new UnsupportedOperationException("texture has not been ported to Vulkan: " + this.getClass().getSimpleName());
 	}
 
 	default SamplerHolder.TextureBinding samplerBinding() {

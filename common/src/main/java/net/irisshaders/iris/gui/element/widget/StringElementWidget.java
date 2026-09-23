@@ -41,8 +41,10 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 		this.appliedValue = this.element.getAppliedOptionValues().getStringValueOrDefault(this.option.getName());
 
 		// Do not use I18n, it'll cause issues with packs trying to use % as prefixes/suffixes.
-		this.prefix = Component.literal(Language.getInstance().has("prefix." + this.option.getName()) ? Language.getInstance().getOrDefault("prefix." + this.option.getName()) : "");
-		this.suffix = Component.literal(Language.getInstance().has("suffix." + this.option.getName()) ? Language.getInstance().getOrDefault("suffix." + this.option.getName()) : "");
+		this.prefix = Component.literal(Language.getInstance().has("prefix." + this.option.getName()) ? Language.getInstance()
+			.getOrDefault("prefix." + this.option.getName()) : "");
+		this.suffix = Component.literal(Language.getInstance().has("suffix." + this.option.getName()) ? Language.getInstance()
+			.getOrDefault("suffix." + this.option.getName()) : "");
 		this.setLabel(GuiUtil.translateOrDefault(Component.literal(this.option.getName()), "option." + this.option.getName()));
 
 		List<String> values = this.option.getAllowedValues();
@@ -71,9 +73,9 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 
 	@Override
 	protected Component createValueLabel() {
-		return prefix.copy().append(GuiUtil.translateOrDefault(
-			Component.literal(getValue()).append(suffix),
-			"value." + this.option.getName() + "." + getValue())).withStyle(style -> style.withColor(TextColor.fromRgb(0xFF6688ff)));
+		return prefix.copy().append(
+				GuiUtil.translateOrDefault(Component.literal(getValue()).append(suffix), "value." + this.option.getName() + "." + getValue()))
+			.withStyle(style -> style.withColor(TextColor.fromRgb(0xFF6688ff)));
 	}
 
 	@Override

@@ -7,7 +7,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenAxis;
 import net.minecraft.client.gui.navigation.ScreenDirection;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
@@ -39,9 +38,11 @@ public class SliderElementWidget extends StringElementWidget {
 
 		if (usedKeyboard) {
 			if (Minecraft.getInstance().hasShiftDown()) {
-				renderTooltip(guiGraphics, SET_TO_DEFAULT, bounds.getBoundInDirection(ScreenDirection.RIGHT), bounds.position().y(), hovered);
+				renderTooltip(guiGraphics, SET_TO_DEFAULT, bounds.getBoundInDirection(ScreenDirection.RIGHT), bounds.position().y(),
+					hovered);
 			} else if (!this.screen.isDisplayingComment()) {
-				renderTooltip(guiGraphics, this.unmodifiedLabel, bounds.getBoundInDirection(ScreenDirection.RIGHT), bounds.position().y(), hovered);
+				renderTooltip(guiGraphics, this.unmodifiedLabel, bounds.getBoundInDirection(ScreenDirection.RIGHT), bounds.position().y(),
+					hovered);
 			}
 		} else {
 			if (Minecraft.getInstance().hasShiftDown()) {
@@ -74,18 +75,21 @@ public class SliderElementWidget extends StringElementWidget {
 		// Draw background button
 		GuiUtil.drawButton(guiGraphics, bounds.position().x(), bounds.position().y(), bounds.width(), bounds.height(), isFocused(), false);
 		// Draw slider area
-		GuiUtil.drawButton(guiGraphics, bounds.position().x() + 2, bounds.position().y() + 2, bounds.width() - 4, bounds.height() - 4, false, true);
+		GuiUtil.drawButton(guiGraphics, bounds.position().x() + 2, bounds.position().y() + 2, bounds.width() - 4, bounds.height() - 4,
+			false, true);
 
 		// Range of x values the slider can occupy
 		int sliderSpace = (bounds.width() - 8) - ACTIVE_SLIDER_WIDTH;
 		// Position of slider
 		int sliderPos = (bounds.position().x() + 4) + (int) (((float) valueIndex / (valueCount - 1)) * sliderSpace);
 		// Draw slider
-		GuiUtil.drawButton(guiGraphics, sliderPos, bounds.position().y() + 4, ACTIVE_SLIDER_WIDTH, bounds.height() - 8, this.mouseDown, false);
+		GuiUtil.drawButton(guiGraphics, sliderPos, bounds.position().y() + 4, ACTIVE_SLIDER_WIDTH, bounds.height() - 8, this.mouseDown,
+			false);
 
 		// Draw value label
 		Font font = Minecraft.getInstance().font;
-		guiGraphics.text(font, this.valueLabel, bounds.getCenterInAxis(ScreenAxis.HORIZONTAL) - (int) (font.width(this.valueLabel) * 0.5), bounds.position().y() + 7, 0xFFFFFFFF);
+		guiGraphics.text(font, this.valueLabel, bounds.getCenterInAxis(ScreenAxis.HORIZONTAL) - (int) (font.width(this.valueLabel) * 0.5),
+			bounds.position().y() + 7, 0xFFFFFFFF);
 	}
 
 	private void whileDragging(int mouseX) {

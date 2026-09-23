@@ -1,7 +1,5 @@
 package net.irisshaders.iris.platform;
 
-import com.mojang.renderpearl.api.GpuFormat;
-import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
@@ -34,6 +32,6 @@ public interface IrisPlatformHelpers {
 
 	boolean useELS();
 
-    BlockState getBlockAppearance(BlockAndTintGetter level, BlockState state, Direction cullFace, BlockPos pos);
+	BlockState getBlockAppearance(BlockAndTintGetter level, BlockState state, Direction cullFace, BlockPos pos);
 
 }

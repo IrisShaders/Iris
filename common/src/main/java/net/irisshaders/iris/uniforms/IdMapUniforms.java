@@ -30,8 +30,7 @@ public final class IdMapUniforms {
 		notifier.addListener(mainHandSupplier::update);
 		notifier.addListener(offHandSupplier::update);
 
-		uniforms
-			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId", mainHandSupplier::getIntID)
+		uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId", mainHandSupplier::getIntID)
 			.uniform1i(UniformUpdateFrequency.PER_FRAME, "heldItemId2", offHandSupplier::getIntID)
 			.uniform1i(PER_FRAME, "heldBlockLightValue", mainHandSupplier::getLightValue)
 			.uniform1i(PER_FRAME, "heldBlockLightValue2", offHandSupplier::getLightValue)

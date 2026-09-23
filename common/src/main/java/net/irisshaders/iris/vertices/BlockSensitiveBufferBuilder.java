@@ -9,5 +9,5 @@ public interface BlockSensitiveBufferBuilder {
 
 	void endBlock();
 
-    void ignoreMidBlock(boolean b);
+	void ignoreMidBlock(boolean b);
 }

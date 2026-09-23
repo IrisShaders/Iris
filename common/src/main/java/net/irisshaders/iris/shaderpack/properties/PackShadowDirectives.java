@@ -169,7 +169,8 @@ public class PackShadowDirectives {
 
 	private static void acceptColorMipmapSettings(DirectiveHolder directives, Int2ObjectMap<SamplingSettings> samplers) {
 		// Get the default base value for the shadow depth mipmap setting
-		directives.acceptConstBooleanDirective("generateShadowColorMipmap", mipmap -> samplers.forEach((i, sampler) -> sampler.setMipmap(mipmap)));
+		directives.acceptConstBooleanDirective("generateShadowColorMipmap",
+			mipmap -> samplers.forEach((i, sampler) -> sampler.setMipmap(mipmap)));
 
 		// Find any per-sampler overrides for the shadow depth mipmap setting
 		for (int i = 0; i < PackShadowDirectives.MAX_SHADOW_COLOR_BUFFERS_IRIS; i++) {
@@ -317,8 +318,7 @@ public class PackShadowDirectives {
 			this.explicitRenderDistance = true;
 		});
 
-		directives.acceptConstFloatDirective("shadowIntervalSize",
-			intervalSize -> this.intervalSize = intervalSize);
+		directives.acceptConstFloatDirective("shadowIntervalSize", intervalSize -> this.intervalSize = intervalSize);
 
 		acceptHardwareFilteringSettings(directives, depthSamplingSettings);
 		acceptDepthMipmapSettings(directives, depthSamplingSettings);
@@ -338,7 +338,8 @@ public class PackShadowDirectives {
 				if (internalFormat.isPresent()) {
 					settings.computeIfAbsent(finalI, sa -> new SamplingSettings()).setFormat(internalFormat.get());
 				} else {
-					Iris.logger.warn("Unrecognized internal texture format " + format + " specified for " + bufferName + "Format, ignoring.");
+					Iris.logger.warn(
+						"Unrecognized internal texture format " + format + " specified for " + bufferName + "Format, ignoring.");
 				}
 			});
 
@@ -357,16 +358,7 @@ public class PackShadowDirectives {
 
 	@Override
 	public String toString() {
-		return "PackShadowDirectives{" +
-			"resolution=" + resolution +
-			", fov=" + fov +
-			", distance=" + distance +
-			", distanceRenderMul=" + distanceRenderMul +
-			", entityDistanceRenderMul=" + entityShadowDistanceMul +
-			", intervalSize=" + intervalSize +
-			", depthSamplingSettings=" + depthSamplingSettings +
-			", colorSamplingSettings=" + colorSamplingSettings +
-			'}';
+		return "PackShadowDirectives{" + "resolution=" + resolution + ", fov=" + fov + ", distance=" + distance + ", distanceRenderMul=" + distanceRenderMul + ", entityDistanceRenderMul=" + entityShadowDistanceMul + ", intervalSize=" + intervalSize + ", depthSamplingSettings=" + depthSamplingSettings + ", colorSamplingSettings=" + colorSamplingSettings + '}';
 	}
 
 	public static class SamplingSettings {
@@ -446,13 +438,7 @@ public class PackShadowDirectives {
 
 		@Override
 		public String toString() {
-			return "SamplingSettings{" +
-				"mipmap=" + mipmap +
-				", nearest=" + nearest +
-				", clear=" + clear +
-				", clearColor=" + clearColor +
-				", format=" + format.name() +
-				'}';
+			return "SamplingSettings{" + "mipmap=" + mipmap + ", nearest=" + nearest + ", clear=" + clear + ", clearColor=" + clearColor + ", format=" + format.name() + '}';
 		}
 	}
 
@@ -473,11 +459,7 @@ public class PackShadowDirectives {
 
 		@Override
 		public String toString() {
-			return "DepthSamplingSettings{" +
-				"mipmap=" + getMipmap() +
-				", nearest=" + getNearest() +
-				", hardwareFiltering=" + hardwareFiltering +
-				'}';
+			return "DepthSamplingSettings{" + "mipmap=" + getMipmap() + ", nearest=" + getNearest() + ", hardwareFiltering=" + hardwareFiltering + '}';
 		}
 	}
 }

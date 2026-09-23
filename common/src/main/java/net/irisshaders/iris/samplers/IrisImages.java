@@ -1,22 +1,19 @@
 package net.irisshaders.iris.samplers;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.renderpearl.backend.vulkan.VulkanGpuTextureView;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.irisshaders.iris.gl.image.ImageHolder;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.targets.CustomImage;
 import net.irisshaders.iris.targets.RenderTarget;
 import net.irisshaders.iris.targets.RenderTargets;
-import net.irisshaders.iris.vulkan.CompositeSynchronization;
 
 import java.util.Set;
-import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 public class IrisImages {
-	public static void addRenderTargetImages(ImageHolder images, Supplier<ImmutableSet<Integer>> flipped,
-		RenderTargets renderTargets) {
+	public static void addRenderTargetImages(ImageHolder images, Supplier<ImmutableSet<Integer>> flipped, RenderTargets renderTargets) {
 		for (int i = 0; i < renderTargets.getRenderTargetCount(); i++) {
 			final int index = i;
 
@@ -30,22 +27,16 @@ public class IrisImages {
 			renderTargets.getOrCreate(index).enableStorage();
 
 			// Note: image bindings *are* impacted by buffer flips.
-			LongSupplier textureID = () -> {
+			Supplier<GpuTextureView> texture = () -> {
 				ImmutableSet<Integer> flippedBuffers = flipped.get();
 				RenderTarget target = renderTargets.getOrCreate(index);
 
-				if (flippedBuffers.contains(index)) {
-					return ((VulkanGpuTextureView) target.getTextureView(true, false)).vkImageView();
-				} else {
-					return ((VulkanGpuTextureView) target.getTextureView(false, false)).vkImageView();
-				}
+				return target.getTextureView(flippedBuffers.contains(index), false);
 			};
 
 			final InternalTextureFormat internalFormat = renderTargets.getOrCreate(i).getInternalFormat();
-			images.addTextureImage(textureID, () -> CompositeSynchronization.image(
-					renderTargets.getOrCreate(index).getTextureView(flipped.get().contains(index), false).texture()).handle(),
-				internalFormat,
-				name);
+
+			images.addTextureImage(texture, internalFormat, name);
 		}
 	}
 
@@ -54,7 +45,6 @@ public class IrisImages {
 		if (images == null) {
 			return false;
 		}
-
 		return images.hasImage("shadowcolorimg0") || images.hasImage("shadowcolorimg1");
 	}
 
@@ -64,7 +54,6 @@ public class IrisImages {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -72,7 +61,6 @@ public class IrisImages {
 		if (images == null) {
 			return;
 		}
-
 		for (int i = 0; i < shadowRenderTargets.getNumColorTextures(); i++) {
 			final int index = i;
 
@@ -82,26 +70,19 @@ public class IrisImages {
 
 			shadowRenderTargets.getOrCreate(i).enableStorage();
 
-			LongSupplier textureID;
-
+			Supplier<GpuTextureView> texture;
 			if (flipped == null) {
-				textureID = () -> ((VulkanGpuTextureView) shadowRenderTargets.getOrCreate(index)
-					.getTextureView(shadowRenderTargets.isFlipped(index), false)).vkImageView();
+				texture = () -> shadowRenderTargets.getOrCreate(index).getTextureView(shadowRenderTargets.isFlipped(index), false);
 			} else {
-				textureID = () -> ((VulkanGpuTextureView) shadowRenderTargets.getOrCreate(index)
-					.getTextureView(flipped.contains(index), false)).vkImageView();
+				texture = () -> shadowRenderTargets.getOrCreate(index).getTextureView(flipped.contains(index), false);
 			}
-
 			InternalTextureFormat format = shadowRenderTargets.getColorTextureFormat(index);
-			images.addTextureImage(textureID, () -> CompositeSynchronization.image(shadowRenderTargets.getOrCreate(index)
-					.getTextureView(flipped == null ? shadowRenderTargets.isFlipped(index) : flipped.contains(index), false).texture())
-				.handle(), format, "shadowcolorimg" + i);
+
+			images.addTextureImage(texture, format, "shadowcolorimg" + i);
 		}
 	}
 
 	public static void addCustomImages(ImageHolder images, Set<CustomImage> customImages) {
-		customImages.forEach(
-			image -> images.addTextureImage(() -> image.image().view(), () -> image.image().image(), image.getInternalFormat(),
-				image.getName()));
+		customImages.forEach(image -> images.addImage(image::image, image.getInternalFormat(), image.getName()));
 	}
 }

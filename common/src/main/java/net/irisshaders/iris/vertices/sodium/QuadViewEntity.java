@@ -1,6 +1,5 @@
 package net.irisshaders.iris.vertices.sodium;
 
-import org.lwjgl.system.MemoryUtil;
 import net.irisshaders.iris.vertices.views.QuadView;
 import org.lwjgl.system.MemoryUtil;
 

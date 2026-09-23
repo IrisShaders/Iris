@@ -31,7 +31,8 @@ public abstract class VectorCachedUniform<T> extends CachedUniform {
 		if (!this.cached.equals(other)) {
 			this.setFrom(other);
 			return true;
-		} else return false;
+		} else
+			return false;
 	}
 
 	@Override

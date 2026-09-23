@@ -2,9 +2,9 @@ package net.irisshaders.iris.pipeline;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
@@ -17,7 +17,6 @@ import net.irisshaders.iris.pathways.CenterDepthSampler;
 import net.irisshaders.iris.pipeline.programs.CompositeProgram;
 import net.irisshaders.iris.pipeline.programs.ComputeProgram;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
-import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.samplers.CustomTextureSamplerInterceptor;
 import net.irisshaders.iris.samplers.IrisImages;
@@ -68,9 +67,8 @@ public class FinalPassRenderer {
 	public FinalPassRenderer(IrisRenderingPipeline pipeline, ProgramSet pack, RenderTargets renderTargets, TextureAccess noiseTexture,
 		ShaderStorageBufferHolder holder, FrameUpdateNotifier updateNotifier, ImmutableSet<Integer> flippedBuffers,
 		CenterDepthSampler centerDepthSampler, Supplier<ShadowRenderTargets> shadowTargetsSupplier,
-		Object2ObjectMap<String, TextureAccess> customTextureIds,
-		Object2ObjectMap<String, TextureAccess> irisCustomTextures, Set<CustomImage> customImages,
-		ImmutableSet<Integer> flippedAtLeastOnce, CustomUniforms customUniforms) {
+		Object2ObjectMap<String, TextureAccess> customTextureIds, Object2ObjectMap<String, TextureAccess> irisCustomTextures,
+		Set<CustomImage> customImages, ImmutableSet<Integer> flippedAtLeastOnce, CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
 		this.centerDepthSampler = centerDepthSampler;
 		this.customTextureIds = customTextureIds;
@@ -78,46 +76,40 @@ public class FinalPassRenderer {
 		this.customImages = customImages;
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
-		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings =
-			renderTargetDirectives.getRenderTargetSettings();
+		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings = renderTargetDirectives.getRenderTargetSettings();
+
 		this.noiseTexture = noiseTexture;
 		this.renderTargets = renderTargets;
 		this.customUniforms = customUniforms;
-		this.finalPass = pack.get(ProgramId.Final)
-			.map(source -> {
-				Pass pass = new Pass();
-				ProgramDirectives directives = source.getDirectives();
-				pass.program = createProgram(source, flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
-				pass.computes = createComputes(pack.getFinalCompute(), flippedBuffers, flippedAtLeastOnce,
-					shadowTargetsSupplier, holder);
-				pass.stageReadsFromAlt = flippedBuffers;
-				pass.mipmappedBuffers = directives.getMipmappedBuffers();
+		this.finalPass = pack.get(ProgramId.Final).map(source -> {
+			Pass pass = new Pass();
+			ProgramDirectives directives = source.getDirectives();
 
-				return pass;
-			})
-			.orElse(null);
+			pass.program = createProgram(source, flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
+			pass.computes = createComputes(pack.getFinalCompute(), flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier, holder);
+			pass.stageReadsFromAlt = flippedBuffers;
+			pass.mipmappedBuffers = directives.getMipmappedBuffers();
 
-		if (finalPass == null) {
+			return pass;
+		}).orElse(null);
+
+		if (this.finalPass == null) {
 			var outputs = new ColorAttachmentPlan.Builder().program("final_copy", new int[]{0}, Set.of()).build(1);
-			fallbackProgram = new CompositeProgram(
-				RenderSystem.getDevice(), pipeline.packSamplers(), "final_copy",
-				Map.of(
-					PatchShaderType.VERTEX,
-					"#version 450\nin vec3 Position;in vec2 UV0;out vec2 uv;void main(){gl_Position=vec4(Position.xy*2.0-1.0,0,1);" +
-						"uv=UV0;}",
-					PatchShaderType.FRAGMENT,
-					"#version 450\nin vec2 uv;uniform sampler2D colortex0;layout(location=0)out vec4 color;void "
-						+ "main(){color=texture(colortex0,uv);}"),
+			this.fallbackProgram = new CompositeProgram(pipeline.getPackSamplers(), "final_copy", Map.of(PatchShaderType.VERTEX,
+				"#version 330\nin vec3 Position;in vec2 UV0;out vec2 uv;void main(){gl_Position=vec4(Position.xy*2.0-1.0,0,1);" + "uv=UV0;}",
+				PatchShaderType.FRAGMENT,
+				"#version 330\nin vec2 uv;uniform sampler2D colortex0;layout(location=0)out vec4 color;void " + "main(){color=texture(colortex0,uv);}"),
 				outputs.program("final_copy"), Collections.singletonList(null));
-			IrisSamplers.addRenderTargetSamplers(fallbackProgram.samplers(), () -> flippedBuffers, renderTargets, true, pipeline);
-			fallbackProgram.samplers().finish();
+			IrisSamplers.addRenderTargetSamplers(this.fallbackProgram.getSamplers(), () -> flippedBuffers, renderTargets, true, pipeline);
+			this.fallbackProgram.getSamplers().finish();
 		} else {
-			fallbackProgram = null;
+			this.fallbackProgram = null;
 		}
 
 		IntList buffersToBeCleared = pack.getPackDirectives().getRenderTargetDirectives().getBuffersToBeCleared();
 
 		ImmutableList.Builder<SwapPass> swapPasses = ImmutableList.builder();
+
 		flippedBuffers.forEach((i) -> {
 			int target = i;
 
@@ -150,22 +142,35 @@ public class FinalPassRenderer {
 
 		target.turnOffMips(true);
 		target.turnOffMips(false);
+
+	}
+
+	public void prepare() {
+		if (this.finalPass != null) {
+			for (ComputeProgram compute : this.finalPass.computes) {
+				if (compute != null) {
+					compute.prepare();
+				}
+			}
+		}
+		var main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+		var program = this.finalPass == null ? this.fallbackProgram : this.finalPass.program;
+		program.prepare(List.of(main.getColorTextureView()));
 	}
 
 	public void renderFinalPass() {
-		var device = RenderSystem.getDevice();
 		var main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
-		var program = finalPass == null ? fallbackProgram : finalPass.program;
+		var program = this.finalPass == null ? this.fallbackProgram : this.finalPass.program;
 
-		if (finalPass != null) {
-			for (ComputeProgram compute : finalPass.computes) {
+		if (this.finalPass != null) {
+			for (ComputeProgram compute : this.finalPass.computes) {
 				if (compute != null) {
 					compute.dispatch(main.width, main.height);
 				}
 			}
 
-			for (int index : finalPass.mipmappedBuffers) {
-				setupMipmapping(renderTargets.get(index), finalPass.stageReadsFromAlt.contains(index));
+			for (int index : this.finalPass.mipmappedBuffers) {
+				setupMipmapping(this.renderTargets.get(index), this.finalPass.stageReadsFromAlt.contains(index));
 			}
 		}
 
@@ -177,12 +182,11 @@ public class FinalPassRenderer {
 			resetRenderTarget(renderTargets.get(i));
 		}
 
-		var encoder = device.createCommandEncoder();
-
-		for (SwapPass swap : swapPasses) {
-			var target = renderTargets.get(swap.target);
-			encoder.copyTextureToTexture(target.getTextureView(true, false).texture(), target.getTextureView(false, false).texture(), 0, 0,
-				0, 0, 0, target.getWidth(), target.getHeight());
+		for (SwapPass swap : this.swapPasses) {
+			var target = this.renderTargets.get(swap.target);
+			Iris.getRenderBackend().commands()
+				.copyTexture(target.getTextureView(true, false).texture(), target.getTextureView(false, false).texture(), target.getWidth(),
+					target.getHeight());
 		}
 	}
 
@@ -190,29 +194,29 @@ public class FinalPassRenderer {
 	}
 
 	private CompositeProgram createProgram(ProgramSource source, ImmutableSet<Integer> flipped,
-		ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
-		Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
+		ImmutableSet<Integer> flippedAtLeastOnceSnapshot, Supplier<ShadowRenderTargets> shadowTargetsSupplier) {
 
-		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(
-			source.getName(), source.getVertexSource().orElseThrow(NullPointerException::new), source.getGeometrySource().orElse(null),
-			source.getFragmentSource().orElseThrow(NullPointerException::new), TextureStage.COMPOSITE_AND_FINAL, pipeline.getTextureMap(), pipeline.getTextureOverrides(TextureStage.COMPOSITE_AND_FINAL));
-		ShaderPrinter.printProgram(source.getName()).addSources(transformed).print();
+		Map<PatchShaderType, String> transformed = TransformPatcher.patchComposite(source.getName(),
+			source.getVertexSource().orElseThrow(NullPointerException::new), source.getGeometrySource().orElse(null),
+			source.getFragmentSource().orElseThrow(NullPointerException::new), TextureStage.COMPOSITE_AND_FINAL, pipeline.getTextureMap(),
+			pipeline.getTextureOverrides(TextureStage.COMPOSITE_AND_FINAL));
 
 		var outputs = new ColorAttachmentPlan.Builder().program(source.getName(), new int[]{0}, Set.of()).build(1);
-		var program = new CompositeProgram(RenderSystem.getDevice(), pipeline.packSamplers(), source.getName(), transformed,
+		var program = new CompositeProgram(this.pipeline.getPackSamplers(), source.getName(), transformed,
 			outputs.program(source.getName()), Collections.singletonList(null));
-		var builder = program.samplers();
-		builder.addStorageBuffers(pipeline.storageBuffers());
+		var builder = program.getSamplers();
+		builder.addStorageBuffers(this.pipeline.getStorageBuffers());
 
-		program.uniforms().useFrameUniforms(pipeline.frameUniforms());
-		CommonUniforms.addDynamicUniforms(program.uniforms(), FogMode.OFF);
+		program.getUniforms().useFrameUniforms(this.pipeline.getFrameUniforms());
+		CommonUniforms.addDynamicUniforms(program.getUniforms(), FogMode.OFF);
 
-		CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
-			new CustomTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
+		CustomTextureSamplerInterceptor customTextureSamplerInterceptor = new CustomTextureSamplerInterceptor(builder,
+			this.customTextureIds, flippedAtLeastOnceSnapshot);
+
 		IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true, pipeline);
 		IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
 		IrisImages.addCustomImages(builder, customImages);
-		IrisImages.addRenderTargetImages(builder, () -> flipped, renderTargets);
+		IrisImages.addRenderTargetImages(builder, () -> flipped, this.renderTargets);
 
 		if (IrisImages.hasShadowImages(builder)) {
 			IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
@@ -227,23 +231,20 @@ public class FinalPassRenderer {
 				pipeline.hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 		}
 
-		centerDepthSampler.setUsage(
-			builder.addTextureSampler(new SamplerHolder.TextureBinding(
-					"iris_centerDepthSmooth", centerDepthSampler::getCenterDepthTextureView, () -> GlSampler.NEAREST),
-				false, "iris_centerDepthSmooth"));
+		this.centerDepthSampler.setUsage(builder.addTextureSampler(
+			new SamplerHolder.TextureBinding("iris_centerDepthSmooth", this.centerDepthSampler::getCenterDepthTextureView,
+				() -> GlSampler.NEAREST), false, "iris_centerDepthSmooth"));
 		builder.finish();
 
 		return program;
 	}
 
 	private ComputeProgram[] createComputes(ComputeSource[] compute, ImmutableSet<Integer> flipped,
-		ImmutableSet<Integer> flippedAtLeastOnceSnapshot,
-		Supplier<ShadowRenderTargets> shadowTargetsSupplier, ShaderStorageBufferHolder holder) {
+		ImmutableSet<Integer> flippedAtLeastOnceSnapshot, Supplier<ShadowRenderTargets> shadowTargetsSupplier,
+		ShaderStorageBufferHolder holder) {
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
-
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
-
 			if (source == null || source.getSource().isEmpty()) {
 			} else {
 
@@ -253,13 +254,13 @@ public class FinalPassRenderer {
 				ComputeProgram program;
 
 				try {
-					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), TextureStage.COMPOSITE_AND_FINAL, pipeline.getTextureMap(), pipeline.getTextureOverrides(TextureStage.COMPOSITE_AND_FINAL));
+					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null),
+						TextureStage.COMPOSITE_AND_FINAL, pipeline.getTextureMap(),
+						pipeline.getTextureOverrides(TextureStage.COMPOSITE_AND_FINAL));
 
-					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
-
-					program = new ComputeProgram(RenderSystem.getDevice(), pipeline.packSamplers(), source.getName(), transformed);
-					builder = program.samplers();
-					builder.addStorageBuffers(pipeline.storageBuffers());
+					program = new ComputeProgram(this.pipeline.getPackSamplers(), source.getName(), transformed);
+					builder = program.getSamplers();
+					builder.addStorageBuffers(this.pipeline.getStorageBuffers());
 				} catch (ShaderCompileException e) {
 					throw e;
 				} catch (RuntimeException e) {
@@ -267,10 +268,10 @@ public class FinalPassRenderer {
 					throw new RuntimeException("Shader compilation failed for final compute " + source.getName() + "!", e);
 				}
 
-				CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
-					new CustomTextureSamplerInterceptor(builder, customTextureIds, flippedAtLeastOnceSnapshot);
-				program.uniforms().useFrameUniforms(pipeline.frameUniforms());
-				CommonUniforms.addDynamicUniforms(program.uniforms(), FogMode.OFF);
+				CustomTextureSamplerInterceptor customTextureSamplerInterceptor = new CustomTextureSamplerInterceptor(builder,
+					this.customTextureIds, flippedAtLeastOnceSnapshot);
+				program.getUniforms().useFrameUniforms(this.pipeline.getFrameUniforms());
+				CommonUniforms.addDynamicUniforms(program.getUniforms(), FogMode.OFF);
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true, pipeline);
 				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
@@ -307,21 +308,21 @@ public class FinalPassRenderer {
 			finalPass.destroy();
 		}
 
-		if (fallbackProgram != null) {
-			fallbackProgram.destroy();
+		if (this.fallbackProgram != null) {
+			this.fallbackProgram.destroy();
 		}
 	}
 
 	private static final class Pass {
-		CompositeProgram program;
 		ComputeProgram[] computes;
 		ImmutableSet<Integer> stageReadsFromAlt;
 		ImmutableSet<Integer> mipmappedBuffers;
+		private CompositeProgram program;
 
 		private void destroy() {
 			this.program.destroy();
 
-			for (var compute : computes) {
+			for (var compute : this.computes) {
 				if (compute != null) {
 					compute.destroy();
 				}

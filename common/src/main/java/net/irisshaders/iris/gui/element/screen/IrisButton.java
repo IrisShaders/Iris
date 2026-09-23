@@ -67,20 +67,17 @@ public class IrisButton extends Button {
 		public IrisButton.Builder pos(int pButton$Builder0, int pInt1) {
 			this.x = pButton$Builder0;
 			this.y = pInt1;
-
 			return this;
 		}
 
 		public IrisButton.Builder width(int pButton$Builder0) {
 			this.width = pButton$Builder0;
-
 			return this;
 		}
 
 		public IrisButton.Builder size(int pButton$Builder0, int pInt1) {
 			this.width = pButton$Builder0;
 			this.height = pInt1;
-
 			return this;
 		}
 
@@ -90,23 +87,19 @@ public class IrisButton extends Button {
 
 		public IrisButton.Builder tooltip(@Nullable Tooltip pButton$Builder0) {
 			this.tooltip = pButton$Builder0;
-
 			return this;
 		}
 
 		public IrisButton.Builder createNarration(Button.CreateNarration pButton$Builder0) {
 			this.createNarration = pButton$Builder0;
-
 			return this;
 		}
 
 		public IrisButton build() {
-			IrisButton lvButton1 = new IrisButton(this.x, this.y, this.width, this.height, this.message, this.onPress,
-				this.createNarration,
+			IrisButton lvButton1 = new IrisButton(this.x, this.y, this.width, this.height, this.message, this.onPress, this.createNarration,
 				this.alpha);
 			lvButton1.setTooltip(this.tooltip);
 			lvButton1.active = true;
-
 			return lvButton1;
 		}
 	}

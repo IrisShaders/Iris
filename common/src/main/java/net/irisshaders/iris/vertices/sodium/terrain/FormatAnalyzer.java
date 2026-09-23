@@ -66,11 +66,9 @@ public class FormatAnalyzer {
 			midBlockOffset = 0;
 		}
 
-        VertexFormat.Builder VERTEX_FORMAT = VertexFormat.builder(0)
-                .addAttribute("a_Position", GpuFormat.RG32_UINT)
-                .addAttribute("a_Color", GpuFormat.RGBA8_UNORM)
-                .addAttribute("a_TexCoord", GpuFormat.RG16_UINT)
-                .addAttribute("a_LightAndData", GpuFormat.RGBA8_UINT);
+		VertexFormat.Builder VERTEX_FORMAT = VertexFormat.builder(0).addAttribute("a_Position", GpuFormat.RG32_UINT)
+			.addAttribute("a_Color", GpuFormat.RGBA8_UNORM).addAttribute("a_TexCoord", GpuFormat.RG16_UINT)
+			.addAttribute("a_LightAndData", GpuFormat.RGBA8_UINT);
 
 		if (blockId) {
 			VERTEX_FORMAT.addAttribute("mc_Entity", GpuFormat.R32_UINT);
@@ -88,6 +86,7 @@ public class FormatAnalyzer {
 			VERTEX_FORMAT.addAttribute("at_midBlock", GpuFormat.RGBA8_SNORM);
 		}
 
-		return classMap.computeIfAbsent(key, k -> new XHFPModelVertexType(VERTEX_FORMAT.build(), blockIdOffset, normalOffset, midUvOffset, midBlockOffset));
+		return classMap.computeIfAbsent(key,
+			k -> new XHFPModelVertexType(VERTEX_FORMAT.build(), blockIdOffset, normalOffset, midUvOffset, midBlockOffset));
 	}
 }

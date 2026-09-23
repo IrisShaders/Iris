@@ -1,14 +1,11 @@
 package net.irisshaders.iris.shadows;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.mixin.EndFlashAccess;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.EndFlashState;
 import net.minecraft.world.level.Level;
 import org.joml.Matrix4f;
@@ -19,7 +16,8 @@ public class ShadowMatrices {
 
 	public static Matrix4f createOrthoMatrix(float halfPlaneLength, float nearPlane, float farPlane) {
 		//System.out.println("making a matrix with " + nearPlane + " / " + farPlane + " * " + halfPlaneLength);
-		return new Matrix4f().setOrthoSymmetric(halfPlaneLength * 2, halfPlaneLength * 2, nearPlane, farPlane, RenderSystem.getDevice().getDeviceInfo().isZZeroToOne());
+		return new Matrix4f().setOrthoSymmetric(halfPlaneLength * 2, halfPlaneLength * 2, nearPlane, farPlane,
+			RenderSystem.getDevice().getDeviceInfo().isZZeroToOne());
 	}
 
 	public static Matrix4f createPerspectiveMatrix(float fov) {
@@ -32,17 +30,18 @@ public class ShadowMatrices {
 			// column 2
 			0f, yScale, 0f, 0f,
 			// column 3
-			0f, 0f,  (zZeroToOne ? FAR : (FAR + NEAR)) / (NEAR - FAR), -1.0F,
+			0f, 0f, (zZeroToOne ? FAR : (FAR + NEAR)) / (NEAR - FAR), -1.0F,
 			// column 4
-			0f, 0f, (RenderSystem.getDevice().getDeviceInfo().isZZeroToOne() ? FAR : (2.0F * FAR)) * NEAR / (NEAR - FAR), 1f
-		);
+			0f, 0f, (RenderSystem.getDevice().getDeviceInfo().isZZeroToOne() ? FAR : (2.0F * FAR)) * NEAR / (NEAR - FAR), 1f);
 	}
 
-	public static void createBaselineModelViewMatrix(PoseStack target, float shadowAngle, float sunPathRotation, float nearPlane, float farPlane) {
+	public static void createBaselineModelViewMatrix(PoseStack target, float shadowAngle, float sunPathRotation, float nearPlane,
+		float farPlane) {
 		target.last().normal().identity();
 		target.last().pose().identity();
 
-		if (Minecraft.getInstance().level.dimension() == Level.END && Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::supportsEndFlash).orElse(false)) {
+		if (Minecraft.getInstance().level.dimension() == Level.END && Iris.getPipelineManager().getPipeline()
+			.map(WorldRenderingPipeline::supportsEndFlash).orElse(false)) {
 
 			EndFlashState state = Minecraft.getInstance().level.endFlashState();
 			float skyAngle = state.getXAngle();
@@ -98,8 +97,8 @@ public class ShadowMatrices {
 		target.last().pose().translate(offsetX, offsetY, offsetZ);
 	}
 
-	public static void createModelViewMatrix(PoseStack target, float shadowAngle, float shadowIntervalSize,
-											 float sunPathRotation, double cameraX, double cameraY, double cameraZ, float nearPlane, float farPlane) {
+	public static void createModelViewMatrix(PoseStack target, float shadowAngle, float shadowIntervalSize, float sunPathRotation,
+		double cameraX, double cameraY, double cameraZ, float nearPlane, float farPlane) {
 		createBaselineModelViewMatrix(target, shadowAngle, sunPathRotation, nearPlane, farPlane);
 		snapModelViewToGrid(target, shadowIntervalSize, cameraX, cameraY, cameraZ);
 	}
@@ -108,65 +107,40 @@ public class ShadowMatrices {
 		public static void main(String[] args) {
 			// const float shadowDistance = 32.0;
 			// /* SHADOWHPL:32.0 */
-			Matrix4f expected = new Matrix4f(
-				0.03125f, 0f, 0f, 0f,
-				0f, 0.03125f, 0f, 0f,
-				0f, 0f, -0.007814026437699795f, 0f,
-				0f, 0f, -1.000390648841858f, 1f
-			);
+			Matrix4f expected = new Matrix4f(0.03125f, 0f, 0f, 0f, 0f, 0.03125f, 0f, 0f, 0f, 0f, -0.007814026437699795f, 0f, 0f, 0f,
+				-1.000390648841858f, 1f);
 
 			test("ortho projection hpl=32", expected, createOrthoMatrix(32.0f, 0.05f, 256.0f));
 
 			// const float shadowDistance = 110.0;
 			// /* SHADOWHPL:110.0 */
-			Matrix4f expected110 = new Matrix4f(
-				0.00909090880304575f, 0, 0, 0,
-				0, 0.00909090880304575f, 0, 0,
-				0, 0, -0.007814026437699795f, 0,
-				0, 0, -1.000390648841858f, 1
-			);
+			Matrix4f expected110 = new Matrix4f(0.00909090880304575f, 0, 0, 0, 0, 0.00909090880304575f, 0, 0, 0, 0, -0.007814026437699795f,
+				0, 0, 0, -1.000390648841858f, 1);
 
 			test("ortho projection hpl=110", expected110, createOrthoMatrix(110.0f, 0.05f, 256.0f));
 
-			Matrix4f expected90Proj = new Matrix4f(
-				1.0f, 0.0f, 0.0f, 0.0f,
-				0.0f, 1.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, -1.0003906f, -1.0f,
-				0.0f, 0.0f, -0.10001954f, 0.0f
-			);
+			Matrix4f expected90Proj = new Matrix4f(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0003906f, -1.0f, 0.0f,
+				0.0f, -0.10001954f, 0.0f);
 
 			test("perspective projection fov=90", expected90Proj, createPerspectiveMatrix(90.0f));
 
 			Matrix4f expectedModelViewAtDawn = new Matrix4f(
 				// column 1
-				0.21545040607452393f,
-				5.820481518981069E-8f,
-				0.9765146970748901f,
-				0,
+				0.21545040607452393f, 5.820481518981069E-8f, 0.9765146970748901f, 0,
 				// column 2
-				-0.9765147466795349f,
-				1.2841844920785661E-8f,
-				0.21545039117336273f,
-				0,
+				-0.9765147466795349f, 1.2841844920785661E-8f, 0.21545039117336273f, 0,
 				// column 3
-				0,
-				-0.9999999403953552f,
-				5.960464477539063E-8f,
-				0,
+				0, -0.9999999403953552f, 5.960464477539063E-8f, 0,
 				// column 4
-				0.38002151250839233f,
-				1.0264281034469604f,
-				-100.4463119506836f,
-				1
-			);
+				0.38002151250839233f, 1.0264281034469604f, -100.4463119506836f, 1);
 
 			PoseStack modelView = new PoseStack();
 
 			// NB: At dawn, the shadow angle is NOT zero.
 			// When DayTime=0, skyAngle = 282 degrees.
 			// Thus, sunAngle = shadowAngle = 0.03451777f
-			createModelViewMatrix(modelView, 0.03451777f, 2.0f,
-				0.0f, 0.646045982837677f, 82.53274536132812f, -514.0264282226562f, NEAR, FAR);
+			createModelViewMatrix(modelView, 0.03451777f, 2.0f, 0.0f, 0.646045982837677f, 82.53274536132812f, -514.0264282226562f, NEAR,
+				FAR);
 
 			test("model view at dawn", expectedModelViewAtDawn, modelView.last().pose());
 		}

@@ -4,7 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 
 public class IrisContainerObjectSelectionList<E extends ContainerObjectSelectionList.Entry<E>> extends ContainerObjectSelectionList<E> {
-	public IrisContainerObjectSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right, int itemHeight) {
+	public IrisContainerObjectSelectionList(Minecraft client, int width, int height, int top, int bottom, int left, int right,
+		int itemHeight) {
 		super(client, width, height, top, itemHeight);
 	}
 

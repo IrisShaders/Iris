@@ -10,7 +10,8 @@ import java.util.List;
 public final class ShadowRenderCallbacks {
 	private static final List<IrisShadowRenderCallback> CALLBACKS = new ArrayList<>();
 
-	private ShadowRenderCallbacks() {}
+	private ShadowRenderCallbacks() {
+	}
 
 	public static void register(IrisShadowRenderCallback callback) {
 		CALLBACKS.add(callback);

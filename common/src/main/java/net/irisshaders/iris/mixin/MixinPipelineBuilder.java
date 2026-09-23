@@ -1,5 +1,6 @@
 package net.irisshaders.iris.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
@@ -8,6 +9,7 @@ import com.mojang.renderpearl.api.pipeline.ShaderSource;
 import com.mojang.renderpearl.frontend.shaders.PipelineBuilder;
 import net.irisshaders.iris.vertices.ImmediateState;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -15,10 +17,8 @@ import java.util.concurrent.Executor;
 @Mixin(PipelineBuilder.class)
 public class MixinPipelineBuilder {
 	@WrapMethod(method = "compilePipeline")
-	private CompletableFuture<CompiledRenderPipeline.Pending> iris$useDeclaredVertexFormats(
-		RenderPipeline pipeline, ShaderSource shaderSource,
-		Executor executor,
-		Operation<CompletableFuture<CompiledRenderPipeline.Pending>> original) {
+	private CompletableFuture<CompiledRenderPipeline.Pending> iris$useDeclaredVertexFormats(RenderPipeline pipeline,
+		ShaderSource shaderSource, Executor executor, Operation<CompletableFuture<CompiledRenderPipeline.Pending>> original) {
 		boolean previous = ImmediateState.skipExtension.get();
 		ImmediateState.skipExtension.set(true);
 		try {
@@ -26,5 +26,19 @@ public class MixinPipelineBuilder {
 		} finally {
 			ImmediateState.skipExtension.set(previous);
 		}
+	}
+
+	@ModifyReturnValue(method = "compilePipeline", at = @At("RETURN"))
+	private CompletableFuture<CompiledRenderPipeline.Pending> iris$finishWithDeclaredVertexFormats(
+		CompletableFuture<CompiledRenderPipeline.Pending> original) {
+		return original.thenApply(inner -> () -> {
+			boolean previous = ImmediateState.skipExtension.get();
+			ImmediateState.skipExtension.set(true);
+			try {
+				return inner.finishCompile();
+			} finally {
+				ImmediateState.skipExtension.set(previous);
+			}
+		});
 	}
 }

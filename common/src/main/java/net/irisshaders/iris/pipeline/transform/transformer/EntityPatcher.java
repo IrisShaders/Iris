@@ -16,8 +16,8 @@ public class EntityPatcher {
 	private static final AutoHintedMatcher<ExternalDeclaration> uniformVec4EntityColor = new AutoHintedMatcher<>(
 		"uniform vec4 entityColor;", ParseShape.EXTERNAL_DECLARATION);
 
-	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntEntityId = new AutoHintedMatcher<>(
-		"uniform int entityId;", ParseShape.EXTERNAL_DECLARATION);
+	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntEntityId = new AutoHintedMatcher<>("uniform int entityId;",
+		ParseShape.EXTERNAL_DECLARATION);
 
 	private static final AutoHintedMatcher<ExternalDeclaration> uniformIntBlockEntityId = new AutoHintedMatcher<>(
 		"uniform int blockEntityId;", ParseShape.EXTERNAL_DECLARATION);
@@ -26,11 +26,7 @@ public class EntityPatcher {
 		"uniform int currentRenderedItemId;", ParseShape.EXTERNAL_DECLARATION);
 
 	// Add entity color -> overlay color attribute support.
-	public static void patchOverlayColor(
-		ASTParser t,
-		TranslationUnit tree,
-		Root root,
-		VanillaParameters parameters) {
+	public static void patchOverlayColor(ASTParser t, TranslationUnit tree, Root root, VanillaParameters parameters) {
 		// delete original declaration
 		root.processMatches(t, uniformVec4EntityColor, ASTNode::detachAndDelete);
 
@@ -38,8 +34,7 @@ public class EntityPatcher {
 			// add our own declarations
 			// TODO: We're exposing entityColor to this stage even if it isn't declared in
 			// this stage. But this is needed for the pass-through behavior.
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"uniform sampler2D iris_overlay;",
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform sampler2D iris_overlay;",
 				parameters.inputs.isIE() ? "uniform ivec2 iris_OverlayUV;" : "in ivec2 iris_UV1;");
 
 			// Create our own main function to wrap the existing main function, so that we
@@ -47,8 +42,7 @@ public class EntityPatcher {
 			// stage.
 			tree.prependMainFunctionBody(t,
 				"vec4 overlayColor = texelFetch(iris_overlay, " + (parameters.inputs.isIE() ? "iris_OverlayUV" : "iris_UV1") + ", 0);",
-				"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);",
-				"iris_vertexColor = iris_Color;",
+				"entityColor = vec4(overlayColor.rgb, 1.0 - overlayColor.a);", "iris_vertexColor = iris_Color;",
 				// Workaround for a shader pack bug:
 				// https://github.com/IrisShaders/Iris/issues/1549
 				// Some shader packs incorrectly ignore the alpha value, and assume that rgb
@@ -62,11 +56,7 @@ public class EntityPatcher {
 		VaryingTransformer.add(t, tree, parameters, Type.F32VEC4, "iris_vertexColor");
 	}
 
-	public static void patchEntityId(
-		ASTParser t,
-		TranslationUnit tree,
-		Root root,
-		VanillaParameters parameters) {
+	public static void patchEntityId(ASTParser t, TranslationUnit tree, Root root, VanillaParameters parameters) {
 		// delete original declaration
 		root.processMatches(t, uniformIntEntityId, ASTNode::detachAndDelete);
 		root.processMatches(t, uniformIntBlockEntityId, ASTNode::detachAndDelete);

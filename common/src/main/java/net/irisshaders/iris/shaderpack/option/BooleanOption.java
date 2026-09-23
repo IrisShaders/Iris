@@ -15,10 +15,6 @@ public final class BooleanOption extends BaseOption {
 
 	@Override
 	public String toString() {
-		return "BooleanDefineOption{" +
-			"name=" + getName() +
-			", comment=" + getComment() +
-			", defaultValue=" + defaultValue +
-			'}';
+		return "BooleanDefineOption{" + "name=" + getName() + ", comment=" + getComment() + ", defaultValue=" + defaultValue + '}';
 	}
 }

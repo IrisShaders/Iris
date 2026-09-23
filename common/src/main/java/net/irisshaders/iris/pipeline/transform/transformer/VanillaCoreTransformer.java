@@ -12,11 +12,7 @@ import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
 import static net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
 public class VanillaCoreTransformer {
-	public static void transform(
-		ASTParser t,
-		TranslationUnit tree,
-		Root root,
-		VanillaParameters parameters) {
+	public static void transform(ASTParser t, TranslationUnit tree, Root root, VanillaParameters parameters) {
 
 		if (parameters.inputs.hasOverlay()) {
 			if (!parameters.inputs.isText()) {
@@ -25,9 +21,7 @@ public class VanillaCoreTransformer {
 			EntityPatcher.patchEntityId(t, tree, root, parameters);
 		}
 
-		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-			"const float mc_chunkFade = -1.0;",
-			"""
+		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "const float mc_chunkFade = -1.0;", """
 				layout(std140) uniform iris_Fog {
 				    vec4 FogColor;
 				    float FogEnvironmentalStart;
@@ -37,14 +31,7 @@ public class VanillaCoreTransformer {
 				    float FogSkyEnd;
 				    float FogCloudsEnd;
 				} iris_fogP;
-				""",
-			"struct iris_FogParameters {" +
-				"vec4 color;" +
-				"float density;" +
-				"float start;" +
-				"float end;" +
-				"float scale;" +
-				"};",
+				""", "struct iris_FogParameters {" + "vec4 color;" + "float density;" + "float start;" + "float end;" + "float scale;" + "};",
 			"iris_FogParameters irisInt_Fog = iris_FogParameters(iris_fogP.FogColor, 0.0, iris_fogP.FogEnvironmentalStart, iris_fogP.FogEnvironmentalEnd, 1.0 / (iris_fogP.FogEnvironmentalEnd - iris_fogP.FogEnvironmentalStart));");
 
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
@@ -54,23 +41,21 @@ public class VanillaCoreTransformer {
 			    vec4 ColorModulator;
 			    vec3 ModelOffset;
 			} iris_transforms;
-			""",
-			"""
-				layout(std140) uniform iris_Projection {
-				    mat4 iris_ProjMat;
-				};
-				""",
-			"""
-				layout(std140) uniform iris_Globals {
-    ivec3 CameraBlockPos;
-    float GlintAlpha;
-    vec3 CameraOffset;
-    float GameTime;
-    vec2 ScreenSize;
-    int MenuBlurRadius;
-    int UseRgss;
-				} iris_globalInfo;
-				""");
+			""", """
+			layout(std140) uniform iris_Projection {
+			    mat4 iris_ProjMat;
+			};
+			""", """
+			layout(std140) uniform iris_Globals {
+			ivec3 CameraBlockPos;
+			float GlintAlpha;
+			vec3 CameraOffset;
+			float GameTime;
+			vec2 ScreenSize;
+			int MenuBlurRadius;
+			int UseRgss;
+			} iris_globalInfo;
+			""");
 
 		CommonTransformer.transform(t, tree, root, parameters, true);
 		CommonTransformer.replaceMidBlock(t, tree, root, parameters);

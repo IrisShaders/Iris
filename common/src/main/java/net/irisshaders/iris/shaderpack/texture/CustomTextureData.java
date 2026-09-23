@@ -73,8 +73,8 @@ public abstract class CustomTextureData {
 		private final PixelType pixelType;
 		private final TextureFilteringData filteringData;
 
-		private RawData(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
-						PixelFormat pixelFormat, PixelType pixelType) {
+		private RawData(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat, PixelFormat pixelFormat,
+			PixelType pixelType) {
 			this.content = content;
 			this.filteringData = filteringData;
 			this.internalFormat = internalFormat;
@@ -106,15 +106,16 @@ public abstract class CustomTextureData {
 	public static final class RawData1D extends RawData {
 		private final int sizeX;
 
-		public RawData1D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
-						 PixelFormat pixelFormat, PixelType pixelType, int sizeX) {
+		public RawData1D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat, PixelFormat pixelFormat,
+			PixelType pixelType, int sizeX) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType);
 			int expectedSize = sizeX * pixelFormat.getComponentCount() * pixelType.getByteSize();
 
 			if (content.length < expectedSize) {
 				throw new IllegalStateException("1D Custom texture was " + content.length + " bytes; expected " + expectedSize);
 			} else if (content.length > expectedSize) {
-				Iris.logger.warn("1D Custom texture was " + content.length + " bytes; expected " + expectedSize + ". This is allowed, but you probably don't want this.");
+				Iris.logger.warn(
+					"1D Custom texture was " + content.length + " bytes; expected " + expectedSize + ". This is allowed, but you probably don't want this.");
 			}
 
 			this.sizeX = sizeX;
@@ -129,8 +130,8 @@ public abstract class CustomTextureData {
 		final int sizeX;
 		final int sizeY;
 
-		public RawData2D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
-						 PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY) {
+		public RawData2D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat, PixelFormat pixelFormat,
+			PixelType pixelType, int sizeX, int sizeY) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType);
 
 			int expectedSize = sizeX * sizeY * pixelFormat.getComponentCount() * pixelType.getByteSize();
@@ -138,7 +139,8 @@ public abstract class CustomTextureData {
 			if (content.length < expectedSize) {
 				throw new IllegalStateException("2D Custom texture was " + content.length + " bytes; expected " + expectedSize);
 			} else if (content.length > expectedSize) {
-				Iris.logger.warn("2D Custom texture was " + content.length + " bytes; expected " + expectedSize + ". This is allowed, but you probably don't want this.");
+				Iris.logger.warn(
+					"2D Custom texture was " + content.length + " bytes; expected " + expectedSize + ". This is allowed, but you probably don't want this.");
 			}
 
 			this.sizeX = sizeX;
@@ -159,8 +161,8 @@ public abstract class CustomTextureData {
 		final int sizeY;
 		final int sizeZ;
 
-		public RawData3D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
-						 PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY, int sizeZ) {
+		public RawData3D(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat, PixelFormat pixelFormat,
+			PixelType pixelType, int sizeX, int sizeY, int sizeZ) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType);
 
 			int expectedSize = sizeX * sizeY * sizeZ * pixelFormat.getComponentCount() * pixelType.getByteSize();
@@ -168,7 +170,8 @@ public abstract class CustomTextureData {
 			if (content.length < expectedSize) {
 				throw new IllegalStateException("3D Custom texture was " + content.length + " bytes; expected " + expectedSize);
 			} else if (content.length > expectedSize) {
-				Iris.logger.warn("3D Custom texture was " + content.length + " bytes; expected " + expectedSize + ". This is allowed, but you probably don't want this.");
+				Iris.logger.warn(
+					"3D Custom texture was " + content.length + " bytes; expected " + expectedSize + ". This is allowed, but you probably don't want this.");
 			}
 
 			this.sizeX = sizeX;
@@ -190,7 +193,8 @@ public abstract class CustomTextureData {
 	}
 
 	public static class RawDataRect extends RawData2D {
-		public RawDataRect(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat, PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY) {
+		public RawDataRect(byte[] content, TextureFilteringData filteringData, InternalTextureFormat internalFormat,
+			PixelFormat pixelFormat, PixelType pixelType, int sizeX, int sizeY) {
 			super(content, filteringData, internalFormat, pixelFormat, pixelType, sizeX, sizeY);
 		}
 	}

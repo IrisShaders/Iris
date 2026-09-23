@@ -26,15 +26,11 @@ public class ComputeDirectiveParser {
 		}
 
 		if (parts.length != 3) {
-			Iris.logger.error("Failed to process " + directive +
-				": expected 3 arguments to a ivec3 constructor, got " + parts.length);
+			Iris.logger.error("Failed to process " + directive + ": expected 3 arguments to a ivec3 constructor, got " + parts.length);
 		}
 
 		try {
-			source.setWorkGroups(new Vector3i(
-				Integer.parseInt(parts[0]),
-				Integer.parseInt(parts[1]),
-				Integer.parseInt(parts[2])));
+			source.setWorkGroups(new Vector3i(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
 		} catch (NumberFormatException e) {
 			Iris.logger.error("Failed to process " + directive, e);
 		}
@@ -60,15 +56,11 @@ public class ComputeDirectiveParser {
 		}
 
 		if (parts.length != 2) {
-			Iris.logger.error("Failed to process " + directive +
-				": expected 2 arguments to a vec2 constructor, got " + parts.length);
+			Iris.logger.error("Failed to process " + directive + ": expected 2 arguments to a vec2 constructor, got " + parts.length);
 		}
 
 		try {
-			source.setWorkGroupRelative(new Vector2f(
-				Float.parseFloat(parts[0]),
-				Float.parseFloat(parts[1])
-			));
+			source.setWorkGroupRelative(new Vector2f(Float.parseFloat(parts[0]), Float.parseFloat(parts[1])));
 		} catch (NumberFormatException e) {
 			Iris.logger.error("Failed to process " + directive, e);
 		}

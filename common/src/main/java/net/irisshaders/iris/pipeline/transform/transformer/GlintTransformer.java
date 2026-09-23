@@ -22,11 +22,9 @@ public final class GlintTransformer {
 	}
 
 	public static void transform(ASTParser parser, TranslationUnit tree, Root root, Parameters parameters) {
-		tree.parseAndInjectNodes(parser, ASTInjectionPoint.BEFORE_DECLARATIONS,
-			"bool mc_hasGlint();", "vec3 mc_sampleGlint();");
+		tree.parseAndInjectNodes(parser, ASTInjectionPoint.BEFORE_DECLARATIONS, "bool mc_hasGlint();", "vec3 mc_sampleGlint();");
 		if (!hasGlint(parameters)) {
-			tree.parseAndInjectNodes(parser, ASTInjectionPoint.END,
-				"bool mc_hasGlint() { return false; }",
+			tree.parseAndInjectNodes(parser, ASTInjectionPoint.END, "bool mc_hasGlint() { return false; }",
 				"vec3 mc_sampleGlint() { return vec3(0.0); }");
 			return;
 		}
@@ -44,8 +42,7 @@ public final class GlintTransformer {
 			tree.prependMainFunctionBody(parser, "iris_glintCoord = (iris_transforms.TextureMat * vec4(" + uv + ", 0.0, 1.0)).xy;");
 		}
 
-		tree.parseAndInjectNodes(parser, ASTInjectionPoint.END,
-			"bool mc_hasGlint() { return true; }",
+		tree.parseAndInjectNodes(parser, ASTInjectionPoint.END, "bool mc_hasGlint() { return true; }",
 			"vec3 mc_sampleGlint() { return glintAlpha * texture(glintTexture, iris_glintCoord).rgb; }");
 	}
 

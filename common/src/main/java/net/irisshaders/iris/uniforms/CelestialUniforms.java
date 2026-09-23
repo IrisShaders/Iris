@@ -28,7 +28,9 @@ public final class CelestialUniforms {
 	}
 
 	public static float getSunAngle(boolean sun) {
-		float currentAngle = Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe().getValue(sun ? EnvironmentAttributes.SUN_ANGLE : EnvironmentAttributes.MOON_ANGLE, CapturedRenderingState.INSTANCE.getTickDelta());
+		float currentAngle = Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe()
+			.getValue(sun ? EnvironmentAttributes.SUN_ANGLE : EnvironmentAttributes.MOON_ANGLE,
+				CapturedRenderingState.INSTANCE.getTickDelta());
 
 		float c = currentAngle + 90.0f;
 
@@ -75,8 +77,7 @@ public final class CelestialUniforms {
 
 
 	public void addCelestialUniforms(UniformHolder uniforms) {
-		uniforms
-			.uniform1f(PER_FRAME, "sunAngle", () -> CelestialUniforms.getSunAngle(true) / 360.0f)
+		uniforms.uniform1f(PER_FRAME, "sunAngle", () -> CelestialUniforms.getSunAngle(true) / 360.0f)
 			.uniformTruncated3f(PER_FRAME, "sunPosition", this::getSunPosition)
 			.uniformTruncated3f(PER_FRAME, "moonPosition", this::getMoonPosition)
 			.uniform1f(PER_FRAME, "shadowAngle", CelestialUniforms::getShadowAngle)
@@ -87,8 +88,7 @@ public final class CelestialUniforms {
 				} else {
 					return ZERO;
 				}
-			})
-			.uniformTruncated3f(PER_FRAME, "upPosition", CelestialUniforms::getUpPosition);
+			}).uniformTruncated3f(PER_FRAME, "upPosition", CelestialUniforms::getUpPosition);
 	}
 
 	private Vector4f getSunPosition() {
@@ -101,7 +101,8 @@ public final class CelestialUniforms {
 
 	private Vector4f getEndFlashPosition() {
 		EndFlashState state = Minecraft.getInstance().level.endFlashState();
-		if (state == null) return ZERO;
+		if (state == null)
+			return ZERO;
 
 		float h = state.getYAngle(); // yaw around Y
 		float g = state.getXAngle(); // this feels silly
@@ -128,18 +129,19 @@ public final class CelestialUniforms {
 	}
 
 	public Vector4f getShadowLightPosition() {
-		if (Minecraft.getInstance().level.dimension() == Level.END && Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::supportsEndFlash).orElse(false)) {
+		if (Minecraft.getInstance().level.dimension() == Level.END && Iris.getPipelineManager().getPipeline()
+			.map(WorldRenderingPipeline::supportsEndFlash).orElse(false)) {
 			return getEndFlashPosition();
 		}
 		return isDay() ? getSunPosition() : getMoonPosition();
 	}
 
 	public Vector4f getShadowLightPositionInWorldSpace() {
-		if (Minecraft.getInstance().level.dimension() == Level.END && Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::supportsEndFlash).orElse(false)) {
+		if (Minecraft.getInstance().level.dimension() == Level.END && Iris.getPipelineManager().getPipeline()
+			.map(WorldRenderingPipeline::supportsEndFlash).orElse(false)) {
 			return getEndFlashPositionInWorldSpace();
 		}
-		return isDay() ? getCelestialPositionInWorldSpace(true, 100.0F)
-			: getCelestialPositionInWorldSpace(false, -100.0F);
+		return isDay() ? getCelestialPositionInWorldSpace(true, 100.0F) : getCelestialPositionInWorldSpace(false, -100.0F);
 	}
 
 	private Vector4f getCelestialPositionInWorldSpace(boolean sun, float y) {
@@ -153,7 +155,9 @@ public final class CelestialUniforms {
 		// This is because we need the result of it before it's actually performed in vanilla.
 		celestial.rotate(Axis.YP.rotationDegrees(-90.0F));
 		celestial.rotate(Axis.ZP.rotationDegrees(sunPathRotation));
-		float currentAngle = Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe().getValue(sun ? EnvironmentAttributes.SUN_ANGLE : EnvironmentAttributes.MOON_ANGLE, CapturedRenderingState.INSTANCE.getTickDelta());
+		float currentAngle = Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe()
+			.getValue(sun ? EnvironmentAttributes.SUN_ANGLE : EnvironmentAttributes.MOON_ANGLE,
+				CapturedRenderingState.INSTANCE.getTickDelta());
 
 		celestial.rotate(Axis.XP.rotationDegrees(currentAngle));
 		celestial.transform(position);
@@ -170,7 +174,9 @@ public final class CelestialUniforms {
 		// This is because we need the result of it before it's actually performed in vanilla.
 		celestial.rotate(Axis.YP.rotationDegrees(-90.0F));
 		celestial.rotate(Axis.ZP.rotationDegrees(sunPathRotation));
-		float currentAngle = Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe().getValue(sun ? EnvironmentAttributes.SUN_ANGLE : EnvironmentAttributes.MOON_ANGLE, CapturedRenderingState.INSTANCE.getTickDelta());
+		float currentAngle = Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe()
+			.getValue(sun ? EnvironmentAttributes.SUN_ANGLE : EnvironmentAttributes.MOON_ANGLE,
+				CapturedRenderingState.INSTANCE.getTickDelta());
 
 		celestial.rotate(Axis.XP.rotationDegrees(currentAngle));
 		position = celestial.transform(position);

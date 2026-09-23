@@ -9,7 +9,8 @@ public class BuiltinReplacementUniforms {
 
 	static {
 		// This mimics the transformations done in LightTexture to the GL_TEXTURE matrix.
-		lightmapTextureMatrix = new Matrix4f(0.00390625f, 0.0f, 0.0f, 0.0f, 0.0f, 0.00390625f, 0.0f, 0.0f, 0.0f, 0.0f, 0.00390625f, 0.0f, 0.03125f, 0.03125f, 0.03125f, 1.0f);
+		lightmapTextureMatrix = new Matrix4f(0.00390625f, 0.0f, 0.0f, 0.0f, 0.0f, 0.00390625f, 0.0f, 0.0f, 0.0f, 0.0f, 0.00390625f, 0.0f,
+			0.03125f, 0.03125f, 0.03125f, 1.0f);
 	}
 
 	public static void addBuiltinReplacementUniforms(UniformHolder uniforms) {

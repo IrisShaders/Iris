@@ -4,13 +4,13 @@ import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.UniformType;
-import net.irisshaders.iris.pipeline.transform.vulkan.VulkanResourceLayout;
+import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 
 public final class RenderPearlUniformBindings {
 	private RenderPearlUniformBindings() {
 	}
 
-	public static BindGroupLayout createLayout(VulkanResourceLayout resources) {
+	public static BindGroupLayout createLayout(ShaderResourceLayout resources) {
 		var builder = BindGroupLayout.builder();
 
 		for (var descriptor : resources.descriptors()) {
@@ -22,11 +22,12 @@ public final class RenderPearlUniformBindings {
 				case UNIFORM_BUFFER -> UniformType.UNIFORM_BUFFER;
 				case SAMPLER -> {
 					if (descriptor.type().contains("BUFFER")) {
-						throw new UnsupportedOperationException("Texel buffer format must be supplied: " + descriptor.name());
+						throw new UnsupportedOperationException("texel buffer format must be supplied: " + descriptor.name());
 					}
 
 					yield UniformType.COMBINED_IMAGE_SAMPLER;
 				}
+
 				case IMAGE, STORAGE_BUFFER ->
 					throw new UnsupportedOperationException("RenderPearl needs storage resource support: " + descriptor.name());
 			};
@@ -37,6 +38,6 @@ public final class RenderPearlUniformBindings {
 	}
 
 	public static void bind(RenderPass pass, GpuBufferSlice uniforms) {
-		pass.setUniform(VulkanResourceLayout.UNIFORM_BLOCK, uniforms);
+		pass.setUniform(ShaderResourceLayout.UNIFORM_BLOCK, uniforms);
 	}
 }

@@ -13,6 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinReloadableTexture extends AbstractTexture {
 	@Inject(method = "doLoad", at = @At("RETURN"))
 	private void iris$onDoLoad(NativeImage nativeImage, CallbackInfo ci) {
-		TextureTracker.INSTANCE.trackTexture(this.texture, (AbstractTexture) this);
+		TextureTracker.INSTANCE.trackTexture(this.texture, this);
 	}
 }

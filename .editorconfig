@@ -18,8 +18,18 @@ tab_width = unset
 
 [*.java]
 indent_style = tab
-tab_width = unset
+indent_size = 4
+max_line_length = 140
 ij_continuation_indent_size = 4
+ij_smart_tabs = false
+ij_java_keep_line_breaks = false
+ij_java_align_multiline_parameters = false
+ij_java_align_multiline_parameters_in_calls = false
+ij_java_align_multiline_chained_methods = false
+ij_java_call_parameters_wrap = normal
+ij_java_method_parameters_wrap = normal
+ij_java_method_call_chain_wrap = normal
+ij_java_wrap_first_method_in_call_chain = false
 ij_java_class_count_to_use_import_on_demand = 999
 ij_java_names_count_to_use_import_on_demand = 999
 ij_java_imports_layout = *,|,javax.**,java.**,|,$*

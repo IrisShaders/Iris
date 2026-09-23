@@ -38,7 +38,8 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 
 	private static int getOffset(String name) {
 		var element = IrisVertexFormats.GLYPH.getElement(name);
-		if (element == null) throw new IllegalArgumentException("Cannot find element " + name);
+		if (element == null)
+			throw new IllegalArgumentException("Cannot find element " + name);
 		return element.offset();
 	}
 
@@ -53,7 +54,8 @@ public class IrisTextVertexSinkImpl implements IrisTextVertexSink {
 	}
 
 	@Override
-	public void quad(float minX, float minY, float maxX, float maxY, float z, int color, float minU, float minV, float maxU, float maxV, int light) {
+	public void quad(float minX, float minY, float maxX, float maxY, float z, int color, float minU, float minV, float maxU, float maxV,
+		int light) {
 		vertex(minX, minY, z, color, minU, minV, light);
 		vertex(minX, maxY, z, color, minU, maxV, light);
 		vertex(maxX, maxY, z, color, maxU, maxV, light);

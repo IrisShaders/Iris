@@ -7,11 +7,7 @@ import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 
 public class CompositeCoreTransformer {
-	public static void transform(
-		ASTParser t,
-		TranslationUnit tree,
-		Root root,
-		Parameters parameters) {
+	public static void transform(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
 		CompositeDepthTransformer.transform(t, tree, root);
 
 		if (parameters.type == PatchShaderType.VERTEX) {

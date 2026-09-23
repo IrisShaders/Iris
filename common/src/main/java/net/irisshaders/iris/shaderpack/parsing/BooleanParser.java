@@ -73,8 +73,7 @@ public class BooleanParser {
 			evaluate(operationStack, valueStack, false);
 			boolean result = valueStack.pop();
 			if (!valueStack.isEmpty() || !operationStack.isEmpty()) {
-				Iris.logger.warn(
-					"Failed to parse the following boolean operation correctly, stacks not empty, defaulting to true!: '{}'",
+				Iris.logger.warn("Failed to parse the following boolean operation correctly, stacks not empty, defaulting to true!: '{}'",
 					expression);
 				return true;
 			}
@@ -134,17 +133,20 @@ public class BooleanParser {
 			boolean compute(boolean value, Stack<Boolean> valueStack) {
 				return valueStack.pop() && value;
 			}
-		}, OR {
+		},
+		OR {
 			@Override
 			boolean compute(boolean value, Stack<Boolean> valueStack) {
 				return valueStack.pop() || value;
 			}
-		}, NOT {
+		},
+		NOT {
 			@Override
 			boolean compute(boolean value, Stack<Boolean> valueStack) {
 				return !value;
 			}
-		}, OPEN;
+		},
+		OPEN;
 
 		boolean compute(boolean value, Stack<Boolean> valueStack) {
 			return value;

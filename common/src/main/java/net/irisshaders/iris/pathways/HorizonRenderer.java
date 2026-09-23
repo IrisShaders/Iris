@@ -61,9 +61,10 @@ public class HorizonRenderer {
 		}
 
 		BufferBuilder buffer = new BufferBuilder(storage, PrimitiveTopology.TRIANGLE_FAN, DefaultVertexFormat.POSITION);
-		buildHorizon(currentRenderDistance * 16, buffer);
 
+		buildHorizon(currentRenderDistance * 16, buffer);
 		MeshData meshData = buffer.buildOrThrow();
+
 		this.buffer = RenderSystem.getDevice()
 			.createBuffer(() -> "Horizon", GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, meshData.vertexBuffer());
 		this.indexCount = meshData.drawState().indexCount();
@@ -98,7 +99,6 @@ public class HorizonRenderer {
 		GpuBuffer indexBuffer = indices.getBuffer(indexCount);
 		GpuBufferSlice gpuBufferSlice = RenderSystem.getDynamicUniforms()
 			.writeTransform((Matrix4f) modelView, fogColor, new Vector3f(), new Matrix4f());
-
 		try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder()
 			.createRenderPass(() -> "Sky", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(), Optional.empty(),
 				Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
@@ -114,6 +114,6 @@ public class HorizonRenderer {
 
 	public void destroy() {
 		buffer.close();
-		storage.close();
+		this.storage.close();
 	}
 }

@@ -13,8 +13,7 @@ public class FileNode {
 
 	// NB: The caller is responsible for ensuring that the includes map
 	//     is in sync with the lines list.
-	private FileNode(AbsolutePackPath path, ImmutableList<String> lines,
-					 ImmutableMap<Integer, AbsolutePackPath> includes) {
+	private FileNode(AbsolutePackPath path, ImmutableList<String> lines, ImmutableMap<Integer, AbsolutePackPath> includes) {
 		this.path = path;
 		this.lines = lines;
 		this.includes = includes;
@@ -24,14 +23,13 @@ public class FileNode {
 		this.path = path;
 		this.lines = lines;
 
-		AbsolutePackPath currentDirectory = path.parent().orElseThrow(
-			() -> new IllegalArgumentException("Not a valid shader file name: " + path));
+		AbsolutePackPath currentDirectory = path.parent()
+			.orElseThrow(() -> new IllegalArgumentException("Not a valid shader file name: " + path));
 
 		this.includes = findIncludes(currentDirectory, lines);
 	}
 
-	private static ImmutableMap<Integer, AbsolutePackPath> findIncludes(AbsolutePackPath currentDirectory,
-																		ImmutableList<String> lines) {
+	private static ImmutableMap<Integer, AbsolutePackPath> findIncludes(AbsolutePackPath currentDirectory, ImmutableList<String> lines) {
 		ImmutableMap.Builder<Integer, AbsolutePackPath> foundIncludes = ImmutableMap.builder();
 
 		for (int i = 0; i < lines.size(); i++) {

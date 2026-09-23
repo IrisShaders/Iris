@@ -77,7 +77,8 @@ public class ShaderPack {
 	private final Map<NamespacedId, ProgramSetInterface> overrides;
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
-	private final EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new EnumMap<>(TextureStage.class);
+	private final EnumMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new EnumMap<>(
+		TextureStage.class);
 	private final Object2ObjectMap<String, CustomTextureData> irisCustomTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final CustomTextureData customNoiseTexture;
 	private final ShaderPackOptions shaderPackOptions;
@@ -104,7 +105,8 @@ public class ShaderPack {
 	 *             have completed, and there is no need to hold on to the path for that reason.
 	 * @throws IOException if there are any IO errors during shader pack loading.
 	 */
-	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines, boolean isZip) throws IOException, IllegalStateException {
+	public ShaderPack(Path root, Map<String, String> changedConfigs, ImmutableList<StringPair> environmentDefines,
+		boolean isZip) throws IOException, IllegalStateException {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
@@ -114,8 +116,7 @@ public class ShaderPack {
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
 
-		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"),
-			potentialFileNames);
+		ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/"), potentialFileNames);
 
 		dimensionIds = new ArrayList<>();
 		bufferObjects = new Int2ObjectArrayMap<>();
@@ -148,8 +149,7 @@ public class ShaderPack {
 		}
 
 		for (String id : dimensionIdCreator) {
-			if (ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/" + id),
-				potentialFileNames)) {
+			if (ShaderPackSourceNames.findPresentSources(starts, root, AbsolutePackPath.fromAbsolutePath("/" + id), potentialFileNames)) {
 				dimensionIds.add(id);
 			}
 		}
@@ -158,7 +158,8 @@ public class ShaderPack {
 		IncludeGraph graph = new IncludeGraph(root, starts.build(), isZip);
 
 		if (!graph.getFailures().isEmpty()) {
-			throw new IOException(String.join("\n", graph.getFailures().values().stream().map(RusticError::toString).toArray(String[]::new)));
+			throw new IOException(
+				String.join("\n", graph.getFailures().values().stream().map(RusticError::toString).toArray(String[]::new)));
 		}
 
 		this.languageMap = new LanguageMap(root.resolve("lang"));
@@ -173,15 +174,15 @@ public class ShaderPack {
 				finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_" + flag.name(), ""));
 			}
 		}
-		this.shaderProperties = loadProperties(root, "shaders.properties")
-			.map(source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines))
-			.orElseGet(ShaderProperties::empty);
+		this.shaderProperties = loadProperties(root, "shaders.properties").map(
+			source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines)).orElseGet(ShaderProperties::empty);
 
 		for (Int2ObjectMap.Entry<ShaderStorageInfo> shaderStorageInfoEntry : shaderProperties.getBufferObjects().int2ObjectEntrySet()) {
 			ShaderStorageInfo info = shaderStorageInfoEntry.getValue();
 
 			if (info.name() == null) {
-				bufferObjects.put(shaderStorageInfoEntry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), null));
+				bufferObjects.put(shaderStorageInfoEntry.getIntKey(),
+					new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), null));
 			} else {
 				String path = info.name();
 
@@ -195,12 +196,16 @@ public class ShaderPack {
 					byte[] data = Files.readAllBytes(root.resolve(path));
 
 					if (data.length > info.size()) {
-						throw new IllegalStateException("Tried to load a shader storage file with no space in the buffer! Increase the buffer size.");
+						throw new IllegalStateException(
+							"Tried to load a shader storage file with no space in the buffer! Increase the buffer size.");
 					}
 
-					bufferObjects.put(shaderStorageInfoEntry.getIntKey(), new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), data));
+					bufferObjects.put(shaderStorageInfoEntry.getIntKey(),
+						new BuiltShaderStorageInfo(info.size(), info.relative(), info.scaleX(), info.scaleY(), data));
 				} catch (IOException e) {
-					Iris.logger.error("Shader storage buffer with index " + shaderStorageInfoEntry.getIntKey() + " and path " + path + " could not be read.", e);
+					Iris.logger.error(
+						"Shader storage buffer with index " + shaderStorageInfoEntry.getIntKey() + " and path " + path + " could not be read.",
+						e);
 				}
 			}
 		}
@@ -214,24 +219,30 @@ public class ShaderPack {
 		}
 
 		if (!activeFeatures.contains(FeatureFlags.SSBO) && !shaderProperties.getBufferObjects().isEmpty()) {
-			throw new IllegalStateException("An SSBO is being used, but the feature flag for SSBO's hasn't been set! Please set either a requirement or check for the SSBO feature using \"iris.features.required/optional = ssbo\".");
+			throw new IllegalStateException(
+				"An SSBO is being used, but the feature flag for SSBO's hasn't been set! Please set either a requirement or check for the SSBO feature using \"iris.features.required/optional = ssbo\".");
 		}
 
 		if (!activeFeatures.contains(FeatureFlags.CUSTOM_IMAGES) && !shaderProperties.getIrisCustomImages().isEmpty()) {
-			throw new IllegalStateException("Custom images are being used, but the feature flag for custom images hasn't been set! Please set either a requirement or check for custom images' feature flag using \"iris.features.required/optional = CUSTOM_IMAGES\".");
+			throw new IllegalStateException(
+				"Custom images are being used, but the feature flag for custom images hasn't been set! Please set either a requirement or check for custom images' feature flag using \"iris.features.required/optional = CUSTOM_IMAGES\".");
 		}
 
-		List<FeatureFlags> invalidFlagList = shaderProperties.getRequiredFeatureFlags().stream().filter(FeatureFlags::isInvalid).map(FeatureFlags::getValue).collect(Collectors.toList());
+		List<FeatureFlags> invalidFlagList = shaderProperties.getRequiredFeatureFlags().stream().filter(FeatureFlags::isInvalid)
+			.map(FeatureFlags::getValue).collect(Collectors.toList());
 		List<String> invalidFeatureFlags = invalidFlagList.stream().map(FeatureFlags::getHumanReadableName).toList();
 
 		if (!invalidFeatureFlags.isEmpty()) {
 			if (Minecraft.getInstance().gui.screen() instanceof ShaderPackScreen) {
-				MutableComponent component = Component.translatable("iris.unsupported.pack.description", FeatureFlags.getInvalidStatus(invalidFlagList), invalidFeatureFlags.stream()
-					.collect(Collectors.joining(", ", ": ", ".")));
+				MutableComponent component = Component.translatable("iris.unsupported.pack.description",
+					FeatureFlags.getInvalidStatus(invalidFlagList),
+					invalidFeatureFlags.stream().collect(Collectors.joining(", ", ": ", ".")));
 				if (SystemUtils.IS_OS_MAC) {
 					component = component.append(Component.translatable("iris.unsupported.pack.macos"));
 				}
-				Minecraft.getInstance().gui.setScreen(new FeatureMissingErrorScreen(Minecraft.getInstance().gui.screen(), Component.translatable("iris.unsupported.pack"), component));
+				Minecraft.getInstance().gui.setScreen(
+					new FeatureMissingErrorScreen(Minecraft.getInstance().gui.screen(), Component.translatable("iris.unsupported.pack"),
+						component));
 			}
 			IrisApi.getInstance().getConfig().setShadersEnabledAndApply(false);
 		}
@@ -243,7 +254,8 @@ public class ShaderPack {
 			}
 		}
 
-		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream().filter(flag -> !FeatureFlags.isInvalid(flag)).toList();
+		List<String> optionalFeatureFlags = shaderProperties.getOptionalFeatureFlags().stream()
+			.filter(flag -> !FeatureFlags.isInvalid(flag)).toList();
 
 		if (!optionalFeatureFlags.isEmpty()) {
 			optionalFeatureFlags.forEach(flag -> newEnvDefines.add(new StringPair("IRIS_FEATURE_" + flag, "")));
@@ -268,8 +280,8 @@ public class ShaderPack {
 
 		{
 			String profileName = getCurrentProfileName();
-			OptionValues profileOptions = new MutableOptionValues(
-				this.shaderPackOptions.getOptionSet(), this.profile.current.map(p -> p.optionValues).orElse(new HashMap<>()));
+			OptionValues profileOptions = new MutableOptionValues(this.shaderPackOptions.getOptionSet(),
+				this.profile.current.map(p -> p.optionValues).orElse(new HashMap<>()));
 
 			int userOptionsChanged = this.shaderPackOptions.getOptionValues().getOptionsChanged() - profileOptions.getOptionsChanged();
 
@@ -319,7 +331,8 @@ public class ShaderPack {
 			return source;
 		};
 
-		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + dimensionMap.getOrDefault(new NamespacedId("*", "*"), "")), sourceProvider, shaderProperties, this);
+		this.base = new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + dimensionMap.getOrDefault(new NamespacedId("*", "*"), "")),
+			sourceProvider, shaderProperties, this);
 
 		this.overrides = new HashMap<>();
 
@@ -366,8 +379,7 @@ public class ShaderPack {
 	/**
 	 * Loads properties from a properties file in a shaderpack path
 	 */
-	private static Optional<Properties> loadProperties(Path shaderPath, String name,
-													   Iterable<StringPair> environmentDefines) {
+	private static Optional<Properties> loadProperties(Path shaderPath, String name, Iterable<StringPair> environmentDefines) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
 			return Optional.empty();
@@ -419,7 +431,7 @@ public class ShaderPack {
 
 	@Nullable
 	private static ProgramSet loadOverrides(boolean has, AbsolutePackPath path, Function<AbsolutePackPath, String> sourceProvider,
-											ShaderProperties shaderProperties, ShaderPack pack) {
+		ShaderProperties shaderProperties, ShaderPack pack) {
 		if (has) {
 			return new ProgramSet(path, sourceProvider, shaderProperties, pack);
 		}
@@ -531,13 +543,18 @@ public class ShaderPack {
 			} else if (definition instanceof TextureDefinition.RawDefinition rawDefinition) {
 				customTextureData = switch (rawDefinition.getTarget()) {
 					case TEXTURE_1D ->
-						new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
+						new CustomTextureData.RawData1D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(),
+							rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX());
 					case TEXTURE_2D ->
-						new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+						new CustomTextureData.RawData2D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(),
+							rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
 					case TEXTURE_3D ->
-						new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(), rawDefinition.getSizeZ());
+						new CustomTextureData.RawData3D(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(),
+							rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY(),
+							rawDefinition.getSizeZ());
 					case TEXTURE_RECTANGLE ->
-						new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(), rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
+						new CustomTextureData.RawDataRect(content, new TextureFilteringData(blur, clamp), rawDefinition.getInternalFormat(),
+							rawDefinition.getFormat(), rawDefinition.getPixelType(), rawDefinition.getSizeX(), rawDefinition.getSizeY());
 				};
 			} else {
 				customTextureData = null;
@@ -562,7 +579,8 @@ public class ShaderPack {
 				if (dimensionIds.contains(name)) {
 					return new ProgramSet(AbsolutePackPath.fromAbsolutePath("/" + name), sourceProvider, shaderProperties, this);
 				} else {
-					Iris.logger.error("Attempted to load dimension folder " + name + " for dimension " + dimension + ", but it does not exist!");
+					Iris.logger.error(
+						"Attempted to load dimension folder " + name + " for dimension " + dimension + ", but it does not exist!");
 					return ProgramSetInterface.Empty.INSTANCE;
 				}
 			} else {

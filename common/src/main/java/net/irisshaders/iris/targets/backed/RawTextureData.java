@@ -16,34 +16,57 @@ public final class RawTextureData {
 		boolean integer = sourceFormat.isInteger();
 
 		if (integer != internal.getPixelFormat().isInteger()) {
-			throw new IllegalArgumentException("Integer texture upload format mismatch");
+			throw new IllegalArgumentException("integer texture upload format mismatch");
 		}
 
 		switch (type) {
-			case BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT -> {
+			case BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, UNSIGNED_SHORT_5_6_5,
+			     UNSIGNED_SHORT_5_6_5_REV, UNSIGNED_SHORT_5_5_5_1, UNSIGNED_SHORT_1_5_5_5_REV -> {
 			}
-			default -> throw new UnsupportedOperationException("Packed raw pixel conversion is not implemented: " + type);
+
+			default -> throw new UnsupportedOperationException("packed raw pixel conversion is not implemented: " + type);
 		}
 
 		int inputChannels = sourceFormat.getComponentCount();
-		int stride = Math.multiplyExact(inputChannels, type.getByteSize());
+		int packedChannels = switch (type) {
+			case UNSIGNED_SHORT_5_6_5, UNSIGNED_SHORT_5_6_5_REV -> 3;
+			case UNSIGNED_SHORT_5_5_5_1, UNSIGNED_SHORT_1_5_5_5_REV -> 4;
+			default -> 0;
+		};
+
+		if (packedChannels != 0 && (integer || inputChannels != packedChannels)) {
+			throw new IllegalArgumentException("packed raw pixel format mismatch: " + sourceFormat + " " + type);
+		}
+
+		int stride = packedChannels != 0 ? type.getByteSize() : Math.multiplyExact(inputChannels, type.getByteSize());
 
 		if (pixels.length < Math.multiplyExact(texels, stride)) {
-			throw new IllegalArgumentException("Raw texture data is too short");
+			throw new IllegalArgumentException("raw texture data is too short");
 		}
 
 		var input = ByteBuffer.wrap(pixels).order(ByteOrder.nativeOrder());
 		var output = ByteBuffer.allocateDirect(Math.multiplyExact(texels, target.blockSize())).order(ByteOrder.nativeOrder());
-		boolean bgr = sourceFormat == PixelFormat.BGR || sourceFormat == PixelFormat.BGRA || sourceFormat == PixelFormat.BGR_INTEGER ||
-			sourceFormat == PixelFormat.BGRA_INTEGER;
+		boolean bgr = sourceFormat == PixelFormat.BGR || sourceFormat == PixelFormat.BGRA || sourceFormat == PixelFormat.BGR_INTEGER || sourceFormat == PixelFormat.BGRA_INTEGER;
+
+		boolean packedTarget = internal == InternalTextureFormat.RGB565 || internal == InternalTextureFormat.RGB5_A1;
+		int channels = packedTarget ? internal.getPixelFormat().getComponentCount() : target.componentCount();
 
 		for (int i = 0; i < texels; i++) {
-			for (int channel = 0; channel < target.componentCount(); channel++) {
+			int packed = 0;
+
+			for (int channel = 0; channel < channels; channel++) {
 				int sourceChannel = bgr && channel < 3 ? 2 - channel : channel;
 				double value = channel == 3 ? 1 : 0;
 
 				if (channel < internal.getPixelFormat().getComponentCount() && sourceChannel < inputChannels) {
-					value = read(input, i * stride + sourceChannel * type.getByteSize(), type, integer);
+					value = packedChannels != 0 ? readPacked(input, i * stride, sourceChannel, type) : read(input,
+						i * stride + sourceChannel * type.getByteSize(), type, integer);
+				}
+
+				if (packedTarget) {
+					int bits = internal == InternalTextureFormat.RGB565 && channel == 1 ? 6 : channel == 3 ? 1 : 5;
+					packed = packed << bits | (int) Math.round(Math.clamp(value, 0, 1) * ((1 << bits) - 1));
+					continue;
 				}
 
 				switch (target.componentType()) {
@@ -59,12 +82,33 @@ public final class RawTextureData {
 					case SINT_32 -> output.putInt((int) Math.clamp(value, -2147483648.0, 2147483647.0));
 					case FLOAT_16 -> output.putShort(Float.floatToFloat16((float) value));
 					case FLOAT_32 -> output.putFloat((float) value);
-					default -> throw new UnsupportedOperationException("Packed raw image format is not implemented: " + internal);
+					default -> throw new UnsupportedOperationException("packed raw image format is not implemented: " + internal);
 				}
+			}
+
+			if (packedTarget) {
+				if (internal == InternalTextureFormat.RGB5_A1) {
+					packed = packed >>> 1 | (packed & 1) << 15;
+				}
+				output.putShort((short) packed);
 			}
 		}
 
 		return output.flip();
+	}
+
+	private static double readPacked(ByteBuffer input, int offset, int channel, PixelType type) {
+		boolean rgb = type == PixelType.UNSIGNED_SHORT_5_6_5 || type == PixelType.UNSIGNED_SHORT_5_6_5_REV;
+		int bits = rgb && channel == 1 ? 6 : channel == 3 ? 1 : 5;
+		int shift = switch (type) {
+			case UNSIGNED_SHORT_5_6_5 -> channel == 0 ? 11 : channel == 1 ? 5 : 0;
+			case UNSIGNED_SHORT_5_6_5_REV -> channel == 0 ? 0 : channel == 1 ? 5 : 11;
+			case UNSIGNED_SHORT_5_5_5_1 -> channel == 3 ? 0 : 11 - channel * 5;
+			case UNSIGNED_SHORT_1_5_5_5_REV -> channel == 3 ? 15 : channel * 5;
+			default -> throw new UnsupportedOperationException("packed raw pixel type: " + type);
+		};
+		int mask = (1 << bits) - 1;
+		return (input.getShort(offset) >> shift & mask) / (double) mask;
 	}
 
 	private static double read(ByteBuffer input, int offset, PixelType type, boolean integer) {
@@ -79,7 +123,7 @@ public final class RawTextureData {
 				integer ? Integer.toUnsignedLong(input.getInt(offset)) : Integer.toUnsignedLong(input.getInt(offset)) / 4294967295.0;
 			case HALF_FLOAT -> Float.float16ToFloat(input.getShort(offset));
 			case FLOAT -> input.getFloat(offset);
-			default -> throw new UnsupportedOperationException("Raw pixel type: " + type);
+			default -> throw new UnsupportedOperationException("raw pixel type: " + type);
 		};
 	}
 }

@@ -28,7 +28,7 @@ public class MixinSpriteContents implements SpriteContentsExtension {
 	@SuppressWarnings("target")
 	@Inject(method = "sodium$setActive(Z)V", at = @At("TAIL"), remap = false, require = 0)
 	private void iris$onTailMarkActive(CallbackInfo ci) {
-		PBRSpriteHolder pbrHolder = ((SpriteContentsExtension) this).getPBRHolder();
+		PBRSpriteHolder pbrHolder = this.getPBRHolder();
 		if (pbrHolder != null) {
 			TextureAtlasSprite normalSprite = pbrHolder.getNormalSprite();
 			TextureAtlasSprite specularSprite = pbrHolder.getSpecularSprite();

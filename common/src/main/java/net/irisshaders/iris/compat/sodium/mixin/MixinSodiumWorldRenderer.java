@@ -2,30 +2,18 @@ package net.irisshaders.iris.compat.sodium.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
-import com.mojang.blaze3d.vertex.PoseStack;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
-import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.irisshaders.iris.mixinterface.ShadowRenderListAccess;
-import net.irisshaders.iris.mixin.LevelRendererAccessor;
-import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.RenderBuffers;
-import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,12 +21,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.SortedSet;
 
 @Mixin(SodiumWorldRenderer.class)
 public class MixinSodiumWorldRenderer implements ShadowRenderListAccess {
@@ -119,7 +104,7 @@ public class MixinSodiumWorldRenderer implements ShadowRenderListAccess {
 			shadowRenderListAccess.iris$beginShadowRenderListScope();
 		}
 
-		((ShadowRenderListAccess) this.uniformBufferManager).iris$beginShadowRenderListScope();;
+		((ShadowRenderListAccess) this.uniformBufferManager).iris$beginShadowRenderListScope();
 	}
 
 	@Override
@@ -128,7 +113,7 @@ public class MixinSodiumWorldRenderer implements ShadowRenderListAccess {
 			shadowRenderListAccess.iris$endShadowRenderListScope();
 		}
 
-		((ShadowRenderListAccess) this.uniformBufferManager).iris$endShadowRenderListScope();;
+		((ShadowRenderListAccess) this.uniformBufferManager).iris$endShadowRenderListScope();
 
 		if (this.iris$shadowScopeActive) {
 			this.iris$shadowLastCameraPos = this.lastCameraPos;
@@ -158,13 +143,11 @@ public class MixinSodiumWorldRenderer implements ShadowRenderListAccess {
 	}
 
 
-	@Redirect(method = "setupTerrain", remap = false,
-		at = @At(value = "INVOKE",
-			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z", ordinal = 0,
-			remap = false))
+	@Redirect(method = "setupTerrain", remap = false, at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z", ordinal = 0, remap = false))
 	private boolean iris$forceChunkGraphRebuildInShadowPass(RenderSectionManager instance) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-			float sunAngle = Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe().getValue(EnvironmentAttributes.SUN_ANGLE, CapturedRenderingState.INSTANCE.getTickDelta());
+			float sunAngle = Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe()
+				.getValue(EnvironmentAttributes.SUN_ANGLE, CapturedRenderingState.INSTANCE.getTickDelta());
 			if (lastSunAngle != sunAngle) {
 				lastSunAngle = sunAngle;
 				return true;
@@ -174,9 +157,7 @@ public class MixinSodiumWorldRenderer implements ShadowRenderListAccess {
 		return instance.needsUpdate();
 	}
 
-	@WrapOperation(method = "setupTerrain",
-		at = @At(value = "INVOKE",
-			target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z"))
+	@WrapOperation(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/RenderSectionManager;needsUpdate()Z"))
 	private boolean iris$forceEndGraphRebuild(RenderSectionManager instance, Operation<Boolean> original) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			// TODO: Detect when the sun/moon isn't moving
@@ -187,7 +168,9 @@ public class MixinSodiumWorldRenderer implements ShadowRenderListAccess {
 	}
 
 	@Inject(method = "isEntityVisible", at = @At("HEAD"), cancellable = true)
-	private <T extends Entity, S extends EntityRenderState> void iris$skipEntityCheck(EntityRenderer<T, S> renderer, Entity entity, float partialTicks, CallbackInfoReturnable<Boolean> cir) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) cir.setReturnValue(true);
+	private <T extends Entity, S extends EntityRenderState> void iris$skipEntityCheck(EntityRenderer<T, S> renderer, Entity entity,
+		float partialTicks, CallbackInfoReturnable<Boolean> cir) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered())
+			cir.setReturnValue(true);
 	}
 }

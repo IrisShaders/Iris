@@ -2,7 +2,6 @@ package net.irisshaders.iris.pbr.util;
 
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.gl.IrisRenderSystem;
-import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
@@ -22,12 +21,8 @@ public class TextureManipulationUtil {
 		IrisRenderSystem.getIntegerv(GL11.GL_VIEWPORT, previousViewport);
 
 		GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, colorFillFBO);
-		IrisRenderSystem.clearColor(
-			(rgba >> 24 & 0xFF) / 255.0f,
-			(rgba >> 16 & 0xFF) / 255.0f,
-			(rgba >> 8 & 0xFF) / 255.0f,
-			(rgba & 0xFF) / 255.0f
-		);
+		IrisRenderSystem.clearColor((rgba >> 24 & 0xFF) / 255.0f, (rgba >> 16 & 0xFF) / 255.0f, (rgba >> 8 & 0xFF) / 255.0f,
+			(rgba & 0xFF) / 255.0f);
 		GlStateManager._bindTexture(textureId);
 		for (int level = 0; level <= maxLevel; ++level) {
 			int width = GlStateManager._getTexLevelParameter(GL11.GL_TEXTURE_2D, level, GL11.GL_TEXTURE_WIDTH);

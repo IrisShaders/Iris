@@ -23,6 +23,7 @@ import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.util.Type;
+import net.irisshaders.iris.pipeline.transform.Std140Type;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -35,8 +36,8 @@ public final class VulkanGlsl {
 	}
 
 	public static boolean hasStorage(TypeQualifier qualifier, StorageQualifier.StorageType storage) {
-		return qualifier != null &&
-			qualifier.getParts().stream().anyMatch(p -> p instanceof StorageQualifier s && s.storageType == storage);
+		return qualifier != null && qualifier.getParts().stream()
+			.anyMatch(p -> p instanceof StorageQualifier s && s.storageType == storage);
 	}
 
 	public static NamedLayoutQualifierPart layout(TypeQualifier qualifier, String name) {
@@ -44,16 +45,9 @@ public final class VulkanGlsl {
 			return null;
 		}
 
-		return qualifier.getParts()
-			.stream()
-			.filter(LayoutQualifier.class::isInstance)
-			.map(LayoutQualifier.class::cast)
-			.flatMap(q -> q.getParts().stream())
-			.filter(NamedLayoutQualifierPart.class::isInstance)
-			.map(NamedLayoutQualifierPart.class::cast)
-			.filter(p -> p.getName().getName().equals(name))
-			.findFirst()
-			.orElse(null);
+		return qualifier.getParts().stream().filter(LayoutQualifier.class::isInstance).map(LayoutQualifier.class::cast)
+			.flatMap(q -> q.getParts().stream()).filter(NamedLayoutQualifierPart.class::isInstance)
+			.map(NamedLayoutQualifierPart.class::cast).filter(p -> p.getName().getName().equals(name)).findFirst().orElse(null);
 	}
 
 	public static void removeLayout(TypeQualifier qualifier, String... names) {
@@ -76,8 +70,8 @@ public final class VulkanGlsl {
 
 	public static void setLayout(TypeQualifier qualifier, String name, int value) {
 		removeLayout(qualifier, name);
-		qualifier.getParts().add(0, new LayoutQualifier(Stream.of(
-			new NamedLayoutQualifierPart(new Identifier(name), new LiteralExpression(Type.INT32, value)))));
+		qualifier.getParts().add(0,
+			new LayoutQualifier(Stream.of(new NamedLayoutQualifierPart(new Identifier(name), new LiteralExpression(Type.INT32, value)))));
 	}
 
 	public static int integer(Expression expression, Root root) {
@@ -93,15 +87,14 @@ public final class VulkanGlsl {
 			String name = reference.getIdentifier().getName();
 
 			if (!visiting.add(name)) {
-				throw new IllegalArgumentException("Cyclic layout constant: " + name);
+				throw new IllegalArgumentException("cyclic layout constant: " + name);
 			}
 
 			try {
 				for (var identifier : root.identifierIndex.get(name)) {
-					if (identifier.getParent() instanceof DeclarationMember member &&
-						member.getParent() instanceof TypeAndInitDeclaration declaration &&
-						hasStorage(declaration.getType().getTypeQualifier(), StorageQualifier.StorageType.CONST) &&
-						member.getInitializer() instanceof ExpressionInitializer initializer) {
+					if (identifier.getParent() instanceof DeclarationMember member && member.getParent() instanceof TypeAndInitDeclaration declaration && hasStorage(
+						declaration.getType().getTypeQualifier(),
+						StorageQualifier.StorageType.CONST) && member.getInitializer() instanceof ExpressionInitializer initializer) {
 						return integer(initializer.getExpression(), root, visiting);
 					}
 				}
@@ -117,7 +110,7 @@ public final class VulkanGlsl {
 				case GROUPING, IDENTITY -> value;
 				case NEGATION -> Math.negateExact(value);
 				case BITWISE_NOT -> ~value;
-				default -> throw new IllegalArgumentException("Unsupported unary layout constant");
+				default -> throw new IllegalArgumentException("unsupported unary layout constant");
 			};
 		}
 
@@ -136,11 +129,11 @@ public final class VulkanGlsl {
 				case BITWISE_AND -> left & right;
 				case BITWISE_OR -> left | right;
 				case BITWISE_XOR -> left ^ right;
-				default -> throw new IllegalArgumentException("Unsupported layout constant: " + expression.getExpressionType());
+				default -> throw new IllegalArgumentException("unsupported layout constant: " + expression.getExpressionType());
 			};
 		}
 
-		throw new IllegalArgumentException("Expected an integer layout constant, got " + expression);
+		throw new IllegalArgumentException("expected an integer layout constant, got " + expression);
 	}
 
 	public static List<Integer> dimensions(Root root, ArraySpecifier... arrays) {
@@ -155,7 +148,7 @@ public final class VulkanGlsl {
 				int size = integer(dimension, root);
 
 				if (size <= 0) {
-					throw new IllegalArgumentException("Array size must be positive");
+					throw new IllegalArgumentException("array size must be positive");
 				}
 
 				dimensions.add(size);
@@ -170,7 +163,7 @@ public final class VulkanGlsl {
 		int[] shape = type.getDimensions();
 
 		if (type.getCompactName() == null || (type.getBitDepth() != 1 && type.getBitDepth() != 32 && type.getBitDepth() != 64)) {
-			throw new IllegalArgumentException("Unsupported uniform scalar width: " + type);
+			throw new IllegalArgumentException("unsupported uniform scalar width: " + type);
 		}
 
 		return new Std140Type(type.getCompactName(), Math.max(4, type.getBitDepth() / 8), type.isMatrix() ? shape[0] : 1,
@@ -200,13 +193,13 @@ public final class VulkanGlsl {
 				return true;
 			}
 
-			if (!(declaration instanceof DeclarationMember || declaration instanceof IterationConditionInitializer) ||
-				declaration.getAncestor(FunctionDefinition.class) != function) {
+			if (!(declaration instanceof DeclarationMember || declaration instanceof IterationConditionInitializer) || declaration.getAncestor(
+				FunctionDefinition.class) != function) {
 				continue;
 			}
 
-			if (declaration == reference.getAncestor(DeclarationMember.class) ||
-				declaration == reference.getAncestor(IterationConditionInitializer.class)) {
+			if (declaration == reference.getAncestor(DeclarationMember.class) || declaration == reference.getAncestor(
+				IterationConditionInitializer.class)) {
 				continue;
 			}
 
@@ -217,19 +210,18 @@ public final class VulkanGlsl {
 			}
 
 			if (scope instanceof CompoundStatement compound) {
-				ASTNode declaredAt = childOf(scope, declaration), referencedAt = childOf(scope, reference);
+				ASTNode declaredAt = childOf(scope, declaration);
+				ASTNode referencedAt = childOf(scope, reference);
 				int declarationIndex = compound.getStatements().indexOf(declaredAt);
-				int referenceIndex =
-					compound.getStatements().indexOf(referencedAt);
+				int referenceIndex = compound.getStatements().indexOf(referencedAt);
 
 				if (declarationIndex > referenceIndex) {
 					continue;
 				}
 
-				if (declarationIndex == referenceIndex && declaration instanceof DeclarationMember member &&
-					reference.getAncestor(DeclarationMember.class) instanceof DeclarationMember referencedMember &&
-					member.getParent() == referencedMember.getParent() && member.getParent() instanceof TypeAndInitDeclaration typed &&
-					typed.getMembers().indexOf(member) > typed.getMembers().indexOf(referencedMember)) {
+				if (declarationIndex == referenceIndex && declaration instanceof DeclarationMember member && reference.getAncestor(
+					DeclarationMember.class) instanceof DeclarationMember referencedMember && member.getParent() == referencedMember.getParent() && member.getParent() instanceof TypeAndInitDeclaration typed && typed.getMembers()
+					.indexOf(member) > typed.getMembers().indexOf(referencedMember)) {
 					continue;
 				}
 			}

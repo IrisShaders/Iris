@@ -24,8 +24,12 @@ import io.github.douira.glsl_transformer.ast.print.ASTPrinter;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import io.github.douira.glsl_transformer.ast.transform.JobParameters;
 import io.github.douira.glsl_transformer.ast.transform.SingleASTTransformer;
+import io.github.douira.glsl_transformer.util.LRUCache;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
+import net.irisshaders.iris.pipeline.transform.PatchedShader;
+import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
 import net.irisshaders.iris.samplers.SamplerBindingPlan;
 import net.irisshaders.iris.samplers.SamplerHeapLayout;
@@ -44,33 +48,52 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public final class VulkanShaderPatcher {
+	private static final Map<Map<PatchShaderType, String>, PatchedShader> discoveryCache = new LRUCache<>(256);
+	private static final SingleASTTransformer<JobParameters> parser = new SingleASTTransformer<>();
+
+	static {
+		parser.setParsingCacheStrategy(ASTParser.ParsingCacheStrategy.TWO_TIER);
+	}
+
 	private VulkanShaderPatcher() {
 	}
 
-	public static Result patch(Map<PatchShaderType, String> sources) {
+	public static PatchedShader patch(Map<PatchShaderType, String> sources) {
 		return patch(sources, null);
 	}
 
-	public static Result patch(Map<PatchShaderType, String> sources, SamplerBindingPlan samplers) {
+	public static PatchedShader patch(Map<PatchShaderType, String> sources, SamplerBindingPlan samplers) {
 		return patch(sources, samplers, null);
 	}
 
-	public static Result patch(Map<PatchShaderType, String> sources, SamplerBindingPlan samplers, ColorAttachmentPlan.Program outputs) {
+	public static PatchedShader patch(Map<PatchShaderType, String> sources, SamplerBindingPlan samplers,
+		ColorAttachmentPlan.Program outputs) {
 		return patch(sources, samplers, outputs, name -> false);
 	}
 
-	public static Result discover(Map<PatchShaderType, String> sources) {
-		return patch(sources, null, null, name -> true);
+	public static PatchedShader discover(Map<PatchShaderType, String> sources) {
+		var key = new EnumMap<PatchShaderType, String>(PatchShaderType.class);
+		sources.forEach((stage, source) -> {
+			if (source != null) {
+				key.put(stage, source);
+			}
+		});
+		return discoveryCache.computeIfAbsent(Map.copyOf(key), unused -> patch(sources, null, null, name -> true));
 	}
 
-	public static Result patch(Map<PatchShaderType, String> sources, SamplerBindingPlan samplers, ColorAttachmentPlan.Program outputs,
-		Predicate<String> registered) {
+	public static PatchedShader patch(Map<PatchShaderType, String> sources, SamplerBindingPlan samplers,
+		ColorAttachmentPlan.Program outputs, Predicate<String> registered) {
 		return patch(sources, samplers, outputs, registered, null, name -> true);
 	}
 
-	public static Result patch(Map<PatchShaderType, String> sources, SamplerBindingPlan samplers, ColorAttachmentPlan.Program outputs,
-		Predicate<String> registered, VulkanResourceLayout frameLayout, Predicate<String> dynamic) {
-		var parser = new SingleASTTransformer<>();
+	public static PatchedShader patch(Map<PatchShaderType, String> sources, SamplerBindingPlan samplers,
+		ColorAttachmentPlan.Program outputs, Predicate<String> registered, ShaderResourceLayout frameLayout, Predicate<String> dynamic) {
+		return patch(sources, samplers, outputs, registered, frameLayout, dynamic, true);
+	}
+
+	public static PatchedShader patch(Map<PatchShaderType, String> sources, SamplerBindingPlan samplers,
+		ColorAttachmentPlan.Program outputs, Predicate<String> registered, ShaderResourceLayout frameLayout, Predicate<String> dynamic,
+		boolean vulkan) {
 		var trees = new EnumMap<PatchShaderType, TranslationUnit>(PatchShaderType.class);
 
 		for (var entry : sources.entrySet()) {
@@ -85,10 +108,8 @@ public final class VulkanShaderPatcher {
 			for (var declaration : tree.getRoot().nodeIndex.getStream(TypeAndInitDeclaration.class).toList()) {
 				var qualifier = declaration.getType().getTypeQualifier();
 				boolean input = stage != PatchShaderType.VERTEX && VulkanGlsl.hasStorage(qualifier, StorageQualifier.StorageType.IN);
-				boolean opaqueUniform = VulkanGlsl.hasStorage(qualifier, StorageQualifier.StorageType.UNIFORM) &&
-					declaration.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier opaque &&
-					(opaque.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER ||
-						opaque.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.IMAGE);
+				boolean opaqueUniform = VulkanGlsl.hasStorage(qualifier, StorageQualifier.StorageType.UNIFORM) && declaration.getType()
+					.getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier opaque && (opaque.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER || opaque.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.IMAGE);
 
 				if (!input && !opaqueUniform) {
 					continue;
@@ -110,10 +131,10 @@ public final class VulkanShaderPatcher {
 				}
 			}
 		});
-		LayoutTransformer.transformGrouped(parser, trees, null);
+		LayoutTransformer.transformGrouped(parser, trees, null, vulkan);
 
 		BitSet written = outputs == null ? null : remapFragmentOutputs(parser, trees.get(PatchShaderType.FRAGMENT), outputs);
-		VulkanResourceLayout layout = VulkanResourceTransformer.transform(parser, trees, registered, frameLayout, dynamic);
+		ShaderResourceLayout layout = VulkanResourceTransformer.transform(parser, trees, registered, frameLayout, dynamic, vulkan);
 
 		if (samplers != null) {
 			layout = lowerSamplerHeap(parser, trees, layout, samplers);
@@ -136,7 +157,7 @@ public final class VulkanShaderPatcher {
 		}
 
 		for (var tree : trees.values()) {
-			for (String name : List.of("tanh", "fma")) {
+			for (String name : List.of("tanh", "fma", "min3", "max3", "mid3")) {
 				boolean declared = tree.getRoot().nodeIndex.getStream(FunctionDefinition.class)
 					.anyMatch(function -> function.getFunctionPrototype().getName().getName().equals(name));
 
@@ -157,24 +178,27 @@ public final class VulkanShaderPatcher {
 		var result = new EnumMap<PatchShaderType, String>(PatchShaderType.class);
 
 		for (var entry : trees.entrySet()) {
-			initializeGlobals(parser, entry.getValue());
+			if (vulkan) {
+				initializeGlobals(parser, entry.getValue());
+			}
+
 			result.put(entry.getKey(), ASTPrinter.print(PrintType.INDENTED, entry.getValue()));
 		}
 
-		return new Result(result, layout, samplers, written);
+		return new PatchedShader(result, layout, samplers, written);
 	}
 
 	private static void initializeGlobals(ASTParser parser, TranslationUnit tree) {
 		boolean initialized = false;
 
 		for (var external : List.copyOf(tree.getChildren())) {
-			if (!(external instanceof DeclarationExternalDeclaration declaration) ||
-				!(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) ||
-				variables.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier) {
+			if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) || variables.getType()
+				.getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier) {
 				continue;
 			}
 
 			var qualifier = variables.getType().getTypeQualifier();
+
 			if (qualifier != null && qualifier.getParts().stream().anyMatch(StorageQualifier.class::isInstance)) {
 				continue;
 			}
@@ -235,19 +259,6 @@ public final class VulkanShaderPatcher {
 		}
 	}
 
-	public record Result(Map<PatchShaderType, String> sources, VulkanResourceLayout layout, SamplerBindingPlan samplers,
-		BitSet writtenAttachments) {
-		public Result {
-			sources = Map.copyOf(sources);
-			writtenAttachments = writtenAttachments == null ? null : (BitSet) writtenAttachments.clone();
-		}
-
-		@Override
-		public BitSet writtenAttachments() {
-			return writtenAttachments == null ? null : (BitSet) writtenAttachments.clone();
-		}
-	}
-
 	private static BitSet remapFragmentOutputs(ASTParser parser, TranslationUnit tree, ColorAttachmentPlan.Program plan) {
 		var written = new BitSet(plan.attachmentCount());
 
@@ -259,8 +270,7 @@ public final class VulkanShaderPatcher {
 		var copies = new StringBuilder();
 		root.indexBuildSession(() -> {
 			for (var external : List.copyOf(tree.getChildren())) {
-				if (!(external instanceof DeclarationExternalDeclaration declaration) ||
-					!(declaration.getDeclaration() instanceof TypeAndInitDeclaration typed)) {
+				if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration typed)) {
 					continue;
 				}
 
@@ -275,32 +285,32 @@ public final class VulkanShaderPatcher {
 				}
 
 				if (typed.getMembers().size() != 1) {
-					throw new IllegalArgumentException("Split output declarations before remapping");
+					throw new IllegalArgumentException("split output declarations before remapping");
 				}
 
 				var member = typed.getMembers().getFirst();
 
 				if (!(typed.getType().getTypeSpecifier() instanceof BuiltinNumericTypeSpecifier numeric) || numeric.type.isMatrix()) {
-					throw new IllegalArgumentException("Unsupported fragment output type: " + member.getName().getName());
+					throw new IllegalArgumentException("unsupported fragment output type: " + member.getName().getName());
 				}
 
 				var index = VulkanGlsl.layout(qualifier, "index");
 
 				if (index != null && VulkanGlsl.integer(index.getExpression(), root) != 0) {
-					throw new IllegalArgumentException("Dual-source fragment outputs require a separate pipeline");
+					throw new IllegalArgumentException("dual-source fragment outputs require a separate pipeline");
 				}
 
 				var location = VulkanGlsl.layout(qualifier, "location");
 
 				if (location == null) {
-					throw new IllegalArgumentException("Allocate output locations before remapping");
+					throw new IllegalArgumentException("allocate output locations before remapping");
 				}
 
 				int first = VulkanGlsl.integer(location.getExpression(), root);
 				var dimensions = VulkanGlsl.dimensions(root, member.getArraySpecifier(), numeric.getArraySpecifier());
 
 				if (dimensions.size() > 1) {
-					throw new IllegalArgumentException("Multidimensional fragment output arrays are unsupported");
+					throw new IllegalArgumentException("multidimensional fragment output arrays are unsupported");
 				}
 
 				int count = dimensions.isEmpty() ? 1 : dimensions.getFirst();
@@ -330,7 +340,7 @@ public final class VulkanShaderPatcher {
 					String name = "iris_vkColorOutput" + attachment;
 
 					if (root.identifierIndex.has(name)) {
-						throw new IllegalArgumentException("Reserved fragment output name: " + name);
+						throw new IllegalArgumentException("reserved fragment output name: " + name);
 					}
 
 					var scalar = numeric.cloneInto(root);
@@ -341,8 +351,8 @@ public final class VulkanShaderPatcher {
 
 					VulkanGlsl.setLayout(outputQualifier, "location", attachment);
 					tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_DECLARATIONS,
-						ASTPrinter.print(PrintType.COMPACT, outputQualifier) + " " + ASTPrinter.print(PrintType.COMPACT, scalar) + " " +
-							name + ";");
+						ASTPrinter.print(PrintType.COMPACT, outputQualifier) + " " + ASTPrinter.print(PrintType.COMPACT,
+							scalar) + " " + name + ";");
 					copies.append(name).append('=').append(member.getName().getName());
 
 					if (!dimensions.isEmpty()) {
@@ -356,7 +366,7 @@ public final class VulkanShaderPatcher {
 
 			if (!copies.isEmpty()) {
 				if (root.identifierIndex.has("iris_vkFragmentMain")) {
-					throw new IllegalArgumentException("Reserved fragment entry point");
+					throw new IllegalArgumentException("reserved fragment entry point");
 				}
 
 				root.rename("main", "iris_vkFragmentMain");
@@ -367,13 +377,10 @@ public final class VulkanShaderPatcher {
 		return written;
 	}
 
-
-	private static VulkanResourceLayout lowerSamplerHeap(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees,
-		VulkanResourceLayout resources, SamplerBindingPlan plan) {
-		int indexBinding =
-			resources.descriptors().stream().filter(d -> d.set() == 0).mapToInt(VulkanResourceLayout.Descriptor::binding).max().orElse(-1) +
-				1;
+	private static ShaderResourceLayout lowerSamplerHeap(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees,
+		ShaderResourceLayout resources, SamplerBindingPlan plan) {
 		Map<SamplerHeapLayout.Type, Set<PatchShaderType>> heapStages = new EnumMap<>(SamplerHeapLayout.Type.class);
+		Map<SamplerHeapLayout.Type, Set<PatchShaderType>> drawStages = new EnumMap<>(SamplerHeapLayout.Type.class);
 
 		for (var entry : trees.entrySet()) {
 			TranslationUnit tree = entry.getValue();
@@ -384,13 +391,12 @@ public final class VulkanShaderPatcher {
 
 			var root = tree.getRoot();
 			Set<SamplerHeapLayout.Type> used = EnumSet.noneOf(SamplerHeapLayout.Type.class);
+			Set<SamplerHeapLayout.Type> usedDraw = EnumSet.noneOf(SamplerHeapLayout.Type.class);
 			root.indexBuildSession(() -> {
 				for (var external : List.copyOf(tree.getChildren())) {
-					if (!(external instanceof DeclarationExternalDeclaration declaration) ||
-						!(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) ||
-						!VulkanGlsl.hasStorage(variables.getType().getTypeQualifier(), StorageType.UNIFORM) ||
-						!(variables.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier opaque) ||
-						opaque.type.kind != BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER) {
+					if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) || !VulkanGlsl.hasStorage(
+						variables.getType().getTypeQualifier(), StorageType.UNIFORM) || !(variables.getType()
+						.getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier opaque) || opaque.type.kind != BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER) {
 						continue;
 					}
 
@@ -399,7 +405,7 @@ public final class VulkanShaderPatcher {
 					try {
 						type = SamplerHeapLayout.Type.valueOf(opaque.type.name());
 					} catch (IllegalArgumentException exception) {
-						throw new IllegalArgumentException("Unsupported sampler heap type: " + opaque.type, exception);
+						throw new IllegalArgumentException("unsupported sampler heap type: " + opaque.type, exception);
 					}
 
 					for (var member : variables.getMembers()) {
@@ -407,8 +413,7 @@ public final class VulkanShaderPatcher {
 						var dimensions = VulkanGlsl.dimensions(root, member.getArraySpecifier(), opaque.getArraySpecifier());
 						int count = dimensions.stream().reduce(1, Math::multiplyExact);
 						var slots = plan.require(name, type, count);
-						var references =
-							root.identifierIndex.get(name).stream().filter(id -> id.getParent() instanceof ReferenceExpression)
+						var references = root.identifierIndex.get(name).stream().filter(id -> id.getParent() instanceof ReferenceExpression)
 							.map(id -> (ReferenceExpression) id.getParent()).toList();
 
 						for (var reference : references) {
@@ -421,7 +426,7 @@ public final class VulkanShaderPatcher {
 
 							for (int dimension : dimensions) {
 								if (!(access.getParent() instanceof ArrayAccessExpression array) || array.getLeft() != access) {
-									throw new IllegalArgumentException("Sampler arrays must be indexed before heap lowering: " + name);
+									throw new IllegalArgumentException("sampler arrays must be indexed before heap lowering: " + name);
 								}
 
 								int index;
@@ -430,11 +435,11 @@ public final class VulkanShaderPatcher {
 									index = VulkanGlsl.integer(array.getRight(), root);
 								} catch (IllegalArgumentException exception) {
 									throw new IllegalArgumentException(
-										"Dynamic sampler array indexing needs a draw/material index plan: " + name, exception);
+										"dynamic sampler array indexing needs a draw/material index plan: " + name, exception);
 								}
 
 								if (index < 0 || index >= dimension) {
-									throw new IllegalArgumentException("Sampler array index out of range: " + name);
+									throw new IllegalArgumentException("sampler array index out of range: " + name);
 								}
 
 								element = Math.addExact(Math.multiplyExact(element, dimension), index);
@@ -442,73 +447,69 @@ public final class VulkanShaderPatcher {
 							}
 
 							var slot = slots.get(element);
-							access.replaceByAndDelete(parser.parseExpression(root, type.uniformName() + "[" + (plan.indirect() ?
-								"iris_samplerIndices.slots[" + plan.indexSlots().indexOf(slot) / 4 + "][" +
-									plan.indexSlots().indexOf(slot) % 4 + "]" : slot.index()) + "]"));
-							used.add(type);
+							boolean draw = plan.heap().isDraw(slot);
+							access.replaceByAndDelete(parser.parseExpression(root,
+								(draw ? type.drawUniformName() : type.uniformName()) + "[" + slot.index() + "]"));
+							(draw ? usedDraw : used).add(type);
 						}
 					}
 
 					declaration.detachAndDelete();
 				}
 
-				if (lowerSelections(parser, tree, used)) {
+				if (lowerSelections(parser, tree, used, usedDraw)) {
 					markSamplerParameters(parser, tree);
 					tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_ALL, "#extension GL_EXT_nonuniform_qualifier : require\n");
 				}
 
-				if (plan.indirect() && !used.isEmpty()) {
-					tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_DECLARATIONS,
-						"layout(std140,set=0,binding=" + indexBinding + ") uniform " + SamplerBindingPlan.INDEX_BLOCK + " { ivec4 slots[" +
-							plan.indexBytes() / 16 + "]; } iris_samplerIndices;");
-				}
+				for (boolean draw : List.of(false, true)) {
+					for (var type : draw ? usedDraw : used) {
+						String uniformName = draw ? type.drawUniformName() : type.uniformName();
 
-				for (var type : used) {
-					if (root.identifierIndex.has(type.uniformName())) {
+						if (root.identifierIndex.has(uniformName)) {
 
-						boolean declared = root.identifierIndex.get(type.uniformName()).stream()
-							.anyMatch(id -> id.getParent() instanceof DeclarationMember || id.getParent() instanceof FunctionParameter);
+							boolean declared = root.identifierIndex.get(uniformName).stream()
+								.anyMatch(id -> id.getParent() instanceof DeclarationMember || id.getParent() instanceof FunctionParameter);
 
-						if (declared) {
-							throw new IllegalArgumentException("Reserved sampler heap identifier: " + type.uniformName());
+							if (declared) {
+								throw new IllegalArgumentException("reserved sampler heap identifier: " + uniformName);
+							}
 						}
-					}
 
-					tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_DECLARATIONS,
-						"layout(set = " + SamplerHeapLayout.DESCRIPTOR_SET + ", binding = " + type.binding() + ") uniform " + type.glsl +
-							" " + type.uniformName() + "[" + plan.heap().heaps().get(type).size() + "];");
-					heapStages.computeIfAbsent(type, ignored -> EnumSet.noneOf(PatchShaderType.class)).add(entry.getKey());
+						tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_DECLARATIONS,
+							"layout(set = " + (draw ? SamplerHeapLayout.DRAW_DESCRIPTOR_SET : SamplerHeapLayout.DESCRIPTOR_SET) + ", binding = " + type.binding() + ") uniform " + type.glsl + " " + uniformName + "[" + (draw ? plan.heap()
+								.drawHeaps() : plan.heap().heaps()).get(type).size() + "];");
+						(draw ? drawStages : heapStages).computeIfAbsent(type, ignored -> EnumSet.noneOf(PatchShaderType.class))
+							.add(entry.getKey());
+					}
 				}
 			});
 		}
 
-		List<VulkanResourceLayout.Descriptor> descriptors = new ArrayList<>();
+		List<ShaderResourceLayout.Descriptor> descriptors = new ArrayList<>();
 
 		for (var descriptor : resources.descriptors()) {
-			if (descriptor.kind() != VulkanResourceLayout.Kind.SAMPLER) {
+			if (descriptor.kind() != ShaderResourceLayout.Kind.SAMPLER) {
 				descriptors.add(descriptor);
 			}
 		}
 
 		heapStages.forEach((type, stages) -> descriptors.add(
-			new VulkanResourceLayout.Descriptor(type.uniformName(), VulkanResourceLayout.Kind.SAMPLER, type.name(),
+			new ShaderResourceLayout.Descriptor(type.uniformName(), ShaderResourceLayout.Kind.SAMPLER, type.name(),
 				plan.heap().heaps().get(type).size(), SamplerHeapLayout.DESCRIPTOR_SET, type.binding(), null, stages)));
 
-		if (plan.indirect() && !heapStages.isEmpty()) {
-			var stages = EnumSet.noneOf(PatchShaderType.class);
-			heapStages.values().forEach(stages::addAll);
-			descriptors.add(
-				new VulkanResourceLayout.Descriptor(SamplerBindingPlan.INDEX_BLOCK, VulkanResourceLayout.Kind.UNIFORM_BUFFER, "block", 1
-					, 0,
-					indexBinding, null, stages));
-		}
+		drawStages.forEach((type, stages) -> descriptors.add(
+			new ShaderResourceLayout.Descriptor(type.drawUniformName(), ShaderResourceLayout.Kind.SAMPLER, type.name(),
+				plan.heap().drawHeaps().get(type).size(), SamplerHeapLayout.DRAW_DESCRIPTOR_SET, type.binding(), null, stages)));
 
-		return new VulkanResourceLayout(resources.uniformBufferSize(), resources.uniforms(), descriptors);
+		return new ShaderResourceLayout(resources.uniformBufferSize(), resources.uniforms(), descriptors);
 	}
 
-	private static boolean lowerSelections(ASTParser parser, TranslationUnit tree, Set<SamplerHeapLayout.Type> used) {
+	private static boolean lowerSelections(ASTParser parser, TranslationUnit tree, Set<SamplerHeapLayout.Type> used,
+		Set<SamplerHeapLayout.Type> usedDraw) {
 		var heaps = new HashSet<String>();
 		used.forEach(type -> heaps.add(type.uniformName()));
+		usedDraw.forEach(type -> heaps.add(type.drawUniformName()));
 
 		boolean modified = false;
 		boolean changed;
@@ -539,8 +540,8 @@ public final class VulkanShaderPatcher {
 		var root = tree.getRoot();
 
 		for (var parameter : root.nodeIndex.getStream(FunctionParameter.class).toList()) {
-			if (parameter.getName() == null || !(parameter.getType().getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier opaque) ||
-				opaque.type.kind != BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER) {
+			if (parameter.getName() == null || !(parameter.getType()
+				.getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier opaque) || opaque.type.kind != BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER) {
 				continue;
 			}
 
@@ -553,8 +554,8 @@ public final class VulkanShaderPatcher {
 			String name = parameter.getName().getName();
 
 			for (var identifier : root.identifierIndex.getStream(name).toList()) {
-				if (!(identifier.getParent() instanceof ReferenceExpression reference) ||
-					reference.getAncestor(FunctionDefinition.class) != function || VulkanGlsl.isShadowed(reference, name, parameter)) {
+				if (!(identifier.getParent() instanceof ReferenceExpression reference) || reference.getAncestor(
+					FunctionDefinition.class) != function || VulkanGlsl.isShadowed(reference, name, parameter)) {
 					continue;
 				}
 
@@ -575,8 +576,8 @@ public final class VulkanShaderPatcher {
 			expression = grouping.getOperand();
 		}
 
-		if (!(expression instanceof ArrayAccessExpression access) || !(access.getLeft() instanceof ReferenceExpression reference) ||
-			!heaps.contains(reference.getIdentifier().getName())) {
+		if (!(expression instanceof ArrayAccessExpression access) || !(access.getLeft() instanceof ReferenceExpression reference) || !heaps.contains(
+			reference.getIdentifier().getName())) {
 			return null;
 		}
 

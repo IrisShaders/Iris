@@ -75,9 +75,7 @@ public class ParsedString {
 		int position = 0;
 
 		for (char character : text.toCharArray()) {
-			if (!Character.isDigit(character)
-				&& !Character.isAlphabetic(character)
-				&& character != '_') {
+			if (!Character.isDigit(character) && !Character.isAlphabetic(character) && character != '_') {
 				break;
 			}
 

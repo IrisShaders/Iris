@@ -13,13 +13,11 @@ import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 
 public class CompositeTransformer {
-	private static final AutoHintedMatcher<Expression> glTextureMatrix0To7 = new AutoHintedMatcher<>(
-		"gl_TextureMatrix[index]", ParseShape.EXPRESSION) {
+	private static final AutoHintedMatcher<Expression> glTextureMatrix0To7 = new AutoHintedMatcher<>("gl_TextureMatrix[index]",
+		ParseShape.EXPRESSION) {
 		{
-			markClassedPredicateWildcard("index",
-				pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
-				LiteralExpression.class,
-				literalExpression -> {
+			markClassedPredicateWildcard("index", pattern.getRoot().identifierIndex.getOne("index").getAncestor(ReferenceExpression.class),
+				LiteralExpression.class, literalExpression -> {
 					if (!literalExpression.isInteger()) {
 						return false;
 					}
@@ -29,11 +27,7 @@ public class CompositeTransformer {
 		}
 	};
 
-	public static void transform(
-		ASTParser t,
-		TranslationUnit tree,
-		Root root,
-		Parameters parameters) {
+	public static void transform(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
 		CommonTransformer.transform(t, tree, root, parameters, true);
 		CompositeDepthTransformer.transform(t, tree, root);
 
@@ -45,8 +39,7 @@ public class CompositeTransformer {
 		// TODO: Other fog things
 
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
-			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0",
-				"vec4(UV0, 0.0, 1.0)");
+			root.replaceReferenceExpressions(t, "gl_MultiTexCoord0", "vec4(UV0, 0.0, 1.0)");
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec2 UV0;");
 			CommonTransformer.replaceGlMultiTexCoordBounded(t, root, 1, 7);
 		}
@@ -73,8 +66,7 @@ public class CompositeTransformer {
 
 		// TODO: All of the transformed variants of the input matrices, preferably
 		// computed on the CPU side...
-		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix",
-			"(gl_ProjectionMatrix * gl_ModelViewMatrix)");
+		root.replaceReferenceExpressions(t, "gl_ModelViewProjectionMatrix", "(gl_ProjectionMatrix * gl_ModelViewMatrix)");
 		root.replaceReferenceExpressions(t, "gl_ModelViewMatrix", "mat4(1.0)");
 
 		// This is used to scale the quad projection matrix from (0, 1) to (-1, 1).

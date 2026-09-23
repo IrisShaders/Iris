@@ -86,7 +86,7 @@ public class DotExporter {
 	}
 
 	private <V> void writeEdge(Writer writer, int level, V source, V target, int edgeWeight, DotProvider<V, ?> provider,
-							   Cluster<V, ?> sourceCluster, Cluster<V, ?> targetCluster) throws IOException {
+		Cluster<V, ?> sourceCluster, Cluster<V, ?> targetCluster) throws IOException {
 		indent(writer, level);
 		writer.write(provider.getNodeId(sourceCluster == null ? source : sourceCluster.sample));
 		writer.write(" -> ");
@@ -115,9 +115,7 @@ public class DotExporter {
 		writer.write(lineSpeparator);
 	}
 
-	private <V, G extends Digraph<V>> Map<V, Cluster<V, G>> createClusters(
-		G digraph,
-		DotProvider<V, G> provider,
+	private <V, G extends Digraph<V>> Map<V, Cluster<V, G>> createClusters(G digraph, DotProvider<V, G> provider,
 		DigraphProvider<? super V, G> subgraphs) {
 		Map<V, Cluster<V, G>> clusters = new HashMap<>();
 		if (subgraphs != null) {
@@ -131,10 +129,7 @@ public class DotExporter {
 		return clusters;
 	}
 
-	public <V, G extends Digraph<V>> void export(
-		DotProvider<V, G> provider,
-		G digraph,
-		DigraphProvider<V, G> subgraphs,
+	public <V, G extends Digraph<V>> void export(DotProvider<V, G> provider, G digraph, DigraphProvider<V, G> subgraphs,
 		Writer writer) throws IOException {
 
 		writer.write("de.odysseus.ithaka.digraph G {");
@@ -159,13 +154,8 @@ public class DotExporter {
 		writer.flush();
 	}
 
-	private <V, G extends Digraph<V>> void writeNodesAndEdges(
-		Writer writer,
-		int level,
-		DotProvider<V, G> provider,
-		G digraph,
-		Map<V, Cluster<V, G>> clusters,
-		DigraphProvider<V, G> subgraphs) throws IOException {
+	private <V, G extends Digraph<V>> void writeNodesAndEdges(Writer writer, int level, DotProvider<V, G> provider, G digraph,
+		Map<V, Cluster<V, G>> clusters, DigraphProvider<V, G> subgraphs) throws IOException {
 		for (V vertex : digraph.vertices()) {
 			if (clusters.containsKey(vertex)) {
 				writeCluster(writer, level, provider, vertex, clusters.get(vertex), subgraphs);
@@ -175,19 +165,14 @@ public class DotExporter {
 		}
 		for (V source : digraph.vertices()) {
 			for (V target : digraph.targets(source)) {
-				writeEdge(writer, level, source, target, digraph.get(source, target).getAsInt(), provider,
-					clusters.get(source), clusters.get(target));
+				writeEdge(writer, level, source, target, digraph.get(source, target).getAsInt(), provider, clusters.get(source),
+					clusters.get(target));
 			}
 		}
 	}
 
-	private <V, G extends Digraph<V>> void writeCluster(
-		Writer writer,
-		int level,
-		DotProvider<V, G> provider,
-		V subgraphVertex,
-		Cluster<V, G> cluster,
-		DigraphProvider<V, G> subgraphs) throws IOException {
+	private <V, G extends Digraph<V>> void writeCluster(Writer writer, int level, DotProvider<V, G> provider, V subgraphVertex,
+		Cluster<V, G> cluster, DigraphProvider<V, G> subgraphs) throws IOException {
 
 		indent(writer, level);
 		writer.write("subgraph ");

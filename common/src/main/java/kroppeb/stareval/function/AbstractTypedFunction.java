@@ -46,10 +46,8 @@ public abstract class AbstractTypedFunction implements TypedFunction {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof AbstractTypedFunction func) {
-			return Objects.equals(returnType, func.returnType) &&
-				Arrays.equals(parameters, func.parameters) &&
-				priority == func.priority &&
-				isPure == func.isPure;
+			return Objects.equals(returnType, func.returnType) && Arrays.equals(parameters,
+				func.parameters) && priority == func.priority && isPure == func.isPure;
 		}
 
 		return false;

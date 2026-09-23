@@ -3,8 +3,7 @@ package kroppeb.stareval.element.tree;
 import kroppeb.stareval.element.ExpressionElement;
 import kroppeb.stareval.parser.BinaryOp;
 
-public record BinaryExpressionElement(BinaryOp op, ExpressionElement left,
-									  ExpressionElement right) implements ExpressionElement {
+public record BinaryExpressionElement(BinaryOp op, ExpressionElement left, ExpressionElement right) implements ExpressionElement {
 
 
 	@Override

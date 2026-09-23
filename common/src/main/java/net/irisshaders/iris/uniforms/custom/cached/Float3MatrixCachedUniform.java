@@ -5,8 +5,6 @@ import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.parsing.MatrixType;
 import org.joml.Matrix3f;
 import org.joml.Matrix3fc;
-import org.joml.Matrix4f;
-import org.joml.Matrix4fc;
 
 import java.util.function.Supplier;
 

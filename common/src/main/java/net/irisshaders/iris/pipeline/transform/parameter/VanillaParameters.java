@@ -18,10 +18,8 @@ public class VanillaParameters extends GeometryInfoParameters {
 	private final boolean isClouds;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public VanillaParameters(
-		Patch patch,
-		Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides,
-		AlphaTest alpha, boolean isLines, boolean isClouds, boolean hasChunkOffset,
+	public VanillaParameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+		Set<String> textureOverrides, AlphaTest alpha, boolean isLines, boolean isClouds, boolean hasChunkOffset,
 		ShaderAttributeInputs inputs, boolean hasGeometry, boolean hasTesselation) {
 		super(patch, textureMap, textureOverrides, hasGeometry, hasTesselation);
 		this.alpha = alpha;

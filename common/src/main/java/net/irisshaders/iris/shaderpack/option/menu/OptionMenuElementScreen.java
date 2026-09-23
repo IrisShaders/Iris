@@ -13,7 +13,8 @@ public class OptionMenuElementScreen {
 
 	private final Optional<Integer> columnCount;
 
-	public OptionMenuElementScreen(OptionMenuContainer container, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, List<String> elementStrings, Optional<Integer> columnCount) {
+	public OptionMenuElementScreen(OptionMenuContainer container, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions,
+		List<String> elementStrings, Optional<Integer> columnCount) {
 		this.columnCount = columnCount;
 
 		for (String elementString : elementStrings) {

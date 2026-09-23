@@ -1,16 +1,14 @@
 package net.irisshaders.iris.gui.element;
 
 import com.mojang.blaze3d.Blaze3D;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.GuiUtil;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -19,7 +17,6 @@ import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
@@ -37,7 +34,8 @@ import java.util.List;
 import java.util.function.Function;
 
 public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackSelectionList.BaseEntry> {
-	private static final Component PACK_LIST_LABEL = Component.translatable("pack.iris.list.label").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
+	private static final Component PACK_LIST_LABEL = Component.translatable("pack.iris.list.label")
+		.withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
 	private static final Identifier MENU_LIST_BACKGROUND = Identifier.withDefaultNamespace("textures/gui/menu_background.png");
 	private final ShaderPackScreen screen;
 	private final TopButtonRowEntry topButtonRow;
@@ -47,25 +45,26 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	private boolean keyValid;
 	private ShaderPackEntry applied = null;
 
-	public ShaderPackSelectionList(ShaderPackScreen screen, Minecraft client, int width, int height, int top, int bottom, int left, int right) {
+	public ShaderPackSelectionList(ShaderPackScreen screen, Minecraft client, int width, int height, int top, int bottom, int left,
+		int right) {
 		super(client, width, bottom, top + 4, bottom, left, right, 20);
 		WatchKey key1;
 		WatchService watcher1;
 
 		this.screen = screen;
 		this.topButtonRow = new TopButtonRowEntry(this, Iris.getIrisConfig().areShadersEnabled());
-		this.downloadButton = new PinnedEntry(Component.literal("Download Shaders"), () -> this.minecraft.gui.setScreen(new ConfirmLinkScreen(bl -> {
-			if (bl) {
-				Blaze3D.openUri(URI.create("https://modrinth.com/shaders"));
-			}
-			this.minecraft.gui.setScreen(this.screen);
-		}, URI.create("https://modrinth.com/shaders"), true)), this);
+		this.downloadButton = new PinnedEntry(Component.literal("Download Shaders"),
+			() -> this.minecraft.gui.setScreen(new ConfirmLinkScreen(bl -> {
+				if (bl) {
+					Blaze3D.openUri(URI.create("https://modrinth.com/shaders"));
+				}
+				this.minecraft.gui.setScreen(this.screen);
+			}, URI.create("https://modrinth.com/shaders"), true)), this);
 		try {
 			watcher1 = FileSystems.getDefault().newWatchService();
-			key1 = Iris.getShaderpacksDirectory().register(watcher1,
-				StandardWatchEventKinds.ENTRY_CREATE,
-				StandardWatchEventKinds.ENTRY_MODIFY,
-				StandardWatchEventKinds.ENTRY_DELETE);
+			key1 = Iris.getShaderpacksDirectory()
+				.register(watcher1, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY,
+					StandardWatchEventKinds.ENTRY_DELETE);
 			keyValid = true;
 		} catch (IOException e) {
 			Iris.logger.error("Couldn't register file watcher!", e);
@@ -82,7 +81,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	@Override
 	public boolean keyPressed(KeyEvent event) {
 		if (event.isUp()) {
-			if (getFocused() == this.children().getFirst()) return true;
+			if (getFocused() == this.children().getFirst())
+				return true;
 		}
 
 		return super.keyPressed(event);
@@ -92,7 +92,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	public void extractWidgetRenderState(GuiGraphicsExtractor pAbstractSelectionList0, int pInt1, int pInt2, float pFloat3) {
 		if (keyValid) {
 			for (WatchEvent<?> event : key.pollEvents()) {
-				if (event.kind() == StandardWatchEventKinds.OVERFLOW) continue;
+				if (event.kind() == StandardWatchEventKinds.OVERFLOW)
+					continue;
 
 				refresh();
 				break;
@@ -117,15 +118,14 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	@Override
 	protected void extractListBackground(GuiGraphicsExtractor pAbstractSelectionList0) {
 		float transition = screen.listTransition.getAsFloat();
-		if (transition < 0.02f) return;
+		if (transition < 0.02f)
+			return;
 		//if (transition < 0.99f) pAbstractSelectionList0.flush();
 		//RenderSystem.enableBlend();
 		// TODO 1.21.6
 		//RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, Math.max(screen.listTransition.getAsFloat(), 0.01f));
-		pAbstractSelectionList0.blit(RenderPipelines.GUI_TEXTURED,
-			MENU_LIST_BACKGROUND,
-			this.getX(), this.getY(), (float)this.getRight(), (float)(this.getBottom() + (int)this.scrollAmount()), this.getWidth(), this.getHeight(), 32, 32
-		);
+		pAbstractSelectionList0.blit(RenderPipelines.GUI_TEXTURED, MENU_LIST_BACKGROUND, this.getX(), this.getY(), (float) this.getRight(),
+			(float) (this.getBottom() + (int) this.scrollAmount()), this.getWidth(), this.getHeight(), 32, 32);
 		//if (transition < 0.99f) pAbstractSelectionList0.flush();
 
 		//RenderSystem.disableBlend();
@@ -135,14 +135,17 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	@Override
 	protected void extractListSeparators(GuiGraphicsExtractor pAbstractSelectionList0) {
 		float transition = screen.listTransition.getAsFloat();
-		if (transition < 0.02f) return;
+		if (transition < 0.02f)
+			return;
 		//if (transition < 0.99f) pAbstractSelectionList0.flush();
 		// TODO 1.21.6
 		//RenderSystem.enableBlend();
 		//RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, Math.max(screen.listTransition.getAsFloat(), 0.01f));
 		int col = ARGB.colorFromFloat(transition, 1.0f, 1.0f, 1.0f);
-		pAbstractSelectionList0.blit(RenderPipelines.GUI_TEXTURED, CreateWorldScreen.HEADER_SEPARATOR, this.getX(), this.getY() - 2, 0.0F, 0.0F, this.getWidth(), 2, 32, 2, col);
-		pAbstractSelectionList0.blit(RenderPipelines.GUI_TEXTURED, CreateWorldScreen.FOOTER_SEPARATOR, this.getX(), this.getBottom(), 0.0F, 0.0F, this.getWidth(), 2, 32, 2, col);
+		pAbstractSelectionList0.blit(RenderPipelines.GUI_TEXTURED, CreateWorldScreen.HEADER_SEPARATOR, this.getX(), this.getY() - 2, 0.0F,
+			0.0F, this.getWidth(), 2, 32, 2, col);
+		pAbstractSelectionList0.blit(RenderPipelines.GUI_TEXTURED, CreateWorldScreen.FOOTER_SEPARATOR, this.getX(), this.getBottom(), 0.0F,
+			0.0F, this.getWidth(), 2, 32, 2, col);
 		//if (transition < 0.99f) pAbstractSelectionList0.flush();
 		//RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		//RenderSystem.disableBlend();
@@ -171,18 +174,12 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			// Not translating this since it's going to be seen very rarely,
 			// We're just trying to get more information on a seemingly untraceable bug:
 			// - https://github.com/IrisShaders/Iris/issues/785
-			this.addLabelEntries(
-				Component.empty(),
-				Component.literal("There was an error reading your shaderpacks directory")
-					.withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
-				Component.empty(),
+			this.addLabelEntries(Component.empty(), Component.literal("There was an error reading your shaderpacks directory")
+					.withStyle(ChatFormatting.RED, ChatFormatting.BOLD), Component.empty(),
 				Component.literal("Check your logs for more information."),
 				Component.literal("Please file an issue report including a log file."),
-				Component.literal("If you are able to identify the file causing this, " +
-					"please include it in your report as well."),
-				Component.literal("Note that this might be an issue with folder " +
-					"permissions; ensure those are correct first.")
-			);
+				Component.literal("If you are able to identify the file causing this, " + "please include it in your report as well."),
+				Component.literal("Note that this might be an issue with folder " + "permissions; ensure those are correct first."));
 
 			return;
 		}
@@ -279,7 +276,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 	}
 
 	public static class TopButtonRowEntry extends BaseEntry {
-		private static final Component NONE_PRESENT_LABEL = Component.translatable("options.iris.shaders.nonePresent").withStyle(ChatFormatting.GRAY);
+		private static final Component NONE_PRESENT_LABEL = Component.translatable("options.iris.shaders.nonePresent")
+			.withStyle(ChatFormatting.GRAY);
 		private static final Component SHADERS_DISABLED_LABEL = Component.translatable("options.iris.shaders.disabled");
 		private static final Component SHADERS_ENABLED_LABEL = Component.translatable("options.iris.shaders.enabled");
 
@@ -308,7 +306,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 			GuiUtil.bindIrisWidgetsTexture();
 			GuiUtil.drawButton(guiGraphics, x - 2, y - 2, entryWidth, entryHeight + 2, isHovered, !allowEnableShadersButton);
-			guiGraphics.centeredText(Minecraft.getInstance().font, getEnableDisableLabel(), (x + entryWidth / 2) - 2, y + (entryHeight - 11) / 2, 0xFFFFFFFF);
+			guiGraphics.centeredText(Minecraft.getInstance().font, getEnableDisableLabel(), (x + entryWidth / 2) - 2,
+				y + (entryHeight - 11) / 2, 0xFFFFFFFF);
 		}
 
 		private Component getEnableDisableLabel() {
@@ -359,7 +358,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 			}
 
 			@Override
-			public void renderLabel(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+			public void renderLabel(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY,
+				float tickDelta, boolean hovered) {
 				int textX = this.centerX - (int) (this.font.width(this.text) * 0.5);
 				int textY = y + (int) ((height - 8) * 0.5);
 

@@ -15,7 +15,6 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SolidBucketItem;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -32,32 +31,38 @@ public class ItemStackStateLayerMixin {
 	}
 
 	@Inject(method = "submit", at = @At("HEAD"))
-	private void onRender(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int i, int j, int k, CallbackInfo ci, @Share("lastBState") LocalIntRef ref) {
+	private void onRender(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int i, int j, int k, CallbackInfo ci,
+		@Share("lastBState") LocalIntRef ref) {
 		ref.set(CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity());
 		iris$setupId(((ItemContextState) parentState).getDisplayItem(), ((ItemContextState) parentState).getDisplayItemModel());
 	}
 
 	@Inject(method = "submit", at = @At("TAIL"))
-	private void onRenderEnd(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int i, int j, int k, CallbackInfo ci, @Share("lastBState") LocalIntRef ref) {
+	private void onRenderEnd(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int i, int j, int k, CallbackInfo ci,
+		@Share("lastBState") LocalIntRef ref) {
 		CapturedRenderingState.INSTANCE.setCurrentBlockEntity(ref.get());
 		CapturedRenderingState.INSTANCE.setCurrentRenderedItem(0);
 	}
 
 	@Unique
 	private void iris$setupId(Item item, Identifier modelId) {
-		if (WorldRenderingSettings.INSTANCE.getItemIds() == null) return;
+		if (WorldRenderingSettings.INSTANCE.getItemIds() == null)
+			return;
 
 		if (item instanceof BlockItem blockItem && !(item instanceof SolidBucketItem)) {
-			if (WorldRenderingSettings.INSTANCE.getBlockStateIds() == null) return;
+			if (WorldRenderingSettings.INSTANCE.getBlockStateIds() == null)
+				return;
 
 			CapturedRenderingState.INSTANCE.setCurrentBlockEntity(1);
 
 			//System.out.println(WorldRenderingSettings.INSTANCE.getBlockStateIds().getInt(blockItem.getBlock().defaultBlockState()));
-			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getBlockStateIds().getOrDefault(blockItem.getBlock().defaultBlockState(), 0));
+			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(
+				WorldRenderingSettings.INSTANCE.getBlockStateIds().getOrDefault(blockItem.getBlock().defaultBlockState(), 0));
 		} else {
 			Identifier location = modelId != null ? modelId : BuiltInRegistries.ITEM.getKey(item);
 
-			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
+			CapturedRenderingState.INSTANCE.setCurrentRenderedItem(
+				WorldRenderingSettings.INSTANCE.getItemIds().applyAsInt(new NamespacedId(location.getNamespace(), location.getPath())));
 		}
 	}
 }

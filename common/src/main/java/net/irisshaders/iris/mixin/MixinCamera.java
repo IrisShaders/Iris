@@ -9,26 +9,16 @@ import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Camera.class)
 public class MixinCamera {
-	@WrapOperation(
-		method = "prepareCullFrustum",
-		at = @At(
-			value = "NEW",
-			target = "Lnet/minecraft/client/renderer/culling/Frustum;"
-		)
-	)
+	@WrapOperation(method = "prepareCullFrustum", at = @At(value = "NEW", target = "Lnet/minecraft/client/renderer/culling/Frustum;"))
 	private Frustum iris$disableFrustum(Matrix4fc modelViewMatrix, Matrix4f projectionMatrixForCulling, Operation<Frustum> original) {
 		Frustum frustum;
 
@@ -39,10 +29,10 @@ public class MixinCamera {
 		}
 
 		return frustum;
-    }
+	}
 
 	// Set isRenderingLevel for trigger isMatrixDirty. This is the place setup projection data for each frame
-    @Inject(method = "update", at = @At(value = "HEAD"))
+	@Inject(method = "update", at = @At(value = "HEAD"))
 	private void iris$undoReverseZ(DeltaTracker deltaTracker, CallbackInfo ci) {
 		ImmediateState.isRenderingLevel = true;
 	}

@@ -51,8 +51,8 @@ public record BlockEntry(NamespacedId id, Map<String, String> propertyPredicates
 
 					if (propertyParts.length != 2) {
 						Iris.logger.warn("Warning: the block ID map entry \"" + entry + "\" could not be fully parsed:");
-						Iris.logger.warn("- Block state property filters must be of the form \"key=value\", but "
-							+ splitStates[index] + " is not of that form!");
+						Iris.logger.warn(
+							"- Block state property filters must be of the form \"key=value\", but " + splitStates[index] + " is not of that form!");
 
 						continue;
 					}
@@ -113,8 +113,8 @@ public record BlockEntry(NamespacedId id, Map<String, String> propertyPredicates
 
 			if (propertyParts.length != 2) {
 				Iris.logger.warn("Warning: the block ID map entry \"" + entry + "\" could not be fully parsed:");
-				Iris.logger.warn("- Block state property filters must be of the form \"key=value\", but "
-					+ splitStates[index] + " is not of that form!");
+				Iris.logger.warn(
+					"- Block state property filters must be of the form \"key=value\", but " + splitStates[index] + " is not of that form!");
 
 				// Continue and ignore the invalid entry.
 				continue;

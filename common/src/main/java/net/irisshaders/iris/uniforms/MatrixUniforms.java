@@ -21,34 +21,34 @@ public final class MatrixUniforms {
 	public static void addMatrixUniforms(UniformHolder uniforms, PackDirectives directives) {
 		addMatrix(uniforms, "ModelView", CapturedRenderingState.INSTANCE::getGbufferModelView);
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
-        addDHMatrix(uniforms, "Projection", DHCompat::getProjection);
-		addShadowMatrix(uniforms, "ModelView", () ->
-			new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize(),
-				Mth.equal(directives.getShadowDirectives().getNearPlane(), -1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
-				Mth.equal(directives.getShadowDirectives().getFarPlane(), -1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()
-			).last().pose()));
-		addShadowMatrix(uniforms, "Projection", () -> MatrixUtils.toMinusOneToOne(ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance(),
-																											Mth.equal(directives.getShadowDirectives().getNearPlane(), -1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
-																											Mth.equal(directives.getShadowDirectives().getFarPlane(), -1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane())));
+		addDHMatrix(uniforms, "Projection", DHCompat::getProjection);
+		addShadowMatrix(uniforms, "ModelView", () -> new Matrix4f(
+			ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize(),
+				Mth.equal(directives.getShadowDirectives().getNearPlane(),
+					-1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
+				Mth.equal(directives.getShadowDirectives().getFarPlane(),
+					-1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()).last().pose()));
+		addShadowMatrix(uniforms, "Projection", () -> MatrixUtils.toMinusOneToOne(
+			ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance(),
+				Mth.equal(directives.getShadowDirectives().getNearPlane(),
+					-1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
+				Mth.equal(directives.getShadowDirectives().getFarPlane(),
+					-1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane())));
 	}
 
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4fc> supplier) {
-		uniforms
-			.uniformMatrix(PER_FRAME, "gbuffer" + name, supplier)
+		uniforms.uniformMatrix(PER_FRAME, "gbuffer" + name, supplier)
 			.uniformMatrix(PER_FRAME, "gbuffer" + name + "Inverse", new Inverted(supplier))
 			.uniformMatrix(PER_FRAME, "gbufferPrevious" + name, new Previous(supplier));
 	}
 
 	private static void addDHMatrix(UniformHolder uniforms, String name, Supplier<Matrix4fc> supplier) {
-		uniforms
-			.uniformMatrix(PER_FRAME, "dh" + name, supplier)
-			.uniformMatrix(PER_FRAME, "dh" + name + "Inverse", new Inverted(supplier))
+		uniforms.uniformMatrix(PER_FRAME, "dh" + name, supplier).uniformMatrix(PER_FRAME, "dh" + name + "Inverse", new Inverted(supplier))
 			.uniformMatrix(PER_FRAME, "dhPrevious" + name, new Previous(supplier));
 	}
 
 	private static void addShadowMatrix(UniformHolder uniforms, String name, Supplier<Matrix4fc> supplier) {
-		uniforms
-			.uniformMatrix(PER_FRAME, "shadow" + name, supplier)
+		uniforms.uniformMatrix(PER_FRAME, "shadow" + name, supplier)
 			.uniformMatrix(PER_FRAME, "shadow" + name + "Inverse", new Inverted(supplier));
 	}
 

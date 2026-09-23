@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL20C;
 
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 
 public class TextureInfoCache {
 	public static final TextureInfoCache INSTANCE = new TextureInfoCache();
@@ -27,8 +26,8 @@ public class TextureInfoCache {
 		return info;
 	}
 
-	public void onTexImage2D(int target, int level, int internalformat, int width, int height, int border,
-							 int format, int type, @Nullable ByteBuffer pixels) {
+	public void onTexImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type,
+		@Nullable ByteBuffer pixels) {
 		if (level == 0) {
 			int id = GlStateManagerAccessor.getTEXTURES()[GlStateManagerAccessor.getActiveTexture()].binding;
 			TextureInfo info = getInfo(id);

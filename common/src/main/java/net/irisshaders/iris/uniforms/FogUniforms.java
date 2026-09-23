@@ -45,18 +45,16 @@ public class FogUniforms {
 			() -> ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters().environmentalStart(),
 			listener -> StateUpdateNotifiers.fogStartNotifier.setListener(listener));
 
-		uniforms.uniform1f("fogEnd",
-			() -> ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters().environmentalEnd(),
+		uniforms.uniform1f("fogEnd", () -> ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters().environmentalEnd(),
 			listener -> StateUpdateNotifiers.fogEndNotifier.setListener(listener));
 
 		addFogColor(uniforms);
 	}
 
 	public static void addFogColor(UniformHolder uniforms) {
-		uniforms
-			.uniform3f(UniformUpdateFrequency.PER_FRAME, "fogColor", () -> {
-				return new Vector3f((float) CapturedRenderingState.INSTANCE.getFogColor().x,
-					(float) CapturedRenderingState.INSTANCE.getFogColor().y, (float) CapturedRenderingState.INSTANCE.getFogColor().z);
-			});
+		uniforms.uniform3f(UniformUpdateFrequency.PER_FRAME, "fogColor", () -> {
+			return new Vector3f((float) CapturedRenderingState.INSTANCE.getFogColor().x,
+				(float) CapturedRenderingState.INSTANCE.getFogColor().y, (float) CapturedRenderingState.INSTANCE.getFogColor().z);
+		});
 	}
 }

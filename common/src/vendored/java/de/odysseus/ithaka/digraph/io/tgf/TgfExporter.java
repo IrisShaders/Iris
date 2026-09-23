@@ -33,10 +33,7 @@ public class TgfExporter {
 		this.newline = newline;
 	}
 
-	public <V> void export(
-		TgfLabelProvider<V> provider,
-		Digraph<V> digraph,
-		Writer writer) throws IOException {
+	public <V> void export(TgfLabelProvider<V> provider, Digraph<V> digraph, Writer writer) throws IOException {
 		Map<V, Integer> index = new HashMap<>();
 		int n = 0;
 

@@ -109,7 +109,8 @@ public class SmoothedFloat implements FloatSupplier {
 
 		// Compute the smoothing factor based on our
 		// α = 1 - e^(-𝚫t/τ) = 1 - e^(-k𝚫t)
-		float smoothingFactor = 1.0f - exponentialDecayFactor(newValue > this.accumulator ? this.decayConstantUp : decayConstantDown, lastFrameTime);
+		float smoothingFactor = 1.0f - exponentialDecayFactor(newValue > this.accumulator ? this.decayConstantUp : decayConstantDown,
+			lastFrameTime);
 
 		// sₜ = αxₜ + (1 - α)sₜ₋₁
 		accumulator = lerp(accumulator, newValue, smoothingFactor);

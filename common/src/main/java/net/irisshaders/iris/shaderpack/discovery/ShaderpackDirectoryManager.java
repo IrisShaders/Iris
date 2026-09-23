@@ -90,9 +90,11 @@ public class ShaderpackDirectoryManager {
 		Comparator<Path> comparator = (a, b) -> {
 			if (debug) {
 				if (Files.isDirectory(a)) {
-					if (!Files.isDirectory(b)) return -1;
+					if (!Files.isDirectory(b))
+						return -1;
 				} else if (Files.isDirectory(b)) {
-					if (!Files.isDirectory(a)) return 1;
+					if (!Files.isDirectory(a))
+						return 1;
 				}
 			}
 
@@ -100,9 +102,7 @@ public class ShaderpackDirectoryManager {
 		};
 
 		try (Stream<Path> list = Files.list(root)) {
-			return list.filter(Iris::isValidToShowPack)
-				.sorted(comparator)
-				.map(path -> path.getFileName().toString())
+			return list.filter(Iris::isValidToShowPack).sorted(comparator).map(path -> path.getFileName().toString())
 				.collect(Collectors.toList());
 		}
 	}

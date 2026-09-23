@@ -22,17 +22,22 @@ public class MixinClientPacketListener {
 			return;
 		}
 
-		Iris.getUpdateChecker().getUpdateMessage().ifPresent(msg ->
-			Minecraft.getInstance().player.sendSystemMessage(msg));
+		Iris.getUpdateChecker().getUpdateMessage().ifPresent(msg -> Minecraft.getInstance().player.sendSystemMessage(msg));
 
-		Iris.getStoredError().ifPresent(e ->
-			Minecraft.getInstance().player.sendSystemMessage(Component.translatable(e instanceof ShaderCompileException ? "iris.load.failure.shader" : "iris.load.failure.generic").append(Component.literal("Copy Info").withStyle(arg -> arg.withUnderlined(true).withColor(ChatFormatting.BLUE).withClickEvent(new ClickEvent.CopyToClipboard(e.getMessage())).withHoverEvent(new HoverEvent.ShowText(Component.translatable("chat.copy.click")))))));
+		Iris.getStoredError().ifPresent(e -> Minecraft.getInstance().player.sendSystemMessage(
+			Component.translatable(e instanceof ShaderCompileException ? "iris.load.failure.shader" : "iris.load.failure.generic").append(
+				Component.literal("Copy Info").withStyle(arg -> arg.withUnderlined(true).withColor(ChatFormatting.BLUE)
+					.withClickEvent(new ClickEvent.CopyToClipboard(e.getMessage()))
+					.withHoverEvent(new HoverEvent.ShowText(Component.translatable("chat.copy.click")))))));
 
 		if (Iris.loadedIncompatiblePack()) {
 			Minecraft.getInstance().gui.hud.setTimes(10, 70, 140);
 			Iris.logger.warn("Incompatible pack for DH!");
-			Minecraft.getInstance().player.sendSystemMessage(Component.literal("This pack doesn't have DH support.").withStyle(ChatFormatting.BOLD, ChatFormatting.RED));
-			Minecraft.getInstance().player.sendSystemMessage(Component.literal("Distant Horizons (DH) chunks won't show up. This isn't a bug, get another shader.").withStyle(ChatFormatting.RED));
+			Minecraft.getInstance().player.sendSystemMessage(
+				Component.literal("This pack doesn't have DH support.").withStyle(ChatFormatting.BOLD, ChatFormatting.RED));
+			Minecraft.getInstance().player.sendSystemMessage(
+				Component.literal("Distant Horizons (DH) chunks won't show up. This isn't a bug, get another shader.")
+					.withStyle(ChatFormatting.RED));
 		}
 	}
 }

@@ -27,18 +27,19 @@ public final class OptionMenuConstructor {
 	private static final Map<Class<? extends OptionMenuElementScreen>, ScreenDataProvider<OptionMenuElementScreen>> SCREEN_DATA_CREATORS = new HashMap<>();
 
 	static {
-		registerScreen(OptionMenuMainElementScreen.class, screen ->
-			new ElementWidgetScreenData(Component.literal(Iris.getCurrentPackName()).append(Iris.isFallback() ? " (fallback)" : "").withStyle(ChatFormatting.BOLD), false));
+		registerScreen(OptionMenuMainElementScreen.class, screen -> new ElementWidgetScreenData(
+			Component.literal(Iris.getCurrentPackName()).append(Iris.isFallback() ? " (fallback)" : "").withStyle(ChatFormatting.BOLD),
+			false));
 
-		registerScreen(OptionMenuSubElementScreen.class, screen ->
-			new ElementWidgetScreenData(GuiUtil.translateOrDefault(Component.literal(screen.screenId), "screen." + screen.screenId), true));
+		registerScreen(OptionMenuSubElementScreen.class, screen -> new ElementWidgetScreenData(
+			GuiUtil.translateOrDefault(Component.literal(screen.screenId), "screen." + screen.screenId), true));
 
 		registerWidget(OptionMenuBooleanOptionElement.class, BooleanElementWidget::new);
 		registerWidget(OptionMenuProfileElement.class, ProfileElementWidget::new);
 		registerWidget(OptionMenuLinkElement.class, LinkElementWidget::new);
 
-		registerWidget(OptionMenuStringOptionElement.class, element ->
-			element.slider ? new SliderElementWidget(element) : new StringElementWidget(element));
+		registerWidget(OptionMenuStringOptionElement.class,
+			element -> element.slider ? new SliderElementWidget(element) : new StringElementWidget(element));
 	}
 
 	private OptionMenuConstructor() {
@@ -63,7 +64,8 @@ public final class OptionMenuConstructor {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static void constructAndApplyToScreen(OptionMenuContainer container, ShaderPackScreen packScreen, ShaderPackOptionList optionList, NavigationController navigation) {
+	public static void constructAndApplyToScreen(OptionMenuContainer container, ShaderPackScreen packScreen,
+		ShaderPackOptionList optionList, NavigationController navigation) {
 		OptionMenuElementScreen screen = container.mainScreen;
 
 		if (navigation.getCurrentScreen() != null && container.subScreens.containsKey(navigation.getCurrentScreen())) {

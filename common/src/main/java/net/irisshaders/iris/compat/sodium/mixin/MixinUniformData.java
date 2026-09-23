@@ -45,8 +45,8 @@ public class MixinUniformData implements ShadowRenderListAccess {
 
 	@Inject(method = "delete", at = @At("HEAD"))
 	private void iris$closeShadowUniforms(CallbackInfo ci) {
-		iris$endShadowRenderListScope();
-		shadowUbo.close();
+		this.iris$endShadowRenderListScope();
+		this.shadowUbo.close();
 	}
 
 	@Inject(method = "endFrame", at = @At("HEAD"))
@@ -57,7 +57,7 @@ public class MixinUniformData implements ShadowRenderListAccess {
 
 	@Override
 	public void iris$beginShadowRenderListScope() {
-		if (isSwappedToShadow) {
+		if (this.isSwappedToShadow) {
 			return;
 		}
 
@@ -78,7 +78,7 @@ public class MixinUniformData implements ShadowRenderListAccess {
 
 	@Override
 	public void iris$endShadowRenderListScope() {
-		if (!isSwappedToShadow) {
+		if (!this.isSwappedToShadow) {
 			return;
 		}
 

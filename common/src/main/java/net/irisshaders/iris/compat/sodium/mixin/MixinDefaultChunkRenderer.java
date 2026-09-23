@@ -25,39 +25,38 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(DefaultChunkRenderer.class)
 public class MixinDefaultChunkRenderer {
+	@Unique
+	private final boolean[] shouldDrawShadow = new boolean[DefaultTerrainRenderPasses.ALL.length];
 	@Shadow
 	@Final
 	private boolean[] shouldDraw;
-	@Unique
-	private final boolean[] shouldDrawShadow = new boolean[DefaultTerrainRenderPasses.ALL.length];
 
-	@Redirect(method = { "prepare", "render" }, at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/DefaultChunkRenderer;shouldDraw:[Z"))
+	@Redirect(method = {"prepare", "render"}, at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/DefaultChunkRenderer;shouldDraw:[Z"))
 	private boolean[] change(DefaultChunkRenderer instance) {
 		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? this.shouldDrawShadow : this.shouldDraw;
 	}
 
 	@Redirect(method = "prepare", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/gui/SodiumOptions$PerformanceSettings;useBlockFaceCulling:Z"), remap = false)
 	private boolean iris$disableBlockFaceCullingInShadowPass(SodiumOptions.PerformanceSettings instance) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) return false;
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered())
+			return false;
 		return instance.useBlockFaceCulling;
 	}
 
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/ShaderChunkRenderer;begin(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;Lnet/caffeinemc/mods/sodium/client/util/FogParameters;Lcom/mojang/renderpearl/api/textures/GpuSampler;Lnet/minecraft/client/renderer/oit/OitStage;)V"))
-	private void iris$forceNearest(DefaultChunkRenderer instance,
-	                               TerrainRenderPass terrainRenderPass,
-	                               FogParameters fogParameters,
-	                               GpuSampler gpuSampler,
-	                               OitStage oitStage,
-	                               Operation<Void> original) {
-		original.call(instance, terrainRenderPass, fogParameters, Iris.isPackInUseQuick() ? RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST, true) : gpuSampler, oitStage);
+	private void iris$forceNearest(DefaultChunkRenderer instance, TerrainRenderPass terrainRenderPass, FogParameters fogParameters,
+		GpuSampler gpuSampler, OitStage oitStage, Operation<Void> original) {
+		original.call(instance, terrainRenderPass, fogParameters,
+			Iris.isPackInUseQuick() ? RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST, true) : gpuSampler, oitStage);
 	}
+
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch;isEmpty()Z"), require = 1, remap = false)
-	private boolean iris$checkPreparedBatch(MultiDrawBatch batch, Operation<Boolean> original,
-	                                       @Local RenderRegion region, @Local(argsOnly = true) TerrainRenderPass renderPass) {
+	private boolean iris$checkPreparedBatch(MultiDrawBatch batch, Operation<Boolean> original, @Local RenderRegion region,
+		@Local(argsOnly = true) TerrainRenderPass renderPass) {
 		if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !batch.isFilled) {
-			throw new IllegalStateException("Iris: unprepared main-world terrain batch at region ("
-				+ region.getOriginX() + ", " + region.getOriginY() + ", " + region.getOriginZ()
-				+ "), pass index " + DefaultTerrainRenderPasses.getPassIndex(renderPass) + ", batch size " + batch.size);
+			throw new IllegalStateException(
+				"Iris: unprepared main-world terrain batch at region (" + region.getOriginX() + ", " + region.getOriginY() + ", " + region.getOriginZ() + "), pass index " + DefaultTerrainRenderPasses.getPassIndex(
+					renderPass) + ", batch size " + batch.size);
 		}
 		return original.call(batch);
 	}

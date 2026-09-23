@@ -37,7 +37,7 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 
 	@Override
 	public void rebuildProgram(int width, int height, ColorSpace colorSpace) {
-		close();
+		this.close();
 		this.colorSpace = colorSpace;
 
 		if (colorSpace == ColorSpace.SRGB) {
@@ -47,8 +47,8 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		String vertex;
 		String fragment;
 
-		try (var vs = Objects.requireNonNull(getClass().getResourceAsStream("/colorSpace.vsh"));
-			 var fs = Objects.requireNonNull(getClass().getResourceAsStream("/colorSpace.csh"))) {
+		try (var vs = Objects.requireNonNull(this.getClass().getResourceAsStream("/colorSpace.vsh")); var fs = Objects.requireNonNull(
+			this.getClass().getResourceAsStream("/colorSpace.csh"))) {
 			vertex = new String(vs.readAllBytes(), StandardCharsets.UTF_8).replace("iris_Position", "Position").replace("iris_UV0", "UV0");
 			fragment = new String(fs.readAllBytes(), StandardCharsets.UTF_8);
 		} catch (IOException e) {
@@ -63,22 +63,28 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		}
 
 		fragment = JcppProcessor.glslPreprocessSource(fragment, defines);
-		samplers = new PackSamplers(RenderSystem.getDevice());
+		this.samplers = new PackSamplers();
 
 		var outputs = new ColorAttachmentPlan.Builder().program("colorSpace", new int[]{0}, Set.of()).build(1).program("colorSpace");
-		program = new CompositeProgram(RenderSystem.getDevice(), samplers, "colorSpace",
+		this.program = new CompositeProgram(this.samplers, "colorSpace",
 			Map.of(PatchShaderType.VERTEX, vertex, PatchShaderType.FRAGMENT, fragment), outputs, Collections.singletonList(null));
-		program.uniforms()
-			.uniformMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0,
-				1));
-		program.samplers()
-			.addTextureSampler(new TextureBinding("colorSpace/input", () -> target, () -> GlSampler.NEAREST), false, "readImage");
-		program.samplers().finish();
+		this.program.getUniforms()
+			.uniformMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0, 1));
+		this.program.getSamplers()
+			.addTextureSampler(new TextureBinding("colorSpace/input", () -> this.target, () -> GlSampler.NEAREST), false, "readImage");
+		this.program.getSamplers().finish();
+	}
+
+	@Override
+	public void prepare(GpuTextureView target) {
+		if (this.program != null) {
+			this.program.prepare(List.of(target));
+		}
 	}
 
 	@Override
 	public void process(GpuTextureView target) {
-		if (colorSpace == ColorSpace.SRGB) {
+		if (this.colorSpace == ColorSpace.SRGB) {
 			return;
 		}
 
@@ -86,22 +92,23 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 		int width = target.getWidth(0);
 		int height = target.getHeight(0);
 
-		if (swap == null || swap.getWidth(0) != width || swap.getHeight(0) != height || swap.getFormat() != target.texture().getFormat()) {
-			if (swap != null) {
-				swapView.close();
-				swap.close();
+		if (this.swap == null || this.swap.getWidth(0) != width || this.swap.getHeight(
+			0) != height || this.swap.getFormat() != target.texture().getFormat()) {
+			if (this.swap != null) {
+				this.swapView.close();
+				this.swap.close();
 			}
 
-			swap = device.createTexture("Iris color conversion", GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_COPY_SRC,
+			this.swap = device.createTexture("Iris color conversion", GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_COPY_SRC,
 				target.texture().getFormat(), width, height, 1, 1);
-			swapView = device.createTextureView(swap);
+			this.swapView = device.createTextureView(this.swap);
 		}
 
 		this.target = target;
 
 		try {
-			program.draw(List.of(swapView), new ViewportData(1, 0, 0), 0, 0);
-			device.createCommandEncoder().copyTextureToTexture(swap, target.texture(), 0, 0, 0, 0, 0, width, height);
+			this.program.draw(List.of(this.swapView), new ViewportData(1, 0, 0), 0, 0);
+			device.createCommandEncoder().copyTextureToTexture(this.swap, target.texture(), 0, 0, 0, 0, 0, width, height);
 		} finally {
 			this.target = null;
 		}
@@ -109,21 +116,21 @@ public class ColorSpaceFragmentConverter implements ColorSpaceConverter {
 
 	@Override
 	public void close() {
-		if (program != null) {
-			program.destroy();
-			program = null;
+		if (this.program != null) {
+			this.program.destroy();
+			this.program = null;
 		}
 
-		if (samplers != null) {
-			samplers.close();
-			samplers = null;
+		if (this.samplers != null) {
+			this.samplers.close();
+			this.samplers = null;
 		}
 
-		if (swap != null) {
-			swapView.close();
-			swap.close();
-			swapView = null;
-			swap = null;
+		if (this.swap != null) {
+			this.swapView.close();
+			this.swap.close();
+			this.swapView = null;
+			this.swap = null;
 		}
 	}
 }

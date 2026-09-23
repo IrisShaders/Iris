@@ -2,13 +2,9 @@ package net.irisshaders.iris.mixin.vertices.immediate;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.renderer.StagedVertexBuffer;
-import net.minecraft.client.renderer.rendertype.PreparedRenderType;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,16 +26,14 @@ public class MixinBufferSource {
 		return builder;
 	}
 
-	@Inject(method = "upload",
-		at = @At(value = "HEAD"))
+	@Inject(method = "upload", at = @At(value = "HEAD"))
 	private void iris$beforeFlushBuffer(CallbackInfo ci) {
 		if (iris$notRenderingLevel()) {
 			ImmediateState.renderWithExtendedVertexFormat = false;
 		}
 	}
 
-	@Inject(method = "upload",
-		at = @At(value = "RETURN"))
+	@Inject(method = "upload", at = @At(value = "RETURN"))
 	private void iris$afterFlushBuffer(CallbackInfo ci) {
 		if (iris$notRenderingLevel()) {
 			ImmediateState.renderWithExtendedVertexFormat = true;

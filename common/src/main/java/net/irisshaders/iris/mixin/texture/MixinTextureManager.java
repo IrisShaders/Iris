@@ -15,8 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 @Mixin(TextureManager.class)
 public class MixinTextureManager {
@@ -25,12 +23,8 @@ public class MixinTextureManager {
 	private ResourceManager resourceManager;
 
 	@SuppressWarnings("UnresolvedMixinReference")
-	@Inject(method = {
-		"lambda$reload$2",
-		"lambda$reload$3"
-	}, at = @At("TAIL"), require = 1)
-	private static void iris$onTailReloadLambda(List list, Void void_,
-	                                            CallbackInfo ci) {
+	@Inject(method = {"lambda$reload$2", "lambda$reload$3"}, at = @At("TAIL"), require = 1)
+	private static void iris$onTailReloadLambda(List list, Void void_, CallbackInfo ci) {
 		TextureFormatLoader.reload(Minecraft.getInstance().getResourceManager());
 		PBRTextureManager.INSTANCE.clear();
 		CapturedRenderingState.INSTANCE.incrementTextureReloadCount();

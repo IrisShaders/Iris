@@ -11,7 +11,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Disables the sunrise / sunset effect when blindness is active or when submerged in a fluid.
@@ -23,11 +22,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SkyRenderer.class)
 public class MixinDimensionSpecialEffects {
 	@Inject(method = "renderSunriseAndSunset", at = @At("HEAD"), cancellable = true)
-	private void iris$getSunriseColor(RenderPass renderPass,
-	                                  PoseStack poseStack,
-	                                  float sunAngle,
-	                                  Vector4fc sunriseAndSunsetColor,
-	                                  CallbackInfo ci) {
+	private void iris$getSunriseColor(RenderPass renderPass, PoseStack poseStack, float sunAngle, Vector4fc sunriseAndSunsetColor,
+		CallbackInfo ci) {
 		boolean blockSky = ((LevelRendererAccessor) Minecraft.getInstance().levelRenderer).getLevelRenderState().cameraRenderState.entityRenderState.doesMobEffectBlockSky;
 
 		if (blockSky) {

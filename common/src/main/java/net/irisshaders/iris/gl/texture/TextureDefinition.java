@@ -22,7 +22,8 @@ public class TextureDefinition {
 		private final PixelFormat format;
 		private final PixelType pixelType;
 
-		public RawDefinition(String path, TextureType target, InternalTextureFormat internalFormat, int sizeX, int sizeY, int sizeZ, PixelFormat format, PixelType pixelType) {
+		public RawDefinition(String path, TextureType target, InternalTextureFormat internalFormat, int sizeX, int sizeY, int sizeZ,
+			PixelFormat format, PixelType pixelType) {
 			this.name = path;
 			this.target = target;
 			this.sizeX = sizeX;

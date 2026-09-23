@@ -58,8 +58,7 @@ public class IncludeGraph {
 	private final ImmutableMap<AbsolutePackPath, FileNode> nodes;
 	private final ImmutableMap<AbsolutePackPath, RusticError> failures;
 
-	private IncludeGraph(ImmutableMap<AbsolutePackPath, FileNode> nodes,
-						 ImmutableMap<AbsolutePackPath, RusticError> failures) {
+	private IncludeGraph(ImmutableMap<AbsolutePackPath, FileNode> nodes, ImmutableMap<AbsolutePackPath, RusticError> failures) {
 		this.nodes = nodes;
 		this.failures = failures;
 	}
@@ -133,8 +132,9 @@ public class IncludeGraph {
 
 				if (next.equals(included)) {
 					selfInclude = true;
-					failures.put(next, new RusticError("error", "trivial #include cycle detected",
-						"file includes itself", next.getPathString(), line + 1, lines.get(line)));
+					failures.put(next,
+						new RusticError("error", "trivial #include cycle detected", "file includes itself", next.getPathString(), line + 1,
+							lines.get(line)));
 
 					break;
 				} else if (!seen.contains(included)) {
@@ -191,22 +191,23 @@ public class IncludeGraph {
 
 					if (lastFilePath.equals(start)) {
 						// first node in cycle
-						error.append(new RusticError("error", "#include cycle detected",
-							detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
+						error.append(
+							new RusticError("error", "#include cycle detected", detailMessage, lastFilePath.getPathString(), lineNumber,
+								badLine));
 					} else {
-						error.append("\n  = ").append(new RusticError("note", "cycle involves another file",
-							detailMessage, lastFilePath.getPathString(), lineNumber, badLine));
+						error.append("\n  = ").append(
+							new RusticError("note", "cycle involves another file", detailMessage, lastFilePath.getPathString(), lineNumber,
+								badLine));
 					}
 
 					lastFilePath = node;
 				}
 
-				error.append(
-					"""
-						  note: #include directives are resolved before any other preprocessor directives, any form of #include guard will not work
+				error.append("""
+					  note: #include directives are resolved before any other preprocessor directives, any form of #include guard will not work
 
-						  note: other cycles may still exist, only the first detected non-trivial cycle will be reported
-						""");
+					  note: other cycles may still exist, only the first detected non-trivial cycle will be reported
+					""");
 
 				// TODO: Expose this to the caller (more semantic error handling)
 				Iris.logger.error(error.toString());

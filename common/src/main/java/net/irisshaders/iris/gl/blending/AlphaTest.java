@@ -15,16 +15,12 @@ public record AlphaTest(AlphaTestFunction function, float reference) {
 		if (function == AlphaTestFunction.ALWAYS) {
 			return "// alpha test disabled\n";
 		} else if (this.reference == Float.MAX_VALUE) {
-			return indentation + "if (!(" + alphaAccessor + " > iris_vertexColorAlpha)) {\n" +
-				indentation + "    discard;\n" +
-				indentation + "}\n";
+			return indentation + "if (!(" + alphaAccessor + " > iris_vertexColorAlpha)) {\n" + indentation + "    discard;\n" + indentation + "}\n";
 		} else if (function == AlphaTestFunction.NEVER) {
 			return "discard;\n";
 		}
 
-		return indentation + "if (!(" + alphaAccessor + " " + expr + " " + alphaThreshold + ")) {\n" +
-			indentation + "    discard;\n" +
-			indentation + "}\n";
+		return indentation + "if (!(" + alphaAccessor + " " + expr + " " + alphaThreshold + ")) {\n" + indentation + "    discard;\n" + indentation + "}\n";
 	}
 
 

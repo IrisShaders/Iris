@@ -39,8 +39,8 @@ public class BooleanElementWidget extends BaseOptionElementWidget<OptionMenuBool
 		// Might be equal to the applied value
 		this.value = this.element.getPendingOptionValues().getBooleanValueOrDefault(this.option.getName());
 
-		this.defaultValue = this.element.getAppliedOptionValues().getOptionSet().getBooleanOptions()
-			.get(this.option.getName()).getOption().getDefaultValue();
+		this.defaultValue = this.element.getAppliedOptionValues().getOptionSet().getBooleanOptions().get(this.option.getName()).getOption()
+			.getDefaultValue();
 
 		this.setLabel(GuiUtil.translateOrDefault(Component.literal(this.option.getName()), "option." + this.option.getName()));
 	}

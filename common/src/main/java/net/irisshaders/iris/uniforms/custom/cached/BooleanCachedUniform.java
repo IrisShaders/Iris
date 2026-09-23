@@ -21,7 +21,6 @@ public class BooleanCachedUniform extends CachedUniform {
 	protected boolean doUpdate() {
 		boolean prev = this.cached;
 		this.cached = this.supplier.getAsBoolean();
-
 		return prev != cached;
 	}
 

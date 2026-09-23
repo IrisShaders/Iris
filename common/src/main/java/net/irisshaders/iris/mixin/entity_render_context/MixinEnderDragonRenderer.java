@@ -20,8 +20,10 @@ public class MixinEnderDragonRenderer {
 	private static int previousE;
 
 	@Inject(method = "submitCrystalBeams", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V"))
-	private static void changeId(float f, float g, float h, float i, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int j, CallbackInfo ci) {
-		if (WorldRenderingSettings.INSTANCE.getEntityIds() == null) return;
+	private static void changeId(float f, float g, float h, float i, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int j,
+		CallbackInfo ci) {
+		if (WorldRenderingSettings.INSTANCE.getEntityIds() == null)
+			return;
 
 		previousE = CapturedRenderingState.INSTANCE.getCurrentRenderedEntity();
 		CapturedRenderingState.INSTANCE.setCurrentEntity(WorldRenderingSettings.INSTANCE.getEntityIds().applyAsInt(END_BEAM));

@@ -1,12 +1,8 @@
 package net.irisshaders.iris.mixin.vertices.block_rendering;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import org.spongepowered.asm.mixin.Mixin;
-
-import java.util.Arrays;
 
 /**
  * Allows directional shading and ambient occlusion data to be stored separately in the vertex format.

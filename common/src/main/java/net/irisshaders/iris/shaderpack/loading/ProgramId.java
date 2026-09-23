@@ -44,10 +44,9 @@ public enum ProgramId {
 	ParticlesTrans(ProgramGroup.Gbuffers, "particles_translucent", Particles),
 	EntitiesGlowing(ProgramGroup.Gbuffers, "entities_glowing", Entities),
 	ArmorGlint(ProgramGroup.Gbuffers, "armor_glint", Textured),
-	SpiderEyes(ProgramGroup.Gbuffers, "spidereyes", Textured,
-		new BlendModeOverride(
-			new BlendMode(BlendModeFunction.SRC_ALPHA.getVkId(), BlendModeFunction.ONE.getVkId(), BlendModeFunction.ZERO.getVkId(),
-				BlendModeFunction.ONE.getVkId()))),
+	SpiderEyes(ProgramGroup.Gbuffers, "spidereyes", Textured, new BlendModeOverride(
+		new BlendMode(BlendModeFunction.SRC_ALPHA.getGlId(), BlendModeFunction.ONE.getGlId(), BlendModeFunction.ZERO.getGlId(),
+			BlendModeFunction.ONE.getGlId()))),
 
 	Hand(ProgramGroup.Gbuffers, "hand", TexturedLit),
 	Weather(ProgramGroup.Gbuffers, "weather", TexturedLit),

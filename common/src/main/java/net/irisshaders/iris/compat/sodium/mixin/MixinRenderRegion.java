@@ -20,28 +20,22 @@ import java.util.Map;
 
 @Mixin(RenderRegion.class)
 public class MixinRenderRegion implements ShadowRenderRegion {
+	@Unique
+	ChunkRenderList regularRenderList;
+	@Unique
+	ChunkRenderList shadowRenderList;
+	@Unique
+	Map<TerrainRenderPass, MultiDrawBatch> regularCachedBatches;
+	@Unique
+	Map<TerrainRenderPass, MultiDrawBatch> shadowCachedBatches;
 	@Final
 	@Shadow
 	@Mutable
 	private ChunkRenderList renderList;
-
 	@Mutable
 	@Shadow
 	@Final
 	private Map<TerrainRenderPass, MultiDrawBatch> cachedBatches;
-
-	@Unique
-	ChunkRenderList regularRenderList;
-
-	@Unique
-	ChunkRenderList shadowRenderList;
-
-	@Unique
-	Map<TerrainRenderPass, MultiDrawBatch> regularCachedBatches;
-
-	@Unique
-	Map<TerrainRenderPass, MultiDrawBatch> shadowCachedBatches;
-
 	@Unique
 	private boolean iris$shadowRenderListActive;
 
@@ -91,13 +85,13 @@ public class MixinRenderRegion implements ShadowRenderRegion {
 	@Inject(method = "delete", at = @At("HEAD"))
 	private void iris$delete(CallbackInfo ci) {
 		if (this.regularCachedBatches != null) {
-			for(MultiDrawBatch batch : this.regularCachedBatches.values()) {
+			for (MultiDrawBatch batch : this.regularCachedBatches.values()) {
 				batch.delete();
 			}
 		}
 
 		if (this.shadowCachedBatches != null) {
-			for(MultiDrawBatch batch : this.shadowCachedBatches.values()) {
+			for (MultiDrawBatch batch : this.shadowCachedBatches.values()) {
 				batch.delete();
 			}
 		}
@@ -106,19 +100,19 @@ public class MixinRenderRegion implements ShadowRenderRegion {
 	@Override
 	public void iris$forceClearAllBatches() {
 		if (this.regularCachedBatches != null) {
-			for(MultiDrawBatch batch : this.regularCachedBatches.values()) {
+			for (MultiDrawBatch batch : this.regularCachedBatches.values()) {
 				batch.clear();
 			}
 		}
 
 		if (this.shadowCachedBatches != null) {
-			for(MultiDrawBatch batch : this.shadowCachedBatches.values()) {
+			for (MultiDrawBatch batch : this.shadowCachedBatches.values()) {
 				batch.clear();
 			}
 		}
 
 		if (this.cachedBatches != null) {
-			for(MultiDrawBatch batch : this.cachedBatches.values()) {
+			for (MultiDrawBatch batch : this.cachedBatches.values()) {
 				batch.clear();
 			}
 		}
@@ -146,12 +140,12 @@ public class MixinRenderRegion implements ShadowRenderRegion {
 		}
 	}
 
-	@Redirect(method = { "onGeometryBufferChange", "onGeometrySegmentChange", "update" }, at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearAllCachedBatches()V"))
+	@Redirect(method = {"onGeometryBufferChange", "onGeometrySegmentChange", "update"}, at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearAllCachedBatches()V"))
 	private void iris$clearAllBatchesAfterGeometryChange(RenderRegion instance) {
 		((ShadowRenderRegion) instance).iris$forceClearAllBatches();
 	}
 
-	@Redirect(method = { "onIndexBufferChange", "onIndexSegmentChange" }, at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearCachedBatchFor(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)V"))
+	@Redirect(method = {"onIndexBufferChange", "onIndexSegmentChange"}, at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;clearCachedBatchFor(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)V"))
 	private void iris$clearBatchAfterIndexChange(RenderRegion instance, TerrainRenderPass pass) {
 		((ShadowRenderRegion) instance).iris$forceClearBatchFor(pass);
 	}

@@ -1,6 +1,6 @@
 package net.irisshaders.iris.vulkan;
 
-import net.irisshaders.iris.pipeline.transform.vulkan.VulkanResourceLayout;
+import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkCommandBuffer;
@@ -25,73 +25,76 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public final class VulkanResourceSets implements AutoCloseable {
+public class VulkanResourceSets implements AutoCloseable {
 	private final VkDevice device;
 	private final int size;
 	private final int capacity;
 	private final int setIndex;
 	private final Map<Resources, SharedSet> cached = new HashMap<>();
-	private int allocations;
 	private final long alignment;
 	private final long maxRange;
 	private final long storageAlignment;
 	private final long maxStorageRange;
-	private final Map<String, VulkanResourceLayout.Descriptor> blocks, images;
+	private final Map<String, ShaderResourceLayout.Descriptor> blocks;
+	private final Map<String, ShaderResourceLayout.Descriptor> images;
+	private final List<ShaderResourceLayout.Descriptor> blockOrder;
+	private final int dynamicOffsetCount;
+	private SharedSet previous;
 	private long layout;
 	private long pool;
 	private int live;
 
-	public VulkanResourceSets(VkDevice device, VulkanResourceLayout resources, int capacity) {
+	public VulkanResourceSets(VkDevice device, ShaderResourceLayout resources, int capacity) {
 		this(device, resources, capacity, 0);
 	}
 
-	public VulkanResourceSets(VkDevice device, VulkanResourceLayout resources, int capacity, int setIndex) {
+	public VulkanResourceSets(VkDevice device, ShaderResourceLayout resources, int capacity, int setIndex) {
 		this.setIndex = setIndex;
 		this.device = device;
 		this.size = resources.uniformBufferSize();
 		this.capacity = capacity;
 
 		if (capacity < 1) {
-			throw new IllegalArgumentException("Uniform sets need positive capacity");
+			throw new IllegalArgumentException("uniform sets need positive capacity");
 		}
 
 		var descriptors = resources.descriptors().stream().filter(d -> d.set() == setIndex).toList();
 
 		if (descriptors.isEmpty()) {
-			throw new IllegalArgumentException("No resources in descriptor set " + setIndex);
+			throw new IllegalArgumentException("no resources in descriptor set " + setIndex);
 		}
 
-		Map<String, VulkanResourceLayout.Descriptor> blocks = new LinkedHashMap<>(), images = new LinkedHashMap<>();
+		Map<String, ShaderResourceLayout.Descriptor> blocks = new LinkedHashMap<>();
+		Map<String, ShaderResourceLayout.Descriptor> images = new LinkedHashMap<>();
 		Set<Integer> bindings = new HashSet<>();
 
 		for (var descriptor : descriptors) {
-			if ((descriptor.kind() != VulkanResourceLayout.Kind.UNIFORM_BUFFER &&
-				descriptor.kind() != VulkanResourceLayout.Kind.STORAGE_BUFFER && descriptor.kind() != VulkanResourceLayout.Kind.IMAGE) ||
-				descriptor.count() < 1 || descriptor.binding() < 0 ||
-				(descriptor.kind() == VulkanResourceLayout.Kind.IMAGE ? images : blocks).putIfAbsent(descriptor.name(), descriptor) !=
-					null ||
-				!bindings.add(descriptor.binding())) {
-				throw new IllegalArgumentException("Invalid program descriptor: " + descriptor);
+			if ((descriptor.kind() != ShaderResourceLayout.Kind.UNIFORM_BUFFER && descriptor.kind() != ShaderResourceLayout.Kind.STORAGE_BUFFER && descriptor.kind() != ShaderResourceLayout.Kind.IMAGE) || descriptor.count() < 1 || descriptor.binding() < 0 || (descriptor.kind() == ShaderResourceLayout.Kind.IMAGE ? images : blocks).putIfAbsent(
+				descriptor.name(), descriptor) != null || !bindings.add(descriptor.binding())) {
+				throw new IllegalArgumentException("invalid program descriptor: " + descriptor);
 			}
 		}
 
-		if (blocks.containsKey(VulkanResourceLayout.UNIFORM_BLOCK) && size <= 0) {
-			throw new IllegalArgumentException("Empty generated uniform block");
+		if (blocks.containsKey(ShaderResourceLayout.UNIFORM_BLOCK) && this.size <= 0) {
+			throw new IllegalArgumentException("empty generated uniform block");
 		}
 
 		this.blocks = Collections.unmodifiableMap(blocks);
 		this.images = Collections.unmodifiableMap(images);
+		this.blockOrder = blocks.values().stream().sorted(Comparator.comparingInt(ShaderResourceLayout.Descriptor::binding)).toList();
+		this.dynamicOffsetCount = this.blockOrder.stream().filter(d -> descriptorType(d) == VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC)
+			.mapToInt(ShaderResourceLayout.Descriptor::count).reduce(0, Math::addExact);
 
 		try (var stack = MemoryStack.stackPush()) {
 			var properties = VkPhysicalDeviceProperties.calloc(stack);
 			VK10.vkGetPhysicalDeviceProperties(device.getPhysicalDevice(), properties);
-			alignment = properties.limits().minUniformBufferOffsetAlignment();
-			storageAlignment = properties.limits().minStorageBufferOffsetAlignment();
-			maxStorageRange = Integer.toUnsignedLong(properties.limits().maxStorageBufferRange());
-			maxRange = Integer.toUnsignedLong(properties.limits().maxUniformBufferRange());
+			this.alignment = properties.limits().minUniformBufferOffsetAlignment();
+			this.storageAlignment = properties.limits().minStorageBufferOffsetAlignment();
+			this.maxStorageRange = Integer.toUnsignedLong(properties.limits().maxStorageBufferRange());
+			this.maxRange = Integer.toUnsignedLong(properties.limits().maxUniformBufferRange());
 
-			if (size > maxRange) {
-				throw new IllegalArgumentException("Uniform block exceeds maxUniformBufferRange");
+			if (this.size > this.maxRange) {
+				throw new IllegalArgumentException("uniform block exceeds maxUniformBufferRange");
 			}
 
 			var binding = VkDescriptorSetLayoutBinding.calloc(descriptors.size(), stack);
@@ -101,10 +104,7 @@ public final class VulkanResourceSets implements AutoCloseable {
 			for (var descriptor : descriptors) {
 				int type = descriptorType(descriptor);
 				counts.merge(type, descriptor.count(), Math::addExact);
-				binding.get(index++)
-					.binding(descriptor.binding())
-					.descriptorType(type)
-					.descriptorCount(descriptor.count())
+				binding.get(index++).binding(descriptor.binding()).descriptorType(type).descriptorCount(descriptor.count())
 					.stageFlags(stageFlags(descriptor));
 			}
 
@@ -117,55 +117,41 @@ public final class VulkanResourceSets implements AutoCloseable {
 			sizes.flip();
 
 			var handle = stack.mallocLong(1);
-			check(VK10.vkCreateDescriptorSetLayout(device,
-					VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default().pBindings(binding),
-					null, handle),
-				"create uniform set layout");
-			layout = handle.get(0);
-			check(VK10.vkCreateDescriptorPool(device,
-					VkDescriptorPoolCreateInfo.calloc(stack)
-						.sType$Default()
-						.maxSets(capacity)
-						.flags(VK10.VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
-						.pPoolSizes(sizes),
-					null, handle),
+			check(VK10.vkCreateDescriptorSetLayout(device, VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default().pBindings(binding),
+				null, handle), "create uniform set layout");
+			this.layout = handle.get(0);
+			check(VK10.vkCreateDescriptorPool(device, VkDescriptorPoolCreateInfo.calloc(stack).sType$Default().maxSets(capacity)
+					.flags(VK10.VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT).pPoolSizes(sizes), null, handle),
 				"create uniform descriptor pool");
-			pool = handle.get(0);
+			this.pool = handle.get(0);
 		} catch (RuntimeException | Error exception) {
-			if (layout != 0) {
-				VK10.vkDestroyDescriptorSetLayout(device, layout, null);
+			if (this.layout != 0) {
+				VK10.vkDestroyDescriptorSetLayout(device, this.layout, null);
 			}
 
 			throw exception;
 		}
 	}
 
-	private static int descriptorType(VulkanResourceLayout.Descriptor descriptor) {
+	private static int descriptorType(ShaderResourceLayout.Descriptor descriptor) {
 		return switch (descriptor.kind()) {
 			case UNIFORM_BUFFER ->
 				descriptor.set() == 0 ? VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			case STORAGE_BUFFER -> VK10.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			case IMAGE -> VK10.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			default -> throw new IllegalArgumentException("Not a set 0 resource: " + descriptor);
+			default -> throw new IllegalArgumentException("not a set 0 resource: " + descriptor);
 		};
 	}
 
-	private static int stageFlags(VulkanResourceLayout.Descriptor descriptor) {
+	private static int stageFlags(ShaderResourceLayout.Descriptor descriptor) {
 		int flags = 0;
 
 		for (var stage : descriptor.stages()) {
-			flags |= switch (stage) {
-				case VERTEX -> VK10.VK_SHADER_STAGE_VERTEX_BIT;
-				case TESS_CONTROL -> VK10.VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-				case TESS_EVAL -> VK10.VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-				case GEOMETRY -> VK10.VK_SHADER_STAGE_GEOMETRY_BIT;
-				case FRAGMENT -> VK10.VK_SHADER_STAGE_FRAGMENT_BIT;
-				case COMPUTE -> VK10.VK_SHADER_STAGE_COMPUTE_BIT;
-			};
+			flags |= VulkanShaderCompiler.stageFlag(stage);
 		}
 
 		if (flags == 0) {
-			throw new IllegalArgumentException("Uniform buffer has no shader stages: " + descriptor.name());
+			throw new IllegalArgumentException("uniform buffer has no shader stages: " + descriptor.name());
 		}
 
 		return flags;
@@ -173,50 +159,53 @@ public final class VulkanResourceSets implements AutoCloseable {
 
 	private static void check(int result, String operation) {
 		if (result != VK10.VK_SUCCESS) {
-			throw new IllegalStateException("Failed to " + operation + ": VkResult " + result);
+			throw new IllegalStateException("failed to " + operation + ": VkResult " + result);
 		}
 	}
 
-	public synchronized long setLayout() {
-		requireOpen();
+	public long setLayout() {
+		this.requireOpen();
 
-		return layout;
+		return this.layout;
 	}
 
-	public synchronized Snapshot snapshot(long buffer, long offset, long availableBytes) {
-		if (blocks.size() != 1 || !blocks.containsKey(VulkanResourceLayout.UNIFORM_BLOCK)) {
-			throw new IllegalArgumentException("Supply every named UBO for this shader");
-		}
+	public List<LayoutBinding> getLayoutBindings() {
+		var descriptors = new ArrayList<>(this.blocks.values());
+		descriptors.addAll(this.images.values());
 
-		if (availableBytes < size) {
-			throw new IllegalArgumentException("Uniform buffer slice is too small");
-		}
-
-		return snapshot(Map.of(VulkanResourceLayout.UNIFORM_BLOCK, List.of(new BufferSlice(buffer, offset, size))));
+		return descriptors.stream().sorted(Comparator.comparingInt(ShaderResourceLayout.Descriptor::binding)).map(
+				descriptor -> new LayoutBinding(descriptor.binding(), descriptorType(descriptor), descriptor.count(), stageFlags(descriptor)))
+			.toList();
 	}
 
-	public synchronized Snapshot snapshot(Map<String, List<BufferSlice>> buffers) {
-		return snapshot(buffers, Map.of());
+	public Snapshot snapshot(Map<String, List<BufferSlice>> buffers) {
+		return this.snapshot(buffers, Map.of());
 	}
 
-	public synchronized Snapshot snapshot(Map<String, List<BufferSlice>> buffers, Map<String, List<Long>> views) {
-		requireOpen();
+	public Snapshot snapshot(Map<String, List<BufferSlice>> buffers, Map<String, List<Long>> views) {
+		this.requireOpen();
 
-		if (!buffers.keySet().equals(blocks.keySet())) {
-			throw new IllegalArgumentException("Buffer bindings must match shader blocks: " + blocks.keySet());
+		if (!buffers.keySet().equals(this.blocks.keySet())) {
+			throw new IllegalArgumentException("buffer bindings must match shader blocks: " + this.blocks.keySet());
 		}
 
-		if (!views.keySet().equals(images.keySet())) {
-			throw new IllegalArgumentException("Image bindings must match shader images: " + images.keySet());
+		if (!views.keySet().equals(this.images.keySet())) {
+			throw new IllegalArgumentException("image bindings must match shader images: " + this.images.keySet());
+		}
+
+		var reused = this.reuseSnapshot(buffers, views);
+
+		if (reused != null) {
+			return reused;
 		}
 
 		var imageCopy = new LinkedHashMap<String, List<Long>>();
 
-		for (var entry : images.entrySet()) {
+		for (var entry : this.images.entrySet()) {
 			var list = List.copyOf(views.get(entry.getKey()));
 
 			if (list.size() != entry.getValue().count() || list.stream().anyMatch(v -> v == 0)) {
-				throw new IllegalArgumentException("Invalid image views: " + entry.getKey());
+				throw new IllegalArgumentException("invalid image views: " + entry.getKey());
 			}
 
 			imageCopy.put(entry.getKey(), list);
@@ -224,20 +213,19 @@ public final class VulkanResourceSets implements AutoCloseable {
 
 		Map<String, List<BufferSlice>> copy = new LinkedHashMap<>();
 
-		for (var entry : blocks.entrySet()) {
+		for (var entry : this.blocks.entrySet()) {
 			var slices = List.copyOf(buffers.get(entry.getKey()));
 
 			if (slices.size() != entry.getValue().count()) {
-				throw new IllegalArgumentException("Wrong buffer array size: " + entry.getKey());
+				throw new IllegalArgumentException("wrong buffer array size: " + entry.getKey());
 			}
 
-			boolean storage = entry.getValue().kind() == VulkanResourceLayout.Kind.STORAGE_BUFFER;
+			boolean storage = entry.getValue().kind() == ShaderResourceLayout.Kind.STORAGE_BUFFER;
 
 			for (var slice : slices) {
-				if (slice.offset() % (storage ? storageAlignment : alignment) != 0 ||
-					slice.length() > (storage ? maxStorageRange : maxRange) ||
-					entry.getKey().equals(VulkanResourceLayout.UNIFORM_BLOCK) && slice.length() < size) {
-					throw new IllegalArgumentException("Invalid or unaligned buffer slice: " + entry.getKey());
+				if (slice.offset() % (storage ? this.storageAlignment : this.alignment) != 0 || slice.length() > (storage ? this.maxStorageRange : this.maxRange) || entry.getKey()
+					.equals(ShaderResourceLayout.UNIFORM_BLOCK) && slice.length() < this.size) {
+					throw new IllegalArgumentException("invalid or unaligned buffer slice: " + entry.getKey());
 				}
 			}
 
@@ -246,56 +234,55 @@ public final class VulkanResourceSets implements AutoCloseable {
 
 		var dynamicOffsets = new ArrayList<Integer>();
 		var descriptorBuffers = new LinkedHashMap<String, List<BufferSlice>>();
-		blocks.entrySet().stream().sorted(Comparator.comparingInt(e -> e.getValue().binding())).forEach(entry -> {
-			var slices = copy.get(entry.getKey());
+		for (var descriptor : this.blockOrder) {
+			var slices = copy.get(descriptor.name());
 
-			if (descriptorType(entry.getValue()) == VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC) {
+			if (descriptorType(descriptor) == VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC) {
 				var normalized = new ArrayList<BufferSlice>();
 
 				for (var slice : slices) {
 					if (slice.offset() > 0xffffffffL) {
-						throw new IllegalArgumentException("Dynamic uniform offset exceeds uint32");
+						throw new IllegalArgumentException("dynamic uniform offset exceeds uint32");
 					}
 
 					dynamicOffsets.add((int) slice.offset());
 					normalized.add(new BufferSlice(slice.buffer(), 0, slice.length()));
 				}
 
-				descriptorBuffers.put(entry.getKey(), List.copyOf(normalized));
+				descriptorBuffers.put(descriptor.name(), List.copyOf(normalized));
 			} else {
-				descriptorBuffers.put(entry.getKey(), slices);
+				descriptorBuffers.put(descriptor.name(), slices);
 			}
-		});
+		}
 
 		var key = new Resources(Map.copyOf(descriptorBuffers), Map.copyOf(imageCopy));
 		int[] offsets = dynamicOffsets.stream().mapToInt(Integer::intValue).toArray();
-		var previous = cached.get(key);
+		var previous = this.cached.get(key);
 
 		if (previous != null) {
 			previous.references++;
+			this.previous = previous;
 
 			return new Snapshot(previous, offsets);
 		}
 
-		if (live == capacity) {
-			throw new IllegalStateException("Retire completed uniform sets before allocating another");
+		if (this.live == this.capacity) {
+			throw new IllegalStateException("retire completed uniform sets before allocating another");
 		}
 
 		try (var stack = MemoryStack.stackPush()) {
 			var handle = stack.mallocLong(1);
-			check(VK10.vkAllocateDescriptorSets(
-					device,
-					VkDescriptorSetAllocateInfo.calloc(stack).sType$Default().descriptorPool(pool).pSetLayouts(stack.longs(layout)),
-					handle),
-				"allocate uniform set");
+			check(VK10.vkAllocateDescriptorSets(this.device,
+				VkDescriptorSetAllocateInfo.calloc(stack).sType$Default().descriptorPool(this.pool).pSetLayouts(stack.longs(this.layout)),
+				handle), "allocate uniform set");
 
 			long set = handle.get(0);
 
 			try {
-				var writes = VkWriteDescriptorSet.calloc(blocks.size() + images.size(), stack);
+				var writes = VkWriteDescriptorSet.calloc(this.blocks.size() + this.images.size(), stack);
 				int index = 0;
 
-				for (var entry : blocks.entrySet()) {
+				for (var entry : this.blocks.entrySet()) {
 					var slices = descriptorBuffers.get(entry.getKey());
 					var info = VkDescriptorBufferInfo.calloc(slices.size(), stack);
 
@@ -304,16 +291,11 @@ public final class VulkanResourceSets implements AutoCloseable {
 						info.get(i).buffer(slice.buffer()).offset(slice.offset()).range(slice.length());
 					}
 
-					writes.get(index++)
-						.sType$Default()
-						.dstSet(set)
-						.dstBinding(entry.getValue().binding())
-						.descriptorType(descriptorType(entry.getValue()))
-						.descriptorCount(slices.size())
-						.pBufferInfo(info);
+					writes.get(index++).sType$Default().dstSet(set).dstBinding(entry.getValue().binding())
+						.descriptorType(descriptorType(entry.getValue())).descriptorCount(slices.size()).pBufferInfo(info);
 				}
 
-				for (var entry : images.entrySet()) {
+				for (var entry : this.images.entrySet()) {
 					var list = imageCopy.get(entry.getKey());
 					var info = VkDescriptorImageInfo.calloc(list.size(), stack);
 
@@ -321,82 +303,121 @@ public final class VulkanResourceSets implements AutoCloseable {
 						info.get(i).imageView(list.get(i)).imageLayout(VK10.VK_IMAGE_LAYOUT_GENERAL);
 					}
 
-					writes.get(index++)
-						.sType$Default()
-						.dstSet(set)
-						.dstBinding(entry.getValue().binding())
-						.descriptorType(VK10.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
-						.descriptorCount(list.size())
-						.pImageInfo(info);
+					writes.get(index++).sType$Default().dstSet(set).dstBinding(entry.getValue().binding())
+						.descriptorType(VK10.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE).descriptorCount(list.size()).pImageInfo(info);
 				}
 
-				VK10.vkUpdateDescriptorSets(device, writes, null);
+				VK10.vkUpdateDescriptorSets(this.device, writes, null);
 
-				live++;
-				allocations++;
+				this.live++;
 
 				var shared = new SharedSet(set, key);
-				cached.put(key, shared);
+				this.cached.put(key, shared);
+				this.previous = shared;
 
 				return new Snapshot(shared, offsets);
 			} catch (RuntimeException | Error exception) {
-				VK10.vkFreeDescriptorSets(device, pool, set);
+				VK10.vkFreeDescriptorSets(this.device, this.pool, set);
 
 				throw exception;
 			}
 		}
 	}
 
-	public int allocations() {
-		return allocations;
+	private Snapshot reuseSnapshot(Map<String, List<BufferSlice>> buffers, Map<String, List<Long>> views) {
+		var shared = this.previous;
+
+		if (shared == null || !shared.resources.images().equals(views)) {
+			return null;
+		}
+
+		int[] offsets = new int[this.dynamicOffsetCount];
+		int index = 0;
+
+		for (var descriptor : this.blockOrder) {
+			var slices = buffers.get(descriptor.name());
+			var bound = shared.resources.buffers().get(descriptor.name());
+
+			if (slices.size() != bound.size()) {
+				return null;
+			}
+
+			boolean dynamic = descriptorType(descriptor) == VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+
+			for (int i = 0; i < slices.size(); i++) {
+				var slice = slices.get(i);
+				var previous = bound.get(i);
+
+				if (slice.buffer() != previous.buffer() || slice.length() != previous.length()) {
+					return null;
+				}
+
+				if (dynamic) {
+					if (slice.offset() % this.alignment != 0 || slice.offset() > 0xffffffffL) {
+						return null;
+					}
+
+					offsets[index++] = (int) slice.offset();
+				} else if (slice.offset() != previous.offset()) {
+					return null;
+				}
+			}
+		}
+
+		shared.references++;
+
+		return new Snapshot(shared, offsets);
 	}
 
 	private void requireOpen() {
-		if (pool == 0) {
-			throw new IllegalStateException("Resource descriptor pool is closed");
+		if (this.pool == 0) {
+			throw new IllegalStateException("resource descriptor pool is closed");
 		}
 	}
 
 	@Override
-	public synchronized void close() {
-		if (pool == 0) {
+	public void close() {
+		if (this.pool == 0) {
 			return;
 		}
 
-		if (live != 0) {
-			throw new IllegalStateException("Resource descriptor pool still has live sets");
+		if (this.live != 0) {
+			throw new IllegalStateException("resource descriptor pool still has live sets");
 		}
 
-		VK10.vkDestroyDescriptorPool(device, pool, null);
-		VK10.vkDestroyDescriptorSetLayout(device, layout, null);
-		pool = layout = 0;
+		VK10.vkDestroyDescriptorPool(this.device, this.pool, null);
+		VK10.vkDestroyDescriptorSetLayout(this.device, this.layout, null);
+		this.pool = this.layout = 0;
+	}
+
+	public record LayoutBinding(int binding, int type, int count, int stages) {
 	}
 
 	public record BufferSlice(long buffer, long offset, long length) {
 		public BufferSlice {
 			if (buffer == 0 || offset < 0 || length <= 0 || offset > Long.MAX_VALUE - length) {
-				throw new IllegalArgumentException("Invalid buffer slice");
+				throw new IllegalArgumentException("invalid buffer slice");
 			}
 		}
 	}
 
-	private record Resources(Map<String, List<BufferSlice>> buffers, Map<String, List<Long>> images) {
+	public record Resources(Map<String, List<BufferSlice>> buffers, Map<String, List<Long>> images) {
 	}
 
-	private static final class SharedSet {
-		final long handle;
-		final Resources resources;
-		int references = 1;
+	public static class SharedSet {
+		private final long handle;
+		private final Resources resources;
+		private int references = 1;
 
-		SharedSet(long handle, Resources resources) {
+		private SharedSet(long handle, Resources resources) {
 			this.handle = handle;
 			this.resources = resources;
 		}
 	}
 
-	public final class Snapshot implements AutoCloseable {
-		private SharedSet shared;
+	public class Snapshot implements AutoCloseable {
 		private final int[] offsets;
+		private SharedSet shared;
 
 		private Snapshot(SharedSet shared, int[] offsets) {
 			this.shared = shared;
@@ -408,41 +429,42 @@ public final class VulkanResourceSets implements AutoCloseable {
 		}
 
 		public void bind(VkCommandBuffer command, long pipelineLayout) {
-			bind(command, pipelineLayout, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS);
+			this.bind(command, pipelineLayout, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS);
 		}
 
 		public void bind(VkCommandBuffer command, long pipelineLayout, int bindPoint) {
-			synchronized (VulkanResourceSets.this) {
-				if (shared == null) {
-					throw new IllegalStateException("Uniform set is retired");
-				}
+			if (this.shared == null) {
+				throw new IllegalStateException("uniform set is retired");
+			}
 
-				if (command.getDevice() != device) {
-					throw new IllegalArgumentException("Command buffer belongs to another device");
-				}
+			if (command.getDevice() != VulkanResourceSets.this.device) {
+				throw new IllegalArgumentException("command buffer belongs to another device");
+			}
 
-				try (var stack = MemoryStack.stackPush()) {
-					VK10.vkCmdBindDescriptorSets(command, bindPoint, pipelineLayout, setIndex, stack.longs(shared.handle),
-						offsets.length == 0 ? null : stack.ints(offsets));
-				}
+			try (var stack = MemoryStack.stackPush()) {
+				VK10.vkCmdBindDescriptorSets(command, bindPoint, pipelineLayout, VulkanResourceSets.this.setIndex,
+					stack.longs(this.shared.handle), this.offsets.length == 0 ? null : stack.ints(this.offsets));
 			}
 		}
 
 		@Override
 		public void close() {
-			synchronized (VulkanResourceSets.this) {
-				if (shared == null) {
-					return;
-				}
-
-				if (--shared.references == 0) {
-					check(VK10.vkFreeDescriptorSets(device, pool, shared.handle), "retire uniform set");
-					cached.remove(shared.resources);
-					live--;
-				}
-
-				shared = null;
+			if (this.shared == null) {
+				return;
 			}
+
+			if (--this.shared.references == 0) {
+				check(VK10.vkFreeDescriptorSets(VulkanResourceSets.this.device, VulkanResourceSets.this.pool, this.shared.handle),
+					"retire uniform set");
+				VulkanResourceSets.this.cached.remove(this.shared.resources);
+
+				if (VulkanResourceSets.this.previous == this.shared) {
+					VulkanResourceSets.this.previous = null;
+				}
+				VulkanResourceSets.this.live--;
+			}
+
+			this.shared = null;
 		}
 	}
 }

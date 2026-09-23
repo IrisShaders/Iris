@@ -41,8 +41,8 @@ public class ProgramSet implements ProgramSetInterface {
 	private final EnumMap<ProgramArrayId, ProgramSource[]> compositePrograms = new EnumMap<>(ProgramArrayId.class);
 	private final EnumMap<ProgramArrayId, ComputeSource[][]> computePrograms = new EnumMap<>(ProgramArrayId.class);
 
-	public ProgramSet(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
-					  ShaderProperties shaderProperties, ShaderPack pack) {
+	public ProgramSet(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider, ShaderProperties shaderProperties,
+		ShaderPack pack) {
 		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, shaderProperties);
 		this.pack = pack;
 
@@ -63,7 +63,8 @@ public class ProgramSet implements ProgramSetInterface {
 
 		try (ExecutorService service = Executors.newFixedThreadPool(10)) {
 			for (ProgramArrayId id : ProgramArrayId.values()) {
-				ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties, readTesselation);
+				ProgramSource[] sources = readProgramArray(directory, sourceProvider, id.getSourcePrefix(), shaderProperties,
+					readTesselation);
 				compositePrograms.put(id, sources);
 				ComputeSource[][] computes = new ComputeSource[id.getNumPrograms()][];
 				boolean hasNoComputes = true;
@@ -79,7 +80,9 @@ public class ProgramSet implements ProgramSetInterface {
 			Future[] sources = new Future[ProgramId.values().length];
 
 			for (ProgramId programId : ProgramId.values()) {
-				sources[programId.ordinal()] = service.submit(() -> readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties, programId.getBlendModeOverride(), readTesselation));
+				sources[programId.ordinal()] = service.submit(
+					() -> readProgramSource(directory, sourceProvider, programId.getSourceName(), this, shaderProperties,
+						programId.getBlendModeOverride(), readTesselation));
 			}
 
 			for (ProgramId id : ProgramId.values()) {
@@ -94,16 +97,14 @@ public class ProgramSet implements ProgramSetInterface {
 		locateDirectives();
 	}
 
-	private static ProgramSource readProgramSource(AbsolutePackPath directory,
-												   Function<AbsolutePackPath, String> sourceProvider, String program,
-												   ProgramSet programSet, ShaderProperties properties, boolean readTesselation) {
+	private static ProgramSource readProgramSource(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
+		String program, ProgramSet programSet, ShaderProperties properties, boolean readTesselation) {
 		return readProgramSource(directory, sourceProvider, program, programSet, properties, null, readTesselation);
 	}
 
-	private static ProgramSource readProgramSource(AbsolutePackPath directory,
-												   Function<AbsolutePackPath, String> sourceProvider, String program,
-												   ProgramSet programSet, ShaderProperties properties,
-												   BlendModeOverride defaultBlendModeOverride, boolean readTesselation) {
+	private static ProgramSource readProgramSource(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
+		String program, ProgramSet programSet, ShaderProperties properties, BlendModeOverride defaultBlendModeOverride,
+		boolean readTesselation) {
 		AbsolutePackPath vertexPath = directory.resolve(program + ".vsh");
 		String vertexSource = sourceProvider.apply(vertexPath);
 
@@ -126,7 +127,8 @@ public class ProgramSet implements ProgramSetInterface {
 
 		if (vertexSource == null && fragmentSource != null) {
 			// This is for really old packs that do not use a vertex shader.
-			Iris.logger.warn("Found a program (" + program + ") that has a fragment shader but no vertex shader? This is very legacy behavior and might not work right.");
+			Iris.logger.warn(
+				"Found a program (" + program + ") that has a fragment shader but no vertex shader? This is very legacy behavior and might not work right.");
 			vertexSource = """
 				#version 120
 
@@ -143,13 +145,12 @@ public class ProgramSet implements ProgramSetInterface {
 				""";
 		}
 
-		return new ProgramSource(program, vertexSource, geometrySource, tessControlSource, tessEvalSource, fragmentSource, programSet, properties,
-			defaultBlendModeOverride);
+		return new ProgramSource(program, vertexSource, geometrySource, tessControlSource, tessEvalSource, fragmentSource, programSet,
+			properties, defaultBlendModeOverride);
 	}
 
-	private static ComputeSource readComputeSource(AbsolutePackPath directory,
-												   Function<AbsolutePackPath, String> sourceProvider, String program,
-												   ProgramSet programSet, ShaderProperties properties) {
+	private static ComputeSource readComputeSource(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider,
+		String program, ProgramSet programSet, ShaderProperties properties) {
 		AbsolutePackPath computePath = directory.resolve(program + ".csh");
 		String computeSource = sourceProvider.apply(computePath);
 
@@ -160,9 +161,8 @@ public class ProgramSet implements ProgramSetInterface {
 		return new ComputeSource(program, computeSource, programSet, properties);
 	}
 
-	private ProgramSource[] readProgramArray(AbsolutePackPath directory,
-											 Function<AbsolutePackPath, String> sourceProvider, String name,
-											 ShaderProperties shaderProperties, boolean readTesselation) {
+	private ProgramSource[] readProgramArray(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider, String name,
+		ShaderProperties shaderProperties, boolean readTesselation) {
 		ProgramSource[] programs = new ProgramSource[100];
 
 		for (int i = 0; i < programs.length; i++) {
@@ -174,8 +174,8 @@ public class ProgramSet implements ProgramSetInterface {
 		return programs;
 	}
 
-	private ComputeSource[] readProgramArray(AbsolutePackPath directory,
-											 Function<AbsolutePackPath, String> sourceProvider, String name, ShaderProperties properties) {
+	private ComputeSource[] readProgramArray(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider, String name,
+		ShaderProperties properties) {
 		ComputeSource[] programs = new ComputeSource[100];
 
 		for (int i = 0; i < programs.length; i++) {
@@ -187,8 +187,8 @@ public class ProgramSet implements ProgramSetInterface {
 		return programs;
 	}
 
-	private ComputeSource[] readComputeArray(AbsolutePackPath directory,
-											 Function<AbsolutePackPath, String> sourceProvider, String name, ShaderProperties properties) {
+	private ComputeSource[] readComputeArray(AbsolutePackPath directory, Function<AbsolutePackPath, String> sourceProvider, String name,
+		ShaderProperties properties) {
 		ComputeSource[] programs = new ComputeSource[27];
 
 		programs[0] = readComputeSource(directory, sourceProvider, name, this, properties);
@@ -268,8 +268,8 @@ public class ProgramSet implements ProgramSetInterface {
 			});
 		}
 
-		packDirectives.getRenderTargetDirectives().getRenderTargetSettings().forEach((index, settings) ->
-			Iris.logger.debug("Render target settings for colortex" + index + ": " + settings));
+		packDirectives.getRenderTargetDirectives().getRenderTargetSettings()
+			.forEach((index, settings) -> Iris.logger.debug("Render target settings for colortex" + index + ": " + settings));
 	}
 
 	public ComputeSource[] getSetup() {

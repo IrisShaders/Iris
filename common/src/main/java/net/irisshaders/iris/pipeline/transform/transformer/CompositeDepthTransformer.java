@@ -12,22 +12,17 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 
 class CompositeDepthTransformer {
-	private static final HintedMatcher<ExternalDeclaration> uniformFloatCenterDepthSmooth = new HintedMatcher<>(
-		"uniform float name;", ParseShape.EXTERNAL_DECLARATION, "centerDepthSmooth") {
+	private static final HintedMatcher<ExternalDeclaration> uniformFloatCenterDepthSmooth = new HintedMatcher<>("uniform float name;",
+		ParseShape.EXTERNAL_DECLARATION, "centerDepthSmooth") {
 		{
-			markClassWildcard("name*",
-				pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+			markClassWildcard("name*", pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
 		}
 	};
 
-	public static void transform(
-		ASTParser t,
-		TranslationUnit tree,
-		Root root) {
+	public static void transform(ASTParser t, TranslationUnit tree, Root root) {
 		// replace original declaration
 		if (root.processMatches(t, uniformFloatCenterDepthSmooth, (match) -> {
-			TypeAndInitDeclaration declaration = ((TypeAndInitDeclaration) ((DeclarationExternalDeclaration) match)
-				.getDeclaration());
+			TypeAndInitDeclaration declaration = ((TypeAndInitDeclaration) ((DeclarationExternalDeclaration) match).getDeclaration());
 			DeclarationMember memberToDelete = null;
 			for (DeclarationMember member : declaration.getMembers()) {
 				if (member.getName().getName().equals("centerDepthSmooth")) {
@@ -43,12 +38,10 @@ class CompositeDepthTransformer {
 				}
 			}
 		})) {
-			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"uniform sampler2D iris_centerDepthSmooth;");
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform sampler2D iris_centerDepthSmooth;");
 
 			// if centerDepthSmooth is not declared as a uniform, we don't make it available
-			root.replaceReferenceExpressions(t, "centerDepthSmooth",
-				"texture(iris_centerDepthSmooth, vec2(0.5)).r");
+			root.replaceReferenceExpressions(t, "centerDepthSmooth", "texture(iris_centerDepthSmooth, vec2(0.5)).r");
 		}
 	}
 }

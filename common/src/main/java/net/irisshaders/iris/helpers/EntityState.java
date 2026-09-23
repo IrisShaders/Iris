@@ -7,7 +7,8 @@ public class EntityState {
 	private static boolean hasBackup;
 
 	public static void interposeItemId(int newValue) {
-		if (hasBackup) return;
+		if (hasBackup)
+			return;
 
 		backupValue = CapturedRenderingState.INSTANCE.getCurrentRenderedItem();
 		hasBackup = true;

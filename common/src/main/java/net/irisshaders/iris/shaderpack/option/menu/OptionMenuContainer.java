@@ -28,8 +28,7 @@ public class OptionMenuContainer {
 
 		// note: if the Shader Pack does not provide a list of options for the main screen, then dump all options on to
 		// the main screen by default.
-		this.mainScreen = new OptionMenuMainElementScreen(
-			this, shaderProperties, shaderPackOptions,
+		this.mainScreen = new OptionMenuMainElementScreen(this, shaderProperties, shaderPackOptions,
 			shaderProperties.getMainScreenOptions().orElseGet(() -> Collections.singletonList("*")),
 			shaderProperties.getMainScreenColumnCount());
 
@@ -37,8 +36,9 @@ public class OptionMenuContainer {
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getStringOptions().keySet());
 
 		Map<String, Integer> subScreenColumnCounts = shaderProperties.getSubScreenColumnCount();
-		shaderProperties.getSubScreenOptions().forEach((screenKey, options) -> subScreens.put(screenKey, new OptionMenuSubElementScreen(
-			screenKey, this, shaderProperties, shaderPackOptions, options, Optional.ofNullable(subScreenColumnCounts.get(screenKey)))));
+		shaderProperties.getSubScreenOptions().forEach((screenKey, options) -> subScreens.put(screenKey,
+			new OptionMenuSubElementScreen(screenKey, this, shaderProperties, shaderPackOptions, options,
+				Optional.ofNullable(subScreenColumnCounts.get(screenKey)))));
 
 		// Dump all unused options into screens containing "*"
 		for (Map.Entry<List<OptionMenuElement>, Integer> entry : unusedOptionDumpQueue.entrySet()) {

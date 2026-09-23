@@ -41,9 +41,7 @@ public class StringTransformations implements Transformations {
 		for (String line : this.body.split("\\R")) {
 			String trimmedLine = line.trim();
 
-			if (!trimmedLine.isEmpty()
-				&& !trimmedLine.startsWith("#extension")
-				&& !trimmedLine.startsWith("//")) {
+			if (!trimmedLine.isEmpty() && !trimmedLine.startsWith("#extension") && !trimmedLine.startsWith("//")) {
 				inBody = true;
 			}
 

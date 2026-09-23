@@ -12,7 +12,6 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.attribute.EnvironmentAttributes;
@@ -44,7 +43,8 @@ public class IrisExclusiveUniforms {
 
 		uniforms.uniform1i(UniformUpdateFrequency.PER_TICK, "currentColorSpace", () -> IrisVideoSettings.colorSpace.ordinal());
 
-		uniforms.uniform1f(PER_FRAME, "chunkFadeTimeInv", () -> (float) (1.0 / (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000.0)));
+		uniforms.uniform1f(PER_FRAME, "chunkFadeTimeInv",
+			() -> (float) (1.0 / (Minecraft.getInstance().options.chunkSectionFadeInTime().get() * 1000.0)));
 		uniforms.uniform1i(PER_FRAME, "textureFilteringMode", () -> switch (Minecraft.getInstance().options.textureFiltering().get()) {
 			case NONE -> 0;
 			case RGSS -> 1;
@@ -76,7 +76,8 @@ public class IrisExclusiveUniforms {
 		uniforms.uniform1b(PER_FRAME, "firstPersonCamera", IrisExclusiveUniforms::isFirstPersonCamera);
 		uniforms.uniform1b(UniformUpdateFrequency.PER_TICK, "isSpectator", IrisExclusiveUniforms::isSpectator);
 		uniforms.uniform1i(PER_FRAME, "currentSelectedBlockId", IrisExclusiveUniforms::getCurrentSelectedBlockId);
-		uniforms.uniform1i(PER_FRAME, "seaLevel", () -> Minecraft.getInstance().level == null ? 0 : Minecraft.getInstance().level.getSeaLevel());
+		uniforms.uniform1i(PER_FRAME, "seaLevel",
+			() -> Minecraft.getInstance().level == null ? 0 : Minecraft.getInstance().level.getSeaLevel());
 		uniforms.uniform3f(PER_FRAME, "currentSelectedBlockPos", IrisExclusiveUniforms::getCurrentSelectedBlockPos);
 		uniforms.uniform3d(PER_FRAME, "eyePosition", IrisExclusiveUniforms::getEyePosition);
 		uniforms.uniform1f(UniformUpdateFrequency.PER_TICK, "cloudTime", CapturedRenderingState.INSTANCE::getCloudTime);
@@ -88,15 +89,18 @@ public class IrisExclusiveUniforms {
 				return ZERO;
 			}
 		});
-		uniforms.uniform3d(PER_FRAME, "playerBodyVector", () -> JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getForward()));
+		uniforms.uniform3d(PER_FRAME, "playerBodyVector",
+			() -> JomlConversions.fromVec3(Minecraft.getInstance().getCameraEntity().getForward()));
 		Vector4f zero = new Vector4f(0, 0, 0, 0);
 		uniforms.uniform4f(UniformUpdateFrequency.PER_TICK, "lightningBoltPosition", () -> {
 			if (Minecraft.getInstance().level != null) {
-				return StreamSupport.stream(Minecraft.getInstance().level.entitiesForRendering().spliterator(), false).filter(bolt -> bolt instanceof LightningBolt).findAny().map(bolt -> {
-					Vector3d unshiftedCameraPosition = CameraUniforms.getUnshiftedCameraPosition();
-					Vec3 vec3 = bolt.getPosition(Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true));
-					return new Vector4f((float) (vec3.x - unshiftedCameraPosition.x), (float) (vec3.y - unshiftedCameraPosition.y), (float) (vec3.z - unshiftedCameraPosition.z), 1);
-				}).orElse(zero);
+				return StreamSupport.stream(Minecraft.getInstance().level.entitiesForRendering().spliterator(), false)
+					.filter(bolt -> bolt instanceof LightningBolt).findAny().map(bolt -> {
+						Vector3d unshiftedCameraPosition = CameraUniforms.getUnshiftedCameraPosition();
+						Vec3 vec3 = bolt.getPosition(Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true));
+						return new Vector4f((float) (vec3.x - unshiftedCameraPosition.x), (float) (vec3.y - unshiftedCameraPosition.y),
+							(float) (vec3.z - unshiftedCameraPosition.z), 1);
+					}).orElse(zero);
 			} else {
 				return zero;
 			}
@@ -104,28 +108,36 @@ public class IrisExclusiveUniforms {
 	}
 
 	private static int getVehicleId() {
-		if (Minecraft.getInstance().player == null) return 0;
-		if (Minecraft.getInstance().player.getVehicle() == null) return 0;
+		if (Minecraft.getInstance().player == null)
+			return 0;
+		if (Minecraft.getInstance().player.getVehicle() == null)
+			return 0;
 
 		Object2IntFunction<NamespacedId> entityId = WorldRenderingSettings.INSTANCE.getEntityIds();
-		if (entityId == null) return 0;
+		if (entityId == null)
+			return 0;
 
 		Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(Minecraft.getInstance().player.getVehicle().getType());
-		if (id == null) return 0;
+		if (id == null)
+			return 0;
 
 		return entityId.applyAsInt(new NamespacedId(id.getNamespace(), id.getPath()));
 	}
 
 	private static Vector3d getVehicleLookVector() {
-		if (Minecraft.getInstance().player == null) return ZERO;
-		if (Minecraft.getInstance().player.getVehicle() == null) return ZERO;
+		if (Minecraft.getInstance().player == null)
+			return ZERO;
+		if (Minecraft.getInstance().player.getVehicle() == null)
+			return ZERO;
 
 		return JomlConversions.fromVec3(Minecraft.getInstance().player.getVehicle().getForward());
 	}
 
 	private static Vector3d getRelativeVehiclePosition() {
-		if (Minecraft.getInstance().player == null) return ZERO;
-		if (Minecraft.getInstance().player.getVehicle() == null) return ZERO;
+		if (Minecraft.getInstance().player == null)
+			return ZERO;
+		if (Minecraft.getInstance().player.getVehicle() == null)
+			return ZERO;
 
 		Vec3 vehiclePos = Minecraft.getInstance().player.getVehicle().getPosition(CapturedRenderingState.INSTANCE.getTickDelta());
 
@@ -135,8 +147,10 @@ public class IrisExclusiveUniforms {
 	}
 
 	private static boolean getVehicleInShallowWater() {
-		if (Minecraft.getInstance().player == null) return false;
-		if (Minecraft.getInstance().player.getVehicle() == null) return false;
+		if (Minecraft.getInstance().player == null)
+			return false;
+		if (Minecraft.getInstance().player.getVehicle() == null)
+			return false;
 
 		return Minecraft.getInstance().player.getVehicle().isInShallowWater();
 	}
@@ -176,7 +190,7 @@ public class IrisExclusiveUniforms {
 	private static boolean isHeavyFog() {
 		if (Minecraft.getInstance().level != null) {
 			Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
-			return  Minecraft.getInstance().gui.hud.getBossOverlay().shouldCreateWorldFog();
+			return Minecraft.getInstance().gui.hud.getBossOverlay().shouldCreateWorldFog();
 		}
 
 		return false;
@@ -199,7 +213,8 @@ public class IrisExclusiveUniforms {
 		HitResult hitResult = Minecraft.getInstance().hitResult;
 		if (Minecraft.getInstance().level != null && ((GameRendererAccessor) Minecraft.getInstance().gameRenderer).shouldRenderBlockOutlineA() && hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
 			BlockPos blockPos4 = ((BlockHitResult) hitResult).getBlockPos();
-			return new Vec3((double) blockPos4.getX() + 0.5, (double) blockPos4.getY() + 0.5, (double) blockPos4.getZ() + 0.5).subtract(Minecraft.getInstance().gameRenderer.mainCamera().position()).toVector3f();
+			return new Vec3((double) blockPos4.getX() + 0.5, (double) blockPos4.getY() + 0.5, (double) blockPos4.getZ() + 0.5).subtract(
+				Minecraft.getInstance().gameRenderer.mainCamera().position()).toVector3f();
 		}
 
 		return new Vector3f(-256.0f);
@@ -207,8 +222,7 @@ public class IrisExclusiveUniforms {
 
 	private static float getThunderStrength() {
 		// Note: Ensure this is in the range of 0 to 1 - some custom servers send out of range values.
-		return Math.clamp(0.0F, 1.0F,
-			Minecraft.getInstance().level.getThunderLevel(CapturedRenderingState.INSTANCE.getTickDelta()));
+		return Math.clamp(0.0F, 1.0F, Minecraft.getInstance().level.getThunderLevel(CapturedRenderingState.INSTANCE.getTickDelta()));
 	}
 
 	private static float getCurrentHealth() {
@@ -291,7 +305,8 @@ public class IrisExclusiveUniforms {
 			});
 			uniforms.uniform1f(PER_FRAME, "cloudHeight", () -> {
 				if (level != null) {
-					return Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe().getValue(EnvironmentAttributes.CLOUD_HEIGHT, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false));
+					return Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe().getValue(EnvironmentAttributes.CLOUD_HEIGHT,
+						Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false));
 				} else {
 					return 192.0;
 				}

@@ -2,7 +2,6 @@ package net.irisshaders.iris.shadows.frustum.advanced;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
 import com.sun.management.VMOption;
-import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.render.viewport.ViewportProvider;
 import net.irisshaders.iris.shadows.frustum.BoxCuller;
@@ -37,7 +36,25 @@ import java.lang.management.ManagementFactory;
  * cost of slightly more computations.</p>
  */
 public class AdvancedShadowCullingFrustum extends Frustum implements ViewportProvider, net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum {
+	public static final float CHUNK_SECTION_RADIUS = 8.0f /* chunk bounds */;
+	public static final float CHUNK_SECTION_MARGIN = 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
+	public static final float SECTION_HALF_SIZE = CHUNK_SECTION_RADIUS + CHUNK_SECTION_MARGIN;
 	private static final int MAX_CLIPPING_PLANES = 13;
+	private static final boolean FMA_SUPPORT;
+
+	static {
+		// Automatically enable `joml.useMathFma` system property if JVM UseFMA is enabled.
+		// The JVM will automatically enable the UseFMA vm option if the cpu supports it.
+		// Thanks to kunzite for making me aware of this.
+		final HotSpotDiagnosticMXBean hotSpotDiagnostic = ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean.class);
+		if (hotSpotDiagnostic == null) {
+			FMA_SUPPORT = false;
+		} else {
+			final VMOption useFMAVMOption = hotSpotDiagnostic.getVMOption("UseFMA");
+			FMA_SUPPORT = Boolean.parseBoolean(useFMAVMOption.getValue());
+		}
+	}
+
 	protected final BoxCuller boxCuller;
 	/**
 	 * We store each plane equation as a Vector4f.
@@ -77,7 +94,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 	private int planeCount = 0;
 
 	public AdvancedShadowCullingFrustum(Matrix4fc modelViewProjection, Matrix4fc shadowProjection, Vector3f shadowLightVectorFromOrigin,
-										BoxCuller boxCuller) {
+		BoxCuller boxCuller) {
 		// We're overriding all of the methods, don't pass any matrices down.
 		super(new org.joml.Matrix4f(), new org.joml.Matrix4f());
 
@@ -95,6 +112,10 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 		addEdgePlanes(baseClippingPlanes, isBack);
 
 		this.boxCuller = boxCuller;
+	}
+
+	private static float safeFMA(float a, float b, float c) {
+		return a * b + c;
 	}
 
 	private void addPlane(float[] plane) {
@@ -130,7 +151,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 			isBack[planeIndex] = back;
 
 			if (back || edge) {
-				addPlane(new float[] { plane.x, plane.y, plane.z, plane.w });
+				addPlane(new float[]{plane.x, plane.y, plane.z, plane.w});
 			}
 		}
 
@@ -276,7 +297,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 			}
 		}*/
 
-		addPlane(new float[] { plane.x, plane.y, plane.z, plane.w });
+		addPlane(new float[]{plane.x, plane.y, plane.z, plane.w});
 	}
 
 	// Note: These functions are copied & modified from the vanilla Frustum class.
@@ -325,25 +346,6 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 		return this.checkCornerVisibility(f, g, h, i, j, k);
 	}
 
-	private static final boolean FMA_SUPPORT;
-
-	static {
-		// Automatically enable `joml.useMathFma` system property if JVM UseFMA is enabled.
-		// The JVM will automatically enable the UseFMA vm option if the cpu supports it.
-		// Thanks to kunzite for making me aware of this.
-		final HotSpotDiagnosticMXBean hotSpotDiagnostic = ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean.class);
-		if (hotSpotDiagnostic == null) {
-			FMA_SUPPORT = false;
-		} else {
-			final VMOption useFMAVMOption = hotSpotDiagnostic.getVMOption("UseFMA");
-			FMA_SUPPORT = Boolean.parseBoolean(useFMAVMOption.getValue());
-		}
-	}
-
-	private static float safeFMA(float a, float b, float c) {
-		return a * b + c;
-	}
-
 	/**
 	 * Checks corner visibility.
 	 *
@@ -372,16 +374,14 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 			if (FMA_SUPPORT) {
 				if (Math.fma(plane[0], outsideBoundX, Math.fma(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) >= -plane[3]) {
 					inside &= Math.fma(plane[0], (plane[0] < 0 ? maxX : minX),
-						Math.fma(plane[1], (plane[1] < 0 ? maxY : minY),
-							Math.fma(plane[2], (plane[2] < 0 ? maxZ : minZ), plane[3]))) >= 0;
+						Math.fma(plane[1], (plane[1] < 0 ? maxY : minY), Math.fma(plane[2], (plane[2] < 0 ? maxZ : minZ), plane[3]))) >= 0;
 				} else {
 					return FrustumIntersection.OUTSIDE;
 				}
 			} else {
 				if (safeFMA(plane[0], outsideBoundX, safeFMA(plane[1], outsideBoundY, plane[2] * outsideBoundZ)) >= -plane[3]) {
 					inside &= safeFMA(plane[0], (plane[0] < 0 ? maxX : minX),
-						safeFMA(plane[1], (plane[1] < 0 ? maxY : minY),
-							safeFMA(plane[2], (plane[2] < 0 ? maxZ : minZ), plane[3]))) >= 0;
+						safeFMA(plane[1], (plane[1] < 0 ? maxY : minY), safeFMA(plane[2], (plane[2] < 0 ? maxZ : minZ), plane[3]))) >= 0;
 				} else {
 					return FrustumIntersection.OUTSIDE;
 				}
@@ -420,7 +420,8 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 
 	@Override
 	public boolean testAab(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-		return (boxCuller == null || !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) && this.checkCornerVisibility(minX, minY, minZ, maxX, maxY, maxZ) != FrustumIntersection.OUTSIDE;
+		return (boxCuller == null || !boxCuller.isCulledSodium(minX, minY, minZ, maxX, maxY, maxZ)) && this.checkCornerVisibility(minX,
+			minY, minZ, maxX, maxY, maxZ) != FrustumIntersection.OUTSIDE;
 	}
 
 	@Override
@@ -451,11 +452,6 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 		return new Viewport(this, position.set(x, y, z));
 	}
 
-	public static final float CHUNK_SECTION_RADIUS = 8.0f /* chunk bounds */;
-	public static final float CHUNK_SECTION_MARGIN = 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
-	public static final float SECTION_HALF_SIZE = CHUNK_SECTION_RADIUS + CHUNK_SECTION_MARGIN;
-
-
 	@Override
 	public boolean testSection(float x, float y, float z) {
 		float minX = x - SECTION_HALF_SIZE;
@@ -472,9 +468,7 @@ public class AdvancedShadowCullingFrustum extends Frustum implements ViewportPro
 			float testY = (plane[1] < 0.0f) ? minY : maxY;
 			float testZ = (plane[2] < 0.0f) ? minZ : maxZ;
 
-			if (Math.fma(plane[0], testX,
-				Math.fma(plane[1], testY,
-					plane[2] * testZ)) < -plane[3]) {
+			if (Math.fma(plane[0], testX, Math.fma(plane[1], testY, plane[2] * testZ)) < -plane[3]) {
 				return false;
 			}
 		}

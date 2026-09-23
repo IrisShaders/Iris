@@ -31,17 +31,15 @@ import java.util.function.Consumer;
 
 @Mixin(AbstractEndPortalRenderer.class)
 public class MixinTheEndPortalRenderer {
+	@Unique
+	private static final float RED = 0.075f;
+	@Unique
+	private static final float GREEN = 0.15f;
+	@Unique
+	private static final float BLUE = 0.2f;
 	@Shadow
 	@Final
 	private static Map<Direction, List<Vector3fc>> FACES;
-	@Unique
-	private static final float RED = 0.075f;
-
-	@Unique
-	private static final float GREEN = 0.15f;
-
-	@Unique
-	private static final float BLUE = 0.2f;
 
 	@ModifyArg(method = "submitCube(Ljava/util/Collection;Lnet/minecraft/client/renderer/rendertype/RenderType;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Ljava/util/function/Consumer;)V", index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitCustomGeometry(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;Lnet/minecraft/client/renderer/SubmitNodeCollector$CustomGeometryRenderer;)V"))
 	private static RenderType iris$renderType(RenderType par2) {
@@ -51,10 +49,9 @@ public class MixinTheEndPortalRenderer {
 		return par2;
 	}
 
-	@Inject(method = {
-		"lambda$submitCube$1"
-	}, at = @At("HEAD"), cancellable = true, require = 1)
-	private static <T extends TheEndPortalBlockEntity> void iris$onRender(Collection<Direction> facesToShow, Consumer vertexDecorator, PoseStack.Pose pose, VertexConsumer buffer, CallbackInfo ci) {
+	@Inject(method = {"lambda$submitCube$1"}, at = @At("HEAD"), cancellable = true, require = 1)
+	private static <T extends TheEndPortalBlockEntity> void iris$onRender(Collection<Direction> facesToShow, Consumer vertexDecorator,
+		PoseStack.Pose pose, VertexConsumer buffer, CallbackInfo ci) {
 		if (Iris.getCurrentPack().isEmpty()) {
 			return;
 		}
@@ -79,33 +76,26 @@ public class MixinTheEndPortalRenderer {
 
 			Vector3fc vertex0 = vertices.get(0);
 			buffer.addVertex(pose, vertex0.x(), vertex0.y(), vertex0.z()).setColor(RED, GREEN, BLUE, 1.0f)
-				.setUv(0.0F + progress, 0.0F + progress).setOverlay(overlay).setLight(light)
-				.setNormal(pose, nx, ny, nz);
+				.setUv(0.0F + progress, 0.0F + progress).setOverlay(overlay).setLight(light).setNormal(pose, nx, ny, nz);
 
 			Vector3fc vertex1 = vertices.get(1);
 			buffer.addVertex(pose, vertex1.x(), vertex1.y(), vertex1.z()).setColor(RED, GREEN, BLUE, 1.0f)
-				.setUv(0.0F + progress, 0.2F + progress).setOverlay(overlay).setLight(light)
-				.setNormal(pose, nx, ny, nz);
+				.setUv(0.0F + progress, 0.2F + progress).setOverlay(overlay).setLight(light).setNormal(pose, nx, ny, nz);
 
 			Vector3fc vertex2 = vertices.get(2);
 			buffer.addVertex(pose, vertex2.x(), vertex2.y(), vertex2.z()).setColor(RED, GREEN, BLUE, 1.0f)
-				.setUv(0.2F + progress, 0.2F + progress).setOverlay(overlay).setLight(light)
-				.setNormal(pose, nx, ny, nz);
+				.setUv(0.2F + progress, 0.2F + progress).setOverlay(overlay).setLight(light).setNormal(pose, nx, ny, nz);
 
 			Vector3fc vertex3 = vertices.get(3);
 			buffer.addVertex(pose, vertex3.x(), vertex3.y(), vertex3.z()).setColor(RED, GREEN, BLUE, 1.0f)
-				.setUv(0.2F + progress, 0.0F + progress).setOverlay(overlay).setLight(light)
-				.setNormal(pose, nx, ny, nz);
+				.setUv(0.2F + progress, 0.0F + progress).setOverlay(overlay).setLight(light).setNormal(pose, nx, ny, nz);
 		}
 	}
 
 	@Unique
-	private void quad(EndPortalRenderState entity, VertexConsumer vertexConsumer, PoseStack.Pose pose, Matrix3f normal,
-					  Direction direction, float progress, int overlay, int light,
-					  float x1, float y1, float z1,
-					  float x2, float y2, float z2,
-					  float x3, float y3, float z3,
-					  float x4, float y4, float z4) {
+	private void quad(EndPortalRenderState entity, VertexConsumer vertexConsumer, PoseStack.Pose pose, Matrix3f normal, Direction direction,
+		float progress, int overlay, int light, float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3,
+		float x4, float y4, float z4) {
 		if (!entity.facesToShow.contains(direction)) {
 			return;
 		}
@@ -114,20 +104,16 @@ public class MixinTheEndPortalRenderer {
 		float ny = direction.getStepY();
 		float nz = direction.getStepZ();
 
-		vertexConsumer.addVertex(pose, x1, y1, z1).setColor(RED, GREEN, BLUE, 1.0f)
-			.setUv(0.0F + progress, 0.0F + progress).setOverlay(overlay).setLight(light)
-			.setNormal(pose, nx, ny, nz);
+		vertexConsumer.addVertex(pose, x1, y1, z1).setColor(RED, GREEN, BLUE, 1.0f).setUv(0.0F + progress, 0.0F + progress)
+			.setOverlay(overlay).setLight(light).setNormal(pose, nx, ny, nz);
 
-		vertexConsumer.addVertex(pose, x2, y2, z2).setColor(RED, GREEN, BLUE, 1.0f)
-			.setUv(0.0F + progress, 0.2F + progress).setOverlay(overlay).setLight(light)
-			.setNormal(pose, nx, ny, nz);
+		vertexConsumer.addVertex(pose, x2, y2, z2).setColor(RED, GREEN, BLUE, 1.0f).setUv(0.0F + progress, 0.2F + progress)
+			.setOverlay(overlay).setLight(light).setNormal(pose, nx, ny, nz);
 
-		vertexConsumer.addVertex(pose, x3, y3, z3).setColor(RED, GREEN, BLUE, 1.0f)
-			.setUv(0.2F + progress, 0.2F + progress).setOverlay(overlay).setLight(light)
-			.setNormal(pose, nx, ny, nz);
+		vertexConsumer.addVertex(pose, x3, y3, z3).setColor(RED, GREEN, BLUE, 1.0f).setUv(0.2F + progress, 0.2F + progress)
+			.setOverlay(overlay).setLight(light).setNormal(pose, nx, ny, nz);
 
-		vertexConsumer.addVertex(pose, x4, y4, z4).setColor(RED, GREEN, BLUE, 1.0f)
-			.setUv(0.2F + progress, 0.0F + progress).setOverlay(overlay).setLight(light)
-			.setNormal(pose, nx, ny, nz);
+		vertexConsumer.addVertex(pose, x4, y4, z4).setColor(RED, GREEN, BLUE, 1.0f).setUv(0.2F + progress, 0.0F + progress)
+			.setOverlay(overlay).setLight(light).setNormal(pose, nx, ny, nz);
 	}
 }

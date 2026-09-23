@@ -10,10 +10,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenDirection;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -86,7 +84,8 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 		GuiUtil.drawButton(guiGraphics, bounds.position().x(), bounds.position().y(), bounds.width(), bounds.height(), hovered, false);
 
 		// Draw the value box
-		GuiUtil.drawButton(guiGraphics, bounds.getBoundInDirection(ScreenDirection.RIGHT) - (this.valueSectionWidth + 2), bounds.position().y() + 2, this.valueSectionWidth, bounds.height() - 4, false, true);
+		GuiUtil.drawButton(guiGraphics, bounds.getBoundInDirection(ScreenDirection.RIGHT) - (this.valueSectionWidth + 2),
+			bounds.position().y() + 2, this.valueSectionWidth, bounds.height() - 4, false, true);
 
 		// Draw the preview slider
 		if (sliderPosition >= 0) {
@@ -94,7 +93,8 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 			int sliderSpace = (this.valueSectionWidth - 4) - sliderWidth;
 
 			// Position of slider
-			int sliderPos = (bounds.getBoundInDirection(ScreenDirection.RIGHT) - this.valueSectionWidth) + (int) (sliderPosition * sliderSpace);
+			int sliderPos = (bounds.getBoundInDirection(
+				ScreenDirection.RIGHT) - this.valueSectionWidth) + (int) (sliderPosition * sliderSpace);
 
 			GuiUtil.drawButton(guiGraphics, sliderPos, bounds.position().y() + 4, sliderWidth, bounds.height() - 8, false, false);
 		}
@@ -104,7 +104,9 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 		// Draw the label
 		guiGraphics.text(font, this.trimmedLabel, bounds.position().x() + 6, bounds.position().y() + 7, 0xFFFFFFFF);
 		// Draw the value label
-		guiGraphics.text(font, this.valueLabel, (bounds.getBoundInDirection(ScreenDirection.RIGHT) - 2) - (int) (this.valueSectionWidth * 0.5) - (int) (font.width(this.valueLabel) * 0.5), bounds.position().y() + 7, 0xFFFFFFFF);
+		guiGraphics.text(font, this.valueLabel,
+			(bounds.getBoundInDirection(ScreenDirection.RIGHT) - 2) - (int) (this.valueSectionWidth * 0.5) - (int) (font.width(
+				this.valueLabel) * 0.5), bounds.position().y() + 7, 0xFFFFFFFF);
 	}
 
 	protected final void renderOptionWithValue(GuiGraphicsExtractor guiGraphics, boolean hovered) {
@@ -121,7 +123,8 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 
 	protected final void renderTooltip(GuiGraphicsExtractor guiGraphics, Component text, int mouseX, int mouseY, boolean hovered) {
 		if (hovered) {
-			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(() -> GuiUtil.drawTextPanel(Minecraft.getInstance().font, guiGraphics, text, mouseX + 2, mouseY - 16));
+			ShaderPackScreen.TOP_LAYER_RENDER_QUEUE.add(
+				() -> GuiUtil.drawTextPanel(Minecraft.getInstance().font, guiGraphics, text, mouseX + 2, mouseY - 16));
 		}
 	}
 
@@ -131,10 +134,7 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 	}
 
 	protected final Component createTrimmedLabel() {
-		MutableComponent label = GuiUtil.shortenText(
-			Minecraft.getInstance().font,
-			this.label.copy(),
-			this.maxLabelWidth);
+		MutableComponent label = GuiUtil.shortenText(Minecraft.getInstance().font, this.label.copy(), this.maxLabelWidth);
 
 		if (this.isValueModified()) {
 			label = label.withStyle(style -> style.withColor(TextColor.fromRgb(0xFFffc94a)));
@@ -195,9 +195,8 @@ public abstract class BaseOptionElementWidget<T extends OptionMenuElement> exten
 	@Override
 	public boolean keyPressed(KeyEvent event) {
 		if (event.isConfirmation()) {
-			boolean refresh = Minecraft.getInstance().hasControlDown()
-				? applyOriginalValue()
-				: (Minecraft.getInstance().hasShiftDown() ? applyPreviousValue() : applyNextValue());
+			boolean refresh = Minecraft.getInstance().hasControlDown() ? applyOriginalValue() : (Minecraft.getInstance()
+				.hasShiftDown() ? applyPreviousValue() : applyNextValue());
 
 			if (refresh) {
 				this.navigation.refresh();

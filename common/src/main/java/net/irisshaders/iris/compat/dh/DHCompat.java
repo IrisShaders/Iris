@@ -1,180 +1,105 @@
 package net.irisshaders.iris.compat.dh;
 
-import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.gl.shader.ShaderCompileException;
+import net.irisshaders.iris.gl.sampler.GlSampler;
+import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.platform.IrisPlatformHelpers;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.lang.reflect.InvocationTargetException;
+import java.util.function.Supplier;
 
 public class DHCompat {
-	private static boolean dhPresent = true;
-	private static boolean lastIncompatible;
-	private static MethodHandle deletePipeline;
-	private static MethodHandle incompatible;
-	private static MethodHandle getDepthTex;
-	private static MethodHandle getFarPlane;
-	private static MethodHandle getNearPlane;
-	private static MethodHandle getDepthTexNoTranslucent;
-	private static MethodHandle checkFrame;
-	private static MethodHandle getRenderDistance;
-	private Object compatInternalInstance;
+	private static boolean dhPresent;
+	private final DHCompatInternal compat;
 
-	public DHCompat(IrisRenderingPipeline pipeline, boolean renderDHShadow) {
-		try {
-			if (dhPresent) {
-				compatInternalInstance = Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal").getDeclaredConstructor(pipeline.getClass(), boolean.class).newInstance(pipeline, renderDHShadow);
-				lastIncompatible = (boolean) incompatible.invoke(compatInternalInstance);
-			}
-		} catch (Throwable e) {
-			lastIncompatible = false;
-			if (e.getCause() instanceof ShaderCompileException sce) {
-				throw sce;
-			} else if (e instanceof InvocationTargetException ite) {
-				throw new RuntimeException("Unknown error loading Distant Horizons compatibility.", ite.getCause());
-			} else {
-				throw new RuntimeException("Unknown error loading Distant Horizons compatibility.", e);
-			}
-		}
-
-	}
-
-	public static Matrix4f getProjection() {
-		if (!dhPresent) {
-			return new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
-		}
-
-		return getProjection(getNearPlane(), getFarPlane());
-	}
-
-	static Matrix4f getProjection(float nearPlane, float farPlane) {
-		Matrix4f projection = new Matrix4f(CapturedRenderingState.INSTANCE.getGbufferProjection());
-		return new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), nearPlane, farPlane);
+	public DHCompat(WorldRenderingPipeline pipeline, boolean renderDHShadow) {
+		this.compat = dhPresent && pipeline instanceof IrisRenderingPipeline iris ? new DHCompatInternal(iris, renderDHShadow) : null;
 	}
 
 	public static void run() {
-		try {
-			if (IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons")) {
-				deletePipeline = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "clear", MethodType.methodType(void.class));
-				MethodHandle setupEventHandlers = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.LodRendererEvents"), "setupEventHandlers", MethodType.methodType(void.class));
-				getDepthTex = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getStoredDepthTex", MethodType.methodType(int.class));
-				getRenderDistance = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getRenderDistance", MethodType.methodType(int.class));
-				incompatible = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "incompatiblePack", MethodType.methodType(boolean.class));
-				getFarPlane = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getFarPlane", MethodType.methodType(float.class));
-				getNearPlane = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getNearPlane", MethodType.methodType(float.class));
-				getDepthTexNoTranslucent = MethodHandles.lookup().findVirtual(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "getDepthTexNoTranslucent", MethodType.methodType(int.class));
-				checkFrame = MethodHandles.lookup().findStatic(Class.forName("net.irisshaders.iris.compat.dh.DHCompatInternal"), "checkFrame", MethodType.methodType(boolean.class));
-
-				setupEventHandlers.invoke();
-			} else {
-				dhPresent = false;
-			}
-		} catch (Throwable e) {
-			dhPresent = false;
-
-			if (IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons")) {
-				if (e instanceof ExceptionInInitializerError eiie) {
-					throw new RuntimeException("Failure loading DH compat.", eiie.getCause());
-				} else {
-					throw new RuntimeException("DH found, but one or more API methods are missing. Iris requires DH [2.0.4] or DH API version [1.1.0] or newer. Please make sure you are on the latest version of DH and Iris.", e);
-				}
-			} else {
-				Iris.logger.info("DH not found, and classes not found.");
-			}
+		dhPresent = IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons");
+		if (dhPresent) {
+			LodRendererEvents.setupEventHandlers();
 		}
+	}
+
+	public static Matrix4f getProjection() {
+		return dhPresent ? getProjection(getNearPlane(), getFarPlane()) : new Matrix4f(
+			CapturedRenderingState.INSTANCE.getGbufferProjection());
+	}
+
+	public static Matrix4f getProjection(float nearPlane, float farPlane) {
+		var projection = CapturedRenderingState.INSTANCE.getGbufferProjection();
+		return new Matrix4f().setPerspective(projection.perspectiveFov(), projection.m11() / projection.m00(), nearPlane, farPlane);
 	}
 
 	public static boolean lastPackIncompatible() {
-		return dhPresent && hasRenderingEnabled() && lastIncompatible;
+		var compat = dhPresent ? DHCompatInternal.current() : null;
+		return hasRenderingEnabled() && compat != null && compat.incompatiblePack();
 	}
 
 	public static float getFarPlane() {
-		if (!dhPresent) return 0.01f;
-
-		try {
-			return (float) getFarPlane.invoke();
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
+		return dhPresent ? DHCompatInternal.getFarPlane() : 0.01f;
 	}
 
 	public static float getNearPlane() {
-		if (!dhPresent) return 0.01f;
-
-		try {
-			return (float) getNearPlane.invoke();
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
+		return dhPresent ? DHCompatInternal.getNearPlane() : 0.01f;
 	}
 
 	public static int getRenderDistance() {
-		if (!dhPresent) return Minecraft.getInstance().options.getEffectiveRenderDistance();
-
-		try {
-			return (int) getRenderDistance.invoke();
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
+		return dhPresent ? DHCompatInternal.getRenderDistance() : Minecraft.getInstance().options.getEffectiveRenderDistance();
 	}
 
 	public static boolean checkFrame() {
-		if (!dhPresent) {
-			return false;
+		if (dhPresent) {
+			LodRendererEvents.updateRenderer();
 		}
-
-		try {
-			return (boolean) checkFrame.invoke();
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
+		return hasRenderingEnabled();
 	}
 
 	public static boolean hasRenderingEnabled() {
+		return dhPresent && DHCompatInternal.hasRenderingEnabled();
+	}
+
+	public static void addDepthSamplers(SamplerHolder samplers, Supplier<DHCompat> compat) {
 		if (!dhPresent) {
-			return false;
+			return;
 		}
 
-		return checkFrame();
+		samplers.addTextureSampler(depthBinding("dhDepthTex", compat, false), false, "dhDepthTex", "dhDepthTex0");
+		samplers.addTextureSampler(depthBinding("dhDepthTex1", compat, true), false, "dhDepthTex1");
+	}
+
+	private static SamplerHolder.TextureBinding depthBinding(String name, Supplier<DHCompat> compat, boolean opaque) {
+		return new SamplerHolder.TextureBinding(name, () -> {
+			var current = compat.get();
+			return current == null || current.compat == null || current.compat.incompatiblePack() ? Minecraft.getInstance().gameRenderer.mainRenderTarget()
+				.getDepthTextureView() : current.compat.getDepthTexture(opaque);
+		}, () -> GlSampler.NEAREST);
+	}
+
+	public static void renderLods(boolean translucent) {
+		if (dhPresent) {
+			LodRendererEvents.renderLods(translucent);
+		}
+	}
+
+	public void prepare() {
+		if (this.compat != null) {
+			this.compat.prepare();
+		}
 	}
 
 	public void clearPipeline() {
-		if (compatInternalInstance == null) return;
-
-		try {
-			deletePipeline.invoke(compatInternalInstance);
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
+		if (this.compat != null) {
+			this.compat.close();
 		}
 	}
 
-	public int getDepthTex() {
-		if (compatInternalInstance == null) return 0;
-
-		try {
-			return (int) getDepthTex.invoke(compatInternalInstance);
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public int getDepthTexNoTranslucent() {
-		if (compatInternalInstance == null) return 0;
-
-		try {
-			return (int) getDepthTexNoTranslucent.invoke(compatInternalInstance);
-		} catch (Throwable e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public Object getInstance() {
-		return compatInternalInstance;
+	public DHCompatInternal getInstance() {
+		return this.compat;
 	}
 }

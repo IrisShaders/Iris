@@ -4,7 +4,7 @@ import org.gradle.kotlin.dsl.named
 plugins {
     id("java")
     id("idea")
-    id("net.fabricmc.fabric-loom") version ("1.17.20")
+    id("net.fabricmc.fabric-loom") version ("1.18.4")
 }
 
 evaluationDependsOn(":common")
@@ -37,7 +37,7 @@ repositories {
 }
 
 base {
-    archivesName.set("iris-fabric")
+    archivesName.set("iris-vk")
 }
 
 dependencies {
@@ -132,14 +132,6 @@ tasks.register<Exec>("nsightGpuTrace") {
         "--max-duration-ms=50"
     )
 }
-tasks.named("compileTestJava").configure {
-    enabled = false
-}
-
-tasks.named("test").configure {
-    enabled = false
-}
-
 loom {
     if (project(":common").file("src/main/resources/iris.accesswidener").exists()) {
         accessWidenerPath.set(project(":common").file("src/main/resources/iris.accesswidener"))
@@ -157,9 +149,9 @@ loom {
             configName = "Fabric Client"
             ideConfigGenerated(true)
             runDir("run")
-            environmentVariable("SDL_VIDEODRIVER", "x11")
             // vmArgs("-Dmixin.debug.export=true")
             // vmArg("-XX:+AllowEnhancedClassRedefinition")
+            environmentVariable("SDL_VIDEODRIVER", "x11")
         }
     }
 }

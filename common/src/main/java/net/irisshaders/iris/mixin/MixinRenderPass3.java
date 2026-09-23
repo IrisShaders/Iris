@@ -1,6 +1,5 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.backend.api.RenderPassBackend;
 import com.mojang.renderpearl.frontend.FrontendRenderPass;
 import net.irisshaders.iris.mixinterface.CustomPass;

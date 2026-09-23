@@ -1,385 +1,164 @@
 package net.irisshaders.iris.compat.dh;
 
-import com.mojang.renderpearl.backend.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.DhApi;
-import com.seibel.distanthorizons.api.enums.rendering.EDhApiFogDrawMode;
-import com.seibel.distanthorizons.api.enums.rendering.EDhApiRenderPass;
 import com.seibel.distanthorizons.api.interfaces.override.IDhApiOverrideable;
-import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
-import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiGenericObjectShaderProgram;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiAfterDhInitEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeApplyShaderRenderEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeBufferRenderEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeDeferredRenderEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericObjectRenderEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericRenderSetupEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderCleanupEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderPassEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderSetupEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeTextureClearEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiColorDepthTextureCreatedEvent;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam;
-import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
+import com.seibel.distanthorizons.api.objects.DhApiResult;
+import com.seibel.distanthorizons.core.api.internal.ClientApi;
+import com.seibel.distanthorizons.core.util.math.DhMat4f;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.OverrideInjector;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.helpers.MatrixUtils;
-import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
-import net.minecraft.client.Minecraft;
-import org.lwjgl.opengl.GL43C;
-import org.lwjgl.opengl.GL46C;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.concurrent.CompletableFuture;
 
 public class LodRendererEvents {
-	private static boolean eventHandlersBound = false;
-
-	private static boolean atTranslucent = false;
-	private static int textureWidth;
-	private static int textureHeight;
-
-
-	// constructor //
+	private static IrisDhRenderDefinition definition;
+	private static CompletableFuture<DhApiResult<String>> switchFuture;
+	private static boolean renderingLods;
+	private static boolean requested;
+	private static boolean applied;
+	private static boolean previousDeferred;
+	private static boolean renderingEnabled;
+	private static IDhApiOverrideable shadowFrustum;
 
 	public static void setupEventHandlers() {
-		if (!eventHandlersBound) {
-			eventHandlersBound = true;
-			Iris.logger.info("Queuing DH event binding...");
-
-			DhApiAfterDhInitEvent beforeCleanupEvent = new DhApiAfterDhInitEvent() {
-				@Override
-				public void afterDistantHorizonsInit(DhApiEventParam<Void> event) {
-					Iris.logger.info("DH Ready, binding Iris event handlers...");
-
-					Iris.loadShaderpackWhenPossible();
-
-					setupSetDeferredBeforeRenderingEvent();
-					setupReconnectDepthTextureEvent();
-					setupGenericEvent();
-					setupCreateDepthTextureEvent();
-					setupTransparentRendererEventCancling();
-					setupBeforeBufferClearEvent();
-					setupBeforeRenderCleanupEvent();
-					beforeBufferRenderEvent();
-					setupBeforeRenderFrameBufferBinding();
-					setupBeforeRenderPassEvent();
-					setupBeforeApplyShaderEvent();
-					DHCompatInternal.dhEnabled = DhApi.Delayed.configs.graphics().renderingEnabled().getValue();
-					Iris.logger.info("DH Iris events bound.");
+		DhApi.events.bind(DhApiAfterDhInitEvent.class, new DhApiAfterDhInitEvent() {
+			@Override
+			public void afterDistantHorizonsInit(DhApiEventParam<Void> event) {
+				renderingEnabled = DHCompatInternal.hasRenderingEnabled();
+				Iris.loadShaderpackWhenPossible();
+			}
+		});
+		DhApi.events.bind(DhApiBeforeRenderEvent.class, new DhApiBeforeRenderEvent() {
+			@Override
+			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
+				cancelUnsupportedPass(event);
+			}
+		});
+		DhApi.events.bind(DhApiBeforeDeferredRenderEvent.class, new DhApiBeforeDeferredRenderEvent() {
+			@Override
+			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
+				cancelUnsupportedPass(event);
+			}
+		});
+		DhApi.events.bind(DhApiBeforeRenderSetupEvent.class, new DhApiBeforeRenderSetupEvent() {
+			@Override
+			public void beforeSetup(DhApiEventParam<DhApiRenderParam> event) {
+				clearShadowFrustum();
+				if (event.value.renderDefinition == definition && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+					shadowFrustum = (IDhApiOverrideable) ShadowRenderer.FRUSTUM;
+					OverrideInjector.INSTANCE.bind(IDhApiShadowCullingFrustum.class, shadowFrustum);
 				}
-			};
-			DhApi.events.bind(DhApiAfterDhInitEvent.class, beforeCleanupEvent);
+			}
+		});
+		DhApi.events.bind(DhApiBeforeRenderCleanupEvent.class, new DhApiBeforeRenderCleanupEvent() {
+			@Override
+			public void beforeCleanup(DhApiEventParam<DhApiRenderParam> event) {
+				clearShadowFrustum();
+			}
+		});
+	}
+
+	public static void updateRenderer() {
+		if (DhApi.Delayed.renderProxy == null) {
+			return;
+		}
+		if (switchFuture != null) {
+			if (!switchFuture.isDone()) {
+				return;
+			}
+			var result = switchFuture.join();
+			switchFuture = null;
+			if (!result.success) {
+				throw new IllegalStateException("unable to switch DH renderer: " + result.message);
+			}
+			applied = requested;
+		}
+		boolean enabled = DHCompatInternal.hasRenderingEnabled();
+		if (renderingEnabled != enabled) {
+			renderingEnabled = enabled;
+			if (Iris.isPackInUseQuick()) {
+				try {
+					Iris.reload();
+				} catch (IOException e) {
+					throw new UncheckedIOException("unable to reload DH shaders", e);
+				}
+			}
+		}
+		var compat = DHCompatInternal.current();
+		boolean desired = compat != null && !compat.incompatiblePack() && DHCompatInternal.hasRenderingEnabled();
+		if (desired == applied) {
+			return;
+		}
+		if (definition == null) {
+			definition = new IrisDhRenderDefinition();
+		}
+		requested = desired;
+		if (desired) {
+			previousDeferred = DhApi.Delayed.renderProxy.getDeferTransparentRendering();
+			DhApi.Delayed.renderProxy.setDeferTransparentRendering(true);
+		}
+		switchFuture = desired ? DhApi.Delayed.renderProxy.setRenderDefinitionOverrideAsync(definition,
+			"Iris") : DhApi.Delayed.renderProxy.clearRenderDefinitionOverrideAsync();
+		if (!desired) {
+			switchFuture.thenAccept(result -> DhApi.Delayed.renderProxy.setDeferTransparentRendering(previousDeferred));
 		}
 	}
 
-
-	// setup event handlers //
-
-
-	private static void setupSetDeferredBeforeRenderingEvent() {
-		DhApiBeforeRenderEvent beforeRenderEvent = new DhApiBeforeRenderEvent() {
-			// this event is called before DH starts any rendering prep
-			// canceling it will prevent DH from rendering for that frame
-			@Override
-			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
-
-				DhApi.Delayed.renderProxy.setDeferTransparentRendering(Iris.isPackInUseQuick() && getInstance().shouldOverride);
-				DhApi.Delayed.configs.graphics().fog().drawMode().setValue(getInstance().shouldOverride ? EDhApiFogDrawMode.FOG_DISABLED : EDhApiFogDrawMode.FOG_ENABLED);
-			}
-		};
-
-		DhApi.events.bind(DhApiBeforeRenderEvent.class, beforeRenderEvent);
+	public static boolean isRenderingLods() {
+		return renderingLods;
 	}
 
-	private static void setupReconnectDepthTextureEvent() {
-		DhApiBeforeTextureClearEvent beforeRenderEvent = new DhApiBeforeTextureClearEvent() {
-			@Override
-			public void beforeClear(DhApiCancelableEventParam<DhApiRenderParam> event) {
-				var getResult = DhApi.Delayed.renderProxy.getDhDepthTextureId();
-				if (getResult.success) {
-					int depthTextureId = getResult.payload;
-					getInstance().reconnectDHTextures(depthTextureId);
-				}
+	public static void renderLods(boolean translucent) {
+		updateRenderer();
+		var compat = DHCompatInternal.current();
+		if (compat == null || compat.incompatiblePack() || !DHCompatInternal.hasRenderingEnabled() || ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !compat.hasShadowShader()) {
+			return;
+		}
+		var state = ClientApi.RENDER_STATE;
+		var oldModelView = state.mcModelViewMatrix;
+		state.mcModelViewMatrix = new DhMat4f(
+			ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShadowRenderer.MODELVIEW : CapturedRenderingState.INSTANCE.getGbufferModelView());
+		renderingLods = true;
+		try {
+			DhApi.Delayed.renderProxy.setDeferTransparentRendering(true);
+			if (translucent) {
+				ClientApi.INSTANCE.renderDeferredLodsForShaders();
+			} else {
+				ClientApi.INSTANCE.renderLods();
 			}
-		};
-
-		DhApi.events.bind(DhApiBeforeTextureClearEvent.class, beforeRenderEvent);
+		} finally {
+			renderingLods = false;
+			state.mcModelViewMatrix = oldModelView;
+		}
 	}
 
-	private static void setupGenericEvent() {
-		DhApiBeforeGenericRenderSetupEvent beforeRenderEvent = new DhApiBeforeGenericRenderSetupEvent() {
-			@Override
-			public void beforeSetup(DhApiEventParam<DhApiRenderParam> dhApiEventParam) {
-				if (getInstance().getGenericFB() != null) {
-					getInstance().getGenericFB().bind();
-				}
-			}
-		};
-
-		DhApiBeforeGenericObjectRenderEvent beforeDrawEvent = new DhApiBeforeGenericObjectRenderEvent() {
-			@Override
-			public void beforeRender(DhApiCancelableEventParam<EventParam> dhApiCancelableEventParam) {
-				if (dhApiCancelableEventParam.value.resourceLocationPath.equalsIgnoreCase("Clouds")) {
-					if (getInstance().avoidRenderingClouds()) {
-						dhApiCancelableEventParam.cancelEvent();
-					}
-				}
-			}
-		};
-
-		DhApi.events.bind(DhApiBeforeGenericRenderSetupEvent.class, beforeRenderEvent);
-		DhApi.events.bind(DhApiBeforeGenericObjectRenderEvent.class, beforeDrawEvent);
+	private static void cancelUnsupportedPass(DhApiCancelableEventParam<DhApiRenderParam> event) {
+		var compat = DHCompatInternal.current();
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && (compat == null || !compat.hasShadowShader() || event.value.renderDefinition != definition)) {
+			event.cancelEvent();
+		} else if ((event.value.renderDefinition == definition && (compat == null || compat.incompatiblePack())) || (compat != null && !compat.incompatiblePack() && event.value.renderDefinition != definition)) {
+			event.cancelEvent();
+		}
 	}
 
-	private static DHCompatInternal getInstance() {
-		return (DHCompatInternal) Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::getDHCompat).map(DHCompat::getInstance).orElse(DHCompatInternal.SHADERLESS);
+	private static void clearShadowFrustum() {
+		if (shadowFrustum != null) {
+			OverrideInjector.INSTANCE.unbind(IDhApiShadowCullingFrustum.class, shadowFrustum);
+			shadowFrustum = null;
+		}
 	}
-
-	private static void setupCreateDepthTextureEvent() {
-		DhApiColorDepthTextureCreatedEvent beforeRenderEvent = new DhApiColorDepthTextureCreatedEvent() {
-			@Override
-			public void onResize(DhApiEventParam<EventParam> input) {
-				textureWidth = input.value.newWidth;
-				textureHeight = input.value.newHeight;
-			}
-		};
-
-		DhApi.events.bind(DhApiColorDepthTextureCreatedEvent.class, beforeRenderEvent);
-	}
-
-	private static void setupTransparentRendererEventCancling() {
-		DhApiBeforeRenderEvent beforeRenderEvent = new DhApiBeforeRenderEvent() {
-			@Override
-			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
-				if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && (!getInstance().shouldOverrideShadow)) {
-					event.cancelEvent();
-				}
-			}
-		};
-		DhApiBeforeDeferredRenderEvent beforeRenderEvent2 = new DhApiBeforeDeferredRenderEvent() {
-			@Override
-			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
-				if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && (!getInstance().shouldOverrideShadow)) {
-					event.cancelEvent();
-				}
-			}
-		};
-
-		DhApi.events.bind(DhApiBeforeRenderEvent.class, beforeRenderEvent);
-		DhApi.events.bind(DhApiBeforeDeferredRenderEvent.class, beforeRenderEvent2);
-	}
-
-	private static void setupBeforeRenderCleanupEvent() {
-		DhApiBeforeRenderCleanupEvent beforeCleanupEvent = new DhApiBeforeRenderCleanupEvent() {
-			@Override
-			public void beforeCleanup(DhApiEventParam<DhApiRenderParam> event) {
-				if (getInstance().shouldOverride) {
-					if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-						getInstance().getShadowShader().unbind();
-					} else {
-						getInstance().getSolidShader().unbind();
-					}
-				}
-			}
-		};
-
-		DhApi.events.bind(DhApiBeforeRenderCleanupEvent.class, beforeCleanupEvent);
-	}
-
-	private static void setupBeforeBufferClearEvent() {
-		DhApiBeforeTextureClearEvent beforeCleanupEvent = new DhApiBeforeTextureClearEvent() {
-			@Override
-			public void beforeClear(DhApiCancelableEventParam<DhApiRenderParam> event) {
-				if (event.value.renderPass == EDhApiRenderPass.OPAQUE) {
-					if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-						event.cancelEvent();
-					} else if (getInstance().shouldOverride) {
-						GlStateManager._clear(GL43C.GL_DEPTH_BUFFER_BIT);
-						event.cancelEvent();
-					}
-				}
-			}
-		};
-
-		DhApi.events.bind(DhApiBeforeTextureClearEvent.class, beforeCleanupEvent);
-	}
-
-	private static void beforeBufferRenderEvent() {
-		DhApiBeforeBufferRenderEvent beforeCleanupEvent = new DhApiBeforeBufferRenderEvent() {
-			@Override
-			public void beforeRender(DhApiEventParam<EventParam> input) {
-				DHCompatInternal instance = getInstance();
-				if (instance.shouldOverride) {
-					DhApiVec3f modelPos = input.value.modelPos;
-					if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-						instance.getShadowShader().bind();
-						instance.getShadowShader().setModelPos(modelPos);
-					} else if (atTranslucent) {
-						instance.getTranslucentShader().bind();
-						instance.getTranslucentShader().setModelPos(modelPos);
-					} else {
-						instance.getSolidShader().bind();
-						instance.getSolidShader().setModelPos(modelPos);
-					}
-				}
-			}
-		};
-
-		DhApi.events.bind(DhApiBeforeBufferRenderEvent.class, beforeCleanupEvent);
-	}
-
-	private static void setupBeforeRenderFrameBufferBinding() {
-		DhApiBeforeRenderSetupEvent beforeRenderPassEvent = new DhApiBeforeRenderSetupEvent() {
-			@Override
-			public void beforeSetup(DhApiEventParam<DhApiRenderParam> event) {
-				DHCompatInternal instance = getInstance();
-
-				OverrideInjector.INSTANCE.unbind(IDhApiShadowCullingFrustum.class, (IDhApiOverrideable) ShadowRenderer.FRUSTUM);
-				OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getShadowFBWrapper());
-				OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getSolidFBWrapper());
-				OverrideInjector.INSTANCE.unbind(IDhApiGenericObjectShaderProgram.class, instance.getGenericShader());
-
-				if (instance.shouldOverride) {
-					if (instance.getGenericShader() != null) {
-						OverrideInjector.INSTANCE.bind(IDhApiGenericObjectShaderProgram.class, instance.getGenericShader());
-					}
-
-					if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && instance.shouldOverrideShadow) {
-						OverrideInjector.INSTANCE.bind(IDhApiFramebuffer.class, instance.getShadowFBWrapper());
-						OverrideInjector.INSTANCE.bind(IDhApiShadowCullingFrustum.class, (IDhApiOverrideable) ShadowRenderer.FRUSTUM);
-					} else {
-						OverrideInjector.INSTANCE.bind(IDhApiFramebuffer.class, instance.getSolidFBWrapper());
-					}
-				}
-			}
-		};
-		DhApi.events.bind(DhApiBeforeRenderSetupEvent.class, beforeRenderPassEvent);
-
-	}
-
-	private static void setupBeforeRenderPassEvent() {
-		DhApiBeforeRenderPassEvent beforeCleanupEvent = new DhApiBeforeRenderPassEvent() {
-			@Override
-			public void beforeRender(DhApiEventParam<DhApiRenderParam> event) {
-				DHCompatInternal instance = getInstance();
-
-				// config overrides
-				if (instance.shouldOverride) {
-					DhApi.Delayed.configs.graphics().ambientOcclusion().enabled().setValue(false);
-					DhApi.Delayed.configs.graphics().fog().drawMode().setValue(EDhApiFogDrawMode.FOG_DISABLED);
-
-					if (event.value.renderPass == EDhApiRenderPass.OPAQUE_AND_TRANSPARENT) {
-						Iris.logger.error("Unexpected; somehow the Opaque + Translucent pass ran with shaders on.");
-					}
-				} else {
-					DhApi.Delayed.configs.graphics().ambientOcclusion().enabled().clearValue();
-					DhApi.Delayed.configs.graphics().fog().drawMode().clearValue();
-				}
-
-
-				// cleanup
-				if (event.value.renderPass == EDhApiRenderPass.OPAQUE) {
-					if (instance.shouldOverride) {
-						if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-							instance.getShadowShader().bind();
-						} else {
-							instance.getSolidShader().bind();
-						}
-						atTranslucent = false;
-					}
-				}
-
-
-				// opaque
-				if (event.value.renderPass == EDhApiRenderPass.OPAQUE) {
-					float partialTicks = event.value.partialTicks;
-
-					if (instance.shouldOverride) {
-						if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-							instance.getShadowShader().fillUniformData(
-								MatrixUtils.toMinusOneToOne(ShadowRenderer.PROJECTION), ShadowRenderer.MODELVIEW,
-								-1000, //MC.getWrappedClientLevel().getMinHeight(),
-								partialTicks);
-						} else {
-							//float nearClip = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);
-							//float farClip = (float) ((double) (DHCompatInternal.getDhBlockRenderDistance() + 512) * Math.sqrt(2.0));
-
-							//Iris.logger.info("event near clip: "+event.value.nearClipPlane+" event far clip: "+event.value.farClipPlane+
-							//	" \niris near clip: "+nearClip+" iris far clip: "+farClip);
-
-							instance.getSolidShader().fillUniformData(
-								DHCompat.getProjection(event.value.nearClipPlane, event.value.farClipPlane),
-								CapturedRenderingState.INSTANCE.getGbufferModelView(),
-								-1000, //MC.getWrappedClientLevel().getMinHeight(),
-								partialTicks);
-						}
-					}
-				}
-
-
-				// transparent
-				if (event.value.renderPass == EDhApiRenderPass.TRANSPARENT) {
-					float partialTicks = event.value.partialTicks;
-					int depthTextureId = DhApi.Delayed.renderProxy.getDhDepthTextureId().payload;
-
-					if (instance.shouldOverrideShadow && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-						instance.getShadowShader().bind();
-						instance.getShadowFB().bind();
-						atTranslucent = true;
-
-						return;
-					}
-
-					if (instance.shouldOverride && instance.getTranslucentFB() != null) {
-						instance.copyTranslucents(textureWidth, textureHeight);
-						instance.getTranslucentShader().bind();
-						//float nearClip = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);
-						//float farClip = (float) ((double) (DHCompatInternal.getDhBlockRenderDistance() + 512) * Math.sqrt(2.0));
-						GL46C.glDisable(GL46C.GL_CULL_FACE);
-						//Iris.logger.info("event near clip: "+event.value.nearClipPlane+" event far clip: "+event.value.farClipPlane+
-						//	" \niris near clip: "+nearClip+" iris far clip: "+farClip);
-
-						instance.getTranslucentShader().fillUniformData(
-							DHCompat.getProjection(event.value.nearClipPlane, event.value.farClipPlane),
-							CapturedRenderingState.INSTANCE.getGbufferModelView(),
-							-1000, //MC.getWrappedClientLevel().getMinHeight(),
-							partialTicks);
-
-						instance.getTranslucentFB().bind();
-					}
-
-					atTranslucent = true;
-				}
-
-			}
-		};
-
-		DhApi.events.bind(DhApiBeforeRenderPassEvent.class, beforeCleanupEvent);
-	}
-
-	private static void setupBeforeApplyShaderEvent() {
-		DhApiBeforeApplyShaderRenderEvent beforeApplyShaderEvent = new DhApiBeforeApplyShaderRenderEvent() {
-			@Override
-			public void beforeRender(DhApiCancelableEventParam<DhApiRenderParam> event) {
-				if (Iris.isPackInUseQuick()) {
-					DHCompatInternal instance = getInstance();
-
-					OverrideInjector.INSTANCE.unbind(IDhApiShadowCullingFrustum.class, (IDhApiOverrideable) ShadowRenderer.FRUSTUM);
-					OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getShadowFBWrapper());
-					OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, instance.getSolidFBWrapper());
-
-					event.cancelEvent();
-				}
-			}
-		};
-
-		DhApi.events.bind(DhApiBeforeApplyShaderRenderEvent.class, beforeApplyShaderEvent);
-	}
-
-
 }

@@ -9,7 +9,8 @@ import java.util.Optional;
 public class OptionMenuSubElementScreen extends OptionMenuElementScreen {
 	public final String screenId;
 
-	public OptionMenuSubElementScreen(String screenId, OptionMenuContainer container, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, List<String> elementStrings, Optional<Integer> columnCount) {
+	public OptionMenuSubElementScreen(String screenId, OptionMenuContainer container, ShaderProperties shaderProperties,
+		ShaderPackOptions shaderPackOptions, List<String> elementStrings, Optional<Integer> columnCount) {
 		super(container, shaderProperties, shaderPackOptions, elementStrings, columnCount);
 
 		this.screenId = screenId;

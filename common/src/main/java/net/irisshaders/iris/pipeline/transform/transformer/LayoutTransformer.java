@@ -11,6 +11,7 @@ import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericT
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeReference;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.struct.StructBody;
+import io.github.douira.glsl_transformer.ast.node.type.struct.StructMember;
 import io.github.douira.glsl_transformer.ast.node.type.struct.StructSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
@@ -21,8 +22,10 @@ import net.irisshaders.iris.pipeline.transform.vulkan.VulkanGlsl;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
@@ -34,6 +37,34 @@ public final class LayoutTransformer {
 	}
 
 	public static void transformGrouped(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, Parameters parameters) {
+		transformGrouped(parser, trees, parameters, true);
+	}
+
+	public static void transformGrouped(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, Parameters parameters,
+		boolean stageLocations) {
+		Set<String> memberBlocks = new HashSet<>();
+
+		for (var tree : trees.values()) {
+			tree.getRoot().nodeIndex.getStream(InterfaceBlockDeclaration.class).filter(block -> block.getStructBody().getMembers().stream()
+					.anyMatch(member -> VulkanGlsl.layout(member.getType().getTypeQualifier(), "location") != null))
+				.forEach(block -> memberBlocks.add(block.getBlockName().getName()));
+		}
+
+		if (!stageLocations) {
+			var vertex = trees.get(PatchShaderType.VERTEX);
+			var fragment = trees.get(PatchShaderType.FRAGMENT);
+
+			if (vertex != null) {
+				assign(List.of(), collect(vertex, PatchShaderType.VERTEX, StorageType.IN, memberBlocks));
+			}
+
+			if (fragment != null) {
+				assign(collect(fragment, PatchShaderType.FRAGMENT, StorageType.OUT, memberBlocks), List.of());
+			}
+
+			return;
+		}
+
 		List<Variable> previous = List.of();
 
 		for (PatchShaderType stage : PIPELINE) {
@@ -43,15 +74,15 @@ public final class LayoutTransformer {
 				continue;
 			}
 
-			List<Variable> inputs = collect(tree, stage, StorageType.IN);
+			List<Variable> inputs = collect(tree, stage, StorageType.IN, memberBlocks);
 			assign(previous, inputs);
-			previous = collect(tree, stage, StorageType.OUT);
+			previous = collect(tree, stage, StorageType.OUT, memberBlocks);
 		}
 
 		assign(previous, List.of());
 	}
 
-	private static List<Variable> collect(TranslationUnit tree, PatchShaderType stage, StorageType direction) {
+	private static List<Variable> collect(TranslationUnit tree, PatchShaderType stage, StorageType direction, Set<String> memberBlocks) {
 		List<Variable> variables = new ArrayList<>();
 		Root root = tree.getRoot();
 		root.indexBuildSession(() -> {
@@ -84,7 +115,7 @@ public final class LayoutTransformer {
 							VulkanGlsl.setLayout(splitQualifier, "location", nextLocation);
 						}
 
-						variables.add(new Variable(member.getName().getName(), splitQualifier, size));
+						variables.add(new Variable(member.getName().getName(), splitQualifier, size, typed.getType().getTypeSpecifier()));
 						tree.getChildren().add(tree.getChildren().indexOf(declaration), new DeclarationExternalDeclaration(split));
 						nextLocation = Math.addExact(nextLocation, size);
 					}
@@ -99,9 +130,14 @@ public final class LayoutTransformer {
 						continue;
 					}
 
+					if (memberBlocks.contains(block.getBlockName().getName())) {
+						collectBlock(block, stage, direction, root, variables);
+						continue;
+					}
+
 					int size = blockLocations(block.getStructBody(), root);
 					size = arrayLocations(size, root, perVertex(stage, direction, qualifier), block.getArraySpecifier());
-					variables.add(new Variable(block.getBlockName().getName(), qualifier, size));
+					variables.add(new Variable(block.getBlockName().getName(), qualifier, size, null));
 				}
 			}
 		});
@@ -109,14 +145,57 @@ public final class LayoutTransformer {
 		return variables;
 	}
 
+	private static void collectBlock(InterfaceBlockDeclaration block, PatchShaderType stage, StorageType direction, Root root,
+		List<Variable> variables) {
+		var qualifier = block.getTypeQualifier();
+
+		if (arrayLocations(1, root, perVertex(stage, direction, qualifier), block.getArraySpecifier()) != 1) {
+			throw new IllegalArgumentException("member locations cannot be used on interface block arrays");
+		}
+
+		Integer nextLocation = location(qualifier, root);
+		var body = block.getStructBody();
+
+		for (var member : List.copyOf(body.getMembers())) {
+			Integer explicit = location(member.getType().getTypeQualifier(), root);
+
+			if (explicit != null) {
+				nextLocation = explicit;
+			}
+
+			for (var declarator : member.getDeclarators()) {
+				var split = new StructMember(member.getType().cloneInto(root), Stream.of(declarator.cloneInto(root)));
+				var splitQualifier = split.getType().getTypeQualifier();
+
+				if (splitQualifier == null) {
+					splitQualifier = new TypeQualifier(Stream.empty());
+					split.getType().setTypeQualifier(splitQualifier);
+				}
+
+				int size = locations(member.getType().getTypeSpecifier(), declarator.getArraySpecifier(), root, false);
+
+				if (nextLocation != null) {
+					VulkanGlsl.setLayout(splitQualifier, "location", nextLocation);
+					nextLocation = Math.addExact(nextLocation, size);
+				}
+
+				variables.add(new Variable(block.getBlockName().getName() + "." + declarator.getName().getName(), splitQualifier, size,
+					member.getType().getTypeSpecifier()));
+				body.getMembers().add(body.getMembers().indexOf(member), split);
+			}
+
+			member.detachAndDelete();
+		}
+
+		VulkanGlsl.removeLayout(qualifier, "location");
+	}
+
 	private static boolean perVertex(PatchShaderType stage, StorageType direction, TypeQualifier qualifier) {
 		if (VulkanGlsl.hasStorage(qualifier, StorageType.PATCH)) {
 			return false;
 		}
 
-		return direction == StorageType.IN &&
-			(stage == PatchShaderType.TESS_CONTROL || stage == PatchShaderType.TESS_EVAL || stage == PatchShaderType.GEOMETRY)
-			|| direction == StorageType.OUT && stage == PatchShaderType.TESS_CONTROL;
+		return direction == StorageType.IN && (stage == PatchShaderType.TESS_CONTROL || stage == PatchShaderType.TESS_EVAL || stage == PatchShaderType.GEOMETRY) || direction == StorageType.OUT && stage == PatchShaderType.TESS_CONTROL;
 	}
 
 	private static int locations(TypeSpecifier type, ArraySpecifier array, Root root, boolean perVertex) {
@@ -132,10 +211,10 @@ public final class LayoutTransformer {
 		} else if (type instanceof TypeReference reference) {
 			var struct = root.nodeIndex.getStream(StructSpecifier.class)
 				.filter(s -> s.getName() != null && s.getName().getName().equals(reference.getReference().getName())).findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("Missing interface struct: " + reference.getReference().getName()));
+				.orElseThrow(() -> new IllegalArgumentException("missing interface struct: " + reference.getReference().getName()));
 			size = blockLocations(struct.getStructBody(), root);
 		} else {
-			throw new IllegalArgumentException("Unsupported stage interface type: " + type);
+			throw new IllegalArgumentException("unsupported stage interface type: " + type);
 		}
 
 		return arrayLocations(size, root, perVertex, array, type.getArraySpecifier());
@@ -156,7 +235,7 @@ public final class LayoutTransformer {
 				int length = VulkanGlsl.integer(dimension, root);
 
 				if (length <= 0) {
-					throw new IllegalArgumentException("Invalid interface array size");
+					throw new IllegalArgumentException("invalid interface array size");
 				}
 
 				size = Math.multiplyExact(size, length);
@@ -171,7 +250,7 @@ public final class LayoutTransformer {
 
 		for (var member : body.getMembers()) {
 			if (VulkanGlsl.layout(member.getType().getTypeQualifier(), "location") != null) {
-				throw new IllegalArgumentException("Explicit interface block member locations need separate allocation");
+				throw new IllegalArgumentException("explicit interface block member locations need separate allocation");
 			}
 
 			for (var declarator : member.getDeclarators()) {
@@ -190,7 +269,8 @@ public final class LayoutTransformer {
 
 	private static void assign(List<Variable> outputs, List<Variable> inputs) {
 		Map<String, List<Variable>> groups = new TreeMap<>();
-		Map<String, BitSet> occupiedOutputs = new HashMap<>(), occupiedInputs = new HashMap<>();
+		Map<String, BitSet> occupiedOutputs = new HashMap<>();
+		Map<String, BitSet> occupiedInputs = new HashMap<>();
 
 		for (var side : List.of(outputs, inputs)) {
 			Map<String, BitSet> occupied = side == outputs ? occupiedOutputs : occupiedInputs;
@@ -203,7 +283,7 @@ public final class LayoutTransformer {
 				}
 			}
 		}
-		// Propagate explicit locations before allocating any implicit ones.
+
 		for (var group : groups.values()) {
 			Integer explicit = null;
 
@@ -213,7 +293,7 @@ public final class LayoutTransformer {
 				}
 
 				if (explicit != null && !explicit.equals(variable.location)) {
-					throw new IllegalArgumentException("Conflicting stage locations: " + variable.name);
+					throw new IllegalArgumentException("conflicting stage locations: " + variable.name);
 				}
 
 				explicit = variable.location;
@@ -243,12 +323,14 @@ public final class LayoutTransformer {
 		int location) {
 		for (var variable : group) {
 			var occupied = (outputs.contains(variable) ? out : in).computeIfAbsent(variable.namespace(), ignored -> new BitSet());
-			int start = Math.multiplyExact(location, 4);
-			int end = Math.addExact(start, Math.multiplyExact(variable.size, 4));
-			int used = occupied.nextSetBit(start);
+			for (int i = 0; i < variable.size; i++) {
+				int start = Math.addExact(Math.multiplyExact(Math.addExact(location, i), 4), variable.component);
+				int end = Math.addExact(start, VulkanGlsl.layout(variable.qualifier, "component") == null ? 4 : variable.components);
+				int used = occupied.nextSetBit(start);
 
-			if (used >= 0 && used < end) {
-				return false;
+				if (used >= 0 && used < end) {
+					return false;
+				}
 			}
 		}
 
@@ -270,42 +352,52 @@ public final class LayoutTransformer {
 
 	private static void reserve(Map<String, BitSet> map, Variable variable, int location) {
 		if (location < 0 || location > 65535) {
-			throw new IllegalArgumentException("Invalid interface location: " + location);
-		}
-
-		if (VulkanGlsl.layout(variable.qualifier, "component") != null) {
-			throw new IllegalArgumentException("Component-qualified interfaces need component allocation: " + variable.name);
+			throw new IllegalArgumentException("invalid interface location: " + location);
 		}
 
 		var occupied = map.computeIfAbsent(variable.namespace(), ignored -> new BitSet());
-		int start = Math.multiplyExact(location, 4);
-		int end = Math.addExact(start, Math.multiplyExact(variable.size, 4));
-		int used = occupied.nextSetBit(start);
 
-		if (used >= 0 && used < end) {
-			throw new IllegalArgumentException("Overlapping interface locations: " + variable.name);
+		for (int i = 0; i < variable.size; i++) {
+			int start = Math.addExact(Math.multiplyExact(Math.addExact(location, i), 4), variable.component);
+			int end = Math.addExact(start, variable.components);
+			int used = occupied.nextSetBit(start);
+
+			if (used >= 0 && used < end) {
+				throw new IllegalArgumentException("overlapping interface locations: " + variable.name);
+			}
+
+			occupied.set(start, end);
 		}
-
-		occupied.set(start, end);
 	}
 
 	private static final class Variable {
-		final String name;
-		final TypeQualifier qualifier;
-		final int size;
-		Integer location;
+		private final String name;
+		private final TypeQualifier qualifier;
+		private final int size;
+		private final int component;
+		private final int components;
+		private Integer location;
 
-		Variable(String name, TypeQualifier qualifier, int size) {
+		private Variable(String name, TypeQualifier qualifier, int size, TypeSpecifier type) {
 			this.name = name;
 			this.qualifier = qualifier;
 			this.size = size;
 			this.location = location(qualifier, qualifier.getRoot());
+			var component = VulkanGlsl.layout(qualifier, "component");
+			this.component = component == null ? 0 : VulkanGlsl.integer(component.getExpression(), qualifier.getRoot());
+			int components = type instanceof BuiltinNumericTypeSpecifier numeric && !numeric.type.isMatrix() ? (numeric.type.isScalar() ? 1 : numeric.type.getDimensions()[0]) * Math.max(
+				32, numeric.type.getBitDepth()) / 32 : 4;
+			this.components = component == null && components > 4 ? 4 : components;
+
+			if (this.component < 0 || this.component + this.components > 4 || component != null && (!(type instanceof BuiltinNumericTypeSpecifier numeric) || numeric.type.isMatrix())) {
+				throw new IllegalArgumentException("invalid interface component: " + name);
+			}
 		}
 
-		String namespace() {
-			var index = VulkanGlsl.layout(qualifier, "index");
+		private String namespace() {
+			var index = VulkanGlsl.layout(this.qualifier, "index");
 
-			return Integer.toString(index == null ? 0 : VulkanGlsl.integer(index.getExpression(), qualifier.getRoot()));
+			return Integer.toString(index == null ? 0 : VulkanGlsl.integer(index.getExpression(), this.qualifier.getRoot()));
 		}
 	}
 }

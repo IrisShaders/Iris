@@ -9,15 +9,9 @@ import java.util.stream.Collectors;
 public interface TypedFunction {
 
 	static String format(TypedFunction function, String name) {
-		return String.format("%s %s(%s) (priority: %d, pure:%s)",
-			function.getReturnType().toString(),
-			name,
-			Arrays.stream(function.getParameters())
-				.map(param -> param.constant() ? "const " + param.type() : param.type().toString())
-				.collect(Collectors.joining(", ")),
-			function.priority(),
-			function.isPure() ? "yes" : "no"
-		);
+		return String.format("%s %s(%s) (priority: %d, pure:%s)", function.getReturnType().toString(), name,
+			Arrays.stream(function.getParameters()).map(param -> param.constant() ? "const " + param.type() : param.type().toString())
+				.collect(Collectors.joining(", ")), function.priority(), function.isPure() ? "yes" : "no");
 	}
 
 	Type getReturnType();

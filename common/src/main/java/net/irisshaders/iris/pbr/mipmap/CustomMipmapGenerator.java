@@ -7,7 +7,6 @@ public interface CustomMipmapGenerator {
 	NativeImage[] generateMipLevels(NativeImage[] image, int mipLevel);
 
 	interface Provider {
-		@Nullable
-		CustomMipmapGenerator getMipmapGenerator();
+		@Nullable CustomMipmapGenerator getMipmapGenerator();
 	}
 }

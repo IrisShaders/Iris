@@ -13,16 +13,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EndFlashState.class)
 public class MixinEndFlash {
+	private static final float ABOVE_HORIZON_EPS = 5.0F; // degrees above horizon
 	@Shadow
 	private float xAngle;
-
 	@Shadow
 	private float yAngle;
-
 	@Shadow
 	private long flashSeed;
-
-	private static final float ABOVE_HORIZON_EPS = 5.0F; // degrees above horizon
 
 	@Inject(method = "calculateFlashParameters", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;randomBetween(Lnet/minecraft/util/RandomSource;FF)F", ordinal = 0), cancellable = true)
 	private void iris$calculateNewAngles(long l, CallbackInfo ci, @Local(ordinal = 1) long m, @Local RandomSource randomSource) {

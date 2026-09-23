@@ -18,16 +18,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public class PackRenderTargetDirectives {
-	public static final ImmutableList<String> LEGACY_RENDER_TARGETS = ImmutableList.of(
-		"gcolor",
-		"gdepth",
-		"gnormal",
-		"composite",
-		"gaux1",
-		"gaux2",
-		"gaux3",
-		"gaux4"
-	);
+	public static final ImmutableList<String> LEGACY_RENDER_TARGETS = ImmutableList.of("gcolor", "gdepth", "gnormal", "composite", "gaux1",
+		"gaux2", "gaux3", "gaux4");
 
 	// TODO: Instead of just passing this, the shader pack loader should try to figure out what color buffers are in
 	//       use.
@@ -48,8 +40,7 @@ public class PackRenderTargetDirectives {
 	PackRenderTargetDirectives(Set<Integer> supportedRenderTargets) {
 		this.renderTargetSettings = new Int2ObjectOpenHashMap<>();
 
-		supportedRenderTargets.forEach(
-			(index) -> renderTargetSettings.put(index.intValue(), new RenderTargetSettings()));
+		supportedRenderTargets.forEach((index) -> renderTargetSettings.put(index.intValue(), new RenderTargetSettings()));
 	}
 
 	public IntList getBuffersToBeCleared() {
@@ -77,9 +68,8 @@ public class PackRenderTargetDirectives {
 					case "RGBA32F" -> colortex7.requestedFormat = InternalTextureFormat.RGBA32F;
 					case "RGB32F" -> colortex7.requestedFormat = InternalTextureFormat.RGB32F;
 					case "RGB16" -> colortex7.requestedFormat = InternalTextureFormat.RGB16;
-					case null, default ->
-						Iris.logger.warn("Ignoring GAUX4FORMAT directive /* GAUX4FORMAT:" + format + "*/ because " + format
-							+ " must be RGBA32F, RGB32F, or RGB16. Use `const int colortex7Format = " + format + ";` + instead.");
+					case null, default -> Iris.logger.warn(
+						"Ignoring GAUX4FORMAT directive /* GAUX4FORMAT:" + format + "*/ because " + format + " must be RGBA32F, RGB32F, or RGB16. Use `const int colortex7Format = " + format + ";` + instead.");
 				}
 			});
 		});
@@ -113,15 +103,13 @@ public class PackRenderTargetDirectives {
 		});
 
 		// TODO: Only for composite and deferred
-		directives.acceptConstBooleanDirective(bufferName + "Clear",
-			shouldClear -> settings.clear = shouldClear);
+		directives.acceptConstBooleanDirective(bufferName + "Clear", shouldClear -> settings.clear = shouldClear);
 
 		// TODO: Only for composite, deferred, and final
 
 		// Note: This is still relevant even if shouldClear is false,
 		// since this will be the initial color of the buffer.
-		directives.acceptConstVec4Directive(bufferName + "ClearColor",
-			clearColor -> settings.clearColor = clearColor);
+		directives.acceptConstVec4Directive(bufferName + "ClearColor", clearColor -> settings.clearColor = clearColor);
 	}
 
 	public static final class RenderTargetSettings {
@@ -149,11 +137,7 @@ public class PackRenderTargetDirectives {
 
 		@Override
 		public String toString() {
-			return "RenderTargetSettings{" +
-				"requestedFormat=" + requestedFormat +
-				", clear=" + clear +
-				", clearColor=" + clearColor +
-				'}';
+			return "RenderTargetSettings{" + "requestedFormat=" + requestedFormat + ", clear=" + clear + ", clearColor=" + clearColor + '}';
 		}
 	}
 }

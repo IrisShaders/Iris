@@ -20,7 +20,6 @@ public class FloatCachedUniform extends CachedUniform {
 	protected boolean doUpdate() {
 		float prev = this.cached;
 		this.cached = this.supplier.getAsFloat();
-
 		return prev != cached;
 	}
 

@@ -123,8 +123,7 @@ public class MutableOptionValues implements OptionValues {
 
 	@Override
 	public ImmutableOptionValues toImmutable() {
-		return new ImmutableOptionValues(options, ImmutableMap.copyOf(booleanValues),
-			ImmutableMap.copyOf(stringValues));
+		return new ImmutableOptionValues(options, ImmutableMap.copyOf(booleanValues), ImmutableMap.copyOf(stringValues));
 	}
 
 	@Override

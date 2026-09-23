@@ -8,10 +8,8 @@ public final class ParserOptions {
 	private final Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers;
 	private final TokenRules tokenRules;
 
-	private ParserOptions(
-		Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers,
-		Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers,
-		TokenRules tokenRules) {
+	private ParserOptions(Char2ObjectMap<? extends OpResolver<? extends UnaryOp>> unaryOpResolvers,
+		Char2ObjectMap<? extends OpResolver<? extends BinaryOp>> binaryOpResolvers, TokenRules tokenRules) {
 		this.unaryOpResolvers = unaryOpResolvers;
 		this.binaryOpResolvers = binaryOpResolvers;
 		this.tokenRules = tokenRules;
@@ -82,12 +80,10 @@ public final class ParserOptions {
 		private final Char2ObjectMap<OpResolver.Builder<BinaryOp>> binaryOpResolvers = new Char2ObjectOpenHashMap<>();
 		private TokenRules tokenRules = TokenRules.DEFAULT;
 
-		private static <T> Char2ObjectMap<? extends OpResolver<? extends T>> buildOpResolvers(
-			Char2ObjectMap<OpResolver.Builder<T>> ops) {
+		private static <T> Char2ObjectMap<? extends OpResolver<? extends T>> buildOpResolvers(Char2ObjectMap<OpResolver.Builder<T>> ops) {
 			Char2ObjectMap<OpResolver<T>> result = new Char2ObjectOpenHashMap<>();
 
-			ops.char2ObjectEntrySet().forEach(
-				entry -> result.put(entry.getCharKey(), entry.getValue().build()));
+			ops.char2ObjectEntrySet().forEach(entry -> result.put(entry.getCharKey(), entry.getValue().build()));
 
 			return result;
 		}
@@ -111,10 +107,7 @@ public final class ParserOptions {
 		}
 
 		public ParserOptions build() {
-			return new ParserOptions(
-				buildOpResolvers(this.unaryOpResolvers),
-				buildOpResolvers(this.binaryOpResolvers),
-				this.tokenRules);
+			return new ParserOptions(buildOpResolvers(this.unaryOpResolvers), buildOpResolvers(this.binaryOpResolvers), this.tokenRules);
 		}
 	}
 }

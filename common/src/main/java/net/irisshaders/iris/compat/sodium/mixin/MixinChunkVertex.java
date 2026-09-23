@@ -15,6 +15,11 @@ public class MixinChunkVertex implements ChunkVertexExtension {
 	private int localPosX, localPosY, localPosZ;
 	private boolean ignoresMidBlock = false;
 
+	@Inject(method = "copyVertexTo", at = @At("HEAD"))
+	private static void iris$copyVertex(ChunkVertexEncoder.Vertex from, ChunkVertexEncoder.Vertex _to, CallbackInfo ci) {
+		((ChunkVertexExtension) from).iris$copyData((ChunkVertexExtension) _to);
+	}
+
 	@Override
 	public void iris$setData(byte blockEmission, byte renderType, int blockId, int localX, int localY, int localZ) {
 		this.blockEmission = blockEmission;
@@ -33,11 +38,6 @@ public class MixinChunkVertex implements ChunkVertexExtension {
 	@Override
 	public void iris$copyData(ChunkVertexExtension dest) {
 		dest.iris$setData(blockEmission, renderType, blockId, localPosX, localPosY, localPosZ);
-	}
-
-	@Inject(method = "copyVertexTo", at = @At("HEAD"))
-	private static void iris$copyVertex(ChunkVertexEncoder.Vertex from, ChunkVertexEncoder.Vertex _to, CallbackInfo ci) {
-		((ChunkVertexExtension) from).iris$copyData((ChunkVertexExtension) _to);
 	}
 
 	@Override

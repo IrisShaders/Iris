@@ -21,7 +21,6 @@ public class IntCachedUniform extends CachedUniform {
 	protected boolean doUpdate() {
 		int prev = this.cached;
 		this.cached = this.supplier.getAsInt();
-
 		return prev != cached;
 	}
 

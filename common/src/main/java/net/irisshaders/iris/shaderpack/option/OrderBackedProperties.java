@@ -35,20 +35,17 @@ public class OrderBackedProperties extends Properties {
 
 	@Override
 	public void store(OutputStream out, String comments) throws IOException {
-		customStore0(new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.ISO_8859_1)),
-			comments, true);
+		customStore0(new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.ISO_8859_1)), comments, true);
 	}
 
 	@Override
 	public void store(Writer out, String comments) throws IOException {
-		customStore0(new BufferedWriter(out),
-			comments, true);
+		customStore0(new BufferedWriter(out), comments, true);
 	}
 
 	//Override to stop '/' or ':' chars from being replaced by not called
 	//saveConvert(key, true, escUnicode)
-	private void customStore0(BufferedWriter bw, String comments, boolean escUnicode)
-		throws IOException {
+	private void customStore0(BufferedWriter bw, String comments, boolean escUnicode) throws IOException {
 		bw.write("#" + new Date());
 		bw.newLine();
 		synchronized (this) {

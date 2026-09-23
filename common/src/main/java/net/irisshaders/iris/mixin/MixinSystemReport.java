@@ -9,8 +9,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.function.Supplier;
-
 /**
  * Adds the current shaderpack and number of changed options to crash reports
  */
@@ -22,7 +20,8 @@ public abstract class MixinSystemReport {
 
 	@Inject(at = @At("RETURN"), method = "<init>")
 	private void fillSystemDetails(CallbackInfo ci) {
-		if (Iris.getCurrentPackName() == null) return; // this also gets called at startup for some reason
+		if (Iris.getCurrentPackName() == null)
+			return; // this also gets called at startup for some reason
 
 		this.setDetail("Loaded Shaderpack", () -> {
 			StringBuilder sb = new StringBuilder(Iris.getCurrentPackName() + (Iris.isFallback() ? " (fallback)" : ""));

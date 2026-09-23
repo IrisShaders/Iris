@@ -12,9 +12,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BeaconRenderer.class)
 public class MixinBeaconRenderer {
-	@Inject(method = "submitBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/resources/Identifier;FFIIIFF)V",
-		at = @At("HEAD"), cancellable = true)
-	private static void iris$noLightBeamInShadowPass(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, Identifier Identifier, float f, float g, int i, int j, int k, float h, float l, CallbackInfo ci) {
+	@Inject(method = "submitBeaconBeam(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/resources/Identifier;FFIIIFF)V", at = @At("HEAD"), cancellable = true)
+	private static void iris$noLightBeamInShadowPass(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, Identifier Identifier,
+		float f, float g, int i, int j, int k, float h, float l, CallbackInfo ci) {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			// TODO: Don't do this if we're doing the "Unified Entity Rendering" optimization
 			// TODO: This isn't necessary on most shaderpacks if we support blockEntityId

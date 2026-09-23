@@ -22,16 +22,15 @@ public class CameraUniforms {
 	public static void addCameraUniforms(UniformHolder uniforms, FrameUpdateNotifier notifier) {
 		CameraPositionTracker tracker = new CameraPositionTracker(notifier);
 
-		uniforms
-			.uniform1f(ONCE, "near", () -> 0.05)
-			.uniform1f(PER_FRAME, "far", CameraUniforms::getRenderDistanceInBlocks)
+		uniforms.uniform1f(ONCE, "near", () -> 0.05).uniform1f(PER_FRAME, "far", CameraUniforms::getRenderDistanceInBlocks)
 			.uniform3d(PER_FRAME, "cameraPosition", tracker::getCurrentCameraPosition)
 			.uniform1f(PER_FRAME, "eyeAltitude", tracker::getCurrentCameraPositionY)
 			.uniform3d(PER_FRAME, "previousCameraPosition", tracker::getPreviousCameraPosition)
 			.uniform3i(PER_FRAME, "cameraPositionInt", () -> getCameraPositionInt(getUnshiftedCameraPosition()))
 			.uniform3f(PER_FRAME, "cameraPositionFract", () -> getCameraPositionFract(getUnshiftedCameraPosition()))
 			.uniform3i(PER_FRAME, "previousCameraPositionInt", () -> getCameraPositionInt(tracker.getPreviousCameraPositionUnshifted()))
-			.uniform3f(PER_FRAME, "previousCameraPositionFract", () -> getCameraPositionFract(tracker.getPreviousCameraPositionUnshifted()));
+			.uniform3f(PER_FRAME, "previousCameraPositionFract",
+				() -> getCameraPositionFract(tracker.getPreviousCameraPositionUnshifted()));
 	}
 
 	private static int getRenderDistanceInBlocks() {
@@ -44,19 +43,12 @@ public class CameraUniforms {
 	}
 
 	public static Vector3f getCameraPositionFract(Vector3d originalPos) {
-		return new Vector3f(
-			(float) (originalPos.x - Math.floor(originalPos.x)),
-			(float) (originalPos.y - Math.floor(originalPos.y)),
-			(float) (originalPos.z - Math.floor(originalPos.z))
-		);
+		return new Vector3f((float) (originalPos.x - Math.floor(originalPos.x)), (float) (originalPos.y - Math.floor(originalPos.y)),
+			(float) (originalPos.z - Math.floor(originalPos.z)));
 	}
 
 	public static Vector3i getCameraPositionInt(Vector3d originalPos) {
-		return new Vector3i(
-			(int) Math.floor(originalPos.x),
-			(int) Math.floor(originalPos.y),
-			(int) Math.floor(originalPos.z)
-		);
+		return new Vector3i((int) Math.floor(originalPos.x), (int) Math.floor(originalPos.y), (int) Math.floor(originalPos.z));
 	}
 
 	static class CameraPositionTracker {

@@ -27,7 +27,5 @@ public interface FeedbackArcSetProvider {
 	 *
 	 * @return feedback arc set
 	 */
-	<V> FeedbackArcSet<V> getFeedbackArcSet(Digraph<V> digraph,
-											EdgeWeights<? super V> weights,
-											FeedbackArcSetPolicy policy);
+	<V> FeedbackArcSet<V> getFeedbackArcSet(Digraph<V> digraph, EdgeWeights<? super V> weights, FeedbackArcSetPolicy policy);
 }

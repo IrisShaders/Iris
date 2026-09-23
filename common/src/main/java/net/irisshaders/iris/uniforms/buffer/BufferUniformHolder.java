@@ -12,7 +12,7 @@ import net.irisshaders.iris.gl.uniform.UniformType;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.parsing.MatrixType;
 import net.irisshaders.iris.parsing.VectorType;
-import net.irisshaders.iris.pipeline.transform.vulkan.VulkanResourceLayout;
+import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
 import org.joml.Matrix3fc;
 import org.joml.Matrix4fc;
@@ -37,20 +37,20 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public final class BufferUniformHolder implements DynamicUniformHolder {
-	private VulkanResourceLayout layout;
-	private ByteBuffer data;
-	private FrameUniforms frameUniforms;
 	private final Map<String, Update> updates = new LinkedHashMap<>();
 	private final Set<String> external = new HashSet<>();
+	private ShaderResourceLayout layout;
+	private ByteBuffer data;
+	private FrameUniforms frameUniforms;
 
-	public BufferUniformHolder(VulkanResourceLayout layout) {
+	public BufferUniformHolder(ShaderResourceLayout layout) {
 		this.layout = layout;
 		this.data = ByteBuffer.allocateDirect(layout.uniformBufferSize()).order(ByteOrder.nativeOrder());
 	}
 
 	public boolean isRegistered(String name) {
-		return updates.containsKey(name) || external.contains(name) ||
-			frameUniforms != null && frameUniforms.layout().uniforms().containsKey(name);
+		return this.updates.containsKey(name) || this.external.contains(
+			name) || this.frameUniforms != null && this.frameUniforms.getLayout().uniforms().containsKey(name);
 	}
 
 	public void useFrameUniforms(FrameUniforms uniforms) {
@@ -58,49 +58,64 @@ public final class BufferUniformHolder implements DynamicUniformHolder {
 	}
 
 	public FrameUniforms frameUniforms() {
-		return frameUniforms;
+		return this.frameUniforms;
+	}
+
+	public Set<String> registeredUniforms() {
+		var names = new HashSet<>(this.updates.keySet());
+		names.addAll(this.external);
+
+		if (this.frameUniforms != null) {
+			names.addAll(this.frameUniforms.getLayout().uniforms().keySet());
+		}
+
+		return Set.copyOf(names);
+	}
+
+	public Set<String> dynamicUniforms() {
+		return Set.copyOf(this.updates.keySet());
 	}
 
 	public boolean isDynamic(String name) {
-		return updates.containsKey(name);
+		return this.updates.containsKey(name);
 	}
 
-	public VulkanResourceLayout frameLayout() {
-		return frameUniforms == null ? null : frameUniforms.layout();
+	public ShaderResourceLayout frameLayout() {
+		return this.frameUniforms == null ? null : this.frameUniforms.getLayout();
 	}
 
-	public void resolveLayout(VulkanResourceLayout resolved) {
-		if (layout.uniforms().equals(resolved.uniforms()) && layout.uniformBufferSize() == resolved.uniformBufferSize()) {
+	public void resolveLayout(ShaderResourceLayout resolved) {
+		if (this.layout.uniforms().equals(resolved.uniforms()) && this.layout.uniformBufferSize() == resolved.uniformBufferSize()) {
 			return;
 		}
 
 		var replacement = ByteBuffer.allocateDirect(resolved.uniformBufferSize()).order(ByteOrder.nativeOrder());
 		resolved.uniforms().forEach((name, uniform) -> {
-			var previous = layout.uniforms().get(name);
+			var previous = this.layout.uniforms().get(name);
 
 			if (previous != null) {
 				if (!previous.type().equals(uniform.type())) {
-					throw new IllegalArgumentException("Uniform type changed: " + name);
+					throw new IllegalArgumentException("uniform type changed: " + name);
 				}
 
-				replacement.put(uniform.offset(), data, previous.offset(), uniform.type().size());
+				replacement.put(uniform.offset(), this.data, previous.offset(), uniform.type().size());
 			}
 		});
 
-		for (var name : updates.keySet()) {
+		for (var name : this.updates.keySet()) {
 			if (!resolved.uniforms().containsKey(name)) {
-				throw new IllegalArgumentException("Registered uniform removed: " + name);
+				throw new IllegalArgumentException("registered uniform removed: " + name);
 			}
 		}
 
-		layout = resolved;
-		data = replacement;
+		this.layout = resolved;
+		this.data = replacement;
 	}
 
 	public boolean bindCachedUniform(CachedUniform uniform) {
 		String name = uniform.getName();
 
-		if (!layout.uniforms().containsKey(name)) {
+		if (!this.layout.uniforms().containsKey(name)) {
 			return false;
 		}
 
@@ -108,80 +123,80 @@ public final class BufferUniformHolder implements DynamicUniformHolder {
 		Type type = uniform.getType();
 
 		if (type.equals(Type.Boolean)) {
-			uniform1b(UniformUpdateFrequency.CUSTOM, name, () -> {
+			this.uniform1b(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return value.booleanReturn;
 			});
 		} else if (type.equals(Type.Int)) {
-			uniform1i(UniformUpdateFrequency.CUSTOM, name, () -> {
+			this.uniform1i(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return value.intReturn;
 			});
 		} else if (type.equals(Type.Float)) {
-			uniform1f(UniformUpdateFrequency.CUSTOM, name, (FloatSupplier) () -> {
+			this.uniform1f(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return value.floatReturn;
 			});
 		} else if (type.equals(VectorType.VEC2)) {
-			uniform2f(UniformUpdateFrequency.CUSTOM, name, () -> {
+			this.uniform2f(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return (Vector2f) value.objectReturn;
 			});
 		} else if (type.equals(VectorType.VEC3)) {
-			uniform3f(UniformUpdateFrequency.CUSTOM, name, () -> {
+			this.uniform3f(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return (Vector3f) value.objectReturn;
 			});
 		} else if (type.equals(VectorType.VEC4)) {
-			uniform4f(UniformUpdateFrequency.CUSTOM, name, () -> {
+			this.uniform4f(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return (Vector4f) value.objectReturn;
 			});
 		} else if (type.equals(VectorType.I_VEC2)) {
-			uniform2i(UniformUpdateFrequency.CUSTOM, name, () -> {
+			this.uniform2i(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return (Vector2i) value.objectReturn;
 			});
 		} else if (type.equals(VectorType.I_VEC3)) {
-			uniform3i(UniformUpdateFrequency.CUSTOM, name, () -> {
+			this.uniform3i(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return (Vector3i) value.objectReturn;
 			});
 		} else if (type.equals(VectorType.I_VEC4)) {
-			uniform4i(name, () -> {
+			this.uniform4i(name, () -> {
 				uniform.writeTo(value);
 
 				return (Vector4i) value.objectReturn;
 			}, null);
 		} else if (type.equals(MatrixType.MAT3)) {
-			uniformMatrix3(UniformUpdateFrequency.CUSTOM, name, () -> {
+			this.uniformMatrix3(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return (Matrix3fc) value.objectReturn;
 			});
 		} else if (type.equals(MatrixType.MAT4)) {
-			uniformMatrix(UniformUpdateFrequency.CUSTOM, name, () -> {
+			this.uniformMatrix(UniformUpdateFrequency.CUSTOM, name, () -> {
 				uniform.writeTo(value);
 
 				return (Matrix4fc) value.objectReturn;
 			});
 		} else {
-			throw new IllegalArgumentException("Unsupported cached uniform type: " + name + " " + type);
+			throw new IllegalArgumentException("unsupported cached uniform type: " + name + " " + type);
 		}
 
 		return true;
 	}
 
 	public void update(long tick, long frame) {
-		for (Update update : updates.values()) {
+		for (Update update : this.updates.values()) {
 			boolean due = !update.initialized || switch (update.frequency) {
 				case ONCE -> false;
 				case PER_TICK -> tick != update.tick;
@@ -199,53 +214,54 @@ public final class BufferUniformHolder implements DynamicUniformHolder {
 	}
 
 	public ByteBuffer data() {
-		return data.asReadOnlyBuffer().order(ByteOrder.nativeOrder());
+		return this.data.asReadOnlyBuffer().order(ByteOrder.nativeOrder());
 	}
 
 	public GpuBufferSlice upload(CommandEncoder encoder, int uniformOffsetAlignment) {
-		if (data.capacity() == 0) {
-			throw new IllegalStateException("This program has no loose uniforms");
+		if (this.data.capacity() == 0) {
+			throw new IllegalStateException("this program has no loose uniforms");
 		}
 
 		if (uniformOffsetAlignment <= 0) {
-			throw new IllegalArgumentException("Invalid uniform offset alignment");
+			throw new IllegalArgumentException("invalid uniform offset alignment");
 		}
 
-		return encoder.transientMemory().uploadGpu(data(), uniformOffsetAlignment, GpuBuffer.USAGE_UNIFORM);
+		return encoder.transientMemory().uploadGpu(this.data(), uniformOffsetAlignment, GpuBuffer.USAGE_UNIFORM);
 	}
 
 	private BufferUniformHolder register(UniformUpdateFrequency frequency, String name, String expected, IntConsumer writer) {
-		var uniform = layout.uniforms().get(name);
+		var uniform = this.layout.uniforms().get(name);
 
 		if (uniform == null) {
 			return this;
 		}
 
-		checkType(name, expected);
+		this.checkType(name, expected);
 
-		if (frameUniforms != null && frequency != UniformUpdateFrequency.CUSTOM && frameUniforms.layout().uniforms().containsKey(name)) {
+		if (this.frameUniforms != null && frequency != UniformUpdateFrequency.CUSTOM && this.frameUniforms.getLayout().uniforms()
+			.containsKey(name)) {
 			return this;
 		}
 
-		updates.put(name, new Update(frequency, () -> writer.accept(layout.uniforms().get(name).offset())));
+		this.updates.put(name, new Update(frequency, () -> writer.accept(this.layout.uniforms().get(name).offset())));
 
 		return this;
 	}
 
 	private void checkType(String name, String expected) {
-		var type = layout.uniforms().get(name).type();
+		var type = this.layout.uniforms().get(name).type();
 
 		if (!type.dimensions().isEmpty() || !(type.glsl().equals(expected) || expected.equals("int") && type.glsl().equals("bool"))) {
-			throw new IllegalArgumentException("Uniform " + name + " expects " + type + ", received " + expected);
+			throw new IllegalArgumentException("uniform " + name + " expects " + type + ", received " + expected);
 		}
 	}
 
 	@Override
 	public BufferUniformHolder externallyManagedUniform(String name, UniformType type) {
-		external.add(name);
+		this.external.add(name);
 
-		if (layout.uniforms().containsKey(name)) {
-			checkType(name, switch (type) {
+		if (this.layout.uniforms().containsKey(name)) {
+			this.checkType(name, switch (type) {
 				case INT -> "int";
 				case FLOAT -> "float";
 				case MAT3 -> "mat3";
@@ -264,131 +280,131 @@ public final class BufferUniformHolder implements DynamicUniformHolder {
 
 	@Override
 	public BufferUniformHolder uniform1f(UniformUpdateFrequency frequency, String name, FloatSupplier value) {
-		return register(frequency, name, "float", offset -> {
-			data.putFloat(offset, value.getAsFloat());
+		return this.register(frequency, name, "float", offset -> {
+			this.data.putFloat(offset, value.getAsFloat());
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform1f(UniformUpdateFrequency frequency, String name, IntSupplier value) {
-		return register(frequency, name, "float", offset -> {
-			data.putFloat(offset, value.getAsInt());
+		return this.register(frequency, name, "float", offset -> {
+			this.data.putFloat(offset, value.getAsInt());
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform1f(UniformUpdateFrequency frequency, String name, DoubleSupplier value) {
-		return register(frequency, name, "float", offset -> {
-			data.putFloat(offset, (float) value.getAsDouble());
+		return this.register(frequency, name, "float", offset -> {
+			this.data.putFloat(offset, (float) value.getAsDouble());
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform1i(UniformUpdateFrequency frequency, String name, IntSupplier value) {
-		return register(frequency, name, "int", offset -> {
-			data.putInt(offset, value.getAsInt());
+		return this.register(frequency, name, "int", offset -> {
+			this.data.putInt(offset, value.getAsInt());
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform1b(UniformUpdateFrequency frequency, String name, BooleanSupplier value) {
-		return register(frequency, name, "int", offset -> {
-			data.putInt(offset, value.getAsBoolean() ? 1 : 0);
+		return this.register(frequency, name, "int", offset -> {
+			this.data.putInt(offset, value.getAsBoolean() ? 1 : 0);
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform2f(UniformUpdateFrequency frequency, String name, Supplier<Vector2f> value) {
-		return register(frequency, name, "vec2", offset -> {
+		return this.register(frequency, name, "vec2", offset -> {
 			var vector = value.get();
-			data.putFloat(offset + 0, vector.x);
-			data.putFloat(offset + 4, vector.y);
+			this.data.putFloat(offset, vector.x);
+			this.data.putFloat(offset + 4, vector.y);
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform2i(UniformUpdateFrequency frequency, String name, Supplier<Vector2i> value) {
-		return register(frequency, name, "ivec2", offset -> {
+		return this.register(frequency, name, "ivec2", offset -> {
 			var vector = value.get();
-			data.putInt(offset + 0, vector.x);
-			data.putInt(offset + 4, vector.y);
+			this.data.putInt(offset, vector.x);
+			this.data.putInt(offset + 4, vector.y);
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform3f(UniformUpdateFrequency frequency, String name, Supplier<Vector3f> value) {
-		return register(frequency, name, "vec3", offset -> {
+		return this.register(frequency, name, "vec3", offset -> {
 			var vector = value.get();
-			data.putFloat(offset + 0, vector.x);
-			data.putFloat(offset + 4, vector.y);
-			data.putFloat(offset + 8, vector.z);
+			this.data.putFloat(offset, vector.x);
+			this.data.putFloat(offset + 4, vector.y);
+			this.data.putFloat(offset + 8, vector.z);
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform3i(UniformUpdateFrequency frequency, String name, Supplier<Vector3i> value) {
-		return register(frequency, name, "ivec3", offset -> {
+		return this.register(frequency, name, "ivec3", offset -> {
 			var vector = value.get();
-			data.putInt(offset + 0, vector.x);
-			data.putInt(offset + 4, vector.y);
-			data.putInt(offset + 8, vector.z);
+			this.data.putInt(offset, vector.x);
+			this.data.putInt(offset + 4, vector.y);
+			this.data.putInt(offset + 8, vector.z);
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform4f(UniformUpdateFrequency frequency, String name, Supplier<Vector4f> value) {
-		return register(frequency, name, "vec4", offset -> {
+		return this.register(frequency, name, "vec4", offset -> {
 			var vector = value.get();
-			data.putFloat(offset + 0, vector.x);
-			data.putFloat(offset + 4, vector.y);
-			data.putFloat(offset + 8, vector.z);
-			data.putFloat(offset + 12, vector.w);
+			this.data.putFloat(offset, vector.x);
+			this.data.putFloat(offset + 4, vector.y);
+			this.data.putFloat(offset + 8, vector.z);
+			this.data.putFloat(offset + 12, vector.w);
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniformTruncated3f(UniformUpdateFrequency frequency, String name, Supplier<Vector4f> value) {
-		return register(frequency, name, "vec3", offset -> {
+		return this.register(frequency, name, "vec3", offset -> {
 			var vector = value.get();
-			data.putFloat(offset, vector.x);
-			data.putFloat(offset + 4, vector.y);
-			data.putFloat(offset + 8, vector.z);
+			this.data.putFloat(offset, vector.x);
+			this.data.putFloat(offset + 4, vector.y);
+			this.data.putFloat(offset + 8, vector.z);
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform3d(UniformUpdateFrequency frequency, String name, Supplier<Vector3d> value) {
-		return register(frequency, name, "vec3", offset -> {
+		return this.register(frequency, name, "vec3", offset -> {
 			var vector = value.get();
-			data.putFloat(offset, (float) vector.x);
-			data.putFloat(offset + 4, (float) vector.y);
-			data.putFloat(offset + 8, (float) vector.z);
+			this.data.putFloat(offset, (float) vector.x);
+			this.data.putFloat(offset + 4, (float) vector.y);
+			this.data.putFloat(offset + 8, (float) vector.z);
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform4fArray(UniformUpdateFrequency frequency, String name, Supplier<float[]> value) {
-		return register(frequency, name, "vec4", offset -> {
+		return this.register(frequency, name, "vec4", offset -> {
 			float[] vector = value.get();
 
 			if (vector.length < 4) {
-				throw new IllegalArgumentException("Expected four components");
+				throw new IllegalArgumentException("expected four components");
 			}
 
 			for (int i = 0; i < 4; i++) {
-				data.putFloat(offset + i * 4, vector[i]);
+				this.data.putFloat(offset + i * 4, vector[i]);
 			}
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniformMatrix(UniformUpdateFrequency frequency, String name, Supplier<Matrix4fc> value) {
-		return register(frequency, name, "mat4", offset -> {
+		return this.register(frequency, name, "mat4", offset -> {
 			var matrix = value.get();
 
 			for (int column = 0; column < 4; column++) {
 				for (int row = 0; row < 4; row++) {
-					data.putFloat(offset + column * 16 + row * 4, matrix.get(column, row));
+					this.data.putFloat(offset + column * 16 + row * 4, matrix.get(column, row));
 				}
 			}
 		});
@@ -396,106 +412,106 @@ public final class BufferUniformHolder implements DynamicUniformHolder {
 
 	@Override
 	public BufferUniformHolder uniformMatrixFromArray(UniformUpdateFrequency frequency, String name, Supplier<float[]> value) {
-		return register(frequency, name, "mat4", offset -> {
+		return this.register(frequency, name, "mat4", offset -> {
 			float[] matrix = value.get();
 
 			if (matrix.length < 16) {
-				throw new IllegalArgumentException("Expected sixteen matrix components");
+				throw new IllegalArgumentException("expected sixteen matrix components");
 			}
 
 			for (int i = 0; i < 16; i++) {
-				data.putFloat(offset + i * 4, matrix[i]);
+				this.data.putFloat(offset + i * 4, matrix[i]);
 			}
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniform1f(String name, FloatSupplier value, ValueUpdateNotifier notifier) {
-		return uniform1f(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniform1f(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniform1f(String name, IntSupplier value, ValueUpdateNotifier notifier) {
-		return uniform1f(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniform1f(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniform1f(String name, DoubleSupplier value, ValueUpdateNotifier notifier) {
-		return uniform1f(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniform1f(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniform1i(String name, IntSupplier value, ValueUpdateNotifier notifier) {
-		return uniform1i(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniform1i(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniform2f(String name, Supplier<Vector2f> value, ValueUpdateNotifier notifier) {
-		return uniform2f(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniform2f(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniform2i(String name, Supplier<Vector2i> value, ValueUpdateNotifier notifier) {
-		return uniform2i(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniform2i(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniform3f(String name, Supplier<Vector3f> value, ValueUpdateNotifier notifier) {
-		return uniform3f(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniform3f(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniform4f(String name, Supplier<Vector4f> value, ValueUpdateNotifier notifier) {
-		return uniform4f(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniform4f(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniform4fArray(String name, Supplier<float[]> value, ValueUpdateNotifier notifier) {
-		return uniform4fArray(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniform4fArray(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniformMatrix(String name, Supplier<Matrix4fc> value, ValueUpdateNotifier notifier) {
-		return uniformMatrix(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniformMatrix(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniform4i(String name, Supplier<Vector4i> value, ValueUpdateNotifier notifier) {
-		return register(UniformUpdateFrequency.CUSTOM, name, "ivec4", offset -> {
+		return this.register(UniformUpdateFrequency.CUSTOM, name, "ivec4", offset -> {
 			var vector = value.get();
-			data.putInt(offset, vector.x);
-			data.putInt(offset + 4, vector.y);
-			data.putInt(offset + 8, vector.z);
-			data.putInt(offset + 12, vector.w);
+			this.data.putInt(offset, vector.x);
+			this.data.putInt(offset + 4, vector.y);
+			this.data.putInt(offset + 8, vector.z);
+			this.data.putInt(offset + 12, vector.w);
 		});
 	}
 
 	@Override
 	public BufferUniformHolder uniformMatrix3(String name, Supplier<Matrix3fc> value, ValueUpdateNotifier notifier) {
-		return uniformMatrix3(UniformUpdateFrequency.CUSTOM, name, value);
+		return this.uniformMatrix3(UniformUpdateFrequency.CUSTOM, name, value);
 	}
 
 	@Override
 	public BufferUniformHolder uniformMatrix3(UniformUpdateFrequency frequency, String name, Supplier<Matrix3fc> value) {
-		return register(frequency, name, "mat3", offset -> {
+		return this.register(frequency, name, "mat3", offset -> {
 			var matrix = value.get();
 
 			for (int column = 0; column < 3; column++) {
 				for (int row = 0; row < 3; row++) {
-					data.putFloat(offset + column * 16 + row * 4, matrix.get(column, row));
+					this.data.putFloat(offset + column * 16 + row * 4, matrix.get(column, row));
 				}
 			}
 		});
 	}
 
 	private static final class Update {
-		final UniformUpdateFrequency frequency;
-		final Runnable writer;
-		boolean initialized;
-		long tick;
-		long frame;
+		private final UniformUpdateFrequency frequency;
+		private final Runnable writer;
+		private boolean initialized;
+		private long tick;
+		private long frame;
 
-		Update(UniformUpdateFrequency frequency, Runnable writer) {
+		private Update(UniformUpdateFrequency frequency, Runnable writer) {
 			this.frequency = frequency;
 			this.writer = writer;
 		}

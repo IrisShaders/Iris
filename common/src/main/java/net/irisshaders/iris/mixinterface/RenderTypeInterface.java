@@ -1,8 +1,7 @@
 package net.irisshaders.iris.mixinterface;
 
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import net.minecraft.client.renderer.RenderPipelines;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 
 public interface RenderTypeInterface {
 	default RenderTarget iris$getRenderTarget() {

@@ -16,7 +16,6 @@ import net.irisshaders.iris.pbr.texture.PBRSpriteHolder;
 import net.irisshaders.iris.pbr.texture.PBRType;
 import net.irisshaders.iris.pbr.texture.SpriteContentsExtension;
 import net.irisshaders.iris.pbr.util.ImageManipulationUtil;
-import net.minecraft.client.renderer.texture.MipmapStrategy;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -36,12 +35,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
-	public static final ChannelMipmapGenerator LINEAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(
-		LinearBlendFunction.INSTANCE,
-		LinearBlendFunction.INSTANCE,
-		LinearBlendFunction.INSTANCE,
-		LinearBlendFunction.INSTANCE
-	);
+	public static final ChannelMipmapGenerator LINEAR_MIPMAP_GENERATOR = new ChannelMipmapGenerator(LinearBlendFunction.INSTANCE,
+		LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE, LinearBlendFunction.INSTANCE);
 
 	@Override
 	public void load(TextureAtlas atlas, ResourceManager resourceManager, PBRTextureConsumer pbrTextureConsumer) {
@@ -53,8 +48,10 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		PBRAtlasTexture normalAtlas = null;
 		PBRAtlasTexture specularAtlas = null;
 		for (TextureAtlasSprite sprite : ((TextureAtlasAccessor) atlas).getTexturesByName().values()) {
-			PBRTextureAtlasSprite normalSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, maxLevel, PBRType.NORMAL);
-			PBRTextureAtlasSprite specularSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, maxLevel, PBRType.SPECULAR);
+			PBRTextureAtlasSprite normalSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, maxLevel,
+				PBRType.NORMAL);
+			PBRTextureAtlasSprite specularSprite = createPBRSprite(sprite, resourceManager, atlas, atlasWidth, atlasHeight, maxLevel,
+				PBRType.SPECULAR);
 			if (normalSprite != null) {
 				if (normalAtlas == null) {
 					normalAtlas = new PBRAtlasTexture(atlas, PBRType.NORMAL);
@@ -86,7 +83,8 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 	}
 
 	@Nullable
-	protected PBRTextureAtlasSprite createPBRSprite(TextureAtlasSprite sprite, ResourceManager resourceManager, TextureAtlas atlas, int atlasWidth, int atlasHeight, int mipLevel, PBRType pbrType) {
+	protected PBRTextureAtlasSprite createPBRSprite(TextureAtlasSprite sprite, ResourceManager resourceManager, TextureAtlas atlas,
+		int atlasWidth, int atlasHeight, int mipLevel, PBRType pbrType) {
 		Identifier spriteName = sprite.contents().name();
 		Identifier pbrImageLocation = getPBRImageLocation(spriteName, pbrType);
 
@@ -115,11 +113,13 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		int imageWidth = nativeImage.getWidth();
 		int imageHeight = nativeImage.getHeight();
 		AnimationMetadataSection metadataSection = animationMetadata.getSection(AnimationMetadataSection.TYPE).orElse(null);
-		FrameSize frameSize = metadataSection != null ? metadataSection.calculateFrameSize(imageWidth, imageHeight) : new FrameSize(imageWidth, imageHeight);
+		FrameSize frameSize = metadataSection != null ? metadataSection.calculateFrameSize(imageWidth, imageHeight) : new FrameSize(
+			imageWidth, imageHeight);
 		int frameWidth = frameSize.width();
 		int frameHeight = frameSize.height();
 		if (!Mth.isMultipleOf(imageWidth, frameWidth) || !Mth.isMultipleOf(imageHeight, frameHeight)) {
-			Iris.logger.error("Image {} size {},{} is not multiple of frame size {},{}", pbrImageLocation, imageWidth, imageHeight, frameWidth, frameHeight);
+			Iris.logger.error("Image {} size {},{} is not multiple of frame size {},{}", pbrImageLocation, imageWidth, imageHeight,
+				frameWidth, frameHeight);
 			nativeImage.close();
 			return null;
 		}
@@ -157,13 +157,15 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 					}
 				}
 			} catch (Exception e) {
-				Iris.logger.error("Something bad happened trying to load PBR texture " + spriteName.getPath() + pbrType.getSuffix() + "!", e);
+				Iris.logger.error("Something bad happened trying to load PBR texture " + spriteName.getPath() + pbrType.getSuffix() + "!",
+					e);
 				throw e;
 			}
 		}
 
 		Identifier pbrSpriteName = Identifier.fromNamespaceAndPath(spriteName.getNamespace(), spriteName.getPath() + pbrType.getSuffix());
-		PBRSpriteContents pbrSpriteContents = new PBRSpriteContents(pbrSpriteName, new FrameSize(frameWidth, frameHeight), nativeImage, animationMetadata, pbrType);
+		PBRSpriteContents pbrSpriteContents = new PBRSpriteContents(pbrSpriteName, new FrameSize(frameWidth, frameHeight), nativeImage,
+			animationMetadata, pbrType);
 		pbrSpriteContents.increaseMipLevel(mipLevel);
 		return new PBRTextureAtlasSprite(pbrSpriteName, pbrSpriteContents, atlasWidth, atlasHeight, sprite.getX(), sprite.getY(), sprite);
 	}
@@ -181,7 +183,8 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 		protected final PBRType pbrType;
 
 		public PBRSpriteContents(Identifier name, FrameSize size, NativeImage image, ResourceMetadata metadata, PBRType pbrType) {
-			super(name, size, image, metadata.getSection(AnimationMetadataSection.TYPE), List.of(), metadata.getSection(TextureMetadataSection.TYPE));
+			super(name, size, image, metadata.getSection(AnimationMetadataSection.TYPE), List.of(),
+				metadata.getSection(TextureMetadataSection.TYPE));
 			this.pbrType = pbrType;
 		}
 
@@ -200,9 +203,10 @@ public class AtlasPBRLoader implements PBRTextureLoader<TextureAtlas> {
 
 	public static class PBRTextureAtlasSprite extends TextureAtlasSprite {
 		protected final TextureAtlasSprite baseSprite;
-		private SpriteContents pbrContents;
+		private final SpriteContents pbrContents;
 
-		protected PBRTextureAtlasSprite(Identifier location, PBRSpriteContents contents, int atlasWidth, int atlasHeight, int x, int y, TextureAtlasSprite baseSprite) {
+		protected PBRTextureAtlasSprite(Identifier location, PBRSpriteContents contents, int atlasWidth, int atlasHeight, int x, int y,
+			TextureAtlasSprite baseSprite) {
 			super(location, contents, atlasWidth, atlasHeight, x, y, ((TextureAtlasSpriteAccessor) baseSprite).getPadding());
 			this.baseSprite = baseSprite;
 			this.pbrContents = contents;

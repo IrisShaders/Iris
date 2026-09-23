@@ -4,12 +4,11 @@ import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.components.AbstractWidget;
 
-import java.util.function.Consumer;
-
 public class ShadowDistanceOption<T> extends OptionInstance<T> {
 
 
-	public ShadowDistanceOption(String captionId, TooltipSupplier<T> tooltip, CaptionBasedToString<T> toString, ValueSet<T> values, T initialValue, ValueUpdateListener<? super T> onValueUpdate) {
+	public ShadowDistanceOption(String captionId, TooltipSupplier<T> tooltip, CaptionBasedToString<T> toString, ValueSet<T> values,
+		T initialValue, ValueUpdateListener<? super T> onValueUpdate) {
 		super(captionId, tooltip, toString, values, initialValue, onValueUpdate);
 	}
 

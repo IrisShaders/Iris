@@ -1,4 +1,4 @@
-accessWidener	v1	official
+classTweaker	v2	official
 
 accessible  class   com/mojang/renderpearl/backend/opengl/GlStateManager$BlendState
 accessible  class   com/mojang/renderpearl/backend/opengl/GlStateManager$BooleanState
@@ -30,3 +30,9 @@ accessible class com/mojang/renderpearl/backend/opengl/GlCommandEncoder
 accessible field com/mojang/renderpearl/backend/opengl/GlBuffer handle I
 accessible field net/minecraft/client/renderer/blockentity/state/BlockEntityRenderState blockState Lnet/minecraft/world/level/block/state/BlockState;
 extendable class com/mojang/renderpearl/backend/opengl/GlRenderPipeline
+accessible method com/mojang/renderpearl/backend/vulkan/VulkanCommandEncoder commandBuffer ()Lorg/lwjgl/vulkan/VkCommandBuffer;
+accessible field com/mojang/renderpearl/backend/vulkan/VulkanCommandEncoder currentRenderPass Lcom/mojang/renderpearl/backend/vulkan/VulkanRenderPass;
+
+extend-enum com/mojang/renderpearl/api/GpuFormat IRIS_RGB565_UNORM
+extend-enum com/mojang/renderpearl/api/GpuFormat IRIS_RGB5A1_UNORM
+extend-enum com/mojang/renderpearl/api/GpuFormat IRIS_RGB9E5_FLOAT

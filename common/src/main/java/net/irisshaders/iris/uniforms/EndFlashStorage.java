@@ -8,7 +8,8 @@ public class EndFlashStorage {
 
 	public void tick() {
 		lastEndFlash = currentEndFlash;
-		currentEndFlash = Minecraft.getInstance().level.endFlashState() == null ? 0 : Minecraft.getInstance().level.endFlashState().getIntensity(CapturedRenderingState.INSTANCE.getTickDelta());
+		currentEndFlash = Minecraft.getInstance().level.endFlashState() == null ? 0 : Minecraft.getInstance().level.endFlashState()
+			.getIntensity(CapturedRenderingState.INSTANCE.getTickDelta());
 	}
 
 	public float getLastEndFlash() {

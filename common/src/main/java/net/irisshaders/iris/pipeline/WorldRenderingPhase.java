@@ -1,6 +1,5 @@
 package net.irisshaders.iris.pipeline;
 
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 
 public enum WorldRenderingPhase {

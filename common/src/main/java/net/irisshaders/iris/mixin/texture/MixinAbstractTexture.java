@@ -28,7 +28,7 @@ public abstract class MixinAbstractTexture implements AbstractTextureExtended {
 	private void iris$afterGenerateId(CallbackInfoReturnable<GpuTexture> cir) {
 		if (lastChecked != cir.getReturnValue()) {
 			lastChecked = cir.getReturnValue();
-			TextureTracker.INSTANCE.trackTexture(lastChecked, (AbstractTexture) (Object) this);
+			TextureTracker.INSTANCE.trackTexture(this.lastChecked, (AbstractTexture) (Object) this);
 
 		}
 	}

@@ -26,9 +26,8 @@ public class BiomeUniforms {
 	}
 
 	public static void addBiomeUniforms(UniformHolder uniforms) {
-		uniforms
-			.uniform1i(PER_TICK, "biome", playerI(player ->
-				biomeMap.getInt(player.level().getBiome(player.blockPosition()).unwrapKey().orElse(null))))
+		uniforms.uniform1i(PER_TICK, "biome",
+				playerI(player -> biomeMap.getInt(player.level().getBiome(player.blockPosition()).unwrapKey().orElse(null))))
 			.uniform1i(PER_TICK, "biome_category", playerI(player -> {
 				Holder<Biome> holder = player.level().getBiome(player.blockPosition());
 				ExtendedBiome extendedBiome = ((ExtendedBiome) (Object) holder.value());
@@ -38,19 +37,18 @@ public class BiomeUniforms {
 				} else {
 					return extendedBiome.getBiomeCategory();
 				}
-			}))
-			.uniform1i(PER_TICK, "biome_precipitation", playerI(player -> {
-				Biome.Precipitation precipitation = player.level().getBiome(player.blockPosition()).value().getPrecipitationAt(player.blockPosition(), player.level().getSeaLevel());
+			})).uniform1i(PER_TICK, "biome_precipitation", playerI(player -> {
+				Biome.Precipitation precipitation = player.level().getBiome(player.blockPosition()).value()
+					.getPrecipitationAt(player.blockPosition(), player.level().getSeaLevel());
 				return switch (precipitation) {
 					case NONE -> 0;
 					case RAIN -> 1;
 					case SNOW -> 2;
 				};
-			}))
-			.uniform1f(PER_TICK, "rainfall", playerF(player ->
-				((ExtendedBiome) (Object) player.level().getBiome(player.blockPosition()).value()).getDownfall()))
-			.uniform1f(PER_TICK, "temperature", playerF(player ->
-				player.level().getBiome(player.blockPosition()).value().getBaseTemperature()));
+			})).uniform1f(PER_TICK, "rainfall",
+				playerF(player -> ((ExtendedBiome) (Object) player.level().getBiome(player.blockPosition()).value()).getDownfall()))
+			.uniform1f(PER_TICK, "temperature",
+				playerF(player -> player.level().getBiome(player.blockPosition()).value().getBaseTemperature()));
 	}
 
 	private static BiomeCategories getBiomeCategory(Holder<Biome> holder) {
@@ -83,8 +81,8 @@ public class BiomeUniforms {
 			return BiomeCategories.RIVER;
 		} else if (holder.is(BiomeTags.ALLOWS_SURFACE_SLIME_SPAWNS)) {
 			return BiomeCategories.SWAMP;
-		//} else if (holder.is(BiomeTags.PLAYS_UNDERWATER_MUSIC)) {
-		//	return BiomeCategories.UNDERGROUND; TODO 1.21.11: no good way to do this???
+			//} else if (holder.is(BiomeTags.PLAYS_UNDERWATER_MUSIC)) {
+			//	return BiomeCategories.UNDERGROUND; TODO 1.21.11: no good way to do this???
 		} else if (holder.is(BiomeTags.WITHOUT_ZOMBIE_SIEGES)) {
 			return BiomeCategories.MUSHROOM;
 		} else if (holder.is(BiomeTags.IS_MOUNTAIN)) {

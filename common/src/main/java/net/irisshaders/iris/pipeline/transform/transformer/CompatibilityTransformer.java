@@ -58,31 +58,23 @@ import java.util.stream.Stream;
 public class CompatibilityTransformer {
 	private static final Logger LOGGER = LogManager.getLogger(CompatibilityTransformer.class);
 
-	private static final AutoHintedMatcher<Expression> sildursWaterFract = new AutoHintedMatcher<>(
-		"fract(worldpos.y + 0.001)", ParseShape.EXPRESSION);
+	private static final AutoHintedMatcher<Expression> sildursWaterFract = new AutoHintedMatcher<>("fract(worldpos.y + 0.001)",
+		ParseShape.EXPRESSION);
 	private static final ShaderType[] pipeline = {ShaderType.VERTEX, ShaderType.TESSELATION_CONTROL, ShaderType.TESSELATION_EVAL, ShaderType.GEOMETRY, ShaderType.FRAGMENT};
-	private static final Matcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(
-		StorageType.OUT);
-	private static final Matcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(
-		StorageType.IN);
+	private static final Matcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(StorageType.OUT);
+	private static final Matcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(StorageType.IN);
 	private static final String tagPrefix = "iris_template_";
-	private static final Template<ExternalDeclaration> declarationTemplate = Template
-		.withExternalDeclaration("out __type __name;");
+	private static final Template<ExternalDeclaration> declarationTemplate = Template.withExternalDeclaration("out __type __name;");
 	private static final Template<Statement> initTemplate = Template.withStatement("__decl = __value;");
-	private static final Template<ExternalDeclaration> variableTemplate = Template
-		.withExternalDeclaration("__type __internalDecl;");
-	private static final Template<Statement> statementTemplate = Template
-		.withStatement("__oldDecl = vec3(__internalDecl);");
-	private static final Template<Statement> statementTemplateVector = Template
-		.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
-	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<>(
-		"out float name;",
+	private static final Template<ExternalDeclaration> variableTemplate = Template.withExternalDeclaration("__type __internalDecl;");
+	private static final Template<Statement> statementTemplate = Template.withStatement("__oldDecl = vec3(__internalDecl);");
+	private static final Template<Statement> statementTemplateVector = Template.withStatement("__oldDecl = vec3(__internalDecl, vec4(0));");
+	private static final Matcher<ExternalDeclaration> nonLayoutOutDeclarationMatcher = new Matcher<>("out float name;",
 		ParseShape.EXTERNAL_DECLARATION) {
 		{
 			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
 			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*",
-				pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+			markClassWildcard("name*", pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
 		}
 
 		@Override
@@ -107,14 +99,13 @@ public class CompatibilityTransformer {
 			return hasOutQualifier;
 		}
 	};
-	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template
-		.withExternalDeclaration("out __type __name;");
+	private static final Template<ExternalDeclaration> layoutedOutDeclarationTemplate = Template.withExternalDeclaration(
+		"out __type __name;");
 	private static final String attachTargetPrefix = "outColor";
 	private static final List<String> reservedWords = List.of("texture", "sample");
 
 	static {
-		declarationTemplate
-			.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getUnique(TypeQualifier.class));
+		declarationTemplate.markLocalReplacement(declarationTemplate.getSourceRoot().nodeIndex.getUnique(TypeQualifier.class));
 		declarationTemplate.markLocalReplacement("__type", TypeSpecifier.class);
 		declarationTemplate.markIdentifierReplacement("__name");
 		initTemplate.markIdentifierReplacement("__decl");
@@ -123,9 +114,8 @@ public class CompatibilityTransformer {
 		variableTemplate.markIdentifierReplacement("__internalDecl");
 		statementTemplate.markIdentifierReplacement("__oldDecl");
 		statementTemplate.markIdentifierReplacement("__internalDecl");
-		statementTemplate.markLocalReplacement(
-			statementTemplate.getSourceRoot().nodeIndex.getStream(BuiltinNumericTypeSpecifier.class)
-				.filter(specifier -> specifier.type == Type.F32VEC3).findAny().get());
+		statementTemplate.markLocalReplacement(statementTemplate.getSourceRoot().nodeIndex.getStream(BuiltinNumericTypeSpecifier.class)
+			.filter(specifier -> specifier.type == Type.F32VEC3).findAny().get());
 		statementTemplateVector.markIdentifierReplacement("__oldDecl");
 		statementTemplateVector.markIdentifierReplacement("__internalDecl");
 		statementTemplateVector.markLocalReplacement(
@@ -155,10 +145,11 @@ public class CompatibilityTransformer {
 	}
 
 	public static void transformEach(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
+		HashTransformer.transform(t, tree, root);
 		if (parameters.type == PatchShaderType.VERTEX) {
 			if (root.replaceExpressionMatches(t, sildursWaterFract, "fract(worldpos.y + 0.01)")) {
-				Iris.logger.warn("Patched fract(worldpos.y + 0.001) to fract(worldpos.y + 0.01) to fix " +
-					"waving water disconnecting from other water blocks; See https://github.com/IrisShaders/Iris/issues/509");
+				Iris.logger.warn(
+					"Patched fract(worldpos.y + 0.001) to fract(worldpos.y + 0.01) to fix " + "waving water disconnecting from other water blocks; See https://github.com/IrisShaders/Iris/issues/509");
 			}
 		}
 
@@ -285,25 +276,20 @@ public class CompatibilityTransformer {
 		}
 
 		if (constDeclarationHit) {
-			LOGGER.warn(
-				"Removed the const keyword from declarations that use const parameters. See debugging.md for more information.");
+			LOGGER.warn("Removed the const keyword from declarations that use const parameters. See debugging.md for more information.");
 		}
 
 		// remove empty external declarations
-		boolean emptyDeclarationHit = root.process(
-			root.nodeIndex.getStream(EmptyDeclaration.class),
-			ASTNode::detachAndDelete);
+		boolean emptyDeclarationHit = root.process(root.nodeIndex.getStream(EmptyDeclaration.class), ASTNode::detachAndDelete);
 		if (emptyDeclarationHit) {
-			LOGGER.warn(
-				"Removed empty external declarations (\";\").");
+			LOGGER.warn("Removed empty external declarations (\";\").");
 		}
 
 		// rename reserved words within files
 		for (String reservedWord : reservedWords) {
 			String newName = "iris_renamed_" + reservedWord;
-			if (root.process(root.identifierIndex.getStream(reservedWord).filter(
-					id -> !(id.getParent() instanceof FunctionCallExpression)
-						&& !(id.getParent() instanceof FunctionPrototype)),
+			if (root.process(root.identifierIndex.getStream(reservedWord)
+					.filter(id -> !(id.getParent() instanceof FunctionCallExpression) && !(id.getParent() instanceof FunctionPrototype)),
 				id -> id.setName(newName))) {
 				LOGGER.warn("Renamed reserved word \"" + reservedWord + "\" to \"" + newName + "\".");
 			}
@@ -341,21 +327,17 @@ public class CompatibilityTransformer {
 			}
 
 			LOGGER.warn(
-				"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) "
-					+ structMember.getDeclarators().stream().map(StructDeclarator::getName).map(Identifier::getName)
-					.collect(Collectors.joining(", "))
-					+ ". See debugging.md for more information.");
+				"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) " + structMember.getDeclarators()
+					.stream().map(StructDeclarator::getName).map(Identifier::getName)
+					.collect(Collectors.joining(", ")) + ". See debugging.md for more information.");
 		}
 	}
 
 	private static Statement getInitializer(Root root, String name, Type type) {
-		return initTemplate.getInstanceFor(root,
-			new Identifier(name),
-			type.isScalar()
-				? LiteralExpression.getDefaultValue(type)
-				: root.indexNodes(() -> new FunctionCallExpression(
-				new Identifier(type.getMostCompactName()),
-				Stream.of(LiteralExpression.getDefaultValue(type)))));
+		return initTemplate.getInstanceFor(root, new Identifier(name),
+			type.isScalar() ? LiteralExpression.getDefaultValue(type) : root.indexNodes(
+				() -> new FunctionCallExpression(new Identifier(type.getMostCompactName()),
+					Stream.of(LiteralExpression.getDefaultValue(type)))));
 	}
 
 	private static TypeQualifier makeQualifierOut(TypeQualifier typeQualifier) {
@@ -370,10 +352,7 @@ public class CompatibilityTransformer {
 	}
 
 	// does transformations that require cross-shader type data
-	public static void transformGrouped(
-		ASTParser t,
-		Map<PatchShaderType, TranslationUnit> trees,
-		Parameters parameters) {
+	public static void transformGrouped(ASTParser t, Map<PatchShaderType, TranslationUnit> trees, Parameters parameters) {
 		/*
 		  find attributes that are declared as "in" in geometry or fragment but not
 		  declared as "out" in the previous stage. The missing "out" declarations for
@@ -427,10 +406,8 @@ public class CompatibilityTransformer {
 				if (outDeclarationMatcher.matchesExtract(declaration)) {
 					BuiltinNumericTypeSpecifier extractedType = outDeclarationMatcher.getNodeMatch("type",
 						BuiltinNumericTypeSpecifier.class);
-					for (DeclarationMember member : outDeclarationMatcher
-						.getNodeMatch("name*", DeclarationMember.class)
-						.getAncestor(TypeAndInitDeclaration.class)
-						.getMembers()) {
+					for (DeclarationMember member : outDeclarationMatcher.getNodeMatch("name*", DeclarationMember.class)
+						.getAncestor(TypeAndInitDeclaration.class).getMembers()) {
 						String name = member.getName().getName();
 						if (!name.startsWith("gl_")) {
 							outDeclarations.put(name, extractedType);
@@ -454,10 +431,8 @@ public class CompatibilityTransformer {
 
 					BuiltinNumericTypeSpecifier inTypeSpecifier = inDeclarationMatcher.getNodeMatch("type",
 						BuiltinNumericTypeSpecifier.class);
-					for (DeclarationMember inDeclarationMember : inDeclarationMatcher
-						.getNodeMatch("name*", DeclarationMember.class)
-						.getAncestor(TypeAndInitDeclaration.class)
-						.getMembers()) {
+					for (DeclarationMember inDeclarationMember : inDeclarationMatcher.getNodeMatch("name*", DeclarationMember.class)
+						.getAncestor(TypeAndInitDeclaration.class).getMembers()) {
 						String name = inDeclarationMember.getName().getName();
 						if (name.startsWith("gl_")) {
 							continue;
@@ -472,23 +447,18 @@ public class CompatibilityTransformer {
 
 							if (inTypeSpecifier == null) {
 								LOGGER.warn(
-									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
-										+ " shader that has a missing corresponding out declaration in the previous stage "
-										+ prevType.name()
-										+ " has a non-numeric type and could not be compatibility-patched. See debugging.md for more information.");
+									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name() + " shader that has a missing corresponding out declaration in the previous stage " + prevType.name() + " has a non-numeric type and could not be compatibility-patched. See debugging.md for more information.");
 								continue;
 							}
 							Type inType = inTypeSpecifier.type;
 
 							// insert the new out declaration but copy over the type qualifiers, except for
 							// the in/out qualifier
-							TypeQualifier outQualifier = (TypeQualifier) inDeclarationMatcher
-								.getNodeMatch("qualifier").cloneInto(prevRoot);
+							TypeQualifier outQualifier = (TypeQualifier) inDeclarationMatcher.getNodeMatch("qualifier").cloneInto(prevRoot);
 							makeQualifierOut(outQualifier);
-							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, declarationTemplate.getInstanceFor(prevRoot,
-								outQualifier,
-								inTypeSpecifier.cloneInto(prevRoot),
-								new Identifier(name)));
+							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS,
+								declarationTemplate.getInstanceFor(prevRoot, outQualifier, inTypeSpecifier.cloneInto(prevRoot),
+									new Identifier(name)));
 
 							// add the initializer to the main function
 							prevTree.prependMainFunctionBody(getInitializer(prevRoot, name, inType));
@@ -497,10 +467,7 @@ public class CompatibilityTransformer {
 							outDeclarations.put(name, null);
 
 							LOGGER.warn(
-								"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
-									+ " shader is missing a corresponding out declaration in the previous stage "
-									+ prevType.name()
-									+ " and has been compatibility-patched. See debugging.md for more information.");
+								"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name() + " shader is missing a corresponding out declaration in the previous stage " + prevType.name() + " and has been compatibility-patched. See debugging.md for more information.");
 						}
 
 						// patch mismatching declaration with a local variable and a cast
@@ -523,10 +490,7 @@ public class CompatibilityTransformer {
 							// declaration is not
 							if (outTypeSpecifier.getArraySpecifier() != null) {
 								LOGGER.warn(
-									"The out declaration '" + name + "' in the " + parameters.name + " " + prevPatchTypes.glShaderType.name()
-										+ " shader that has a missing corresponding in declaration in the next stage "
-										+ type.name()
-										+ " has an array type and could not be compatibility-patched. See debugging.md for more information.");
+									"The out declaration '" + name + "' in the " + parameters.name + " " + prevPatchTypes.glShaderType.name() + " shader that has a missing corresponding in declaration in the next stage " + type.name() + " has an array type and could not be compatibility-patched. See debugging.md for more information.");
 								continue;
 							}
 
@@ -543,20 +507,14 @@ public class CompatibilityTransformer {
 								outDeclarations.put(name, null);
 
 								LOGGER.warn(
-									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
-										+ " shader that is never assigned to in the previous stage "
-										+ prevType.name()
-										+ " has been compatibility-patched by adding an initialization for it. See debugging.md for more information.");
+									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name() + " shader that is never assigned to in the previous stage " + prevType.name() + " has been compatibility-patched by adding an initialization for it. See debugging.md for more information.");
 								continue;
 							}
 
 							// bail and warn on mismatching dimensionality
 							if (outType.getDimension() != inType.getDimension()) {
 								LOGGER.warn(
-									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name()
-										+ " shader has a mismatching dimensionality (scalar/vector/matrix) with the out declaration in the previous stage "
-										+ prevType.name()
-										+ " and could not be compatibility-patched. See debugging.md for more information.");
+									"The in declaration '" + name + "' in the " + parameters.name + " " + currentType.glShaderType.name() + " shader has a mismatching dimensionality (scalar/vector/matrix) with the out declaration in the previous stage " + prevType.name() + " and could not be compatibility-patched. See debugging.md for more information.");
 								continue;
 							}
 
@@ -589,28 +547,22 @@ public class CompatibilityTransformer {
 							if (outMembers.size() > 1) {
 								outMember.detach();
 								outTypeSpecifier = outTypeSpecifier.cloneInto(prevRoot);
-								DeclarationExternalDeclaration singleOutDeclaration = (DeclarationExternalDeclaration) declarationTemplate
-									.getInstanceFor(prevRoot,
-										makeQualifierOut(outDeclaration.getType().getTypeQualifier().cloneInto(prevRoot)),
-										outTypeSpecifier,
-										new Identifier(name));
+								DeclarationExternalDeclaration singleOutDeclaration = (DeclarationExternalDeclaration) declarationTemplate.getInstanceFor(
+									prevRoot, makeQualifierOut(outDeclaration.getType().getTypeQualifier().cloneInto(prevRoot)),
+									outTypeSpecifier, new Identifier(name));
 								((TypeAndInitDeclaration) singleOutDeclaration.getDeclaration()).getMembers().set(0, outMember);
 								prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, singleOutDeclaration);
 							}
 
 							// add a global variable with the new name and the old type
-							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, variableTemplate.getInstanceFor(prevRoot,
-								outTypeSpecifier.cloneInto(prevRoot),
-								new Identifier(newName)));
+							prevTree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS,
+								variableTemplate.getInstanceFor(prevRoot, outTypeSpecifier.cloneInto(prevRoot), new Identifier(newName)));
 
 							// insert a statement at the end of the main function that sets the value of the
 							// out declaration to the value of the global variable and does a type cast
 							prevTree.appendMainFunctionBody(
-								(isVector && outType.getDimensions()[0] < inType.getDimensions()[0] ? statementTemplateVector
-									: statementTemplate).getInstanceFor(prevRoot,
-									new Identifier(name),
-									new Identifier(newName),
-									inTypeSpecifier.cloneInto(prevRoot)));
+								(isVector && outType.getDimensions()[0] < inType.getDimensions()[0] ? statementTemplateVector : statementTemplate).getInstanceFor(
+									prevRoot, new Identifier(name), new Identifier(newName), inTypeSpecifier.cloneInto(prevRoot)));
 
 							// make the out declaration use the same type as the fragment shader
 							outTypeSpecifier.replaceByAndDelete(inTypeSpecifier.cloneInto(prevRoot));
@@ -619,11 +571,7 @@ public class CompatibilityTransformer {
 							outDeclarations.put(name, null);
 
 							LOGGER.warn(
-								"The out declaration '" + name + "' in the " + parameters.name + " " + prevType.name()
-									+ " shader has a different type " + outType.getMostCompactName()
-									+ " than the corresponding in declaration of type " + inType.getMostCompactName()
-									+ " in the following stage " + currentType.glShaderType.name()
-									+ " and has been compatibility-patched. See debugging.md for more information.");
+								"The out declaration '" + name + "' in the " + parameters.name + " " + prevType.name() + " shader has a different type " + outType.getMostCompactName() + " than the corresponding in declaration of type " + inType.getMostCompactName() + " in the following stage " + currentType.glShaderType.name() + " and has been compatibility-patched. See debugging.md for more information.");
 						}
 					}
 				}
@@ -646,10 +594,8 @@ public class CompatibilityTransformer {
 			}
 
 			// find the matching outColor members
-			List<DeclarationMember> members = nonLayoutOutDeclarationMatcher
-				.getNodeMatch("name*", DeclarationMember.class)
-				.getAncestor(TypeAndInitDeclaration.class)
-				.getMembers();
+			List<DeclarationMember> members = nonLayoutOutDeclarationMatcher.getNodeMatch("name*", DeclarationMember.class)
+				.getAncestor(TypeAndInitDeclaration.class).getMembers();
 			TypeQualifier typeQualifier = nonLayoutOutDeclarationMatcher.getNodeMatch("qualifier", TypeQualifier.class);
 			BuiltinNumericTypeSpecifier typeSpecifier = nonLayoutOutDeclarationMatcher.getNodeMatch("type",
 				BuiltinNumericTypeSpecifier.class);
@@ -700,14 +646,10 @@ public class CompatibilityTransformer {
 			DeclarationMember member = data.member;
 			member.detach();
 			TypeQualifier newQualifier = data.qualifier.cloneInto(root);
-			newQualifier.getChildren()
-				.add(new LayoutQualifier(Stream.of(new NamedLayoutQualifierPart(
-					new Identifier("location"),
-					new LiteralExpression(Type.INT32, data.number)))));
-			ExternalDeclaration newDeclaration = layoutedOutDeclarationTemplate.getInstanceFor(root,
-				newQualifier,
-				data.type.cloneInto(root),
-				member);
+			newQualifier.getChildren().add(new LayoutQualifier(
+				Stream.of(new NamedLayoutQualifierPart(new Identifier("location"), new LiteralExpression(Type.INT32, data.number)))));
+			ExternalDeclaration newDeclaration = layoutedOutDeclarationTemplate.getInstanceFor(root, newQualifier,
+				data.type.cloneInto(root), member);
 			newDeclarations.add(newDeclaration);
 		}
 		tree.injectNodes(ASTInjectionPoint.BEFORE_DECLARATIONS, newDeclarations);
@@ -719,8 +661,7 @@ public class CompatibilityTransformer {
 		{
 			markClassWildcard("qualifier", pattern.getRoot().nodeIndex.getUnique(TypeQualifier.class));
 			markClassWildcard("type", pattern.getRoot().nodeIndex.getUnique(BuiltinNumericTypeSpecifier.class));
-			markClassWildcard("name*",
-				pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
+			markClassWildcard("name*", pattern.getRoot().identifierIndex.getUnique("name").getAncestor(DeclarationMember.class));
 		}
 
 		public DeclarationMatcher(StorageType storageType) {

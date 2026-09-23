@@ -26,6 +26,7 @@ public class MixinLightTexture {
 
 	@Inject(method = "calculateDarknessScale", at = @At("RETURN"))
 	private void storeDarknessValue(LivingEntity $$0, float $$1, float $$2, CallbackInfoReturnable<Float> cir) {
-		CapturedRenderingState.INSTANCE.setDarknessLightFactor((float) (cir.getReturnValue() * this.minecraft.options.darknessEffectScale().get()));
+		CapturedRenderingState.INSTANCE.setDarknessLightFactor(
+			(float) (cir.getReturnValue() * this.minecraft.options.darknessEffectScale().get()));
 	}
 }

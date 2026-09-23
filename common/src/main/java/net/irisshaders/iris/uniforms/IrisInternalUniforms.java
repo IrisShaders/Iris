@@ -1,6 +1,5 @@
 package net.irisshaders.iris.uniforms;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.caffeinemc.mods.sodium.client.util.FogStorage;
 import net.irisshaders.iris.compat.dh.DHCompat;
@@ -29,16 +28,20 @@ public class IrisInternalUniforms {
 	}
 
 	public static void addFogUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
-		uniforms
-			.uniform4f("iris_FogColor", () -> {
-				FogParameters fog = ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters();
+		uniforms.uniform4f("iris_FogColor", () -> {
+			FogParameters fog = ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters();
 
-				if (fog == FogParameters.NONE) return ONE;
-				return new Vector4f(fog.red(), fog.green(), fog.blue(), fog.alpha());
-			}, t -> {});
+			if (fog == FogParameters.NONE)
+				return ONE;
+			return new Vector4f(fog.red(), fog.green(), fog.blue(), fog.alpha());
+		}, t -> {
+		});
 
-		uniforms.uniform1f("iris_FogStart", () -> ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters().environmentalStart(), t -> {})
-			.uniform1f("iris_FogEnd", () -> ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters().environmentalEnd(), t -> {});
+		uniforms.uniform1f("iris_FogStart",
+			() -> ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters().environmentalStart(), t -> {
+			}).uniform1f("iris_FogEnd",
+			() -> ((FogStorage) Minecraft.getInstance().gameRenderer).sodium$getFogParameters().environmentalEnd(), t -> {
+			});
 
 		uniforms.uniform1f("iris_FogDensity", () -> {
 			// ensure that the minimum value is 0.0
@@ -68,16 +71,21 @@ public class IrisInternalUniforms {
 		});
 
 		uniforms.uniformMatrix(PER_FRAME, "iris_ShadowModelViewMatrixInverse", () -> {
-			return new Matrix4f(ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize(),
-				Mth.equal(directives.getShadowDirectives().getNearPlane(), -1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
-				Mth.equal(directives.getShadowDirectives().getFarPlane(), -1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()
-			).last().pose()).invert();
+			return new Matrix4f(
+				ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize(),
+						Mth.equal(directives.getShadowDirectives().getNearPlane(),
+							-1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
+						Mth.equal(directives.getShadowDirectives().getFarPlane(),
+							-1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()).last()
+					.pose()).invert();
 		});
 
 		uniforms.uniformMatrix(PER_FRAME, "iris_ShadowProjectionMatrixInverse", () -> {
 			return ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance(),
-				Mth.equal(directives.getShadowDirectives().getNearPlane(), -1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
-				Mth.equal(directives.getShadowDirectives().getFarPlane(), -1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()).invert();
+				Mth.equal(directives.getShadowDirectives().getNearPlane(),
+					-1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
+				Mth.equal(directives.getShadowDirectives().getFarPlane(),
+					-1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()).invert();
 		});
 	}
 }

@@ -17,11 +17,9 @@ public class MixinGameRenderer_NightVisionCompat {
 	//
 	// It's optional because of Night Vision Flash Be Gone overwriting this method, but having this injection
 	// succeed avoids a lot of spurious (but silently caught) NullPointerExceptions.
-	@Inject(method = "nightVisionScale", at = @At(value = "INVOKE",
-		target = "Lnet/minecraft/world/effect/MobEffectInstance;endsWithin(I)Z"), cancellable = true,
-		require = 0)
+	@Inject(method = "nightVisionScale", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/effect/MobEffectInstance;endsWithin(I)Z"), cancellable = true, require = 0)
 	private static void iris$safecheckNightvisionStrength(LivingEntity livingEntity, float partialTicks,
-														  CallbackInfoReturnable<Float> cir) {
+		CallbackInfoReturnable<Float> cir) {
 		if (livingEntity.getEffect(MobEffects.NIGHT_VISION) == null) {
 			cir.setReturnValue(0.0f);
 		}

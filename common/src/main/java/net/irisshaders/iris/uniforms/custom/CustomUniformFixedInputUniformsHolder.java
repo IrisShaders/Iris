@@ -39,8 +39,7 @@ import java.util.function.Supplier;
 public class CustomUniformFixedInputUniformsHolder {
 	final private ImmutableMap<String, CachedUniform> inputVariables;
 
-	public CustomUniformFixedInputUniformsHolder(
-		ImmutableMap<String, CachedUniform> inputVariables) {
+	public CustomUniformFixedInputUniformsHolder(ImmutableMap<String, CachedUniform> inputVariables) {
 		this.inputVariables = inputVariables;
 	}
 
@@ -167,20 +166,17 @@ public class CustomUniformFixedInputUniformsHolder {
 		}
 
 		@Override
-		public UniformHolder uniformMatrix(
-			UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4fc> value) {
+		public UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4fc> value) {
 			return this.put(name, new Float4MatrixCachedUniform(name, updateFrequency, value));
 		}
 
 		@Override
-		public UniformHolder uniformMatrix3(
-			UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix3fc> value) {
+		public UniformHolder uniformMatrix3(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix3fc> value) {
 			return this.put(name, new Float3MatrixCachedUniform(name, updateFrequency, value));
 		}
 
 		@Override
-		public UniformHolder uniformMatrixFromArray(
-			UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
+		public UniformHolder uniformMatrixFromArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
 			Matrix4f held = new Matrix4f();
 
 			return this.put(name, new Float4MatrixCachedUniform(name, updateFrequency, () -> {

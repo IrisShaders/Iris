@@ -54,12 +54,7 @@ public class ExpressionResolver {
 		throw new RuntimeException("Couldn't resolve: \n" + String.join("\n", this.extractLogs()));
 	}
 
-	Expression resolveCallExpressionInternal(
-		Type targetType,
-		String name,
-		List<? extends ExpressionElement> inner,
-		boolean implicit
-	) {
+	Expression resolveCallExpressionInternal(Type targetType, String name, List<? extends ExpressionElement> inner, boolean implicit) {
 		int innerLength = inner.size();
 		Expression result = null;
 		TypedFunction resultFunction = null;
@@ -78,15 +73,16 @@ public class ExpressionResolver {
 					continue functions;
 				}
 
-				Expression expression = this.resolveExpressionInternal(param.type(), paramExpression,
-					!implicit || innerLength > 1, implicit);
+				Expression expression = this.resolveExpressionInternal(param.type(), paramExpression, !implicit || innerLength > 1,
+					implicit);
 				if (expression == null)
 					continue functions;
 				params[i] = expression;
 			}
 			// FIXME
 			if (result != null && f.priority() == resultFunction.priority()) {
-				throw new RuntimeException("Ambiguity, \n\told: " + TypedFunction.format(resultFunction, "") + "\n\tnew: " + TypedFunction.format(f, ""));
+				throw new RuntimeException(
+					"Ambiguity, \n\told: " + TypedFunction.format(resultFunction, "") + "\n\tnew: " + TypedFunction.format(f, ""));
 			} else if (resultFunction == null || f.priority() >= resultFunction.priority()) {
 				result = new CallExpression(f, params);
 				resultFunction = f;
@@ -95,15 +91,10 @@ public class ExpressionResolver {
 		return result;
 	}
 
-	private Expression resolveCallExpression(
-		Type targetType,
-		String name,
-		List<? extends ExpressionElement> inner,
-		boolean allowNonImplicit,
-		boolean allowImplicit) {
+	private Expression resolveCallExpression(Type targetType, String name, List<? extends ExpressionElement> inner,
+		boolean allowNonImplicit, boolean allowImplicit) {
 
-		this.log("[DEBUG] resolving function %s with args %s to type %s",
-			name, inner, targetType);
+		this.log("[DEBUG] resolving function %s with args %s to type %s", name, inner, targetType);
 
 		Expression result = null;
 
@@ -112,12 +103,10 @@ public class ExpressionResolver {
 		}
 
 		if (result != null) {
-			this.log("[DEBUG] resolved function %s with args %s to type %s directly",
-				name, inner, targetType);
+			this.log("[DEBUG] resolved function %s with args %s to type %s directly", name, inner, targetType);
 			return result;
 		} else if (!allowImplicit) {
-			this.log("[DEBUG] Failed to resolve function %s with args %s to type %s directly",
-				name, inner, targetType);
+			this.log("[DEBUG] Failed to resolve function %s with args %s to type %s directly", name, inner, targetType);
 			return null;
 		}
 
@@ -132,18 +121,15 @@ public class ExpressionResolver {
 			result = new CallExpression(f, new Expression[]{u});
 		}
 		if (result != null) {
-			this.log("[DEBUG] resolved function %s with args %s to type %s using only final cast",
-				name, inner, targetType);
+			this.log("[DEBUG] resolved function %s with args %s to type %s using only final cast", name, inner, targetType);
 			return result;
 		}
 
 		result = this.resolveCallExpressionInternal(targetType, name, inner, true);
 		if (result != null) {
-			this.log("[DEBUG] resolved function %s with args %s to type %s using implicit inner casts",
-				name, inner, targetType);
+			this.log("[DEBUG] resolved function %s with args %s to type %s using implicit inner casts", name, inner, targetType);
 		} else {
-			this.log("[DEBUG] failed to resolve function %s with args %s to type %s",
-				name, inner, targetType);
+			this.log("[DEBUG] failed to resolve function %s with args %s to type %s", name, inner, targetType);
 		}
 		return result;
 	}
@@ -173,32 +159,26 @@ public class ExpressionResolver {
 			this.log(str.get());
 	}
 
-	private Expression resolveExpressionInternal(
-		Type targetType,
-		ExpressionElement expression,
-		boolean allowNonImplicit,
+	private Expression resolveExpressionInternal(Type targetType, ExpressionElement expression, boolean allowNonImplicit,
 		boolean allowImplicit) {
 		Expression castable;
 		Type innerType;
 
-		this.log("[DEBUG] resolving %s to type %s (%d%d)",
-			expression, targetType, allowNonImplicit ? 1 : 0, allowImplicit ? 1 : 0);
+		this.log("[DEBUG] resolving %s to type %s (%d%d)", expression, targetType, allowNonImplicit ? 1 : 0, allowImplicit ? 1 : 0);
 		switch (expression) {
 			case UnaryExpressionElement token -> {
-				return this.resolveCallExpression(targetType, token.op().name(), Collections.singletonList(token.inner()),
-					allowNonImplicit, allowImplicit);
+				return this.resolveCallExpression(targetType, token.op().name(), Collections.singletonList(token.inner()), allowNonImplicit,
+					allowImplicit);
 			}
 			case BinaryExpressionElement token -> {
 				return this.resolveCallExpression(targetType, token.op().name(), Arrays.asList(token.left(), token.right()),
 					allowNonImplicit, allowImplicit);
 			}
 			case FunctionCall token -> {
-				return this.resolveCallExpression(targetType, token.id(), token.args(),
-					allowNonImplicit, allowImplicit);
+				return this.resolveCallExpression(targetType, token.id(), token.args(), allowNonImplicit, allowImplicit);
 			}
 			case AccessExpressionElement token -> {
-				return this.resolveCallExpression(targetType, "<access$" + token.index() + ">",
-					Collections.singletonList(token.base()),
+				return this.resolveCallExpression(targetType, "<access$" + token.index() + ">", Collections.singletonList(token.base()),
 					allowNonImplicit, allowImplicit);
 			}
 			case NumberToken token -> {
@@ -209,12 +189,12 @@ public class ExpressionResolver {
 				}
 				// TODO: implicit casting is split up too much
 				if (!allowImplicit) {
-					this.log("[DEBUG] failed to resolve constant %s (of type %s) to type %s without implicit casts",
-						token.getNumber(), exp.getType(), targetType);
+					this.log("[DEBUG] failed to resolve constant %s (of type %s) to type %s without implicit casts", token.getNumber(),
+						exp.getType(), targetType);
 					return null;
 				}
-				this.log("[DEBUG] trying implicit casts to resolve constant %s (of type %s) to type %s",
-					token.getNumber(), exp.getType(), targetType);
+				this.log("[DEBUG] trying implicit casts to resolve constant %s (of type %s) to type %s", token.getNumber(), exp.getType(),
+					targetType);
 				castable = exp;
 				innerType = exp.getType();
 			}
@@ -240,8 +220,7 @@ public class ExpressionResolver {
 					};
 				}
 				if (!allowImplicit) {
-					log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",
-						name, type, targetType);
+					log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts", name, type, targetType);
 					return null;
 				}
 				// TODO duplicate of above
@@ -265,8 +244,7 @@ public class ExpressionResolver {
 
 		for (TypedFunction f : casts) {
 			if (f.getParameters()[0].type().equals(innerType)) {
-				this.log("[DEBUG] resolved %s to type %s using implicit casts",
-					expression, targetType);
+				this.log("[DEBUG] resolved %s to type %s using implicit casts", expression, targetType);
 				return new CallExpression(f, new Expression[]{castable});
 			}
 		}

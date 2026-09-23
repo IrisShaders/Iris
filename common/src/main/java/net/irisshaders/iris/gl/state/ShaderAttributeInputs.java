@@ -1,14 +1,11 @@
 package net.irisshaders.iris.gl.state;
 
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
-
-import java.util.List;
-
 import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
-import net.irisshaders.iris.uniforms.CapturedRenderingState;
+
+import java.util.List;
 
 public class ShaderAttributeInputs {
 	private boolean ie;
@@ -31,10 +28,10 @@ public class ShaderAttributeInputs {
 
 		this.newLines = isLines;
 
-        if (format == null) {
-            // Sodium. Get current.
-            format = WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat();
-        }
+		if (format == null) {
+			// Sodium. Get current.
+			format = WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat();
+		}
 
 		this.specialGlint = glint && format.contains("UV3");
 
@@ -73,7 +70,8 @@ public class ShaderAttributeInputs {
 			VertexFormatElement element = elements.get(index);
 			String name = element.name();
 
-			if ("mc_Entity".equals(name) && (element.format().componentType() == GpuFormat.ComponentType.SINT_16 || element.format().componentType() == GpuFormat.ComponentType.SINT_32)) {
+			if ("mc_Entity".equals(name) && (element.format().componentType() == GpuFormat.ComponentType.SINT_16 || element.format()
+				.componentType() == GpuFormat.ComponentType.SINT_32)) {
 				entityComponents = element.format().componentCount();
 			}
 		}

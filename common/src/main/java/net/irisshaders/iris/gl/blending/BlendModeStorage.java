@@ -1,46 +1,127 @@
 package net.irisshaders.iris.gl.blending;
 
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.mixin.GlStateManagerAccessor;
+import net.irisshaders.iris.pipeline.GraphicsBackend;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class BlendModeStorage {
+public class BlendModeStorage {
 	private static final Map<Integer, BlendMode> buffers = new HashMap<>();
+	private static boolean[] originalBlendEnable;
 	private static boolean overridden;
 	private static BlendMode blend;
+	private static BlendMode originalBlend;
+	private static boolean blendLocked;
+	private static boolean blendUnknown;
 
-	private BlendModeStorage() {
+	public static boolean isBlendLocked() {
+		return GraphicsBackend.isOpenGL() && blendLocked;
+	}
+
+	public static boolean isBlendUnknown() {
+		return GraphicsBackend.isOpenGL() && blendUnknown;
 	}
 
 	public static void overrideBlend(BlendMode override) {
-		overridden = true;
-		blend = override;
-		buffers.clear();
+		if (!GraphicsBackend.isOpenGL()) {
+			overridden = true;
+			blend = override;
+			buffers.clear();
+			return;
+		}
+		if (!blendLocked) {
+			// Only save the previous state if the blend mode wasn't already locked
+			GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
+
+			originalBlendEnable = GlStateManagerAccessor.getBLEND_ENABLE().clone();
+			originalBlend = new BlendMode(blendState.srcRgb, blendState.dstRgb, blendState.srcAlpha, blendState.dstAlpha);
+		}
+
+		blendLocked = false;
+
+		if (override == null) {
+			IrisRenderSystem.disableBlend();
+		} else {
+			IrisRenderSystem.enableBlend();
+			GlStateManager._blendFuncSeparate(override.srcRgb(), override.dstRgb(), override.srcAlpha(), override.dstAlpha());
+			blendUnknown = false;
+		}
+
+		blendLocked = true;
 	}
 
 	public static void overrideBufferBlend(int index, BlendMode override) {
-		if (index < 0) {
-			throw new IllegalArgumentException("Negative blend attachment");
+		if (!GraphicsBackend.isOpenGL()) {
+			if (index < 0) {
+				throw new IllegalArgumentException("negative blend attachment");
+			}
+			buffers.put(index, override);
+			return;
+		}
+		if (!blendLocked) {
+			// Only save the previous state if the blend mode wasn't already locked
+			GlStateManager.BlendState blendState = GlStateManagerAccessor.getBLEND();
+
+			originalBlendEnable = GlStateManagerAccessor.getBLEND_ENABLE().clone();
+			originalBlend = new BlendMode(blendState.srcRgb, blendState.dstRgb, blendState.srcAlpha, blendState.dstAlpha);
 		}
 
-		buffers.put(index, override);
+		if (override == null) {
+			IrisRenderSystem.disableBufferBlend(index);
+		} else {
+			IrisRenderSystem.enableBufferBlend(index);
+			IrisRenderSystem.blendFuncSeparatei(index, override.srcRgb(), override.dstRgb(), override.srcAlpha(), override.dstAlpha());
+		}
+
+		blendUnknown = true;
+		blendLocked = true;
+	}
+
+	public static void deferBlendModeToggle(int index, boolean enabled) {
+		originalBlendEnable[index] = enabled;
+	}
+
+	public static void deferBlendFunc(int srcRgb, int dstRgb, int srcAlpha, int dstAlpha) {
+		originalBlend = new BlendMode(srcRgb, dstRgb, srcAlpha, dstAlpha);
+	}
+
+	public static void restoreBlend() {
+		if (!GraphicsBackend.isOpenGL()) {
+			overridden = false;
+			blend = null;
+			buffers.clear();
+			return;
+		}
+		if (!blendLocked && !blendUnknown) {
+			return;
+		}
+
+		blendLocked = false;
+
+		for (int i = 0; i < originalBlendEnable.length; i++) {
+			if (originalBlendEnable[i]) {
+				GlStateManager._enableBlend(i);
+			} else {
+				GlStateManager._disableBlend(i);
+			}
+		}
+
+		GlStateManager._blendFuncSeparate(originalBlend.srcRgb(), originalBlend.dstRgb(), originalBlend.srcAlpha(),
+			originalBlend.dstAlpha());
+		blendUnknown = false;
 	}
 
 	public static List<BlendMode> snapshot(int attachments, BlendMode defaultBlend) {
 		List<BlendMode> states = new ArrayList<>(attachments);
-
 		for (int i = 0; i < attachments; i++) {
 			states.add(buffers.containsKey(i) ? buffers.get(i) : overridden ? blend : defaultBlend);
 		}
-
 		return Collections.unmodifiableList(states);
-	}
-
-	public static void restoreBlend() {
-		overridden = false;
-		blend = null;
-		buffers.clear();
 	}
 }

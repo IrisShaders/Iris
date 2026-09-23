@@ -7,10 +7,10 @@ import com.mojang.renderpearl.api.textures.AddressMode;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.texture.TextureAccess;
-import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.IrisBindings;
@@ -47,8 +47,8 @@ public class IrisSamplers {
 	public static void initRenderer() {
 	}
 
-	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped,
-		RenderTargets renderTargets, boolean isFullscreenPass, WorldRenderingPipeline pipeline) {
+	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped, RenderTargets renderTargets,
+		boolean isFullscreenPass, WorldRenderingPipeline pipeline) {
 		// colortex0,1,2,3 are only able to be sampled from fullscreen passes.
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.
 		int startIndex = isFullscreenPass ? 0 : 4;
@@ -63,8 +63,8 @@ public class IrisSamplers {
 				GlSampler sampler = alt ? target.getAltSampler() : target.getMainSampler();
 
 				return target.getTextureView(alt, sampler.description().mipmapped());
-			}, () -> flipped.get().contains(index) ? renderTargets.getOrCreate(index).getAltSampler() :
-				renderTargets.getOrCreate(index).getMainSampler());
+			}, () -> flipped.get().contains(index) ? renderTargets.getOrCreate(index).getAltSampler() : renderTargets.getOrCreate(index)
+				.getMainSampler());
 
 			final String name = "colortex" + i;
 
@@ -78,11 +78,7 @@ public class IrisSamplers {
 				}
 
 				// colortex0 is the default sampler in fullscreen passes
-				if (i == 0 && isFullscreenPass) {
-					samplers.addTextureSampler(texture, true, name, legacyName);
-				} else {
-					samplers.addTextureSampler(texture, false, name, legacyName);
-				}
+				samplers.addTextureSampler(texture, i == 0 && isFullscreenPass, name, legacyName);
 			} else {
 				if (samplers.hasSampler(name)) {
 					renderTargets.createIfUnsure(index);
@@ -93,8 +89,7 @@ public class IrisSamplers {
 		}
 
 		// Add the DH texture here, to make sure it's always visible.
-		samplers.addDynamicSampler(TextureType.TEXTURE_2D, () -> pipeline.getDHCompat().getDepthTex(), null, "dhDepthTex", "dhDepthTex0");
-		samplers.addDynamicSampler(TextureType.TEXTURE_2D, () -> pipeline.getDHCompat().getDepthTexNoTranslucent(), null, "dhDepthTex1");
+		DHCompat.addDepthSamplers(samplers, () -> pipeline.getDHCompat());
 	}
 
 	public static void addNoiseSampler(SamplerHolder samplers, TextureAccess sampler) {
@@ -140,8 +135,7 @@ public class IrisSamplers {
 					() -> separateHardwareSamplers ? GlSampler.NEAREST : shadowRenderTargets.getSamplerFor(0)), false, "shadowtex0",
 				"watershadow");
 			samplers.addTextureSampler(new SamplerHolder.TextureBinding("shadowtex1", () -> shadowRenderTargets.getDepthTextureView(1),
-					() -> separateHardwareSamplers ? GlSampler.NEAREST : shadowRenderTargets.getSamplerFor(1)), false,
-				"shadowtex1", "shadow");
+				() -> separateHardwareSamplers ? GlSampler.NEAREST : shadowRenderTargets.getSamplerFor(1)), false, "shadowtex1", "shadow");
 		} else {
 			usesShadows = samplers.addTextureSampler(
 				new SamplerHolder.TextureBinding("shadowtex0", () -> shadowRenderTargets.getDepthTextureView(0),
@@ -157,9 +151,8 @@ public class IrisSamplers {
 			String[] names = i == 0 ? new String[]{"shadowcolor", "shadowcolor0"} : new String[]{"shadowcolor" + i};
 			Object key = "shadowcolor" + i + (flipped == null ? "/current" : flipped.contains(i) ? "/alt" : "/main");
 
-			if (samplers.addTextureSampler(new SamplerHolder.TextureBinding(key,
-				() -> shadowRenderTargets.get(index)
-					.getTextureView(flipped == null ? shadowRenderTargets.isFlipped(index) : flipped.contains(index), false),
+			if (samplers.addTextureSampler(new SamplerHolder.TextureBinding(key, () -> shadowRenderTargets.get(index)
+				.getTextureView(flipped == null ? shadowRenderTargets.isFlipped(index) : flipped.contains(index), false),
 				() -> GlSampler.LINEAR), false, names)) {
 				shadowRenderTargets.createIfEmpty(index);
 			}
@@ -189,8 +182,7 @@ public class IrisSamplers {
 		} else {
 			// TODO: Rebind unbound sampler IDs instead of hardcoding a list...
 			samplers.addTextureSampler(new SamplerHolder.TextureBinding(whitePixel, whitePixel::getTextureView, () -> GlSampler.NEAREST),
-				false, "tex", "texture", "gtexture", "u_MainSampler", "Sampler0",
-				"gcolor", "colortex0");
+				false, "tex", "texture", "gtexture", "u_MainSampler", "Sampler0", "gcolor", "colortex0");
 		}
 
 		if (hasLightmap) {
@@ -208,13 +200,11 @@ public class IrisSamplers {
 		}
 
 		if (pipeline instanceof IrisRenderingPipeline irp) {
-			samplers.addTextureSampler(
-				new SamplerHolder.TextureBinding("normals", irp::normalTextureView, irp::getNormalSampler, irp::normalNativeSampler),
-				false,
+			samplers.addDrawTextureSampler(
+				new SamplerHolder.TextureBinding("normals", irp::normalTextureView, irp::getNormalSampler, irp::normalNativeSampler), false,
 				"normals");
-			samplers.addTextureSampler(
-				new SamplerHolder.TextureBinding("specular", irp::specularTextureView, irp::getSpecularSampler,
-					irp::specularNativeSampler),
+			samplers.addDrawTextureSampler(
+				new SamplerHolder.TextureBinding("specular", irp::specularTextureView, irp::getSpecularSampler, irp::specularNativeSampler),
 				false, "specular");
 		}
 	}
@@ -267,7 +257,6 @@ public class IrisSamplers {
 				.createSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, FilterMode.NEAREST, FilterMode.NEAREST, i,
 					OptionalDouble.empty());
 		}
-
 		return terrain[i];
 	}
 

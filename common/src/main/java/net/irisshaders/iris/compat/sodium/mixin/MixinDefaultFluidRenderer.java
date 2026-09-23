@@ -21,30 +21,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(DefaultFluidRenderer.class)
 public class MixinDefaultFluidRenderer implements VertexEncoderInterface {
-	@ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/" +
-		"pipeline/DefaultFluidRenderer;updateQuad(Lnet/caffeinemc/mods/sodium/client/model/quad/ModelQuadViewMutable;" +
-		"Lnet/caffeinemc/mods/sodium/client/world/LevelSlice;Lnet/minecraft/core/BlockPos;Lnet/caffeinemc/" +
-		"mods/sodium/client/model/light/LightPipeline;Lnet/minecraft/core/Direction;Lnet/caffeinemc/mods/" +
-		"sodium/client/model/quad/properties/ModelQuadFacing" +
-		";FLnet/caffeinemc/mods/sodium/client/model/color/ColorProvider;Lnet/minecraft/world/level/material/FluidState;)V", ordinal = 2))
+	@Unique
+	private int blockId;
+	@Unique
+	private int lastBlockId;
+	@Unique
+	private byte isFluid;
+	@Unique
+	private byte lightEmission;
+	@Unique
+	private int localX, localY, localZ;
+
+	@ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/compile/" + "pipeline/DefaultFluidRenderer;updateQuad(Lnet/caffeinemc/mods/sodium/client/model/quad/ModelQuadViewMutable;" + "Lnet/caffeinemc/mods/sodium/client/world/LevelSlice;Lnet/minecraft/core/BlockPos;Lnet/caffeinemc/" + "mods/sodium/client/model/light/LightPipeline;Lnet/minecraft/core/Direction;Lnet/caffeinemc/mods/" + "sodium/client/model/quad/properties/ModelQuadFacing" + ";FLnet/caffeinemc/mods/sodium/client/model/color/ColorProvider;Lnet/minecraft/world/level/material/FluidState;)V", ordinal = 2))
 	private float setBrightness(float br) {
 		return WorldRenderingSettings.INSTANCE.shouldDisableDirectionalShading() ? 1.0f : br;
 	}
-
-	@Unique
-	private int blockId;
-
-	@Unique
-	private int lastBlockId;
-
-	@Unique
-	private byte isFluid;
-
-	@Unique
-	private byte lightEmission;
-
-	@Unique
-	private int localX, localY, localZ;
 
 	@Override
 	public void beginBlock(int blockId, byte isFluid, byte lightEmission, int x, int y, int z) {
@@ -58,7 +49,8 @@ public class MixinDefaultFluidRenderer implements VertexEncoderInterface {
 
 	@Override
 	public void overrideBlock(int anInt) {
-		if (this.lastBlockId != -1) this.lastBlockId = blockId;
+		if (this.lastBlockId != -1)
+			this.lastBlockId = blockId;
 		this.blockId = anInt;
 	}
 
@@ -71,7 +63,8 @@ public class MixinDefaultFluidRenderer implements VertexEncoderInterface {
 	}
 
 	@Inject(method = "writeQuad", at = @At(value = "FIELD", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexEncoder$Vertex;x:F"))
-	private void iris$writeVertex(ChunkModelBuilder builder, TranslucentGeometryCollector collector, Material material, BlockPos offset, ModelQuadView quad, ModelQuadFacing facing, boolean flip, CallbackInfo ci, @Local ChunkVertexEncoder.Vertex vertex) {
+	private void iris$writeVertex(ChunkModelBuilder builder, TranslucentGeometryCollector collector, Material material, BlockPos offset,
+		ModelQuadView quad, ModelQuadFacing facing, boolean flip, CallbackInfo ci, @Local ChunkVertexEncoder.Vertex vertex) {
 		((ChunkVertexExtension) vertex).iris$setData(lightEmission, isFluid, blockId, localX, localY, localZ);
 	}
 }

@@ -13,10 +13,6 @@ public final class ExtendedDataHelper {
 	}
 
 	public static int computeMidBlock(float x, float y, float z, int localPosX, int localPosY, int localPosZ) {
-		return packMidBlock(
-			(localPosX & 0xFFFF) + 0.5f - x,
-			(localPosY & 0xFFFF) + 0.5f - y,
-			(localPosZ & 0xFFFF) + 0.5f - z
-		);
+		return packMidBlock((localPosX & 0xFFFF) + 0.5f - x, (localPosY & 0xFFFF) + 0.5f - y, (localPosZ & 0xFFFF) + 0.5f - z);
 	}
 }

@@ -6,8 +6,72 @@ import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
 
 public class ShaderSynthesizer {
-	public static String vsh(boolean hasChunkOffset, ShaderAttributeInputs inputs, FogMode fogMode,
-							 boolean entityLighting, boolean isLeash) {
+	public static String sodiumVsh() {
+		return """
+			#version 120
+			varying vec4 vertexColor;
+			varying vec2 texCoord;
+			varying vec2 lightCoord;
+			varying vec2 fogDistance;
+			varying float fadeFactor;
+
+			void main() {
+			    vec3 position = gl_Vertex.xyz;
+			    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+			    vertexColor = gl_Color;
+			    texCoord = gl_MultiTexCoord0.xy;
+			    lightCoord = clamp((gl_MultiTexCoord1.xy + 8.0) / 256.0, vec2(0.5 / 16.0), vec2(15.5 / 16.0));
+			    fogDistance = vec2(max(length(position.xz), abs(position.y)), length(position));
+			    fadeFactor = mc_chunkFade;
+			}
+			""";
+	}
+
+	public static String sodiumFsh(boolean shadow) {
+		StringBuilder shader = new StringBuilder("""
+			#version 120
+			uniform sampler2D gtexture;
+			uniform sampler2D lightmap;
+			varying vec4 vertexColor;
+			varying vec2 texCoord;
+			varying vec2 lightCoord;
+			varying vec2 fogDistance;
+			varying float fadeFactor;
+			""");
+
+		if (!shadow) {
+			shader.append("""
+				float linearFog(float distance, vec2 range) {
+				    if (distance <= range.x) return 0.0;
+				    if (distance >= range.y) return 1.0;
+				    return (distance - range.x) / (range.y - range.x);
+				}
+				""");
+		}
+
+		shader.append("""
+			void main() {
+			    vec4 color = texture2D(gtexture, texCoord) * vertexColor * texture2D(lightmap, lightCoord);
+			""");
+
+		if (!shadow) {
+			shader.append("""
+				    float fog = max(linearFog(fogDistance.y, u_EnvironmentFog), linearFog(fogDistance.x, u_RenderFog));
+				    fog = max(fog, 1.0 - fadeFactor);
+				    color.rgb = mix(color.rgb, u_FogColor.rgb, fog * u_FogColor.a);
+				""");
+		}
+
+		shader.append("""
+			    gl_FragData[0] = color;
+			}
+			""");
+
+		return shader.toString();
+	}
+
+	public static String vsh(boolean hasChunkOffset, ShaderAttributeInputs inputs, FogMode fogMode, boolean entityLighting,
+		boolean isLeash) {
 		StringBuilder shader = new StringBuilder();
 		StringBuilder main = new StringBuilder();
 
@@ -50,32 +114,11 @@ public class ShaderSynthesizer {
 
 		if (inputs.isNewLines()) {
 			shader.append("in float LineWidth;\n");
-			shader.append("const float VIEW_SHRINK = 1.0 - (1.0 / 256.0);\n" +
-				"const mat4 VIEW_SCALE = mat4(\n" +
-				"    VIEW_SHRINK, 0.0, 0.0, 0.0,\n" +
-				"    0.0, VIEW_SHRINK, 0.0, 0.0,\n" +
-				"    0.0, 0.0, VIEW_SHRINK, 0.0,\n" +
-				"    0.0, 0.0, 0.0, 1.0\n" +
-				");\n");
+			shader.append(
+				"const float VIEW_SHRINK = 1.0 - (1.0 / 256.0);\n" + "const mat4 VIEW_SCALE = mat4(\n" + "    VIEW_SHRINK, 0.0, 0.0, 0.0,\n" + "    0.0, VIEW_SHRINK, 0.0, 0.0,\n" + "    0.0, 0.0, VIEW_SHRINK, 0.0,\n" + "    0.0, 0.0, 0.0, 1.0\n" + ");\n");
 
-			main.append("vec4 linePosStart = ProjMat * VIEW_SCALE * ModelViewMat * vec4(" + position + ", 1.0);\n" +
-				"    vec4 linePosEnd = ProjMat * VIEW_SCALE * ModelViewMat * vec4(" + position + " + Normal, 1.0);\n" +
-				"\n" +
-				"    vec3 ndc1 = linePosStart.xyz / linePosStart.w;\n" +
-				"    vec3 ndc2 = linePosEnd.xyz / linePosEnd.w;\n" +
-				"\n" +
-				"    vec2 lineScreenDirection = normalize((ndc2.xy - ndc1.xy) * ScreenSize);\n" +
-				"    vec2 lineOffset = vec2(-lineScreenDirection.y, lineScreenDirection.x) * LineWidth / ScreenSize;\n" +
-				"\n" +
-				"    if (lineOffset.x < 0.0) {\n" +
-				"        lineOffset *= -1.0;\n" +
-				"    }\n" +
-				"\n" +
-				"    if (gl_VertexID % 2 == 0) {\n" +
-				"        gl_Position = vec4((ndc1 + vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);\n" +
-				"    } else {\n" +
-				"        gl_Position = vec4((ndc1 - vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);\n" +
-				"    }\n");
+			main.append(
+				"vec4 linePosStart = ProjMat * VIEW_SCALE * ModelViewMat * vec4(" + position + ", 1.0);\n" + "    vec4 linePosEnd = ProjMat * VIEW_SCALE * ModelViewMat * vec4(" + position + " + Normal, 1.0);\n" + "\n" + "    vec3 ndc1 = linePosStart.xyz / linePosStart.w;\n" + "    vec3 ndc2 = linePosEnd.xyz / linePosEnd.w;\n" + "\n" + "    vec2 lineScreenDirection = normalize((ndc2.xy - ndc1.xy) * ScreenSize);\n" + "    vec2 lineOffset = vec2(-lineScreenDirection.y, lineScreenDirection.x) * LineWidth / ScreenSize;\n" + "\n" + "    if (lineOffset.x < 0.0) {\n" + "        lineOffset *= -1.0;\n" + "    }\n" + "\n" + "    if (gl_VertexID % 2 == 0) {\n" + "        gl_Position = vec4((ndc1 + vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);\n" + "    } else {\n" + "        gl_Position = vec4((ndc1 - vec3(lineOffset, 0.0)) * linePosStart.w, linePosStart.w);\n" + "    }\n");
 		} else {
 			main.append("    gl_Position = ProjMat * ModelViewMat * vec4(");
 			main.append(position);
@@ -103,18 +146,15 @@ public class ShaderSynthesizer {
 
 				// Copied from Mojang code.
 				shader.append("vec4 minecraft_mix_light(vec3 lightDir0, vec3 lightDir1, vec3 normal, vec4 color) {\n" +
-		//			"    lightDir0 = normalize(lightDir0);\n" +
-		//			"    lightDir1 = normalize(lightDir1);\n" +
-					"    float light0 = max(0.0, dot(lightDir0, normal));\n" +
-					"    float light1 = max(0.0, dot(lightDir1, normal));\n" +
-					"    float lightAccum = min(1.0, (light0 + light1) * 0.6 + 0.4);\n" +
-					"    return vec4(color.rgb * lightAccum, color.a);\n" +
-					"}\n");
+					//			"    lightDir0 = normalize(lightDir0);\n" +
+					//			"    lightDir1 = normalize(lightDir1);\n" +
+					"    float light0 = max(0.0, dot(lightDir0, normal));\n" + "    float light1 = max(0.0, dot(lightDir1, normal));\n" + "    float lightAccum = min(1.0, (light0 + light1) * 0.6 + 0.4);\n" + "    return vec4(color.rgb * lightAccum, color.a);\n" + "}\n");
 
 				shader.append("in vec3 Normal;\n");
 
 				// minecraft_mix_light just passes through the original alpha value, so it's safe here.
-				main.append("    iris_vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color * ColorModulator);\n");
+				main.append(
+					"    iris_vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color * ColorModulator);\n");
 			} else if (inputs.isNewLines()) {
 				shader.append("in vec3 Normal;\n");
 				main.append("    iris_vertexColor = Color * ColorModulator;\n");
@@ -257,7 +297,8 @@ public class ShaderSynthesizer {
 			main.append("        float x = fragmentDistance * FogDensity;\n");
 			main.append("        fogFactor = exp(-x * x);\n");
 			main.append("    } else {\n");
-			main.append("        fogFactor = (FogRenderDistanceEnd - fragmentDistance) / (FogRenderDistanceEnd - FogRenderDistanceStart);\n");
+			main.append(
+				"        fogFactor = (FogRenderDistanceEnd - fragmentDistance) / (FogRenderDistanceEnd - FogRenderDistanceStart);\n");
 			main.append("    }\n");
 
 			main.append("    fogFactor = clamp(fogFactor, 0.0, 1.0);\n");

@@ -16,14 +16,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public final class ColorAttachmentPlan {
-	public record Target(int index, boolean alt) {
-		public Target {
-			if (index < 0) {
-				throw new IllegalArgumentException("Negative render target");
-			}
-		}
-	}
-
 	private final List<Target> targets;
 	private final Map<String, Program> programs;
 
@@ -32,35 +24,43 @@ public final class ColorAttachmentPlan {
 		requests.values().forEach(union::addAll);
 
 		if (union.size() > maxAttachments) {
-			throw new IllegalArgumentException("Merged render scope needs " + union.size() + " color attachments, device supports " +
-				maxAttachments + "; split the rendering scope");
+			throw new IllegalArgumentException(
+				"merged render scope needs " + union.size() + " color attachments, device supports " + maxAttachments + "; split the rendering scope");
 		}
 
-		targets = List.copyOf(union);
+		this.targets = List.copyOf(union);
 
 		var programs = new LinkedHashMap<String, Program>();
-		requests.forEach((name, outputs)
-			-> programs.put(name, new Program(outputs.stream().mapToInt(targets::indexOf).toArray(),
-			outputs.stream().mapToInt(Target::index).toArray(), targets.size())));
+		requests.forEach((name, outputs) -> programs.put(name,
+			new Program(outputs.stream().mapToInt(this.targets::indexOf).toArray(), outputs.stream().mapToInt(Target::index).toArray(),
+				this.targets.size())));
 		this.programs = Map.copyOf(programs);
 	}
 
 	public List<Target> targets() {
-		return targets;
+		return this.targets;
 	}
 
 	public Set<String> programNames() {
-		return programs.keySet();
+		return this.programs.keySet();
 	}
 
 	public Program program(String name) {
-		var program = programs.get(name);
+		var program = this.programs.get(name);
 
 		if (program == null) {
-			throw new IllegalArgumentException("Unknown attachment program: " + name);
+			throw new IllegalArgumentException("unknown attachment program: " + name);
 		}
 
 		return program;
+	}
+
+	public record Target(int index, boolean alt) {
+		public Target {
+			if (index < 0) {
+				throw new IllegalArgumentException("negative render target");
+			}
+		}
 	}
 
 	public static final class Program {
@@ -75,42 +75,46 @@ public final class ColorAttachmentPlan {
 		}
 
 		public int attachment(int output) {
-			return output >= 0 && output < locations.length ? locations[output] : -1;
+			return output >= 0 && output < this.locations.length ? this.locations[output] : -1;
+		}
+
+		public List<Integer> outputLocations() {
+			return Arrays.stream(this.locations).boxed().toList();
 		}
 
 		public int attachmentCount() {
-			return attachmentCount;
+			return this.attachmentCount;
 		}
 
 		public List<BlendMode> blends(ProgramDirectives directives, BlendMode defaultBlend) {
-			if (!Arrays.equals(drawBuffers, directives.getDrawBuffers())) {
-				throw new IllegalArgumentException("Directives do not match attachment program");
+			if (!directives.hasUnknownDrawBuffers() && !Arrays.equals(this.drawBuffers, directives.getDrawBuffers())) {
+				throw new IllegalArgumentException("directives do not match attachment program");
 			}
 
 			var override = directives.getBlendModeOverride();
 			BlendMode base = override.isPresent() ? override.get().blendMode() : defaultBlend;
-			var states = new ArrayList<BlendMode>(Collections.nCopies(drawBuffers.length, base));
+			var states = new ArrayList<BlendMode>(Collections.nCopies(this.drawBuffers.length, base));
 
 			for (var buffer : directives.getBufferBlendOverrides()) {
-				for (int i = 0; i < drawBuffers.length; i++) {
-					if (drawBuffers[i] == buffer.index()) {
+				for (int i = 0; i < this.drawBuffers.length; i++) {
+					if (this.drawBuffers[i] == buffer.index()) {
 						states.set(i, buffer.blendMode());
 					}
 				}
 			}
 
-			return remapBlends(states);
+			return this.remapBlends(states);
 		}
 
 		public List<BlendMode> remapBlends(List<BlendMode> outputBlends) {
-			if (outputBlends.size() != locations.length) {
-				throw new IllegalArgumentException("Blend states must follow DRAWBUFFERS order");
+			if (outputBlends.size() != this.locations.length) {
+				throw new IllegalArgumentException("blend states must follow DRAWBUFFERS order");
 			}
 
-			var result = new ArrayList<BlendMode>(Collections.nCopies(attachmentCount, null));
+			var result = new ArrayList<BlendMode>(Collections.nCopies(this.attachmentCount, null));
 
-			for (int i = 0; i < locations.length; i++) {
-				result.set(locations[i], outputBlends.get(i));
+			for (int i = 0; i < this.locations.length; i++) {
+				result.set(this.locations[i], outputBlends.get(i));
 			}
 
 			return Collections.unmodifiableList(result);
@@ -121,7 +125,7 @@ public final class ColorAttachmentPlan {
 		private final Map<String, List<Target>> requests = new LinkedHashMap<>();
 
 		public Builder program(String name, ProgramDirectives directives, Set<Integer> writesToAlt) {
-			return program(name, directives.getDrawBuffers(), writesToAlt);
+			return this.program(name, directives.getDrawBuffers(), writesToAlt);
 		}
 
 		public Builder program(String name, int[] drawBuffers, Set<Integer> writesToAlt) {
@@ -130,11 +134,11 @@ public final class ColorAttachmentPlan {
 			var outputs = Arrays.stream(drawBuffers).mapToObj(index -> new Target(index, writesToAlt.contains(index))).toList();
 
 			if (new HashSet<>(outputs).size() != outputs.size()) {
-				throw new IllegalArgumentException("Duplicate DRAWBUFFERS target for " + name);
+				throw new IllegalArgumentException("duplicate DRAWBUFFERS target for " + name);
 			}
 
-			if (requests.putIfAbsent(name, outputs) != null) {
-				throw new IllegalArgumentException("Duplicate attachment program: " + name);
+			if (this.requests.putIfAbsent(name, outputs) != null) {
+				throw new IllegalArgumentException("duplicate attachment program: " + name);
 			}
 
 			return this;
@@ -142,14 +146,14 @@ public final class ColorAttachmentPlan {
 
 		public List<ColorAttachmentPlan> buildGroups(int maxAttachments) {
 			if (maxAttachments < 1) {
-				throw new IllegalArgumentException("Invalid color attachment limit");
+				throw new IllegalArgumentException("invalid color attachment limit");
 			}
 
 			var groups = new ArrayList<ColorAttachmentPlan>();
 			var group = new LinkedHashMap<String, List<Target>>();
 			var union = new HashSet<Target>();
 
-			for (var entry : requests.entrySet()) {
+			for (var entry : this.requests.entrySet()) {
 				var combined = new HashSet<>(union);
 				combined.addAll(entry.getValue());
 
@@ -160,8 +164,8 @@ public final class ColorAttachmentPlan {
 				}
 
 				if (entry.getValue().size() > maxAttachments) {
-					throw new IllegalArgumentException("Program " + entry.getKey() + " needs " + entry.getValue().size() +
-						" color attachments, device supports " + maxAttachments);
+					throw new IllegalArgumentException("program " + entry.getKey() + " needs " + entry.getValue()
+						.size() + " color attachments, device supports " + maxAttachments);
 				}
 
 				group.put(entry.getKey(), entry.getValue());
@@ -177,10 +181,10 @@ public final class ColorAttachmentPlan {
 
 		public ColorAttachmentPlan build(int maxAttachments) {
 			if (maxAttachments < 1) {
-				throw new IllegalArgumentException("Invalid color attachment limit");
+				throw new IllegalArgumentException("invalid color attachment limit");
 			}
 
-			return new ColorAttachmentPlan(requests, maxAttachments);
+			return new ColorAttachmentPlan(this.requests, maxAttachments);
 		}
 	}
 }

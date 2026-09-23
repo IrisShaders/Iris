@@ -136,15 +136,12 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 				}
 
 				if (parts.length != 2) {
-					Iris.logger.error("Failed to process " + directive +
-						": expected 2 arguments to a vec2 constructor, got " + parts.length);
+					Iris.logger.error(
+						"Failed to process " + directive + ": expected 2 arguments to a vec2 constructor, got " + parts.length);
 				}
 
 				try {
-					consumer.accept(new Vector2f(
-						Float.parseFloat(parts[0]),
-						Float.parseFloat(parts[1])
-					));
+					consumer.accept(new Vector2f(Float.parseFloat(parts[0]), Float.parseFloat(parts[1])));
 				} catch (NumberFormatException e) {
 					Iris.logger.error("Failed to process " + directive, e);
 				}
@@ -179,16 +176,12 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 				}
 
 				if (parts.length != 3) {
-					Iris.logger.error("Failed to process " + directive +
-						": expected 3 arguments to a ivec3 constructor, got " + parts.length);
+					Iris.logger.error(
+						"Failed to process " + directive + ": expected 3 arguments to a ivec3 constructor, got " + parts.length);
 				}
 
 				try {
-					consumer.accept(new Vector3i(
-						Integer.parseInt(parts[0]),
-						Integer.parseInt(parts[1]),
-						Integer.parseInt(parts[2])
-					));
+					consumer.accept(new Vector3i(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
 				} catch (NumberFormatException e) {
 					Iris.logger.error("Failed to process " + directive, e);
 				}
@@ -223,17 +216,13 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 				}
 
 				if (parts.length != 4) {
-					Iris.logger.error("Failed to process " + directive +
-						": expected 4 arguments to a vec4 constructor, got " + parts.length);
+					Iris.logger.error(
+						"Failed to process " + directive + ": expected 4 arguments to a vec4 constructor, got " + parts.length);
 				}
 
 				try {
-					consumer.accept(new Vector4f(
-						Float.parseFloat(parts[0]),
-						Float.parseFloat(parts[1]),
-						Float.parseFloat(parts[2]),
-						Float.parseFloat(parts[3])
-					));
+					consumer.accept(new Vector4f(Float.parseFloat(parts[0]), Float.parseFloat(parts[1]), Float.parseFloat(parts[2]),
+						Float.parseFloat(parts[3])));
 				} catch (NumberFormatException e) {
 					Iris.logger.error("Failed to process " + directive, e);
 				}
@@ -258,7 +247,8 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	public void acceptUniformDirective(String name, Runnable onDetected) {
 		// TODO
 		if (IrisLogging.ENABLE_SPAM) {
-			Iris.logger.warn("Not looking for a uniform directive with the name " + name + " since this type of directive is not currently supported.");
+			Iris.logger.warn(
+				"Not looking for a uniform directive with the name " + name + " since this type of directive is not currently supported.");
 		}
 	}
 
@@ -266,7 +256,8 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	public void acceptCommentStringDirective(String name, Consumer<String> consumer) {
 		// TODO
 		if (IrisLogging.ENABLE_SPAM) {
-			Iris.logger.warn("Not looking for a comment string directive with the name " + name + " since this type of directive is not currently supported.");
+			Iris.logger.warn(
+				"Not looking for a comment string directive with the name " + name + " since this type of directive is not currently supported.");
 		}
 	}
 
@@ -274,7 +265,8 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	public void acceptCommentIntDirective(String name, IntConsumer consumer) {
 		// TODO
 		if (IrisLogging.ENABLE_SPAM) {
-			Iris.logger.warn("Not looking for a comment int directive with the name " + name + " since this type of directive is not currently supported.");
+			Iris.logger.warn(
+				"Not looking for a comment int directive with the name " + name + " since this type of directive is not currently supported.");
 		}
 	}
 
@@ -282,7 +274,8 @@ public class DispatchingDirectiveHolder implements DirectiveHolder {
 	public void acceptCommentFloatDirective(String name, FloatConsumer consumer) {
 		// TODO
 		if (IrisLogging.ENABLE_SPAM) {
-			Iris.logger.warn("Not looking for a comment float directive with the name " + name + " since this type of directive is not currently supported.");
+			Iris.logger.warn(
+				"Not looking for a comment float directive with the name " + name + " since this type of directive is not currently supported.");
 		}
 	}
 

@@ -11,8 +11,8 @@ import java.util.Set;
 public class ComputeParameters extends TextureStageParameters {
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
-	public ComputeParameters(Patch patch, TextureStage stage,
-							 Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
+	public ComputeParameters(Patch patch, TextureStage stage, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+		Set<String> textureOverrides) {
 		super(patch, stage, textureMap, textureOverrides);
 	}
 

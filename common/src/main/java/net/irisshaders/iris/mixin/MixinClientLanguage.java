@@ -56,7 +56,8 @@ public class MixinClientLanguage {
 	}
 
 	@Inject(method = "loadFrom", at = @At("HEAD"))
-	private static void check(ResourceManager resourceManager, List<String> definitions, boolean bl, CallbackInfoReturnable<ClientLanguage> cir) {
+	private static void check(ResourceManager resourceManager, List<String> definitions, boolean bl,
+		CallbackInfoReturnable<ClientLanguage> cir) {
 		// Make sure the language codes don't carry over!
 		languageCodes.clear();
 

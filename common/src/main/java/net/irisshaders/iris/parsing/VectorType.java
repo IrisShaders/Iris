@@ -26,17 +26,9 @@ abstract public class VectorType extends Type.ObjectType {
 	public static final VectorType B_VEC3 = new ArrayVector(Type.Boolean, 3);
 	public static final VectorType B_VEC4 = new ArrayVector(Type.Boolean, 4);
 	public static final ArrayVector[] AllArrayVectorTypes = Stream.of(Type.Int, Type.Boolean)
-		.flatMap(type ->
-			IntStream
-				.rangeClosed(2, 4)
-				.mapToObj(i -> new ArrayVector(type, i))
-		).toArray(ArrayVector[]::new);
+		.flatMap(type -> IntStream.rangeClosed(2, 4).mapToObj(i -> new ArrayVector(type, i))).toArray(ArrayVector[]::new);
 	public static final VectorType[] AllVectorTypes = Arrays.stream(Type.AllPrimitives)
-		.flatMap(type ->
-			IntStream
-				.rangeClosed(2, 4)
-				.mapToObj(i -> VectorType.of(type, i))
-		).toArray(VectorType[]::new);
+		.flatMap(type -> IntStream.rangeClosed(2, 4).mapToObj(i -> VectorType.of(type, i))).toArray(VectorType[]::new);
 
 	public static VectorType of(Type.Primitive primitive, int size) {
 		if (primitive.equals(Type.Float)) {
@@ -72,7 +64,8 @@ abstract public class VectorType extends Type.ObjectType {
 			this.inner.getValueFromArray(vector, index, functionReturn);
 		}
 
-		public <T1, T2> void map(T1 item1, T2 item2, FunctionReturn functionReturn, IntObjectObjectObjectConsumer<T1, T2, FunctionReturn> mapper) {
+		public <T1, T2> void map(T1 item1, T2 item2, FunctionReturn functionReturn,
+			IntObjectObjectObjectConsumer<T1, T2, FunctionReturn> mapper) {
 			Object array = this.createObject();
 			for (int i = 0; i < this.size; i++) {
 				mapper.accept(i, item1, item2, functionReturn);
@@ -83,8 +76,10 @@ abstract public class VectorType extends Type.ObjectType {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (!(o instanceof ArrayVector that)) return false;
+			if (this == o)
+				return true;
+			if (!(o instanceof ArrayVector that))
+				return false;
 			return size == that.size && inner.equals(that.inner);
 		}
 

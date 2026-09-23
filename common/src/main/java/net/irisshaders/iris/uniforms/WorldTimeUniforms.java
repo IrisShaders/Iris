@@ -21,10 +21,10 @@ public final class WorldTimeUniforms {
 	 * @param uniforms the program to make the uniforms available to
 	 */
 	public static void addWorldTimeUniforms(UniformHolder uniforms) {
-		uniforms
-			.uniform1i(PER_TICK, "worldTime", WorldTimeUniforms::getWorldDayTime)
-			.uniform1i(PER_TICK, "worldDay", WorldTimeUniforms::getWorldDay)
-			.uniform1i(PER_TICK, "moonPhase", () -> Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe().getValue(EnvironmentAttributes.MOON_PHASE, CapturedRenderingState.INSTANCE.getTickDelta()).index());
+		uniforms.uniform1i(PER_TICK, "worldTime", WorldTimeUniforms::getWorldDayTime)
+			.uniform1i(PER_TICK, "worldDay", WorldTimeUniforms::getWorldDay).uniform1i(PER_TICK, "moonPhase",
+				() -> Minecraft.getInstance().gameRenderer.mainCamera().attributeProbe()
+					.getValue(EnvironmentAttributes.MOON_PHASE, CapturedRenderingState.INSTANCE.getTickDelta()).index());
 	}
 
 	static int getWorldDayTime() {
@@ -36,8 +36,7 @@ public final class WorldTimeUniforms {
 			return (int) (timeOfDay % 24000L);
 		}
 
-		long dayTime = getWorld().dimensionType().hasFixedTime() ? 0 :
-			(timeOfDay % 24000L);
+		long dayTime = getWorld().dimensionType().hasFixedTime() ? 0 : (timeOfDay % 24000L);
 
 		return (int) dayTime;
 	}

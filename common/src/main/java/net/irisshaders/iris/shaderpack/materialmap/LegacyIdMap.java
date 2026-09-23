@@ -11,12 +11,10 @@ import java.util.Collections;
 import java.util.List;
 
 public class LegacyIdMap {
-	private static final ImmutableList<String> COLORS =
-		ImmutableList.of("white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
-			"light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black");
+	private static final ImmutableList<String> COLORS = ImmutableList.of("white", "orange", "magenta", "light_blue", "yellow", "lime",
+		"pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black");
 
-	private static final ImmutableList<String> WOOD_TYPES =
-		ImmutableList.of("oak", "birch", "jungle", "spruce", "acacia", "dark_oak");
+	private static final ImmutableList<String> WOOD_TYPES = ImmutableList.of("oak", "birch", "jungle", "spruce", "acacia", "dark_oak");
 
 	public static void addLegacyValues(Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockIdMap) {
 		add(blockIdMap, 1, block("stone"), block("granite"), block("diorite"), block("andesite"));
@@ -58,15 +56,14 @@ public class LegacyIdMap {
 		add(blockIdMap, 59, block("wheat"), block("carrots"), block("potatoes"));
 
 		// Small flowers
-		add(blockIdMap, 37, block("dandelion"), block("poppy"), block("blue_orchid"),
-			block("allium"), block("azure_bluet"), block("red_tulip"), block("pink_tulip"),
-			block("white_tulip"), block("orange_tulip"), block("oxeye_daisy"),
-			block("cornflower"), block("lily_of_the_valley"), block("wither_rose"));
+		add(blockIdMap, 37, block("dandelion"), block("poppy"), block("blue_orchid"), block("allium"), block("azure_bluet"),
+			block("red_tulip"), block("pink_tulip"), block("white_tulip"), block("orange_tulip"), block("oxeye_daisy"), block("cornflower"),
+			block("lily_of_the_valley"), block("wither_rose"));
 
 		// Big tall grass / flowers
 		// Also include seagrass here
-		add(blockIdMap, 175, block("sunflower"), block("lilac"), block("tall_grass"),
-			block("large_fern"), block("rose_bush"), block("peony"), block("tall_seagrass"));
+		add(blockIdMap, 175, block("sunflower"), block("lilac"), block("tall_grass"), block("large_fern"), block("rose_bush"),
+			block("peony"), block("tall_seagrass"));
 
 		// Fire
 		add(blockIdMap, 51, block("fire"));
@@ -81,7 +78,8 @@ public class LegacyIdMap {
 		return new BlockEntry(new NamespacedId("minecraft", name), Collections.emptyMap());
 	}
 
-	private static void addMany(Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockIdMap, int id, List<String> prefixes, Function<String, BlockEntry> toId) {
+	private static void addMany(Int2ObjectLinkedOpenHashMap<List<BlockEntry>> blockIdMap, int id, List<String> prefixes,
+		Function<String, BlockEntry> toId) {
 		List<BlockEntry> entries = new ArrayList<>();
 
 		for (String prefix : prefixes) {

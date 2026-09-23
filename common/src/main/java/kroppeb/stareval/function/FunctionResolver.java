@@ -17,8 +17,7 @@ public class FunctionResolver {
 	// TODO: instead of a suplier we could use an int->function to make varargs
 	private final Map<String, Map<Type, List<Supplier<? extends TypedFunction>>>> dynamicFunctions;
 
-	public FunctionResolver(
-		Map<String, Map<Type, List<TypedFunction>>> functions,
+	public FunctionResolver(Map<String, Map<Type, List<TypedFunction>>> functions,
 		Map<String, Map<Type, List<Supplier<? extends TypedFunction>>>> dynamicFunctions) {
 		this.functions = functions;
 		this.dynamicFunctions = dynamicFunctions;
@@ -66,19 +65,8 @@ public class FunctionResolver {
 
 			Map<Type, List<Supplier<? extends TypedFunction>>> dynamic = this.dynamicFunctions.get(name);
 			if (dynamic != null)
-				overloads.putAll(
-					dynamic
-						.entrySet()
-						.stream()
-						.collect(Collectors.toMap(
-								Map.Entry::getKey,
-								entry -> entry.getValue()
-									.stream()
-									.map(Supplier::get)
-									.collect(Collectors.toList())
-							)
-						)
-				);
+				overloads.putAll(dynamic.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+					entry -> entry.getValue().stream().map(Supplier::get).collect(Collectors.toList()))));
 
 			for (Map.Entry<Type, List<TypedFunction>> returnTypeOverloads : overloads.entrySet()) {
 				for (TypedFunction typedFunction : returnTypeOverloads.getValue()) {
@@ -103,10 +91,8 @@ public class FunctionResolver {
 		}
 
 		public void addDynamicFunction(String name, Type returnType, Supplier<? extends TypedFunction> function) {
-			this.dynamicFunctions
-				.computeIfAbsent(name, (n) -> new Object2ObjectLinkedOpenHashMap<>())
-				.computeIfAbsent(returnType, (n) -> new ObjectArrayList<>())
-				.add(function);
+			this.dynamicFunctions.computeIfAbsent(name, (n) -> new Object2ObjectLinkedOpenHashMap<>())
+				.computeIfAbsent(returnType, (n) -> new ObjectArrayList<>()).add(function);
 		}
 
 		public void addFunction(String name, TypedFunction function) {
@@ -118,8 +104,7 @@ public class FunctionResolver {
 			for (Map.Entry<String, List<TypedFunction>> entry : this.functions.entrySet()) {
 				Map<Type, List<TypedFunction>> typeMap = new Object2ObjectLinkedOpenHashMap<>();
 				for (TypedFunction function : entry.getValue()) {
-					typeMap.computeIfAbsent(function.getReturnType(), i -> new ObjectArrayList<>())
-						.add(function);
+					typeMap.computeIfAbsent(function.getReturnType(), i -> new ObjectArrayList<>()).add(function);
 				}
 				functions.put(entry.getKey(), typeMap);
 			}

@@ -16,16 +16,26 @@ public abstract class Type {
 	public static final Primitive[] AllPrimitives = {Type.Boolean, Type.Int, Type.Float};
 
 	public static UniformType convert(Type type) {
-		if (type == Type.Int || type == Type.Boolean) return UniformType.INT;
-		else if (type == Type.Float) return UniformType.FLOAT;
-		else if (type == VectorType.VEC2) return UniformType.VEC2;
-		else if (type == VectorType.VEC3) return UniformType.VEC3;
-		else if (type == VectorType.VEC4) return UniformType.VEC4;
-		else if (type == VectorType.I_VEC2) return UniformType.VEC2I;
-		else if (type == VectorType.I_VEC3) return UniformType.VEC3I;
-		else if (type == MatrixType.MAT4) return UniformType.MAT4;
-		else if (type == MatrixType.MAT3) return UniformType.MAT3;
-		else throw new IllegalArgumentException("Unsupported custom uniform type: " + type);
+		if (type == Type.Int || type == Type.Boolean)
+			return UniformType.INT;
+		else if (type == Type.Float)
+			return UniformType.FLOAT;
+		else if (type == VectorType.VEC2)
+			return UniformType.VEC2;
+		else if (type == VectorType.VEC3)
+			return UniformType.VEC3;
+		else if (type == VectorType.VEC4)
+			return UniformType.VEC4;
+		else if (type == VectorType.I_VEC2)
+			return UniformType.VEC2I;
+		else if (type == VectorType.I_VEC3)
+			return UniformType.VEC3I;
+		else if (type == MatrixType.MAT4)
+			return UniformType.MAT4;
+		else if (type == MatrixType.MAT3)
+			return UniformType.MAT3;
+		else
+			throw new IllegalArgumentException("Unsupported custom uniform type: " + type);
 	}
 
 	public abstract ConstantExpression createConstant(FunctionReturn functionReturn);

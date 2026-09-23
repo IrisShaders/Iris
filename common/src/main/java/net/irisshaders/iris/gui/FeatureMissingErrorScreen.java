@@ -24,7 +24,8 @@ public class FeatureMissingErrorScreen extends Screen {
 	protected void init() {
 		super.init();
 		this.message = MultiLineLabel.create(this.font, this.width - 50, messageTemp);
-		this.addRenderableWidget(Button.builder(CommonComponents.GUI_BACK, arg -> this.minecraft.gui.setScreen(parent)).bounds(this.width / 2 - 100, 140, 200, 20).build());
+		this.addRenderableWidget(Button.builder(CommonComponents.GUI_BACK, arg -> this.minecraft.gui.setScreen(parent))
+			.bounds(this.width / 2 - 100, 140, 200, 20).build());
 	}
 
 	@Override
@@ -32,7 +33,7 @@ public class FeatureMissingErrorScreen extends Screen {
 		this.extractBackground(guiGraphics, mouseX, mouseY, delta);
 		ActiveTextCollector activeTextCollector = guiGraphics.textRenderer();
 		guiGraphics.centeredText(this.font, this.title, this.width / 2, 90, 0xFFFFFFFF);
-		message.visitLines(TextAlignment.CENTER,  this.width / 2, 110, 9, activeTextCollector);
+		message.visitLines(TextAlignment.CENTER, this.width / 2, 110, 9, activeTextCollector);
 		super.extractRenderState(guiGraphics, mouseX, mouseY, delta);
 	}
 }

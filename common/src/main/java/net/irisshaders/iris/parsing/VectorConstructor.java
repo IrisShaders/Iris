@@ -12,10 +12,7 @@ import java.util.Arrays;
 public class VectorConstructor extends AbstractTypedFunction {
 
 	public VectorConstructor(Type inner, int size) {
-		super(
-			new VectorType.ArrayVector(inner, size),
-			Util.make(new Type[size], params -> Arrays.fill(params, inner))
-		);
+		super(new VectorType.ArrayVector(inner, size), Util.make(new Type[size], params -> Arrays.fill(params, inner)));
 	}
 
 	@Override
@@ -24,8 +21,7 @@ public class VectorConstructor extends AbstractTypedFunction {
 	}
 
 	@Override
-	public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn
-		functionReturn) {
+	public void evaluateTo(Expression[] params, FunctionContext context, FunctionReturn functionReturn) {
 		VectorType.ArrayVector vectorType = this.getReturnType();
 		vectorType.map(params, context, functionReturn, (i, p, ctx, fr) -> p[i].evaluateTo(ctx, fr));
 	}

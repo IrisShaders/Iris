@@ -22,6 +22,7 @@ public class ClearPassCreator {
 
 		// Sort buffers by their clear color so we can group up glClear calls.
 		Map<Vector2i, Map<ClearPassInformation, IntList>> clearByColor = new HashMap<>();
+
 		renderTargetDirectives.getRenderTargetSettings().forEach((bufferI, settings) -> {
 			// unboxed
 			final int buffer = bufferI;
@@ -41,7 +42,6 @@ public class ClearPassCreator {
 				}
 
 				RenderTarget target = renderTargets.get(buffer);
-
 				if (target == null) {
 					return;
 				}
@@ -54,6 +54,7 @@ public class ClearPassCreator {
 		});
 
 		List<ClearPass> clearPasses = new ArrayList<>();
+
 		clearByColor.forEach((passSize, vector4fIntListMap) -> vector4fIntListMap.forEach((clearInfo, buffers) -> {
 			int startIndex = 0;
 
@@ -69,10 +70,10 @@ public class ClearPassCreator {
 				}
 
 				// No need to clear the depth buffer, since we're using Minecraft's depth buffer.
-				clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
+				clearPasses.add(new ClearPass(clearInfo.color(), clearInfo::width, clearInfo::height,
 					renderTargets.createClearFramebuffer(true, clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
 
-				clearPasses.add(new ClearPass(clearInfo.getColor(), clearInfo::getWidth, clearInfo::getHeight,
+				clearPasses.add(new ClearPass(clearInfo.color(), clearInfo::width, clearInfo::height,
 					renderTargets.createClearFramebuffer(false, clearBuffers), GL21C.GL_COLOR_BUFFER_BIT));
 			}
 		}));

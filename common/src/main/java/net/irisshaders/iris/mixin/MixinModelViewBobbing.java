@@ -3,22 +3,16 @@ package net.irisshaders.iris.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import net.irisshaders.iris.Iris;
 import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.util.Mth;
-import net.minecraft.world.effect.MobEffects;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
-import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Final;
@@ -60,7 +54,8 @@ public abstract class MixinModelViewBobbing {
 	}
 
 	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;mul(Lorg/joml/Matrix4fc;)Lorg/joml/Matrix4f;"))
-	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, Matrix4fc right, Operation<Matrix4f> original, @Local(name = "cameraState") CameraRenderState cameraRenderState) {
+	private Matrix4f iris$applyBobbingToModelView(Matrix4f instance, Matrix4fc right, Operation<Matrix4f> original,
+		@Local(name = "cameraState") CameraRenderState cameraRenderState) {
 		if (!areShadersOn) {
 			return original.call(instance, right);
 		}
@@ -90,9 +85,11 @@ public abstract class MixinModelViewBobbing {
 	}
 
 	@WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZZ)V"))
-	private void iris$renderLevel(LevelRenderer instance, GraphicsResourceAllocator graphicsResourceAllocator, boolean y, CameraRenderState cameraRenderState, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean b, boolean x, Operation<Void> original) {
+	private void iris$renderLevel(LevelRenderer instance, GraphicsResourceAllocator graphicsResourceAllocator, boolean y,
+		CameraRenderState cameraRenderState, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean b, boolean x,
+		Operation<Void> original) {
 		if (areShadersOn) {
-			((Matrix4f) cameraRenderState.viewRotationMatrix).mulLocal(bobStack); // need `bob * modelView` not `modelView * bob`
+			cameraRenderState.viewRotationMatrix.mulLocal(bobStack); // need `bob * modelView` not `modelView * bob`
 		}
 
 		original.call(instance, graphicsResourceAllocator, y, cameraRenderState, gpuBufferSlice, vector4f, b, x);

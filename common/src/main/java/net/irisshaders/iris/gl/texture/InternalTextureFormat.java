@@ -114,12 +114,14 @@ public enum InternalTextureFormat {
 			case RGB10_A2 -> GpuFormat.RGB10A2_UNORM;
 			case RGB10_A2UI -> GpuFormat.RGB10A2_UINT;
 			case R11F_G11F_B10F -> GpuFormat.RG11B10_FLOAT;
-			case RGBA2, RGBA4, R3_G3_B2, RGB5_A1, RGB565, RGB9_E5 ->
+			case RGB565 -> GpuFormat.IRIS_RGB565_UNORM;
+			case RGB5_A1 -> GpuFormat.IRIS_RGB5A1_UNORM;
+			case RGB9_E5 -> GpuFormat.IRIS_RGB9E5_FLOAT;
+			case RGBA2, RGBA4, R3_G3_B2 ->
 				throw new UnsupportedOperationException("RenderPearl cannot represent shader-pack format " + this);
 			default -> {
-				// Three-channel formats are not portable Vulkan color attachments.
-				String name = expectedPixelFormat == PixelFormat.RGB || expectedPixelFormat == PixelFormat.RGB_INTEGER
-					? name().replaceFirst("^RGB", "RGBA") : name();
+				String name = this.expectedPixelFormat == PixelFormat.RGB || this.expectedPixelFormat == PixelFormat.RGB_INTEGER ? this.name()
+					.replaceFirst("^RGB", "RGBA") : this.name();
 
 				if (name.endsWith("_SNORM")) {
 					yield GpuFormat.valueOf(name);

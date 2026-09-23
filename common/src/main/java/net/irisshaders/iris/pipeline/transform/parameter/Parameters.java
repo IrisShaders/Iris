@@ -21,7 +21,8 @@ public abstract class Parameters implements JobParameters {
 	// name of the shader, this should not be part of hash/equals
 	public String name; // set by TransformPatcher
 
-	public Parameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap, Set<String> textureOverrides) {
+	public Parameters(Patch patch, Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap,
+		Set<String> textureOverrides) {
 		this.patch = patch;
 		this.textureMap = textureMap;
 		this.textureOverrides = Set.copyOf(textureOverrides);
@@ -66,6 +67,7 @@ public abstract class Parameters implements JobParameters {
 			return false;
 		if (textureMap == null) {
 			return other.textureMap == null;
-		} else return textureMap.equals(other.textureMap);
+		} else
+			return textureMap.equals(other.textureMap);
 	}
 }

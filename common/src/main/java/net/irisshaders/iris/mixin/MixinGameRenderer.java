@@ -48,14 +48,12 @@ public class MixinGameRenderer {
 		ModelManager modelManager, ItemModelResolver itemModelResolver, CallbackInfo ci) {
 		Iris.logger.info("Hardware information:");
 		Iris.logger.info("CPU: " + DebugEntrySystemSpecs.getCpuInfo());
-		Iris.logger.info(
-			"GPU: " + RenderSystem.getDevice().getDeviceInfo().name() + " (" + RenderSystem.getDevice().getDeviceInfo().backendName() +
-				" " + RenderSystem.getDevice().getDeviceInfo().driverInfo() + ")");
+		Iris.logger.info("GPU: " + RenderSystem.getDevice().getDeviceInfo().name() + " (" + RenderSystem.getDevice().getDeviceInfo()
+			.backendName() + " " + RenderSystem.getDevice().getDeviceInfo().driverInfo() + ")");
 		Iris.logger.info("OS: " + System.getProperty("os.name") + " (" + System.getProperty("os.version") + ")");
 	}
 
-	@ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlobalSettingsUniform;update" +
-		"(IIDJFILnet/minecraft/world/phys/Vec3;Z)V"))
+	@ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlobalSettingsUniform;update" + "(IIDJFILnet/minecraft/world/phys/Vec3;Z)V"))
 	private void iris$modifyBlur(Args args) {
 		if (this.minecraft.gui.screen() instanceof ShaderPackScreen sps) {
 			// TODO 1.21.6
@@ -64,10 +62,7 @@ public class MixinGameRenderer {
 		}
 	}
 
-	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer" +
-		"/FirstPersonHandsAndItemsRenderer;submitHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;" +
-		"Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/PlayerRenderState;" +
-		"Lnet/minecraft/client/renderer/state/level/FirstPersonHandsAndItemsRenderState;)V"))
+	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer" + "/FirstPersonHandsAndItemsRenderer;submitHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;" + "Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/PlayerRenderState;" + "Lnet/minecraft/client/renderer/state/level/FirstPersonHandsAndItemsRenderState;)V"))
 	private void iris$disableVanillaHandRendering(FirstPersonHandsAndItemsRenderer instance, float frameInterp, PoseStack poseStack,
 		SubmitNodeCollector submitNodeCollector, PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state) {
 		if (Iris.isPackInUseQuick()) {

@@ -1,21 +1,13 @@
 package net.irisshaders.iris.targets;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.backend.IrisImage;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.PixelFormat;
 import net.irisshaders.iris.gl.texture.PixelType;
 import net.irisshaders.iris.gl.texture.TextureType;
-import net.irisshaders.iris.vulkan.VulkanCommandBridge;
-import net.irisshaders.iris.vulkan.VulkanImage;
 
 public class CustomImage implements AutoCloseable {
-	private boolean closed;
-
-	public void destroy() {
-		close();
-	}
-
 	protected final String name;
 	protected final String samplerName;
 	protected final TextureType target;
@@ -23,18 +15,11 @@ public class CustomImage implements AutoCloseable {
 	protected final InternalTextureFormat internalTextureFormat;
 	protected final PixelType pixelType;
 	private final boolean clear;
-	private final VulkanDevice device;
-	private VulkanImage image;
+	private boolean closed;
+	private IrisImage image;
 
 	public CustomImage(String name, String samplerName, TextureType target, PixelFormat format, InternalTextureFormat internalFormat,
 		PixelType pixelType, boolean clear, int width, int height, int depth) {
-		this(VulkanCommandBridge.device(RenderSystem.getDevice()), name, samplerName, target, format, internalFormat, pixelType, clear,
-			width, height, depth);
-	}
-
-	public CustomImage(VulkanDevice device, String name, String samplerName, TextureType target, PixelFormat format,
-		InternalTextureFormat internalFormat, PixelType pixelType, boolean clear, int width, int height, int depth) {
-		this.device = device;
 		this.name = name;
 		this.samplerName = samplerName;
 		this.target = target;
@@ -42,53 +27,59 @@ public class CustomImage implements AutoCloseable {
 		this.internalTextureFormat = internalFormat;
 		this.pixelType = pixelType;
 		this.clear = clear;
-		resize(width, height, depth);
+		this.resize(width, height, depth);
+	}
+
+	public void destroy() {
+		this.close();
 	}
 
 	protected void resize(int width, int height, int depth) {
-		if (closed) {
-			throw new IllegalStateException("CustomImage is closed");
+		if (this.closed) {
+			throw new IllegalStateException("custom image is closed");
 		}
 
-		if (image != null && image.width() == width && image.height() == Math.max(1, height) && image.depth() == Math.max(1, depth)) {
+		if (this.image != null && this.image.getWidth() == width && this.image.getHeight() == Math.max(1,
+			height) && this.image.getDepth() == Math.max(1, depth)) {
 			return;
 		}
 
-		var next = new VulkanImage(device, name, target, internalTextureFormat.toGpuFormat(), width, height, depth);
+		var next = Iris.getRenderBackend()
+			.createImage(this.name, this.target, this.internalTextureFormat.toGpuFormat(), width, height, depth, true);
 
-		if (image != null) {
-			image.close();
+		if (this.image != null) {
+			this.image.close();
 		}
 
-		image = next;
+		this.image = next;
 	}
 
-	public VulkanImage image() {
-		if (closed) {
-			throw new IllegalStateException("CustomImage is closed");
+	public IrisImage image() {
+		if (this.closed) {
+			throw new IllegalStateException("custom image is closed");
 		}
 
-		return image;
+		return this.image;
 	}
 
 	public void clear() {
-		image().clear();
+		this.image().clear();
 	}
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	public String getSamplerName() {
-		return samplerName;
+		return this.samplerName;
 	}
 
 	public TextureType getTarget() {
-		return target;
+		return this.target;
 	}
 
 	public boolean shouldClear() {
-		return clear;
+		return this.clear;
 	}
 
 	public void updateNewSize(int width, int height) {
@@ -96,27 +87,27 @@ public class CustomImage implements AutoCloseable {
 
 	@Override
 	public void close() {
-		if (closed) {
+		if (this.closed) {
 			return;
 		}
 
-		closed = true;
+		this.closed = true;
 
-		if (image != null) {
-			image.close();
+		if (this.image != null) {
+			this.image.close();
 		}
 	}
 
 	public InternalTextureFormat getInternalFormat() {
-		return internalTextureFormat;
+		return this.internalTextureFormat;
 	}
 
 	public PixelFormat getFormat() {
-		return format;
+		return this.format;
 	}
 
 	public PixelType getPixelType() {
-		return pixelType;
+		return this.pixelType;
 	}
 
 	public static class Relative extends CustomImage {
@@ -125,13 +116,7 @@ public class CustomImage implements AutoCloseable {
 
 		public Relative(String name, String samplerName, PixelFormat format, InternalTextureFormat internalFormat, PixelType pixelType,
 			boolean clear, float relativeWidth, float relativeHeight, int width, int height) {
-			this(VulkanCommandBridge.device(RenderSystem.getDevice()), name, samplerName, format, internalFormat, pixelType, clear,
-				relativeWidth, relativeHeight, width, height);
-		}
-
-		public Relative(VulkanDevice device, String name, String samplerName, PixelFormat format, InternalTextureFormat internalFormat,
-			PixelType pixelType, boolean clear, float relativeWidth, float relativeHeight, int width, int height) {
-			super(device, name, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, clear,
+			super(name, samplerName, TextureType.TEXTURE_2D, format, internalFormat, pixelType, clear,
 				Math.max(1, (int) (width * relativeWidth)), Math.max(1, (int) (height * relativeHeight)), 0);
 			this.relativeWidth = relativeWidth;
 			this.relativeHeight = relativeHeight;
@@ -139,7 +124,7 @@ public class CustomImage implements AutoCloseable {
 
 		@Override
 		public void updateNewSize(int width, int height) {
-			resize(Math.max(1, (int) (width * relativeWidth)), Math.max(1, (int) (height * relativeHeight)), 0);
+			this.resize(Math.max(1, (int) (width * this.relativeWidth)), Math.max(1, (int) (height * this.relativeHeight)), 0);
 		}
 	}
 }

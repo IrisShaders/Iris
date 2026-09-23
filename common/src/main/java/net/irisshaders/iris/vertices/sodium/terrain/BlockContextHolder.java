@@ -50,7 +50,8 @@ public class BlockContextHolder {
 	}
 
 	public void overrideBlock(int block) {
-		if (this.blockId == block) return;
+		if (this.blockId == block)
+			return;
 
 		if (this.oldId == -1) {
 			this.oldId = blockId;
@@ -60,7 +61,8 @@ public class BlockContextHolder {
 	}
 
 	public void restoreBlock() {
-		if (this.oldId == -1) return;
+		if (this.oldId == -1)
+			return;
 		this.blockId = oldId;
 		this.oldId = -1;
 	}

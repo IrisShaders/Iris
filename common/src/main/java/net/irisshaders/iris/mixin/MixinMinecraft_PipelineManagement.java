@@ -21,6 +21,7 @@ public class MixinMinecraft_PipelineManagement {
 		IrisRenderSystem.destroyRenderer();
 		HandRenderer.closeInstance();
 		IrisSamplers.closeTerrainSamplers();
+		Iris.getRenderBackend().close();
 	}
 
 	/**

@@ -45,7 +45,6 @@ repositories {
         url = uri("https://prmaven.neoforged.net/NeoForge/pr2993")
         content {
             includeModule("net.neoforged", "neoforge")
-            includeModule("net.neoforged", "testframework")
         }
     }
 }
@@ -106,13 +105,10 @@ fun includeAdditional(dependency: String) {
 
 }
 
-tasks.named("compileTestJava").configure {
-    enabled = false
-}
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code
 val notNeoTask: (Task) -> Boolean = { it: Task -> !it.name.startsWith("neo") && !it.name.startsWith("compileService") }
 
-tasks.withType<JavaCompile>().matching(notNeoTask).configureEach {
+tasks.named<JavaCompile>("compileJava") {
     source(project(":common").sourceSets.main.get().allSource)
     source(project(":common").sourceSets.getByName("vendored").allSource)
     source(project(":common").sourceSets.getByName("api").allSource)
@@ -133,7 +129,7 @@ tasks.withType<Javadoc>().matching(notNeoTask).configureEach {
     source(project(":common").sourceSets.main.get().allJava)
 }
 
-tasks.withType<ProcessResources>().matching(notNeoTask).configureEach {
+tasks.named<ProcessResources>("processResources") {
     from(project(":common").sourceSets.main.get().resources)
 }
 

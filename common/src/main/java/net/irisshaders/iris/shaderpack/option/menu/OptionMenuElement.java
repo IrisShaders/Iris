@@ -14,7 +14,8 @@ public abstract class OptionMenuElement {
 	private static final String ELEMENT_EMPTY = "<empty>";
 	private static final String ELEMENT_PROFILE = "<profile>";
 
-	public static OptionMenuElement create(String elementString, OptionMenuContainer container, ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions) throws IllegalArgumentException {
+	public static OptionMenuElement create(String elementString, OptionMenuContainer container, ShaderProperties shaderProperties,
+		ShaderPackOptions shaderPackOptions) throws IllegalArgumentException {
 		// Empty element
 		if (ELEMENT_EMPTY.equals(elementString)) {
 			return EMPTY;
@@ -23,7 +24,8 @@ public abstract class OptionMenuElement {
 		// NB: We don't want to add a profile element if there aren't profiles, even if it's requested. TODO: add this to diagnostics? (lp)
 		if (ELEMENT_PROFILE.equals(elementString)) {
 			// null indicates that the element should be forgotten (not treated as empty)
-			return container.getProfiles().size() > 0 ? new OptionMenuProfileElement(container.getProfiles(), shaderPackOptions.getOptionSet(), shaderPackOptions.getOptionValues()) : null;
+			return container.getProfiles().size() > 0 ? new OptionMenuProfileElement(container.getProfiles(),
+				shaderPackOptions.getOptionSet(), shaderPackOptions.getOptionValues()) : null;
 		}
 		// Link to sub screen element
 		if (elementString.startsWith("[") && elementString.endsWith("]")) {
@@ -35,12 +37,15 @@ public abstract class OptionMenuElement {
 
 		// Option elements (boolean and string), only succeed if the option is defined in the shader source
 		if (booleanOptions.containsKey(elementString)) {
-			return new OptionMenuBooleanOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(), booleanOptions.get(elementString).getOption());
+			return new OptionMenuBooleanOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(),
+				booleanOptions.get(elementString).getOption());
 		} else if (stringOptions.containsKey(elementString)) {
-			return new OptionMenuStringOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(), stringOptions.get(elementString).getOption());
+			return new OptionMenuStringOptionElement(elementString, container, shaderProperties, shaderPackOptions.getOptionValues(),
+				stringOptions.get(elementString).getOption());
 		}
 
 		// Handled and ignored with log warning
-		throw new IllegalArgumentException("Unable to resolve shader pack option menu element \"" + elementString + "\" defined in shaders.properties");
+		throw new IllegalArgumentException(
+			"Unable to resolve shader pack option menu element \"" + elementString + "\" defined in shaders.properties");
 	}
 }

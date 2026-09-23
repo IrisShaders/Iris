@@ -1,7 +1,7 @@
 package net.irisshaders.iris.targets.backed;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.backend.IrisImage;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
@@ -10,70 +10,61 @@ import net.irisshaders.iris.gl.texture.PixelType;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.shaderpack.texture.TextureFilteringData;
-import net.irisshaders.iris.vulkan.VulkanCommandBridge;
-import net.irisshaders.iris.vulkan.VulkanImage;
 
 import java.util.function.IntSupplier;
 
 public class RawTexture implements TextureAccess, AutoCloseable {
-	private boolean closed;
-
-	public void destroy() {
-		close();
-	}
-
 	private final TextureType target;
 	private final GlSampler sampler;
-	private final VulkanImage image;
+	private final IrisImage image;
+	private boolean closed;
 
 	public RawTexture(TextureType target, int width, int height, int depth, InternalTextureFormat internal, PixelFormat format,
 		PixelType type, byte[] pixels, TextureFilteringData filtering) {
-		this(VulkanCommandBridge.device(RenderSystem.getDevice()), target, width, height, depth, internal, format, type, pixels,
-			filtering);
-	}
-
-	public RawTexture(VulkanDevice device, TextureType target, int width, int height, int depth, InternalTextureFormat internal,
-		PixelFormat format, PixelType type, byte[] pixels, TextureFilteringData filtering) {
 		this.target = target;
 
 		boolean blur = filtering.shouldBlur() && !internal.getPixelFormat().isInteger();
-		sampler = filtering.shouldClamp() ? (blur ? GlSampler.LINEAR : GlSampler.NEAREST)
-			: (blur ? GlSampler.LINEAR_REPEAT : GlSampler.NEAREST_REPEAT);
+		this.sampler = filtering.shouldClamp() ? (blur ? GlSampler.LINEAR : GlSampler.NEAREST) : (blur ? GlSampler.LINEAR_REPEAT : GlSampler.NEAREST_REPEAT);
 
 		if (width < 1 || height < 0 || depth < 0) {
-			throw new IllegalArgumentException("Invalid raw texture dimensions");
+			throw new IllegalArgumentException("invalid raw texture dimensions");
 		}
 
 		var data = RawTextureData.convert(pixels, Math.multiplyExact(width, Math.multiplyExact(Math.max(1, height), Math.max(1, depth))),
 			internal, format, type);
-		image = new VulkanImage(device, "Iris raw custom texture", target, internal.toGpuFormat(), width, height, depth, false);
+		this.image = Iris.getRenderBackend()
+			.createImage("Iris raw custom texture", target, internal.toGpuFormat(), width, height, depth, false);
 
 		try {
-			image.upload(data);
+			this.image.upload(data);
 		} catch (RuntimeException | Error failure) {
-			image.close();
+			this.image.close();
 
 			throw failure;
 		}
 	}
 
+	public void destroy() {
+		this.close();
+	}
+
 	public TextureType getTarget() {
-		return target;
+		return this.target;
 	}
 
 	@Override
 	public TextureType getType() {
-		return target;
+		return this.target;
 	}
 
 	@Override
 	public IntSupplier getTextureId() {
-		throw new UnsupportedOperationException("Raw textures use Vulkan views");
+		throw new UnsupportedOperationException("raw textures use Vulkan views");
 	}
 
 	@Override
 	public GlSampler getSampling() {
-		return sampler;
+		return this.sampler;
 	}
 
 	@Override
@@ -81,21 +72,21 @@ public class RawTexture implements TextureAccess, AutoCloseable {
 		return new SamplerHolder.TextureBinding(this, null, this::getSampling, null, this::image);
 	}
 
-	public VulkanImage image() {
-		if (closed) {
-			throw new IllegalStateException("RawTexture is closed");
+	public IrisImage image() {
+		if (this.closed) {
+			throw new IllegalStateException("raw texture is closed");
 		}
 
-		return image;
+		return this.image;
 	}
 
 	@Override
 	public void close() {
-		if (closed) {
+		if (this.closed) {
 			return;
 		}
 
-		closed = true;
-		image.close();
+		this.closed = true;
+		this.image.close();
 	}
 }

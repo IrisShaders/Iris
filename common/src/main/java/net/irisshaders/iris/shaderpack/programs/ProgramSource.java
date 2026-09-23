@@ -17,8 +17,8 @@ public class ProgramSource {
 	private final ProgramDirectives directives;
 	private final ProgramSet parent;
 
-	private ProgramSource(String name, String vertexSource, String geometrySource, String tessControlSource, String tessEvalSource, String fragmentSource,
-						  ProgramDirectives directives, ProgramSet parent) {
+	private ProgramSource(String name, String vertexSource, String geometrySource, String tessControlSource, String tessEvalSource,
+		String fragmentSource, ProgramDirectives directives, ProgramSet parent) {
 		this.name = name;
 		this.vertexSource = vertexSource;
 		this.geometrySource = geometrySource;
@@ -29,8 +29,8 @@ public class ProgramSource {
 		this.parent = parent;
 	}
 
-	public ProgramSource(String name, String vertexSource, String geometrySource, String tessControlSource, String tessEvalSource, String fragmentSource,
-						 ProgramSet parent, ShaderProperties properties, BlendModeOverride defaultBlendModeOverride) {
+	public ProgramSource(String name, String vertexSource, String geometrySource, String tessControlSource, String tessEvalSource,
+		String fragmentSource, ProgramSet parent, ShaderProperties properties, BlendModeOverride defaultBlendModeOverride) {
 		this.name = name;
 		this.vertexSource = vertexSource;
 		this.geometrySource = geometrySource;
@@ -38,12 +38,13 @@ public class ProgramSource {
 		this.tessEvalSource = tessEvalSource;
 		this.fragmentSource = fragmentSource;
 		this.parent = parent;
-		this.directives = new ProgramDirectives(this, properties,
-			PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, defaultBlendModeOverride);
+		this.directives = new ProgramDirectives(this, properties, PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS,
+			defaultBlendModeOverride);
 	}
 
 	public ProgramSource withDirectiveOverride(ProgramDirectives overrideDirectives) {
-		return new ProgramSource(name, vertexSource, geometrySource, tessControlSource, tessEvalSource, fragmentSource, overrideDirectives, parent);
+		return new ProgramSource(name, vertexSource, geometrySource, tessControlSource, tessEvalSource, fragmentSource, overrideDirectives,
+			parent);
 	}
 
 	public String getName() {

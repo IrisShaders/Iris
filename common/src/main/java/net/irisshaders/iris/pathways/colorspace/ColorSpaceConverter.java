@@ -9,5 +9,8 @@ public interface ColorSpaceConverter extends AutoCloseable {
 
 	void rebuildProgram(int width, int height, ColorSpace colorSpace);
 
+	default void prepare(GpuTextureView target) {
+	}
+
 	void process(GpuTextureView target);
 }

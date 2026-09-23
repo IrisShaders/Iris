@@ -2,7 +2,6 @@ package net.irisshaders.iris.config;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.irisshaders.iris.Iris;
@@ -24,10 +23,14 @@ import java.util.Properties;
  * A class dedicated to storing the config values of shaderpacks. Right now it only stores the path to the current shaderpack
  */
 public class IrisConfig {
-	private static final String COMMENT =
-		"This file stores configuration options for Iris, such as the currently active shaderpack";
+	private static final String COMMENT = "This file stores configuration options for Iris, such as the currently active shaderpack";
+	private static final Gson GSON = new Gson();
 	private final Path propertiesPath;
 	private final Path excludedPath;
+	/**
+	 * What shaders should be nuked.
+	 */
+	private final List<Identifier> shadersToSkip = new ArrayList<>();
 	/**
 	 * The path to the current shaderpack. Null if the internal shaderpack is being used.
 	 */
@@ -45,13 +48,10 @@ public class IrisConfig {
 	 */
 	private boolean enableDebugOptions;
 	/**
-	 * What shaders should be nuked.
-	 */
-	private List<Identifier> shadersToSkip = new ArrayList<>();
-	/**
 	 * If the update notification should be disabled or not.
 	 */
 	private boolean disableUpdateMessage;
+	private boolean hasRunVulkan;
 
 	public IrisConfig(Path propertiesPath, Path excluded) {
 		shaderPackName = null;
@@ -59,6 +59,7 @@ public class IrisConfig {
 		allowUnknownShaders = false;
 		enableDebugOptions = false;
 		disableUpdateMessage = false;
+		this.hasRunVulkan = false;
 		this.propertiesPath = propertiesPath;
 		this.excludedPath = excluded;
 	}
@@ -121,6 +122,14 @@ public class IrisConfig {
 		return disableUpdateMessage;
 	}
 
+	public boolean hasRunVulkan() {
+		return this.hasRunVulkan;
+	}
+
+	public void setHasRunVulkan(boolean hasRunVulkan) {
+		this.hasRunVulkan = hasRunVulkan;
+	}
+
 	public void setDebugEnabled(boolean enabled) {
 		enableDebugOptions = enabled;
 	}
@@ -131,8 +140,6 @@ public class IrisConfig {
 	public void setShadersEnabled(boolean enabled) {
 		this.enableShaders = enabled;
 	}
-
-	private static Gson GSON = new Gson();
 
 	/**
 	 * loads the config file and then populates the string, int, and boolean entries with the parsed entries
@@ -174,6 +181,7 @@ public class IrisConfig {
 		allowUnknownShaders = "true".equals(properties.getProperty("allowUnknownShaders"));
 		enableDebugOptions = "true".equals(properties.getProperty("enableDebugOptions"));
 		disableUpdateMessage = "true".equals(properties.getProperty("disableUpdateMessage"));
+		this.hasRunVulkan = "true".equals(properties.getProperty("hasRunVulkan"));
 		try {
 			IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("maxShadowRenderDistance", "32"));
 			IrisVideoSettings.colorSpace = ColorSpace.valueOf(properties.getProperty("colorSpace", "SRGB"));
@@ -199,10 +207,11 @@ public class IrisConfig {
 	public void save() throws IOException {
 		Properties properties = new Properties();
 		properties.setProperty("shaderPack", getShaderPackName().orElse(""));
-		properties.setProperty("enableShaders", enableShaders ? "true" : "false");
-		properties.setProperty("allowUnknownShaders", allowUnknownShaders ? "true" : "false");
-		properties.setProperty("enableDebugOptions", enableDebugOptions ? "true" : "false");
-		properties.setProperty("disableUpdateMessage", disableUpdateMessage ? "true" : "false");
+		properties.setProperty("enableShaders", Boolean.toString(enableShaders));
+		properties.setProperty("allowUnknownShaders", Boolean.toString(allowUnknownShaders));
+		properties.setProperty("enableDebugOptions", Boolean.toString(enableDebugOptions));
+		properties.setProperty("disableUpdateMessage", Boolean.toString(disableUpdateMessage));
+		properties.setProperty("hasRunVulkan", Boolean.toString(this.hasRunVulkan));
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
 		properties.setProperty("colorSpace", IrisVideoSettings.colorSpace.name());
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding

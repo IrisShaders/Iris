@@ -83,7 +83,8 @@ public class IrisElementRow {
 	/**
 	 * Renders the row, with the anchor point being the top left.
 	 */
-	public void render(GuiGraphicsExtractor guiGraphics, int x, int y, int height, int mouseX, int mouseY, float tickDelta, boolean rowHovered) {
+	public void render(GuiGraphicsExtractor guiGraphics, int x, int y, int height, int mouseX, int mouseY, float tickDelta,
+		boolean rowHovered) {
 		this.x = x;
 		this.y = y;
 		this.height = height;
@@ -103,13 +104,13 @@ public class IrisElementRow {
 	/**
 	 * Renders the row, with the anchor point being the top right.
 	 */
-	public void renderRightAligned(GuiGraphicsExtractor guiGraphics, int x, int y, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+	public void renderRightAligned(GuiGraphicsExtractor guiGraphics, int x, int y, int height, int mouseX, int mouseY, float tickDelta,
+		boolean hovered) {
 		render(guiGraphics, x - this.width, y, height, mouseX, mouseY, tickDelta, hovered);
 	}
 
 	private boolean sectionHovered(int sectionX, int sectionWidth, double mx, double my) {
-		return mx > sectionX && mx < sectionX + sectionWidth &&
-			my > this.y && my < this.y + this.height;
+		return mx > sectionX && mx < sectionX + sectionWidth && my > this.y && my < this.y + this.height;
 	}
 
 	private Optional<Element> getHovered(double mx, double my) {
@@ -154,7 +155,8 @@ public class IrisElementRow {
 		private boolean focused;
 		private ScreenRectangle bounds = ScreenRectangle.empty();
 
-		public void render(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+		public void render(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta,
+			boolean hovered) {
 			this.bounds = new ScreenRectangle(x, y, width, height);
 
 			GuiUtil.bindIrisWidgetsTexture();
@@ -164,7 +166,8 @@ public class IrisElementRow {
 			this.renderLabel(guiGraphics, x, y, width, height, mouseX, mouseY, tickDelta, hovered);
 		}
 
-		public abstract void renderLabel(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered);
+		public abstract void renderLabel(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY,
+			float tickDelta, boolean hovered);
 
 		public boolean isHovered() {
 			return hovered;
@@ -240,7 +243,8 @@ public class IrisElementRow {
 		}
 
 		@Override
-		public void renderLabel(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+		public void renderLabel(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY,
+			float tickDelta, boolean hovered) {
 			int iconX = x + (int) ((width - this.icon.getWidth()) * 0.5);
 			int iconY = y + (int) ((height - this.icon.getHeight()) * 0.5);
 
@@ -268,7 +272,8 @@ public class IrisElementRow {
 		}
 
 		@Override
-		public void renderLabel(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY, float tickDelta, boolean hovered) {
+		public void renderLabel(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, int mouseX, int mouseY,
+			float tickDelta, boolean hovered) {
 			int textX = x + (int) ((width - this.font.width(this.text)) * 0.5);
 			int textY = y + (int) ((height - 8) * 0.5);
 

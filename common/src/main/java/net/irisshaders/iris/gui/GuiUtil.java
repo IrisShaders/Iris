@@ -36,9 +36,7 @@ public final class GuiUtil {
 	 * used for succeeding draw calls.
 	 */
 	public static void bindIrisWidgetsTexture() {
-		//RenderSystem.setShaderTexture(0, Minecraft.getInstance().getTextureManager().getTexture(IRIS_WIDGETS_TEX).getTextureView(),
-		// RenderSystem.getSamplerCache().getSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, FilterMode.NEAREST, FilterMode
-		// .NEAREST));
+		//RenderSystem.setShaderTexture(0, Minecraft.getInstance().getTextureManager().getTexture(IRIS_WIDGETS_TEX).getTextureView(), RenderSystem.getSamplerCache().getSampler(AddressMode.CLAMP_TO_EDGE, AddressMode.CLAMP_TO_EDGE, FilterMode.NEAREST, FilterMode.NEAREST));
 	}
 
 	/**
@@ -129,7 +127,6 @@ public final class GuiUtil {
 			return Component.literal(font.plainSubstrByWidth(text.getString(), width - font.width(ELLIPSIS))).append(ELLIPSIS)
 				.setStyle(text.getStyle());
 		}
-
 		return text;
 	}
 
@@ -147,7 +144,6 @@ public final class GuiUtil {
 		if (Language.getInstance().has(translationDesc)) {
 			return Component.translatable(translationDesc, format);
 		}
-
 		return defaultText;
 	}
 

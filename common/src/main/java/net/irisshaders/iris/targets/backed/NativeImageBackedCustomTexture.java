@@ -24,10 +24,6 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 		this.shouldClamp = textureData.getFilteringData().shouldClamp();
 	}
 
-	private int getId() {
-		return this.texture.iris$getGlId();
-	}
-
 	private static NativeImage create(byte[] content) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocateDirect(content.length);
 		buffer.put(content);
@@ -36,9 +32,14 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 		return NativeImage.read(buffer);
 	}
 
+	private int getId() {
+		return this.texture.iris$getGlId();
+	}
+
 	@Override
 	public void upload() {
 		NativeImage image = Objects.requireNonNull(getPixels());
+
 		RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, image);
 	}
 

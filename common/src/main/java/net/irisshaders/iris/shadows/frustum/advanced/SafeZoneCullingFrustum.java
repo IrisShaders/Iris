@@ -10,7 +10,8 @@ import org.joml.Vector3f;
 public class SafeZoneCullingFrustum extends AdvancedShadowCullingFrustum implements Frustum {
 	private final BoxCuller distanceCuller;
 
-	public SafeZoneCullingFrustum(Matrix4fc modelViewProjection, Matrix4fc shadowProjection, Vector3f shadowLightVectorFromOrigin, BoxCuller voxelCuller, BoxCuller distanceCuller) {
+	public SafeZoneCullingFrustum(Matrix4fc modelViewProjection, Matrix4fc shadowProjection, Vector3f shadowLightVectorFromOrigin,
+		BoxCuller voxelCuller, BoxCuller distanceCuller) {
 		super(modelViewProjection, shadowProjection, shadowLightVectorFromOrigin, voxelCuller);
 		this.distanceCuller = distanceCuller;
 	}

@@ -68,8 +68,7 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, IndirectPointer> indirectPointers = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, ArrayList<BufferBlendInformation>> bufferBlendOverrides = new Object2ObjectOpenHashMap<>();
 	private final EnumMap<TextureStage, Object2ObjectMap<String, TextureDefinition>> customTextures = new EnumMap<>(TextureStage.class);
-	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching =
-		new Object2ObjectOpenHashMap<>();
+	private final Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> customTexturePatching = new Object2ObjectOpenHashMap<>();
 	private final Object2ObjectMap<String, TextureDefinition> irisCustomTextures = new Object2ObjectOpenHashMap<>();
 	private final List<ImageInformation> irisCustomImages = new ArrayList<>();
 	private final Int2ObjectArrayMap<ShaderStorageInfo> bufferObjects = new Int2ObjectArrayMap<>();
@@ -143,7 +142,6 @@ public class ShaderProperties {
 
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
-
 		try {
 			preprocessed.load(new StringReader(preprocessedContents));
 			original.load(new StringReader(contents));
@@ -157,7 +155,6 @@ public class ShaderProperties {
 
 			if ("texture.noise".equals(key)) {
 				noiseTexturePath = value;
-
 				return;
 			}
 
@@ -255,7 +252,6 @@ public class ShaderProperties {
 					}
 				} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 					Iris.logger.error("Unable to parse scale directive for " + pass + ": " + value, e);
-
 					return;
 				}
 
@@ -264,6 +260,7 @@ public class ShaderProperties {
 
 			if ("weather".equals(key)) {
 				String[] parts = value.split(" ");
+
 				weather = parts[0].equals("true") ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
 
 				if (parts.length > 1) {
@@ -276,7 +273,6 @@ public class ShaderProperties {
 
 				if (parts.length != 2) {
 					Iris.logger.error("Unable to parse size.buffer directive for " + pass + ": " + value);
-
 					return;
 				}
 
@@ -286,7 +282,6 @@ public class ShaderProperties {
 			handlePassDirective("alphaTest.", key, value, pass -> {
 				if ("off".equals(value) || "false".equals(value)) {
 					alphaTestOverrides.put(pass, AlphaTest.ALWAYS);
-
 					return;
 				}
 
@@ -296,7 +291,6 @@ public class ShaderProperties {
 					Iris.logger.warn("Weird alpha test directive for " + pass + " contains more parts than we expected: " + value);
 				} else if (parts.length < 2) {
 					Iris.logger.error("Invalid alpha test directive for " + pass + ": " + value);
-
 					return;
 				}
 
@@ -305,7 +299,6 @@ public class ShaderProperties {
 				if (function.isEmpty()) {
 					Iris.logger.error(
 						"Unable to parse alpha test directive for " + pass + ", unknown alpha test function " + parts[0] + ": " + value);
-
 					return;
 				}
 
@@ -315,7 +308,6 @@ public class ShaderProperties {
 					reference = Float.parseFloat(parts[1]);
 				} catch (NumberFormatException e) {
 					Iris.logger.error("Unable to parse alpha test directive for " + pass + ": " + value, e);
-
 					return;
 				}
 
@@ -350,7 +342,6 @@ public class ShaderProperties {
 					if ("off".equals(value)) {
 						bufferBlendOverrides.computeIfAbsent(parts[0], list -> new ArrayList<>())
 							.add(new BufferBlendInformation(index, null));
-
 						return;
 					}
 
@@ -358,9 +349,8 @@ public class ShaderProperties {
 					int[] modes = new int[modeArray.length];
 
 					int i = 0;
-
 					for (String modeName : modeArray) {
-						modes[i] = BlendModeFunction.fromString(modeName).get().getVkId();
+						modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
 						i++;
 					}
 
@@ -372,7 +362,6 @@ public class ShaderProperties {
 
 				if ("off".equals(value)) {
 					blendModeOverrides.put(pass, BlendModeOverride.OFF);
-
 					return;
 				}
 
@@ -380,9 +369,8 @@ public class ShaderProperties {
 				int[] modes = new int[modeArray.length];
 
 				int i = 0;
-
 				for (String modeName : modeArray) {
-					modes[i] = BlendModeFunction.fromString(modeName).get().getVkId();
+					modes[i] = BlendModeFunction.fromString(modeName).get().getGlId();
 					i++;
 				}
 
@@ -392,6 +380,7 @@ public class ShaderProperties {
 			handlePassDirective("indirect.", key, value, pass -> {
 				try {
 					String[] locations = value.split(" ");
+
 					indirectPointers.put(pass, new IndirectPointer(Integer.parseInt(locations[0]), Long.parseLong(locations[1])));
 				} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 					Iris.logger.fatal("Failed to parse indirect command for " + pass + "! " + value);
@@ -407,14 +396,12 @@ public class ShaderProperties {
 				float scaleX;
 				float scaleY;
 				String[] parts = value.split(" ");
-
 				if (parts.length <= 2) {
 					try {
 						trueIndex = Integer.parseInt(index);
 						trueSize = Long.parseLong(parts[0]);
 					} catch (NumberFormatException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size!", e);
-
 						return;
 					}
 
@@ -426,7 +413,6 @@ public class ShaderProperties {
 
 					if (trueIndex > 12) {
 						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 12, they're reserved!");
-
 						return;
 					}
 
@@ -446,13 +432,11 @@ public class ShaderProperties {
 						scaleY = Float.parseFloat(parts[3]);
 					} catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
 						Iris.logger.error("Number format exception parsing SSBO index/size, or not correct format!", e);
-
 						return;
 					}
 
 					if (trueIndex > 12) {
 						Iris.logger.fatal("SSBO's cannot use buffer numbers higher than 12, they're reserved!");
-
 						return;
 					}
 
@@ -474,7 +458,6 @@ public class ShaderProperties {
 
 				if (optionalTextureStage.isEmpty()) {
 					Iris.logger.warn("Unknown texture stage " + "\"" + stageName + "\"," + " ignoring custom texture directive for " + key);
-
 					return;
 				}
 
@@ -483,7 +466,6 @@ public class ShaderProperties {
 				if (parts.length > 1) {
 					String newSamplerName = "customtex" + customTexAmount;
 					customTexAmount++;
-
 					TextureType type = null;
 					// Raw texture handling
 					if (parts.length == 6) {
@@ -570,28 +552,24 @@ public class ShaderProperties {
 				String[] parts = value.split(" ");
 				String key2 = key.substring(6);
 
-				if (irisCustomImages.size() > 15) {
-					Iris.logger.error("Only up to 16 images are allowed, but tried to add another image! " + key);
-
-					return;
+				if (irisCustomImages.size() >= 16) {
+					throw new IllegalArgumentException(
+						"Shader pack exceeds Iris's limit of 16 custom images in shaders.properties: cannot declare '" + key2 + "' as custom image " + (irisCustomImages.size() + 1) + ". Reduce the number of image declarations or disable shader options that add custom images.");
 				}
 
 				ImageInformation image;
 
 				String samplerName = parts[0];
-
 				if (samplerName.equals("none")) {
 					samplerName = null;
 				}
-
 				PixelFormat format = PixelFormat.fromString(parts[1]).orElse(null);
 				InternalTextureFormat internalFormat = InternalTextureFormat.fromString(parts[2]).orElse(null);
 				PixelType pixelType = PixelType.fromString(parts[3]).orElse(null);
 
 				if (format == null || internalFormat == null || pixelType == null) {
 					Iris.logger.error(
-						"Image " + key2 + " is invalid! Format: " + format + " Internal format: " + internalFormat + " Pixel type: " +
-							pixelType);
+						"Image " + key2 + " is invalid! Format: " + format + " Internal format: " + internalFormat + " Pixel type: " + pixelType);
 				}
 
 				boolean clear = Boolean.parseBoolean(parts[4]);
@@ -608,7 +586,6 @@ public class ShaderProperties {
 					int width;
 					int height;
 					int depth;
-
 					if (parts.length == 7) {
 						type = TextureType.TEXTURE_1D;
 						width = Integer.parseInt(parts[6]);
@@ -626,10 +603,8 @@ public class ShaderProperties {
 						depth = Integer.parseInt(parts[8]);
 					} else {
 						Iris.logger.error("Unknown image type! " + key2 + " = " + value);
-
 						return;
 					}
-
 					image = new ImageInformation(key2, samplerName, type, format, internalFormat, pixelType, width, height, depth, clear,
 						false, 0, 0);
 				}
@@ -638,15 +613,12 @@ public class ShaderProperties {
 			});
 
 			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> handleBooleanValue(key, value,
-				shouldFlip -> explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>())
-					.put(buffer, shouldFlip)));
+				shouldFlip -> explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>()).put(buffer, shouldFlip)));
 
 			handlePassDirective("variable.", key, value, pass -> {
 				String[] parts = pass.split("\\.");
-
 				if (parts.length != 2) {
 					Iris.logger.warn("Custom variables should take the form of `variable.<type>.<name> = <expression>. Ignoring " + key);
-
 					return;
 				}
 
@@ -655,10 +627,8 @@ public class ShaderProperties {
 
 			handlePassDirective("uniform.", key, value, pass -> {
 				String[] parts = pass.split("\\.");
-
 				if (parts.length != 2) {
 					Iris.logger.warn("Custom uniforms should take the form of `uniform.<type>.<name> = <expression>. Ignoring " + key);
-
 					return;
 				}
 
@@ -674,6 +644,7 @@ public class ShaderProperties {
 		original.forEach((keyObject, valueObject) -> {
 			String key = (String) keyObject;
 			String value = (String) valueObject;
+
 			handleWhitespacedListDirective(key, value, "iris.features.required", options -> requiredFeatureFlags = options);
 			handleWhitespacedListDirective(key, value, "iris.features.optional", options -> optionalFeatureFlags = options);
 
@@ -702,8 +673,7 @@ public class ShaderProperties {
 			handler.accept(false);
 		} else {
 			Iris.logger.warn(
-				"Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or " +
-					"false");
+				"Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or " + "false");
 		}
 	}
 
@@ -718,8 +688,7 @@ public class ShaderProperties {
 			handler.accept(OptionalBoolean.FALSE);
 		} else {
 			Iris.logger.warn(
-				"Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or " +
-					"false");
+				"Unexpected value for boolean key " + key + " in shaders.properties: got " + value + ", but expected either true or " + "false");
 		}
 	}
 
@@ -730,6 +699,7 @@ public class ShaderProperties {
 
 		try {
 			int result = Integer.parseInt(value);
+
 			handler.accept(result);
 		} catch (NumberFormatException nex) {
 			Iris.logger.warn(
@@ -753,6 +723,7 @@ public class ShaderProperties {
 
 			try {
 				int result = Integer.parseInt(value);
+
 				handler.accept(affixStrippedKey, result);
 			} catch (NumberFormatException nex) {
 				Iris.logger.warn(
@@ -768,6 +739,7 @@ public class ShaderProperties {
 	private static void handlePassDirective(String prefix, String key, String value, Consumer<String> handler) {
 		if (key.startsWith(prefix)) {
 			String pass = key.substring(prefix.length());
+
 			handler.accept(pass);
 		}
 	}
@@ -775,6 +747,7 @@ public class ShaderProperties {
 	private static void handleProgramEnabledDirective(String prefix, String key, String value, Consumer<String> handler) {
 		if (key.startsWith(prefix)) {
 			String program = key.substring(prefix.length(), key.indexOf(".", prefix.length()));
+
 			handler.accept(program);
 		}
 	}
@@ -785,6 +758,7 @@ public class ShaderProperties {
 		}
 
 		String[] elements = value.split(" +");
+
 		handler.accept(Arrays.asList(elements));
 	}
 
@@ -793,6 +767,7 @@ public class ShaderProperties {
 		if (key.startsWith(prefix)) {
 			String prefixStrippedKey = key.substring(prefix.length());
 			String[] elements = value.split(" +");
+
 			handler.accept(prefixStrippedKey, Arrays.asList(elements));
 		}
 	}
@@ -802,6 +777,7 @@ public class ShaderProperties {
 			int endOfPassIndex = key.indexOf(".", prefix.length());
 			String stage = key.substring(prefix.length(), endOfPassIndex);
 			String sampler = key.substring(endOfPassIndex + 1);
+
 			handler.accept(stage, sampler);
 		}
 	}

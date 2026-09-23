@@ -37,8 +37,8 @@ public class ProgramDirectives {
 	private boolean unknownDrawBuffers;
 
 	private ProgramDirectives(int[] drawBuffers, ViewportData viewportScale, @Nullable AlphaTest alphaTestOverride,
-							  Optional<BlendModeOverride> blendModeOverride, List<BufferBlendInformation> bufferBlendInformations, ImmutableSet<Integer> mipmappedBuffers,
-							  ImmutableMap<Integer, Boolean> explicitFlips) {
+		Optional<BlendModeOverride> blendModeOverride, List<BufferBlendInformation> bufferBlendInformations,
+		ImmutableSet<Integer> mipmappedBuffers, ImmutableMap<Integer, Boolean> explicitFlips) {
 		this.drawBuffers = drawBuffers;
 		this.viewportScale = viewportScale;
 		this.alphaTestOverride = alphaTestOverride;
@@ -50,7 +50,7 @@ public class ProgramDirectives {
 	}
 
 	public ProgramDirectives(ProgramSource source, ShaderProperties properties, Set<Integer> supportedRenderTargets,
-							 @Nullable BlendModeOverride defaultBlendOverride) {
+		@Nullable BlendModeOverride defaultBlendOverride) {
 		// DRAWBUFFERS is only detected in the fragment shader source code (.fsh).
 		// If there's no explicit declaration, then by default /* DRAWBUFFERS:0 */ is inferred.
 		// For SEUS v08 and SEUS v10 to work, this will need to be set to 01234567. However, doing this causes
@@ -61,7 +61,8 @@ public class ProgramDirectives {
 		Optional<CommentDirective> optionalDrawbuffersDirective = findDrawbuffersDirective(source.getFragmentSource());
 		Optional<CommentDirective> optionalRendertargetsDirective = findRendertargetsDirective(source.getFragmentSource());
 
-		Optional<CommentDirective> optionalCommentDirective = getAppliedDirective(optionalDrawbuffersDirective, optionalRendertargetsDirective);
+		Optional<CommentDirective> optionalCommentDirective = getAppliedDirective(optionalDrawbuffersDirective,
+			optionalRendertargetsDirective);
 		drawBuffers = optionalCommentDirective.map(commentDirective -> {
 			if (commentDirective.getType() == CommentDirective.Type.DRAWBUFFERS) {
 				return parseDigits(commentDirective.getDirective().toCharArray());
@@ -141,12 +142,11 @@ public class ProgramDirectives {
 	}
 
 	private static int[] parseDigitList(String digitListString) {
-		return Arrays.stream(digitListString.split(","))
-			.mapToInt(Integer::parseInt)
-			.toArray();
+		return Arrays.stream(digitListString.split(",")).mapToInt(Integer::parseInt).toArray();
 	}
 
-	private static Optional<CommentDirective> getAppliedDirective(Optional<CommentDirective> optionalDrawbuffersDirective, Optional<CommentDirective> optionalRendertargetsDirective) {
+	private static Optional<CommentDirective> getAppliedDirective(Optional<CommentDirective> optionalDrawbuffersDirective,
+		Optional<CommentDirective> optionalRendertargetsDirective) {
 		if (optionalDrawbuffersDirective.isPresent() && optionalRendertargetsDirective.isPresent()) {
 			if (optionalDrawbuffersDirective.get().getLocation() > optionalRendertargetsDirective.get().getLocation()) {
 				return optionalDrawbuffersDirective;

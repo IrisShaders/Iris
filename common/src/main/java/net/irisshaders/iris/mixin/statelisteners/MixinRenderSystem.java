@@ -1,7 +1,7 @@
 package net.irisshaders.iris.mixin.statelisteners;
 
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;

@@ -29,24 +29,33 @@ public class GlSampler extends GlResource {
 		this.description = new Description(linear, linearMips, mipmapped, hardwareShadow, clamp);
 	}
 
-	private void createGlSampler() {
-		handle = IrisRenderSystem.genSampler();
+	public GlSampler(int sampler) {
+		super(0);
 
-		boolean linear = description.linear();
-		boolean linearMips = description.linearMips();
-		boolean mipmapped = description.mipmapped();
-		boolean hardwareShadow = description.hardwareShadow();
-		boolean clamp = description.clamp();
+		if (sampler <= 0) {
+			throw new IllegalArgumentException("invalid OpenGL sampler");
+		}
+
+		this.handle = sampler;
+		this.description = null;
+	}
+
+	private void createGlSampler() {
+		this.handle = IrisRenderSystem.genSampler();
+
+		boolean linear = this.description.linear();
+		boolean linearMips = this.description.linearMips();
+		boolean mipmapped = this.description.mipmapped();
+		boolean hardwareShadow = this.description.hardwareShadow();
+		boolean clamp = this.description.clamp();
+
 		IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_MAG_FILTER, linear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
 		IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_WRAP_S, clamp ? GL13C.GL_CLAMP_TO_EDGE : GL13C.GL_REPEAT);
 		IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_WRAP_T, clamp ? GL13C.GL_CLAMP_TO_EDGE : GL13C.GL_REPEAT);
 
 		if (mipmapped) {
-			IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_MIN_FILTER, linearMips ? (
-				linear ? GL11C.GL_LINEAR_MIPMAP_LINEAR : GL11C.GL_NEAREST_MIPMAP_LINEAR
-			) : (
-				linear ? GL11C.GL_LINEAR_MIPMAP_NEAREST : GL11C.GL_NEAREST_MIPMAP_NEAREST
-			));
+			IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_MIN_FILTER,
+				linearMips ? (linear ? GL11C.GL_LINEAR_MIPMAP_LINEAR : GL11C.GL_NEAREST_MIPMAP_LINEAR) : (linear ? GL11C.GL_LINEAR_MIPMAP_NEAREST : GL11C.GL_NEAREST_MIPMAP_NEAREST));
 		} else {
 			IrisRenderSystem.samplerParameteri(getId(), GL11C.GL_TEXTURE_MIN_FILTER, linear ? GL11C.GL_LINEAR : GL11C.GL_NEAREST);
 		}
@@ -57,51 +66,40 @@ public class GlSampler extends GlResource {
 		}
 	}
 
-	public GlSampler(int sampler) {
-		super(0);
-
-		if (sampler <= 0) {
-			throw new IllegalArgumentException("Invalid OpenGL sampler");
-		}
-
-		this.handle = sampler;
-		this.description = null;
-	}
-
 	@Override
 	protected void destroyInternal() {
-		if (handle != 0) {
-			IrisRenderSystem.destroySampler(handle);
+		if (this.handle != 0) {
+			IrisRenderSystem.destroySampler(this.handle);
 		}
 
-		handle = 0;
+		this.handle = 0;
 	}
 
 	@Override
 	protected int getGlId() {
-		assertValid();
+		this.assertValid();
 
-		if (handle == 0) {
-			createGlSampler();
+		if (this.handle == 0) {
+			this.createGlSampler();
 		}
 
-		return handle;
+		return this.handle;
 	}
 
 	public Description description() {
-		assertValid();
+		this.assertValid();
 
-		if (description == null) {
-			throw new IllegalStateException("Cannot recreate an opaque OpenGL sampler in Vulkan");
+		if (this.description == null) {
+			throw new IllegalStateException("cannot recreate an opaque OpenGL sampler in Vulkan");
 		}
 
-		return description;
-	}
-
-	public record Description(boolean linear, boolean linearMips, boolean mipmapped, boolean hardwareShadow, boolean clamp) {
+		return this.description;
 	}
 
 	public int getId() {
 		return getGlId();
+	}
+
+	public record Description(boolean linear, boolean linearMips, boolean mipmapped, boolean hardwareShadow, boolean clamp) {
 	}
 }

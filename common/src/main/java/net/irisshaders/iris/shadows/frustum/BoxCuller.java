@@ -27,8 +27,7 @@ public class BoxCuller {
 	}
 
 	public boolean isCulled(AABB aabb) {
-		return isCulled((float) aabb.minX, (float) aabb.minY, (float) aabb.minZ,
-			(float) aabb.maxX, (float) aabb.maxY, (float) aabb.maxZ);
+		return isCulled((float) aabb.minX, (float) aabb.minY, (float) aabb.minZ, (float) aabb.maxX, (float) aabb.maxY, (float) aabb.maxZ);
 	}
 
 	public boolean isCulled(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
@@ -69,9 +68,7 @@ public class BoxCuller {
 			return FrustumIntersection.OUTSIDE;
 		}
 
-		if (minX >= -this.maxDistance && maxX <= this.maxDistance &&
-			minY >= -this.maxDistance && maxY <= this.maxDistance &&
-			minZ >= -this.maxDistance && maxZ <= this.maxDistance) {
+		if (minX >= -this.maxDistance && maxX <= this.maxDistance && minY >= -this.maxDistance && maxY <= this.maxDistance && minZ >= -this.maxDistance && maxZ <= this.maxDistance) {
 			return FrustumIntersection.INSIDE;
 		}
 

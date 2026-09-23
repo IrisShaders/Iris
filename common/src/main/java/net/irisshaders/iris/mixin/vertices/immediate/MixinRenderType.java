@@ -1,6 +1,5 @@
 package net.irisshaders.iris.mixin.vertices.immediate;
 
-import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;

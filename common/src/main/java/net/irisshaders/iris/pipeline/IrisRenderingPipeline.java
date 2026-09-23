@@ -10,6 +10,7 @@ import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.GLDebug;
@@ -17,7 +18,6 @@ import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
-import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.irisshaders.iris.gl.image.ImageHolder;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
@@ -44,14 +44,13 @@ import net.irisshaders.iris.pbr.texture.PBRTextureHolder;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.pbr.texture.PBRType;
 import net.irisshaders.iris.pipeline.programs.ComputeProgram;
+import net.irisshaders.iris.pipeline.programs.ExtendedShader;
 import net.irisshaders.iris.pipeline.programs.ShaderCreator;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderLoadingMap;
 import net.irisshaders.iris.pipeline.programs.ShaderMap;
 import net.irisshaders.iris.pipeline.programs.ShaderSupplier;
-import net.irisshaders.iris.pipeline.programs.WorldProgram;
 import net.irisshaders.iris.pipeline.transform.Patch;
-import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderPrinter;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.samplers.CustomTextureSamplerInterceptor;
@@ -84,6 +83,7 @@ import net.irisshaders.iris.targets.BufferFlipper;
 import net.irisshaders.iris.targets.ClearPass;
 import net.irisshaders.iris.targets.ClearPassCreator;
 import net.irisshaders.iris.targets.CustomImage;
+import net.irisshaders.iris.targets.RenderFramebuffer;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.targets.WorldRenderTargets;
 import net.irisshaders.iris.targets.backed.NativeImageBackedSingleColorTexture;
@@ -95,9 +95,7 @@ import net.irisshaders.iris.uniforms.VanillaUniforms;
 import net.irisshaders.iris.uniforms.buffer.FrameUniforms;
 import net.irisshaders.iris.uniforms.builtin.BuiltinReplacementUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
-import net.irisshaders.iris.util.RenderCapture;
 import net.irisshaders.iris.vertices.sodium.terrain.FormatAnalyzer;
-import net.irisshaders.iris.vulkan.CompositeSynchronization;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.TextureFilteringMethod;
@@ -114,6 +112,7 @@ import org.joml.Vector4f;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -133,7 +132,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final boolean separateHardwareSamplers;
 	private final ProgramFallbackResolver resolver;
 	private final Supplier<ShadowRenderTargets> shadowTargetsSupplier;
-	private final Set<WorldProgram> loadedShaders;
+	private final Set<ExtendedShader> loadedShaders;
 	private final CompositeRenderer beginRenderer;
 	private final CompositeRenderer prepareRenderer;
 	private final CompositeRenderer deferredRenderer;
@@ -180,6 +179,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final int stackSize = 0;
 	private final boolean skipAllRendering;
 	private final CloudSetting dhCloudSetting;
+	private final boolean supportsEndFlash;
 	public boolean isBeforeTranslucent;
 	private boolean initializedBlockIds;
 	private ShaderStorageBufferHolder shaderStorageBufferHolder;
@@ -196,26 +196,15 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private boolean shouldBindPBR;
 	private AbstractTexture currentNormalTexture;
 	private GpuSampler normalNativeSampler, specularNativeSampler;
-
-	public GpuSampler normalNativeSampler() {
-		return normalNativeSampler;
-	}
-
-	public GpuSampler specularNativeSampler() {
-		return specularNativeSampler;
-	}
-
 	private AbstractTexture currentSpecularTexture;
 	private ColorSpace currentColorSpace;
-
-	private final boolean supportsEndFlash;
 	private GlSampler normalSampler = GlSampler.MIPPED_NEAREST, specularSampler = GlSampler.MIPPED_NEAREST;
-
 	private int albedoTex;
+	private boolean shouldRemovePhase = false;
 
 	public IrisRenderingPipeline(ProgramSet programSet) {
 		var cleanup = new ArrayList<Runnable>();
-		cleanup.add(horizonRenderer::destroy);
+		cleanup.add(this.horizonRenderer::destroy);
 
 		try {
 			ShaderPrinter.resetPrintState();
@@ -229,7 +218,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			this.packDirectives = programSet.getPackDirectives();
 			this.customTextureMap = programSet.getPackDirectives().getTextureMap();
 			this.separateHardwareSamplers = programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS);
-			this.shadowDirectives = packDirectives.getShadowDirectives();
+			this.shadowDirectives = this.packDirectives.getShadowDirectives();
 			this.cloudSetting = programSet.getPackDirectives().getCloudSetting();
 			this.dhCloudSetting = programSet.getPackDirectives().getDHCloudSetting();
 			this.shouldRenderSun = programSet.getPackDirectives().shouldRenderSun();
@@ -250,50 +239,49 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			GpuTexture depthTexture = main.getDepthTexture();
 			DepthBufferFormat depthBufferFormat = DepthBufferFormat.fromMojang(depthTexture.getFormat());
 
-			if (!pack.getBufferObjects().isEmpty()) {
+			if (!this.pack.getBufferObjects().isEmpty()) {
 				if (IrisRenderSystem.supportsSSBO()) {
-					this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(pack.getBufferObjects(), main.width, main.height);
+					this.shaderStorageBufferHolder = new ShaderStorageBufferHolder(this.pack.getBufferObjects(), main.width, main.height);
 
-					cleanup.add(shaderStorageBufferHolder::close);
+					cleanup.add(this.shaderStorageBufferHolder::close);
 				} else {
-					throw new IllegalStateException("Shader storage buffers/immutable buffer storage is not supported on this graphics "
-						+ "card, however the shaderpack requested them? This shouldn't be possible.");
+					throw new IllegalStateException("shader storage buffers are not supported");
 				}
 			}
 
-			this.customImages = new HashSet<>();
-			cleanup.add(() -> customImages.forEach(CustomImage::destroy));
+			this.customImages = new LinkedHashSet<>();
+			cleanup.add(() -> this.customImages.forEach(CustomImage::destroy));
 
 			for (ImageInformation information : programSet.getPack().getIrisCustomImages()) {
 				if (information.isRelative()) {
-					customImages.add(new CustomImage.Relative(information.name(), information.samplerName(), information.format(),
-						information.internalTextureFormat(), information.type(), information.clear(),
-						information.relativeWidth(), information.relativeHeight(), main.width,
-						main.height));
+					this.customImages.add(new CustomImage.Relative(information.name(), information.samplerName(), information.format(),
+						information.internalTextureFormat(), information.type(), information.clear(), information.relativeWidth(),
+						information.relativeHeight(), main.width, main.height));
 				} else {
-					customImages.add(new CustomImage(information.name(), information.samplerName(), information.target(),
-						information.format(), information.internalTextureFormat(), information.type(),
-						information.clear(), information.width(), information.height(), information.depth()));
+					this.customImages.add(
+						new CustomImage(information.name(), information.samplerName(), information.target(), information.format(),
+							information.internalTextureFormat(), information.type(), information.clear(), information.width(),
+							information.height(), information.depth()));
 				}
 			}
 
-			this.clearImages = customImages.stream().filter(CustomImage::shouldClear).collect(ImmutableList.toImmutableList());
+			this.clearImages = this.customImages.stream().filter(CustomImage::shouldClear).collect(ImmutableList.toImmutableList());
 
 			if (programSet.getPackDirectives().getParticleRenderingSettings() != ParticleRenderingSettings.UNSET) {
 				this.particleRenderingSettings = programSet.getPackDirectives().getParticleRenderingSettings();
-			} else if (programSet.getComposite(ProgramArrayId.Deferred).length > 0 &&
-				!programSet.getPackDirectives().shouldUseSeparateEntityDraws()) {
+			} else if (programSet.getComposite(ProgramArrayId.Deferred).length > 0 && !programSet.getPackDirectives()
+				.shouldUseSeparateEntityDraws()) {
 				this.particleRenderingSettings = ParticleRenderingSettings.AFTER;
 			} else {
 				this.particleRenderingSettings = ParticleRenderingSettings.MIXED;
 			}
 
-			this.renderTargets = new RenderTargets(
-				main.width, main.height, depthTexture, ((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat,
+			this.renderTargets = new RenderTargets(main.width, main.height, depthTexture,
+				((Blaze3dRenderTargetExt) main).iris$getDepthBufferVersion(), depthBufferFormat,
 				programSet.getPackDirectives().getRenderTargetDirectives().getRenderTargetSettings(), programSet.getPackDirectives());
-			cleanup.add(renderTargets::destroy);
-			this.packSamplers = new PackSamplers(RenderSystem.getDevice());
-			cleanup.add(packSamplers::close);
+			cleanup.add(this.renderTargets::destroy);
+			this.packSamplers = new PackSamplers();
+			cleanup.add(this.packSamplers::close);
 			this.sunPathRotation = programSet.getPackDirectives().getSunPathRotation();
 
 			PackShadowDirectives shadowDirectives = programSet.getPackDirectives().getShadowDirectives();
@@ -301,13 +289,13 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			if (shadowDirectives.isDistanceRenderMulExplicit()) {
 				if (shadowDirectives.getDistanceRenderMul() >= 0.0) {
 
-					forcedShadowRenderDistanceChunks =
-						OptionalInt.of(((int) (shadowDirectives.getDistance() * shadowDirectives.getDistanceRenderMul()) + 15) / 16);
+					this.forcedShadowRenderDistanceChunks = OptionalInt.of(
+						((int) (shadowDirectives.getDistance() * shadowDirectives.getDistanceRenderMul()) + 15) / 16);
 				} else {
-					forcedShadowRenderDistanceChunks = OptionalInt.of(-1);
+					this.forcedShadowRenderDistanceChunks = OptionalInt.of(-1);
 				}
 			} else {
-				forcedShadowRenderDistanceChunks = OptionalInt.empty();
+				this.forcedShadowRenderDistanceChunks = OptionalInt.empty();
 			}
 
 			this.customUniforms = programSet.getPack().customUniforms.build(holder -> {
@@ -318,160 +306,156 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				VanillaUniforms.addVanillaUniforms(holder);
 			});
 
-			this.frameUniforms = new FrameUniforms(RenderSystem.getDevice(), packSamplers.backend(), customUniforms);
-			cleanup.add(frameUniforms::close);
+			this.frameUniforms = new FrameUniforms(this.customUniforms);
+			cleanup.add(this.frameUniforms::close);
 
-			customTextureManager =
-				new CustomTextureManager(programSet.getPackDirectives(), programSet.getPack().getCustomTextureDataMap(),
-					programSet.getPack().getIrisCustomTextureDataMap(), programSet.getPack().getCustomNoiseTexture());
-			cleanup.add(customTextureManager::destroy);
-			whitePixel = new NativeImageBackedSingleColorTexture(255, 255, 255, 255);
-			cleanup.add(whitePixel::close);
-			biggerWhitePixel = new NativeImageBackedSingleColorTexture(32, 32, 255, 255, 255, 255);
-			cleanup.add(biggerWhitePixel::close);
+			this.customTextureManager = new CustomTextureManager(programSet.getPackDirectives(),
+				programSet.getPack().getCustomTextureDataMap(), programSet.getPack().getIrisCustomTextureDataMap(),
+				programSet.getPack().getCustomNoiseTexture());
+			cleanup.add(this.customTextureManager::destroy);
+			this.whitePixel = new NativeImageBackedSingleColorTexture(255, 255, 255, 255);
+			cleanup.add(this.whitePixel::close);
+			this.biggerWhitePixel = new NativeImageBackedSingleColorTexture(32, 32, 255, 255, 255, 255);
+			cleanup.add(this.biggerWhitePixel::close);
 
 			BufferFlipper flipper = new BufferFlipper();
-			this.centerDepthSampler =
-				new CenterDepthSampler(renderTargets::getDepthTexture, programSet.getPackDirectives().getCenterDepthHalfLife());
-			cleanup.add(centerDepthSampler::destroy);
+			this.centerDepthSampler = new CenterDepthSampler(this.renderTargets::getDepthTexture,
+				programSet.getPackDirectives().getCenterDepthHalfLife());
+			cleanup.add(this.centerDepthSampler::destroy);
 
 			this.shadowMapResolution = programSet.getPackDirectives().getShadowDirectives().getResolution();
 
 			this.shadowTargetsSupplier = () -> {
-				if (shadowRenderTargets == null) {
+				if (this.shadowRenderTargets == null) {
 
-					this.shadowRenderTargets = new ShadowRenderTargets(this, shadowMapResolution, shadowDirectives);
-					cleanup.add(shadowRenderTargets::destroy);
+					this.shadowRenderTargets = new ShadowRenderTargets(this, this.shadowMapResolution, shadowDirectives);
+					cleanup.add(this.shadowRenderTargets::destroy);
 				}
 
-				return shadowRenderTargets;
+				return this.shadowRenderTargets;
 			};
 
 			if (shadowDirectives.isShadowEnabled() == OptionalBoolean.TRUE) {
-				shadowTargetsSupplier.get();
+				this.shadowTargetsSupplier.get();
 			}
 
-			this.shadowComputes = createShadowComputes(programSet.getShadowCompute(), programSet);
-			cleanup.add(() -> destroyComputes(shadowComputes));
+			this.shadowComputes = this.createShadowComputes(programSet.getShadowCompute(), programSet);
+			cleanup.add(() -> destroyComputes(this.shadowComputes));
 
-			this.beginRenderer = new CompositeRenderer(
-				this, CompositePass.BEGIN, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Begin),
-				programSet.getCompute(ProgramArrayId.Begin), renderTargets, shaderStorageBufferHolder,
-				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
-				TextureStage.BEGIN,
-				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.BEGIN, Object2ObjectMaps.emptyMap()),
-				customTextureManager.getIrisCustomTextures(), customImages, programSet.getPackDirectives().getExplicitFlips("begin_pre"),
-				customUniforms);
-			cleanup.add(beginRenderer::destroy);
+			this.beginRenderer = new CompositeRenderer(this, CompositePass.BEGIN, programSet.getPackDirectives(),
+				programSet.getComposite(ProgramArrayId.Begin), programSet.getCompute(ProgramArrayId.Begin), this.renderTargets,
+				this.shaderStorageBufferHolder, this.customTextureManager.getNoiseTexture(), this.updateNotifier, this.centerDepthSampler,
+				flipper, this.shadowTargetsSupplier, TextureStage.BEGIN,
+				this.customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.BEGIN, Object2ObjectMaps.emptyMap()),
+				this.customTextureManager.getIrisCustomTextures(), this.customImages,
+				programSet.getPackDirectives().getExplicitFlips("begin_pre"), this.customUniforms);
+			cleanup.add(this.beginRenderer::destroy);
 
-			flippedBeforeShadow = flipper.snapshot();
+			this.flippedBeforeShadow = flipper.snapshot();
 
-			this.prepareRenderer = new CompositeRenderer(
-				this, CompositePass.PREPARE, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Prepare),
-				programSet.getCompute(ProgramArrayId.Prepare), renderTargets, shaderStorageBufferHolder,
-				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
-				TextureStage.PREPARE,
-				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()),
-				customTextureManager.getIrisCustomTextures(), customImages, programSet.getPackDirectives().getExplicitFlips("prepare_pre"),
-				customUniforms);
-			cleanup.add(prepareRenderer::destroy);
+			this.prepareRenderer = new CompositeRenderer(this, CompositePass.PREPARE, programSet.getPackDirectives(),
+				programSet.getComposite(ProgramArrayId.Prepare), programSet.getCompute(ProgramArrayId.Prepare), this.renderTargets,
+				this.shaderStorageBufferHolder, this.customTextureManager.getNoiseTexture(), this.updateNotifier, this.centerDepthSampler,
+				flipper, this.shadowTargetsSupplier, TextureStage.PREPARE,
+				this.customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.PREPARE, Object2ObjectMaps.emptyMap()),
+				this.customTextureManager.getIrisCustomTextures(), this.customImages,
+				programSet.getPackDirectives().getExplicitFlips("prepare_pre"), this.customUniforms);
+			cleanup.add(this.prepareRenderer::destroy);
 
-			flippedAfterPrepare = flipper.snapshot();
+			this.flippedAfterPrepare = flipper.snapshot();
 
-			this.deferredRenderer = new CompositeRenderer(
-				this, CompositePass.DEFERRED, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Deferred),
-				programSet.getCompute(ProgramArrayId.Deferred), renderTargets, shaderStorageBufferHolder,
-				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
-				TextureStage.DEFERRED,
-				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()),
-				customTextureManager.getIrisCustomTextures(), customImages, programSet.getPackDirectives().getExplicitFlips(
-				"deferred_pre"),
-				customUniforms);
-			cleanup.add(deferredRenderer::destroy);
+			this.deferredRenderer = new CompositeRenderer(this, CompositePass.DEFERRED, programSet.getPackDirectives(),
+				programSet.getComposite(ProgramArrayId.Deferred), programSet.getCompute(ProgramArrayId.Deferred), this.renderTargets,
+				this.shaderStorageBufferHolder, this.customTextureManager.getNoiseTexture(), this.updateNotifier, this.centerDepthSampler,
+				flipper, this.shadowTargetsSupplier, TextureStage.DEFERRED,
+				this.customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.DEFERRED, Object2ObjectMaps.emptyMap()),
+				this.customTextureManager.getIrisCustomTextures(), this.customImages,
+				programSet.getPackDirectives().getExplicitFlips("deferred_pre"), this.customUniforms);
+			cleanup.add(this.deferredRenderer::destroy);
 
-			flippedAfterTranslucent = flipper.snapshot();
+			this.flippedAfterTranslucent = flipper.snapshot();
 
-			this.compositeRenderer = new CompositeRenderer(
-				this, CompositePass.COMPOSITE, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.Composite),
-				programSet.getCompute(ProgramArrayId.Composite), renderTargets, shaderStorageBufferHolder,
-				customTextureManager.getNoiseTexture(), updateNotifier, centerDepthSampler, flipper, shadowTargetsSupplier,
-				TextureStage.COMPOSITE_AND_FINAL,
-				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
-				customTextureManager.getIrisCustomTextures(), customImages,
-				programSet.getPackDirectives().getExplicitFlips("composite_pre"), customUniforms);
-			cleanup.add(compositeRenderer::destroy);
-			this.finalPassRenderer = new FinalPassRenderer(
-				this, programSet, renderTargets, customTextureManager.getNoiseTexture(), shaderStorageBufferHolder, updateNotifier,
-				flipper.snapshot(), centerDepthSampler, shadowTargetsSupplier,
-				customTextureManager.getCustomTextureIdMap().getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
-				customTextureManager.getIrisCustomTextures(), customImages, this.compositeRenderer.getFlippedAtLeastOnceFinal(),
-				customUniforms);
-			cleanup.add(finalPassRenderer::destroy);
+			this.compositeRenderer = new CompositeRenderer(this, CompositePass.COMPOSITE, programSet.getPackDirectives(),
+				programSet.getComposite(ProgramArrayId.Composite), programSet.getCompute(ProgramArrayId.Composite), this.renderTargets,
+				this.shaderStorageBufferHolder, this.customTextureManager.getNoiseTexture(), this.updateNotifier, this.centerDepthSampler,
+				flipper, this.shadowTargetsSupplier, TextureStage.COMPOSITE_AND_FINAL, this.customTextureManager.getCustomTextureIdMap()
+				.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
+				this.customTextureManager.getIrisCustomTextures(), this.customImages,
+				programSet.getPackDirectives().getExplicitFlips("composite_pre"), this.customUniforms);
+			cleanup.add(this.compositeRenderer::destroy);
+			this.finalPassRenderer = new FinalPassRenderer(this, programSet, this.renderTargets,
+				this.customTextureManager.getNoiseTexture(), this.shaderStorageBufferHolder, this.updateNotifier, flipper.snapshot(),
+				this.centerDepthSampler, this.shadowTargetsSupplier, this.customTextureManager.getCustomTextureIdMap()
+				.getOrDefault(TextureStage.COMPOSITE_AND_FINAL, Object2ObjectMaps.emptyMap()),
+				this.customTextureManager.getIrisCustomTextures(), this.customImages, this.compositeRenderer.getFlippedAtLeastOnceFinal(),
+				this.customUniforms);
+			cleanup.add(this.finalPassRenderer::destroy);
 
 			this.dhCompat = new DHCompat(this, shadowDirectives.isDhShadowEnabled().orElse(true));
+			cleanup.add(this.dhCompat::clearPipeline);
 
 			this.loadedShaders = new HashSet<>();
 			cleanup.add(this::destroyShaders);
-			this.worldTargets = new WorldRenderTargets(renderTargets, shadowTargetsSupplier, flippedAfterPrepare, flippedAfterTranslucent);
+			this.worldTargets = new WorldRenderTargets(this.renderTargets, this.shadowTargetsSupplier, this.flippedAfterPrepare,
+				this.flippedAfterTranslucent);
 
 			ShaderLoadingMap loadingMap = new ShaderLoadingMap((key, patchType) -> {
 				try {
 					if (key.isShadow()) {
-						return createShadowShader(key.getName(), resolver.resolve(key.getProgram()), key, patchType);
+						return this.createShadowShader(key.getName(), this.resolver.resolve(key.getProgram()), key, patchType);
 					} else {
-						return createShader(key.getName(), resolver.resolve(key.getProgram()), key, patchType);
+						return this.createShader(key.getName(), this.resolver.resolve(key.getProgram()), key, patchType);
 					}
 				} catch (FakeChainedJsonException e) {
-					destroyShaders();
+					this.destroyShaders();
 
 					throw e.getTrueException();
 				} catch (IOException e) {
-					destroyShaders();
+					this.destroyShaders();
 
 					throw new RuntimeException(e);
 				} catch (RuntimeException e) {
-					destroyShaders();
+					this.destroyShaders();
 
 					throw e;
 				}
 			});
 			this.shaderMap = new ShaderMap(loadingMap, (shader) -> {
 				if (shader.key().isShadow()) {
-					return shadowRenderTargets == null;
+					return this.shadowRenderTargets == null;
 				} else {
 					return false;
 				}
-			}, loadedShaders::add);
+			}, this.loadedShaders::add);
 
-			initializedBlockIds = false;
+			this.initializedBlockIds = false;
 
 			WorldRenderingSettings.INSTANCE.setEntityIds(programSet.getPack().getIdMap().getEntityIdMap());
 			WorldRenderingSettings.INSTANCE.setItemIds(programSet.getPack().getIdMap().getItemIdMap());
 			WorldRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programSet.getPackDirectives().getAmbientOcclusionLevel());
-			WorldRenderingSettings.INSTANCE.setDisableDirectionalShading(shouldDisableDirectionalShading());
+			WorldRenderingSettings.INSTANCE.setDisableDirectionalShading(this.shouldDisableDirectionalShading());
 			WorldRenderingSettings.INSTANCE.setUseSeparateAo(programSet.getPackDirectives().shouldUseSeparateAo());
 			WorldRenderingSettings.INSTANCE.setBreaksAnisotropy(programSet.getPackDirectives().breaksAnisotropy());
 			WorldRenderingSettings.INSTANCE.setVoxelizeLightBlocks(programSet.getPackDirectives().shouldVoxelizeLightBlocks());
 			WorldRenderingSettings.INSTANCE.setSeparateEntityDraws(programSet.getPackDirectives().shouldUseSeparateEntityDraws());
 
-			if (shadowRenderTargets != null) {
+			if (this.shadowRenderTargets != null) {
 				boolean shadowUsesImages = false;
-				this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
-				this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
-				this.shadowCompositeRenderer = new ShadowCompositeRenderer(
-					this, programSet.getPackDirectives(), programSet.getComposite(ProgramArrayId.ShadowComposite),
-					programSet.getCompute(ProgramArrayId.ShadowComposite), this.shadowRenderTargets, this.shaderStorageBufferHolder,
-					customTextureManager.getNoiseTexture(), updateNotifier,
-					customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), customImages,
-					programSet.getPackDirectives().getExplicitFlips("shadowcomp_pre"), customTextureManager.getIrisCustomTextures(),
-					customUniforms);
+				this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(this.shadowRenderTargets, false, shadowDirectives);
+				this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(this.shadowRenderTargets, true, shadowDirectives);
+				this.shadowCompositeRenderer = new ShadowCompositeRenderer(this, programSet.getPackDirectives(),
+					programSet.getComposite(ProgramArrayId.ShadowComposite), programSet.getCompute(ProgramArrayId.ShadowComposite),
+					this.shadowRenderTargets, this.shaderStorageBufferHolder, this.customTextureManager.getNoiseTexture(),
+					this.updateNotifier, this.customTextureManager.getCustomTextureIdMap(TextureStage.SHADOWCOMP), this.customImages,
+					programSet.getPackDirectives().getExplicitFlips("shadowcomp_pre"), this.customTextureManager.getIrisCustomTextures(),
+					this.customUniforms);
 
 				if (programSet.getPackDirectives().getShadowDirectives().isShadowEnabled().orElse(true)) {
-					this.shadowRenderer = new ShadowRenderer(
-						this, resolver.resolveNullable(ProgramId.ShadowSolid), programSet.getPackDirectives(), shadowRenderTargets,
-						shadowCompositeRenderer, customUniforms, programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
+					this.shadowRenderer = new ShadowRenderer(this, this.resolver.resolveNullable(ProgramId.ShadowSolid),
+						programSet.getPackDirectives(), this.shadowRenderTargets, this.shadowCompositeRenderer, this.customUniforms,
+						programSet.getPack().hasFeature(FeatureFlags.SEPARATE_HARDWARE_SAMPLERS));
 				} else {
-					shadowRenderer = null;
+					this.shadowRenderer = null;
 				}
 
 			} else {
@@ -481,27 +465,33 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				this.shadowRenderer = null;
 			}
 
-			this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
-			cleanup.add(() -> destroyComputes(setup));
+			this.setup = this.createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
+			cleanup.add(() -> destroyComputes(this.setup));
 
 			this.customUniforms.optimise();
 
 			boolean hasRun = false;
-			this.clearPassesFull =
-				ClearPassCreator.createClearPasses(renderTargets, true, programSet.getPackDirectives().getRenderTargetDirectives());
-			this.clearPasses =
-				ClearPassCreator.createClearPasses(renderTargets, false, programSet.getPackDirectives().getRenderTargetDirectives());
+			this.clearPassesFull = ClearPassCreator.createClearPasses(this.renderTargets, true,
+				programSet.getPackDirectives().getRenderTargetDirectives());
+			this.clearPasses = ClearPassCreator.createClearPasses(this.renderTargets, false,
+				programSet.getPackDirectives().getRenderTargetDirectives());
 
-			for (ComputeProgram program : setup) {
+			for (ComputeProgram program : this.setup) {
+				if (program != null) {
+					program.prepare();
+				}
+			}
+
+			for (ComputeProgram program : this.setup) {
 				if (program != null) {
 					if (!hasRun) {
 						hasRun = true;
-						renderTargets.onFullClear();
+						this.renderTargets.onFullClear();
 
 						Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
 
 						Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
-						clearPassesFull.forEach(clearPass -> clearPass.execute(fogColor));
+						ClearPass.executeAll(this.clearPassesFull, fogColor);
 					}
 
 					program.dispatch(1, 1);
@@ -512,7 +502,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			}
 
 			if (programSet.getPackDirectives().supportsColorCorrection()) {
-				colorSpaceConverter = new ColorSpaceConverter() {
+				this.colorSpaceConverter = new ColorSpaceConverter() {
 					@Override
 					public void rebuildProgram(int width, int height, ColorSpace colorSpace) {
 					}
@@ -523,13 +513,43 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				};
 			} else {
 
-				colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
+				this.colorSpaceConverter = new ColorSpaceFragmentConverter(main.width, main.height, IrisVideoSettings.colorSpace);
 			}
 
-			currentColorSpace = IrisVideoSettings.colorSpace;
+			cleanup.add(this.colorSpaceConverter::close);
+			this.currentColorSpace = IrisVideoSettings.colorSpace;
+
+			{
+				for (ComputeProgram program : this.shadowComputes) {
+					if (program != null) {
+						program.prepare();
+					}
+				}
+				this.loadedShaders.forEach(ExtendedShader::prepare);
+				IrisPipelines.preparePrograms(this, this.shaderMap);
+				this.beginRenderer.prepare();
+				this.prepareRenderer.prepare();
+				this.deferredRenderer.prepare();
+				this.compositeRenderer.prepare();
+				if (this.shadowCompositeRenderer != null) {
+					this.shadowCompositeRenderer.prepare();
+				}
+				this.finalPassRenderer.prepare();
+				this.colorSpaceConverter.prepare(main.getColorTextureView());
+				this.dhCompat.prepare();
+				Iris.getRenderBackend().finishCompilation();
+			}
 
 			cleanup.clear();
 		} catch (RuntimeException | Error failure) {
+			try {
+				Iris.getRenderBackend().finishCompilation();
+			} catch (RuntimeException | Error suppressed) {
+				if (suppressed != failure) {
+					failure.addSuppressed(suppressed);
+				}
+			}
+
 			for (var close : cleanup.reversed()) {
 				try {
 					close.run();
@@ -542,25 +562,38 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		}
 	}
 
+	private static void destroyComputes(ComputeProgram[] programs) {
+		for (var program : programs) {
+			if (program != null) {
+				program.close();
+			}
+		}
+	}
+
+	public GpuSampler normalNativeSampler() {
+		return this.normalNativeSampler;
+	}
+
+	public GpuSampler specularNativeSampler() {
+		return this.specularNativeSampler;
+	}
+
 	private ComputeProgram[] createShadowComputes(ComputeSource[] compute, ProgramSet programSet) {
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
-
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
-
 			if (source == null || source.getSource().isEmpty()) {
 			} else {
 				ProgramResources builder;
 				ComputeProgram program;
 
 				try {
-					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), TextureStage.GBUFFERS_AND_SHADOW, customTextureMap, getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW));
+					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null),
+						TextureStage.GBUFFERS_AND_SHADOW, customTextureMap, getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW));
 
-					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
-
-					program = new ComputeProgram(RenderSystem.getDevice(), packSamplers, source.getName(), transformed);
-					builder = program.samplers();
-					builder.addStorageBuffers(shaderStorageBufferHolder);
+					program = new ComputeProgram(this.packSamplers, source.getName(), transformed);
+					builder = program.getSamplers();
+					builder.addStorageBuffers(this.shaderStorageBufferHolder);
 				} catch (ShaderCompileException e) {
 					throw e;
 				} catch (RuntimeException e) {
@@ -568,16 +601,18 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 					throw new RuntimeException("Shader compilation failed for compute " + source.getName() + "!", e);
 				}
 
-				program.uniforms().useFrameUniforms(frameUniforms);
-				CommonUniforms.addDynamicUniforms(program.uniforms(), FogMode.OFF);
+				program.getUniforms().useFrameUniforms(this.frameUniforms);
+				CommonUniforms.addDynamicUniforms(program.getUniforms(), FogMode.OFF);
 
 				Supplier<ImmutableSet<Integer>> flipped;
+
 				flipped = () -> flippedBeforeShadow;
 
 				TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
 
-				CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
-					new CustomTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap(textureStage));
+				CustomTextureSamplerInterceptor customTextureSamplerInterceptor = new CustomTextureSamplerInterceptor(builder,
+					customTextureManager.getCustomTextureIdMap(textureStage));
+
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, false, this);
 				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 				IrisSamplers.addCustomImages(customTextureSamplerInterceptor, customImages);
@@ -609,39 +644,38 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	private ComputeProgram[] createSetupComputes(ComputeSource[] compute, ProgramSet programSet, TextureStage stage) {
 		ComputeProgram[] programs = new ComputeProgram[compute.length];
-
 		for (int i = 0; i < programs.length; i++) {
 			ComputeSource source = compute[i];
-
 			if (source == null || source.getSource().isEmpty()) {
 			} else {
 				ProgramResources builder;
 				ComputeProgram program;
 
 				try {
-					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), stage, customTextureMap, getTextureOverrides(stage));
+					String transformed = TransformPatcher.patchCompute(source.getName(), source.getSource().orElse(null), stage,
+						customTextureMap, getTextureOverrides(stage));
 
-					ShaderPrinter.printProgram(source.getName()).addSource(PatchShaderType.COMPUTE, transformed).print();
-
-					program = new ComputeProgram(RenderSystem.getDevice(), packSamplers, source.getName(), transformed);
-					builder = program.samplers();
-					builder.addStorageBuffers(shaderStorageBufferHolder);
+					program = new ComputeProgram(this.packSamplers, source.getName(), transformed);
+					builder = program.getSamplers();
+					builder.addStorageBuffers(this.shaderStorageBufferHolder);
 				} catch (RuntimeException e) {
 
 					throw new RuntimeException("Shader compilation failed for setup compute " + source.getName() + "!", e);
 				}
 
-				program.uniforms().useFrameUniforms(frameUniforms);
-				CommonUniforms.addDynamicUniforms(program.uniforms(), FogMode.OFF);
+				program.getUniforms().useFrameUniforms(this.frameUniforms);
+				CommonUniforms.addDynamicUniforms(program.getUniforms(), FogMode.OFF);
 
 				ImmutableSet<Integer> empty = ImmutableSet.of();
 				Supplier<ImmutableSet<Integer>> flipped;
+
 				flipped = () -> empty;
 
 				TextureStage textureStage = TextureStage.SETUP;
 
-				CustomTextureSamplerInterceptor customTextureSamplerInterceptor =
-					new CustomTextureSamplerInterceptor(builder, customTextureManager.getCustomTextureIdMap(textureStage));
+				CustomTextureSamplerInterceptor customTextureSamplerInterceptor = new CustomTextureSamplerInterceptor(builder,
+					customTextureManager.getCustomTextureIdMap(textureStage));
+
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, flipped, renderTargets, true, this);
 				IrisSamplers.addCustomTextures(builder, customTextureManager.getIrisCustomTextures());
 				IrisSamplers.addCompositeSamplers(builder, renderTargets);
@@ -690,17 +724,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	}
 
 	private ShaderSupplier createShader(String name, ShaderKey key, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
-		VertexFormat vertexFormat, FogMode fogMode, boolean isIntensity, boolean isFullbright,
-		boolean isGlint, boolean isText, boolean isIE, Patch patch) throws IOException {
+		VertexFormat vertexFormat, FogMode fogMode, boolean isIntensity, boolean isFullbright, boolean isGlint, boolean isText,
+		boolean isIE, Patch patch) throws IOException {
 		boolean isLines = programId == ProgramId.Line && resolver.has(ProgramId.Line);
 
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isLines, isGlint, isText, isIE);
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> isBeforeTranslucent ? flippedAfterPrepare : flippedAfterTranslucent;
 
-		ShaderSupplier extendedShader =
-			ShaderCreator.create(this, name, key, source, programId, fallbackAlpha, vertexFormat, inputs, updateNotifier, this, flipped,
-				fogMode, isIntensity, isFullbright, false, isLines, customUniforms, patch);
+		ShaderSupplier extendedShader = ShaderCreator.create(this, name, key, source, programId, fallbackAlpha, vertexFormat, inputs,
+			this.updateNotifier, this, flipped, fogMode, isIntensity, isFullbright, false, isLines, this.customUniforms, patch);
 
 		return extendedShader;
 	}
@@ -708,14 +741,14 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private ShaderSupplier createFallbackShader(String name, ShaderKey key) throws IOException {
 
 		ShaderSupplier shader = ShaderCreator.createFallback(name, key, key.getAlphaTest(), key.getVertexFormat(), null, this,
-			key.getFogMode(), key.hasDiffuseLighting(), key == ShaderKey.GLINT,
-			key.isText(), key.isIntensity(), key.shouldIgnoreLightmap());
+			key.getFogMode(), key.hasDiffuseLighting(), key == ShaderKey.GLINT, key.isText(), key.isIntensity(),
+			key.shouldIgnoreLightmap());
 
 		return shader;
 	}
 
-	private ShaderSupplier createShadowShader(String name, Optional<ProgramSource> source, ShaderKey key, Patch patchType)
-		throws IOException {
+	private ShaderSupplier createShadowShader(String name, Optional<ProgramSource> source, ShaderKey key,
+		Patch patchType) throws IOException {
 		if (source.isEmpty()) {
 			return createFallbackShadowShader(name, key);
 		}
@@ -725,26 +758,25 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	}
 
 	private ShaderSupplier createFallbackShadowShader(String name, ShaderKey key) throws IOException {
-		ShaderSupplier shader = ShaderCreator.createFallbackShadow(
-			name, key, shadowTargetsSupplier, key.getAlphaTest(), key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(),
-			key.hasDiffuseLighting(), key == ShaderKey.GLINT, key.isText(), key.isIntensity(), key.shouldIgnoreLightmap());
+		ShaderSupplier shader = ShaderCreator.createFallbackShadow(name, key, shadowTargetsSupplier, key.getAlphaTest(),
+			key.getVertexFormat(), BlendModeOverride.OFF, this, key.getFogMode(), key.hasDiffuseLighting(), key == ShaderKey.GLINT,
+			key.isText(), key.isIntensity(), key.shouldIgnoreLightmap());
 
 		return shader;
 	}
 
 	private ShaderSupplier createShadowShader(String name, ShaderKey key, ProgramSource source, ProgramId programId,
-		AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright,
-		boolean isText, boolean isIE, Patch patchType) throws IOException {
+		AlphaTest fallbackAlpha, VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright, boolean isText, boolean isIE,
+		Patch patchType) throws IOException {
 		boolean isLines = programId == ProgramId.Line && resolver.has(ProgramId.Line);
 
 		ShaderAttributeInputs inputs = new ShaderAttributeInputs(vertexFormat, isFullbright, isLines, false, isText, isIE);
 
 		Supplier<ImmutableSet<Integer>> flipped = () -> flippedBeforeShadow;
 
-		ShaderSupplier extendedShader = ShaderCreator.createShadow(this, name, key, source, programId, shadowTargetsSupplier,
-			fallbackAlpha,
-			vertexFormat, inputs, updateNotifier, this, flipped, FogMode.PER_VERTEX,
-			isIntensity, isFullbright, true, isLines, customUniforms, patchType);
+		ShaderSupplier extendedShader = ShaderCreator.createShadow(this, name, key, source, programId, shadowTargetsSupplier, fallbackAlpha,
+			vertexFormat, inputs, updateNotifier, this, flipped, FogMode.PER_VERTEX, isIntensity, isFullbright, true, isLines,
+			customUniforms, patchType);
 
 		return extendedShader;
 	}
@@ -753,8 +785,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		boolean isShadowPass, boolean hasTexture, boolean hasLightmap, boolean hasOverlay) {
 		TextureStage textureStage = TextureStage.GBUFFERS_AND_SHADOW;
 
-		CustomTextureSamplerInterceptor samplerHolder = new CustomTextureSamplerInterceptor(
-			samplers, customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
+		CustomTextureSamplerInterceptor samplerHolder = new CustomTextureSamplerInterceptor(samplers,
+			customTextureManager.getCustomTextureIdMap().getOrDefault(textureStage, Object2ObjectMaps.emptyMap()));
+
 		IrisSamplers.addRenderTargetSamplers(samplerHolder, flipped, renderTargets, false, this);
 		IrisSamplers.addCustomTextures(samplerHolder, customTextureManager.getIrisCustomTextures());
 		IrisImages.addRenderTargetImages(images, flipped, renderTargets);
@@ -764,7 +797,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			shouldBindPBR = IrisSamplers.hasPBRSamplers(samplerHolder);
 		}
 
-		IrisSamplers.addLevelSamplers(samplers, this, whitePixel, hasTexture, hasLightmap, hasOverlay);
+		IrisSamplers.addLevelSamplers(samplerHolder, this, this.whitePixel, hasTexture, hasLightmap, hasOverlay);
 		IrisSamplers.addWorldDepthSamplers(samplerHolder, this.renderTargets);
 		IrisSamplers.addNoiseSampler(samplerHolder, this.customTextureManager.getNoiseTexture());
 		IrisSamplers.addCustomImages(samplerHolder, customImages);
@@ -777,8 +810,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			IrisImages.addShadowColorImages(images, shadowTargetsSupplier.get(), null);
 		}
 	}
-
-	private boolean shouldRemovePhase = false;
 
 	@Override
 	public WorldRenderingPhase getPhase() {
@@ -795,36 +826,24 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return phase;
 	}
 
-	public void removePhaseIfNeeded() {
-		if (shouldRemovePhase) {
-			phase = WorldRenderingPhase.NONE;
-			shouldRemovePhase = false;
-			GLDebug.popGroup();
-		}
-	}
-
 	@Override
 	public void setPhase(WorldRenderingPhase phase) {
 		if (phase == WorldRenderingPhase.NONE) {
-			if (shouldRemovePhase) {
+			if (this.shouldRemovePhase) {
 				GLDebug.popGroup();
 			}
 
 			shouldRemovePhase = true;
-
 			return;
 		} else {
 			shouldRemovePhase = false;
-
 			if (phase == this.phase) {
 				return;
 			}
 		}
 
 		GLDebug.popGroup();
-
-		if (phase != WorldRenderingPhase.NONE && phase != WorldRenderingPhase.TERRAIN_CUTOUT &&
-			phase != WorldRenderingPhase.TERRAIN_CUTOUT_MIPPED && phase != WorldRenderingPhase.TRIPWIRE) {
+		if (phase != WorldRenderingPhase.NONE && phase != WorldRenderingPhase.TERRAIN_CUTOUT && phase != WorldRenderingPhase.TERRAIN_CUTOUT_MIPPED && phase != WorldRenderingPhase.TRIPWIRE) {
 			if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 				GLDebug.pushGroup(phase.ordinal(),
 					"Shadow " + StringUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
@@ -832,9 +851,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				GLDebug.pushGroup(phase.ordinal(), StringUtils.capitalize(phase.name().toLowerCase(Locale.ROOT).replace("_", " ")));
 			}
 		}
-
 		this.phase = phase;
 		GbufferPrograms.runPhaseChangeNotifier();
+	}
+
+	public void removePhaseIfNeeded() {
+		if (shouldRemovePhase) {
+			phase = WorldRenderingPhase.NONE;
+			shouldRemovePhase = false;
+			GLDebug.popGroup();
+		}
 	}
 
 	@Override
@@ -845,7 +871,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	@Override
 	public int getCurrentNormalTexture() {
-		return currentNormalTexture == null ? 0 : TextureTracker.INSTANCE.identity(currentNormalTexture.getTexture());
+		return this.currentNormalTexture == null ? 0 : TextureTracker.INSTANCE.identity(this.currentNormalTexture.getTexture());
 	}
 
 	public GlSampler getNormalSampler() {
@@ -858,19 +884,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	@Override
 	public int getCurrentSpecularTexture() {
-		return currentSpecularTexture == null ? 0 : TextureTracker.INSTANCE.identity(currentSpecularTexture.getTexture());
+		return this.currentSpecularTexture == null ? 0 : TextureTracker.INSTANCE.identity(this.currentSpecularTexture.getTexture());
 	}
 
 	@Override
 	public void onSetAlbedoTex(GpuTextureView id) {
 		if (id != null) {
 			TextureTracker.INSTANCE.bindTexture(id.texture());
-			albedoTex = TextureTracker.INSTANCE.identity(id.texture());
-
-			int maxAnisotropy = Minecraft.getInstance().options.textureFiltering().get() == TextureFilteringMethod.ANISOTROPIC
-				? Minecraft.getInstance().options.maxAnisotropyValue()
-				: 1;
-
+			this.albedoTex = TextureTracker.INSTANCE.identity(id.texture());
+			int maxAnisotropy = Minecraft.getInstance().options.textureFiltering()
+				.get() == TextureFilteringMethod.ANISOTROPIC ? Minecraft.getInstance().options.maxAnisotropyValue() : 1;
 			if (shouldBindPBR && isRenderingWorld) {
 				PBRTextureHolder pbrHolder = PBRTextureManager.INSTANCE.getOrLoadHolder(id.texture());
 				currentNormalTexture = pbrHolder.normalTexture();
@@ -878,12 +901,10 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 				TextureFormat textureFormat = TextureFormatLoader.getFormat();
 				this.normalSampler = this.specularSampler = GlSampler.MIPPED_NEAREST_NEAREST;
-				this.normalNativeSampler = textureFormat == null || textureFormat.canInterpolateValues(PBRType.NORMAL)
-					? IrisSamplers.getTerrainCache(maxAnisotropy)
-					: null;
-				this.specularNativeSampler = textureFormat == null || textureFormat.canInterpolateValues(PBRType.SPECULAR)
-					? IrisSamplers.getTerrainCache(maxAnisotropy)
-					: null;
+				this.normalNativeSampler = textureFormat == null || textureFormat.canInterpolateValues(
+					PBRType.NORMAL) ? IrisSamplers.getTerrainCache(maxAnisotropy) : null;
+				this.specularNativeSampler = textureFormat == null || textureFormat.canInterpolateValues(
+					PBRType.SPECULAR) ? IrisSamplers.getTerrainCache(maxAnisotropy) : null;
 
 				PBRTextureManager.notifyPBRTexturesChanged();
 			}
@@ -906,16 +927,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		PBRTextureManager.INSTANCE.onNewFrame();
 
-		updateNotifier.onNewFrame();
+		this.updateNotifier.onNewFrame();
 
 		this.customUniforms.update();
-		frameUniforms.beginFrame();
-		packSamplers.beginFrame();
-
+		this.frameUniforms.beginFrame();
+		this.packSamplers.beginFrame();
 		Vector4f emptyClearColor = new Vector4f(1.0F);
+
 		GLDebug.pushGroup(100, "Clear textures");
 
-		clearImages.forEach(CustomImage::clear);
+		this.clearImages.forEach(CustomImage::clear);
 
 		if (shadowRenderTargets != null) {
 			if (packDirectives.getShadowDirectives().isShadowEnabled() == OptionalBoolean.FALSE) {
@@ -923,20 +944,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 					this.shadowClearPasses = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, false, shadowDirectives);
 					this.shadowClearPassesFull = ClearPassCreator.createShadowClearPasses(shadowRenderTargets, true, shadowDirectives);
 					shadowRenderTargets.onFullClear();
-
-					for (ClearPass clearPass : shadowClearPassesFull) {
-						clearPass.execute(emptyClearColor);
-					}
+					ClearPass.executeAll(shadowClearPassesFull, emptyClearColor);
 				}
 			} else {
 
-				RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(shadowRenderTargets.getDepthTexture(), 1.0f);
+				RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(this.shadowRenderTargets.getDepthTexture(), 1.0f);
 
 				ImmutableList<ClearPass> passes;
 
 				for (ComputeProgram computeProgram : shadowComputes) {
 					if (computeProgram != null) {
-						customUniforms.push(computeProgram);
 						computeProgram.dispatch(shadowMapResolution, shadowMapResolution);
 					}
 				}
@@ -950,12 +967,9 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 					passes = shadowClearPasses;
 				}
 
-				for (ClearPass clearPass : passes) {
-					clearPass.execute(emptyClearColor);
-				}
+				ClearPass.executeAll(passes, emptyClearColor);
 			}
 		}
-
 
 		RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
 
@@ -971,7 +985,6 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			deferredRenderer.recalculateSizes();
 			compositeRenderer.recalculateSizes();
 			finalPassRenderer.recalculateSwapPassSize();
-
 			if (shaderStorageBufferHolder != null) {
 				shaderStorageBufferHolder.hasResizedScreen(main.width, main.height);
 			}
@@ -1003,9 +1016,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
 
-		for (ClearPass clearPass : passes) {
-			clearPass.execute(fogColor);
-		}
+		ClearPass.executeAll(passes, fogColor);
 
 		GLDebug.popGroup();
 
@@ -1073,6 +1084,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		renderTargets.copyPreTranslucentDepth();
 
 		deferredRenderer.renderAll();
+		DHCompat.renderLods(true);
 	}
 
 	@Override
@@ -1080,16 +1092,13 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		isRenderingWorld = false;
 		removePhaseIfNeeded();
 
-		try (var synchronization = CompositeSynchronization.begin(RenderSystem.getDevice())) {
-			compositeRenderer.renderAll();
-			finalPassRenderer.renderFinalPass();
-		}
+		this.compositeRenderer.renderAll();
+		this.finalPassRenderer.renderFinalPass();
 	}
 
 	@Override
 	public void finalizeGameRendering() {
-		colorSpaceConverter.process(Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView());
-		RenderCapture.endFrame();
+		this.colorSpaceConverter.process(Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView());
 	}
 
 	@Override
@@ -1178,37 +1187,36 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return cloudSetting;
 	}
 
-	public WorldRenderTargets worldTargets() {
-		return worldTargets;
+	public WorldRenderTargets getWorldTargets() {
+		return this.worldTargets;
 	}
 
-	public ShaderStorageBufferHolder storageBuffers() {
-		return shaderStorageBufferHolder;
+	public ShaderStorageBufferHolder getStorageBuffers() {
+		return this.shaderStorageBufferHolder;
 	}
 
-	public PackSamplers packSamplers() {
-		return packSamplers;
+	public PackSamplers getPackSamplers() {
+		return this.packSamplers;
 	}
 
-	public FrameUniforms frameUniforms() {
-		return frameUniforms;
+	public FrameUniforms getFrameUniforms() {
+		return this.frameUniforms;
 	}
 
-	public WorldRenderTargets.Phase worldTargetPhase() {
-		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? WorldRenderTargets.Phase.SHADOW
-			: isBeforeTranslucent ? WorldRenderTargets.Phase.OPAQUE
-			: WorldRenderTargets.Phase.TRANSLUCENT;
+	public WorldRenderTargets.Phase getWorldTargetPhase() {
+		return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? WorldRenderTargets.Phase.SHADOW : this.isBeforeTranslucent ? WorldRenderTargets.Phase.OPAQUE : WorldRenderTargets.Phase.TRANSLUCENT;
 	}
 
 	public GpuTextureView normalTextureView() {
-		return currentNormalTexture.getTextureView();
+		return (this.currentNormalTexture == null ? PBRTextureManager.INSTANCE.getDefaultHolder()
+			.normalTexture() : this.currentNormalTexture).getTextureView();
 	}
 
 	public GpuTextureView specularTextureView() {
-		return currentSpecularTexture.getTextureView();
+		return (this.currentSpecularTexture == null ? PBRTextureManager.INSTANCE.getDefaultHolder()
+			.specularTexture() : this.currentSpecularTexture).getTextureView();
 	}
 
-	@Override
 	public ShaderMap getShaderMap() {
 		return shaderMap;
 	}
@@ -1220,28 +1228,20 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		});
 	}
 
-	private static void destroyComputes(ComputeProgram[] programs) {
-		for (var program : programs) {
-			if (program != null) {
-				program.close();
-			}
-		}
-	}
-
 	@Override
 	public void destroy() {
 		destroyed = true;
-		destroyComputes(setup);
-		destroyComputes(shadowComputes);
+		destroyComputes(this.setup);
+		destroyComputes(this.shadowComputes);
 
 		destroyShaders();
-		colorSpaceConverter.close();
+		this.colorSpaceConverter.close();
 
 		if (shadowCompositeRenderer != null) {
 			shadowCompositeRenderer.destroy();
 		}
 
-		beginRenderer.destroy();
+		this.beginRenderer.destroy();
 		prepareRenderer.destroy();
 		compositeRenderer.destroy();
 		deferredRenderer.destroy();
@@ -1253,12 +1253,13 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		horizonRenderer.destroy();
 
-		frameUniforms.close();
-		packSamplers.close();
+		this.frameUniforms.close();
+		this.packSamplers.close();
+
 		renderTargets.destroy();
 		dhCompat.clearPipeline();
 
-		customImages.forEach(CustomImage::destroy);
+		this.customImages.forEach(CustomImage::destroy);
 
 		if (shadowRenderTargets != null) {
 			shadowRenderTargets.destroy();
@@ -1312,11 +1313,12 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		DimensionType.Skybox skyType = Minecraft.getInstance().level.dimensionType().skybox();
 
-		if (shouldRenderSkyDisc &&
-			(skyType == DimensionType.Skybox.OVERWORLD || Minecraft.getInstance().level.dimensionType().hasSkyLight())) {
+		if (shouldRenderSkyDisc && (skyType == DimensionType.Skybox.OVERWORLD || Minecraft.getInstance().level.dimensionType()
+			.hasSkyLight())) {
 			Vector3d fogColor3 = CapturedRenderingState.INSTANCE.getFogColor();
 
 			Vector4f fogColor = new Vector4f((float) fogColor3.x, (float) fogColor3.y, (float) fogColor3.z, 1.0F);
+
 			horizonRenderer.renderHorizon(CapturedRenderingState.INSTANCE.getGbufferModelView(),
 				CapturedRenderingState.INSTANCE.getGbufferProjection(), fogColor);
 		}
@@ -1352,9 +1354,14 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return customUniforms;
 	}
 
-	public GlFramebuffer createDHFramebuffer(ProgramSource sources, boolean trans) {
+	public RenderFramebuffer createDHFramebuffer(ProgramSource sources, boolean trans) {
+		if (sources.getDirectives().getDrawBuffers().length == 0) {
+			var framebuffer = new RenderFramebuffer();
+			framebuffer.disableDrawBuffers();
+			return framebuffer;
+		}
 		return renderTargets.createDHFramebuffer(trans ? flippedAfterTranslucent : flippedAfterPrepare,
-			sources.getDirectives().getDrawBuffers());
+			java.util.Arrays.stream(sources.getDirectives().getDrawBuffers()).sorted().toArray());
 	}
 
 	public ImmutableSet<Integer> getFlippedBeforeShadow() {
@@ -1369,9 +1376,21 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		return flippedAfterTranslucent;
 	}
 
-	public GlFramebuffer createDHFramebufferShadow(ProgramSource sources) {
+	public RenderFramebuffer createDHFramebufferShadow(ProgramSource sources) {
 
-		return shadowRenderTargets.createDHFramebuffer(ImmutableSet.of(), new int[]{0, 1});
+		var targets = this.shadowTargetsSupplier.get();
+		RenderFramebuffer framebuffer;
+		if (sources.getDirectives().getDrawBuffers().length == 0) {
+			framebuffer = new RenderFramebuffer();
+			framebuffer.disableDrawBuffers();
+		} else {
+			framebuffer = targets.createDHFramebuffer(ImmutableSet.of(),
+				java.util.Arrays.stream(sources.getDirectives().getDrawBuffers()).sorted().toArray());
+		}
+		if (!framebuffer.hasDepthAttachment()) {
+			framebuffer.addDepthAttachment(this.shadowRenderTargets.getDepthTexture());
+		}
+		return framebuffer;
 	}
 
 	public boolean hasShadowRenderTargets() {

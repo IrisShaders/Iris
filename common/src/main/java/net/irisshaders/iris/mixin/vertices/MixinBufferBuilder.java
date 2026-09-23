@@ -1,10 +1,10 @@
 package net.irisshaders.iris.mixin.vertices;
 
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
@@ -13,11 +13,11 @@ import net.irisshaders.iris.vertices.BufferBuilderPolygonView;
 import net.irisshaders.iris.vertices.ExtendedDataHelper;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
-import org.lwjgl.system.MemoryUtil;
 import net.irisshaders.iris.vertices.MojangBufferAccessor;
 import net.irisshaders.iris.vertices.NormI8;
 import net.irisshaders.iris.vertices.NormalHelper;
 import org.joml.Vector3f;
+import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -235,8 +235,7 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 	private void fillExtendedData(int vertexAmount) {
 		iris$vertexCount = 0;
 
-		if (positionOffset == IRIS$UNKNOWN_OFFSET || uvOffset == IRIS$UNKNOWN_OFFSET || midTexOffset == IRIS$UNKNOWN_OFFSET
-			|| normalOffset == IRIS$UNKNOWN_OFFSET || tangentOffset == IRIS$UNKNOWN_OFFSET) {
+		if (positionOffset == IRIS$UNKNOWN_OFFSET || uvOffset == IRIS$UNKNOWN_OFFSET || midTexOffset == IRIS$UNKNOWN_OFFSET || normalOffset == IRIS$UNKNOWN_OFFSET || tangentOffset == IRIS$UNKNOWN_OFFSET) {
 			Arrays.fill(vertexOffsets, 0);
 			return;
 		}
@@ -262,7 +261,8 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 				long newPointer = basePointer + vertexOffsets[vertex];
 				int vertexNormal = MemoryUtil.memGetInt(newPointer + normalOffset); // retrieve per-vertex normal
 
-				int tangent = NormalHelper.computeTangentSmooth(NormI8.unpackX(vertexNormal), NormI8.unpackY(vertexNormal), NormI8.unpackZ(vertexNormal), polygon);
+				int tangent = NormalHelper.computeTangentSmooth(NormI8.unpackX(vertexNormal), NormI8.unpackY(vertexNormal),
+					NormI8.unpackZ(vertexNormal), polygon);
 
 				MemoryUtil.memPutFloat(newPointer + midTexOffset, midU);
 				MemoryUtil.memPutFloat(newPointer + midTexOffset + 4, midV);

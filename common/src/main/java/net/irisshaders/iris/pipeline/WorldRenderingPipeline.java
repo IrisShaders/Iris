@@ -21,9 +21,9 @@ import java.util.Set;
 public interface WorldRenderingPipeline {
 	void beginLevelRendering();
 
-    void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera, CameraRenderState renderState);
+	void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera, CameraRenderState renderState);
 
-    void addDebugText(DebugScreenDisplayer messages);
+	void addDebugText(DebugScreenDisplayer messages);
 
 	OptionalInt getForcedShadowRenderDistanceChunksForDisplay();
 
@@ -97,9 +97,9 @@ public interface WorldRenderingPipeline {
 
 	void setIsMainBound(boolean mainBound);
 
-    void onBeginClear();
+	void onBeginClear();
 
-    boolean supportsEndFlash();
+	boolean supportsEndFlash();
 
 	int getAlbedoTex();
 }

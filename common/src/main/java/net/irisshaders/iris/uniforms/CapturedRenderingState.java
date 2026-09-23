@@ -6,7 +6,6 @@ import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3d;
 import org.joml.Vector4i;
-import org.lwjgl.vulkan.VK10;
 
 public class CapturedRenderingState {
 
@@ -29,6 +28,7 @@ public class CapturedRenderingState {
 
 	private float currentAlphaTest;
 	private float cloudTime;
+	private BlendMode blend;
 
 	private CapturedRenderingState() {
 	}
@@ -145,36 +145,14 @@ public class CapturedRenderingState {
 		this.textureReloadCount = 0;
 	}
 
-	private BlendMode blend;
-
 	public void setBlendMode(BlendMode value) {
-		blend = value;
+		this.blend = value;
 	}
 
 	public Vector4i getBlendFunction() {
-		return blend == null ? new Vector4i()
-			: new Vector4i(legacyFactor(blend.srcRgb()), legacyFactor(blend.dstRgb()), legacyFactor(blend.srcAlpha()),
-			legacyFactor(blend.dstAlpha()));
+		return this.blend == null ? new Vector4i() : new Vector4i(this.blend.srcRgb(), this.blend.dstRgb(), this.blend.srcAlpha(),
+			this.blend.dstAlpha());
 	}
 
-	private static int legacyFactor(int factor) {
-		return switch (factor) {
-			case VK10.VK_BLEND_FACTOR_ZERO -> 0;
-			case VK10.VK_BLEND_FACTOR_ONE -> 1;
-			case VK10.VK_BLEND_FACTOR_SRC_COLOR -> 0x300;
-			case VK10.VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR -> 0x301;
-			case VK10.VK_BLEND_FACTOR_SRC_ALPHA -> 0x302;
-			case VK10.VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA -> 0x303;
-			case VK10.VK_BLEND_FACTOR_DST_ALPHA -> 0x304;
-			case VK10.VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA -> 0x305;
-			case VK10.VK_BLEND_FACTOR_DST_COLOR -> 0x306;
-			case VK10.VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR -> 0x307;
-			case VK10.VK_BLEND_FACTOR_SRC_ALPHA_SATURATE -> 0x308;
-			case VK10.VK_BLEND_FACTOR_CONSTANT_COLOR -> 0x8001;
-			case VK10.VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR -> 0x8002;
-			case VK10.VK_BLEND_FACTOR_CONSTANT_ALPHA -> 0x8003;
-			case VK10.VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA -> 0x8004;
-			default -> throw new IllegalArgumentException("Unsupported Iris blend factor: " + factor);
-		};
-	}
+
 }

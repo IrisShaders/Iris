@@ -6,8 +6,8 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.phys.AABB;
 import org.joml.FrustumIntersection;
-import org.joml.Matrix4fc;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector3d;
 
 public class NonCullingFrustum extends Frustum implements ViewportProvider, net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum {
@@ -41,8 +41,8 @@ public class NonCullingFrustum extends Frustum implements ViewportProvider, net.
 
 	@Override
 	public boolean pointInFrustum(double x, double y, double z) {
-      return true;
-   }
+		return true;
+	}
 
 	@Override
 	public double getCamX() {

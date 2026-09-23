@@ -12,8 +12,7 @@ import java.util.Locale;
 public interface TextureFormat {
 	String name();
 
-	@Nullable
-	String version();
+	@Nullable String version();
 
 	default List<String> getDefines() {
 		List<String> defines = new ArrayList<>();
@@ -48,8 +47,7 @@ public interface TextureFormat {
 		}
 	}
 
-	@Nullable
-	CustomMipmapGenerator getMipmapGenerator(PBRType pbrType);
+	@Nullable CustomMipmapGenerator getMipmapGenerator(PBRType pbrType);
 
 	interface Factory {
 		TextureFormat createFormat(String name, @Nullable String version);
