@@ -5,6 +5,7 @@ import net.irisshaders.batchedentityrendering.impl.FullyBufferedMultiBufferSourc
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingBuffer;
 import net.irisshaders.batchedentityrendering.impl.MemoryTrackingRenderBuffers;
 import net.irisshaders.batchedentityrendering.impl.RenderBuffersExt;
+import net.irisshaders.iris.apiimpl.IrisApiV0Impl;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
@@ -41,7 +42,7 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 
 	@Inject(method = "bufferSource", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceBufferSource(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {
-		if (begins == 0) {
+		if (begins == 0 || !IrisApiV0Impl.INSTANCE.isShaderPackInUse()) {
 			return;
 		}
 
@@ -50,7 +51,7 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 
 	@Inject(method = "crumblingBufferSource", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceCrumblingBufferSource(CallbackInfoReturnable<MultiBufferSource.BufferSource> cir) {
-		if (begins == 0) {
+		if (begins == 0 || !IrisApiV0Impl.INSTANCE.isShaderPackInUse()) {
 			return;
 		}
 
@@ -68,7 +69,7 @@ public class MixinRenderBuffers implements RenderBuffersExt, MemoryTrackingRende
 
 	@Inject(method = "outlineBufferSource", at = @At("HEAD"), cancellable = true)
 	private void batchedentityrendering$replaceOutlineBufferSource(CallbackInfoReturnable<OutlineBufferSource> provider) {
-		if (begins == 0) {
+		if (begins == 0 || !IrisApiV0Impl.INSTANCE.isShaderPackInUse()) {
 			return;
 		}
 
