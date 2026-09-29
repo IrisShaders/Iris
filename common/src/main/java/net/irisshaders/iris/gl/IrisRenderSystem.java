@@ -32,6 +32,7 @@ import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL45C;
 import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.NVXGPUMemoryInfo;
+import org.lwjgl.opengl.ATIMeminfo;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -474,7 +475,11 @@ public class IrisRenderSystem {
 	}
 
 	public static long getVRAM() {
-		if (GL.getCapabilities().GL_NVX_gpu_memory_info) {
+		if (GL.getCapabilities().GL_ATI_meminfo) {
+			int[] params = new int[4];
+			GL32C.glGetIntegerv(ATIMeminfo.GL_TEXTURE_FREE_MEMORY_ATI,params);
+			return Math.max(params[1],params[3])* 1024L;
+		} else if (GL.getCapabilities().GL_NVX_gpu_memory_info) {
 			return GL32C.glGetInteger(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX) * 1024L;
 		} else {
 			return 4294967296L;
