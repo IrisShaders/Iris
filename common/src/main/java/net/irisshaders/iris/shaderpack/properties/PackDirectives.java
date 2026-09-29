@@ -27,6 +27,7 @@ public class PackDirectives {
 	private float wetnessHalfLife;
 	private float eyeBrightnessHalfLife;
 	private float centerDepthHalfLife;
+	private float centerDepthSampleScale = 1.0F;
 	private CloudSetting cloudSetting;
 	private CloudSetting dhCloudSetting;
 	private boolean underwaterOverlay;
@@ -150,6 +151,10 @@ public class PackDirectives {
 
 	public float getCenterDepthHalfLife() {
 		return centerDepthHalfLife;
+	}
+
+	public float getCenterDepthSampleScale() {
+		return centerDepthSampleScale;
 	}
 
 	public CloudSetting getCloudSetting() {
@@ -288,6 +293,14 @@ public class PackDirectives {
 
 		directives.acceptConstFloatDirective("centerDepthHalflife",
 			centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
+
+		directives.acceptConstFloatDirective("centerDepthSampleScale", scale -> {
+			if (Float.isFinite(scale) && scale > 0.0F && scale <= 1.0F) {
+				centerDepthSampleScale = scale;
+			} else {
+				Iris.logger.warn("Invalid centerDepthSampleScale: " + scale + "; expected a value in (0, 1]");
+			}
+		});
 	}
 
 	public ImmutableMap<Integer, Boolean> getExplicitFlips(String pass) {

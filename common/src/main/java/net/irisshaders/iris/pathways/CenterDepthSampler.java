@@ -48,7 +48,7 @@ public class CenterDepthSampler {
 	private boolean everRetrieved;
 	private boolean destroyed;
 
-	public CenterDepthSampler(IntSupplier depthSupplier, float halfLife) {
+	public CenterDepthSampler(IntSupplier depthSupplier, float halfLife, float sampleScale) {
 		this.texture = GlStateManager._genTexture();
 		this.altTexture = GlStateManager._genTexture();
 		this.framebuffer = new GlFramebuffer();
@@ -74,6 +74,7 @@ public class CenterDepthSampler {
 		builder.addDynamicSampler(() -> altTexture, GlSampler.NEAREST,  "altDepth");
 		builder.uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", SystemTimeUniforms.TIMER::getLastFrameTime);
 		builder.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> (1.0f / ((halfLife * 0.1) / LN2)));
+		builder.uniform1f(UniformUpdateFrequency.ONCE, "sampleScale", () -> sampleScale);
 		// TODO: can we just do this for all composites?
 		builder.uniformMatrix(UniformUpdateFrequency.ONCE, "projection", () -> new Matrix4f(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, -1, -1, 0, 1));
 		this.program = builder.build();
