@@ -310,7 +310,8 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 		BufferFlipper flipper = new BufferFlipper();
 
-		this.centerDepthSampler = new CenterDepthSampler(() -> renderTargets.getDepthTexture().iris$getGlId(), programSet.getPackDirectives().getCenterDepthHalfLife());
+		this.centerDepthSampler = new CenterDepthSampler(() -> renderTargets.getDepthTexture().iris$getGlId(),
+			programSet.getPackDirectives().getCenterDepthHalfLife(), programSet.getPackDirectives().getCenterDepthSampleScale());
 
 		this.shadowMapResolution = programSet.getPackDirectives().getShadowDirectives().getResolution();
 
