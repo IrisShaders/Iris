@@ -7,8 +7,6 @@
     "MixinGameClientEvents",
     "MixinFluidRendererImpl",
     "MixinGooBlock",
-    "MixinRenderFlame",
-    "MixinRenderMekasuit",
     "MixinLevelRenderer",
     "MixinRenderSPS",
     "MixinRenderTypes",

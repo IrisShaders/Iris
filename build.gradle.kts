@@ -5,12 +5,12 @@ plugins {
 }
 
 val MINECRAFT_VERSION by extra { "26.3" }
-val NEOFORGE_VERSION by extra { "26.2.0.0-beta" }
+val NEOFORGE_VERSION by extra { "26.3.0.7-beta" }
 val FABRIC_LOADER_VERSION by extra { "0.19.3" }
 val FABRIC_API_VERSION by extra { "0.160.5+26.3" }
 
 val SODIUM_DEPENDENCY_FABRIC by extra { "net.caffeinemc:sodium-fabric:0.9.2+mc26.3" }
-val SODIUM_DEPENDENCY_NEO by extra { "net.caffeinemc:sodium-fabric:0.9.2+mc26.3" }
+val SODIUM_DEPENDENCY_NEO by extra { "net.caffeinemc:sodium-neoforge-mod:0.9.2+mc26.3" }
 
 // This value can be set to null to disable Parchment.
 // TODO: Re-add Parchment
