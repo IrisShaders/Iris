@@ -22,6 +22,7 @@ public class TextureManipulationUtil {
 		IrisRenderSystem.getIntegerv(GL11.GL_VIEWPORT, previousViewport);
 
 		GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, colorFillFBO);
+		GlStateManager._disableScissorTest();
 		IrisRenderSystem.clearColor(
 			(rgba >> 24 & 0xFF) / 255.0f,
 			(rgba >> 16 & 0xFF) / 255.0f,
