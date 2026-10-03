@@ -92,11 +92,11 @@ public final class CommonUniforms {
 		}, listener -> {
 		});
 
-		uniforms.uniform1i("gtextureId", () -> GlStateManagerAccessor.getTEXTURES()[0].binding, StateUpdateNotifiers.bindTextureNotifier);
+		uniforms.uniform1i("gtextureId", () -> Iris.getPipelineManager().getPipeline().map(i -> i.getAlbedoTex()).orElse(0), StateUpdateNotifiers.bindTextureNotifier);
 		uniforms.uniform1i("textureReloadCount", CapturedRenderingState.INSTANCE::getTextureReloadCount, StateUpdateNotifiers.bindTextureNotifier);
 
 		uniforms.uniform2i("gtextureSize", () -> {
-			int glId = GlStateManagerAccessor.getTEXTURES()[0].binding;
+			int glId = Iris.getPipelineManager().getPipeline().map(i -> i.getAlbedoTex()).orElse(0);
 
 			TextureInfo info = TextureInfoCache.INSTANCE.getInfo(glId);
 			return new Vector2i(info.getWidth(), info.getHeight());
