@@ -37,6 +37,7 @@
     "MixinFogRenderer",
     "MixinGameRenderer",
     "MixinGameRenderer_NightVisionCompat",
+    "MixinGlBackend",
     "MixinGlCommandEncoder",
     "MixinGlProgram",
     "MixinGlRenderPass",
