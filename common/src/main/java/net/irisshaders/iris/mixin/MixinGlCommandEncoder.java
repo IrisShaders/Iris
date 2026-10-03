@@ -123,7 +123,7 @@ public class MixinGlCommandEncoder {
 
 		lastPass = glRenderPass;
 		if (Iris.isPackInUseQuick() || glRenderPass.iris$getCustomPass() != null) {
-			this.lastProgram = null;
+			this.lastPipeline = null;
 		}
 
 		if (glRenderPass.iris$getCustomPass() != null) {
