@@ -340,7 +340,7 @@ public class LodRendererEvents {
 						instance.getTranslucentShader().bind();
 						//float nearClip = DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(partialTicks);
 						//float farClip = (float) ((double) (DHCompatInternal.getDhBlockRenderDistance() + 512) * Math.sqrt(2.0));
-						GL46C.glDisable(GL46C.GL_CULL_FACE);
+						GlStateManager._disableCull();
 						//Iris.logger.info("event near clip: "+event.value.nearClipPlane+" event far clip: "+event.value.farClipPlane+
 						//	" \niris near clip: "+nearClip+" iris far clip: "+farClip);
 
