@@ -221,6 +221,16 @@ public abstract class MixinLevelRenderer {
 		pipeline.setPhase(WorldRenderingPhase.NONE);
 	}
 
+	// Fixes depth being messed up with chunk borders with shaders
+	@WrapOperation(method = "executeAlwaysOnTop", require = 1, at = @At(value = "INVOKE", target = "Ljava/util/OptionalDouble;of(D)Ljava/util/OptionalDouble;"))
+	private OptionalDouble iris$keepMainDepth(double clearDepth, Operation<OptionalDouble> original, @Local(argsOnly = true) boolean consistentDepthRequired) {
+		if (Iris.isPackInUseQuick() && !consistentDepthRequired) {
+			return OptionalDouble.empty();
+		}
+
+		return original.call(clearDepth);
+	}
+
 	@Inject(method = "executeClassicTransparency", require = 1, at = @At(value = "HEAD"))
 	private void iris$beginWeather(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.RAIN_SNOW);
