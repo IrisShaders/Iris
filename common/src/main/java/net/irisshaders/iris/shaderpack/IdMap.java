@@ -185,6 +185,10 @@ public class IdMap {
 
 			// Split on any whitespace
 			for (String part : value.split("\\s+")) {
+				if (part.isEmpty()) {
+					continue;
+				}
+
 				if (part.contains("=")) {
 					// Avoid tons of logspam for now
 					Iris.logger.warn("Failed to parse an Identifier in " + fileName + " for the key " + key + ": state properties are currently not supported: " + part);
@@ -297,6 +301,10 @@ public class IdMap {
 			}
 
 			for (String part : value.split("\\s+")) {
+				if (part.isEmpty()) {
+					continue;
+				}
+
 				if (part.startsWith("%")) {
 					Iris.logger.fatal("Cannot use a tag in the render type map: " + key + " = " + value);
 					continue;
