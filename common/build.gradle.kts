@@ -153,7 +153,6 @@ artifacts {
 
 loom {
     mixin {
-        defaultRefmapName = "iris.refmap.json"
         useLegacyMixinAp = false
     }
 

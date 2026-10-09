@@ -64,7 +64,7 @@ public class IrisMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public String getRefMapperConfig() {
-		return "iris.refmap.json";
+		return null;
 	}
 
 	@Override

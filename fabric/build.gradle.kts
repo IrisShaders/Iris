@@ -100,7 +100,6 @@ loom {
 
     @Suppress("UnstableApiUsage")
     mixin {
-        defaultRefmapName.set("iris-fabric.refmap.json")
         useLegacyMixinAp = false
     }
 
