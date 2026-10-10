@@ -2,9 +2,7 @@ package net.irisshaders.iris;
 
 import com.google.common.base.Throwables;
 import com.mojang.blaze3d.opengl.GlDebug;
-import com.mojang.blaze3d.opengl.GlDevice;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializerRegistry;
 import net.irisshaders.iris.compat.dh.DHCompat;
@@ -40,15 +38,15 @@ import net.irisshaders.iris.vertices.sodium.IrisEntityToTerrainVertexSerializer;
 import net.irisshaders.iris.vertices.sodium.ModelToEntityVertexSerializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.util.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
+import net.minecraft.world.level.CardinalLighting;
 import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -608,6 +606,19 @@ public class Iris {
 		}
 	}
 
+	/**
+	 * Gets the dimension of the level that the player is currently in.
+	 * <p>
+	 * If the player is not in a level, this will return their last dimension
+	 * to avoid unnecessary shaderpack reloads.
+	 * <p>
+	 * The returned dimension may differ from the actual dimension depending
+	 * on the dimension type's properties to ensure that the appropriate
+	 * effects are applied in custom dimension types that are based on the
+	 * standard overworld, nether, or end.
+	 *
+	 * @return the player's current dimension or an override
+	 */
 	public static NamespacedId getCurrentDimension() {
 		ClientLevel level = Minecraft.getInstance().level;
 
@@ -634,6 +645,14 @@ public class Iris {
 
 			if (skybox == DimensionType.Skybox.OVERWORLD) {
 				return DimensionId.OVERWORLD;
+			}
+
+			// If the skybox is NONE, the dimension type may be nether-like. However, to avoid falsely overriding custom
+			// dimension types that are not intending to imitate the nether, we'll check the cardinal lighting property
+			// as a heuristic and return the nether only if it matches that of the nether.
+			if (skybox == DimensionType.Skybox.NONE
+				&& level.dimensionType().cardinalLightType() == CardinalLighting.Type.NETHER) {
+				return DimensionId.NETHER;
 			}
 
 			return dimensionId;
@@ -773,28 +792,28 @@ public class Iris {
 		return getVersion().split("\\+")[0];
 	}
 
-    public static boolean handleDebugKeys(KeyEvent event) {
-        if (reloadKeybind.matches(event)) {
-            try {
-                reload();
+	public static boolean handleDebugKeys(KeyEvent event) {
+		if (reloadKeybind.matches(event)) {
+			try {
+				reload();
 
-                if (Minecraft.getInstance().player != null) {
-                    Minecraft.getInstance().player.sendSystemMessage(Component.translatable("iris.shaders.reloaded"));
-                }
+				if (Minecraft.getInstance().player != null) {
+					Minecraft.getInstance().player.sendSystemMessage(Component.translatable("iris.shaders.reloaded"));
+				}
 
-            } catch (Exception e) {
-                logger.error("Error while reloading Shaders for Iris!", e);
+			} catch (Exception e) {
+				logger.error("Error while reloading Shaders for Iris!", e);
 
-                if (Minecraft.getInstance().player != null) {
-                    Minecraft.getInstance().player.sendSystemMessage(Component.translatable("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED));
-                }
-            }
+				if (Minecraft.getInstance().player != null) {
+					Minecraft.getInstance().player.sendSystemMessage(Component.translatable("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED));
+				}
+			}
 			return true;
-        }
+		}
 		return false;
-    }
+	}
 
-    /**
+	/**
 	 * Called very early on in Minecraft initialization. At this point we *cannot* safely access OpenGL, but we can do
 	 * some very basic setup, config loading, and environment checks.
 	 *
