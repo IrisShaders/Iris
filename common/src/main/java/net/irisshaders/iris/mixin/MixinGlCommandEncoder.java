@@ -159,8 +159,40 @@ public class MixinGlCommandEncoder {
 		}
 	}
 
+	@Unique
+	private static final String[] IRIS_FALLBACK_SAMPLERS = { "Sampler1", "Sampler2" };
+
+	@Unique
+	private final List<String> placeholderSamplers = new ArrayList<>();
+
+	// ExtendedShader declares Sampler1/Sampler2 based on the vertex format, but some vanilla render types (e.g. items)
+	// never bind them. Iris binds fallback textures for these in iris$setupState, which runs after vanilla's sampler
+	// validation. Temporarily fill in placeholders so validation passes; they are removed again before Iris' setup.
+	@Inject(method = "trySetup", at = @At("HEAD"))
+	private void iris$addPlaceholderSamplers(GlRenderPass glRenderPass, Collection<String> collection, CallbackInfoReturnable<Boolean> cir) {
+		placeholderSamplers.clear();
+
+		if (!(glRenderPass.pipeline.program() instanceof ExtendedShader shader) || glRenderPass.samplers.isEmpty()) {
+			return;
+		}
+
+		GlRenderPass.TextureViewAndSampler placeholder = glRenderPass.samplers.values().iterator().next();
+
+		for (String name : IRIS_FALLBACK_SAMPLERS) {
+			if (shader.getUniforms().get(name) instanceof Uniform.Sampler && !glRenderPass.samplers.containsKey(name)) {
+				glRenderPass.samplers.put(name, placeholder);
+				placeholderSamplers.add(name);
+			}
+		}
+	}
+
 	@Inject(method = "trySetup", at = @At("RETURN"))
 	private void iris$setupState(GlRenderPass glRenderPass, Collection<String> collection, CallbackInfoReturnable<Boolean> cir) {
+		for (String name : placeholderSamplers) {
+			glRenderPass.samplers.remove(name);
+		}
+		placeholderSamplers.clear();
+
 		if (glRenderPass.pipeline.program() instanceof IrisProgram is && !is.iris$isSetUp()) {
 			GlRenderPass.TextureViewAndSampler sam = glRenderPass.samplers.get("Sampler0");
 			if (sam != null && Iris.getPipelineManager().getPipelineNullable() instanceof IrisRenderingPipeline irp) {
