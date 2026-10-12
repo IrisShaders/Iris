@@ -40,6 +40,9 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.LINES, p -> ShaderKey.LINES);
 		assignToMain(RenderPipelines.LINES_TRANSLUCENT, p -> ShaderKey.LINES);
 		assignToMain(RenderPipelines.SECONDARY_BLOCK_OUTLINE, p -> ShaderKey.LINES);
+		assignToMain(RenderPipelines.DEBUG_FILLED_BOX, p -> ShaderKey.BASIC_COLOR);
+		assignToMain(RenderPipelines.DEBUG_QUADS, p -> ShaderKey.BASIC_COLOR);
+		assignToMain(RenderPipelines.DEBUG_TRIANGLE_FAN, p -> ShaderKey.BASIC_COLOR);
 		assignToMain(RenderPipelines.STARS, p -> ShaderKey.SKY_BASIC);
 		assignToMain(RenderPipelines.SUNRISE_SUNSET, p -> ShaderKey.SKY_BASIC_COLOR);
 		assignToMain(RenderPipelines.SKY, p -> ShaderKey.SKY_BASIC);
