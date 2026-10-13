@@ -86,16 +86,16 @@ public class IrisConfig implements ConfigEntryPoint {
                             builder.createBooleanOption(
                                             Identifier.parse("sodium:quality.graphics"))
                                     .setTooltip(i -> {
-                                        if (Iris.getCurrentPack().isPresent()) {
+                                        if (Iris.getIrisConfig().areShadersEnabled()) {
                                             return Component.literal(
-                                                    "This option is not relevant when a shader pack is active.");
+                                                    "This option is not usable with shaders on.");
                                         }
 
                                         return Component.translatable(
-                                                "options.improvedTransparency.tooltip");
+                                                "options.improvedTransparency.oit.tooltip");
                                     })
                                     .setEnabledProvider(
-                                            i -> Iris.getCurrentPack().isEmpty(),
+                                            i -> !Iris.getIrisConfig().areShadersEnabled(),
                                             ConfigState.UPDATE_ON_REBUILD
                                     )
                     )
