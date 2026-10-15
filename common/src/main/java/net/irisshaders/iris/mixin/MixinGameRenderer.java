@@ -16,7 +16,10 @@ import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
+import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.client.gui.components.debug.DebugEntrySystemSpecs;
 import net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer;
 import net.minecraft.client.renderer.item.ItemModelResolver;
@@ -87,5 +90,16 @@ public class MixinGameRenderer {
 	@Inject(method = "renderLevel", at = @At("TAIL"))
 	private void iris$runColorSpace(CallbackInfo ci) {
 		Iris.getPipelineManager().getPipeline().ifPresent(WorldRenderingPipeline::finalizeGameRendering);
+	}
+
+	@WrapOperation(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;extract(Lnet/minecraft/client/DeltaTracker;Lnet/minecraft/client/Camera;F)V"))
+	private void iris$markLevelExtract(LevelExtractor instance, DeltaTracker deltaTracker, Camera camera, float partialTick, Operation<Void> original) {
+		boolean previous = ImmediateState.isRenderingLevel;
+		ImmediateState.isRenderingLevel = true;
+		try {
+			original.call(instance, deltaTracker, camera, partialTick);
+		} finally {
+			ImmediateState.isRenderingLevel = previous;
+		}
 	}
 }
