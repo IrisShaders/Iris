@@ -85,6 +85,14 @@ public class VulkanProgramResources {
 
 		var buffers = bindings.buffers();
 
+		for (var descriptor : this.resources.getUniformDeclarations()) {
+			for (var slice : buffers.getOrDefault(descriptor.name(), List.of())) {
+				accesses.add(new VulkanSynchronization.Access(
+					new VulkanSynchronization.Resource(false, ((VulkanGpuBuffer) slice.buffer()).vkBuffer()), stages(descriptor.stages()),
+					KHRSynchronization2.VK_ACCESS_2_UNIFORM_READ_BIT_KHR, false));
+			}
+		}
+
 		for (var descriptor : this.resources.getStorageDeclarations()) {
 			for (var slice : buffers.get(descriptor.name())) {
 				accesses.add(new VulkanSynchronization.Access(

@@ -28,6 +28,7 @@ import org.lwjgl.vulkan.VkSamplerCreateInfo;
 import org.lwjgl.vulkan.VkWriteDescriptorSet;
 
 import java.nio.LongBuffer;
+import java.util.ArrayDeque;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -46,6 +47,7 @@ public class VulkanSamplerHeap implements AutoCloseable {
 	private final int poolCapacity;
 	private final boolean updateAfterBind;
 	private final Map<Long, Integer> poolSizes = new LinkedHashMap<>();
+	private final ArrayDeque<Long> available = new ArrayDeque<>();
 	private final AtomicInteger layoutReferences = new AtomicInteger(1);
 	private long setLayout;
 	private long drawSetLayout;
@@ -160,8 +162,7 @@ public class VulkanSamplerHeap implements AutoCloseable {
 
 	private long createPool(MemoryStack stack) {
 		var handle = stack.mallocLong(1);
-		var poolInfo = VkDescriptorPoolCreateInfo.calloc(stack).sType$Default().maxSets(this.poolCapacity)
-			.flags(VK10.VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
+		var poolInfo = VkDescriptorPoolCreateInfo.calloc(stack).sType$Default().maxSets(this.poolCapacity);
 
 		if (this.updateAfterBind) {
 			poolInfo.flags(poolInfo.flags() | VK12.VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT);
@@ -280,17 +281,23 @@ public class VulkanSamplerHeap implements AutoCloseable {
 		}
 
 		try (var stack = MemoryStack.stackPush()) {
-			if (this.poolSizes.get(this.pool) == this.poolCapacity) {
-				this.pool = this.poolSizes.entrySet().stream().filter(entry -> entry.getValue() < this.poolCapacity)
-					.mapToLong(Map.Entry::getKey).findFirst().orElseGet(() -> this.createPool(stack));
+			var allocation = this.available.pollFirst();
+
+			if (allocation == null) {
+				if (this.poolSizes.get(this.pool) == this.poolCapacity) {
+					this.pool = this.poolSizes.entrySet().stream().filter(entry -> entry.getValue() < this.poolCapacity)
+						.mapToLong(Map.Entry::getKey).findFirst().orElseGet(() -> this.createPool(stack));
+				}
+
+				var handle = stack.mallocLong(1);
+				check(VK10.vkAllocateDescriptorSets(this.device,
+					VkDescriptorSetAllocateInfo.calloc(stack).sType$Default().descriptorPool(this.pool)
+						.pSetLayouts(stack.longs(this.setLayout)), handle), "allocate sampler heap generation");
+				allocation = handle.get(0);
+				this.poolSizes.merge(this.pool, 1, Integer::sum);
 			}
 
-			var handle = stack.mallocLong(1);
-			check(VK10.vkAllocateDescriptorSets(this.device,
-				VkDescriptorSetAllocateInfo.calloc(stack).sType$Default().descriptorPool(this.pool)
-					.pSetLayouts(stack.longs(this.setLayout)), handle), "allocate sampler heap generation");
-
-			long set = handle.get(0);
+			long set = allocation;
 
 			try {
 				if (!this.layout.heaps().isEmpty()) {
@@ -300,11 +307,10 @@ public class VulkanSamplerHeap implements AutoCloseable {
 				}
 
 				this.liveSnapshots++;
-				this.poolSizes.merge(this.pool, 1, Integer::sum);
 
-				return new Snapshot(this.pool, set);
+				return new Snapshot(allocation);
 			} catch (RuntimeException | Error exception) {
-				VK10.vkFreeDescriptorSets(this.device, this.pool, set);
+				this.available.addLast(allocation);
 
 				throw exception;
 			}
@@ -353,6 +359,7 @@ public class VulkanSamplerHeap implements AutoCloseable {
 
 		this.poolSizes.keySet().forEach(handle -> VK10.vkDestroyDescriptorPool(this.device, handle, null));
 		this.poolSizes.clear();
+		this.available.clear();
 		this.pool = 0;
 		this.releaseLayouts();
 		this.samplers.values().forEach(sampler -> VK10.vkDestroySampler(this.device, sampler, null));
@@ -422,20 +429,20 @@ public class VulkanSamplerHeap implements AutoCloseable {
 	public class Snapshot implements AutoCloseable {
 		private final Snapshot parent;
 		private final Map<SamplerHeapLayout.Slot, Entry> draws;
-		private final long descriptorPool;
+		private final Long allocation;
 		private long set;
 		private int references = 1;
 
-		private Snapshot(long descriptorPool, long set) {
-			this.descriptorPool = descriptorPool;
-			this.set = set;
+		private Snapshot(Long allocation) {
+			this.allocation = allocation;
+			this.set = allocation;
 			this.parent = null;
 			this.draws = Map.of();
 		}
 
 		private Snapshot(Snapshot parent, Map<SamplerHeapLayout.Slot, Entry> draws) {
 			this.parent = parent.retain();
-			this.descriptorPool = parent.descriptorPool;
+			this.allocation = parent.allocation;
 			this.set = parent.set;
 			this.draws = Map.copyOf(draws);
 		}
@@ -466,6 +473,10 @@ public class VulkanSamplerHeap implements AutoCloseable {
 		}
 
 		public void bind(VkCommandBuffer commandBuffer, long pipelineLayout, int bindPoint) {
+			this.bind(commandBuffer, pipelineLayout, bindPoint, null);
+		}
+
+		public void bind(VkCommandBuffer commandBuffer, long pipelineLayout, int bindPoint, VulkanBindingState state) {
 			if (this.set == 0) {
 				throw new IllegalStateException("sampler heap generation is retired");
 			}
@@ -475,9 +486,11 @@ public class VulkanSamplerHeap implements AutoCloseable {
 			}
 
 			try (var stack = MemoryStack.stackPush()) {
-				VK10.vkCmdBindDescriptorSets(commandBuffer, bindPoint, pipelineLayout, SamplerHeapLayout.DESCRIPTOR_SET,
-					stack.longs(this.set), null);
-				if (!VulkanSamplerHeap.this.layout.drawHeaps().isEmpty()) {
+				if (state == null || state.descriptor(pipelineLayout, SamplerHeapLayout.DESCRIPTOR_SET, this.set, null)) {
+					VK10.vkCmdBindDescriptorSets(commandBuffer, bindPoint, pipelineLayout, SamplerHeapLayout.DESCRIPTOR_SET,
+						stack.longs(this.set), null);
+				}
+				if (!VulkanSamplerHeap.this.layout.drawHeaps().isEmpty() && (state == null || state.draws(pipelineLayout, this.draws))) {
 					var writes = VulkanSamplerHeap.this.writeDescriptors(stack, VulkanSamplerHeap.this.layout.drawHeaps(), this.draws);
 					KHRPushDescriptor.vkCmdPushDescriptorSetKHR(commandBuffer, bindPoint, pipelineLayout,
 						SamplerHeapLayout.DRAW_DESCRIPTOR_SET, writes);
@@ -501,9 +514,7 @@ public class VulkanSamplerHeap implements AutoCloseable {
 				return;
 			}
 
-			check(VK10.vkFreeDescriptorSets(VulkanSamplerHeap.this.device, this.descriptorPool, this.set),
-				"retire sampler heap generation");
-			VulkanSamplerHeap.this.poolSizes.merge(this.descriptorPool, -1, Integer::sum);
+			VulkanSamplerHeap.this.available.addLast(this.allocation);
 			this.set = 0;
 			VulkanSamplerHeap.this.liveSnapshots--;
 		}

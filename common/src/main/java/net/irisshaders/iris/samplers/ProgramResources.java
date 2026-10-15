@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 public final class ProgramResources implements SamplerHolder, ImageHolder {
 	private final PackSamplers pack;
 	private final List<ShaderResourceLayout.Descriptor> storageDeclarations;
+	private final List<ShaderResourceLayout.Descriptor> uniformDeclarations;
 	private final Map<PackSamplers.Reference, LongSupplier> texels = new LinkedHashMap<>();
 	private final Map<String, ShaderResourceLayout.Descriptor> declarations = new LinkedHashMap<>();
 	private final Map<String, PackSamplers.Reference> references = new LinkedHashMap<>();
@@ -43,6 +44,7 @@ public final class ProgramResources implements SamplerHolder, ImageHolder {
 	public ProgramResources(PackSamplers pack, ShaderResourceLayout layout) {
 		this.pack = pack;
 		this.storageDeclarations = layout.descriptors().stream().filter(d -> d.kind() == ShaderResourceLayout.Kind.STORAGE_BUFFER).toList();
+		this.uniformDeclarations = layout.descriptors().stream().filter(d -> d.kind() == ShaderResourceLayout.Kind.UNIFORM_BUFFER).toList();
 
 		for (var descriptor : layout.descriptors()) {
 			if (descriptor.kind() == ShaderResourceLayout.Kind.IMAGE) {
@@ -219,6 +221,10 @@ public final class ProgramResources implements SamplerHolder, ImageHolder {
 		this.images.forEach((name, image) -> result.put(name, List.of(image.get())));
 
 		return result;
+	}
+
+	public List<ShaderResourceLayout.Descriptor> getUniformDeclarations() {
+		return this.uniformDeclarations;
 	}
 
 	public List<ShaderResourceLayout.Descriptor> getStorageDeclarations() {

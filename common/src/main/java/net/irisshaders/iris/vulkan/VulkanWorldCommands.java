@@ -41,6 +41,7 @@ public class VulkanWorldCommands extends ForwardingRenderPass implements WorldPa
 	private final VulkanCommandEncoder encoder;
 	private final boolean owned;
 	private final VkCommandBuffer command;
+	private final VulkanBindingState bindings;
 	private final Map<TexelBufferKey, Long> texels = new HashMap<>();
 	private boolean closed;
 	private VulkanGraphicsShader.Pipeline pipeline;
@@ -54,6 +55,7 @@ public class VulkanWorldCommands extends ForwardingRenderPass implements WorldPa
 		super(pass);
 		this.encoder = encoder;
 		this.owned = owned;
+		this.bindings = owned ? new VulkanBindingState() : null;
 		this.command = encoder.commandBuffer();
 		((VulkanWorldPassAccess) encoder).iris$setWorldPass(this);
 	}
@@ -113,7 +115,7 @@ public class VulkanWorldCommands extends ForwardingRenderPass implements WorldPa
 	@Override
 	public void bindPipeline(GraphicsPipeline pipeline) {
 		this.pipeline = (VulkanGraphicsShader.Pipeline) pipeline;
-		this.pipeline.bind(this.encoder, this.command, !this.owned);
+		this.pipeline.bind(this.encoder, this.command, !this.owned, this.bindings);
 	}
 
 	@Override

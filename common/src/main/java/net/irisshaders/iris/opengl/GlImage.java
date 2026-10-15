@@ -6,6 +6,7 @@ import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import net.irisshaders.iris.backend.IrisImage;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.texture.TextureType;
+import net.irisshaders.iris.gl.texture.TextureUploadHelper;
 import org.lwjgl.opengl.ARBClearTexture;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11C;
@@ -94,6 +95,7 @@ final class GlImage implements IrisImage {
 	public void upload(ByteBuffer data) {
 		GlShaderBindings.bindTexture(this.target, this.id);
 		int alignment = GlStateManager._getInteger(GL11C.GL_UNPACK_ALIGNMENT);
+		TextureUploadHelper.resetTextureUploadState();
 		GlStateManager._pixelStore(GL11C.GL_UNPACK_ALIGNMENT, 1);
 
 		try {
@@ -127,6 +129,7 @@ final class GlImage implements IrisImage {
 		var zeros = MemoryUtil.memCalloc(Math.multiplyExact(Math.multiplyExact(this.width, this.height), this.format.blockSize()));
 		GlShaderBindings.bindTexture(this.target, this.id);
 		int alignment = GlStateManager._getInteger(GL11C.GL_UNPACK_ALIGNMENT);
+		TextureUploadHelper.resetTextureUploadState();
 		GlStateManager._pixelStore(GL11C.GL_UNPACK_ALIGNMENT, 1);
 
 		try {

@@ -151,7 +151,7 @@ loom {
             runDir("run")
             // vmArgs("-Dmixin.debug.export=true")
             // vmArg("-XX:+AllowEnhancedClassRedefinition")
-            environmentVariable("SDL_VIDEODRIVER", "x11")
+            //environmentVariable("SDL_VIDEODRIVER", "x11")
         }
     }
 }

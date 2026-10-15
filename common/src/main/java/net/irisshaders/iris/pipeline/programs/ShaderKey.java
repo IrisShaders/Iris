@@ -151,7 +151,7 @@ public enum ShaderKey {
 
 	SODIUM_TERRAIN_SOLID(ProgramId.TerrainSolid, AlphaTests.OFF, null, FogMode.PER_VERTEX, LightingModel.LIGHTMAP, Patch.SODIUM),
 	SODIUM_TERRAIN_CUTOUT(ProgramId.TerrainCutout, AlphaTests.HALF_ALPHA, null, FogMode.PER_VERTEX, LightingModel.LIGHTMAP, Patch.SODIUM),
-	SODIUM_TERRAIN_TRANSLUCENT(ProgramId.Water, AlphaTests.ONE_TENTH_ALPHA, null, FogMode.PER_VERTEX, LightingModel.LIGHTMAP, Patch.SODIUM),
+	SODIUM_TERRAIN_TRANSLUCENT(ProgramId.Water, AlphaTests.NON_ZERO_ALPHA, null, FogMode.PER_VERTEX, LightingModel.LIGHTMAP, Patch.SODIUM),
 
 	SHADOW_SODIUM_TERRAIN_SOLID(ProgramId.ShadowSolid, AlphaTests.OFF, null, FogMode.PER_VERTEX, LightingModel.LIGHTMAP, Patch.SODIUM),
 	SHADOW_SODIUM_TERRAIN_CUTOUT(ProgramId.ShadowCutout, AlphaTests.HALF_ALPHA, null, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,

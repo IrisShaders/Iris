@@ -15,6 +15,7 @@ import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
 import org.lwjgl.vulkan.VkWriteDescriptorSet;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -31,6 +32,7 @@ public class VulkanResourceSets implements AutoCloseable {
 	private final int capacity;
 	private final int setIndex;
 	private final Map<Resources, SharedSet> cached = new HashMap<>();
+	private final ArrayDeque<SharedSet> available = new ArrayDeque<>();
 	private final long alignment;
 	private final long maxRange;
 	private final long storageAlignment;
@@ -121,7 +123,7 @@ public class VulkanResourceSets implements AutoCloseable {
 				null, handle), "create uniform set layout");
 			this.layout = handle.get(0);
 			check(VK10.vkCreateDescriptorPool(device, VkDescriptorPoolCreateInfo.calloc(stack).sType$Default().maxSets(capacity)
-					.flags(VK10.VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT).pPoolSizes(sizes), null, handle),
+					.pPoolSizes(sizes), null, handle),
 				"create uniform descriptor pool");
 			this.pool = handle.get(0);
 		} catch (RuntimeException | Error exception) {
@@ -271,12 +273,17 @@ public class VulkanResourceSets implements AutoCloseable {
 		}
 
 		try (var stack = MemoryStack.stackPush()) {
-			var handle = stack.mallocLong(1);
-			check(VK10.vkAllocateDescriptorSets(this.device,
-				VkDescriptorSetAllocateInfo.calloc(stack).sType$Default().descriptorPool(this.pool).pSetLayouts(stack.longs(this.layout)),
-				handle), "allocate uniform set");
+			var shared = this.available.pollFirst();
 
-			long set = handle.get(0);
+			if (shared == null) {
+				var handle = stack.mallocLong(1);
+				check(VK10.vkAllocateDescriptorSets(this.device,
+					VkDescriptorSetAllocateInfo.calloc(stack).sType$Default().descriptorPool(this.pool).pSetLayouts(stack.longs(this.layout)),
+					handle), "allocate uniform set");
+				shared = new SharedSet(handle.get(0), key);
+			}
+
+			long set = shared.handle;
 
 			try {
 				var writes = VkWriteDescriptorSet.calloc(this.blocks.size() + this.images.size(), stack);
@@ -311,13 +318,16 @@ public class VulkanResourceSets implements AutoCloseable {
 
 				this.live++;
 
-				var shared = new SharedSet(set, key);
+				shared.resources = key;
+				shared.references = 1;
 				this.cached.put(key, shared);
 				this.previous = shared;
 
 				return new Snapshot(shared, offsets);
 			} catch (RuntimeException | Error exception) {
-				VK10.vkFreeDescriptorSets(this.device, this.pool, set);
+				shared.resources = null;
+				shared.references = 0;
+				this.available.addLast(shared);
 
 				throw exception;
 			}
@@ -388,6 +398,7 @@ public class VulkanResourceSets implements AutoCloseable {
 		VK10.vkDestroyDescriptorPool(this.device, this.pool, null);
 		VK10.vkDestroyDescriptorSetLayout(this.device, this.layout, null);
 		this.pool = this.layout = 0;
+		this.available.clear();
 	}
 
 	public record LayoutBinding(int binding, int type, int count, int stages) {
@@ -406,7 +417,7 @@ public class VulkanResourceSets implements AutoCloseable {
 
 	public static class SharedSet {
 		private final long handle;
-		private final Resources resources;
+		private Resources resources;
 		private int references = 1;
 
 		private SharedSet(long handle, Resources resources) {
@@ -433,12 +444,20 @@ public class VulkanResourceSets implements AutoCloseable {
 		}
 
 		public void bind(VkCommandBuffer command, long pipelineLayout, int bindPoint) {
+			this.bind(command, pipelineLayout, bindPoint, null);
+		}
+
+		public void bind(VkCommandBuffer command, long pipelineLayout, int bindPoint, VulkanBindingState state) {
 			if (this.shared == null) {
 				throw new IllegalStateException("uniform set is retired");
 			}
 
 			if (command.getDevice() != VulkanResourceSets.this.device) {
 				throw new IllegalArgumentException("command buffer belongs to another device");
+			}
+
+			if (state != null && !state.descriptor(pipelineLayout, VulkanResourceSets.this.setIndex, this.shared.handle, this.offsets)) {
+				return;
 			}
 
 			try (var stack = MemoryStack.stackPush()) {
@@ -454,9 +473,9 @@ public class VulkanResourceSets implements AutoCloseable {
 			}
 
 			if (--this.shared.references == 0) {
-				check(VK10.vkFreeDescriptorSets(VulkanResourceSets.this.device, VulkanResourceSets.this.pool, this.shared.handle),
-					"retire uniform set");
 				VulkanResourceSets.this.cached.remove(this.shared.resources);
+				this.shared.resources = null;
+				VulkanResourceSets.this.available.addLast(this.shared);
 
 				if (VulkanResourceSets.this.previous == this.shared) {
 					VulkanResourceSets.this.previous = null;

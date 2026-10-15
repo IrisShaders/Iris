@@ -1,7 +1,6 @@
 package net.irisshaders.iris.vulkan;
 
 import com.mojang.renderpearl.api.textures.GpuTexture;
-import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuTexture;
 import net.irisshaders.iris.Iris;
 import org.lwjgl.system.MemoryStack;
@@ -36,8 +35,11 @@ public class VulkanSynchronization {
 		var sync = ((VulkanRenderBackend) Iris.getRenderBackend()).synchronization;
 
 		if (!sync.started) {
-			VulkanCommandEncoder.memoryBarrier(command, stack);
-			sync.started = true;
+			var incoming = Planner.incoming(accesses);
+			if (incoming.dstStages() != 0) {
+				barrier(command, stack, incoming);
+				sync.started = true;
+			}
 		}
 
 		var dependency = sync.planner.accept(accesses);
@@ -59,7 +61,11 @@ public class VulkanSynchronization {
 	}
 
 	public static void after(VkCommandBuffer command, MemoryStack stack) {
-		VulkanCommandEncoder.memoryBarrier(command, stack);
+		var sync = ((VulkanRenderBackend) Iris.getRenderBackend()).synchronization;
+		var dependency = sync.planner.outgoing();
+		if (dependency.srcStages() != 0) {
+			barrier(command, stack, dependency);
+		}
 		reset();
 	}
 
@@ -85,6 +91,32 @@ public class VulkanSynchronization {
 
 	public static class Planner {
 		private final Map<Resource, State> states = new HashMap<>();
+
+		public static Dependency incoming(List<Access> accesses) {
+			long stages = 0;
+			long mask = 0;
+
+			for (var access : accesses) {
+				stages |= access.stages();
+				mask |= access.access();
+			}
+
+			return new Dependency(KHRSynchronization2.VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT_KHR,
+				KHRSynchronization2.VK_ACCESS_2_MEMORY_READ_BIT_KHR | KHRSynchronization2.VK_ACCESS_2_MEMORY_WRITE_BIT_KHR, stages, mask);
+		}
+
+		public Dependency outgoing() {
+			long stages = 0;
+			long mask = 0;
+
+			for (var state : this.states.values()) {
+				stages |= state.writerStages | state.readerStages;
+				mask |= state.writerAccess;
+			}
+
+			return new Dependency(stages, mask, KHRSynchronization2.VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT_KHR,
+				KHRSynchronization2.VK_ACCESS_2_MEMORY_READ_BIT_KHR | KHRSynchronization2.VK_ACCESS_2_MEMORY_WRITE_BIT_KHR);
+		}
 
 		public Dependency accept(List<Access> accesses) {
 			var merged = new HashMap<Resource, Access>();

@@ -42,12 +42,12 @@ public class VulkanGraphicsShader implements GraphicsShader {
 	public VulkanGraphicsShader(VulkanShaderCache cache, String name, PatchedShader shader, ProgramResources resources,
 		BufferUniformHolder uniforms) {
 		if (shader.sources().containsKey(PatchShaderType.GEOMETRY) && !VulkanShaderFeatures.isSupported(VulkanShaderFeatures.GEOMETRY)) {
-			throw new IllegalArgumentException("geometry shaders are not supported: " + name);
+			throw new IllegalArgumentException("geometry shaders are not supported by this GPU??? " + name);
 		}
 
 		if ((shader.sources().containsKey(PatchShaderType.TESS_CONTROL) || shader.sources()
 			.containsKey(PatchShaderType.TESS_EVAL)) && !VulkanShaderFeatures.isSupported(VulkanShaderFeatures.TESSELLATION)) {
-			throw new IllegalArgumentException("tessellation shaders are not supported: " + name);
+			throw new IllegalArgumentException("tessellation shaders are not supported by this GPU??? " + name);
 		}
 
 		this.cache = cache;
@@ -94,10 +94,6 @@ public class VulkanGraphicsShader implements GraphicsShader {
 
 	@Override
 	public GraphicsPipeline createPipeline(PipelineState state) {
-		if (this.closed) {
-			throw new IllegalStateException("graphics shader is closed");
-		}
-
 		return new Pipeline(this.compilePipeline(state, false), state);
 	}
 
@@ -171,10 +167,6 @@ public class VulkanGraphicsShader implements GraphicsShader {
 		}
 
 		private VulkanGraphicsPipeline getPipeline() {
-			if (this.closed) {
-				throw new IllegalStateException("graphics pipeline is closed");
-			}
-
 			if (this.pipeline == null) {
 				this.pipeline = VulkanShaderCache.await(this.compilation);
 			}
@@ -182,7 +174,7 @@ public class VulkanGraphicsShader implements GraphicsShader {
 			return this.pipeline;
 		}
 
-		public void bind(VulkanCommandEncoder encoder, VkCommandBuffer command, boolean vanilla) {
+		public void bind(VulkanCommandEncoder encoder, VkCommandBuffer command, boolean vanilla, VulkanBindingState state) {
 			var pipeline = this.getPipeline();
 			if (vanilla) {
 				if (this.vanillaPipeline == null) {
@@ -212,10 +204,10 @@ public class VulkanGraphicsShader implements GraphicsShader {
 					bindings.getImageViews(resolved));
 
 				if (VulkanGraphicsShader.this.frame != null) {
-					pipeline.bindFrame(command, VulkanGraphicsShader.this.frame.getSnapshot());
+					pipeline.bindFrame(command, VulkanGraphicsShader.this.frame.getSnapshot(), state);
 				}
 
-				pipeline.bind(command, heap, snapshot);
+				pipeline.bind(command, heap, snapshot, state);
 			} finally {
 				encoder.queueForDestroy(heap::close);
 

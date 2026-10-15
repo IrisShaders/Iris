@@ -4,6 +4,7 @@ import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
 import io.github.douira.glsl_transformer.ast.node.declaration.FunctionDeclaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.FunctionParameter;
+import io.github.douira.glsl_transformer.ast.node.declaration.InterfaceBlockDeclaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.ConditionExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public final class VulkanShaderPatcher {
 	private static final Map<Map<PatchShaderType, String>, PatchedShader> discoveryCache = new LRUCache<>(256);
@@ -131,6 +133,9 @@ public final class VulkanShaderPatcher {
 				}
 			}
 		});
+		if (vulkan) {
+			removeUnusedVertexOutputs(trees);
+		}
 		LayoutTransformer.transformGrouped(parser, trees, null, vulkan);
 
 		BitSet written = outputs == null ? null : remapFragmentOutputs(parser, trees.get(PatchShaderType.FRAGMENT), outputs);
@@ -186,6 +191,75 @@ public final class VulkanShaderPatcher {
 		}
 
 		return new PatchedShader(result, layout, samplers, written);
+	}
+
+	// this is needed for chocapic v6 which uses MORE THAN 128 COMPONENTS IF WE DON'T OPTIMIZE????
+	private static void removeUnusedVertexOutputs(Map<PatchShaderType, TranslationUnit> trees) {
+		var vertex = trees.get(PatchShaderType.VERTEX);
+		var fragment = trees.get(PatchShaderType.FRAGMENT);
+
+		if (vertex == null || fragment == null || trees.containsKey(PatchShaderType.TESS_CONTROL) || trees.containsKey(
+			PatchShaderType.TESS_EVAL) || trees.containsKey(PatchShaderType.GEOMETRY)) {
+			return;
+		}
+
+		var inputs = new HashSet<String>();
+
+		for (var declaration : fragment.getRoot().nodeIndex.getStream(TypeAndInitDeclaration.class).toList()) {
+			var qualifier = declaration.getType().getTypeQualifier();
+
+			if (VulkanGlsl.hasStorage(qualifier, StorageType.IN)) {
+				if (VulkanGlsl.layout(qualifier, "location") != null) {
+					return;
+				}
+
+				declaration.getMembers().forEach(member -> inputs.add(member.getName().getName()));
+			}
+		}
+
+		if (fragment.getRoot().nodeIndex.getStream(InterfaceBlockDeclaration.class)
+			.anyMatch(block -> VulkanGlsl.hasStorage(block.getTypeQualifier(), StorageType.IN))) {
+			return;
+		}
+
+		var root = vertex.getRoot();
+		root.indexBuildSession(() -> {
+			for (var external : List.copyOf(vertex.getChildren())) {
+				if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration typed)) {
+					continue;
+				}
+
+				var qualifier = typed.getType().getTypeQualifier();
+
+				if (!VulkanGlsl.hasStorage(qualifier, StorageType.OUT) || !(typed.getType().getTypeSpecifier() instanceof BuiltinNumericTypeSpecifier) || VulkanGlsl.layout(
+					qualifier, "location") != null || VulkanGlsl.layout(qualifier, "xfb_buffer") != null || VulkanGlsl.layout(qualifier, "xfb_offset") != null) {
+					continue;
+				}
+
+				for (var member : List.copyOf(typed.getMembers())) {
+					String name = member.getName().getName();
+
+					if (name.startsWith("gl_") || inputs.contains(name)) {
+						continue;
+					}
+
+					var local = new TypeAndInitDeclaration(typed.getType().cloneInto(root), Stream.of(member.cloneInto(root)));
+
+					for (var part : List.copyOf(local.getType().getTypeQualifier().getParts())) {
+						if (!(part instanceof PrecisionQualifier || part instanceof PreciseQualifier)) {
+							part.detachAndDelete();
+						}
+					}
+
+					vertex.getChildren().add(vertex.getChildren().indexOf(declaration), new DeclarationExternalDeclaration(local));
+					member.detachAndDelete();
+				}
+
+				if (typed.getMembers().isEmpty()) {
+					declaration.detachAndDelete();
+				}
+			}
+		});
 	}
 
 	private static void initializeGlobals(ASTParser parser, TranslationUnit tree) {

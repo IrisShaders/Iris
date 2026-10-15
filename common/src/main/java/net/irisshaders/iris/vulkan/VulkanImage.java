@@ -40,10 +40,6 @@ public class VulkanImage implements IrisImage {
 		this.height = Math.max(1, height);
 		this.depth = Math.max(1, depth);
 
-		if (width < 1 || height < 0 || depth < 0) {
-			throw new IllegalArgumentException("invalid custom image extent: " + name);
-		}
-
 		int dimension = switch (type) {
 			case TEXTURE_1D -> VK10.VK_IMAGE_TYPE_1D;
 			case TEXTURE_2D, TEXTURE_RECTANGLE -> VK10.VK_IMAGE_TYPE_2D;

@@ -376,11 +376,15 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 		VK10.vkCmdPushConstants(command, this.pipelineLayout, VK10.VK_SHADER_STAGE_ALL_GRAPHICS, 0, data);
 	}
 
-	public void bindFrame(VkCommandBuffer command, VulkanResourceSets.Snapshot frame) {
-		frame.bind(command, this.pipelineLayout);
+	public void bindFrame(VkCommandBuffer command, VulkanResourceSets.Snapshot frame, VulkanBindingState state) {
+		frame.bind(command, this.pipelineLayout, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, state);
 	}
 
 	public void bind(VkCommandBuffer commandBuffer, VulkanSamplerHeap.Snapshot heap, VulkanResourceSets.Snapshot uniforms) {
+		this.bind(commandBuffer, heap, uniforms, null);
+	}
+
+	public void bind(VkCommandBuffer commandBuffer, VulkanSamplerHeap.Snapshot heap, VulkanResourceSets.Snapshot uniforms, VulkanBindingState state) {
 		if (this.pipeline == 0 || commandBuffer.getDevice() != this.device) {
 			throw new IllegalStateException("invalid graphics pipeline binding");
 		}
@@ -390,11 +394,13 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 		}
 
 		if (uniforms != null) {
-			uniforms.bind(commandBuffer, this.pipelineLayout);
+			uniforms.bind(commandBuffer, this.pipelineLayout, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, state);
 		}
 
-		heap.bind(commandBuffer, this.pipelineLayout, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS);
-		VK10.vkCmdBindPipeline(commandBuffer, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, this.pipeline);
+		heap.bind(commandBuffer, this.pipelineLayout, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, state);
+		if (state == null || state.pipeline(this.pipeline)) {
+			VK10.vkCmdBindPipeline(commandBuffer, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, this.pipeline);
+		}
 
 		if (this.zeroVertexBuffer != 0) {
 			try (var stack = MemoryStack.stackPush()) {
