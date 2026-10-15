@@ -17,7 +17,7 @@ val SODIUM_DEPENDENCY_NEO by extra { "net.caffeinemc:sodium-fabric:0.9.2+mc26.3"
 val PARCHMENT_VERSION by extra { null }
 
 // https://semver.org/
-val MOD_VERSION by extra { "1.11.6" }
+val MOD_VERSION by extra { "1.12.0" }
 
 allprojects {
     apply(plugin = "java")

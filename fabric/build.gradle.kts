@@ -37,7 +37,7 @@ repositories {
 }
 
 base {
-    archivesName.set("iris-vk")
+    archivesName.set("iris-fabric")
 }
 
 dependencies {
