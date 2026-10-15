@@ -9,9 +9,7 @@ import com.mojang.renderpearl.backend.opengl.GlBuffer;
 import com.mojang.renderpearl.backend.opengl.GlConst;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
-import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
-import com.mojang.renderpearl.api.pipeline.CompareOp;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -58,7 +56,6 @@ import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -75,9 +72,8 @@ import java.util.function.Supplier;
 
 public class CompositeRenderer {
 	public static final RenderPipeline COMPOSITE_PIPELINE = RenderPipeline.builder()
-		.withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
 		.withColorTargetState(ColorTargetState.DEFAULT)
-		.withLocation(Identifier.fromNamespaceAndPath("iris", "composite")).withVertexShader(Identifier.fromNamespaceAndPath("iris", "core/screenquad")).withFragmentShader("core/blit_screen").withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+		.withLocation(Identifier.fromNamespaceAndPath("iris", "composite")).withVertexShader(Identifier.fromNamespaceAndPath("iris", "core/screenquad")).withFragmentShader(Identifier.fromNamespaceAndPath("iris", "core/screenquad"))
 		.withVertexBinding(0, DefaultVertexFormat.POSITION_TEX)
 		.withPrimitiveTopology(PrimitiveTopology.QUADS)
 		.build();
