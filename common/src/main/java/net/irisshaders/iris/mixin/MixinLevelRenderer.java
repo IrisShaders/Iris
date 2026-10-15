@@ -31,6 +31,7 @@ import net.irisshaders.iris.pipeline.WorldRenderingPhase;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.IrisTimeUniforms;
+import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -172,6 +173,7 @@ public abstract class MixinLevelRenderer {
 		}
 		pipeline.finalizeLevelRendering();
 		pipeline = null;
+		ImmediateState.isRenderingLevel = false;
 
 		if (!warned) {
 			warned = true;
