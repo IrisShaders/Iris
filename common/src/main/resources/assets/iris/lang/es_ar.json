@@ -10,7 +10,7 @@
   "iris.load.failure.shader": "¡No se pudo cargar el Shader Pack! Por favor, informá del error al desarrollador del shader.",
   "iris.load.failure.generic": "Iris encontró un problema al intentar cargar los Shaders. Por favor, informá del error a los desarrolladores de Iris.",
   "iris.shaders.ssbofailure": "El shader solicitó una función específica (SSBO) que tu GPU no admite. Es posible que no funcione correctamente.",
-  "iris.keybind.reload": "Recargar Shaders (F3 + )",
+  "iris.keybind.reload": "Recargar Shaders",
   "iris.keybind.shaderPackSelection": "Pantalla de Selección de Shaders",
   "iris.keybind.wireframe": "Modo de estructura alámbrica (solo SP)",
   "iris.keybind.toggleShaders": "Activar o desactivar Shaders",
