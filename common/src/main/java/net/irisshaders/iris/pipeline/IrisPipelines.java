@@ -31,6 +31,7 @@ public class IrisPipelines {
 	public static final Map<CompiledRenderPipeline, Map<GlProgram, Map<List<VertexFormat>, FrontendRenderPipeline>>> OVERRIDE_CACHE = new IdentityHashMap<>();
 
 	public static void clearOverrideCache() {
+		// Only close the vertex arrays, IrisRenderingPipeline.destroyShaders() deletes the programs.
 		OVERRIDE_CACHE.values().stream()
 			.flatMap(byProgram -> byProgram.values().stream())
 			.flatMap(byFormat -> byFormat.values().stream())
