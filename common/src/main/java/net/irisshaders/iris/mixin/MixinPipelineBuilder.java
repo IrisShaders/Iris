@@ -7,6 +7,7 @@ import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.pipeline.ShaderSource;
 import com.mojang.renderpearl.frontend.shaders.PipelineBuilder;
+import net.irisshaders.iris.pipeline.IrisPipelines;
 import net.irisshaders.iris.vertices.ImmediateState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,6 +20,7 @@ public class MixinPipelineBuilder {
 	@WrapMethod(method = "compilePipeline")
 	private CompletableFuture<CompiledRenderPipeline.Pending> iris$useDeclaredVertexFormats(RenderPipeline pipeline,
 		ShaderSource shaderSource, Executor executor, Operation<CompletableFuture<CompiledRenderPipeline.Pending>> original) {
+		IrisPipelines.registerPipeline(pipeline);
 		boolean previous = ImmediateState.skipExtension.get();
 		ImmediateState.skipExtension.set(true);
 		try {

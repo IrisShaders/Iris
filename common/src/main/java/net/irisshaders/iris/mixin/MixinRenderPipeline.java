@@ -1,21 +1,16 @@
 package net.irisshaders.iris.mixin;
 
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
-import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
-import net.minecraft.client.renderer.RenderPipelines;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.Objects;
 
 @Mixin(RenderPipeline.class)
 public class MixinRenderPipeline {
@@ -23,21 +18,7 @@ public class MixinRenderPipeline {
 	private void iris$change(CallbackInfoReturnable<VertexFormat> cir) {
 		if (Iris.isPackInUseQuick() && Thread.currentThread().getName()
 			.contains("Render") && ImmediateState.isRenderingLevel && !ImmediateState.skipExtension.get()) {
-			VertexFormat vf = cir.getReturnValue();
-			RenderPipeline thiss = (RenderPipeline) (Object) this;
-			if (Objects.equals(vf, DefaultVertexFormat.BLOCK)) {
-				cir.setReturnValue(IrisVertexFormats.TERRAIN);
-			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
-				cir.setReturnValue(IrisVertexFormats.GLYPH);
-			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR) && thiss.equals(RenderPipelines.TEXT_SEE_THROUGH)) {
-				cir.setReturnValue(IrisVertexFormats.GLYPH);
-			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
-				cir.setReturnValue(IrisVertexFormats.ENTITY);
-			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY_GLINT_SPECIAL)) {
-				cir.setReturnValue(IrisVertexFormats.ENTITY_GLINT_SPECIAL);
-			} else if (Objects.equals(vf, ChunkMeshFormats.COMPACT.getVertexFormat())) {
-				cir.setReturnValue(WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat());
-			}
+			cir.setReturnValue(IrisVertexFormats.extend((RenderPipeline) (Object) this, cir.getReturnValue()));
 		}
 	}
 
@@ -45,20 +26,10 @@ public class MixinRenderPipeline {
 	private void iris$change2(CallbackInfoReturnable<List<VertexFormat>> cir) {
 		if (Iris.isPackInUseQuick() && Thread.currentThread().getName()
 			.contains("Render") && ImmediateState.isRenderingLevel && !ImmediateState.skipExtension.get()) {
-			VertexFormat vf = cir.getReturnValue().get(0);
-			RenderPipeline thiss = (RenderPipeline) (Object) this;
-			if (Objects.equals(vf, DefaultVertexFormat.BLOCK)) {
-				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.TERRAIN}));
-			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
-				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.GLYPH}));
-			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR) && thiss.equals(RenderPipelines.TEXT_SEE_THROUGH)) {
-				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.GLYPH}));
-			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
-				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.ENTITY}));
-			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY_GLINT_SPECIAL)) {
-				cir.setReturnValue(List.of(IrisVertexFormats.ENTITY_GLINT_SPECIAL));
-			} else if (Objects.equals(vf, ChunkMeshFormats.COMPACT.getVertexFormat())) {
-				cir.setReturnValue(List.of(new VertexFormat[]{WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat()}));
+			var formats = cir.getReturnValue();
+			var extended = IrisVertexFormats.extend((RenderPipeline) (Object) this, formats.getFirst());
+			if (extended != formats.getFirst()) {
+				cir.setReturnValue(List.of(extended));
 			}
 		}
 	}

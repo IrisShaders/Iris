@@ -59,16 +59,20 @@ final class GlComputePipeline implements ComputePipeline {
 		IrisRenderSystem.memoryBarrier(GL42C.GL_ALL_BARRIER_BITS);
 		var resolved = this.resources.resolve();
 		resolved.buffers().putAll(this.shader.uploadUniforms(this.uniforms));
-		this.shader.bind(this.resources, this.uniforms, resolved);
+		try {
+			this.shader.bind(this.resources, this.uniforms, resolved);
 
-		if (indirect == null) {
-			IrisRenderSystem.dispatchCompute(groups.x, groups.y, groups.z);
-		} else {
-			GlStateManager._glBindBuffer(GL43C.GL_DISPATCH_INDIRECT_BUFFER, ((GlBuffer) indirect.buffer()).handle());
-			IrisRenderSystem.dispatchComputeIndirect(indirect.offset());
+			if (indirect == null) {
+				IrisRenderSystem.dispatchCompute(groups.x, groups.y, groups.z);
+			} else {
+				GlStateManager._glBindBuffer(GL43C.GL_DISPATCH_INDIRECT_BUFFER, ((GlBuffer) indirect.buffer()).handle());
+				IrisRenderSystem.dispatchComputeIndirect(indirect.offset());
+			}
+
+			IrisRenderSystem.memoryBarrier(GL42C.GL_ALL_BARRIER_BITS);
+		} finally {
+			GlShaderBindings.clearDynamicSamplers();
 		}
-
-		IrisRenderSystem.memoryBarrier(GL42C.GL_ALL_BARRIER_BITS);
 	}
 
 	@Override

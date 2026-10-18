@@ -273,7 +273,7 @@ public enum ShaderKey {
 	}
 
 	public boolean isIntensity() {
-		return this == TEXT_INTENSITY || this == TEXT_INTENSITY_BE || this == SHADOW_TEXT_INTENSITY;
+		return this == TEXT_INTENSITY || this == TEXT_INTENSITY_BE || this == HAND_TEXT_INTENSITY || this == SHADOW_TEXT_INTENSITY;
 	}
 
 	public String getName() {

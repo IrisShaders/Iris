@@ -12,11 +12,14 @@ import com.mojang.renderpearl.backend.api.RenderPassBackend;
 import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
 import com.mojang.renderpearl.backend.vulkan.VulkanConst;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
+import com.mojang.renderpearl.backend.vulkan.VulkanGpuTexture;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.backend.ForwardingRenderPass;
 import net.irisshaders.iris.backend.GraphicsPipeline;
 import net.irisshaders.iris.backend.WorldPassCommands;
 import net.irisshaders.iris.mixinterface.VulkanWorldPassAccess;
+import net.irisshaders.iris.samplers.ProgramResources;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -35,6 +38,8 @@ import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 // using VK render passes because 26.4 will
 public class VulkanWorldCommands extends ForwardingRenderPass implements WorldPassCommands {
@@ -43,12 +48,18 @@ public class VulkanWorldCommands extends ForwardingRenderPass implements WorldPa
 	private final VkCommandBuffer command;
 	private final VulkanBindingState bindings;
 	private final Map<TexelBufferKey, Long> texels = new HashMap<>();
+	private final LongOpenHashSet attachments = new LongOpenHashSet();
 	private boolean closed;
+	private boolean reusable;
+	private boolean joined;
+	private RenderPassDescriptor descriptor;
 	private VulkanGraphicsShader.Pipeline pipeline;
 	private int indexSize = 4;
 
 	public VulkanWorldCommands(VulkanCommandEncoder encoder, RenderPassDescriptor descriptor) {
 		this(encoder, ((VulkanWorldPassAccess) encoder).iris$createRenderPass(descriptor), true);
+		this.descriptor = descriptor;
+		this.trackAttachments();
 	}
 
 	public VulkanWorldCommands(VulkanCommandEncoder encoder, RenderPassBackend pass, boolean owned) {
@@ -58,6 +69,101 @@ public class VulkanWorldCommands extends ForwardingRenderPass implements WorldPa
 		this.bindings = owned ? new VulkanBindingState() : null;
 		this.command = encoder.commandBuffer();
 		((VulkanWorldPassAccess) encoder).iris$setWorldPass(this);
+	}
+
+	@Override
+	public void allowReuse() {
+		this.reusable = this.owned;
+	}
+
+	public boolean canReuse() {
+		return this.reusable;
+	}
+
+	public void reused(boolean joined) {
+		this.joined = joined;
+	}
+
+	public boolean matches(RenderPassDescriptor next) {
+		if (this.descriptor == null || !this.descriptor.renderArea().equals(next.renderArea()) || this.descriptor.colorAttachments()
+			.size() != next.colorAttachments().size()) {
+			return false;
+		}
+		for (int i = 0; i < next.colorAttachments().size(); i++) {
+			var before = this.descriptor.colorAttachments().get(i);
+			var after = next.colorAttachments().get(i);
+			if (before == null ? after != null : after == null || before.textureView() != after.textureView() || after.clearValue()
+				.isPresent()) {
+				return false;
+			}
+		}
+		var before = this.descriptor.depthAttachment();
+		var after = next.depthAttachment();
+		return before == null ? after == null : after != null && before.textureView() == after.textureView() && after.clearValue()
+			.isEmpty();
+	}
+
+	public void finishHeld() {
+		try (var stack = MemoryStack.stackPush()) {
+			VK10.vkCmdEndRenderPass(this.command);
+			this.finish(stack);
+		}
+	}
+
+	private void trackAttachments() {
+		this.attachments.clear();
+		for (var color : this.descriptor.colorAttachments()) {
+			if (color != null) {
+				this.attachments.add(((VulkanGpuTexture) color.textureView().texture()).vkImage());
+			}
+		}
+		if (this.descriptor.depthAttachment() != null) {
+			this.attachments.add(((VulkanGpuTexture) this.descriptor.depthAttachment().textureView().texture()).vkImage());
+		}
+	}
+
+	public void prepareResources(ProgramResources.Bindings resources, boolean storage) {
+		var backend = (VulkanRenderBackend) Iris.getRenderBackend();
+		boolean pending = backend.textures.pending(resources);
+		boolean separate = storage || !resources.images().isEmpty();
+		if (this.reusable || this.joined) {
+			for (var binding : resources.textures().values()) {
+				long image = binding.image() == null ? ((VulkanGpuTexture) binding.texture().texture()).vkImage() : binding.image()
+					.getImage();
+				separate |= this.attachments.contains(image);
+			}
+			if (separate) {
+				this.reusable = false;
+			}
+		}
+		for (var images : resources.images().values()) {
+			for (var binding : images) {
+				backend.textures.written(binding.image() == null ? ((VulkanGpuTexture) binding.texture().texture()).vkImage() : binding.image()
+					.getImage());
+			}
+		}
+		if (this.owned && (pending || this.joined && separate)) {
+			try (var stack = MemoryStack.stackPush()) {
+				VK10.vkCmdEndRenderPass(this.command);
+				this.finish(stack);
+				if (pending) {
+					backend.textures.flush(this.encoder);
+				}
+				var builder = RenderPassDescriptor.builder(this.descriptor.label()).withRenderArea(this.descriptor.renderArea());
+				for (var attachment : this.descriptor.colorAttachments()) {
+					if (attachment == null) {
+						builder.withUnusedColorAttachment();
+					} else {
+						builder.withColorAttachment(attachment.textureView(), Optional.empty());
+					}
+				}
+				if (this.descriptor.depthAttachment() != null) {
+					builder.withDepthAttachment(this.descriptor.depthAttachment().textureView(), OptionalDouble.empty());
+				}
+				backend.getRenderPassCache().begin(this.command, stack, builder.build());
+				this.joined = false;
+			}
+		}
 	}
 
 	public boolean isOwned() {
@@ -115,7 +221,7 @@ public class VulkanWorldCommands extends ForwardingRenderPass implements WorldPa
 	@Override
 	public void bindPipeline(GraphicsPipeline pipeline) {
 		this.pipeline = (VulkanGraphicsShader.Pipeline) pipeline;
-		this.pipeline.bind(this.encoder, this.command, !this.owned, this.bindings);
+		this.pipeline.bind(this.encoder, this.command, !this.owned, this.bindings, this);
 	}
 
 	@Override
@@ -128,7 +234,19 @@ public class VulkanWorldCommands extends ForwardingRenderPass implements WorldPa
 		try (var stack = MemoryStack.stackPush()) {
 			VK10.vkCmdEndRenderPass(this.command);
 			this.finish(stack);
-			((VulkanRenderBackend) Iris.getRenderBackend()).getRenderPassCache().begin(this.command, stack, colors, depth, area);
+			var builder = RenderPassDescriptor.builder(this.descriptor.label()).withRenderArea(area);
+			for (var color : colors) {
+				builder.withColorAttachment(color, Optional.empty());
+			}
+			if (depth != null) {
+				builder.withDepthAttachment(depth, OptionalDouble.empty());
+			}
+			var backend = (VulkanRenderBackend) Iris.getRenderBackend();
+			this.descriptor = backend.textures.takeClears(builder.build());
+			this.trackAttachments();
+			this.joined = false;
+			backend.textures.written(this.descriptor);
+			backend.getRenderPassCache().begin(this.command, stack, this.descriptor);
 		}
 	}
 

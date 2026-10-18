@@ -5,6 +5,7 @@ import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuTexture;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.backend.IrisImage;
 import net.irisshaders.iris.backend.SyncCommand;
 import org.lwjgl.system.MemoryStack;
@@ -104,6 +105,15 @@ public class VulkanSyncCommand implements SyncCommand {
 		}
 
 		var encoder = VulkanCommandBridge.encoder(RenderSystem.getDevice().createCommandEncoder());
+		var backend = (VulkanRenderBackend) Iris.getRenderBackend();
+		if (backend.textures.pending(accesses)) {
+			backend.textures.flush(encoder);
+		}
+		for (var access : accesses) {
+			if (access.write() && access.resource().image()) {
+				backend.textures.written(access.resource().handle());
+			}
+		}
 
 		try (var stack = MemoryStack.stackPush()) {
 			VulkanSynchronization.before(VulkanCommandBridge.commandBuffer(encoder), stack, accesses);

@@ -42,6 +42,7 @@ import net.minecraft.client.Minecraft;
 import org.joml.Vector2i;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -165,18 +166,26 @@ public class IrisDhProgram implements AutoCloseable {
 		return this.framebuffer;
 	}
 
+	public Batch beginBatch() {
+		return new Batch();
+	}
+
 	public void draw(GpuBuffer vertices, GpuBuffer indices, IndexType indexType, int count) {
-		if (count == 0 || vertices == null || indices == null) {
+		try (var batch = this.beginBatch()) {
+			batch.draw(vertices, indices, indexType, count);
+		}
+	}
+
+	private void drawBatch(List<Draw> draws) {
+		if (draws.isEmpty()) {
 			return;
 		}
-		var level = Minecraft.getInstance().level;
-		this.uniforms.update(level == null ? 0 : level.getGameTime(), SystemTimeUniforms.COUNTER.getAsInt());
-		int alignment = RenderSystem.getDevice().getDeviceInfo().limits().minUniformOffsetAlignment();
-		this.uniformBuffers = this.uniforms.data().hasRemaining() ? Map.of(ShaderResourceLayout.UNIFORM_BLOCK,
-			List.of(this.uniforms.upload(RenderSystem.getDevice().createCommandEncoder(), alignment))) : Map.of();
 		var backend = Iris.getRenderBackend();
-		var sync = backend.createSync().read(this.pipeline).read(vertices, SyncCommand.Access.VERTEX)
-			.read(indices, SyncCommand.Access.INDEX);
+		var sync = backend.createSync().read(this.pipeline);
+		for (var draw : draws) {
+			sync.read(draw.vertices, SyncCommand.Access.VERTEX).read(draw.indices, SyncCommand.Access.INDEX);
+			draw.uniforms.values().forEach(slices -> slices.forEach(slice -> sync.read(slice, SyncCommand.Access.UNIFORM)));
+		}
 		var colors = this.framebuffer.getColorViews();
 		var depth = this.framebuffer.getDepthView();
 		colors.forEach(view -> sync.write(view, SyncCommand.Access.COLOR_ATTACHMENT));
@@ -185,14 +194,50 @@ public class IrisDhProgram implements AutoCloseable {
 		ImmediateState.temporarilyIgnorePass = true;
 		try (var pass = backend.createRenderPass(this.name, this.pipeline.framebuffer(), colors, depth,
 			new Vector2i(depth.getWidth(0), depth.getHeight(0)))) {
-			pass.setVertexBuffer(0, vertices.slice());
-			pass.setIndexBuffer(indices, indexType);
-			pass.bindPipeline(this.pipeline);
-			pass.drawIndexed(count, 1, 0, 0, 0);
+			for (var draw : draws) {
+				this.uniformBuffers = draw.uniforms;
+				pass.setVertexBuffer(0, draw.vertices.slice());
+				pass.setIndexBuffer(draw.indices, draw.indexType);
+				pass.bindPipeline(this.pipeline);
+				pass.drawIndexed(draw.count, 1, 0, 0, 0);
+			}
 		} finally {
 			ImmediateState.temporarilyIgnorePass = ignore;
 			this.uniformBuffers = Map.of();
 		}
+	}
+
+	public final class Batch implements AutoCloseable {
+		private final List<Draw> draws = new ArrayList<>();
+
+		private Batch() {
+		}
+
+		public void draw(GpuBuffer vertices, GpuBuffer indices, IndexType indexType, int count) {
+			if (count == 0 || vertices == null || indices == null) {
+				return;
+			}
+			var uniforms = IrisDhProgram.this.uniforms;
+			var level = Minecraft.getInstance().level;
+			uniforms.update(level == null ? 0 : level.getGameTime(), SystemTimeUniforms.COUNTER.getAsInt());
+			int alignment = RenderSystem.getDevice().getDeviceInfo().limits().minUniformOffsetAlignment();
+			Map<String, List<GpuBufferSlice>> buffers = uniforms.data().hasRemaining() ? Map.of(ShaderResourceLayout.UNIFORM_BLOCK,
+				List.of(uniforms.upload(RenderSystem.getDevice().createCommandEncoder(), alignment))) : Map.of();
+			this.draws.add(new Draw(vertices, indices, indexType, count, buffers));
+		}
+
+		@Override
+		public void close() {
+			try {
+				IrisDhProgram.this.drawBatch(this.draws);
+			} finally {
+				this.draws.clear();
+			}
+		}
+	}
+
+	private record Draw(GpuBuffer vertices, GpuBuffer indices, IndexType indexType, int count,
+		Map<String, List<GpuBufferSlice>> uniforms) {
 	}
 
 	@Override

@@ -123,6 +123,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final RenderTargets renderTargets;
 	private final PackSamplers packSamplers;
 	private final ShaderMap shaderMap;
+	private int pipelineVersion = -1;
 	private final WorldRenderTargets worldTargets;
 	private final CustomUniforms customUniforms;
 	private final FrameUniforms frameUniforms;
@@ -539,6 +540,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 				this.dhCompat.prepare();
 				Iris.getRenderBackend().finishCompilation();
 			}
+			this.preparePipelines();
 
 			cleanup.clear();
 		} catch (RuntimeException | Error failure) {
@@ -911,8 +913,16 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		}
 	}
 
+	private void preparePipelines() {
+		if (GraphicsBackend.isVulkan() && this.pipelineVersion != IrisPipelines.getVersion()) {
+			this.pipelineVersion = IrisPipelines.getVersion();
+			IrisPipelines.preparePipelines(this, this.shaderMap);
+		}
+	}
+
 	@Override
 	public void beginLevelRendering() {
+		this.preparePipelines();
 
 		isRenderingWorld = true;
 

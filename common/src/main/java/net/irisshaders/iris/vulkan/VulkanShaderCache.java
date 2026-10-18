@@ -40,6 +40,9 @@ public class VulkanShaderCache implements AutoCloseable {
 		return compiler;
 	});
 	private final ExecutorService executor;
+	private final ExecutorService backgroundExecutor = Executors.newFixedThreadPool(1,
+		Thread.ofPlatform().daemon().priority(Thread.NORM_PRIORITY - 1).name("Iris pipeline compiler").factory());
+	private final Set<VulkanCompileTask<?>> pipelineTasks = ConcurrentHashMap.newKeySet();
 	private int spirvBytes;
 	private boolean closing;
 	private volatile boolean closed;
@@ -52,6 +55,9 @@ public class VulkanShaderCache implements AutoCloseable {
 	}
 
 	public static <T> T await(CompletableFuture<T> future) {
+		if (future instanceof VulkanCompileTask<T> task) {
+			task.run();
+		}
 		try {
 			return future.join();
 		} catch (CompletionException failure) {
@@ -239,10 +245,22 @@ public class VulkanShaderCache implements AutoCloseable {
 		return this.track(future.thenApplyAsync(task, this.executor));
 	}
 
+	public <T, R> CompletableFuture<R> compilePipeline(CompletableFuture<T> input, Function<T, R> compile, boolean background) {
+		this.requireOpen();
+		var task = new VulkanCompileTask<>(() -> compile.apply(await(input)), background ? this.backgroundExecutor : this.executor);
+		this.pipelineTasks.add(task);
+		task.whenComplete((result, failure) -> this.pipelineTasks.remove(task));
+		if (!background) {
+			this.track(task);
+		}
+		task.schedule(input);
+		return task;
+	}
+
 	private <T> CompletableFuture<T> track(CompletableFuture<T> future) {
 		this.pending.add(future);
 		future.whenComplete((result, failure) -> {
-			if (failure == null) {
+			if (failure == null || future.isCancelled()) {
 				this.pending.remove(future);
 			}
 		});
@@ -308,11 +326,13 @@ public class VulkanShaderCache implements AutoCloseable {
 		}
 
 		this.closing = true;
+		this.pipelineTasks.forEach(task -> task.cancel(false));
 
 		try {
 			this.finishCompilation();
 		} catch (RuntimeException | Error ignored) {
 		} finally {
+			this.backgroundExecutor.close();
 			this.executor.close();
 		}
 

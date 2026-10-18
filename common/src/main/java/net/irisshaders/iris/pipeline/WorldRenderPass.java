@@ -38,6 +38,7 @@ public final class WorldRenderPass extends ForwardingRenderPass {
 		super(commands);
 		this.iris = iris;
 		this.commands = commands;
+		this.commands.allowReuse();
 		this.renderPass = new MinecraftRenderPass(commands);
 		this.area = area;
 		this.depth = depth;

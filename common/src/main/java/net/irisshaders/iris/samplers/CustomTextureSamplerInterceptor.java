@@ -142,6 +142,12 @@ public final class CustomTextureSamplerInterceptor implements SamplerHolder {
 	@Override
 	public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler,
 		String... names) {
-		return false;
+		TextureAccess override = this.getOverride(names);
+
+		if (override != null) {
+			return this.samplerHolder.addDynamicSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
+		} else {
+			return this.samplerHolder.addDynamicSampler(type, texture, notifier, sampler, names);
+		}
 	}
 }

@@ -1,6 +1,7 @@
 package net.irisshaders.iris.gl.uniform;
 
 import org.joml.Matrix3fc;
+import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -17,9 +18,13 @@ import java.util.function.Supplier;
 public interface UniformHolder {
 	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, FloatSupplier value);
 
-	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, IntSupplier value);
+	default UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, IntSupplier value) {
+		return this.uniform1f(updateFrequency, name, (FloatSupplier) value::getAsInt);
+	}
 
-	UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, DoubleSupplier value);
+	default UniformHolder uniform1f(UniformUpdateFrequency updateFrequency, String name, DoubleSupplier value) {
+		return this.uniform1f(updateFrequency, name, (FloatSupplier) () -> (float) value.getAsDouble());
+	}
 
 	UniformHolder uniform1i(UniformUpdateFrequency updateFrequency, String name, IntSupplier value);
 
@@ -33,19 +38,37 @@ public interface UniformHolder {
 
 	UniformHolder uniform3i(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3i> value);
 
-	UniformHolder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value);
+	default UniformHolder uniformTruncated3f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value) {
+		Vector3f converted = new Vector3f();
+		return this.uniform3f(updateFrequency, name, () -> {
+			Vector4f vector = value.get();
+			return converted.set(vector.x, vector.y, vector.z);
+		});
+	}
 
-	UniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3d> value);
+	default UniformHolder uniform3d(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector3d> value) {
+		Vector3f converted = new Vector3f();
+		return this.uniform3f(updateFrequency, name, () -> {
+			Vector3d vector = value.get();
+			return converted.set((float) vector.x, (float) vector.y, (float) vector.z);
+		});
+	}
 
 	UniformHolder uniform4f(UniformUpdateFrequency updateFrequency, String name, Supplier<Vector4f> value);
 
-	UniformHolder uniform4fArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value);
+	default UniformHolder uniform4fArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
+		Vector4f converted = new Vector4f();
+		return this.uniform4f(updateFrequency, name, () -> converted.set(value.get()));
+	}
 
 	UniformHolder uniformMatrix(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix4fc> value);
 
 	UniformHolder uniformMatrix3(UniformUpdateFrequency updateFrequency, String name, Supplier<Matrix3fc> value);
 
-	UniformHolder uniformMatrixFromArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value);
+	default UniformHolder uniformMatrixFromArray(UniformUpdateFrequency updateFrequency, String name, Supplier<float[]> value) {
+		Matrix4f converted = new Matrix4f();
+		return this.uniformMatrix(updateFrequency, name, () -> converted.set(value.get()));
+	}
 
 	UniformHolder externallyManagedUniform(String name, UniformType type);
 }

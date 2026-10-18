@@ -90,7 +90,7 @@ public class CompositeProgram {
 			}
 
 			for (var member : declaration.getMembers()) {
-				String name = member.getName().getName();
+				String name = WorldShaderTransformer.vertexAttributeName(member.getName().getName());
 
 				int location = VulkanGlsl.integer(VulkanGlsl.layout(qualifier, "location").getExpression(), tree.getRoot());
 

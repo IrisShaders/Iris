@@ -29,6 +29,8 @@ public interface IrisApi {
 	 */
 	int getMinorApiRevision();
 
+	boolean supportsMultiBackend();
+
 	/**
 	 * Checks whether a shader pack is currently in use and being used
 	 * for rendering. If there is no shader pack enabled or a shader

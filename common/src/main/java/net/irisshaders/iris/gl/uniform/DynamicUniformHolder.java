@@ -16,9 +16,13 @@ import java.util.function.Supplier;
 public interface DynamicUniformHolder extends UniformHolder {
 	DynamicUniformHolder uniform1f(String name, FloatSupplier value, ValueUpdateNotifier notifier);
 
-	DynamicUniformHolder uniform1f(String name, IntSupplier value, ValueUpdateNotifier notifier);
+	default DynamicUniformHolder uniform1f(String name, IntSupplier value, ValueUpdateNotifier notifier) {
+		return this.uniform1f(name, (FloatSupplier) value::getAsInt, notifier);
+	}
 
-	DynamicUniformHolder uniform1f(String name, DoubleSupplier value, ValueUpdateNotifier notifier);
+	default DynamicUniformHolder uniform1f(String name, DoubleSupplier value, ValueUpdateNotifier notifier) {
+		return this.uniform1f(name, (FloatSupplier) () -> (float) value.getAsDouble(), notifier);
+	}
 
 	DynamicUniformHolder uniform1i(String name, IntSupplier value, ValueUpdateNotifier notifier);
 
@@ -30,7 +34,10 @@ public interface DynamicUniformHolder extends UniformHolder {
 
 	DynamicUniformHolder uniform4f(String name, Supplier<Vector4f> value, ValueUpdateNotifier notifier);
 
-	DynamicUniformHolder uniform4fArray(String name, Supplier<float[]> value, ValueUpdateNotifier notifier);
+	default DynamicUniformHolder uniform4fArray(String name, Supplier<float[]> value, ValueUpdateNotifier notifier) {
+		Vector4f converted = new Vector4f();
+		return this.uniform4f(name, () -> converted.set(value.get()), notifier);
+	}
 
 	DynamicUniformHolder uniform4i(String name, Supplier<Vector4i> value, ValueUpdateNotifier notifier);
 

@@ -20,6 +20,7 @@ import net.irisshaders.iris.backend.RenderBackend;
 import net.irisshaders.iris.backend.SyncCommand;
 import net.irisshaders.iris.backend.WorldPassCommands;
 import net.irisshaders.iris.gl.texture.TextureType;
+import net.irisshaders.iris.mixinterface.VulkanWorldPassAccess;
 import net.irisshaders.iris.pipeline.transform.PatchedShader;
 import net.irisshaders.iris.samplers.PackSamplers;
 import net.irisshaders.iris.samplers.ProgramResources;
@@ -34,15 +35,20 @@ import java.util.List;
 // not sure if i'm happy with this yet... AI designed a lot of it, but it seems mostly logical and I don't feel like rewriting it right now?
 public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 	public final VulkanSynchronization synchronization = new VulkanSynchronization();
+	public final VulkanTextureState textures = new VulkanTextureState(this);
 	private final VulkanColorMipmaps mipmaps = new VulkanColorMipmaps();
 	private final VulkanDepthMipmaps depthMipmaps = new VulkanDepthMipmaps();
 	private final VulkanRenderPassCache renderPassCache = new VulkanRenderPassCache(VulkanCommandBridge.getDevice().vkDevice());
 	private VulkanShaderCache shaderCache;
 	private volatile boolean closed;
 
+	public VulkanRenderBackend() {
+		((VulkanWorldPassAccess) VulkanCommandBridge.getDevice().createCommandEncoder()).iris$setTextureState(this.textures);
+	}
+
 	@Override
 	public WorldPassCommands createRenderPass(CommandEncoderBackend encoder, RenderPassDescriptor descriptor) {
-		return new VulkanWorldCommands((VulkanCommandEncoder) encoder, descriptor);
+		return new VulkanWorldCommands((VulkanCommandEncoder) encoder, this.textures.takeClears(descriptor));
 	}
 
 	@Override
@@ -63,6 +69,10 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 
 	@Override
 	public void dispatch(ComputePipeline pipeline, Vector3i groups, FilledIndirectPointer indirect) {
+		var encoder = VulkanCommandBridge.getDevice().createCommandEncoder();
+		((VulkanWorldPassAccess) encoder).iris$flushRenderPass();
+		this.textures.flush(encoder);
+		this.textures.invalidateMipmaps();
 		((VulkanComputePipeline) pipeline).dispatch(groups, indirect);
 	}
 
@@ -111,7 +121,10 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 	}
 
 	public void onDeleteTextureView(long view) {
-		this.renderPassCache.release(view, VulkanCommandBridge.getDevice().createCommandEncoder());
+		var encoder = VulkanCommandBridge.getDevice().createCommandEncoder();
+		((VulkanWorldPassAccess) encoder).iris$flushRenderPass();
+		this.textures.flush(encoder);
+		this.renderPassCache.release(view, encoder);
 	}
 
 	@Override
@@ -124,6 +137,9 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 			this.shaderCache.finishCompilation();
 		}
 
+		var encoder = VulkanCommandBridge.getDevice().createCommandEncoder();
+		((VulkanWorldPassAccess) encoder).iris$flushRenderPass();
+		this.textures.flush(encoder);
 		this.closed = true;
 		this.mipmaps.close();
 		this.depthMipmaps.close();
@@ -152,9 +168,14 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 
 	@Override
 	public void generateMipmaps(GpuTexture texture, boolean linear) {
+		if (this.textures.mipmaps(texture, linear)) {
+			return;
+		}
+		this.textures.beforeAccess(VulkanCommandBridge.getDevice().createCommandEncoder(), texture, false);
 		if (!linear || !this.mipmaps.generate(texture)) {
 			VulkanTextureOps.generateMipmaps(texture, linear);
 		}
+		this.textures.generated(texture, linear);
 	}
 
 	@Override
@@ -168,13 +189,15 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 	}
 
 	public void onDeleteTexture(GpuTexture texture) {
+		((VulkanWorldPassAccess) VulkanCommandBridge.getDevice().createCommandEncoder()).iris$flushRenderPass();
+		this.textures.release(texture);
 		this.mipmaps.release(texture);
 		this.depthMipmaps.release(texture);
 	}
 
 	@Override
 	public void clearColors(List<GpuTextureView> textures, Vector4f color) {
-		VulkanTextureOps.clearColors(textures, color);
+		this.textures.clear(textures, color);
 	}
 
 	@Override

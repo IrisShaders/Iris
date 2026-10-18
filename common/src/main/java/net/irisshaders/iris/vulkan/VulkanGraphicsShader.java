@@ -5,6 +5,7 @@ import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
 import com.mojang.renderpearl.backend.vulkan.VulkanConst;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.backend.FramebufferDescription;
 import net.irisshaders.iris.backend.GraphicsPipeline;
 import net.irisshaders.iris.backend.GraphicsShader;
@@ -94,10 +95,15 @@ public class VulkanGraphicsShader implements GraphicsShader {
 
 	@Override
 	public GraphicsPipeline createPipeline(PipelineState state) {
-		return new Pipeline(this.compilePipeline(state, false), state);
+		return this.createPipeline(state, false);
 	}
 
-	private CompletableFuture<VulkanGraphicsPipeline> compilePipeline(PipelineState state, boolean dynamic) {
+	@Override
+	public GraphicsPipeline createPipeline(PipelineState state, boolean background) {
+		return new Pipeline(this.compilePipeline(state, false, background), state);
+	}
+
+	private CompletableFuture<VulkanGraphicsPipeline> compilePipeline(PipelineState state, boolean dynamic, boolean background) {
 		int[] formats = state.colorFormats().stream().mapToInt(VulkanConst::toVk).toArray();
 		var attributes = state.vertexAttributes().stream()
 			.map(a -> new VulkanGraphicsPipeline.Attribute(a.location(), a.binding(), VulkanConst.toVk(a.format()), a.offset())).toList();
@@ -106,15 +112,27 @@ public class VulkanGraphicsShader implements GraphicsShader {
 			state.zeroVertexBuffer() == null ? 0 : ((VulkanGpuBuffer) state.zeroVertexBuffer()).vkBuffer(), state.vertexFormats());
 		var device = VulkanCommandBridge.getDevice().vkDevice();
 		var heap = this.pack.getSamplerHeap();
-		var pipeline = this.library == null ? this.cache.thenApply(this.spirv,
+		var pipeline = this.library == null ? this.cache.compilePipeline(this.spirv,
 			spirv -> new VulkanGraphicsPipeline(device, heap, this.sets, spirv, formats, state.vertexStride(), attributes,
 				state.blendModes(), this.shader.writtenAttachments(), world, this.frame == null ? null : this.frame.sets,
-				dynamic)) : this.cache.thenApply(this.library,
+				dynamic), background) : this.cache.compilePipeline(this.library,
 			library -> new VulkanGraphicsPipeline(device, heap, this.sets, library, formats, state.vertexStride(), attributes,
-				state.blendModes(), this.shader.writtenAttachments(), world, this.frame == null ? null : this.frame.sets, dynamic));
+				state.blendModes(), this.shader.writtenAttachments(), world, this.frame == null ? null : this.frame.sets, dynamic), background);
 		this.pipelines.add(pipeline);
+		if (background) {
+			pipeline.whenComplete((result, failure) -> {
+				if (failure != null && !pipeline.isCancelled()) {
+					Iris.logger.warn("Failed to precompile render pipeline {}", state.vanillaPipeline().getLocation(), failure);
+				}
+			});
+		}
 
 		return pipeline;
+	}
+
+	@Override
+	public void cancelCompilation() {
+		this.pipelines.forEach(future -> future.cancel(false));
 	}
 
 	@Override
@@ -124,6 +142,7 @@ public class VulkanGraphicsShader implements GraphicsShader {
 		}
 
 		this.closed = true;
+		this.cancelCompilation();
 
 		this.pipelines.forEach(future -> future.handle((pipeline, failure) -> null).join());
 		this.pipelines.clear();
@@ -174,18 +193,20 @@ public class VulkanGraphicsShader implements GraphicsShader {
 			return this.pipeline;
 		}
 
-		public void bind(VulkanCommandEncoder encoder, VkCommandBuffer command, boolean vanilla, VulkanBindingState state) {
+		public void bind(VulkanCommandEncoder encoder, VkCommandBuffer command, boolean vanilla, VulkanBindingState state,
+			VulkanWorldCommands pass) {
 			var pipeline = this.getPipeline();
 			if (vanilla) {
 				if (this.vanillaPipeline == null) {
 					if (this.vanillaCompilation == null) {
-						this.vanillaCompilation = VulkanGraphicsShader.this.compilePipeline(this.state, true);
+						this.vanillaCompilation = VulkanGraphicsShader.this.compilePipeline(this.state, true, false);
 					}
 					this.vanillaPipeline = VulkanShaderCache.await(this.vanillaCompilation);
 				}
 				pipeline = this.vanillaPipeline;
 			}
 			var resolved = VulkanGraphicsShader.this.resources.resolve();
+			pass.prepareResources(resolved, !VulkanGraphicsShader.this.resources.getStorageDeclarations().isEmpty());
 			var complete = resolved.buffers();
 
 			if (!complete.containsKey(ShaderResourceLayout.UNIFORM_BLOCK) && VulkanGraphicsShader.this.uniforms.data().hasRemaining()) {

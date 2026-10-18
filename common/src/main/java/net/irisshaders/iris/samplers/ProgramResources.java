@@ -10,6 +10,7 @@ import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.TextureType;
+import net.irisshaders.iris.pipeline.GraphicsBackend;
 import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ public final class ProgramResources implements SamplerHolder, ImageHolder {
 	private final Map<String, ShaderResourceLayout.Descriptor> declarations = new LinkedHashMap<>();
 	private final Map<String, PackSamplers.Reference> references = new LinkedHashMap<>();
 	private final Map<PackSamplers.Reference, TextureBinding> textures = new LinkedHashMap<>();
+	private final Map<PackSamplers.Reference, GlTextureBinding> glTextures = new LinkedHashMap<>();
 	private final Map<String, ShaderResourceLayout.Descriptor> imageDeclarations = new LinkedHashMap<>();
 	private final Map<String, InternalTextureFormat> imageFormats = new LinkedHashMap<>();
 	private final Map<String, Supplier<ImageBinding>> images = new LinkedHashMap<>();
@@ -185,7 +187,9 @@ public final class ProgramResources implements SamplerHolder, ImageHolder {
 			}
 		}
 
-		this.textures.keySet().retainAll(new HashSet<>(this.references.values()));
+		var referenced = new HashSet<>(this.references.values());
+		this.textures.keySet().retainAll(referenced);
+		this.glTextures.keySet().retainAll(referenced);
 	}
 
 	public PackSamplers getPackSamplers() {
@@ -198,6 +202,10 @@ public final class ProgramResources implements SamplerHolder, ImageHolder {
 
 	public Map<PackSamplers.Reference, TextureBinding> getTextureBindings() {
 		return Collections.unmodifiableMap(this.textures);
+	}
+
+	public GlTextureBinding getGlTextureBinding(PackSamplers.Reference reference) {
+		return this.glTextures.get(reference);
 	}
 
 	public Map<PackSamplers.Reference, LongSupplier> getTexelBufferBindings() {
@@ -300,13 +308,39 @@ public final class ProgramResources implements SamplerHolder, ImageHolder {
 
 	@Override
 	public boolean addDynamicSampler(TextureType type, IntSupplier texture, Supplier<GlSampler> sampler, String... names) {
-		return this.unsupported(names);
+		return this.addDynamicSampler(type, texture, null, sampler, names);
 	}
 
 	@Override
 	public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler,
 		String... names) {
-		return this.unsupported(names);
+		if (!GraphicsBackend.isOpenGL()) {
+			return this.unsupported(names);
+		}
+
+		var binding = new GlTextureBinding(type, texture, sampler, notifier);
+		boolean used = false;
+		for (String name : names) {
+			var declaration = this.declarations.get(name);
+			if (declaration == null) {
+				continue;
+			}
+			if (declaration.count() != 1) {
+				throw new UnsupportedOperationException("sampler array registration is not implemented: " + name);
+			}
+			var samplerType = SamplerHeapLayout.Type.valueOf(declaration.type());
+			if (samplerType.texelBuffer()) {
+				throw new UnsupportedOperationException("texel samplers require a buffer view: " + name);
+			}
+			var reference = this.pack.register(samplerType, binding, true);
+			this.references.put(name, reference);
+			this.glTextures.put(reference, binding);
+			used = true;
+		}
+		return used;
+	}
+
+	public record GlTextureBinding(TextureType type, IntSupplier texture, Supplier<GlSampler> sampler, ValueUpdateNotifier notifier) {
 	}
 
 	public record Bindings(Map<PackSamplers.Reference, TextureBinding.Resolved> textures, Map<PackSamplers.Reference, Long> texels, Map<String, List<GpuBufferSlice>> buffers, Map<String, List<ImageBinding>> images) {

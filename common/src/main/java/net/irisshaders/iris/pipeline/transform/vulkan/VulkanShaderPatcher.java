@@ -14,7 +14,6 @@ import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallE
 import io.github.douira.glsl_transformer.ast.node.expression.unary.GroupingExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
-import io.github.douira.glsl_transformer.ast.node.type.initializer.NestedInitializer;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.PreciseQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.PrecisionQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
@@ -31,6 +30,7 @@ import io.github.douira.glsl_transformer.util.LRUCache;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.PatchedShader;
 import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
+import net.irisshaders.iris.pipeline.transform.transformer.CompatibilityTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.LayoutTransformer;
 import net.irisshaders.iris.samplers.SamplerBindingPlan;
 import net.irisshaders.iris.samplers.SamplerHeapLayout;
@@ -107,6 +107,10 @@ public final class VulkanShaderPatcher {
 		trees.forEach((stage, tree) -> {
 			removeUnreachableFunctions(tree);
 
+			if (vulkan) {
+				CompatibilityTransformer.transformVulkan(tree.getRoot());
+			}
+
 			for (var declaration : tree.getRoot().nodeIndex.getStream(TypeAndInitDeclaration.class).toList()) {
 				var qualifier = declaration.getType().getTypeQualifier();
 				boolean input = stage != PatchShaderType.VERTEX && VulkanGlsl.hasStorage(qualifier, StorageQualifier.StorageType.IN);
@@ -145,48 +149,11 @@ public final class VulkanShaderPatcher {
 			layout = lowerSamplerHeap(parser, trees, layout, samplers);
 		}
 
-		String samplerName = "iris_legacySampler";
-
-		for (int suffix = 0; ; suffix++) {
-			String candidate = samplerName;
-
-			if (trees.values().stream().noneMatch(tree -> tree.getRoot().identifierIndex.has(candidate))) {
-				break;
-			}
-
-			samplerName = "iris_legacySampler" + suffix;
-		}
-
-		for (var tree : trees.values()) {
-			tree.getRoot().rename("sampler", samplerName);
-		}
-
-		for (var tree : trees.values()) {
-			for (String name : List.of("tanh", "fma", "min3", "max3", "mid3")) {
-				boolean declared = tree.getRoot().nodeIndex.getStream(FunctionDefinition.class)
-					.anyMatch(function -> function.getFunctionPrototype().getName().getName().equals(name));
-
-				if (!declared) {
-					continue;
-				}
-
-				String replacement = "iris_legacy_" + name;
-
-				for (int suffix = 0; tree.getRoot().identifierIndex.has(replacement); suffix++) {
-					replacement = "iris_legacy_" + name + suffix;
-				}
-
-				tree.getRoot().rename(name, replacement);
-			}
-		}
+		CompatibilityTransformer.transformLate(parser, trees, vulkan);
 
 		var result = new EnumMap<PatchShaderType, String>(PatchShaderType.class);
 
 		for (var entry : trees.entrySet()) {
-			if (vulkan) {
-				initializeGlobals(parser, entry.getValue());
-			}
-
 			result.put(entry.getKey(), ASTPrinter.print(PrintType.INDENTED, entry.getValue()));
 		}
 
@@ -260,34 +227,6 @@ public final class VulkanShaderPatcher {
 				}
 			}
 		});
-	}
-
-	private static void initializeGlobals(ASTParser parser, TranslationUnit tree) {
-		boolean initialized = false;
-
-		for (var external : List.copyOf(tree.getChildren())) {
-			if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) || variables.getType()
-				.getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier) {
-				continue;
-			}
-
-			var qualifier = variables.getType().getTypeQualifier();
-
-			if (qualifier != null && qualifier.getParts().stream().anyMatch(StorageQualifier.class::isInstance)) {
-				continue;
-			}
-
-			for (var member : variables.getMembers()) {
-				if (member.getInitializer() == null && !member.getName().getName().startsWith("gl_")) {
-					member.setInitializer(new NestedInitializer());
-					initialized = true;
-				}
-			}
-		}
-
-		if (initialized) {
-			tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_ALL, "#extension GL_EXT_null_initializer : require\n");
-		}
 	}
 
 	private static void removeUnreachableFunctions(TranslationUnit tree) {

@@ -183,19 +183,32 @@ public class DHCompatInternal implements AutoCloseable {
 		}
 		BlazeBlockTextureAtlas.INSTANCE.uploadPendingTiles();
 		ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderPassEvent.class, params);
-		var camera = Minecraft.getInstance().gameRenderer.mainCamera().position();
+		// Grow shared index storage before retaining buffers for the batch.
 		for (int i = 0; i < buffers.size(); i++) {
 			var container = (LodBufferContainer) buffers.get(i);
-			var origin = container.minCornerBlockPos;
-			this.modelOffset.set((float) (origin.getX() - camera.x), (float) (origin.getY() - camera.y),
-				(float) (origin.getZ() - camera.z));
-			this.bufferEvent.update(params, new DhApiVec3f(this.modelOffset.x, this.modelOffset.y, this.modelOffset.z));
-			ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeBufferRenderEvent.class, this.bufferEvent);
 			var vertices = opaque ? container.getVboOpaqueWrappers() : container.getVboTransparentWrappers();
 			for (var wrapper : vertices) {
 				var buffer = (IrisDhVertexBuffer) wrapper;
 				if (buffer.getVertexCount() != 0) {
-					program.draw(buffer.getVertexBuffer(), buffer.getIndexBuffer(), buffer.getIndexType(), buffer.getIndexCount());
+					buffer.getIndexBuffer();
+				}
+			}
+		}
+		var camera = Minecraft.getInstance().gameRenderer.mainCamera().position();
+		try (var batch = program.beginBatch()) {
+			for (int i = 0; i < buffers.size(); i++) {
+				var container = (LodBufferContainer) buffers.get(i);
+				var origin = container.minCornerBlockPos;
+				this.modelOffset.set((float) (origin.getX() - camera.x), (float) (origin.getY() - camera.y),
+					(float) (origin.getZ() - camera.z));
+				this.bufferEvent.update(params, new DhApiVec3f(this.modelOffset.x, this.modelOffset.y, this.modelOffset.z));
+				ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeBufferRenderEvent.class, this.bufferEvent);
+				var vertices = opaque ? container.getVboOpaqueWrappers() : container.getVboTransparentWrappers();
+				for (var wrapper : vertices) {
+					var buffer = (IrisDhVertexBuffer) wrapper;
+					if (buffer.getVertexCount() != 0) {
+						batch.draw(buffer.getVertexBuffer(), buffer.getIndexBuffer(), buffer.getIndexType(), buffer.getIndexCount());
+					}
 				}
 			}
 		}

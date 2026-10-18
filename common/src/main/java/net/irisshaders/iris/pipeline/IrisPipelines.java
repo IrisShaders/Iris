@@ -2,22 +2,28 @@ package net.irisshaders.iris.pipeline;
 
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import it.unimi.dsi.fastutil.Function;
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderMap;
 import net.irisshaders.iris.pipeline.programs.ShaderOverrides;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
+import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.minecraft.client.renderer.RenderPipelines;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 public class IrisPipelines {
-	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMap = new Object2ObjectArrayMap<>();
-	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMapShadow = new Object2ObjectArrayMap<>();
+	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMap = new ConcurrentHashMap<>();
+	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMapShadow = new ConcurrentHashMap<>();
+	private static final Map<RenderPipeline, List<ShaderKey>> coreShaderVariants = new ConcurrentHashMap<>();
+	private static final Map<RenderPipeline, Boolean> sodiumPipelines = new ConcurrentHashMap<>();
+	private static final AtomicInteger version = new AtomicInteger();
 	private static final Function<IrisRenderingPipeline, ShaderKey> FAKE_FUNCTION = p -> null;
 
 	static {
@@ -28,19 +34,19 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.TRANSLUCENT_TERRAIN, p -> ShaderKey.TERRAIN_TRANSLUCENT);
 		assignToMain(RenderPipelines.TRANSLUCENT_BLOCK, p -> ShaderKey.MOVING_BLOCK);
 		assignToMain(RenderPipelines.WORLD_BORDER, p -> ShaderKey.TEXTURED);
-		assignToMain(RenderPipelines.ENTITY_CUTOUT, p -> getCutout(p));
-		assignToMain(RenderPipelines.ENTITY_CUTOUT_CULL, p -> getCutout(p));
-		assignToMain(RenderPipelines.ENTITY_CUTOUT_DISSOLVE, p -> getCutout(p));
-		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT_CULL, p -> getTranslucent(p));
-		assignToMain(RenderPipelines.ITEM_TRANSLUCENT, p -> getTranslucent(p));
-		assignToMain(RenderPipelines.ITEM_CUTOUT, p -> getCutout(p));
-		assignToMain(RenderPipelines.ITEM_CUTOUT_GLINT, p -> getGlint(ShaderKey.ENTITIES_CUTOUT_GLINT));
-		assignToMain(RenderPipelines.ENTITY_SOLID_GLINT, p -> getGlint(ShaderKey.ENTITIES_SOLID_GLINT));
-		assignToMain(RenderPipelines.ITEM_TRANSLUCENT_GLINT, p -> getGlint(ShaderKey.ENTITIES_TRANSLUCENT_GLINT));
-		assignToMain(RenderPipelines.ITEM_TRANSLUCENT_GLINT_SPECIAL, p -> getGlint(ShaderKey.ENTITIES_TRANSLUCENT_GLINT_SPECIAL));
-		assignToMain(RenderPipelines.ITEM_CUTOUT_GLINT_SPECIAL, p -> getGlint(ShaderKey.ENTITIES_CUTOUT_GLINT_SPECIAL));
-		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT, p -> getTranslucent(p));
-		assignToMain(RenderPipelines.ENTITY_SHADOW, p -> getTranslucent(p));
+		assignToMain(RenderPipelines.ENTITY_CUTOUT, p -> getCutout(p), ShaderKey.BLOCK_ENTITY_DIFFUSE, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignToMain(RenderPipelines.ENTITY_CUTOUT_CULL, p -> getCutout(p), ShaderKey.BLOCK_ENTITY_DIFFUSE, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignToMain(RenderPipelines.ENTITY_CUTOUT_DISSOLVE, p -> getCutout(p), ShaderKey.BLOCK_ENTITY_DIFFUSE, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT_CULL, p -> getTranslucent(p), ShaderKey.BE_TRANSLUCENT, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignToMain(RenderPipelines.ITEM_TRANSLUCENT, p -> getTranslucent(p), ShaderKey.BE_TRANSLUCENT, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignToMain(RenderPipelines.ITEM_CUTOUT, p -> getCutout(p), ShaderKey.BLOCK_ENTITY_DIFFUSE, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignGlint(RenderPipelines.ITEM_CUTOUT_GLINT, ShaderKey.ENTITIES_CUTOUT_GLINT);
+		assignGlint(RenderPipelines.ENTITY_SOLID_GLINT, ShaderKey.ENTITIES_SOLID_GLINT);
+		assignGlint(RenderPipelines.ITEM_TRANSLUCENT_GLINT, ShaderKey.ENTITIES_TRANSLUCENT_GLINT);
+		assignGlint(RenderPipelines.ITEM_TRANSLUCENT_GLINT_SPECIAL, ShaderKey.ENTITIES_TRANSLUCENT_GLINT_SPECIAL);
+		assignGlint(RenderPipelines.ITEM_CUTOUT_GLINT_SPECIAL, ShaderKey.ENTITIES_CUTOUT_GLINT_SPECIAL);
+		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT, p -> getTranslucent(p), ShaderKey.BE_TRANSLUCENT, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignToMain(RenderPipelines.ENTITY_SHADOW, p -> getTranslucent(p), ShaderKey.BE_TRANSLUCENT, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
 		assignToMain(RenderPipelines.LINES, p -> ShaderKey.LINES);
 		assignToMain(RenderPipelines.LINES_TRANSLUCENT, p -> ShaderKey.LINES);
 		assignToMain(RenderPipelines.LINES_TRANSLUCENT_NO_DEPTH_WRITE, p -> ShaderKey.LINES);
@@ -57,15 +63,15 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.TRANSLUCENT_PARTICLE, p -> ShaderKey.PARTICLES_TRANS);
 		assignToMain(RenderPipelines.WATER_MASK, p -> ShaderKey.BASIC);
 		assignToMain(RenderPipelines.GLINT, p -> ShaderKey.GLINT);
-		assignToMain(RenderPipelines.ARMOR_CUTOUT_NO_CULL, p -> getCutout(p));
-		assignToMain(RenderPipelines.ARMOR_CUTOUT_NO_CULL_GLINT, p -> getGlint(ShaderKey.ENTITIES_CUTOUT_GLINT_ARMOR));
-		assignToMain(RenderPipelines.WOLF_ARMOR_CRACKS, p -> getTranslucent(p));
+		assignToMain(RenderPipelines.ARMOR_CUTOUT_NO_CULL, p -> getCutout(p), ShaderKey.BLOCK_ENTITY_DIFFUSE, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignGlint(RenderPipelines.ARMOR_CUTOUT_NO_CULL_GLINT, ShaderKey.ENTITIES_CUTOUT_GLINT_ARMOR);
+		assignToMain(RenderPipelines.WOLF_ARMOR_CRACKS, p -> getTranslucent(p), ShaderKey.BE_TRANSLUCENT, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
 		assignToMain(RenderPipelines.EYES, p -> ShaderKey.ENTITIES_EYES);
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT_EMISSIVE, p -> ShaderKey.ENTITIES_EYES_TRANS);
-		assignToMain(RenderPipelines.ARMOR_DECAL_CUTOUT_NO_CULL, p -> getCutout(p));
-		assignToMain(RenderPipelines.BREEZE_WIND, p -> getTranslucent(p));
-		assignToMain(RenderPipelines.ENTITY_SOLID, p -> getSolid(p));
-		assignToMain(RenderPipelines.ENTITY_SOLID_Z_OFFSET_FORWARD, p -> getSolid(p));
+		assignToMain(RenderPipelines.ARMOR_DECAL_CUTOUT_NO_CULL, p -> getCutout(p), ShaderKey.BLOCK_ENTITY_DIFFUSE, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignToMain(RenderPipelines.BREEZE_WIND, p -> getTranslucent(p), ShaderKey.BE_TRANSLUCENT, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignToMain(RenderPipelines.ENTITY_SOLID, p -> getSolid(p), ShaderKey.BLOCK_ENTITY, ShaderKey.HAND_CUTOUT, ShaderKey.HAND_TRANSLUCENT);
+		assignToMain(RenderPipelines.ENTITY_SOLID_Z_OFFSET_FORWARD, p -> getSolid(p), ShaderKey.BLOCK_ENTITY, ShaderKey.HAND_CUTOUT, ShaderKey.HAND_TRANSLUCENT);
 		assignToMain(RenderPipelines.END_GATEWAY, p -> ShaderKey.BLOCK_ENTITY);
 		assignToMain(RenderPipelines.ENERGY_SWIRL, p -> ShaderKey.ENTITIES_CUTOUT);
 		assignToMain(RenderPipelines.END_CRYSTAL_BEAM, p -> ShaderKey.ENTITIES_CUTOUT);
@@ -76,17 +82,17 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.BEACON_BEAM_TRANSLUCENT, p -> ShaderKey.BEACON);
 		assignToMain(RenderPipelines.END_PORTAL, p -> ShaderKey.BLOCK_ENTITY);
 		assignToMain(RenderPipelines.END_SKY, p -> ShaderKey.SKY_TEXTURED);
-		assignToMain(RenderPipelines.TEXT, p -> getText(p));
-		assignToMain(RenderPipelines.TEXT_POLYGON_OFFSET, p -> getText(p));
-		assignToMain(RenderPipelines.TEXT_SEE_THROUGH, p -> getText(p));
-		assignToMain(RenderPipelines.TEXT_GRAYSCALE_SEE_THROUGH, p -> getTextIntensity(p));
-		assignToMain(RenderPipelines.TEXT_GRAYSCALE, p -> getTextIntensity(p));
-		assignToMain(RenderPipelines.TEXT_GRAYSCALE_POLYGON_OFFSET, p -> getTextIntensity(p));
+		assignToMain(RenderPipelines.TEXT, p -> getText(p), ShaderKey.TEXT_BE, ShaderKey.HAND_TEXT, ShaderKey.HAND_TEXT_TRANSLUCENT);
+		assignToMain(RenderPipelines.TEXT_POLYGON_OFFSET, p -> getText(p), ShaderKey.TEXT_BE, ShaderKey.HAND_TEXT, ShaderKey.HAND_TEXT_TRANSLUCENT);
+		assignToMain(RenderPipelines.TEXT_SEE_THROUGH, p -> getText(p), ShaderKey.TEXT_BE, ShaderKey.HAND_TEXT, ShaderKey.HAND_TEXT_TRANSLUCENT);
+		assignToMain(RenderPipelines.TEXT_GRAYSCALE_SEE_THROUGH, p -> getTextIntensity(p), ShaderKey.TEXT_INTENSITY_BE);
+		assignToMain(RenderPipelines.TEXT_GRAYSCALE, p -> getTextIntensity(p), ShaderKey.TEXT_INTENSITY_BE);
+		assignToMain(RenderPipelines.TEXT_GRAYSCALE_POLYGON_OFFSET, p -> getTextIntensity(p), ShaderKey.TEXT_INTENSITY_BE);
 		assignToMain(RenderPipelines.CRUMBLING, p -> ShaderKey.CRUMBLING);
 		assignToMain(RenderPipelines.LEASH, p -> ShaderKey.LEASH);
 		assignToMain(RenderPipelines.CLOUDS, p -> ShaderKey.CLOUDS);
 		assignToMain(RenderPipelines.FLAT_CLOUDS, p -> ShaderKey.CLOUDS);
-		assignToMain(RenderPipelines.BANNER_PATTERN, p -> getTranslucent(p));
+		assignToMain(RenderPipelines.BANNER_PATTERN, p -> getTranslucent(p), ShaderKey.BE_TRANSLUCENT, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
 		assignToMain(RenderPipelines.WEATHER, p -> ShaderKey.WEATHER);
 
 		assignToShadow(RenderPipelines.SOLID_BLOCK, p -> ShaderKey.SHADOW_TERRAIN_CUTOUT);
@@ -171,7 +177,7 @@ public class IrisPipelines {
 		}
 	}
 
-	private static void assignToMain(RenderPipeline pipeline, Function<IrisRenderingPipeline, ShaderKey> o) {
+	private static void assignToMain(RenderPipeline pipeline, Function<IrisRenderingPipeline, ShaderKey> o, ShaderKey... alternatives) {
 		if (coreShaderMap.containsKey(pipeline)) {
 			Function<IrisRenderingPipeline, ShaderKey> current = coreShaderMap.get(pipeline);
 			ShaderKey currentKey = current.apply(null);
@@ -182,6 +188,8 @@ public class IrisPipelines {
 		}
 
 		coreShaderMap.put(pipeline, o);
+		coreShaderVariants.put(pipeline, List.of(alternatives));
+		version.incrementAndGet();
 	}
 
 	private static void assignToShadow(RenderPipeline pipeline, Function<IrisRenderingPipeline, ShaderKey> o) {
@@ -190,6 +198,11 @@ public class IrisPipelines {
 		}
 
 		coreShaderMapShadow.put(pipeline, o);
+		version.incrementAndGet();
+	}
+
+	private static void assignGlint(RenderPipeline pipeline, ShaderKey key) {
+		assignToMain(pipeline, p -> getGlint(key), getGlint(key, true), getGlint(key, false));
 	}
 
 	private static ShaderKey getGlint(ShaderKey key) {
@@ -197,7 +210,10 @@ public class IrisPipelines {
 			return key;
 		}
 
-		boolean solid = HandRenderer.getInstance().isRenderingSolid();
+		return getGlint(key, HandRenderer.getInstance().isRenderingSolid());
+	}
+
+	private static ShaderKey getGlint(ShaderKey key, boolean solid) {
 		return switch (key) {
 			case ENTITIES_CUTOUT_GLINT_SPECIAL, ENTITIES_TRANSLUCENT_GLINT_SPECIAL ->
 				solid ? ShaderKey.HAND_CUTOUT_GLINT_SPECIAL : ShaderKey.HAND_TRANSLUCENT_GLINT_SPECIAL;
@@ -246,13 +262,7 @@ public class IrisPipelines {
 	@Nullable
 	public static ShaderKey getPipeline(IrisRenderingPipeline pipeline, RenderPipeline shader) {
 		if (shader.getLocation().getNamespace().contains("sodium")) {
-			if (shader.getColorTargetStates().get(0).blendFunction().isPresent()) {
-				return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_SODIUM_TERRAIN_TRANSLUCENT : ShaderKey.SODIUM_TERRAIN_TRANSLUCENT;
-			} else if (shader.getShaderDefines().asSourceDirectives().contains("CUTOUT")) {
-				return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_SODIUM_TERRAIN_CUTOUT : ShaderKey.SODIUM_TERRAIN_CUTOUT;
-			} else {
-				return ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? ShaderKey.SHADOW_SODIUM_TERRAIN_SOLID : ShaderKey.SODIUM_TERRAIN_SOLID;
-			}
+			return sodiumPipeline(shader, ShadowRenderingState.areShadowsCurrentlyBeingRendered());
 		}
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			return coreShaderMapShadow.getOrDefault(shader, FAKE_FUNCTION).apply(pipeline);
@@ -261,15 +271,61 @@ public class IrisPipelines {
 		}
 	}
 
-	public static void preparePrograms(IrisRenderingPipeline pipeline, ShaderMap shaders) {
+	private static ShaderKey sodiumPipeline(RenderPipeline shader, boolean shadow) {
+		if (shader.getColorTargetStates().getFirst().blendFunction().isPresent()) {
+			return shadow ? ShaderKey.SHADOW_SODIUM_TERRAIN_TRANSLUCENT : ShaderKey.SODIUM_TERRAIN_TRANSLUCENT;
+		} else if (shader.getShaderDefines().asSourceDirectives().contains("CUTOUT")) {
+			return shadow ? ShaderKey.SHADOW_SODIUM_TERRAIN_CUTOUT : ShaderKey.SODIUM_TERRAIN_CUTOUT;
+		} else {
+			return shadow ? ShaderKey.SHADOW_SODIUM_TERRAIN_SOLID : ShaderKey.SODIUM_TERRAIN_SOLID;
+		}
+	}
+
+	private static void forEachMapping(IrisRenderingPipeline pipeline, BiConsumer<RenderPipeline, ShaderKey> consumer) {
 		for (var assignments : List.of(coreShaderMap, coreShaderMapShadow)) {
 			assignments.forEach((draw, keySupplier) -> {
 				var key = keySupplier.apply(pipeline);
-				var program = key == null ? null : shaders.getShader(key);
-				if (program != null) {
-					program.prepare(draw.getVertexFormatBindings());
+				if (key != null) {
+					consumer.accept(draw, key);
 				}
 			});
+		}
+		coreShaderVariants.forEach((draw, keys) -> keys.forEach(key -> consumer.accept(draw, key)));
+		sodiumPipelines.keySet().forEach(draw -> {
+			consumer.accept(draw, sodiumPipeline(draw, false));
+			consumer.accept(draw, sodiumPipeline(draw, true));
+		});
+	}
+
+	public static void preparePrograms(IrisRenderingPipeline pipeline, ShaderMap shaders) {
+		forEachMapping(pipeline, (draw, key) -> {
+			var program = shaders.getShader(key);
+			if (program != null) {
+				program.prepare(IrisVertexFormats.getExtendedFormats(draw));
+			}
+		});
+	}
+
+	public static void preparePipelines(IrisRenderingPipeline pipeline, ShaderMap shaders) {
+		forEachMapping(pipeline, (draw, key) -> {
+			var program = shaders.getShader(key);
+			if (program != null) {
+				try {
+					program.preparePipelines(draw);
+				} catch (RuntimeException failure) {
+					Iris.logger.warn("Failed to prepare render pipeline {} for {}", draw.getLocation(), key, failure);
+				}
+			}
+		});
+	}
+
+	public static int getVersion() {
+		return version.get();
+	}
+
+	public static void registerPipeline(RenderPipeline pipeline) {
+		if (pipeline.getLocation().getNamespace().contains("sodium") && sodiumPipelines.putIfAbsent(pipeline, true) == null) {
+			version.incrementAndGet();
 		}
 	}
 
@@ -277,7 +333,7 @@ public class IrisPipelines {
 		if (coreShaderMap.containsKey(pipeline)) {
 			throw new IllegalStateException("Shader already assigned: " + pipeline.getLocation() + ": " + programId);
 		} else {
-			coreShaderMap.put(pipeline, p -> programId);
+			assignToMain(pipeline, p -> programId);
 		}
 	}
 
@@ -285,17 +341,20 @@ public class IrisPipelines {
 		if (coreShaderMapShadow.containsKey(pipeline)) {
 			throw new IllegalStateException("Shadow shader already assigned: " + pipeline.getLocation() + ": " + programId);
 		} else {
-			coreShaderMapShadow.put(pipeline, p -> programId);
+			assignToShadow(pipeline, p -> programId);
 		}
 	}
 
 	public static void copyPipeline(RenderPipeline pipelineToCopy, RenderPipeline returnValue) {
 		if (coreShaderMap.containsKey(pipelineToCopy)) {
 			coreShaderMap.put(returnValue, coreShaderMap.get(pipelineToCopy));
+			coreShaderVariants.put(returnValue, coreShaderVariants.getOrDefault(pipelineToCopy, List.of()));
+			version.incrementAndGet();
 		}
 
 		if (coreShaderMapShadow.containsKey(pipelineToCopy)) {
 			coreShaderMapShadow.put(returnValue, coreShaderMapShadow.get(pipelineToCopy));
+			version.incrementAndGet();
 		}
 	}
 }

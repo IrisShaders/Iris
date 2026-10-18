@@ -1,12 +1,19 @@
 package net.irisshaders.iris.vertices;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import com.mojang.renderpearl.api.vertex.VertexFormatElement;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
+import net.minecraft.client.renderer.RenderPipelines;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class IrisVertexFormats {
@@ -53,6 +60,29 @@ public class IrisVertexFormats {
 
 		CLOUDS = VertexFormat.builder(0).addAttribute("Position", GpuFormat.RGB32_FLOAT).addAttribute("Color", GpuFormat.RGBA8_UNORM)
 			.addAttribute("Normal", GpuFormat.RGBA8_SNORM).build();
+	}
+
+	public static VertexFormat extend(RenderPipeline pipeline, VertexFormat format) {
+		if (Objects.equals(format, DefaultVertexFormat.BLOCK)) {
+			return TERRAIN;
+		} else if (Objects.equals(format, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
+			return GLYPH;
+		} else if (Objects.equals(format, DefaultVertexFormat.POSITION_TEX_COLOR) && pipeline.equals(RenderPipelines.TEXT_SEE_THROUGH)) {
+			return GLYPH;
+		} else if (Objects.equals(format, DefaultVertexFormat.ENTITY)) {
+			return ENTITY;
+		} else if (Objects.equals(format, DefaultVertexFormat.ENTITY_GLINT_SPECIAL)) {
+			return ENTITY_GLINT_SPECIAL;
+		} else if (Objects.equals(format, ChunkMeshFormats.COMPACT.getVertexFormat())) {
+			return WorldRenderingSettings.INSTANCE.getVertexFormat().getVertexFormat();
+		}
+		return format;
+	}
+
+	public static List<VertexFormat> getExtendedFormats(RenderPipeline pipeline) {
+		var formats = pipeline.getVertexFormatBindings();
+		var extended = extend(pipeline, formats.getFirst());
+		return extended == formats.getFirst() ? formats : List.of(extended);
 	}
 
 	private static void debug(VertexFormat format) {

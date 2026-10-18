@@ -16,7 +16,7 @@ public class DHCompat {
 	private final DHCompatInternal compat;
 
 	public DHCompat(WorldRenderingPipeline pipeline, boolean renderDHShadow) {
-		this.compat = dhPresent && pipeline instanceof IrisRenderingPipeline iris ? new DHCompatInternal(iris, renderDHShadow) : null;
+		this.compat = hasRenderingEnabled() && pipeline instanceof IrisRenderingPipeline iris ? new DHCompatInternal(iris, renderDHShadow) : null;
 	}
 
 	public static void run() {

@@ -36,6 +36,7 @@ import net.irisshaders.iris.targets.WorldRenderTargets;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.CommonUniforms;
 import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
+import net.irisshaders.iris.vertices.IrisVertexFormats;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ public class ExtendedShader implements AutoCloseable {
 				filtered.put(stage, text);
 			}
 		});
-		this.sources = WorldShaderTransformer.patchMatrices(filtered);
+		this.sources = WorldShaderTransformer.patchMatrices(filtered, shaderKey.isIntensity());
 
 		var layout = VulkanShaderPatcher.discover(this.sources).layout();
 
@@ -190,7 +191,7 @@ public class ExtendedShader implements AutoCloseable {
 		try {
 			var key = new PipelineKey(vanilla, override.vertexFormats(), depthFormat);
 			var pipeline = variant.pipelines.computeIfAbsent(key,
-				unused -> this.prepare(variant, vanilla, override.vertexFormats(), phase, depthFormat));
+				unused -> this.prepare(variant, vanilla, override.vertexFormats(), phase, depthFormat, false));
 			CapturedRenderingState.INSTANCE.setCurrentAlphaTest(this.alpha.reference());
 			CapturedRenderingState.INSTANCE.setBlendMode(this.blend(vanilla));
 			variant.uniforms.update(tick, frame);
@@ -252,6 +253,23 @@ public class ExtendedShader implements AutoCloseable {
 		this.variants.forEach((phase, variant) -> this.prepareShader(variant, phase, inputs).attributes(formats));
 	}
 
+	public void preparePipelines(RenderPipeline pipeline) {
+		if (this.closed) {
+			throw new IllegalStateException("world program is closed: " + this.name);
+		}
+		var formats = Collections.unmodifiableList(new ArrayList<>(IrisVertexFormats.getExtendedFormats(pipeline)));
+		this.variants.forEach((phase, variant) -> {
+			var depth = this.parent.getWorldTargets().getFramebuffer(phase, this.name).getDepthView();
+			GpuFormat depthFormat = depth == null ? null : depth.texture().getFormat();
+			variant.pipelines.computeIfAbsent(new PipelineKey(pipeline, formats, depthFormat),
+				unused -> this.prepare(variant, pipeline, formats, phase, depthFormat, true));
+			if (depthFormat != null && phase != WorldRenderTargets.Phase.SHADOW) {
+				variant.pipelines.computeIfAbsent(new PipelineKey(pipeline, formats, null),
+					unused -> this.prepare(variant, pipeline, formats, phase, null, true));
+			}
+		});
+	}
+
 	private Map<PatchShaderType, String> inputSources(List<VertexFormat> formats) {
 		return this.inputSources.computeIfAbsent(Collections.unmodifiableList(new ArrayList<>(formats)),
 			key -> WorldShaderTransformer.vertexInputs(this.sources, WorldShaderTransformer.availableFormats(key)));
@@ -270,7 +288,7 @@ public class ExtendedShader implements AutoCloseable {
 	}
 
 	private GraphicsPipeline prepare(Variant variant, RenderPipeline vanilla, List<VertexFormat> formats, WorldRenderTargets.Phase phase,
-		GpuFormat depthFormat) {
+		GpuFormat depthFormat, boolean background) {
 		var prepared = this.prepareShader(variant, phase, this.inputSources(formats));
 		var attributes = prepared.attributes(formats);
 		int fallbackBinding = WorldShaderTransformer.fallbackVertexBinding(formats);
@@ -289,7 +307,7 @@ public class ExtendedShader implements AutoCloseable {
 
 		return prepared.shader().createPipeline(
 			new PipelineState(new FramebufferDescription(targets.stream().map(v -> v.texture().getFormat()).toList(), depthFormat), blends,
-				attributes, 0, vanilla, phase == WorldRenderTargets.Phase.SHADOW, needsFallback ? this.zeroVertices : null, formats));
+				attributes, 0, vanilla, phase == WorldRenderTargets.Phase.SHADOW, needsFallback ? this.zeroVertices : null, formats), background);
 	}
 
 	private BlendMode blend(RenderPipeline vanilla) {
@@ -326,6 +344,7 @@ public class ExtendedShader implements AutoCloseable {
 		var backend = Iris.getRenderBackend();
 
 		for (var variant : this.variants.values()) {
+			variant.shaders.values().forEach(shader -> shader.shader().cancelCompilation());
 			variant.pipelines.values().forEach(p -> backend.retire(p::close));
 			variant.shaders.values().forEach(shader -> backend.retire(shader.shader()::close));
 		}

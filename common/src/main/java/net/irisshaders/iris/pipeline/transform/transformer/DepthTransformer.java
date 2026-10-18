@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public class DepthTransformer {
 	private static final Set<String> DEPTH_SAMPLERS = Set.of("depthtex0", "depthtex1", "depthtex2", "gdepthtex", "dhDepthTex",
@@ -151,9 +152,7 @@ public class DepthTransformer {
 	}
 
 	private static void invertDepthReads(ASTParser t, TranslationUnit tree, Root root, Set<String> depthSamplers) {
-		Set<FunctionParameter> depthParameters = specializeDepthFunctions(tree, root, depthSamplers);
-		root.process(
-			root.nodeIndex.getStream(FunctionCallExpression.class).filter(call -> isDepthRead(call, depthParameters, depthSamplers)),
+		root.process(textureReads(tree, root, depthSamplers, "iris_depth_"),
 			call -> {
 				FunctionCallExpression wrapper = (FunctionCallExpression) t.parseExpression(root, "vec4()");
 				call.replaceBy(wrapper);
@@ -163,7 +162,12 @@ public class DepthTransformer {
 			});
 	}
 
-	private static Set<FunctionParameter> specializeDepthFunctions(TranslationUnit tree, Root root, Set<String> depthSamplers) {
+	public static Stream<FunctionCallExpression> textureReads(TranslationUnit tree, Root root, Set<String> samplers, String prefix) {
+		Set<FunctionParameter> parameters = specializeDepthFunctions(tree, root, samplers, prefix);
+		return root.nodeIndex.getStream(FunctionCallExpression.class).filter(call -> isDepthRead(call, parameters, samplers));
+	}
+
+	private static Set<FunctionParameter> specializeDepthFunctions(TranslationUnit tree, Root root, Set<String> depthSamplers, String prefix) {
 		var declarations = List.copyOf(tree.getChildren());
 		List<FunctionDefinition> definitions = declarations.stream().filter(FunctionDefinition.class::isInstance)
 			.map(FunctionDefinition.class::cast).toList();
@@ -194,7 +198,7 @@ public class DepthTransformer {
 				if (overloads.isEmpty()) {
 					continue;
 				}
-				name = "iris_depth_" + specializations.size() + "_" + key.name();
+				name = prefix + specializations.size() + "_" + key.name();
 				specializations.put(key, name);
 				for (FunctionDefinition original : overloads) {
 					FunctionDefinition specialized = original.cloneInto(root);

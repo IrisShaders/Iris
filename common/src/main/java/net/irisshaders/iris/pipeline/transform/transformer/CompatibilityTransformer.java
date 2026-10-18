@@ -9,12 +9,17 @@ import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclara
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.binary.DivisionExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.binary.MultiplicationExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.unary.UnaryExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.EmptyDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.ExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionDefinition;
 import io.github.douira.glsl_transformer.ast.node.statement.Statement;
+import io.github.douira.glsl_transformer.ast.node.type.initializer.ExpressionInitializer;
+import io.github.douira.glsl_transformer.ast.node.type.initializer.NestedInitializer;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
@@ -22,6 +27,7 @@ import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifie
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
+import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.FunctionPrototype;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.TypeSpecifier;
@@ -60,6 +66,18 @@ public class CompatibilityTransformer {
 
 	private static final AutoHintedMatcher<Expression> sildursWaterFract = new AutoHintedMatcher<>("fract(worldpos.y + 0.001)",
 		ParseShape.EXPRESSION);
+	private static final AutoHintedMatcher<Expression> sineHash = new AutoHintedMatcher<>("fract(sin(dot(input, vec2(a, b))) * scale)",
+		ParseShape.EXPRESSION) {
+		{
+			markClassWildcard("input", pattern.getRoot().identifierIndex.getUnique("input").getAncestor(ReferenceExpression.class),
+				Expression.class);
+			for (String name : List.of("a", "b", "scale")) {
+				markClassedPredicateWildcard(name, pattern.getRoot().identifierIndex.getUnique(name).getAncestor(ReferenceExpression.class),
+					Expression.class,
+					expression -> name.equals("scale") ? number(expression) > 100.0 : Double.isFinite(number(expression)));
+			}
+		}
+	};
 	private static final ShaderType[] pipeline = {ShaderType.VERTEX, ShaderType.TESSELATION_CONTROL, ShaderType.TESSELATION_EVAL, ShaderType.GEOMETRY, ShaderType.FRAGMENT};
 	private static final Matcher<ExternalDeclaration> outDeclarationMatcher = new DeclarationMatcher(StorageType.OUT);
 	private static final Matcher<ExternalDeclaration> inDeclarationMatcher = new DeclarationMatcher(StorageType.IN);
@@ -145,7 +163,7 @@ public class CompatibilityTransformer {
 	}
 
 	public static void transformEach(ASTParser t, TranslationUnit tree, Root root, Parameters parameters) {
-		HashTransformer.transform(t, tree, root);
+		transformHash(t, tree, root);
 		if (parameters.type == PatchShaderType.VERTEX) {
 			if (root.replaceExpressionMatches(t, sildursWaterFract, "fract(worldpos.y + 0.01)")) {
 				Iris.logger.warn(
@@ -330,6 +348,198 @@ public class CompatibilityTransformer {
 				"Moved unsized array specifier (of the form []) from the type to each of the the declaration member(s) " + structMember.getDeclarators()
 					.stream().map(StructDeclarator::getName).map(Identifier::getName)
 					.collect(Collectors.joining(", ")) + ". See debugging.md for more information.");
+		}
+	}
+
+	public static void transformVulkan(Root root) {
+		transformConstantDivision(root);
+		transformConstTranspose(root);
+	}
+
+	public static void transformLate(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, boolean vulkan) {
+		String samplerName = "iris_legacySampler";
+
+		for (int suffix = 0; ; suffix++) {
+			String candidate = samplerName;
+
+			if (trees.values().stream().noneMatch(tree -> tree.getRoot().identifierIndex.has(candidate))) {
+				break;
+			}
+
+			samplerName = "iris_legacySampler" + suffix;
+		}
+
+		for (var tree : trees.values()) {
+			tree.getRoot().rename("sampler", samplerName);
+		}
+
+		for (var tree : trees.values()) {
+			// fixes miniature
+			for (String name : List.of("tanh", "fma", "min3", "max3", "mid3", "round")) {
+				boolean declared = tree.getRoot().nodeIndex.getStream(FunctionDefinition.class)
+					.anyMatch(function -> function.getFunctionPrototype().getName().getName().equals(name));
+
+				if (!declared) {
+					continue;
+				}
+
+				String replacement = "iris_legacy_" + name;
+
+				for (int suffix = 0; tree.getRoot().identifierIndex.has(replacement); suffix++) {
+					replacement = "iris_legacy_" + name + suffix;
+				}
+
+				tree.getRoot().rename(name, replacement);
+			}
+		}
+
+		if (vulkan) {
+			for (var tree : trees.values()) {
+				initializeGlobals(parser, tree);
+			}
+		}
+	}
+
+	// TODO: Remove this if you are reading this past mid-2027
+	// This transformer is here to work around a ridiculous bug in spirv-opt that causes some shaders, such as Continuum 2.0 Redux, to just segfault. https://github.com/KhronosGroup/SPIRV-Tools/pull/6936
+	private static void transformConstantDivision(Root root) {
+		root.process(root.nodeIndex.getStream(DivisionExpression.class), division -> {
+			Expression divisor = division.getRight();
+			boolean negative = false;
+
+			while (divisor instanceof UnaryExpression unary) {
+				switch (divisor.getExpressionType()) {
+					case GROUPING, IDENTITY -> {
+					}
+					case NEGATION -> negative = !negative;
+					default -> {
+						return;
+					}
+				}
+				divisor = unary.getOperand();
+			}
+
+			if (!(divisor instanceof LiteralExpression literal) || !literal.isFloatingPoint()) {
+				return;
+			}
+
+			int bits = literal.getType().getBitDepth();
+			if (bits != 32 && bits != 64) {
+				return;
+			}
+
+			double value = literal.getFloating();
+			double magnitude = Math.abs(value);
+			double reciprocal = 1.0 / value;
+			double minimum = bits == 32 ? Float.MIN_NORMAL : Double.MIN_NORMAL;
+			double maximum = bits == 32 ? Float.MAX_VALUE : Double.MAX_VALUE;
+
+			if (magnitude < minimum || magnitude > maximum || Math.abs(reciprocal) < minimum || Math.abs(
+				reciprocal) > maximum || Math.scalb(1.0, Math.getExponent(magnitude)) != magnitude) {
+				return;
+			}
+
+			double multiplier = negative ? -reciprocal : reciprocal;
+			root.indexBuildSession(() -> {
+				Expression dividend = division.getLeft();
+				dividend.detach();
+				division.replaceByAndDelete(new MultiplicationExpression(dividend, new LiteralExpression(literal.getType(), multiplier)));
+			});
+		});
+	}
+
+	private static void transformConstTranspose(Root root) {
+		root.process(root.nodeIndex.getStream(FunctionCallExpression.class)
+			.filter(call -> call.getFunctionName() != null && call.getFunctionName().getName().equals("transpose")), call -> {
+			var initializer = call.getAncestor(ExpressionInitializer.class);
+			var declaration = initializer == null ? null : initializer.getAncestor(TypeAndInitDeclaration.class);
+
+			if (declaration == null || declaration.getType().getTypeQualifier() == null) {
+				return;
+			}
+
+			var qualifier = declaration.getType().getTypeQualifier();
+
+			for (var part : List.copyOf(qualifier.getParts())) {
+				if (part instanceof StorageQualifier storage && storage.storageType == StorageQualifier.StorageType.CONST) {
+					part.detachAndDelete();
+				}
+			}
+
+			if (qualifier.getParts().isEmpty()) {
+				qualifier.detachAndDelete();
+			}
+		});
+	}
+
+	// This replaces the fract(sin(dot(input, vec2Constant)) * largeConstant) which is used to generate a random hash.
+	// On NVIDIA Vulkan, this causes all sorts of issues (such as BSL's waving animation breaking), so it's replaced with an integer hash.
+	private static void transformHash(ASTParser t, TranslationUnit tree, Root root) {
+		boolean replaced = false;
+		for (Identifier identifier : root.identifierIndex.getStream("fract").toList()) {
+			if (!(identifier.getParent() instanceof FunctionCallExpression call) || !sineHash.matchesExtract(call)) {
+				continue;
+			}
+			Expression input = sineHash.getNodeMatch("input", Expression.class);
+			FunctionCallExpression replacement = (FunctionCallExpression) t.parseExpression(root, "iris_hash21()");
+			input.detach();
+			replacement.getParameters().add(input);
+			call.replaceByAndDelete(replacement);
+			replaced = true;
+		}
+		if (replaced) {
+			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, """
+				float iris_hash21(vec2 p) {
+				    uvec2 q = floatBitsToUint(p);
+				    uint h = q.x * 3266489917u + q.y;
+				    h = h * 747796405u + 2891336453u;
+				    h = ((h >> 15u) ^ h) * 277803737u;
+				    h = ((h >> 22u) ^ h);
+				    return float(h) * (1.0 / 4294967295.0);
+				}
+				""");
+		}
+	}
+
+	private static double number(Expression expression) {
+		if (expression instanceof LiteralExpression literal) {
+			return literal.isFloatingPoint() ? literal.getFloating() : literal.isInteger() ? literal.getInteger() : Double.NaN;
+		}
+		if (expression instanceof UnaryExpression unary) {
+			return switch (expression.getExpressionType()) {
+				case GROUPING, IDENTITY -> number(unary.getOperand());
+				case NEGATION -> -number(unary.getOperand());
+				default -> Double.NaN;
+			};
+		}
+		return Double.NaN;
+	}
+
+	private static void initializeGlobals(ASTParser parser, TranslationUnit tree) {
+		boolean initialized = false;
+
+		for (var external : List.copyOf(tree.getChildren())) {
+			if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) || variables.getType()
+				.getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier) {
+				continue;
+			}
+
+			var qualifier = variables.getType().getTypeQualifier();
+
+			if (qualifier != null && qualifier.getParts().stream().anyMatch(StorageQualifier.class::isInstance)) {
+				continue;
+			}
+
+			for (var member : variables.getMembers()) {
+				if (member.getInitializer() == null && !member.getName().getName().startsWith("gl_")) {
+					member.setInitializer(new NestedInitializer());
+					initialized = true;
+				}
+			}
+		}
+
+		if (initialized) {
+			tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_ALL, "#extension GL_EXT_null_initializer : require\n");
 		}
 	}
 

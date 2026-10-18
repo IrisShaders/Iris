@@ -32,6 +32,11 @@ public class IrisApiV0Impl implements IrisApi {
 	}
 
 	@Override
+	public boolean supportsMultiBackend() {
+		return true;
+	}
+
+	@Override
 	public boolean isShaderPackInUse() {
 		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 

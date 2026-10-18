@@ -7,6 +7,7 @@ import com.mojang.renderpearl.backend.opengl.GlSampler;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.renderpearl.backend.opengl.GlTextureView;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
 import net.irisshaders.iris.pipeline.transform.PatchedShader;
 import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import net.irisshaders.iris.samplers.ProgramResources;
@@ -23,16 +24,22 @@ import org.lwjgl.opengl.GL40C;
 import org.lwjgl.opengl.GL43C;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-final class GlShaderBindings implements AutoCloseable {
+public final class GlShaderBindings implements AutoCloseable {
+	private static final Set<ValueUpdateNotifier> notifiers = new HashSet<>();
+	private static GlShaderBindings active;
 	final int program;
 	final PatchedShader source;
 	private final Map<String, Integer> bindings;
+	private final boolean owned;
 	private int references = 1;
 
 	GlShaderBindings(String name, PatchedShader input) {
+		this.owned = true;
 		this.source = input;
 		this.bindings = GlShaderPatcher.getBindings(input.layout());
 		var sources = this.source.sources();
@@ -79,6 +86,14 @@ final class GlShaderBindings implements AutoCloseable {
 				GlStateManager.glDeleteShader(shader);
 			}
 		}
+	}
+
+	public GlShaderBindings(int program, ShaderResourceLayout layout, Map<String, Integer> bindings) {
+		this.owned = false;
+		this.program = program;
+		this.source = new PatchedShader(Map.of(), layout, null, null);
+		this.bindings = Map.copyOf(bindings);
+		this.assignBindings();
 	}
 
 	static void bindTexture(int target, int id) {
@@ -133,7 +148,34 @@ final class GlShaderBindings implements AutoCloseable {
 		}
 	}
 
-	void bind(ProgramResources resources, BufferUniformHolder uniforms, ProgramResources.Bindings resolved) {
+	static void clearDynamicSamplers() {
+		for (var notifier : notifiers) {
+			notifier.setListener(null);
+		}
+		notifiers.clear();
+		active = null;
+	}
+
+	private static void bindGlTexture(ProgramResources.GlTextureBinding texture, int unit) {
+		var sampler = texture.sampler() == null ? null : texture.sampler().get();
+		IrisRenderSystem.bindSamplerToUnit(unit, sampler == null ? 0 : sampler.getId());
+		IrisRenderSystem.bindTextureToUnit(texture.type().getGlType(), unit, texture.texture().getAsInt());
+	}
+
+	private void updateGlTextures(ProgramResources resources) {
+		for (var descriptor : this.source.layout().descriptors()) {
+			if (descriptor.kind() == ShaderResourceLayout.Kind.SAMPLER) {
+				var texture = resources.getGlTextureBinding(resources.getSamplerReferences().get(descriptor.name()));
+				if (texture != null) {
+					bindGlTexture(texture, this.bindings.get(descriptor.name()));
+				}
+			}
+		}
+	}
+
+	public void bind(ProgramResources resources, BufferUniformHolder uniforms, ProgramResources.Bindings resolved) {
+		clearDynamicSamplers();
+		active = this;
 		GlStateManager._glUseProgram(this.program);
 		var buffers = resolved.buffers();
 
@@ -169,8 +211,16 @@ final class GlShaderBindings implements AutoCloseable {
 				case SAMPLER -> {
 					var reference = resources.getSamplerReferences().get(descriptor.name());
 					var texture = resolved.textures().get(reference);
-					GlStateManager._activeTexture(GL13C.GL_TEXTURE0 + binding);
+					var glTexture = resources.getGlTextureBinding(reference);
+					if (glTexture != null) {
+						bindGlTexture(glTexture, binding);
+						if (glTexture.notifier() != null && notifiers.add(glTexture.notifier())) {
+							glTexture.notifier().setListener(() -> this.updateGlTextures(resources));
+						}
+						continue;
+					}
 
+					GlStateManager._activeTexture(GL13C.GL_TEXTURE0 + binding);
 					if (texture == null) {
 						GL11C.glBindTexture(GL31C.GL_TEXTURE_BUFFER, Math.toIntExact(resolved.texels().get(reference)));
 						IrisRenderSystem.bindSamplerToUnit(binding, 0);
@@ -249,7 +299,12 @@ final class GlShaderBindings implements AutoCloseable {
 	@Override
 	public void close() {
 		if (this.references > 0 && --this.references == 0) {
-			GlStateManager.glDeleteProgram(this.program);
+			if (active == this) {
+				clearDynamicSamplers();
+			}
+			if (this.owned) {
+				GlStateManager.glDeleteProgram(this.program);
+			}
 		}
 	}
 }

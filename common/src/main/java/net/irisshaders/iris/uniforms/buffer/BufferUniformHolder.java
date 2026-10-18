@@ -13,6 +13,7 @@ import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.parsing.MatrixType;
 import net.irisshaders.iris.parsing.VectorType;
 import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
+import net.irisshaders.iris.pipeline.transform.Std140Type;
 import net.irisshaders.iris.uniforms.custom.cached.CachedUniform;
 import org.joml.Matrix3fc;
 import org.joml.Matrix4fc;
@@ -28,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
@@ -42,10 +44,20 @@ public final class BufferUniformHolder implements DynamicUniformHolder {
 	private ShaderResourceLayout layout;
 	private ByteBuffer data;
 	private FrameUniforms frameUniforms;
+	private Set<String> requestedUniforms;
 
 	public BufferUniformHolder(ShaderResourceLayout layout) {
 		this.layout = layout;
 		this.data = ByteBuffer.allocateDirect(layout.uniformBufferSize()).order(ByteOrder.nativeOrder());
+	}
+
+	public BufferUniformHolder(Set<String> uniforms) {
+		this(new ShaderResourceLayout(0, Map.of(), List.of()));
+		this.requestedUniforms = Set.copyOf(uniforms);
+	}
+
+	public ShaderResourceLayout getLayout() {
+		return this.layout;
 	}
 
 	public boolean isRegistered(String name) {
@@ -229,7 +241,28 @@ public final class BufferUniformHolder implements DynamicUniformHolder {
 		return encoder.transientMemory().uploadGpu(this.data(), uniformOffsetAlignment, GpuBuffer.USAGE_UNIFORM);
 	}
 
+	private void discoverUniform(String name, String glsl) {
+		int rows = switch (glsl) {
+			case "float", "int" -> 1;
+			case "vec2", "ivec2" -> 2;
+			case "vec3", "ivec3", "mat3" -> 3;
+			case "vec4", "ivec4", "mat4" -> 4;
+			default -> throw new IllegalArgumentException("unsupported uniform type: " + glsl);
+		};
+		var type = new Std140Type(glsl, 4, glsl.startsWith("mat") ? rows : 1, rows, List.of());
+		int end = this.layout.uniforms().values().stream().mapToInt(uniform -> uniform.offset() + uniform.type().size()).max()
+			.orElse(0);
+		int offset = Std140Type.align(end, type.alignment());
+		var uniforms = new LinkedHashMap<>(this.layout.uniforms());
+		uniforms.put(name, new ShaderResourceLayout.Uniform(offset, type));
+		this.resolveLayout(new ShaderResourceLayout(Std140Type.align(offset + type.size(), 16), uniforms, this.layout.descriptors()));
+	}
+
 	private BufferUniformHolder register(UniformUpdateFrequency frequency, String name, String expected, IntConsumer writer) {
+		if (this.requestedUniforms != null && this.requestedUniforms.contains(name) && !this.layout.uniforms().containsKey(name)) {
+			this.discoverUniform(name, expected);
+		}
+
 		var uniform = this.layout.uniforms().get(name);
 
 		if (uniform == null) {

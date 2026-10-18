@@ -3,6 +3,7 @@ package net.irisshaders.iris.pipeline.transform;
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
+import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
@@ -13,6 +14,7 @@ import io.github.douira.glsl_transformer.ast.transform.JobParameters;
 import io.github.douira.glsl_transformer.ast.transform.SingleASTTransformer;
 import io.github.douira.glsl_transformer.util.LRUCache;
 import net.irisshaders.iris.backend.PipelineState;
+import net.irisshaders.iris.pipeline.transform.transformer.DepthTransformer;
 import net.irisshaders.iris.pipeline.transform.vulkan.VulkanGlsl;
 
 import java.util.ArrayList;
@@ -21,9 +23,10 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class WorldShaderTransformer {
-	private static final Map<String, String> matrixCache = new LRUCache<>(256);
+	private static final Map<MatrixKey, String> matrixCache = new LRUCache<>(256);
 	private static final Map<VertexInputKey, String> vertexCache = new LRUCache<>(256);
 	private static final Map<AttributeKey, List<PipelineState.Attribute>> attributeCache = new LRUCache<>(256);
 
@@ -223,7 +226,7 @@ public final class WorldShaderTransformer {
 		return result;
 	}
 
-	public static Map<PatchShaderType, String> patchMatrices(Map<PatchShaderType, String> sources) {
+	public static Map<PatchShaderType, String> patchMatrices(Map<PatchShaderType, String> sources, boolean intensity) {
 		var result = new EnumMap<PatchShaderType, String>(PatchShaderType.class);
 		var parser = new SingleASTTransformer<JobParameters>();
 		sources.forEach((stage, source) -> {
@@ -231,7 +234,8 @@ public final class WorldShaderTransformer {
 				return;
 			}
 
-			var cached = matrixCache.get(source);
+			var key = new MatrixKey(source, intensity);
+			var cached = matrixCache.get(key);
 
 			if (cached != null) {
 				result.put(stage, cached);
@@ -240,6 +244,26 @@ public final class WorldShaderTransformer {
 
 			var tree = parser.parseSeparateTranslationUnit(source);
 			var root = tree.getRoot();
+
+			if (intensity) {
+				root.process(DepthTransformer.textureReads(tree, root, Set.of("tex", "texture", "gtexture", "u_MainSampler", "Sampler0"),
+					"iris_intensity_"), call -> {
+					String name = call.getFunctionName().getName();
+
+					if (name.startsWith("textureGather")) {
+						if (call.getParameters().size() > (name.startsWith("textureGatherOffset") ? 3 : 2)) {
+							call.getParameters().getLast().replaceByAndDelete(parser.parseExpression(root, "0"));
+						}
+
+						return;
+					}
+
+					var swizzle = (MemberAccessExpression) parser.parseExpression(root, "vec4(0.0).rrrr");
+					call.replaceBy(swizzle);
+					swizzle.getOperand().replaceByAndDelete(call);
+				});
+			}
+
 			boolean sodium = root.identifierIndex.has("u_Globals");
 			String model = sodium ? "u_ModelViewMatrix" : "iris_transforms.ModelViewMat";
 			String projectionFunction = root.identifierIndex.has("iris_toMinusOneToOne") ? "iris_toMinusOneToOne" : "iris_undoRevZ";
@@ -270,10 +294,13 @@ public final class WorldShaderTransformer {
 			}
 
 			result.put(stage, ASTPrinter.print(PrintType.INDENTED, tree));
-			matrixCache.put(source, result.get(stage));
+			matrixCache.put(key, result.get(stage));
 		});
 
 		return result;
+	}
+
+	private record MatrixKey(String source, boolean intensity) {
 	}
 
 	private record VertexInputKey(String source, Map<String, GpuFormat> formats) {

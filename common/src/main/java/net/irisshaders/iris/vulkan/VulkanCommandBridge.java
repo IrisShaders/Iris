@@ -10,6 +10,7 @@ import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
 import com.mojang.renderpearl.frontend.FrontendCommandEncoder;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBuffer;
 import net.irisshaders.iris.mixin.FrontendDeviceAccessor;
+import net.irisshaders.iris.mixinterface.VulkanWorldPassAccess;
 import org.lwjgl.vulkan.VkCommandBuffer;
 
 public class VulkanCommandBridge {
@@ -43,6 +44,7 @@ public class VulkanCommandBridge {
 			throw new IllegalStateException("Iris native work must be recorded outside a Minecraft render pass");
 		}
 
+		((VulkanWorldPassAccess) encoder).iris$flushRenderPass();
 		return encoder.commandBuffer();
 	}
 

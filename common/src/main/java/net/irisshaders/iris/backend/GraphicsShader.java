@@ -7,6 +7,13 @@ public interface GraphicsShader extends AutoCloseable {
 
 	GraphicsPipeline createPipeline(PipelineState state);
 
+	default GraphicsPipeline createPipeline(PipelineState state, boolean background) {
+		return this.createPipeline(state);
+	}
+
+	default void cancelCompilation() {
+	}
+
 	@Override
 	void close();
 }

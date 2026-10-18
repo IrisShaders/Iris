@@ -170,6 +170,7 @@ public final class GlWorldCommands extends ForwardingRenderPass implements World
 
 	@Override
 	public void end() {
+		GlShaderBindings.clearDynamicSamplers();
 		if (!this.texels.isEmpty()) {
 			var textures = List.copyOf(this.texels.values());
 			RenderSystem.queueFencedTask(() -> textures.forEach(view -> {
