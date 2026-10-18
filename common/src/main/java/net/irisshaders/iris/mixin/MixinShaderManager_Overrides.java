@@ -62,8 +62,6 @@ import static net.irisshaders.iris.pipeline.programs.ShaderOverrides.isBlockEnti
 public abstract class MixinShaderManager_Overrides {
 	@Unique
 	private static Set<RenderPipeline> missingShaders = new HashSet<>();
-	@Unique
-	private static final Map<CompiledRenderPipeline, Map<GlProgram, Map<List<VertexFormat>, FrontendRenderPipeline>>> iris$overrides = new IdentityHashMap<>();
 
 	@Inject(method = "getCompiledPipelineNullable", at = @At(value = "RETURN"), cancellable = true)
 	private static void redirectIrisProgram(RenderPipeline renderPipeline, CallbackInfoReturnable<CompiledRenderPipeline> cir) {
@@ -84,7 +82,7 @@ public abstract class MixinShaderManager_Overrides {
 			if (program != null) {
 				GlDevice device = (GlDevice) ((GpuDeviceAccessor) RenderSystem.getDevice()).getBackend();
 				List<VertexFormat> vertexFormats = new ArrayList<>(renderPipeline.getVertexFormatBindings());
-				FrontendRenderPipeline cached = iris$overrides
+				FrontendRenderPipeline cached = IrisPipelines.OVERRIDE_CACHE
 					.computeIfAbsent(old2, unused -> new IdentityHashMap<>())
 					.computeIfAbsent(program, unused -> new HashMap<>())
 					.get(vertexFormats);
@@ -97,7 +95,7 @@ public abstract class MixinShaderManager_Overrides {
 				VertexArray vertexArray = VertexArray.createSource(GL.getCapabilities(), new HashSet<>()).apply(program, createInfo);
 				FrontendRenderPipeline replacement = new FrontendRenderPipeline(old2.name(), new GlRenderPipeline(device, createInfo, program, vertexArray),
 					vertexFormats, old2.uniformIndices(), old2.uniforms(), old2.colorTargetStates(), old2.wantsDepthTexture(), old2.pushConstantSize());
-				iris$overrides.get(old2).get(program).put(vertexFormats, replacement);
+				IrisPipelines.OVERRIDE_CACHE.get(old2).get(program).put(vertexFormats, replacement);
 				cir.setReturnValue(replacement);
 			} else if (missingShaders.add(renderPipeline)) {
 				if (renderPipeline.getLocation().getNamespace().equals("minecraft")) {

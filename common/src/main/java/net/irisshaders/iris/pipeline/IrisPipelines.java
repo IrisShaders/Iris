@@ -12,6 +12,14 @@ import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.renderer.RenderPipelines;
 import org.jetbrains.annotations.Nullable;
 
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.renderpearl.backend.opengl.GlProgram;
+import com.mojang.renderpearl.backend.opengl.GlRenderPipeline;
+import com.mojang.renderpearl.frontend.FrontendRenderPipeline;
+
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static net.irisshaders.iris.pipeline.programs.ShaderOverrides.isBlockEntities;
@@ -20,6 +28,15 @@ public class IrisPipelines {
 	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMap = new Object2ObjectArrayMap<>();
 	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMapShadow = new Object2ObjectArrayMap<>();
 	private static final Function<IrisRenderingPipeline, ShaderKey> FAKE_FUNCTION = p -> null;
+	public static final Map<CompiledRenderPipeline, Map<GlProgram, Map<List<VertexFormat>, FrontendRenderPipeline>>> OVERRIDE_CACHE = new IdentityHashMap<>();
+
+	public static void clearOverrideCache() {
+		OVERRIDE_CACHE.values().stream()
+			.flatMap(byProgram -> byProgram.values().stream())
+			.flatMap(byFormat -> byFormat.values().stream())
+			.forEach(pipeline -> ((GlRenderPipeline) pipeline.backendRenderPipeline()).vertexArray().close());
+		OVERRIDE_CACHE.clear();
+	}
 
 	static {
 		assignToMain(RenderPipelines.SOLID_BLOCK, p -> ShaderKey.TERRAIN_SOLID);
