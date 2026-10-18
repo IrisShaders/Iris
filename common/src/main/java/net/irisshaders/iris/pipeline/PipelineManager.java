@@ -81,6 +81,8 @@ public class PipelineManager {
 	 * @see <a href="https://github.com/IrisShaders/Iris/issues/1330">this GitHub issue</a>
 	 */
 	public void destroyPipeline() {
+		IrisPipelines.clearOverrideCache();
+
 		pipelinesPerDimension.forEach((dimensionId, pipeline) -> {
 			Iris.logger.info("Destroying pipeline {}", dimensionId);
 			resetTextureState();
