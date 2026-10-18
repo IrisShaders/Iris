@@ -1,22 +1,13 @@
 package net.irisshaders.iris.mixin.forge;
 
-import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.WeatherEffectRenderer;
-import net.minecraft.client.renderer.state.GameRenderState;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
+// WeatherEffectRenderer.render was reshaped to render(WeatherRenderState, RenderPass) and no
+// longer calls GameRenderState.useShaderTransparency(), which no longer exists. The redirect that used to
+// force rain/snow into the depth buffer has nothing left to redirect, so this mixin is now empty - the
+// same thing upstream did to the Fabric copy of this class for 26.3.
 @Mixin(WeatherEffectRenderer.class)
 public class MixinRenderTypes {
-	@Redirect(method = "render(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/client/renderer/state/level/WeatherRenderState;Lnet/minecraft/client/renderer/state/level/LevelRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/state/GameRenderState;useShaderTransparency()Z"))
-	private static boolean iris$writeRainAndSnowToDepthBuffer(GameRenderState instance) {
-		if (Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::shouldWriteRainAndSnowToDepthBuffer).orElse(false)) {
-			return true;
-		}
 
-		return instance.useShaderTransparency();
-	}
 }

@@ -5,16 +5,12 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.frustum.fallback.NonCullingFrustum;
-import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.culling.Frustum;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Camera.class)
 public class MixinCamera {
@@ -31,14 +27,4 @@ public class MixinCamera {
 		return frustum;
 	}
 
-	// Set isRenderingLevel for trigger isMatrixDirty. This is the place setup projection data for each frame
-	@Inject(method = "update", at = @At(value = "HEAD"))
-	private void iris$undoReverseZ(DeltaTracker deltaTracker, CallbackInfo ci) {
-		ImmediateState.isRenderingLevel = true;
-	}
-
-	@Inject(method = "update", at = @At(value = "RETURN"))
-	private void iris$restoreReverseZ(DeltaTracker deltaTracker, CallbackInfo ci) {
-		ImmediateState.isRenderingLevel = false;
-	}
 }

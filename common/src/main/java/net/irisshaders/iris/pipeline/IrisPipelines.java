@@ -65,7 +65,7 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.GLINT, p -> ShaderKey.GLINT);
 		assignToMain(RenderPipelines.ARMOR_CUTOUT_NO_CULL, p -> getCutout(p), ShaderKey.BLOCK_ENTITY_DIFFUSE, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
 		assignGlint(RenderPipelines.ARMOR_CUTOUT_NO_CULL_GLINT, ShaderKey.ENTITIES_CUTOUT_GLINT_ARMOR);
-		assignToMain(RenderPipelines.WOLF_ARMOR_CRACKS, p -> getTranslucent(p), ShaderKey.BE_TRANSLUCENT, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
+		assignToMain(RenderPipelines.WOLF_ARMOR_CRACKS, p -> getCutout(p), ShaderKey.BLOCK_ENTITY_DIFFUSE, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
 		assignToMain(RenderPipelines.EYES, p -> ShaderKey.ENTITIES_EYES);
 		assignToMain(RenderPipelines.ENTITY_TRANSLUCENT_EMISSIVE, p -> ShaderKey.ENTITIES_EYES_TRANS);
 		assignToMain(RenderPipelines.ARMOR_DECAL_CUTOUT_NO_CULL, p -> getCutout(p), ShaderKey.BLOCK_ENTITY_DIFFUSE, ShaderKey.HAND_CUTOUT_DIFFUSE, ShaderKey.HAND_WATER_DIFFUSE);
@@ -126,6 +126,8 @@ public class IrisPipelines {
 		assignToShadow(RenderPipelines.BREEZE_WIND, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.EYES, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.BANNER_PATTERN, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
+		assignToShadow(RenderPipelines.WOLF_ARMOR_CRACKS, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
+
 		assignToShadow(RenderPipelines.ENERGY_SWIRL, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.GLINT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.OPAQUE_PARTICLE, p -> ShaderKey.SHADOW_PARTICLES);
