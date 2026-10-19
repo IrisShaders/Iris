@@ -4,6 +4,7 @@ import net.irisshaders.iris.pbr.format.TextureFormatLoader;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.feature.ItemFeatureRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Final;
@@ -23,6 +24,15 @@ public class MixinTextureManager {
 	@Shadow
 	@Final
 	private ResourceManager resourceManager;
+
+	@Inject(method = "<init>", at = @At("RETURN"))
+	private void iris$registerGlintTextures(ResourceManager resourceManager, CallbackInfo ci) {
+		// Iris samples these directly, bypassing vanilla's glint render types. Register them
+		// for the initial resource reload so the first draw never uploads a texture mid-pass.
+		TextureManager textureManager = (TextureManager) (Object) this;
+		textureManager.registerForNextReload(ItemFeatureRenderer.ENCHANTED_GLINT_ITEM);
+		textureManager.registerForNextReload(ItemFeatureRenderer.ENCHANTED_GLINT_ARMOR);
+	}
 
 	@SuppressWarnings("UnresolvedMixinReference")
 	@Inject(method = {
