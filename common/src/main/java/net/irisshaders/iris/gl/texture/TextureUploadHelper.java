@@ -4,10 +4,6 @@ import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import org.lwjgl.opengl.GL20C;
 
 public class TextureUploadHelper {
-	private TextureUploadHelper() {
-		// no construction
-	}
-
 	public static void resetTextureUploadState() {
 		// Ensure that the pixel storage mode is in a sane state, otherwise the uploaded texture data will be quite
 		// incorrect.

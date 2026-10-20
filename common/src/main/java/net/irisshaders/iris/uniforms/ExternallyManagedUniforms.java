@@ -4,10 +4,6 @@ import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformType;
 
 public class ExternallyManagedUniforms {
-	private ExternallyManagedUniforms() {
-		// no construction allowed
-	}
-
 	public static void addExternallyManagedUniforms(UniformHolder uniformHolder) {
 		addMat4(uniformHolder, "iris_ModelViewMatrix");
 		addMat4(uniformHolder, "u_ModelViewProjectionMatrix");

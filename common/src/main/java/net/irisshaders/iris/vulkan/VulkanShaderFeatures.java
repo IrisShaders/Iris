@@ -18,9 +18,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class VulkanShaderFeatures {
-	public static final FeatureSet SAMPLER_UPDATE_AFTER_BIND = new FeatureSet("Iris sampler update after bind", Set.of(),
+	public static final FeatureSet DESCRIPTOR_HEAP = new FeatureSet("Iris descriptor heap", Set.of(),
 		Set.of(new VulkanFeature(VulkanFeatureSets.VK12_FEATURES_STRUCT, "descriptorBindingSampledImageUpdateAfterBind"),
-			new VulkanFeature(VulkanFeatureSets.VK12_FEATURES_STRUCT, "descriptorBindingUniformTexelBufferUpdateAfterBind")));
+			new VulkanFeature(VulkanFeatureSets.VK12_FEATURES_STRUCT, "descriptorBindingStorageBufferUpdateAfterBind"),
+			new VulkanFeature(VulkanFeatureSets.VK12_FEATURES_STRUCT, "descriptorBindingPartiallyBound"),
+			new VulkanFeature(VulkanFeatureSets.VK12_FEATURES_STRUCT, "descriptorBindingUpdateUnusedWhilePending"),
+			new VulkanFeature(VulkanFeatureSets.VK10_FEATURES_STRUCT, "shaderStorageBufferArrayDynamicIndexing"),
+			new VulkanFeature(VulkanFeatureSets.VK10_FEATURES_STRUCT, "shaderSampledImageArrayDynamicIndexing")));
 	public static final FeatureSet GEOMETRY = new FeatureSet("Iris geometry shaders", Set.of(),
 		Set.of(new VulkanFeature(VulkanFeatureSets.VK10_FEATURES_STRUCT, "geometryShader")));
 	public static final FeatureSet TESSELLATION = new FeatureSet("Iris tessellation shaders", Set.of(),
@@ -43,9 +47,6 @@ public class VulkanShaderFeatures {
 		KHRComputeShaderDerivatives.VK_KHR_COMPUTE_SHADER_DERIVATIVES_EXTENSION_NAME,
 		NVComputeShaderDerivatives.VK_NV_COMPUTE_SHADER_DERIVATIVES_EXTENSION_NAME,
 		EXTShaderSubgroupPartitioned.VK_EXT_SHADER_SUBGROUP_PARTITIONED_EXTENSION_NAME);
-
-	private VulkanShaderFeatures() {
-	}
 
 	public static FeatureSet getOptionalFeatures(VkPhysicalDevice device) throws BackendCreationException {
 		var extensions = new HashSet<>(VulkanUtils.enumerateExtensions(device));

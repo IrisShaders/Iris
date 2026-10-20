@@ -14,9 +14,6 @@ import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
 import java.util.Map;
 
 public final class GlintTransformer {
-	private GlintTransformer() {
-	}
-
 	private static boolean hasGlint(Parameters parameters) {
 		return parameters instanceof VanillaParameters vanilla && vanilla.inputs.isGlint() && vanilla.inputs.hasOverlay();
 	}

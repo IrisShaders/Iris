@@ -1,9 +1,12 @@
 package net.irisshaders.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
+import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallExpression;
 import io.github.douira.glsl_transformer.ast.node.declaration.InterfaceBlockDeclaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
+import io.github.douira.glsl_transformer.ast.node.external_declaration.ExtensionDirective;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
@@ -14,10 +17,12 @@ import io.github.douira.glsl_transformer.ast.node.type.struct.StructBody;
 import io.github.douira.glsl_transformer.ast.node.type.struct.StructMember;
 import io.github.douira.glsl_transformer.ast.node.type.struct.StructSpecifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.print.ASTPrinter;
+import io.github.douira.glsl_transformer.ast.print.PrintType;
+import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import net.irisshaders.iris.pipeline.transform.Glsl;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
-import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
-import net.irisshaders.iris.pipeline.transform.vulkan.VulkanGlsl;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -29,41 +34,20 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
-public final class LayoutTransformer {
+public class LayoutTransformer {
 	private static final List<PatchShaderType> PIPELINE = List.of(PatchShaderType.VERTEX, PatchShaderType.TESS_CONTROL,
 		PatchShaderType.TESS_EVAL, PatchShaderType.GEOMETRY, PatchShaderType.FRAGMENT);
 
-	private LayoutTransformer() {
-	}
-
-	public static void transformGrouped(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, Parameters parameters) {
-		transformGrouped(parser, trees, parameters, true);
-	}
-
-	public static void transformGrouped(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, Parameters parameters,
-		boolean stageLocations) {
+	public static void transformGrouped(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, boolean vulkan) {
 		Set<String> memberBlocks = new HashSet<>();
 
 		for (var tree : trees.values()) {
 			tree.getRoot().nodeIndex.getStream(InterfaceBlockDeclaration.class).filter(block -> block.getStructBody().getMembers().stream()
-					.anyMatch(member -> VulkanGlsl.layout(member.getType().getTypeQualifier(), "location") != null))
+					.anyMatch(member -> Glsl.layout(member.getType().getTypeQualifier(), "location") != null))
 				.forEach(block -> memberBlocks.add(block.getBlockName().getName()));
 		}
 
-		if (!stageLocations) {
-			var vertex = trees.get(PatchShaderType.VERTEX);
-			var fragment = trees.get(PatchShaderType.FRAGMENT);
-
-			if (vertex != null) {
-				assign(List.of(), collect(vertex, PatchShaderType.VERTEX, StorageType.IN, memberBlocks));
-			}
-
-			if (fragment != null) {
-				assign(collect(fragment, PatchShaderType.FRAGMENT, StorageType.OUT, memberBlocks), List.of());
-			}
-
-			return;
-		}
+		flattenStructures(parser, trees);
 
 		List<Variable> previous = List.of();
 
@@ -75,11 +59,139 @@ public final class LayoutTransformer {
 			}
 
 			List<Variable> inputs = collect(tree, stage, StorageType.IN, memberBlocks);
-			assign(previous, inputs);
+			assign(previous, inputs, vulkan);
 			previous = collect(tree, stage, StorageType.OUT, memberBlocks);
 		}
 
-		assign(previous, List.of());
+		assign(previous, List.of(), vulkan);
+
+		if (!vulkan) {
+			for (var stage : PIPELINE) {
+				var tree = trees.get(stage);
+				if (tree == null) continue;
+				requireExtension(parser, tree, "GL_ARB_separate_shader_objects");
+				boolean enhanced = tree.getRoot().nodeIndex.getStream(InterfaceBlockDeclaration.class)
+					.anyMatch(block -> !block.getBlockName().getName().startsWith("gl_")
+						&& (Glsl.hasStorage(block.getTypeQualifier(), StorageType.IN)
+							|| Glsl.hasStorage(block.getTypeQualifier(), StorageType.OUT)))
+					|| tree.getRoot().nodeIndex.getStream(NamedLayoutQualifierPart.class)
+						.anyMatch(part -> part.getName().getName().equals("component"));
+				if (enhanced && tree.getVersionStatement().version.number < 440) {
+					requireExtension(parser, tree, "GL_ARB_enhanced_layouts");
+				}
+			}
+		}
+	}
+
+	private static void requireExtension(ASTParser parser, TranslationUnit tree, String name) {
+		tree.getRoot().nodeIndex.getStream(ExtensionDirective.class).filter(extension -> extension.getName().equals(name))
+			.toList().forEach(ExtensionDirective::detachAndDelete);
+		tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_ALL, "#extension " + name + " : require\n");
+	}
+
+	private static void flattenStructures(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees) {
+		if (trees.containsKey(PatchShaderType.TESS_CONTROL)) {
+			return;
+		}
+
+		Set<String> blocked = new HashSet<>();
+		Set<String> identifiers = new HashSet<>();
+		trees.values().forEach(tree -> tree.getRoot().nodeIndex.getStream(io.github.douira.glsl_transformer.ast.node.Identifier.class).forEach(id -> identifiers.add(id.getName())));
+		for (var entry : trees.entrySet()) {
+			var root = entry.getValue().getRoot();
+			for (var declaration : root.nodeIndex.getStream(TypeAndInitDeclaration.class).toList()) {
+				var qualifier = declaration.getType().getTypeQualifier();
+				if (!Glsl.hasStorage(qualifier, StorageType.IN) && !Glsl.hasStorage(qualifier, StorageType.OUT)) {
+					continue;
+				}
+				if (declaration.getMembers().size() != 1 || location(qualifier, root) != null || declaration.getType().getTypeSpecifier().getArraySpecifier() != null) {
+					declaration.getMembers().forEach(member -> blocked.add(member.getName().getName()));
+				}
+				declaration.getMembers().stream().filter(member -> member.getArraySpecifier() != null)
+					.forEach(member -> blocked.add(member.getName().getName()));
+			}
+		}
+
+		Map<String, String> names = new HashMap<>();
+		for (var entry : trees.entrySet()) {
+			var tree = entry.getValue();
+			var root = tree.getRoot();
+			StringBuilder inputs = new StringBuilder();
+			StringBuilder outputs = new StringBuilder();
+			root.indexBuildSession(() -> {
+				for (var external : List.copyOf(tree.getChildren())) {
+					if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration typed) || typed.getMembers().size() != 1) {
+						continue;
+					}
+					var qualifier = typed.getType().getTypeQualifier();
+					boolean input = Glsl.hasStorage(qualifier, StorageType.IN);
+					boolean output = Glsl.hasStorage(qualifier, StorageType.OUT);
+					String name = typed.getMembers().getFirst().getName().getName();
+					if ((!input && !output) || input && entry.getKey() == PatchShaderType.VERTEX || output && entry.getKey() == PatchShaderType.FRAGMENT || blocked.contains(name)) {
+						continue;
+					}
+					var leaves = new ArrayList<Leaf>();
+					if (structure(typed.getType().getTypeSpecifier(), root) == null || !leaves(typed.getType().getTypeSpecifier(), "", root, leaves)) {
+						continue;
+					}
+					String qualifiers = ASTPrinter.print(PrintType.COMPACT, qualifier);
+					for (var leaf : leaves) {
+						String key = name + leaf.path;
+						String varying = names.computeIfAbsent(key, ignored -> {
+							String candidate = "iris_varying_" + names.size();
+							while (!identifiers.add(candidate)) candidate += "_";
+							return candidate;
+						});
+						tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_FUNCTIONS, qualifiers + " " + leaf.type + " " + varying + ";");
+						(input ? inputs : outputs).append(input ? key + "=" + varying : varying + "=" + key).append(';');
+					}
+					typed.getType().setTypeQualifier(null);
+				}
+				if (!inputs.isEmpty() || !outputs.isEmpty()) {
+					String main = "iris_varying_main";
+					while (root.identifierIndex.has(main)) main += "_";
+					root.rename("main", main);
+					if (entry.getKey() == PatchShaderType.GEOMETRY && !outputs.isEmpty()) {
+						for (var call : root.nodeIndex.getStream(FunctionCallExpression.class).toList()) {
+							if (call.getFunctionName() == null) continue;
+							String function = call.getFunctionName().getName();
+							if (!function.equals("EmitVertex") && !function.equals("EmitStreamVertex")) continue;
+							String wrapper = "iris_varying_" + function;
+							if (!root.identifierIndex.has(wrapper)) {
+								tree.getChildren().add(0, parser.parseExternalDeclaration(root, "void " + wrapper + (function.equals("EmitVertex") ? "(){" + outputs + "EmitVertex();}" : "(int stream){" + outputs + "EmitStreamVertex(stream);}")));
+							}
+							call.getFunctionName().setName(wrapper);
+						}
+					}
+					tree.getChildren().add(parser.parseExternalDeclaration(root, "void main(){" + inputs + main + "();" + outputs + "}"));
+				}
+			});
+		}
+	}
+
+	private static StructSpecifier structure(TypeSpecifier type, Root root) {
+		if (type instanceof StructSpecifier struct) return struct;
+		if (!(type instanceof TypeReference reference)) return null;
+		return root.nodeIndex.getStream(StructSpecifier.class).filter(struct -> struct.getName() != null && struct.getName().getName().equals(reference.getReference().getName())).findFirst().orElse(null);
+	}
+
+	private static boolean leaves(TypeSpecifier type, String path, Root root, List<Leaf> leaves) {
+		if (type.getArraySpecifier() != null) return false;
+		if (type instanceof BuiltinNumericTypeSpecifier) {
+			leaves.add(new Leaf(path, ASTPrinter.print(PrintType.COMPACT, type)));
+			return true;
+		}
+		var struct = structure(type, root);
+		if (struct == null) return false;
+		for (var member : struct.getStructBody().getMembers()) {
+			for (var declarator : member.getDeclarators()) {
+				if (declarator.getArraySpecifier() != null || !leaves(member.getType().getTypeSpecifier(), path + "." + declarator.getName().getName(), root, leaves)) return false;
+			}
+		}
+		return true;
+	}
+
+	public record Leaf(String path, String type) {
 	}
 
 	private static List<Variable> collect(TranslationUnit tree, PatchShaderType stage, StorageType direction, Set<String> memberBlocks) {
@@ -94,7 +206,7 @@ public final class LayoutTransformer {
 				if (declaration.getDeclaration() instanceof TypeAndInitDeclaration typed) {
 					var qualifier = typed.getType().getTypeQualifier();
 
-					if (!VulkanGlsl.hasStorage(qualifier, direction)) {
+					if (!Glsl.hasStorage(qualifier, direction)) {
 						continue;
 					}
 
@@ -112,7 +224,7 @@ public final class LayoutTransformer {
 							perVertex(stage, direction, qualifier));
 
 						if (explicit != null) {
-							VulkanGlsl.setLayout(splitQualifier, "location", nextLocation);
+							Glsl.setLayout(splitQualifier, "location", nextLocation);
 						}
 
 						variables.add(new Variable(member.getName().getName(), splitQualifier, size, typed.getType().getTypeSpecifier()));
@@ -126,7 +238,7 @@ public final class LayoutTransformer {
 				} else if (declaration.getDeclaration() instanceof InterfaceBlockDeclaration block) {
 					var qualifier = block.getTypeQualifier();
 
-					if (!VulkanGlsl.hasStorage(qualifier, direction) || block.getBlockName().getName().startsWith("gl_")) {
+					if (!Glsl.hasStorage(qualifier, direction) || block.getBlockName().getName().startsWith("gl_")) {
 						continue;
 					}
 
@@ -175,23 +287,23 @@ public final class LayoutTransformer {
 				int size = locations(member.getType().getTypeSpecifier(), declarator.getArraySpecifier(), root, false);
 
 				if (nextLocation != null) {
-					VulkanGlsl.setLayout(splitQualifier, "location", nextLocation);
+					Glsl.setLayout(splitQualifier, "location", nextLocation);
 					nextLocation = Math.addExact(nextLocation, size);
 				}
 
 				variables.add(new Variable(block.getBlockName().getName() + "." + declarator.getName().getName(), splitQualifier, size,
-					member.getType().getTypeSpecifier()));
+					member.getType().getTypeSpecifier(), block.getBlockName().getName()));
 				body.getMembers().add(body.getMembers().indexOf(member), split);
 			}
 
 			member.detachAndDelete();
 		}
 
-		VulkanGlsl.removeLayout(qualifier, "location");
+		Glsl.removeLayout(qualifier, "location");
 	}
 
 	private static boolean perVertex(PatchShaderType stage, StorageType direction, TypeQualifier qualifier) {
-		if (VulkanGlsl.hasStorage(qualifier, StorageType.PATCH)) {
+		if (Glsl.hasStorage(qualifier, StorageType.PATCH)) {
 			return false;
 		}
 
@@ -232,7 +344,7 @@ public final class LayoutTransformer {
 					continue;
 				}
 
-				int length = VulkanGlsl.integer(dimension, root);
+				int length = Glsl.integer(dimension, root);
 
 				if (length <= 0) {
 					throw new IllegalArgumentException("invalid interface array size");
@@ -249,7 +361,7 @@ public final class LayoutTransformer {
 		int size = 0;
 
 		for (var member : body.getMembers()) {
-			if (VulkanGlsl.layout(member.getType().getTypeQualifier(), "location") != null) {
+			if (Glsl.layout(member.getType().getTypeQualifier(), "location") != null) {
 				throw new IllegalArgumentException("explicit interface block member locations need separate allocation");
 			}
 
@@ -262,12 +374,12 @@ public final class LayoutTransformer {
 	}
 
 	private static Integer location(TypeQualifier qualifier, Root root) {
-		var part = VulkanGlsl.layout(qualifier, "location");
+		var part = Glsl.layout(qualifier, "location");
 
-		return part == null ? null : VulkanGlsl.integer(part.getExpression(), root);
+		return part == null ? null : Glsl.integer(part.getExpression(), root);
 	}
 
-	private static void assign(List<Variable> outputs, List<Variable> inputs) {
+	private static void assign(List<Variable> outputs, List<Variable> inputs, boolean packComponents) {
 		Map<String, List<Variable>> groups = new TreeMap<>();
 		Map<String, BitSet> occupiedOutputs = new HashMap<>();
 		Map<String, BitSet> occupiedInputs = new HashMap<>();
@@ -300,7 +412,11 @@ public final class LayoutTransformer {
 			}
 
 			if (explicit != null) {
-				assignGroup(group, outputs, occupiedOutputs, occupiedInputs, explicit);
+				int component = group.stream().filter(variable -> variable.location != null).findFirst().orElseThrow().component;
+				if (group.stream().anyMatch(variable -> variable.location != null && variable.component != component)) {
+					throw new IllegalArgumentException("conflicting stage components: " + group.getFirst().name);
+				}
+				assignGroup(group, outputs, occupiedOutputs, occupiedInputs, explicit, component, false);
 			}
 		}
 
@@ -309,27 +425,33 @@ public final class LayoutTransformer {
 				continue;
 			}
 
-			int location = 0;
-
-			while (!fits(group, outputs, occupiedOutputs, occupiedInputs, location)) {
-				location++;
+			boolean packed = packComponents && !outputs.isEmpty() && !inputs.isEmpty()
+				&& group.stream().allMatch(variable -> variable.packable);
+			int position = 0;
+			while (!fits(group, outputs, inputs, occupiedOutputs, occupiedInputs, position / 4, packed ? position % 4 : 0, packed)) {
+				position += packed ? 1 : 4;
 			}
-
-			assignGroup(group, outputs, occupiedOutputs, occupiedInputs, location);
+			assignGroup(group, outputs, occupiedOutputs, occupiedInputs, position / 4, packed ? position % 4 : 0, packed);
 		}
 	}
 
-	private static boolean fits(List<Variable> group, List<Variable> outputs, Map<String, BitSet> out, Map<String, BitSet> in,
-		int location) {
+	private static boolean fits(List<Variable> group, List<Variable> outputs, List<Variable> inputs, Map<String, BitSet> out, Map<String, BitSet> in,
+		int location, int component, boolean packed) {
 		for (var variable : group) {
+			if (packed && (component + variable.components > 4 || component % variable.alignment != 0)) return false;
 			var occupied = (outputs.contains(variable) ? out : in).computeIfAbsent(variable.namespace(), ignored -> new BitSet());
 			for (int i = 0; i < variable.size; i++) {
-				int start = Math.addExact(Math.multiplyExact(Math.addExact(location, i), 4), variable.component);
-				int end = Math.addExact(start, VulkanGlsl.layout(variable.qualifier, "component") == null ? 4 : variable.components);
+				int start = Math.addExact(Math.multiplyExact(Math.addExact(location, i), 4), component);
+				int end = Math.addExact(start, packed || Glsl.layout(variable.qualifier, "component") != null ? variable.components : 4);
 				int used = occupied.nextSetBit(start);
 
 				if (used >= 0 && used < end) {
 					return false;
+				}
+			}
+			if (packed) {
+				for (var other : outputs.contains(variable) ? outputs : inputs) {
+					if (other.location != null && other.namespace().equals(variable.namespace()) && other.location < location + variable.size && location < other.location + other.size && !other.packing.equals(variable.packing)) return false;
 				}
 			}
 		}
@@ -338,14 +460,18 @@ public final class LayoutTransformer {
 	}
 
 	private static void assignGroup(List<Variable> group, List<Variable> outputs, Map<String, BitSet> out, Map<String, BitSet> in,
-		int location) {
+		int location, int component, boolean packed) {
 		for (var variable : group) {
 			if (variable.location != null) {
 				continue;
 			}
 
+			variable.component = component;
 			reserve(outputs.contains(variable) ? out : in, variable, location);
-			variable.qualifier.getRoot().indexBuildSession(() -> VulkanGlsl.setLayout(variable.qualifier, "location", location));
+			variable.qualifier.getRoot().indexBuildSession(() -> {
+				Glsl.setLayout(variable.qualifier, "location", location);
+				if (packed || component != 0) Glsl.setLayout(variable.qualifier, "component", component);
+			});
 			variable.location = location;
 		}
 	}
@@ -370,24 +496,36 @@ public final class LayoutTransformer {
 		}
 	}
 
-	private static final class Variable {
+	public static class Variable {
 		private final String name;
 		private final TypeQualifier qualifier;
 		private final int size;
-		private final int component;
+		private int component;
 		private final int components;
+		private final boolean packable;
+		private final int alignment;
+		private final String packing;
 		private Integer location;
 
 		private Variable(String name, TypeQualifier qualifier, int size, TypeSpecifier type) {
+			this(name, qualifier, size, type, null);
+		}
+
+		private Variable(String name, TypeQualifier qualifier, int size, TypeSpecifier type, String interfaceBlock) {
 			this.name = name;
 			this.qualifier = qualifier;
 			this.size = size;
 			this.location = location(qualifier, qualifier.getRoot());
-			var component = VulkanGlsl.layout(qualifier, "component");
-			this.component = component == null ? 0 : VulkanGlsl.integer(component.getExpression(), qualifier.getRoot());
+			var component = Glsl.layout(qualifier, "component");
+			this.component = component == null ? 0 : Glsl.integer(component.getExpression(), qualifier.getRoot());
 			int components = type instanceof BuiltinNumericTypeSpecifier numeric && !numeric.type.isMatrix() ? (numeric.type.isScalar() ? 1 : numeric.type.getDimensions()[0]) * Math.max(
 				32, numeric.type.getBitDepth()) / 32 : 4;
 			this.components = component == null && components > 4 ? 4 : components;
+			this.packable = type instanceof BuiltinNumericTypeSpecifier numeric && !numeric.type.isMatrix() && components <= 4 && size == 1;
+			this.alignment = type instanceof BuiltinNumericTypeSpecifier numeric && numeric.type.getBitDepth() == 64 ? 2 : 1;
+			this.packing = interfaceBlock + ":" + (type instanceof BuiltinNumericTypeSpecifier numeric ? numeric.type.getNumberType() + ":" + numeric.type.getBitDepth() + ":" + qualifier.getParts().stream()
+				.filter(part -> !(part instanceof io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier) && !(part instanceof io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier))
+				.map(part -> ASTPrinter.print(PrintType.COMPACT, part)).sorted().toList() : "aggregate");
 
 			if (this.component < 0 || this.component + this.components > 4 || component != null && (!(type instanceof BuiltinNumericTypeSpecifier numeric) || numeric.type.isMatrix())) {
 				throw new IllegalArgumentException("invalid interface component: " + name);
@@ -395,9 +533,9 @@ public final class LayoutTransformer {
 		}
 
 		private String namespace() {
-			var index = VulkanGlsl.layout(this.qualifier, "index");
+			var index = Glsl.layout(this.qualifier, "index");
 
-			return Integer.toString(index == null ? 0 : VulkanGlsl.integer(index.getExpression(), this.qualifier.getRoot()));
+			return (Glsl.hasStorage(this.qualifier, StorageType.PATCH) ? "patch:" : "vertex:") + (index == null ? 0 : Glsl.integer(index.getExpression(), this.qualifier.getRoot()));
 		}
 	}
 }

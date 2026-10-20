@@ -1,377 +1,300 @@
 package net.irisshaders.iris.vulkan;
 
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
+import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.gl.buffer.ShaderStorageBuffer;
 import net.irisshaders.iris.gl.sampler.GlSampler;
-import net.irisshaders.iris.mixin.VulkanDeviceAccessor;
+import net.irisshaders.iris.mixin.VulkanCommandEncoderAccessor;
+import net.irisshaders.iris.pipeline.transform.VulkanPushConstants;
+import net.irisshaders.iris.samplers.SamplerBindingPlan.DescriptorIndices;
 import net.irisshaders.iris.samplers.SamplerHeapLayout;
+import net.irisshaders.iris.samplers.VulkanHeapLayout;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.Platform;
-import org.lwjgl.vulkan.KHRPushDescriptor;
-import org.lwjgl.vulkan.VK10;
-import org.lwjgl.vulkan.VK11;
-import org.lwjgl.vulkan.VK12;
-import org.lwjgl.vulkan.VkCommandBuffer;
-import org.lwjgl.vulkan.VkDescriptorImageInfo;
-import org.lwjgl.vulkan.VkDescriptorPoolCreateInfo;
-import org.lwjgl.vulkan.VkDescriptorPoolSize;
-import org.lwjgl.vulkan.VkDescriptorSetAllocateInfo;
-import org.lwjgl.vulkan.VkDescriptorSetLayoutBinding;
-import org.lwjgl.vulkan.VkDescriptorSetLayoutBindingFlagsCreateInfo;
-import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo;
-import org.lwjgl.vulkan.VkDescriptorSetLayoutSupport;
-import org.lwjgl.vulkan.VkDevice;
-import org.lwjgl.vulkan.VkPhysicalDeviceDescriptorIndexingProperties;
-import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
-import org.lwjgl.vulkan.VkPhysicalDeviceProperties2;
-import org.lwjgl.vulkan.VkPhysicalDevicePushDescriptorPropertiesKHR;
-import org.lwjgl.vulkan.VkSamplerCreateInfo;
-import org.lwjgl.vulkan.VkWriteDescriptorSet;
+import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.vulkan.*;
 
 import java.nio.LongBuffer;
-import java.util.ArrayDeque;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
+import java.util.function.Supplier;
+
+import static net.irisshaders.iris.vulkan.VulkanChecks.check;
 
 public class VulkanSamplerHeap implements AutoCloseable {
 	private final VkDevice device;
-	private final Map<SamplerHeapLayout.Type, VulkanDummySampler> dummies = new EnumMap<>(SamplerHeapLayout.Type.class);
-	private final Map<GlSampler.Description, Long> samplers = new HashMap<>();
-	private final SamplerHeapLayout layout;
-	private final int poolCapacity;
-	private final boolean updateAfterBind;
-	private final Map<Long, Integer> poolSizes = new LinkedHashMap<>();
-	private final ArrayDeque<Long> available = new ArrayDeque<>();
-	private final AtomicInteger layoutReferences = new AtomicInteger(1);
+	private final Object2LongMap<GlSampler.Description> samplers = new Object2LongOpenHashMap<>();
+	private final VulkanHeapLayout layout;
+	private int imageCount;
+	private final Long2IntMap samplerIndices = new Long2IntOpenHashMap();
+	private final List<Supplier<GpuBufferSlice>> buffers = new ArrayList<>();
+	private VulkanStorageBuffer mipmapCounter;
+	private int mipmapCounterIndex;
+	private final Frame[] frames = new Frame[VulkanHeapLayout.FRAMES_IN_FLIGHT];
 	private long setLayout;
-	private long drawSetLayout;
-	private long emptySetLayout;
+	private long graphicsLayout;
+	private long computeLayout;
+	private final Object2LongMap<List<VulkanShaderBindings.LayoutBinding>> drawLayouts = new Object2LongOpenHashMap<>();
 	private volatile long pool;
-	private int liveSnapshots;
+	private boolean closed;
 
-	public VulkanSamplerHeap(VulkanDevice device, SamplerHeapLayout layout, int poolCapacity) {
-		this.device = Objects.requireNonNull(device).vkDevice();
-		this.layout = Objects.requireNonNull(layout);
-		this.updateAfterBind = Platform.get() == Platform.MACOSX && device instanceof VulkanDeviceAccessor access && access.iris$getEnabledFeatures()
-			.contains(VulkanShaderFeatures.SAMPLER_UPDATE_AFTER_BIND);
-
-		if (poolCapacity < 1) {
-			throw new IllegalArgumentException("heap must allow at least one descriptor generation");
-		}
-
-		this.poolCapacity = poolCapacity;
-
+	public VulkanSamplerHeap(VulkanDevice device) {
+		this.device = device.vkDevice();
 		try (var stack = MemoryStack.stackPush()) {
-			this.validateLimits(stack);
-
-			var bindings = VkDescriptorSetLayoutBinding.calloc(layout.heaps().size(), stack);
-			int index = 0;
-
-			for (var entry : layout.heaps().entrySet()) {
-				bindings.get(index++).binding(entry.getKey().binding()).descriptorType(descriptorType(entry.getKey()))
-					.descriptorCount(entry.getValue().size()).stageFlags(VK10.VK_SHADER_STAGE_ALL);
-			}
-
-			var info = VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default().pBindings(bindings);
-			if (this.updateAfterBind) {
-				var flags = stack.mallocInt(bindings.capacity());
-				for (int i = 0; i < flags.capacity(); i++) {
-					flags.put(i, VK12.VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
-				}
-				info.flags(VK12.VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT)
-					.pNext(VkDescriptorSetLayoutBindingFlagsCreateInfo.calloc(stack).sType$Default().pBindingFlags(flags));
-			}
-			var support = VkDescriptorSetLayoutSupport.calloc(stack).sType$Default();
-			VK11.vkGetDescriptorSetLayoutSupport(this.device, info, support);
-
-			if (!support.supported()) {
-				throw new IllegalArgumentException("the device cannot support this sampler heap layout");
-			}
-
+			this.layout = selectLayout(this.device, stack);
+			Iris.logger.info("Using Vulkan heap: {} samplers, {} images, {} buffers", this.layout.samplers(), this.layout.images(), this.layout.buffers());
+			int[] types = {VK10.VK_DESCRIPTOR_TYPE_SAMPLER, VK10.VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+				VK10.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER};
+			int[] counts = {this.layout.samplers(), this.layout.images(), this.layout.buffers(), 15};
 			var handle = stack.mallocLong(1);
-			check(VK10.vkCreateDescriptorSetLayout(this.device, info, null, handle), "create sampler heap layout");
+			check(VK10.vkCreateDescriptorSetLayout(this.device, layoutInfo(this.layout, stack), null, handle), "create global heap layout");
 			this.setLayout = handle.get(0);
-
-			if (!layout.drawHeaps().isEmpty()) {
-				var properties = VkPhysicalDevicePushDescriptorPropertiesKHR.calloc(stack).sType$Default();
-				VK11.vkGetPhysicalDeviceProperties2(this.device.getPhysicalDevice(),
-					VkPhysicalDeviceProperties2.calloc(stack).sType$Default().pNext(properties));
-				int count = layout.drawHeaps().values().stream().mapToInt(List::size).sum();
-
-				if (count > properties.maxPushDescriptors()) {
-					throw new IllegalArgumentException("too many per-draw samplers: " + count);
-				}
-
-				var draws = VkDescriptorSetLayoutBinding.calloc(layout.drawHeaps().size(), stack);
-				int binding = 0;
-
-				for (var entry : layout.drawHeaps().entrySet()) {
-					draws.get(binding++).binding(entry.getKey().binding()).descriptorType(descriptorType(entry.getKey()))
-						.descriptorCount(entry.getValue().size()).stageFlags(VK10.VK_SHADER_STAGE_ALL);
-				}
-				check(VK10.vkCreateDescriptorSetLayout(this.device, VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default()
-						.flags(KHRPushDescriptor.VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR).pBindings(draws), null, handle),
-					"create per-draw sampler layout");
-				this.drawSetLayout = handle.get(0);
-				check(VK10.vkCreateDescriptorSetLayout(this.device, VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default(), null,
-					handle), "create empty sampler layout");
-				this.emptySetLayout = handle.get(0);
+			this.graphicsLayout = this.createPipelineLayout(VK10.VK_SHADER_STAGE_ALL_GRAPHICS, stack);
+			this.computeLayout = this.createPipelineLayout(VK10.VK_SHADER_STAGE_COMPUTE_BIT, stack);
+			var sizes = VkDescriptorPoolSize.calloc(types.length, stack);
+			for (int i = 0; i < types.length; i++) {
+				sizes.get(i).type(types[i]).descriptorCount(counts[i] * frames.length);
 			}
-
-			this.pool = this.createPool(stack);
-			Stream.concat(layout.heaps().keySet().stream(), layout.drawHeaps().keySet().stream()).distinct().forEach(type -> {
-				long sampler = type.texelBuffer() ? 0 : this.sampler(
-					new GlSampler.Description(false, false, false, type.glsl.endsWith("Shadow"), true));
-				this.dummies.put(type, new VulkanDummySampler(device, type, sampler));
-			});
-		} catch (RuntimeException | Error exception) {
-			this.dummies.values().forEach(VulkanDummySampler::close);
-			this.samplers.values().forEach(sampler -> VK10.vkDestroySampler(this.device, sampler, null));
-			if (this.pool != 0) {
-				VK10.vkDestroyDescriptorPool(this.device, this.pool, null);
-			}
-			if (this.drawSetLayout != 0) {
-				VK10.vkDestroyDescriptorSetLayout(this.device, this.drawSetLayout, null);
-			}
-			if (this.emptySetLayout != 0) {
-				VK10.vkDestroyDescriptorSetLayout(this.device, this.emptySetLayout, null);
-			}
-			if (this.setLayout != 0) {
-				VK10.vkDestroyDescriptorSetLayout(this.device, this.setLayout, null);
-			}
-
-			throw exception;
+			check(VK10.vkCreateDescriptorPool(this.device, VkDescriptorPoolCreateInfo.calloc(stack).sType$Default()
+				.flags(VK12.VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT).maxSets(frames.length).pPoolSizes(sizes), null, handle),
+				"create global heap pool");
+			this.pool = handle.get(0);
+			var sets = stack.mallocLong(frames.length);
+			var layouts = stack.mallocLong(frames.length);
+			for (int i = 0; i < frames.length; i++) layouts.put(i, this.setLayout);
+			check(VK10.vkAllocateDescriptorSets(this.device, VkDescriptorSetAllocateInfo.calloc(stack).sType$Default()
+				.descriptorPool(this.pool).pSetLayouts(layouts), sets), "allocate frame heaps");
+			for (int i = 0; i < frames.length; i++) this.frames[i] = new Frame(sets.get(i));
+			this.mipmapCounter = new VulkanStorageBuffer(device, "Iris mipmap counter", 4, null);
+			this.mipmapCounterIndex = this.addBuffer(this.mipmapCounter::slice);
+		} catch (RuntimeException | Error failure) {
+			this.close();
+			throw failure;
 		}
 	}
 
-	private static void check(int result, String operation) {
-		if (result != VK10.VK_SUCCESS) {
-			throw new IllegalStateException("failed to " + operation + ": VkResult " + result);
-		}
-	}
-
-	private static int descriptorType(SamplerHeapLayout.Type type) {
-		return type.texelBuffer() ? VK10.VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	}
-
-	private long createPool(MemoryStack stack) {
-		var handle = stack.mallocLong(1);
-		var poolInfo = VkDescriptorPoolCreateInfo.calloc(stack).sType$Default().maxSets(this.poolCapacity);
-
-		if (this.updateAfterBind) {
-			poolInfo.flags(poolInfo.flags() | VK12.VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT);
-		}
-
-		if (this.layout.descriptorCount() > 0) {
-			Map<Integer, Integer> counts = new TreeMap<>();
-			this.layout.heaps().forEach((type, slots) -> counts.merge(descriptorType(type), slots.size(), Math::addExact));
-
-			var sizes = VkDescriptorPoolSize.calloc(counts.size(), stack);
-			int poolIndex = 0;
-
-			for (var entry : counts.entrySet()) {
-				sizes.get(poolIndex++).type(entry.getKey()).descriptorCount(Math.multiplyExact(entry.getValue(), this.poolCapacity));
-			}
-
-			poolInfo.pPoolSizes(sizes);
-		}
-
-		check(VK10.vkCreateDescriptorPool(this.device, poolInfo, null, handle), "create sampler heap pool");
-		long result = handle.get(0);
-		this.poolSizes.put(result, 0);
-
-		return result;
-	}
-
-	private void validateLimits(MemoryStack stack) {
-		var properties = VkPhysicalDeviceProperties.calloc(stack);
-		VK10.vkGetPhysicalDeviceProperties(this.device.getPhysicalDevice(), properties);
-		var limits = properties.limits();
-
-		int count = Stream.concat(this.layout.heaps().values().stream(), this.layout.drawHeaps().values().stream()).mapToInt(List::size)
-			.sum();
-		int samplers = Stream.concat(this.layout.heaps().entrySet().stream(), this.layout.drawHeaps().entrySet().stream())
-			.filter(entry -> !entry.getKey().texelBuffer()).mapToInt(entry -> entry.getValue().size()).sum();
-
-		int regularCount = this.updateAfterBind ? this.layout.drawHeaps().values().stream().mapToInt(List::size).sum() : count;
-		int regularSamplers = this.updateAfterBind ? this.layout.drawHeaps().entrySet().stream()
-			.filter(entry -> !entry.getKey().texelBuffer()).mapToInt(entry -> entry.getValue().size()).sum() : samplers;
-
-		if (regularSamplers > Integer.toUnsignedLong(limits.maxPerStageDescriptorSamplers()) || regularCount > Integer.toUnsignedLong(
-			limits.maxPerStageDescriptorSampledImages()) || regularSamplers > Integer.toUnsignedLong(
-			limits.maxDescriptorSetSamplers()) || regularCount > Integer.toUnsignedLong(
-			limits.maxDescriptorSetSampledImages()) || regularCount > Integer.toUnsignedLong(limits.maxPerStageResources())) {
-			throw new IllegalArgumentException("sampler heap exceeds device descriptor limits: " + regularCount + " descriptors");
-		}
-
-		if (this.updateAfterBind) {
-			var indexing = VkPhysicalDeviceDescriptorIndexingProperties.calloc(stack).sType$Default();
-			VK11.vkGetPhysicalDeviceProperties2(this.device.getPhysicalDevice(),
-				VkPhysicalDeviceProperties2.calloc(stack).sType$Default().pNext(indexing));
-			if (samplers > Integer.toUnsignedLong(
-				indexing.maxPerStageDescriptorUpdateAfterBindSamplers()) || count > Integer.toUnsignedLong(
-				indexing.maxPerStageDescriptorUpdateAfterBindSampledImages()) || samplers > Integer.toUnsignedLong(
-				indexing.maxDescriptorSetUpdateAfterBindSamplers()) || count > Integer.toUnsignedLong(
-				indexing.maxDescriptorSetUpdateAfterBindSampledImages()) || count > Integer.toUnsignedLong(
-				indexing.maxPerStageUpdateAfterBindResources()) || (long) this.layout.descriptorCount() * this.poolCapacity > Integer.toUnsignedLong(
-				indexing.maxUpdateAfterBindDescriptorsInAllPools())) {
-				throw new IllegalArgumentException(
-					"sampler heap exceeds device descriptor indexing limits: " + count + " descriptors, " + this.poolCapacity + " generations");
-			}
-		}
-	}
-
-	public void retainLayouts() {
-		this.requireOpen();
-		int references;
-
-		do {
-			references = this.layoutReferences.get();
-
-			if (references == 0) {
-				throw new IllegalStateException("sampler heap is closed");
-			}
-		} while (!this.layoutReferences.compareAndSet(references, references + 1));
-	}
-
-	public void releaseLayouts() {
-		if (this.layoutReferences.getAndUpdate(references -> Math.max(0, references - 1)) != 1) {
-			return;
-		}
-
-		VK10.vkDestroyDescriptorSetLayout(this.device, this.setLayout, null);
-		if (this.drawSetLayout != 0) {
-			VK10.vkDestroyDescriptorSetLayout(this.device, this.drawSetLayout, null);
-		}
-		if (this.emptySetLayout != 0) {
-			VK10.vkDestroyDescriptorSetLayout(this.device, this.emptySetLayout, null);
-		}
-		this.setLayout = this.drawSetLayout = this.emptySetLayout = 0;
-	}
-
-	public LongBuffer pipelineSetLayouts(MemoryStack stack, long uniforms, long frame) {
-		if (this.drawSetLayout != 0) {
-			return stack.longs(uniforms, this.setLayout, frame == 0 ? this.emptySetLayout : frame, this.drawSetLayout);
-		}
-
-		return frame == 0 ? stack.longs(uniforms, this.setLayout) : stack.longs(uniforms, this.setLayout, frame);
-	}
-
-	public SamplerHeapLayout layout() {
+	public VulkanHeapLayout layout() {
 		return this.layout;
 	}
 
-	public Snapshot snapshot(Map<SamplerHeapLayout.Slot, ? extends Entry> images) {
-		this.requireOpen();
+	public VulkanStorageBuffer mipmapCounter() {
+		return this.mipmapCounter;
+	}
 
-		Map<SamplerHeapLayout.Slot, Entry> copy = Map.copyOf(images);
+	public int mipmapCounterIndex() {
+		return this.mipmapCounterIndex;
+	}
 
-		for (var entry : copy.entrySet()) {
-			this.layout.requireSlot(entry.getKey());
+	public static VkDescriptorSetLayoutCreateInfo layoutInfo(VulkanHeapLayout layout, MemoryStack stack) {
+		var bindings = VkDescriptorSetLayoutBinding.calloc(4, stack);
+		bindings.get(0).binding(VulkanHeapLayout.SAMPLERS_BINDING).descriptorType(VK10.VK_DESCRIPTOR_TYPE_SAMPLER)
+			.descriptorCount(layout.samplers()).stageFlags(VK10.VK_SHADER_STAGE_ALL);
+		bindings.get(1).binding(VulkanHeapLayout.IMAGES_BINDING).descriptorType(VK10.VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE)
+			.descriptorCount(layout.images()).stageFlags(VK10.VK_SHADER_STAGE_ALL);
+		bindings.get(2).binding(VulkanHeapLayout.BUFFERS_BINDING).descriptorType(VK10.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
+			.descriptorCount(layout.buffers()).stageFlags(VK10.VK_SHADER_STAGE_ALL);
+		// our frame UBO! I actually only need 1, but I intentionally bumped it to 15 here just in case a few mods want to eat some, and it stays under the GTX limit
+		bindings.get(3).binding(VulkanHeapLayout.FRAME_UNIFORMS_BINDING).descriptorType(VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+			.descriptorCount(15).stageFlags(VK10.VK_SHADER_STAGE_ALL);
+		int flags = VK12.VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT | VK12.VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT
+			| VK12.VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+		return VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default().pBindings(bindings)
+			.flags(VK12.VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT)
+			.pNext(VkDescriptorSetLayoutBindingFlagsCreateInfo.calloc(stack).sType$Default().pBindingFlags(stack.ints(flags, flags, flags,
+				VK12.VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT | VK12.VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT)));
+	}
 
-			if (this.layout.isDraw(entry.getKey()) || entry.getKey().type().texelBuffer() != (entry.getValue() instanceof TexelBuffer)) {
-				throw new IllegalArgumentException("descriptor does not match heap type: " + entry.getKey());
+	public static VulkanHeapLayout selectLayout(VkDevice device, MemoryStack stack) {
+		var push = VkPhysicalDevicePushDescriptorPropertiesKHR.calloc(stack).sType$Default();
+		var indexing = VkPhysicalDeviceDescriptorIndexingProperties.calloc(stack).sType$Default().pNext(push.address());
+		var properties = VkPhysicalDeviceProperties2.calloc(stack).sType$Default().pNext(indexing);
+		VK11.vkGetPhysicalDeviceProperties2(device.getPhysicalDevice(), properties);
+		var preferred = maximumLayout(indexing, push.maxPushDescriptors());
+		if (supportsLayout(device, preferred, stack)) return preferred;
+
+		VulkanHeapLayout selected = null;
+		int low = 1;
+		int high = preferred.images() - 1;
+		while (low <= high) {
+			int images = (low + high) / 2;
+			var candidate = new VulkanHeapLayout(preferred.samplers(), images, preferred.buffers());
+			if (supportsLayout(device, candidate, stack)) {
+				selected = candidate;
+				low = images + 1;
+			} else {
+				high = images - 1;
 			}
 		}
+		if (selected == null) throw new IllegalArgumentException("device cannot support Iris's frame descriptor heap layout");
+		return selected;
+	}
 
+	public static VulkanHeapLayout maximumLayout(VkPhysicalDeviceDescriptorIndexingProperties indexing, int pushDescriptors) {
+		long draw = Integer.toUnsignedLong(pushDescriptors);
+		int samplers = VulkanHeapLayout.SAMPLER_COUNT;
+		long samplerLimit = Math.min(Integer.toUnsignedLong(indexing.maxPerStageDescriptorUpdateAfterBindSamplers()),
+			Integer.toUnsignedLong(indexing.maxDescriptorSetUpdateAfterBindSamplers()));
+		int buffers = (int) Math.min(VulkanHeapLayout.BUFFER_COUNT,
+			Math.min(Integer.toUnsignedLong(indexing.maxPerStageDescriptorUpdateAfterBindStorageBuffers()),
+				Integer.toUnsignedLong(indexing.maxDescriptorSetUpdateAfterBindStorageBuffers())));
+		long resources = Math.min(Integer.toUnsignedLong(indexing.maxPerStageUpdateAfterBindResources()) - draw,
+			Integer.toUnsignedLong(indexing.maxUpdateAfterBindDescriptorsInAllPools()) / VulkanHeapLayout.FRAMES_IN_FLIGHT);
+		long sampledImages = Math.min(Integer.toUnsignedLong(indexing.maxPerStageDescriptorUpdateAfterBindSampledImages()),
+			Integer.toUnsignedLong(indexing.maxDescriptorSetUpdateAfterBindSampledImages())) - draw;
+		// WHY DOES THIS LIMIT EXIST???
+		int images = (int) Math.min(VulkanHeapLayout.IMAGE_COUNT, Math.min(sampledImages, resources - samplers - buffers - 1));
+		if (samplerLimit < samplers + draw || buffers < 128 || images < 1) {
+			throw new IllegalArgumentException("device cannot support Iris's frame descriptor heap");
+		}
+		return new VulkanHeapLayout(samplers, images, buffers);
+	}
+
+	private static boolean supportsLayout(VkDevice device, VulkanHeapLayout layout, MemoryStack stack) {
+		var support = VkDescriptorSetLayoutSupport.calloc(stack).sType$Default();
+		VK11.vkGetDescriptorSetLayoutSupport(device, layoutInfo(layout, stack), support);
+		return support.supported();
+	}
+
+	public LongBuffer pipelineSetLayouts(MemoryStack stack, long draw) {
+		return draw == 0 ? stack.longs(this.setLayout) : stack.longs(this.setLayout, draw);
+	}
+
+	private long createPipelineLayout(int stages, MemoryStack stack) {
+		var handle = stack.mallocLong(1);
+		check(VK10.vkCreatePipelineLayout(this.device, VkPipelineLayoutCreateInfo.calloc(stack).sType$Default()
+			.pSetLayouts(stack.longs(this.setLayout))
+			.pPushConstantRanges(VkPushConstantRange.calloc(1, stack).stageFlags(stages).offset(0).size(VulkanPushConstants.MAX_SIZE)),
+			null, handle), "create heap pipeline layout");
+		return handle.get(0);
+	}
+
+	public void beginFrame(GpuBufferSlice uniforms) {
+		var frame = this.frame();
+		if (uniforms != null) {
+			frame.write(new DescriptorWrite(0, VulkanHeapLayout.FRAME_UNIFORMS_BINDING, VK10.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				0, 0, 0, uniforms));
+		}
+		frame.flushDescriptors();
+	}
+
+	public void bind(VkCommandBuffer command) {
+		var frame = this.frame();
+		frame.flushDescriptors();
 		try (var stack = MemoryStack.stackPush()) {
-			var allocation = this.available.pollFirst();
-
-			if (allocation == null) {
-				if (this.poolSizes.get(this.pool) == this.poolCapacity) {
-					this.pool = this.poolSizes.entrySet().stream().filter(entry -> entry.getValue() < this.poolCapacity)
-						.mapToLong(Map.Entry::getKey).findFirst().orElseGet(() -> this.createPool(stack));
-				}
-
-				var handle = stack.mallocLong(1);
-				check(VK10.vkAllocateDescriptorSets(this.device,
-					VkDescriptorSetAllocateInfo.calloc(stack).sType$Default().descriptorPool(this.pool)
-						.pSetLayouts(stack.longs(this.setLayout)), handle), "allocate sampler heap generation");
-				allocation = handle.get(0);
-				this.poolSizes.merge(this.pool, 1, Integer::sum);
-			}
-
-			long set = allocation;
-
-			try {
-				if (!this.layout.heaps().isEmpty()) {
-					var writes = this.writeDescriptors(stack, this.layout.heaps(), copy);
-					writes.forEach(write -> write.dstSet(set));
-					VK10.vkUpdateDescriptorSets(this.device, writes, null);
-				}
-
-				this.liveSnapshots++;
-
-				return new Snapshot(allocation);
-			} catch (RuntimeException | Error exception) {
-				this.available.addLast(allocation);
-
-				throw exception;
-			}
+			var sets = stack.longs(frame.set);
+			VK10.vkCmdBindDescriptorSets(command, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, this.graphicsLayout,
+				VulkanHeapLayout.DESCRIPTOR_SET, sets, null);
+			VK10.vkCmdBindDescriptorSets(command, VK10.VK_PIPELINE_BIND_POINT_COMPUTE, this.computeLayout,
+				VulkanHeapLayout.DESCRIPTOR_SET, sets, null);
 		}
 	}
 
-	private VkWriteDescriptorSet.Buffer writeDescriptors(MemoryStack stack, Map<SamplerHeapLayout.Type, List<SamplerHeapLayout.Slot>> heaps,
-		Map<SamplerHeapLayout.Slot, Entry> entries) {
-		var writes = VkWriteDescriptorSet.calloc(heaps.size(), stack);
-		int index = 0;
+	public Frame frame() {
+		long submission = ((VulkanCommandEncoderAccessor) VulkanCommandBridge.encoder()).iris$getCurrentSubmitIndex();
+		var frame = this.frames[Math.floorMod(submission, this.frames.length)];
+		frame.begin(submission);
+		return frame;
+	}
 
-		for (var entry : heaps.entrySet()) {
-			var slots = entry.getValue();
-			var fallback = this.dummies.get(entry.getKey()).entry();
-			var write = writes.get(index++).sType$Default().dstBinding(entry.getKey().binding())
-				.descriptorType(descriptorType(entry.getKey())).descriptorCount(slots.size());
-
-			if (entry.getKey().texelBuffer()) {
-				var views = stack.mallocLong(slots.size());
-				for (int i = 0; i < slots.size(); i++) {
-					views.put(i, ((TexelBuffer) entries.getOrDefault(slots.get(i), fallback)).bufferView());
+	public long drawLayout(List<net.irisshaders.iris.pipeline.transform.ShaderResourceLayout.Descriptor> descriptors) {
+		var key = descriptors.stream().filter(d -> d.set() == SamplerHeapLayout.DRAW_DESCRIPTOR_SET)
+			.map(d -> new VulkanShaderBindings.LayoutBinding(d.binding(), VulkanShaderBindings.descriptorType(d), d.count(),
+				VulkanShaderBindings.stageFlags(d)))
+			.sorted(java.util.Comparator.comparingInt(VulkanShaderBindings.LayoutBinding::binding)).toList();
+		if (key.isEmpty()) return 0;
+		return this.drawLayouts.computeLongIfAbsent(key, unused -> {
+			try (var stack = MemoryStack.stackPush()) {
+				var push = VkPhysicalDevicePushDescriptorPropertiesKHR.calloc(stack).sType$Default();
+				VK11.vkGetPhysicalDeviceProperties2(this.device.getPhysicalDevice(), VkPhysicalDeviceProperties2.calloc(stack).sType$Default().pNext(push));
+				if (key.stream().mapToInt(VulkanShaderBindings.LayoutBinding::count).sum() > push.maxPushDescriptors()) {
+					throw new IllegalArgumentException("draw descriptors exceed maxPushDescriptors: " + key);
 				}
-				write.pTexelBufferView(views);
-			} else {
-				var images = VkDescriptorImageInfo.calloc(slots.size(), stack);
-				for (int i = 0; i < slots.size(); i++) {
-					var image = (ImageSampler) entries.getOrDefault(slots.get(i), fallback);
-					images.get(i).imageView(image.imageView()).sampler(image.sampler()).imageLayout(image.imageLayout());
+				var bindings = VkDescriptorSetLayoutBinding.calloc(key.size(), stack);
+				for (int i = 0; i < key.size(); i++) {
+					var binding = key.get(i);
+					bindings.get(i).binding(binding.binding()).descriptorType(binding.type()).descriptorCount(binding.count()).stageFlags(binding.stages());
 				}
-				write.pImageInfo(images);
+				var handle = stack.mallocLong(1);
+				check(VK10.vkCreateDescriptorSetLayout(this.device, VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default()
+					.flags(KHRPushDescriptor.VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR).pBindings(bindings), null, handle), "create draw push-descriptor layout");
+				return handle.get(0);
 			}
-		}
+		});
+	}
 
-		return writes;
+	public List<VulkanShaderBindings.LayoutBinding> drawLayoutKey(long layout) {
+		return this.drawLayouts.object2LongEntrySet().stream().filter(entry -> entry.getLongValue() == layout)
+			.map(Map.Entry::getKey).findFirst().orElse(List.of());
+	}
+
+	/** Indices stay assigned until this dimension's heap is destroyed. */
+	public int addImage(ImageSampler image) {
+		if (this.imageCount == this.layout.images()) {
+			throw new IllegalArgumentException("shader pack exceeds Vulkan image heap capacity: " + this.layout.images());
+		}
+		int index = this.imageCount++;
+		this.frame().writeImage(index, image);
+		return index;
+	}
+
+	public int addSampler(long sampler) {
+		int index = this.samplerIndices.getOrDefault(sampler, -1);
+		if (index >= 0) return index;
+		index = this.samplerIndices.size();
+		if (index == this.layout.samplers()) {
+			throw new IllegalArgumentException("shader pack exceeds Vulkan sampler heap capacity: " + this.layout.samplers());
+		}
+		this.samplerIndices.put(sampler, index);
+		this.frame().writeSampler(index, sampler);
+		return index;
+	}
+
+	public int addBuffer(ShaderStorageBuffer buffer) {
+		return this.addBuffer(buffer::slice);
+	}
+
+	public int addBuffer(Supplier<GpuBufferSlice> buffer) {
+		int index = this.buffers.size();
+		if (index == this.layout.buffers()) {
+			throw new IllegalArgumentException("shader pack exceeds Vulkan buffer heap capacity: " + this.layout.buffers());
+		}
+		this.buffers.add(buffer);
+		this.frame().writeBuffer(index, buffer.get());
+		return index;
+	}
+
+	public void update(DescriptorIndices indices, ImageSampler sampled) {
+		var frame = this.frame();
+		frame.writeImage(indices.image(), sampled);
+		frame.writeSampler(indices.sampler(), sampled.sampler());
 	}
 
 	@Override
 	public void close() {
-		if (this.pool == 0) {
-			return;
+		if (this.closed) return;
+		this.closed = true;
+		if (this.mipmapCounter != null) this.mipmapCounter.close();
+		if (this.pool != 0) {
+			VK10.vkDestroyDescriptorPool(this.device, this.pool, null);
+			this.pool = 0;
 		}
-
-		if (this.liveSnapshots != 0) {
-			throw new IllegalStateException("sampler heap still has live descriptor generations");
-		}
-
-		this.poolSizes.keySet().forEach(handle -> VK10.vkDestroyDescriptorPool(this.device, handle, null));
-		this.poolSizes.clear();
-		this.available.clear();
-		this.pool = 0;
-		this.releaseLayouts();
 		this.samplers.values().forEach(sampler -> VK10.vkDestroySampler(this.device, sampler, null));
 		this.samplers.clear();
-		this.dummies.values().forEach(VulkanDummySampler::close);
-		this.dummies.clear();
-	}
-
-	private void requireOpen() {
-		if (this.pool == 0) {
-			throw new IllegalStateException("sampler heap is closed");
-		}
+		VK10.vkDestroyPipelineLayout(this.device, this.graphicsLayout, null);
+		VK10.vkDestroyPipelineLayout(this.device, this.computeLayout, null);
+		this.graphicsLayout = this.computeLayout = 0;
+		VK10.vkDestroyDescriptorSetLayout(this.device, this.setLayout, null);
+		this.drawLayouts.values().forEach(layout -> VK10.vkDestroyDescriptorSetLayout(this.device, layout, null));
+		this.drawLayouts.clear();
+		this.setLayout = 0;
 	}
 
 	public long sampler(GlSampler sampler) {
@@ -379,9 +302,7 @@ public class VulkanSamplerHeap implements AutoCloseable {
 	}
 
 	public long sampler(GlSampler.Description description) {
-		this.requireOpen();
-
-		return this.samplers.computeIfAbsent(description, this::createSampler);
+		return this.samplers.computeLongIfAbsent(description, this::createSampler);
 	}
 
 	private long createSampler(GlSampler.Description state) {
@@ -393,11 +314,7 @@ public class VulkanSamplerHeap implements AutoCloseable {
 				.addressModeU(address).addressModeV(address).addressModeW(address).maxLod(state.mipmapped() ? VK10.VK_LOD_CLAMP_NONE : 0)
 				.compareEnable(state.hardwareShadow()).compareOp(VK10.VK_COMPARE_OP_LESS_OR_EQUAL);
 			var handle = stack.mallocLong(1);
-			int result = VK10.vkCreateSampler(this.device, info, null, handle);
-
-			if (result != VK10.VK_SUCCESS) {
-				throw new IllegalStateException("could not create Iris sampler: " + result);
-			}
+			check(VK10.vkCreateSampler(this.device, info, null, handle), "create Iris sampler");
 
 			return handle.get(0);
 		}
@@ -407,116 +324,102 @@ public class VulkanSamplerHeap implements AutoCloseable {
 	}
 
 	public record TexelBuffer(long bufferView) implements Entry {
-		public TexelBuffer {
-			if (bufferView == 0) {
-				throw new IllegalArgumentException("texel heap entries require a buffer view");
-			}
-		}
 	}
 
 	public record ImageSampler(long imageView, long sampler, int imageLayout) implements Entry {
-		public ImageSampler {
-			if (imageView == 0 || sampler == 0) {
-				throw new IllegalArgumentException("sampler heap entries require an image view and sampler");
-			}
-
-			if (imageLayout != VK10.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && imageLayout != VK10.VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL && imageLayout != VK10.VK_IMAGE_LAYOUT_GENERAL) {
-				throw new IllegalArgumentException("unsupported sampled image layout: " + imageLayout);
-			}
-		}
 	}
 
-	public class Snapshot implements AutoCloseable {
-		private final Snapshot parent;
-		private final Map<SamplerHeapLayout.Slot, Entry> draws;
-		private final Long allocation;
-		private long set;
-		private int references = 1;
 
-		private Snapshot(Long allocation) {
-			this.allocation = allocation;
-			this.set = allocation;
-			this.parent = null;
-			this.draws = Map.of();
+	public record DescriptorWrite(int index, int binding, int type, long view, long sampler, int layout, GpuBufferSlice buffer) { }
+
+	public class Frame {
+		private final long set;
+		private final Long2ObjectMap<DescriptorWrite> pending = new Long2ObjectLinkedOpenHashMap<>();
+		private final Long2ObjectMap<DescriptorWrite> written = new Long2ObjectLinkedOpenHashMap<>();
+		private long submission = -1;
+
+		private Frame(long set) {
+			this.set = set;
 		}
 
-		private Snapshot(Snapshot parent, Map<SamplerHeapLayout.Slot, Entry> draws) {
-			this.parent = parent.retain();
-			this.allocation = parent.allocation;
-			this.set = parent.set;
-			this.draws = Map.copyOf(draws);
+		private void begin(long submission) {
+			if (this.submission == submission) return;
+			this.submission = submission;
+			this.pending.clear();
+			for (int i = 0; i < buffers.size(); i++) {
+				this.writeBuffer(i, buffers.get(i).get());
+			}
 		}
 
-		public Snapshot withDraws(Map<SamplerHeapLayout.Slot, Entry> draws) {
-			for (var entry : draws.entrySet()) {
-				if (!VulkanSamplerHeap.this.layout.isDraw(entry.getKey()) || entry.getKey().type()
-					.texelBuffer() != (entry.getValue() instanceof TexelBuffer)) {
-					throw new IllegalArgumentException("invalid per-draw sampler: " + entry.getKey());
+		public void writeBuffer(int index, GpuBufferSlice slice) {
+			this.write(new DescriptorWrite(index, VulkanHeapLayout.BUFFERS_BINDING, VK10.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				0, 0, 0, slice));
+		}
+
+		private void writeImage(int index, ImageSampler sampled) {
+			this.write(new DescriptorWrite(index, VulkanHeapLayout.IMAGES_BINDING, VK10.VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+				sampled.imageView(), 0, sampled.imageLayout(), null));
+		}
+
+		private void writeSampler(int index, long sampler) {
+			this.write(new DescriptorWrite(index, VulkanHeapLayout.SAMPLERS_BINDING, VK10.VK_DESCRIPTOR_TYPE_SAMPLER,
+				0, sampler, 0, null));
+		}
+
+		private void write(DescriptorWrite write) {
+			long slot = (long) write.binding() << 32 | Integer.toUnsignedLong(write.index());
+			if (write.equals(this.written.get(slot))) {
+				this.pending.remove(slot);
+			} else {
+				this.pending.put(slot, write);
+			}
+		}
+
+		public void flushDescriptors() {
+			if (this.pending.isEmpty()) return;
+			int count = this.pending.size();
+			int bufferCount = 0;
+			for (var entry : this.pending.values()) {
+				if (entry.buffer() != null) bufferCount++;
+			}
+			int imageCount = count - bufferCount;
+			int writeBytes = count * VkWriteDescriptorSet.SIZEOF;
+			int imageBytes = imageCount * VkDescriptorImageInfo.SIZEOF;
+			var allocation = MemoryUtil.memCalloc(writeBytes + imageBytes + bufferCount * VkDescriptorBufferInfo.SIZEOF);
+			try {
+				long address = MemoryUtil.memAddress(allocation);
+				var writes = VkWriteDescriptorSet.create(address, count);
+				var images = VkDescriptorImageInfo.create(address + writeBytes, imageCount);
+				var buffers = VkDescriptorBufferInfo.create(address + writeBytes + imageBytes, bufferCount);
+				int i = 0;
+				int imageIndex = 0;
+				int bufferIndex = 0;
+				for (var entry : this.pending.values()) {
+					var write = writes.get(i).sType$Default().dstSet(this.set).dstBinding(entry.binding())
+						.dstArrayElement(entry.index()).descriptorType(entry.type()).descriptorCount(1);
+					if (entry.buffer() != null) {
+						var slice = entry.buffer();
+						buffers.get(bufferIndex).buffer(((VulkanGpuBuffer) slice.buffer()).vkBuffer()).offset(slice.offset()).range(slice.length());
+						buffers.position(bufferIndex).limit(bufferIndex + 1);
+						write.pBufferInfo(buffers);
+						buffers.position(0).limit(buffers.capacity());
+						bufferIndex++;
+					} else {
+						images.get(imageIndex).imageView(entry.view()).sampler(entry.sampler()).imageLayout(entry.layout());
+						images.position(imageIndex).limit(imageIndex + 1);
+						write.pImageInfo(images);
+						images.position(0).limit(images.capacity());
+						imageIndex++;
+					}
+					i++;
 				}
-			}
-
-			return draws.isEmpty() ? this.retain() : new Snapshot(this, draws);
-		}
-
-		public Snapshot retain() {
-			if (this.set == 0) {
-				throw new IllegalStateException("retired frame heap");
-			}
-
-			this.references++;
-
-			return this;
-		}
-
-		public SamplerHeapLayout layout() {
-			return VulkanSamplerHeap.this.layout;
-		}
-
-		public void bind(VkCommandBuffer commandBuffer, long pipelineLayout, int bindPoint) {
-			this.bind(commandBuffer, pipelineLayout, bindPoint, null);
-		}
-
-		public void bind(VkCommandBuffer commandBuffer, long pipelineLayout, int bindPoint, VulkanBindingState state) {
-			if (this.set == 0) {
-				throw new IllegalStateException("sampler heap generation is retired");
-			}
-
-			if (commandBuffer.getDevice() != VulkanSamplerHeap.this.device) {
-				throw new IllegalArgumentException("command buffer belongs to another device");
-			}
-
-			try (var stack = MemoryStack.stackPush()) {
-				if (state == null || state.descriptor(pipelineLayout, SamplerHeapLayout.DESCRIPTOR_SET, this.set, null)) {
-					VK10.vkCmdBindDescriptorSets(commandBuffer, bindPoint, pipelineLayout, SamplerHeapLayout.DESCRIPTOR_SET,
-						stack.longs(this.set), null);
-				}
-				if (!VulkanSamplerHeap.this.layout.drawHeaps().isEmpty() && (state == null || state.draws(pipelineLayout, this.draws))) {
-					var writes = VulkanSamplerHeap.this.writeDescriptors(stack, VulkanSamplerHeap.this.layout.drawHeaps(), this.draws);
-					KHRPushDescriptor.vkCmdPushDescriptorSetKHR(commandBuffer, bindPoint, pipelineLayout,
-						SamplerHeapLayout.DRAW_DESCRIPTOR_SET, writes);
-				}
+				VK10.vkUpdateDescriptorSets(device, writes, null);
+				this.written.putAll(this.pending);
+				this.pending.clear();
+			} finally {
+				MemoryUtil.memFree(allocation);
 			}
 		}
 
-		@Override
-		public void close() {
-			if (this.set == 0) {
-				return;
-			}
-
-			if (--this.references != 0) {
-				return;
-			}
-
-			if (this.parent != null) {
-				this.parent.close();
-				this.set = 0;
-				return;
-			}
-
-			VulkanSamplerHeap.this.available.addLast(this.allocation);
-			this.set = 0;
-			VulkanSamplerHeap.this.liveSnapshots--;
-		}
 	}
 }

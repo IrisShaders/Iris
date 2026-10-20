@@ -5,32 +5,21 @@ import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.seibel.distanthorizons.api.DhApi;
-import com.seibel.distanthorizons.api.interfaces.render.IDhApiCustomRenderRegister;
-import com.seibel.distanthorizons.api.interfaces.render.renderDef.objects.IDhApiGenericObjectVertexBufferContainer;
+import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderableBoxGroup;
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.objects.IDhApiTerrainBufferContainer;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeBufferRenderEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericObjectRenderEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericRenderCleanupEvent;
-import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericRenderSetupEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderPassEvent;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam;
 import com.seibel.distanthorizons.api.objects.math.DhApiVec3f;
 import com.seibel.distanthorizons.api.objects.util.IDhApiReadOnlyList;
-import com.seibel.distanthorizons.common.render.blaze.wrappers.texture.BlazeBlockTextureAtlas;
-import com.seibel.distanthorizons.core.dataObjects.render.bufferBuilding.LodBufferContainer;
-import com.seibel.distanthorizons.core.render.renderer.RenderableBoxGroup;
 import com.seibel.distanthorizons.coreapi.DependencyInjection.ApiEventInjector;
 import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.helpers.MatrixUtils;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.shaderpack.properties.CloudSetting;
-import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.Minecraft;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -40,13 +29,7 @@ public class DHCompatInternal implements AutoCloseable {
 	private final IrisRenderingPipeline pipeline;
 	private final List<IrisDhProgram> programs = new ArrayList<>();
 	private final Vector3f modelOffset = new Vector3f();
-	private final Matrix4f modelView = new Matrix4f();
-	private final Matrix4f modelViewInverse = new Matrix4f();
-	private final Matrix4f projection = new Matrix4f();
-	private final Matrix4f projectionInverse = new Matrix4f();
-	private final Matrix3f normalMatrix = new Matrix3f();
 	private final DhApiBeforeBufferRenderEvent.EventParam bufferEvent = new DhApiBeforeBufferRenderEvent.EventParam();
-	private final DhApiBeforeGenericObjectRenderEvent.EventParam genericEvent = new DhApiBeforeGenericObjectRenderEvent.EventParam();
 	private IrisDhProgram terrain;
 	private IrisDhProgram water;
 	private IrisDhProgram generic;
@@ -56,7 +39,6 @@ public class DHCompatInternal implements AutoCloseable {
 	private GpuTexture opaqueDepth;
 	private GpuTextureView depthView;
 	private GpuTextureView opaqueDepthView;
-	private float clipDistance;
 	private int skyLight;
 	private int blockLight;
 	private boolean closed;
@@ -105,8 +87,8 @@ public class DHCompatInternal implements AutoCloseable {
 	}
 
 	public static float getNearPlane() {
-		return DhApi.Delayed.renderProxy == null ? 0.01f : Math.max(0.01f,
-			DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getRealTickDelta()));
+		return DhApi.Delayed.renderProxy == null ? 0.01f
+			: DhApi.Delayed.renderProxy.getNearClipPlaneDistanceInBlocks(CapturedRenderingState.INSTANCE.getRealTickDelta());
 	}
 
 	private IrisDhProgram createProgram(ProgramSource source, boolean generic, boolean shadow, boolean translucent) {
@@ -127,19 +109,11 @@ public class DHCompatInternal implements AutoCloseable {
 		return this.shadow != null;
 	}
 
-	public void setup(DhApiRenderParam params) {
+	public void setup() {
 		if (this.incompatiblePack()) {
 			return;
 		}
 		this.resizeDepth();
-		boolean shadow = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
-		this.modelView.set(shadow ? ShadowRenderer.MODELVIEW : CapturedRenderingState.INSTANCE.getGbufferModelView());
-		this.modelView.invert(this.modelViewInverse);
-		this.modelView.normal(this.normalMatrix);
-		this.projection.set(shadow ? MatrixUtils.toMinusOneToOne(ShadowRenderer.PROJECTION) : DHCompat.getProjection(params.nearClipPlane,
-			params.farClipPlane));
-		this.projection.invert(this.projectionInverse);
-		this.clipDistance = shadow ? 0 : params.nearClipPlane;
 	}
 
 	private void resizeDepth() {
@@ -168,7 +142,6 @@ public class DHCompatInternal implements AutoCloseable {
 		}
 		var encoder = RenderSystem.getDevice().createCommandEncoder();
 		encoder.clearDepthTexture(this.depth, 0);
-		encoder.clearDepthTexture(this.opaqueDepth, 0);
 	}
 
 	public void renderTerrain(DhApiRenderParam params, boolean opaque, IDhApiReadOnlyList<? extends IDhApiTerrainBufferContainer> buffers) {
@@ -178,14 +151,13 @@ public class DHCompatInternal implements AutoCloseable {
 			return;
 		}
 		if (!opaque && !shadow) {
-			Iris.getRenderBackend().commands()
-				.copyTexture(this.depth, this.opaqueDepth, this.depthView.getWidth(0), this.depthView.getHeight(0));
+			RenderSystem.getDevice().createCommandEncoder().copyTextureToTexture(this.depth, this.opaqueDepth, 0, 0, 0, 0, 0,
+				this.depthView.getWidth(0), this.depthView.getHeight(0));
 		}
-		BlazeBlockTextureAtlas.INSTANCE.uploadPendingTiles();
 		ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeRenderPassEvent.class, params);
 		// Grow shared index storage before retaining buffers for the batch.
 		for (int i = 0; i < buffers.size(); i++) {
-			var container = (LodBufferContainer) buffers.get(i);
+			var container = buffers.get(i);
 			var vertices = opaque ? container.getVboOpaqueWrappers() : container.getVboTransparentWrappers();
 			for (var wrapper : vertices) {
 				var buffer = (IrisDhVertexBuffer) wrapper;
@@ -197,10 +169,10 @@ public class DHCompatInternal implements AutoCloseable {
 		var camera = Minecraft.getInstance().gameRenderer.mainCamera().position();
 		try (var batch = program.beginBatch()) {
 			for (int i = 0; i < buffers.size(); i++) {
-				var container = (LodBufferContainer) buffers.get(i);
-				var origin = container.minCornerBlockPos;
-				this.modelOffset.set((float) (origin.getX() - camera.x), (float) (origin.getY() - camera.y),
-					(float) (origin.getZ() - camera.z));
+				var container = buffers.get(i);
+				var origin = container.getMinCornerBlockPos();
+				this.modelOffset.set((float) (origin.x - camera.x), (float) (origin.y - camera.y),
+					(float) (origin.z - camera.z));
 				this.bufferEvent.update(params, new DhApiVec3f(this.modelOffset.x, this.modelOffset.y, this.modelOffset.z));
 				ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeBufferRenderEvent.class, this.bufferEvent);
 				var vertices = opaque ? container.getVboOpaqueWrappers() : container.getVboTransparentWrappers();
@@ -213,47 +185,27 @@ public class DHCompatInternal implements AutoCloseable {
 			}
 		}
 		if (opaque && !shadow) {
-			Iris.getRenderBackend().commands()
-				.copyTexture(this.depth, this.opaqueDepth, this.depthView.getWidth(0), this.depthView.getHeight(0));
+			RenderSystem.getDevice().createCommandEncoder().copyTextureToTexture(this.depth, this.opaqueDepth, 0, 0, 0, 0, 0,
+				this.depthView.getWidth(0), this.depthView.getHeight(0));
 		}
 	}
 
-	public void renderGeneric(DhApiRenderParam params, IDhApiCustomRenderRegister register, boolean ssao) {
+	public void renderGeneric(IDhApiRenderableBoxGroup group) {
 		boolean shadow = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 		var program = shadow ? this.genericShadow : this.generic;
-		if (program == null) {
+		if (program == null || this.avoidRenderingClouds() && group.getResourceLocationPath().equalsIgnoreCase("Clouds")) {
 			return;
 		}
-		ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeGenericRenderSetupEvent.class, params);
-		var camera = Minecraft.getInstance().gameRenderer.mainCamera().position();
-		for (var group : register.getRenderBoxList()) {
-			if (group == null || group.isSsaoEnabled() != ssao) {
-				continue;
-			}
-			var boxGroup = (RenderableBoxGroup) group;
-			boxGroup.preRender(params);
-			if (!group.isActive() || this.avoidRenderingClouds() && group.getResourceLocationPath().equalsIgnoreCase("Clouds")) {
-				continue;
-			}
-			this.genericEvent.update(params, group);
-			if (ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeGenericObjectRenderEvent.class, this.genericEvent)) {
-				continue;
-			}
-			boxGroup.tryUpdateInstancedDataAsync(params);
-			if (boxGroup.vertexBufferContainer.getState() != IDhApiGenericObjectVertexBufferContainer.EState.RENDER) {
-				continue;
-			}
-			var buffer = (IrisDhGenericBuffer) boxGroup.vertexBufferContainer;
-			var origin = group.getOriginBlockPos();
-			this.modelOffset.set((float) (origin.x - camera.x), (float) (origin.y - camera.y), (float) (origin.z - camera.z));
-			this.skyLight = group.getSkyLight();
-			this.blockLight = group.getBlockLight();
-			if (buffer.getVertexCount() != 0) {
-				program.draw(buffer.getVertexBuffer(), buffer.getIndexBuffer(), buffer.getIndexType(), buffer.getIndexCount());
-			}
-			boxGroup.postRender(params);
+		var buffer = (IrisDhGenericBuffer) group.getRenderVertexBufferContainer();
+		if (buffer.getVertexCount() == 0) {
+			return;
 		}
-		ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeGenericRenderCleanupEvent.class, params);
+		var camera = Minecraft.getInstance().gameRenderer.mainCamera().position();
+		var origin = group.getOriginBlockPos();
+		this.modelOffset.set((float) (origin.x - camera.x), (float) (origin.y - camera.y), (float) (origin.z - camera.z));
+		this.skyLight = group.getSkyLight();
+		this.blockLight = group.getBlockLight();
+		program.draw(buffer.getVertexBuffer(), buffer.getIndexBuffer(), buffer.getIndexType(), buffer.getIndexCount());
 	}
 
 	private boolean avoidRenderingClouds() {
@@ -265,36 +217,12 @@ public class DHCompatInternal implements AutoCloseable {
 	}
 
 	public GpuTextureView getBlockAtlas() {
-		var atlas = BlazeBlockTextureAtlas.INSTANCE.getTextureWrapper().getTextureView();
+		var atlas = IrisBlockTextureAtlas.INSTANCE.getView();
 		return atlas == null ? this.pipeline.getWhitePixel().getTextureView() : atlas;
 	}
 
 	public Vector3f getModelOffset() {
 		return this.modelOffset;
-	}
-
-	public Matrix4f getModelView() {
-		return this.modelView;
-	}
-
-	public Matrix4f getModelViewInverse() {
-		return this.modelViewInverse;
-	}
-
-	public Matrix4f getProjection() {
-		return this.projection;
-	}
-
-	public Matrix4f getProjectionInverse() {
-		return this.projectionInverse;
-	}
-
-	public Matrix3f getNormalMatrix() {
-		return this.normalMatrix;
-	}
-
-	public float getClipDistance() {
-		return this.clipDistance;
 	}
 
 	public int getSkyLight() {

@@ -24,9 +24,6 @@ public final class GuiUtil {
 	public static final Identifier IRIS_WIDGETS_TEX = Identifier.fromNamespaceAndPath("iris", "textures/gui/widgets.png");
 	private static final Component ELLIPSIS = Component.literal("...");
 
-	private GuiUtil() {
-	}
-
 	private static Minecraft client() {
 		return Minecraft.getInstance();
 	}

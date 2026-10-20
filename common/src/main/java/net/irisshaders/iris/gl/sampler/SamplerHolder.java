@@ -4,24 +4,13 @@ import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.irisshaders.iris.backend.IrisImage;
-import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
-import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.samplers.SamplerHeapLayout;
 
 import java.util.Objects;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public interface SamplerHolder {
-	default boolean addTextureSampler(TextureBinding binding, boolean defaultSampler, String... names) {
-		for (String name : names) {
-			if (this.hasSampler(name)) {
-				throw new UnsupportedOperationException("native texture registration is unavailable: " + name);
-			}
-		}
-
-		return false;
-	}
+	boolean addTextureSampler(TextureBinding binding, boolean defaultSampler, String... names);
 
 	default boolean addDrawTextureSampler(TextureBinding binding, boolean defaultSampler, String... names) {
 		return this.addTextureSampler(binding, defaultSampler, names);
@@ -30,33 +19,6 @@ public interface SamplerHolder {
 	void addExternalSampler(int textureUnit, String... names);
 
 	boolean hasSampler(String name);
-
-	/**
-	 * Like addDynamicSampler, but also ensures that any unrecognized / unbound samplers sample from this
-	 * sampler.
-	 * <p>
-	 * Throws an exception if texture unit 0 is already allocated or reserved in some way. Do not call this
-	 * function after calls to addDynamicSampler, it must be called before any calls to addDynamicSampler.
-	 */
-	default boolean addDefaultSampler(IntSupplier sampler, String... names) {
-		return addDefaultSampler(TextureType.TEXTURE_2D, sampler, null, null, names);
-	}
-
-	boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler,
-		String... names);
-
-	default boolean addDynamicSampler(IntSupplier texture, GlSampler sampler, String... names) {
-		return addDynamicSampler(TextureType.TEXTURE_2D, texture, () -> sampler, names);
-	}
-
-	boolean addDynamicSampler(TextureType type, IntSupplier texture, Supplier<GlSampler> sampler, String... names);
-
-	default boolean addDynamicSampler(IntSupplier texture, GlSampler sampler, ValueUpdateNotifier notifier, String... names) {
-		return addDynamicSampler(TextureType.TEXTURE_2D, texture, notifier, () -> sampler, names);
-	}
-
-	boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler,
-		String... names);
 
 	record TextureBinding(Object key, Supplier<GpuTextureView> texture, Supplier<GlSampler> sampler, Supplier<GpuSampler> nativeSampler, Supplier<IrisImage> image) {
 		public TextureBinding(Object key, Supplier<GpuTextureView> texture, Supplier<GlSampler> sampler,

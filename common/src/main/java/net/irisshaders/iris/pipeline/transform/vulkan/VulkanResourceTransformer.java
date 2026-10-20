@@ -12,8 +12,8 @@ import io.github.douira.glsl_transformer.ast.node.external_declaration.FunctionD
 import io.github.douira.glsl_transformer.ast.node.type.initializer.ExpressionInitializer;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinFixedTypeSpecifier;
@@ -26,12 +26,18 @@ import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.query.Root;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
+import net.irisshaders.iris.pipeline.transform.Glsl;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
-import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
+import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout.Access;
 import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout.Descriptor;
 import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout.Kind;
 import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout.Uniform;
+import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import net.irisshaders.iris.pipeline.transform.Std140Type;
+import net.irisshaders.iris.pipeline.transform.UniformPlan;
+import net.irisshaders.iris.pipeline.transform.VulkanPushConstants;
+import net.irisshaders.iris.samplers.SamplerHeapLayout;
+import net.irisshaders.iris.samplers.VulkanHeapLayout;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,51 +55,7 @@ import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public final class VulkanResourceTransformer {
-	private VulkanResourceTransformer() {
-	}
-
-	private static void resolveStructDefaults(ASTParser parser, TranslationUnit tree) {
-		var root = tree.getRoot();
-		root.indexBuildSession(() -> {
-			for (var external : List.copyOf(tree.getChildren())) {
-				if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) || !VulkanGlsl.hasStorage(
-					variables.getType().getTypeQualifier(), StorageType.UNIFORM)) {
-					continue;
-				}
-
-				var type = variables.getType().getTypeSpecifier();
-
-				if (!(type instanceof StructSpecifier || type instanceof TypeReference)) {
-					continue;
-				}
-
-				if (type instanceof StructSpecifier struct && struct.getName() == null) {
-					String name = "iris_uniformStruct";
-
-					for (int suffix = 0; root.identifierIndex.has(name); suffix++) {
-						name = "iris_uniformStruct" + suffix;
-					}
-
-					struct.setName(new Identifier(name));
-				}
-
-				for (var member : variables.getMembers()) {
-					if (member.getInitializer() == null) {
-						member.setInitializer(
-							new ExpressionInitializer(parser.parseExpression(root, zeroValue(type, member.getArraySpecifier(), root))));
-					}
-				}
-
-				var qualifier = variables.getType().getTypeQualifier();
-				qualifier.getParts()
-					.removeIf(part -> part instanceof StorageQualifier storage && storage.storageType == StorageType.UNIFORM);
-				qualifier.getParts().add(new StorageQualifier(StorageType.CONST));
-				VulkanGlsl.removeLayout(qualifier, "location", "set", "binding", "offset");
-			}
-		});
-	}
-
+public class VulkanResourceTransformer {
 	private static String zeroValue(TypeSpecifier type, ArraySpecifier array, Root root) {
 		String name;
 		String value;
@@ -128,7 +90,7 @@ public final class VulkanResourceTransformer {
 			value = name + "(" + String.join(",", members) + ")";
 		}
 
-		var dimensions = VulkanGlsl.dimensions(root, array, type.getArraySpecifier());
+		var dimensions = Glsl.dimensions(root, array, type.getArraySpecifier());
 		String suffix = "";
 
 		for (int i = dimensions.size() - 1; i >= 0; i--) {
@@ -140,65 +102,73 @@ public final class VulkanResourceTransformer {
 		return value;
 	}
 
-	private static void resolveDefaults(TranslationUnit tree, Predicate<String> registered) {
+	private static void resolveDefaults(ASTParser parser, TranslationUnit tree, Predicate<String> registered, boolean resolveUnset) {
 		var root = tree.getRoot();
 		root.indexBuildSession(() -> {
 			for (var external : List.copyOf(tree.getChildren())) {
-				if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) || !VulkanGlsl.hasStorage(
-					variables.getType().getTypeQualifier(), StorageType.UNIFORM) || variables.getMembers().stream()
-					.noneMatch(member -> member.getInitializer() != null)) {
+				if (!(external instanceof DeclarationExternalDeclaration declaration)
+					|| !(declaration.getDeclaration() instanceof TypeAndInitDeclaration variables)
+					|| !Glsl.hasStorage(variables.getType().getTypeQualifier(), StorageType.UNIFORM)) {
+					continue;
+				}
+
+				var specifier = variables.getType().getTypeSpecifier();
+				if (specifier instanceof StructSpecifier || specifier instanceof TypeReference) {
+					if (specifier instanceof StructSpecifier struct && struct.getName() == null) {
+						struct.setName(new Identifier(Glsl.uniqueName(List.of(tree), "iris_uniformStruct")));
+					}
+					for (var member : variables.getMembers()) {
+						if (member.getInitializer() == null) {
+							member.setInitializer(new ExpressionInitializer(parser.parseExpression(root,
+								zeroValue(specifier, member.getArraySpecifier(), root))));
+						}
+					}
+					makeConstant(variables.getType().getTypeQualifier());
+					continue;
+				}
+				if (!(specifier instanceof BuiltinNumericTypeSpecifier)
+					|| variables.getMembers().stream().noneMatch(member -> member.getInitializer() != null
+						|| resolveUnset && !registered.test(member.getName().getName()))) {
 					continue;
 				}
 
 				for (var member : variables.getMembers()) {
 					var copy = member.cloneInto(root);
 					var type = variables.getType().cloneInto(root);
-
-					if (copy.getInitializer() != null) {
-						if (registered.test(copy.getName().getName())) {
-							copy.getInitializer().detachAndDelete();
-						} else {
-							var qualifier = type.getTypeQualifier();
-
-							for (var part : List.copyOf(qualifier.getParts())) {
-								if (part instanceof StorageQualifier storage && storage.storageType == StorageType.UNIFORM) {
-									part.detachAndDelete();
-								}
-							}
-
-							qualifier.getParts().add(new StorageQualifier(StorageType.CONST));
-							VulkanGlsl.removeLayout(qualifier, "location", "set", "binding", "offset");
+					if (registered.test(copy.getName().getName())) {
+						if (copy.getInitializer() != null) copy.getInitializer().detachAndDelete();
+					} else if (copy.getInitializer() != null || resolveUnset) {
+						if (copy.getInitializer() == null) {
+							copy.setInitializer(new ExpressionInitializer(parser.parseExpression(root,
+								zeroValue(specifier, copy.getArraySpecifier(), root))));
 						}
+						makeConstant(type.getTypeQualifier());
 					}
-
 					tree.getChildren().add(tree.getChildren().indexOf(declaration),
 						new DeclarationExternalDeclaration(new TypeAndInitDeclaration(type, Stream.of(copy))));
 				}
-
 				declaration.detachAndDelete();
 			}
 		});
 	}
 
+	private static void makeConstant(TypeQualifier qualifier) {
+		for (var part : List.copyOf(qualifier.getParts())) {
+			if (part instanceof StorageQualifier) part.detachAndDelete();
+		}
+		qualifier.getParts().add(new StorageQualifier(StorageType.CONST));
+		Glsl.removeLayout(qualifier, "location", "set", "binding", "offset");
+	}
+
 	public static ShaderResourceLayout transform(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees) {
-		return transform(parser, trees, name -> false);
+		return transform(parser, trees, name -> false, null, true);
 	}
 
 	public static ShaderResourceLayout transform(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees,
-		Predicate<String> registered) {
-		return transform(parser, trees, registered, null, name -> true);
-	}
-
-	public static ShaderResourceLayout transform(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees,
-		Predicate<String> registered, ShaderResourceLayout frameLayout, Predicate<String> dynamic) {
-		return transform(parser, trees, registered, frameLayout, dynamic, true);
-	}
-
-	public static ShaderResourceLayout transform(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees,
-		Predicate<String> registered, ShaderResourceLayout frameLayout, Predicate<String> dynamic, boolean vulkan) {
+		Predicate<String> registered, UniformPlan uniformPlan, boolean vulkan) {
+		var frameLayout = uniformPlan == null ? null : uniformPlan.frame();
 		trees.values().stream().filter(Objects::nonNull).forEach(tree -> {
-			resolveStructDefaults(parser, tree);
-			resolveDefaults(tree, registered);
+			resolveDefaults(parser, tree, registered, uniformPlan != null);
 		});
 
 		Map<String, Std140Type> types = new TreeMap<>();
@@ -223,7 +193,7 @@ public final class VulkanResourceTransformer {
 					if (declaration.getDeclaration() instanceof TypeAndInitDeclaration variables) {
 						TypeQualifier qualifier = variables.getType().getTypeQualifier();
 
-						if (!VulkanGlsl.hasStorage(qualifier, StorageType.UNIFORM)) {
+						if (!Glsl.hasStorage(qualifier, StorageType.UNIFORM)) {
 							continue;
 						}
 
@@ -242,7 +212,7 @@ public final class VulkanResourceTransformer {
 								var newDeclaration = new DeclarationExternalDeclaration(split);
 								tree.getChildren().add(tree.getChildren().indexOf(declaration), newDeclaration);
 
-								var dimensions = VulkanGlsl.dimensions(root, member.getArraySpecifier(), type.getArraySpecifier());
+								var dimensions = Glsl.dimensions(root, member.getArraySpecifier(), type.getArraySpecifier());
 								int count = dimensions.stream().reduce(1, Math::multiplyExact);
 								String signature = opaque.type + dimensions.toString();
 								addResource(resources, member.getName().getName(), kind, opaque.type.name(), count, signature,
@@ -253,15 +223,12 @@ public final class VulkanResourceTransformer {
 						} else if (type instanceof BuiltinNumericTypeSpecifier numeric) {
 							for (var member : List.copyOf(variables.getMembers())) {
 								String name = member.getName().getName();
-								Std140Type uniformType = VulkanGlsl.uniformType(numeric, member, root);
+								Std140Type uniformType = Glsl.uniformType(numeric, member, root);
 								var shared = frameLayout == null ? null : frameLayout.uniforms().get(name);
 
-								if (shared != null && !dynamic.test(name) && !compatibleSharedType(uniformType, shared.type())) {
+								if (shared != null && uniformPlan.isFrame(name) && !compatibleSharedType(uniformType, shared.type())) {
 									var constantType = variables.getType().cloneInto(root);
-									var constantQualifier = constantType.getTypeQualifier();
-									constantQualifier.getParts().removeIf(StorageQualifier.class::isInstance);
-									constantQualifier.getParts().add(new StorageQualifier(StorageType.CONST));
-									VulkanGlsl.removeLayout(constantQualifier, "location", "set", "binding", "offset");
+									makeConstant(constantType.getTypeQualifier());
 									var constant = member.cloneInto(root);
 									constant.setInitializer(
 										new ExpressionInitializer(parser.parseExpression(root, uniformType.zeroConstant())));
@@ -286,7 +253,7 @@ public final class VulkanResourceTransformer {
 						}
 					} else if (declaration.getDeclaration() instanceof InterfaceBlockDeclaration block) {
 						TypeQualifier qualifier = block.getTypeQualifier();
-						Kind kind = VulkanGlsl.hasStorage(qualifier, StorageType.BUFFER) ? Kind.STORAGE_BUFFER : VulkanGlsl.hasStorage(
+						Kind kind = Glsl.hasStorage(qualifier, StorageType.BUFFER) ? Kind.STORAGE_BUFFER : Glsl.hasStorage(
 							qualifier, StorageType.UNIFORM) ? Kind.UNIFORM_BUFFER : null;
 
 						if (kind == null) {
@@ -294,25 +261,16 @@ public final class VulkanResourceTransformer {
 						}
 
 						if (vulkan && block.getBlockName().getName().equals("iris_SodiumPushConstants")) {
-							VulkanGlsl.removeLayout(qualifier, "set", "binding");
+							Glsl.removeLayout(qualifier, "set", "binding");
 							qualifier.getParts().add(0,
 								new LayoutQualifier(Stream.of(new NamedLayoutQualifierPart(new Identifier("push_constant"), null))));
 							continue;
 						}
 
-						if (VulkanGlsl.layout(qualifier, "push_constant") != null) {
-							throw new IllegalArgumentException("shader pack push constants are not supported");
-						}
-
-						if (VulkanGlsl.layout(qualifier, "shared") != null || VulkanGlsl.layout(qualifier, "packed") != null) {
-							throw new IllegalArgumentException(
-								"Vulkan requires an explicit std140/std430 block layout: " + block.getBlockName().getName());
-						}
-
-						var dimensions = VulkanGlsl.dimensions(root, block.getArraySpecifier());
+						var dimensions = Glsl.dimensions(root, block.getArraySpecifier());
 						int count = dimensions.stream().reduce(1, Math::multiplyExact);
-						String signature = ASTPrinter.print(PrintType.COMPACT, block.getStructBody()) + dimensions + (VulkanGlsl.layout(
-							qualifier, "row_major") != null) + ":" + (VulkanGlsl.layout(qualifier, "std430") != null);
+						String signature = ASTPrinter.print(PrintType.COMPACT, block.getStructBody()) + dimensions + (Glsl.layout(
+							qualifier, "row_major") != null) + ":" + (Glsl.layout(qualifier, "std430") != null);
 						addResource(resources, block.getBlockName().getName(), kind, "block", count, signature, qualifier, entry.getKey(),
 							tree);
 					}
@@ -325,30 +283,45 @@ public final class VulkanResourceTransformer {
 		}
 
 		Map<String, Std140Type> frameTypes = new HashMap<>();
-
 		if (frameLayout != null) {
 			for (var entry : List.copyOf(types.entrySet())) {
-				var shared = frameLayout.uniforms().get(entry.getKey());
-
-				if (shared == null || dynamic.test(entry.getKey())) {
-					continue;
+				if (uniformPlan.isFrame(entry.getKey())) {
+					frameTypes.put(entry.getKey(), entry.getValue());
+					types.remove(entry.getKey());
 				}
-
-				var type = entry.getValue();
-
-				frameTypes.put(entry.getKey(), type);
-				types.remove(entry.getKey());
 			}
+		}
+
+		Map<String, Uniform> pushUniforms = new LinkedHashMap<>();
+		if (vulkan && uniformPlan != null) {
+			for (var entry : VulkanPushConstants.fixedUniforms(uniformPlan.profile()).entrySet()) {
+				var type = types.remove(entry.getKey());
+				if (type != null) {
+					if (!type.equals(entry.getValue().type())) {
+						throw new IllegalArgumentException("unexpected draw uniform type: " + entry.getKey());
+					}
+					pushUniforms.put(entry.getKey(), entry.getValue());
+				}
+			}
+			boolean nativePush = trees.values().stream().filter(Objects::nonNull).anyMatch(tree -> tree.getRoot().nodeIndex
+				.getStream(InterfaceBlockDeclaration.class).anyMatch(block -> block.getBlockName().getName().equals("iris_SodiumPushConstants")));
+			int end = nativePush || uniformPlan.profile() == UniformPlan.Profile.DH
+				? VulkanPushConstants.NATIVE_OFFSET + VulkanPushConstants.NATIVE_SIZE : VulkanPushConstants.UNIFORM_SIZE;
+			for (var entry : types.entrySet()) {
+				end = Std140Type.align(end, entry.getValue().std430Alignment());
+				pushUniforms.put(entry.getKey(), new Uniform(end, entry.getValue()));
+				end = Math.addExact(end, entry.getValue().std430Size());
+			}
+			if (end > VulkanPushConstants.MAX_SIZE) {
+				throw new IllegalArgumentException("draw uniforms exceed " + VulkanPushConstants.MAX_SIZE + " push-constant bytes: " + end);
+			}
+			types.clear();
 		}
 
 		StringBuilder frameBody = new StringBuilder();
 
 		if (frameLayout != null) {
 			frameLayout.uniforms().entrySet().stream().sorted(Comparator.comparingInt(e -> e.getValue().offset())).forEach(entry -> {
-				if (vulkan) {
-					frameBody.append("layout(offset = ").append(entry.getValue().offset()).append(") ");
-				}
-
 				frameBody.append(entry.getValue().type().declaration(entry.getKey()));
 			});
 		}
@@ -363,23 +336,19 @@ public final class VulkanResourceTransformer {
 			offset = Std140Type.align(offset, type.alignment());
 			alignment = Math.max(alignment, type.alignment());
 			uniforms.put(entry.getKey(), new Uniform(offset, type));
-			if (vulkan) {
-				body.append("layout(offset = ").append(offset).append(") ");
-			}
-
 			body.append(type.declaration(entry.getKey()));
 			offset = Math.addExact(offset, type.size());
 		}
 
 		List<Descriptor> descriptors = new ArrayList<>();
 
-		if (frameLayout != null) {
+		if (vulkan && frameLayout != null) {
 			descriptors.addAll(frameLayout.descriptors());
 		}
 
 		int binding = 0;
 
-		if (!uniforms.isEmpty()) {
+		if (vulkan && !uniforms.isEmpty()) {
 			if (resources.containsKey(ShaderResourceLayout.UNIFORM_BLOCK)) {
 				throw new IllegalArgumentException("reserved uniform block: " + ShaderResourceLayout.UNIFORM_BLOCK);
 			}
@@ -393,51 +362,32 @@ public final class VulkanResourceTransformer {
 			}
 
 			descriptors.add(
-				new Descriptor(ShaderResourceLayout.UNIFORM_BLOCK, Kind.UNIFORM_BUFFER, "block", 1, 0, binding++, null, stages));
+				new Descriptor(ShaderResourceLayout.UNIFORM_BLOCK, Kind.UNIFORM_BUFFER, "block", 1,
+					SamplerHeapLayout.DRAW_DESCRIPTOR_SET, VulkanHeapLayout.DRAW_BUFFER_BINDING + binding++, null, stages));
 		}
 
 		for (Resource resource : resources.values()) {
-			int assignedBinding = binding++;
+			boolean drawResource = vulkan && (resource.kind == Kind.UNIFORM_BUFFER || resource.kind == Kind.IMAGE);
+			int assignedSet = drawResource ? SamplerHeapLayout.DRAW_DESCRIPTOR_SET : 0;
+			int assignedBinding = binding++ + (drawResource ? VulkanHeapLayout.DRAW_BUFFER_BINDING : 0);
 
 			for (var qualifier : resource.qualifiers) {
 				qualifier.getRoot().indexBuildSession(() -> {
-					VulkanGlsl.removeLayout(qualifier, "location", "set", "binding");
-					VulkanGlsl.setLayout(qualifier, "set", 0);
-					VulkanGlsl.setLayout(qualifier, "binding", assignedBinding);
+					Glsl.removeLayout(qualifier, "location", "set", "binding");
+					if (vulkan) {
+						Glsl.setLayout(qualifier, "set", assignedSet);
+						Glsl.setLayout(qualifier, "binding", assignedBinding);
+					}
 				});
 			}
 
 			descriptors.add(
-				new Descriptor(resource.name, resource.kind, resource.type, resource.count, 0, assignedBinding, resource.originalBinding,
-					resource.stages));
+				new Descriptor(resource.name, resource.kind, resource.type, resource.count, assignedSet, assignedBinding, resource.originalBinding,
+					resource.stages, resource.access));
 		}
 
-		String instanceName = "iris_uniformData";
-
-		for (int suffix = 0; ; suffix++) {
-			String candidate = instanceName;
-
-			if (trees.values().stream().filter(Objects::nonNull).noneMatch(tree -> tree.getRoot().identifierIndex.has(candidate))) {
-				break;
-			}
-
-			instanceName = "iris_uniformData" + suffix;
-		}
-
-		final String uniformInstance = instanceName;
-		String frameName = "iris_frameData";
-
-		for (int suffix = 0; ; suffix++) {
-			String candidate = frameName;
-
-			if (trees.values().stream().filter(Objects::nonNull).noneMatch(tree -> tree.getRoot().identifierIndex.has(candidate))) {
-				break;
-			}
-
-			frameName = "iris_frameData" + suffix;
-		}
-
-		final String frameInstance = frameName;
+		String uniformInstance = Glsl.uniqueName(trees.values(), "iris_uniformData");
+		String frameInstance = Glsl.uniqueName(trees.values(), "iris_frameData");
 
 		for (TranslationUnit tree : trees.values()) {
 			if (tree == null) {
@@ -445,14 +395,15 @@ public final class VulkanResourceTransformer {
 			}
 
 			tree.getRoot().indexBuildSession(() -> {
-				for (String name : stageUniforms.getOrDefault(tree, Set.of())) {
+				for (String name : vulkan ? stageUniforms.getOrDefault(tree, Set.of()) : Set.<String>of()) {
 					var references = tree.getRoot().identifierIndex.get(name).stream()
 						.filter(id -> id.getParent() instanceof ReferenceExpression).map(id -> (ReferenceExpression) id.getParent())
 						.toList();
 
 					for (var reference : references) {
-						if (!VulkanGlsl.isShadowed(reference, name)) {
-							String expression = (frameTypes.containsKey(name) ? frameInstance : uniformInstance) + "." + name;
+						if (!Glsl.isShadowed(reference, name)) {
+							String expression = pushUniforms.containsKey(name) ? "iris_draw_" + name
+								: (frameTypes.containsKey(name) ? frameInstance : uniformInstance) + "." + name;
 
 							if (frameTypes.containsKey(name) && !frameTypes.get(name).equals(frameLayout.uniforms().get(name).type())) {
 								expression = frameTypes.get(name).glsl() + "(" + expression + ")";
@@ -464,19 +415,21 @@ public final class VulkanResourceTransformer {
 				}
 
 				for (var declaration : looseUniforms) {
-					if (declaration.getRoot() == tree.getRoot()) {
+					if (vulkan && declaration.getRoot() == tree.getRoot()) {
 						declaration.detachAndDelete();
 					}
 				}
 
-				if (!uniforms.isEmpty()) {
+				if (vulkan && !uniforms.isEmpty()) {
 					tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_DECLARATIONS,
-						"layout(std140, column_major, set = 0, binding = 0) uniform " + ShaderResourceLayout.UNIFORM_BLOCK + " {" + body + "} " + uniformInstance + ";");
+						"layout(std140, column_major, set = " + SamplerHeapLayout.DRAW_DESCRIPTOR_SET + ", binding = "
+							+ VulkanHeapLayout.DRAW_BUFFER_BINDING + ") uniform " + ShaderResourceLayout.UNIFORM_BLOCK + " {" + body + "} " + uniformInstance + ";");
 				}
 
-				if (frameLayout != null) {
+				if (vulkan && frameLayout != null) {
 					tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_DECLARATIONS,
-						"layout(std140, column_major, set = 2, binding = 0) uniform " + ShaderResourceLayout.FRAME_BLOCK + " {" + frameBody + "} " + frameInstance + ";");
+						"layout(std140, column_major, set = " + VulkanHeapLayout.DESCRIPTOR_SET + ", binding = "
+							+ VulkanHeapLayout.FRAME_UNIFORMS_BINDING + ") uniform " + ShaderResourceLayout.FRAME_BLOCK + " {" + frameBody + "} " + frameInstance + ";");
 				}
 
 				Version minimumVersion = vulkan ? Version.GLSL45 : Version.GLSL33;
@@ -499,7 +452,35 @@ public final class VulkanResourceTransformer {
 			});
 		}
 
-		return new ShaderResourceLayout(Std140Type.align(offset, alignment), uniforms, descriptors);
+		var layout = new ShaderResourceLayout(Std140Type.align(offset, alignment), uniforms, descriptors, pushUniforms);
+		if (vulkan && uniformPlan != null) {
+			injectPushConstants(parser, trees, layout, uniformPlan);
+		}
+		return layout;
+	}
+
+	private static void injectPushConstants(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees,
+		ShaderResourceLayout layout, UniformPlan uniformPlan) {
+		var nativeBlock = trees.values().stream().filter(Objects::nonNull).flatMap(tree -> tree.getRoot().nodeIndex
+			.getStream(InterfaceBlockDeclaration.class)).filter(block -> Glsl.layout(block.getTypeQualifier(), "push_constant") != null)
+			.findFirst().orElse(null);
+		String nativeMembers = nativeBlock == null ? null : nativeBlock.getStructBody().getMembers().stream()
+			.map(member -> ASTPrinter.print(PrintType.COMPACT, member)).collect(java.util.stream.Collectors.joining());
+		String pushMembers = VulkanPushConstants.members(layout, uniformPlan.profile(), nativeMembers);
+		for (var tree : trees.values()) {
+			if (tree == null) continue;
+			var root = tree.getRoot();
+			root.indexBuildSession(() -> {
+				var stageNativeBlock = root.nodeIndex.getStream(InterfaceBlockDeclaration.class)
+					.filter(block -> Glsl.layout(block.getTypeQualifier(), "push_constant") != null).findFirst().orElse(null);
+				var draw = (DeclarationExternalDeclaration) parser.parseExternalDeclaration(root,
+					"layout(push_constant, std430) uniform iris_Draw {" + pushMembers + "};");
+				if (stageNativeBlock != null) {
+					stageNativeBlock.getParent().detachAndDelete();
+				}
+				tree.injectNode(ASTInjectionPoint.BEFORE_DECLARATIONS, draw);
+			});
+		}
 	}
 
 	private static boolean compatibleSharedType(Std140Type type, Std140Type shared) {
@@ -509,9 +490,11 @@ public final class VulkanResourceTransformer {
 
 	private static void addResource(Map<String, Resource> resources, String name, Kind kind, String type, int count, String signature,
 		TypeQualifier qualifier, PatchShaderType stage, TranslationUnit tree) {
-		var binding = VulkanGlsl.layout(qualifier, "binding");
-		Integer original = binding == null ? null : VulkanGlsl.integer(binding.getExpression(), tree.getRoot());
-		Resource resource = resources.computeIfAbsent(name, ignored -> new Resource(name, kind, type, count, signature));
+		var binding = Glsl.layout(qualifier, "binding");
+		Integer original = binding == null ? null : Glsl.integer(binding.getExpression(), tree.getRoot());
+		Access access = kind != Kind.IMAGE && kind != Kind.STORAGE_BUFFER || Glsl.hasStorage(qualifier, StorageType.READONLY)
+			? Access.READ_ONLY : Glsl.hasStorage(qualifier, StorageType.WRITEONLY) ? Access.WRITE_ONLY : Access.READ_WRITE;
+		Resource resource = resources.computeIfAbsent(name, ignored -> new Resource(name, kind, type, count, signature, access));
 
 		if (resource.kind != kind || !resource.signature.equals(signature)) {
 			throw new IllegalArgumentException("conflicting resource declarations: " + name);
@@ -527,9 +510,10 @@ public final class VulkanResourceTransformer {
 
 		resource.qualifiers.add(qualifier);
 		resource.stages.add(stage);
+		resource.access = resource.access.merge(access);
 	}
 
-	private static final class Resource {
+	private static class Resource {
 		private final String name;
 		private final Kind kind;
 		private final String type;
@@ -538,13 +522,15 @@ public final class VulkanResourceTransformer {
 		private final List<TypeQualifier> qualifiers = new ArrayList<>();
 		private final Set<PatchShaderType> stages = EnumSet.noneOf(PatchShaderType.class);
 		private Integer originalBinding;
+		private Access access;
 
-		private Resource(String name, Kind kind, String type, int count, String signature) {
+		private Resource(String name, Kind kind, String type, int count, String signature, Access access) {
 			this.name = name;
 			this.kind = kind;
 			this.type = type;
 			this.count = count;
 			this.signature = signature;
+			this.access = access;
 		}
 	}
 }

@@ -8,9 +8,10 @@ import org.spongepowered.asm.mixin.Shadow;
 public enum MixinGpuFormat {
 	IRIS_RGB565_UNORM(GpuFormat.ComponentType.OPAQUE_16, 1),
 	IRIS_RGB5A1_UNORM(GpuFormat.ComponentType.OPAQUE_16, 1),
+	IRIS_RGBA4_UNORM(GpuFormat.ComponentType.OPAQUE_16, 1),
 	IRIS_RGB9E5_FLOAT(GpuFormat.ComponentType.OPAQUE_32, 1);
 
 	@Shadow
-	MixinGpuFormat(GpuFormat.ComponentType componentType, int componentCount) {
+	private MixinGpuFormat(GpuFormat.ComponentType componentType, int componentCount) {
 	}
 }

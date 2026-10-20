@@ -10,6 +10,7 @@ import net.irisshaders.iris.gl.texture.PixelType;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.shaderpack.texture.TextureFilteringData;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.function.IntSupplier;
 
@@ -32,15 +33,17 @@ public class RawTexture implements TextureAccess, AutoCloseable {
 
 		var data = RawTextureData.convert(pixels, Math.multiplyExact(width, Math.multiplyExact(Math.max(1, height), Math.max(1, depth))),
 			internal, format, type);
-		this.image = Iris.getRenderBackend()
-			.createImage("Iris raw custom texture", target, internal.toGpuFormat(), width, height, depth, false);
-
 		try {
-			this.image.upload(data);
-		} catch (RuntimeException | Error failure) {
-			this.image.close();
-
-			throw failure;
+			this.image = Iris.getRenderBackend()
+				.createImage("Iris raw custom texture", target, internal.toGpuFormat(), width, height, depth, false);
+			try {
+				this.image.upload(data);
+			} catch (RuntimeException | Error failure) {
+				this.image.close();
+				throw failure;
+			}
+		} finally {
+			MemoryUtil.memFree(data);
 		}
 	}
 

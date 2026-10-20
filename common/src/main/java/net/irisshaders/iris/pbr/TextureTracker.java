@@ -23,9 +23,6 @@ public final class TextureTracker {
 	private GpuTexture boundTexture;
 	private int nextIdentity = 1;
 
-	private TextureTracker() {
-	}
-
 	public int identity(GpuTexture texture) {
 		return texture == null ? 0 : this.identities.computeIfAbsent(texture, unused -> this.nextIdentity++);
 	}

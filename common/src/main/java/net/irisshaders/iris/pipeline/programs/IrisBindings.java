@@ -21,9 +21,6 @@ public final class IrisBindings {
 	public static final int PUSH_CONSTANTS = 6;
 	public static final int SODIUM_GLOBALS = 0;
 
-	private IrisBindings() {
-	}
-
 	public static void apply(int program) {
 		if (GL20C.glGetProgrami(program, GL20C.GL_LINK_STATUS) == GL20C.GL_FALSE) {
 			return;

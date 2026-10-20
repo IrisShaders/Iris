@@ -187,6 +187,10 @@ public class IdMap {
 
 			// Split on any whitespace
 			for (String part : value.split("\\s+")) {
+				if (part.isEmpty()) {
+					continue;
+				}
+
 				if (part.contains("=")) {
 					// Avoid tons of logspam for now
 					Iris.logger.warn(
@@ -301,6 +305,10 @@ public class IdMap {
 			}
 
 			for (String part : value.split("\\s+")) {
+				if (part.isEmpty()) {
+					continue;
+				}
+
 				if (part.startsWith("%")) {
 					Iris.logger.fatal("Cannot use a tag in the render type map: " + key + " = " + value);
 					continue;
@@ -409,7 +417,7 @@ public class IdMap {
 	private static class DuplicateTracker {
 		private final Map<String, String> identifierToKeyMap = new HashMap<>();
 		private final Set<String> reportedDuplicates = new HashSet<>(); // Tracks which duplicates have already been reported
-		private final Map<String, Integer> duplicateCounts = new HashMap<>();
+		private final Object2IntMap<String> duplicateCounts = new Object2IntOpenHashMap<>();
 
 		private final String fileName;
 		private final String itemType;
@@ -451,7 +459,7 @@ public class IdMap {
 				String duplicateKey = identifier + "|" + previousKey + "|" + key;
 
 				// Increment the count for this duplicate
-				duplicateCounts.put(duplicateKey, duplicateCounts.getOrDefault(duplicateKey, 0) + 1);
+				duplicateCounts.mergeInt(duplicateKey, 1, Integer::sum);
 
 				// Only log if we haven't reported this specific duplicate before AND debug is enabled
 				if (debugEnabled && !reportedDuplicates.contains(duplicateKey)) {
@@ -468,7 +476,7 @@ public class IdMap {
 
 		public void reportSummary() {
 			if (debugEnabled && !duplicateCounts.isEmpty()) {
-				int totalDuplicates = duplicateCounts.values().stream().mapToInt(Integer::intValue).sum();
+				int totalDuplicates = duplicateCounts.values().intStream().sum();
 				Iris.logger.warn("Found {} duplicate {} in {}.", totalDuplicates, itemType + (totalDuplicates > 1 ? "s" : ""), fileName);
 			}
 		}

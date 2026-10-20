@@ -12,9 +12,6 @@ import java.util.Objects;
 import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public final class WorldTimeUniforms {
-	private WorldTimeUniforms() {
-	}
-
 	/**
 	 * Makes world time uniforms available to the given program
 	 *

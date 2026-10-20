@@ -1,6 +1,7 @@
 package net.irisshaders.iris.gl.texture;
 
 import com.mojang.renderpearl.api.GpuFormat;
+import net.irisshaders.iris.backend.IrisGpuFormats;
 import net.irisshaders.iris.gl.GlVersion;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL30C;
@@ -93,7 +94,7 @@ public enum InternalTextureFormat {
 	private final PixelFormat expectedPixelFormat;
 	private final ShaderDataType shaderDataType;
 
-	InternalTextureFormat(int glFormat, GlVersion minimumGlVersion, PixelFormat expectedPixelFormat, ShaderDataType shaderDataType) {
+	private InternalTextureFormat(int glFormat, GlVersion minimumGlVersion, PixelFormat expectedPixelFormat, ShaderDataType shaderDataType) {
 		this.glFormat = glFormat;
 		this.minimumGlVersion = minimumGlVersion;
 		this.expectedPixelFormat = expectedPixelFormat;
@@ -114,10 +115,11 @@ public enum InternalTextureFormat {
 			case RGB10_A2 -> GpuFormat.RGB10A2_UNORM;
 			case RGB10_A2UI -> GpuFormat.RGB10A2_UINT;
 			case R11F_G11F_B10F -> GpuFormat.RG11B10_FLOAT;
-			case RGB565 -> GpuFormat.IRIS_RGB565_UNORM;
-			case RGB5_A1 -> GpuFormat.IRIS_RGB5A1_UNORM;
-			case RGB9_E5 -> GpuFormat.IRIS_RGB9E5_FLOAT;
-			case RGBA2, RGBA4, R3_G3_B2 ->
+			case RGB565 -> IrisGpuFormats.RGB565_UNORM;
+			case RGB5_A1 -> IrisGpuFormats.RGB5A1_UNORM;
+			case RGB9_E5 -> IrisGpuFormats.RGB9E5_FLOAT;
+			case RGBA4 -> IrisGpuFormats.RGBA4_UNORM;
+			case RGBA2, R3_G3_B2 ->
 				throw new UnsupportedOperationException("RenderPearl cannot represent shader-pack format " + this);
 			default -> {
 				String name = this.expectedPixelFormat == PixelFormat.RGB || this.expectedPixelFormat == PixelFormat.RGB_INTEGER ? this.name()

@@ -16,9 +16,6 @@ import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 public class CameraUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
 
-	private CameraUniforms() {
-	}
-
 	public static void addCameraUniforms(UniformHolder uniforms, FrameUpdateNotifier notifier) {
 		CameraPositionTracker tracker = new CameraPositionTracker(notifier);
 

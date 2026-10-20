@@ -1,7 +1,7 @@
 package net.irisshaders.iris.shaderpack.include;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +40,7 @@ public class IncludeProcessor {
 		ImmutableList.Builder<String> builder = ImmutableList.builder();
 
 		ImmutableList<String> lines = fileNode.getLines();
-		ImmutableMap<Integer, AbsolutePackPath> includes = fileNode.getIncludes();
+		Int2ObjectMap<AbsolutePackPath> includes = fileNode.getIncludes();
 
 		for (int i = 0; i < lines.size(); i++) {
 			AbsolutePackPath include = includes.get(i);

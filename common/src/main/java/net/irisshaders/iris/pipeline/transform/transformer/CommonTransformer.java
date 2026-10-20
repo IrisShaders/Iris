@@ -26,6 +26,10 @@ import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.ast.transform.Template;
 import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
@@ -67,7 +71,7 @@ public class CommonTransformer {
 	private static final Template<ExternalDeclaration> fragDataDeclaration = Template.withExternalDeclaration(
 		"layout (location = __index) out vec4 __name;");
 	private static final List<Expression> replaceExpressions = new ArrayList<>();
-	private static final List<Long> replaceIndexes = new ArrayList<>();
+	private static final LongList replaceIndexes = new LongArrayList();
 	private static final Template<ExternalDeclaration> inputDeclarationTemplate = Template.withExternalDeclaration("uniform int __name;");
 	private static final Template<ExternalDeclaration> inputDeclarationTemplateLayout = Template.withExternalDeclaration(
 		"layout (location = __index) uniform int __name;");
@@ -322,7 +326,7 @@ public class CommonTransformer {
 			// change gl_FragData[i] to iris_FragDatai
 			replaceExpressions.clear();
 			replaceIndexes.clear();
-			Set<Long> replaceIndexesSet = new HashSet<>();
+			LongSet replaceIndexesSet = new LongOpenHashSet();
 			for (Identifier id : root.identifierIndex.get("gl_FragData")) {
 				ArrayAccessExpression accessExpression = id.getAncestor(ArrayAccessExpression.class);
 				if (accessExpression == null || !glFragDataI.matchesExtract(accessExpression)) {

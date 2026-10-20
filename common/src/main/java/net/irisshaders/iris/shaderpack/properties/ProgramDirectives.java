@@ -1,9 +1,10 @@
 package net.irisshaders.iris.shaderpack.properties;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
+import it.unimi.dsi.fastutil.ints.Int2BooleanMaps;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.blending.BufferBlendInformation;
@@ -33,12 +34,12 @@ public class ProgramDirectives {
 	private final Optional<BlendModeOverride> blendModeOverride;
 	private final List<BufferBlendInformation> bufferBlendInformations;
 	private final ImmutableSet<Integer> mipmappedBuffers;
-	private final ImmutableMap<Integer, Boolean> explicitFlips;
+	private final Int2BooleanMap explicitFlips;
 	private boolean unknownDrawBuffers;
 
 	private ProgramDirectives(int[] drawBuffers, ViewportData viewportScale, @Nullable AlphaTest alphaTestOverride,
 		Optional<BlendModeOverride> blendModeOverride, List<BufferBlendInformation> bufferBlendInformations,
-		ImmutableSet<Integer> mipmappedBuffers, ImmutableMap<Integer, Boolean> explicitFlips) {
+		ImmutableSet<Integer> mipmappedBuffers, Int2BooleanMap explicitFlips) {
 		this.drawBuffers = drawBuffers;
 		this.viewportScale = viewportScale;
 		this.alphaTestOverride = alphaTestOverride;
@@ -91,7 +92,7 @@ public class ProgramDirectives {
 			alphaTestOverride = null;
 			blendModeOverride = Optional.ofNullable(defaultBlendOverride);
 			bufferBlendInformations = Collections.emptyList();
-			explicitFlips = ImmutableMap.of();
+			explicitFlips = Int2BooleanMaps.EMPTY_MAP;
 		}
 
 		HashSet<Integer> mipmappedBuffers = new HashSet<>();
@@ -193,7 +194,7 @@ public class ProgramDirectives {
 		return mipmappedBuffers;
 	}
 
-	public ImmutableMap<Integer, Boolean> getExplicitFlips() {
+	public Int2BooleanMap getExplicitFlips() {
 		return explicitFlips;
 	}
 }

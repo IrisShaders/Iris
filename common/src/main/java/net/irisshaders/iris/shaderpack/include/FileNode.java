@@ -1,7 +1,9 @@
 package net.irisshaders.iris.shaderpack.include;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import net.irisshaders.iris.shaderpack.transform.line.LineTransform;
 
 import java.util.Objects;
@@ -9,11 +11,11 @@ import java.util.Objects;
 public class FileNode {
 	private final AbsolutePackPath path;
 	private final ImmutableList<String> lines;
-	private final ImmutableMap<Integer, AbsolutePackPath> includes;
+	private final Int2ObjectMap<AbsolutePackPath> includes;
 
 	// NB: The caller is responsible for ensuring that the includes map
 	//     is in sync with the lines list.
-	private FileNode(AbsolutePackPath path, ImmutableList<String> lines, ImmutableMap<Integer, AbsolutePackPath> includes) {
+	private FileNode(AbsolutePackPath path, ImmutableList<String> lines, Int2ObjectMap<AbsolutePackPath> includes) {
 		this.path = path;
 		this.lines = lines;
 		this.includes = includes;
@@ -29,8 +31,8 @@ public class FileNode {
 		this.includes = findIncludes(currentDirectory, lines);
 	}
 
-	private static ImmutableMap<Integer, AbsolutePackPath> findIncludes(AbsolutePackPath currentDirectory, ImmutableList<String> lines) {
-		ImmutableMap.Builder<Integer, AbsolutePackPath> foundIncludes = ImmutableMap.builder();
+	private static Int2ObjectMap<AbsolutePackPath> findIncludes(AbsolutePackPath currentDirectory, ImmutableList<String> lines) {
+		Int2ObjectMap<AbsolutePackPath> foundIncludes = new Int2ObjectLinkedOpenHashMap<>();
 
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i).trim();
@@ -59,7 +61,7 @@ public class FileNode {
 			foundIncludes.put(i, currentDirectory.resolve(target));
 		}
 
-		return foundIncludes.build();
+		return Int2ObjectMaps.unmodifiable(foundIncludes);
 	}
 
 	public AbsolutePackPath getPath() {
@@ -70,7 +72,7 @@ public class FileNode {
 		return lines;
 	}
 
-	public ImmutableMap<Integer, AbsolutePackPath> getIncludes() {
+	public Int2ObjectMap<AbsolutePackPath> getIncludes() {
 		return includes;
 	}
 

@@ -1,12 +1,11 @@
 package net.irisshaders.iris.vulkan;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.backend.vulkan.VulkanConst;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuTexture;
-import org.joml.Vector4f;
+import net.irisshaders.iris.Iris;
 import org.joml.Vector4fc;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.VK10;
@@ -17,27 +16,22 @@ import org.lwjgl.vulkan.VkImageSubresourceRange;
 
 import java.util.List;
 
-public class VulkanTextureOps {
-	private VulkanTextureOps() {
-	}
+import static org.lwjgl.vulkan.KHRSynchronization2.*;
 
-	public static void clearColors(List<GpuTextureView> views, Vector4f color) {
+public class VulkanTextureOps {
+	public static void clearColors(List<GpuTextureView> views, Vector4fc color) {
 		if (views.isEmpty()) {
 			return;
 		}
 
-		var encoder = VulkanCommandBridge.encoder(RenderSystem.getDevice().createCommandEncoder());
-		var command = VulkanCommandBridge.commandBuffer(encoder);
+		var command = VulkanCommandBridge.commandBuffer();
 
 		try (var stack = MemoryStack.stackPush()) {
-			VulkanSynchronization.before(command, stack, views.stream().map(
-				view -> new VulkanSynchronization.Access(VulkanSynchronization.image(view.texture()), VK10.VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK10.VK_ACCESS_TRANSFER_WRITE_BIT, true)).toList());
-
 			var value = VkClearColorValue.calloc(stack);
 			var range = VkImageSubresourceRange.calloc(1, stack).aspectMask(VK10.VK_IMAGE_ASPECT_COLOR_BIT);
 
 			for (var view : views) {
+				Iris.getRenderBackend().sync(VK_PIPELINE_STAGE_2_CLEAR_BIT_KHR, 0, VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR);
 				var texture = (VulkanGpuTexture) view.texture();
 
 				clearValue(value, texture.getFormat(), color);
@@ -47,7 +41,6 @@ public class VulkanTextureOps {
 				VK10.vkCmdClearColorImage(command, texture.vkImage(), VK10.VK_IMAGE_LAYOUT_GENERAL, value, range);
 			}
 
-			VulkanSynchronization.after(command, stack);
 		}
 	}
 
@@ -69,36 +62,14 @@ public class VulkanTextureOps {
 		}
 	}
 
-	public static void copyTexture(GpuTexture source, GpuTexture destination, int width, int height) {
-		var frontend = RenderSystem.getDevice().createCommandEncoder();
-		var command = VulkanCommandBridge.commandBuffer(VulkanCommandBridge.encoder(frontend));
-
-		try (var stack = MemoryStack.stackPush()) {
-			VulkanSynchronization.before(command, stack, List.of(
-				new VulkanSynchronization.Access(VulkanSynchronization.image(source), VK10.VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK10.VK_ACCESS_TRANSFER_READ_BIT, false),
-				new VulkanSynchronization.Access(VulkanSynchronization.image(destination), VK10.VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK10.VK_ACCESS_TRANSFER_WRITE_BIT, true)));
-			frontend.copyTextureToTexture(source, destination, 0, 0, 0, 0, 0, width, height);
-		}
-	}
-
 	public static void generateMipmaps(GpuTexture texture, boolean linear) {
-		if (!(texture instanceof VulkanGpuTexture image) || image.isClosed()) {
-			throw new IllegalArgumentException("expected a live Vulkan texture");
-		}
-
-		if (!texture.getFormat().hasColorAspect()) {
-			throw new IllegalArgumentException("color mipmap generation requires a color texture");
-		}
-
+		var image = (VulkanGpuTexture) texture;
 		if (texture.getMipLevels() == 1) {
 			return;
 		}
 
-		var encoder = VulkanCommandBridge.encoder(RenderSystem.getDevice().createCommandEncoder());
 
-		var command = VulkanCommandBridge.commandBuffer(encoder);
+		var command = VulkanCommandBridge.commandBuffer();
 
 		try (var stack = MemoryStack.stackPush()) {
 			var properties = VkFormatProperties.calloc(stack);
@@ -114,7 +85,8 @@ public class VulkanTextureOps {
 			var region = VkImageBlit.calloc(1, stack);
 
 			for (int level = 1; level < texture.getMipLevels(); level++) {
-				VulkanSynchronization.mip(command, stack, texture);
+				Iris.getRenderBackend().sync(VK_PIPELINE_STAGE_2_BLIT_BIT_KHR, VK_ACCESS_2_TRANSFER_READ_BIT_KHR,
+					VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR);
 				region.srcSubresource().aspectMask(VK10.VK_IMAGE_ASPECT_COLOR_BIT).mipLevel(level - 1)
 					.layerCount(texture.getDepthOrLayers());
 				region.dstSubresource().aspectMask(VK10.VK_IMAGE_ASPECT_COLOR_BIT).mipLevel(level).layerCount(texture.getDepthOrLayers());
@@ -124,7 +96,6 @@ public class VulkanTextureOps {
 					region, linear ? VK10.VK_FILTER_LINEAR : VK10.VK_FILTER_NEAREST);
 			}
 
-			VulkanSynchronization.after(command, stack);
 		}
 	}
 }

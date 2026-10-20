@@ -3,24 +3,21 @@ package net.irisshaders.iris.opengl;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass.RenderArea;
 import com.mojang.renderpearl.api.commands.RenderPassDescriptor;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
-import com.mojang.renderpearl.backend.api.CommandEncoderBackend;
 import com.mojang.renderpearl.backend.api.RenderPassBackend;
 import com.mojang.renderpearl.backend.opengl.FrameBufferAttachment;
 import com.mojang.renderpearl.backend.opengl.GlBuffer;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.renderpearl.backend.opengl.GlTexture;
-import com.mojang.renderpearl.frontend.FrontendCommandEncoder;
 import net.irisshaders.iris.backend.ComputePipeline;
 import net.irisshaders.iris.backend.GraphicsShader;
 import net.irisshaders.iris.backend.IrisImage;
-import net.irisshaders.iris.backend.NonRenderCommands;
 import net.irisshaders.iris.backend.PackResources;
 import net.irisshaders.iris.backend.RenderBackend;
-import net.irisshaders.iris.backend.SyncCommand;
 import net.irisshaders.iris.backend.WorldPassCommands;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBuffer;
@@ -28,15 +25,12 @@ import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.pipeline.transform.PatchedShader;
 import net.irisshaders.iris.samplers.PackSamplers;
-import net.irisshaders.iris.samplers.ProgramResources;
-import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
-import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
-import org.joml.Vector3i;
+import net.irisshaders.iris.samplers.ProgramSamplers;
+import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL12C;
 import org.lwjgl.opengl.GL13C;
-import org.lwjgl.opengl.GL14C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32C;
 import org.lwjgl.opengl.GL43C;
@@ -48,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class GlRenderBackend implements RenderBackend, NonRenderCommands {
+public class GlRenderBackend implements RenderBackend {
 	private final Map<PatchedShader, GlShaderBindings> shaders = new LinkedHashMap<>(16, 0.75f, true);
 	private boolean closed;
 
@@ -79,28 +73,13 @@ public final class GlRenderBackend implements RenderBackend, NonRenderCommands {
 	}
 
 	@Override
-	public WorldPassCommands createRenderPass(CommandEncoderBackend encoder, RenderPassDescriptor descriptor) {
-		return new GlWorldCommands(encoder, descriptor);
+	public WorldPassCommands createRenderPass(RenderPassDescriptor descriptor) {
+		return new GlWorldCommands(descriptor);
 	}
 
 	@Override
 	public WorldPassCommands adaptRenderPass(RenderPassBackend pass, RenderArea area) {
-		return new GlWorldCommands(((FrontendCommandEncoder) RenderSystem.getDevice().createCommandEncoder()).backend(), pass, area, false);
-	}
-
-	@Override
-	public NonRenderCommands commands() {
-		return this;
-	}
-
-	@Override
-	public SyncCommand createSync() {
-		return new GlSyncCommand();
-	}
-
-	@Override
-	public void dispatch(ComputePipeline pipeline, Vector3i groups, FilledIndirectPointer indirect) {
-		((GlComputePipeline) pipeline).dispatch(groups, indirect);
+		return new GlWorldCommands(pass, area, false);
 	}
 
 	@Override
@@ -109,8 +88,8 @@ public final class GlRenderBackend implements RenderBackend, NonRenderCommands {
 	}
 
 	@Override
-	public GraphicsShader createGraphicsShader(String name, PatchedShader source, ProgramResources resources,
-		BufferUniformHolder uniforms) {
+	public GraphicsShader createGraphicsShader(String name, PatchedShader source, ProgramSamplers resources,
+		DrawUniforms uniforms) {
 		return new GlGraphicsShader(this.getShader(name, source), resources, uniforms);
 	}
 
@@ -129,11 +108,30 @@ public final class GlRenderBackend implements RenderBackend, NonRenderCommands {
 				var iterator = this.shaders.values().iterator();
 				var oldest = iterator.next();
 				iterator.remove();
-				oldest.close();
+				try {
+					oldest.finishCompilation();
+				} finally {
+					oldest.close();
+				}
 			}
 		}
 
 		return shader;
+	}
+
+	@Override
+	public void finishCompilation() {
+		var iterator = this.shaders.values().iterator();
+		while (iterator.hasNext()) {
+			var shader = iterator.next();
+			try {
+				shader.finishCompilation();
+			} catch (RuntimeException | Error failure) {
+				iterator.remove();
+				shader.close();
+				throw failure;
+			}
+		}
 	}
 
 	@Override
@@ -148,8 +146,8 @@ public final class GlRenderBackend implements RenderBackend, NonRenderCommands {
 	}
 
 	@Override
-	public ComputePipeline createComputePipeline(String name, PatchedShader source, ProgramResources resources,
-		BufferUniformHolder uniforms) {
+	public ComputePipeline createComputePipeline(String name, PatchedShader source, ProgramSamplers resources,
+		DrawUniforms uniforms) {
 		return new GlComputePipeline(this.getShader(name, source), resources, uniforms);
 	}
 
@@ -238,36 +236,20 @@ public final class GlRenderBackend implements RenderBackend, NonRenderCommands {
 		this.generateMipmaps(texture, true);
 	}
 
-	static final class GlPackResources implements PackResources {
-		private final Map<GlSampler.Description, Integer> samplers = new HashMap<>();
+	public static class GlPackResources implements PackResources {
+		private final Map<GlSampler.Description, GlSampler> samplers = new HashMap<>();
 
-		int getSampler(GlSampler.Description state) {
-			return this.samplers.computeIfAbsent(state, key -> {
-				int id = IrisRenderSystem.genSampler();
-				int mag = key.linear() ? GL11C.GL_LINEAR : GL11C.GL_NEAREST;
-				int min = !key.mipmapped() ? mag : key.linearMips() ? (key.linear() ? GL11C.GL_LINEAR_MIPMAP_LINEAR : GL11C.GL_NEAREST_MIPMAP_LINEAR) : (key.linear() ? GL11C.GL_LINEAR_MIPMAP_NEAREST : GL11C.GL_NEAREST_MIPMAP_NEAREST);
-				IrisRenderSystem.samplerParameteri(id, GL11C.GL_TEXTURE_MIN_FILTER, min);
-				IrisRenderSystem.samplerParameteri(id, GL11C.GL_TEXTURE_MAG_FILTER, mag);
-
-				for (int axis : new int[]{GL11C.GL_TEXTURE_WRAP_S, GL11C.GL_TEXTURE_WRAP_T, GL12C.GL_TEXTURE_WRAP_R}) {
-					IrisRenderSystem.samplerParameteri(id, axis, key.clamp() ? GL12C.GL_CLAMP_TO_EDGE : GL11C.GL_REPEAT);
-				}
-
-				IrisRenderSystem.samplerParameteri(id, GL14C.GL_TEXTURE_COMPARE_MODE,
-					key.hardwareShadow() ? GL30C.GL_COMPARE_REF_TO_TEXTURE : GL11C.GL_NONE);
-				IrisRenderSystem.samplerParameteri(id, GL14C.GL_TEXTURE_COMPARE_FUNC, GL11C.GL_LEQUAL);
-
-				return id;
-			});
+		public int getSampler(GlSampler.Description state) {
+			return this.samplers.computeIfAbsent(state, GlSampler::new).getId();
 		}
 
 		@Override
-		public void beginFrame() {
+		public void beginFrame(GpuBufferSlice frameUniforms) {
 		}
 
 		@Override
 		public void close() {
-			this.samplers.values().forEach(IrisRenderSystem::destroySampler);
+			this.samplers.values().forEach(GlSampler::close);
 			this.samplers.clear();
 		}
 	}

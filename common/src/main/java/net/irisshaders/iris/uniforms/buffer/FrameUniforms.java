@@ -9,8 +9,10 @@ import net.irisshaders.iris.gl.uniform.UniformType;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import net.irisshaders.iris.pipeline.transform.Std140Type;
+import net.irisshaders.iris.samplers.VulkanHeapLayout;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -18,12 +20,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.TreeMap;
 
-public final class FrameUniforms implements AutoCloseable {
+public class FrameUniforms implements AutoCloseable {
 	private final ShaderResourceLayout layout;
 	private final BufferUniformHolder values;
 	private final ArrayDeque<Slot> available = new ArrayDeque<>();
 	private final List<Slot> slots = new ArrayList<>();
-	private final List<Runnable> cleanup = new ArrayList<>();
 	private Slot current;
 	private boolean closed;
 	private int uploads;
@@ -65,23 +66,32 @@ public final class FrameUniforms implements AutoCloseable {
 		}
 
 		this.layout = new ShaderResourceLayout(Std140Type.align(offset, 16), uniforms, List.of(
-			new ShaderResourceLayout.Descriptor(ShaderResourceLayout.FRAME_BLOCK, ShaderResourceLayout.Kind.UNIFORM_BUFFER, "block", 1, 2,
-				0, null, EnumSet.allOf(PatchShaderType.class))));
+			new ShaderResourceLayout.Descriptor(ShaderResourceLayout.FRAME_BLOCK, ShaderResourceLayout.Kind.UNIFORM_BUFFER, "block", 1,
+				VulkanHeapLayout.DESCRIPTOR_SET, VulkanHeapLayout.FRAME_UNIFORMS_BINDING, null, EnumSet.allOf(PatchShaderType.class))));
 		this.values = new BufferUniformHolder(this.layout);
-		custom.assignTo(this.values);
-	}
-
-	public void addCloseCallback(Runnable destructor) {
-		this.cleanup.add(destructor);
+		try {
+			custom.assignTo(this.values);
+		} catch (RuntimeException | Error failure) {
+			this.values.close();
+			throw failure;
+		}
 	}
 
 	public ShaderResourceLayout getLayout() {
 		return this.layout;
 	}
 
-	public void beginFrame() {
+	public ByteBuffer data() {
+		return this.values.data();
+	}
+
+	public int revision() {
+		return this.uploads;
+	}
+
+	public GpuBufferSlice beginFrame() {
 		this.retireFrame();
-		this.snapshot();
+		return this.snapshot();
 	}
 
 	public GpuBufferSlice snapshot() {
@@ -128,8 +138,7 @@ public final class FrameUniforms implements AutoCloseable {
 		}
 
 		this.closed = true;
-		this.cleanup.forEach(Iris.getRenderBackend()::retire);
-		this.cleanup.clear();
+		this.values.close();
 
 		for (var slot : this.slots) {
 
@@ -141,6 +150,6 @@ public final class FrameUniforms implements AutoCloseable {
 		this.slots.clear();
 	}
 
-	private record Slot(GpuBuffer buffer, GpuBufferSlice slice) {
+	public record Slot(GpuBuffer buffer, GpuBufferSlice slice) {
 	}
 }

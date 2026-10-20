@@ -19,7 +19,7 @@ import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;
 import net.irisshaders.iris.shaderpack.properties.PackShadowDirectives;
 import net.irisshaders.iris.shadows.ShadowRenderTargets;
 import net.irisshaders.iris.targets.CustomImage;
-import net.irisshaders.iris.targets.RenderTarget;
+import net.irisshaders.iris.targets.RenderTargetMipmapState;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 
@@ -40,15 +40,16 @@ public class IrisSamplers {
 
 	private static final GpuSampler[] terrain = new GpuSampler[16];
 
-	private IrisSamplers() {
-		// no construction allowed
-	}
-
 	public static void initRenderer() {
 	}
 
 	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped, RenderTargets renderTargets,
 		boolean isFullscreenPass, WorldRenderingPipeline pipeline) {
+		addRenderTargetSamplers(samplers, flipped, renderTargets, isFullscreenPass, pipeline, renderTargets.plannedMipmaps());
+	}
+
+	public static void addRenderTargetSamplers(SamplerHolder samplers, Supplier<ImmutableSet<Integer>> flipped, RenderTargets renderTargets,
+		boolean isFullscreenPass, WorldRenderingPipeline pipeline, RenderTargetMipmapState mipmaps) {
 		// colortex0,1,2,3 are only able to be sampled from fullscreen passes.
 		// Iris could lift this restriction, though I'm not sure if it could cause issues.
 		int startIndex = isFullscreenPass ? 0 : 4;
@@ -56,15 +57,15 @@ public class IrisSamplers {
 		for (int i = startIndex; i < renderTargets.getRenderTargetCount(); i++) {
 			final int index = i;
 
+			boolean alt = flipped.get().contains(index);
+			boolean mipmapped = mipmaps.mipmapped(index, alt);
 			SamplerHolder.TextureBinding texture = new SamplerHolder.TextureBinding(
-				"colortex" + index + (flipped.get().contains(index) ? "/alt" : "/main"), () -> {
-				boolean alt = flipped.get().contains(index);
-				RenderTarget target = renderTargets.getOrCreate(index);
-				GlSampler sampler = alt ? target.getAltSampler() : target.getMainSampler();
-
-				return target.getTextureView(alt, sampler.description().mipmapped());
-			}, () -> flipped.get().contains(index) ? renderTargets.getOrCreate(index).getAltSampler() : renderTargets.getOrCreate(index)
-				.getMainSampler());
+				"colortex" + index + (alt ? "/alt" : "/main") + (mipmapped ? "/mips" : "/base"),
+				() -> renderTargets.getOrCreate(index).getTextureView(alt, mipmapped), () -> {
+					boolean linear = renderTargets.getOrCreate(index).allowsLinearFiltering();
+					return mipmapped ? (linear ? GlSampler.MIPPED_LINEAR : GlSampler.MIPPED_NEAREST)
+						: (linear ? GlSampler.LINEAR : GlSampler.NEAREST);
+				});
 
 			final String name = "colortex" + i;
 

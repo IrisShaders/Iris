@@ -2,6 +2,9 @@ package net.irisshaders.iris.shaderpack.include;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.error.RusticError;
 import net.irisshaders.iris.shaderpack.transform.line.LineTransform;
@@ -65,7 +68,7 @@ public class IncludeGraph {
 
 	public IncludeGraph(Path root, ImmutableList<AbsolutePackPath> startingPaths, boolean isZip) {
 		Map<AbsolutePackPath, AbsolutePackPath> cameFrom = new HashMap<>();
-		Map<AbsolutePackPath, Integer> lineNumberInclude = new HashMap<>();
+		Object2IntMap<AbsolutePackPath> lineNumberInclude = new Object2IntOpenHashMap<>();
 
 		Map<AbsolutePackPath, FileNode> nodes = new HashMap<>();
 		Map<AbsolutePackPath, RusticError> failures = new HashMap<>();
@@ -111,10 +114,10 @@ public class IncludeGraph {
 					detailMessage = "IO error";
 				}
 
-				String badLine = nodes.get(src).getLines().get(lineNumberInclude.get(next)).trim();
+				String badLine = nodes.get(src).getLines().get(lineNumberInclude.getInt(next)).trim();
 
 				RusticError topLevelError = new RusticError("error", topLevelMessage, detailMessage, src.getPathString(),
-					lineNumberInclude.get(next) + 1, badLine);
+					lineNumberInclude.getInt(next) + 1, badLine);
 
 				failures.put(next, topLevelError);
 
@@ -126,8 +129,8 @@ public class IncludeGraph {
 			FileNode node = new FileNode(next, lines);
 			boolean selfInclude = false;
 
-			for (Map.Entry<Integer, AbsolutePackPath> include : node.getIncludes().entrySet()) {
-				int line = include.getKey();
+			for (Int2ObjectMap.Entry<AbsolutePackPath> include : node.getIncludes().int2ObjectEntrySet()) {
+				int line = include.getIntKey();
 				AbsolutePackPath included = include.getValue();
 
 				if (next.equals(included)) {
@@ -179,9 +182,9 @@ public class IncludeGraph {
 					FileNode lastFile = nodes.get(lastFilePath);
 					int lineNumber = -1;
 
-					for (Map.Entry<Integer, AbsolutePackPath> include : lastFile.getIncludes().entrySet()) {
+					for (Int2ObjectMap.Entry<AbsolutePackPath> include : lastFile.getIncludes().int2ObjectEntrySet()) {
 						if (include.getValue() == node) {
-							lineNumber = include.getKey() + 1;
+							lineNumber = include.getIntKey() + 1;
 						}
 					}
 

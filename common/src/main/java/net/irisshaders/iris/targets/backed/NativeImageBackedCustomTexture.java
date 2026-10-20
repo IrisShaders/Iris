@@ -7,9 +7,9 @@ import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.shaderpack.texture.CustomTextureData;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import org.lwjgl.system.MemoryUtil;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 
@@ -25,11 +25,12 @@ public class NativeImageBackedCustomTexture extends DynamicTexture implements Te
 	}
 
 	private static NativeImage create(byte[] content) throws IOException {
-		ByteBuffer buffer = ByteBuffer.allocateDirect(content.length);
-		buffer.put(content);
-		buffer.flip();
-
-		return NativeImage.read(buffer);
+		var buffer = MemoryUtil.memAlloc(content.length);
+		try {
+			return NativeImage.read(buffer.put(content).flip());
+		} finally {
+			MemoryUtil.memFree(buffer);
+		}
 	}
 
 	private int getId() {

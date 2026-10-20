@@ -21,8 +21,8 @@ import net.irisshaders.iris.gl.blending.BlendMode;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerHolder.TextureBinding;
-import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.state.ShaderAttributeInputs;
+import net.irisshaders.iris.pipeline.GraphicsBackend;
 import net.irisshaders.iris.pipeline.IrisRenderPipeline;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
@@ -30,13 +30,14 @@ import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.pipeline.transform.WorldShaderTransformer;
 import net.irisshaders.iris.pipeline.transform.vulkan.VulkanShaderPatcher;
-import net.irisshaders.iris.samplers.ProgramResources;
+import net.irisshaders.iris.samplers.ProgramSamplers;
 import net.irisshaders.iris.shaderpack.properties.ProgramDirectives;
 import net.irisshaders.iris.targets.WorldRenderTargets;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.CommonUniforms;
-import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
+import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -96,44 +97,48 @@ public class ExtendedShader implements AutoCloseable {
 		var phases = shaderKey.getRenderPhases();
 		parent.getWorldTargets().register(name, drawBuffers, phases);
 
-		for (var phase : phases) {
-			var uniforms = new BufferUniformHolder(layout);
-			uniforms.useFrameUniforms(parent.getFrameUniforms());
-			CommonUniforms.addDynamicUniforms(uniforms, FogMode.PER_VERTEX);
+		try {
+			for (var phase : phases) {
+				var samplers = new ProgramSamplers(parent.getPackSamplers(), layout);
+				var uniforms = new DrawUniforms(layout);
+				this.variants.put(phase, new Variant(uniforms, samplers, layout));
+				uniforms.useFrameUniforms(parent.getFrameUniforms());
+				CommonUniforms.addDrawUniforms(uniforms);
 
-			var samplers = new ProgramResources(parent.getPackSamplers(), layout);
-			samplers.addStorageBuffers(parent.getStorageBuffers());
-			samplers.setUniformBuffers(() -> this.uniformBuffers);
-			samplers.setExternalBindings(unit -> new TextureBinding("world/texture/" + unit,
-				() -> this.texture(unit) == null ? parent.getBiggerWhitePixel().getTextureView() : this.texture(unit).view(),
-				() -> GlSampler.NEAREST, () -> this.texture(unit) == null ? null : this.texture(unit).sampler()));
+				uniforms.setUniformBuffers(() -> this.uniformBuffers);
+				samplers.setExternalBindings(unit -> new TextureBinding("world/texture/" + unit,
+					() -> this.texture(unit) == null ? parent.getBiggerWhitePixel().getTextureView() : this.texture(unit).view(),
+					() -> GlSampler.NEAREST, () -> this.texture(unit) == null ? null : this.texture(unit).sampler()));
 
-			var flipped = ImmutableSet.copyOf(shadow ? parent.getFlippedBeforeShadow() : parent.getWorldTargets().getFlippedBuffers(phase));
-			parent.addGbufferOrShadowSamplers(samplers, samplers, () -> flipped, shadow, inputs.hasTex(), inputs.hasLight(),
-				inputs.hasOverlay());
+				var flipped = ImmutableSet.copyOf(shadow ? parent.getFlippedBeforeShadow() : parent.getWorldTargets().getFlippedBuffers(phase));
+				parent.addGbufferOrShadowSamplers(samplers, samplers, () -> flipped, shadow, inputs.hasTex(), inputs.hasLight(),
+					inputs.hasOverlay(), phase);
 
-			samplers.addDrawTextureSampler(new TextureBinding("world/glint",
-				() -> inputs.isGlint() && inputs.hasOverlay() && this.drawResources.get(
-					"GlintSampler") instanceof TextureViewAndSampler texture ? texture.view() : parent.getWhitePixel().getTextureView(),
-				() -> GlSampler.NEAREST, () -> inputs.isGlint() && inputs.hasOverlay() && this.drawResources.get(
-				"GlintSampler") instanceof TextureViewAndSampler texture ? texture.sampler() : null), false, "glintTexture");
+				samplers.addDrawTextureSampler(new TextureBinding("world/glint",
+					() -> inputs.isGlint() && inputs.hasOverlay() && this.drawResources.get(
+						"GlintSampler") instanceof TextureViewAndSampler texture ? texture.view() : parent.getWhitePixel().getTextureView(),
+					() -> GlSampler.NEAREST, () -> inputs.isGlint() && inputs.hasOverlay() && this.drawResources.get(
+					"GlintSampler") instanceof TextureViewAndSampler texture ? texture.sampler() : null), false, "glintTexture");
 
-			for (var descriptor : layout.descriptors()) {
-				if (descriptor.kind() == ShaderResourceLayout.Kind.SAMPLER && descriptor.type().endsWith("BUFFER")) {
-					samplers.addTexelSampler(descriptor.name(), "world/texel/" + descriptor.name(), () -> {
-						var view = this.drawResources.get(descriptor.name());
+				for (var descriptor : layout.descriptors()) {
+					if (descriptor.kind() == ShaderResourceLayout.Kind.SAMPLER && descriptor.type().endsWith("BUFFER")) {
+						samplers.addTexelSampler(descriptor.name(), "world/texel/" + descriptor.name(), () -> {
+							var view = this.drawResources.get(descriptor.name());
 
-						if (!(view instanceof Long)) {
-							throw new IllegalStateException("missing world texel buffer: " + descriptor.name());
-						}
+							if (!(view instanceof Long)) {
+								throw new IllegalStateException("missing world texel buffer: " + descriptor.name());
+							}
 
-						return (Long) view;
-					});
+							return (Long) view;
+						});
+					}
 				}
-			}
 
-			samplers.finish();
-			this.variants.put(phase, new Variant(uniforms, samplers, layout));
+				samplers.finish();
+			}
+		} catch (RuntimeException | Error failure) {
+			this.variants.values().forEach(variant -> variant.uniforms.close());
+			throw failure;
 		}
 	}
 
@@ -167,11 +172,15 @@ public class ExtendedShader implements AutoCloseable {
 	}
 
 	public FrontendRenderPipeline override(RenderPipeline source, FrontendRenderPipeline original) {
+		return this.override(source, original, source.getVertexFormatBindings());
+	}
+
+	public FrontendRenderPipeline override(RenderPipeline source, FrontendRenderPipeline original, List<VertexFormat> vertexFormats) {
 		if (this.closed) {
 			throw new IllegalStateException("world shader is closed: " + this.name);
 		}
 
-		var formats = Collections.unmodifiableList(new ArrayList<>(source.getVertexFormatBindings()));
+		var formats = Collections.unmodifiableList(new ArrayList<>(vertexFormats));
 		return this.overrides.computeIfAbsent(new OverrideKey(source, original, formats),
 			key -> new FrontendRenderPipeline(original.name(), new IrisRenderPipeline(this, source, formats), formats,
 				original.uniformIndices(), original.uniforms(), original.colorTargetStates(), original.wantsDepthTexture(),
@@ -194,20 +203,15 @@ public class ExtendedShader implements AutoCloseable {
 				unused -> this.prepare(variant, vanilla, override.vertexFormats(), phase, depthFormat, false));
 			CapturedRenderingState.INSTANCE.setCurrentAlphaTest(this.alpha.reference());
 			CapturedRenderingState.INSTANCE.setBlendMode(this.blend(vanilla));
-			variant.uniforms.update(tick, frame);
+			CommonUniforms.writeDrawUniforms(variant.uniforms);
 
 			var bindings = new LinkedHashMap<String, List<GpuBufferSlice>>();
 
-			int alignment = RenderSystem.getDevice().getDeviceInfo().limits().minUniformOffsetAlignment();
-
 			for (var block : variant.layout.descriptors()) {
-				if (block.set() == 0 && block.kind() == ShaderResourceLayout.Kind.UNIFORM_BUFFER) {
+				if (block.kind() == ShaderResourceLayout.Kind.UNIFORM_BUFFER && !block.name().equals(ShaderResourceLayout.FRAME_BLOCK)) {
 					GpuBufferSlice slice;
 
-					if (block.name().equals(ShaderResourceLayout.UNIFORM_BLOCK)) {
-						slice = RenderSystem.getDevice().createCommandEncoder().transientMemory()
-							.uploadGpu(variant.uniforms.data(), alignment, GpuBuffer.USAGE_UNIFORM);
-					} else if (block.name().equals("iris_SodiumPushConstants")) {
+					if (block.name().equals("iris_SodiumPushConstants")) {
 						if (pushConstants == null) {
 							throw new IllegalStateException("missing Sodium push constants for " + this.name);
 						}
@@ -262,15 +266,18 @@ public class ExtendedShader implements AutoCloseable {
 			var depth = this.parent.getWorldTargets().getFramebuffer(phase, this.name).getDepthView();
 			GpuFormat depthFormat = depth == null ? null : depth.texture().getFormat();
 			variant.pipelines.computeIfAbsent(new PipelineKey(pipeline, formats, depthFormat),
-				unused -> this.prepare(variant, pipeline, formats, phase, depthFormat, true));
+				_ -> this.prepare(variant, pipeline, formats, phase, depthFormat, true));
 			if (depthFormat != null && phase != WorldRenderTargets.Phase.SHADOW) {
 				variant.pipelines.computeIfAbsent(new PipelineKey(pipeline, formats, null),
-					unused -> this.prepare(variant, pipeline, formats, phase, null, true));
+					_ -> this.prepare(variant, pipeline, formats, phase, null, true));
 			}
 		});
 	}
 
 	private Map<PatchShaderType, String> inputSources(List<VertexFormat> formats) {
+		if (GraphicsBackend.isOpenGL()) {
+			formats = List.of(this.vertexFormat);
+		}
 		return this.inputSources.computeIfAbsent(Collections.unmodifiableList(new ArrayList<>(formats)),
 			key -> WorldShaderTransformer.vertexInputs(this.sources, WorldShaderTransformer.availableFormats(key)));
 	}
@@ -278,7 +285,8 @@ public class ExtendedShader implements AutoCloseable {
 	private PreparedShader prepareShader(Variant variant, WorldRenderTargets.Phase phase, Map<PatchShaderType, String> inputs) {
 		return variant.shaders.computeIfAbsent(inputs.get(PatchShaderType.VERTEX), unused -> {
 			var outputs = this.parent.getWorldTargets().getAttachmentPlan(phase, this.name).program(this.name);
-			var patched = TransformPatcher.patchProgram(this.name, inputs, variant.samplers, variant.uniforms, outputs);
+			var patched = TransformPatcher.patchProgram(this.name, inputs, variant.samplers, variant.uniforms,
+				GraphicsBackend.isOpenGL() ? outputs.withoutRemapping() : outputs);
 			var shader = Iris.getRenderBackend().createGraphicsShader(this.name, patched, variant.samplers, variant.uniforms);
 			variant.uniforms.resolveLayout(shader.getSource().layout());
 			variant.layout = shader.getSource().layout();
@@ -295,8 +303,14 @@ public class ExtendedShader implements AutoCloseable {
 		boolean needsFallback = attributes.stream().anyMatch(attribute -> attribute.binding() == fallbackBinding);
 
 		if (needsFallback && this.zeroVertices == null) {
-			this.zeroVertices = RenderSystem.getDevice()
-				.createBuffer(() -> "Iris zero vertex attributes", GpuBuffer.USAGE_VERTEX, ByteBuffer.allocateDirect(32));
+			var data = MemoryUtil.memAlloc(32);
+			try {
+				MemoryUtil.memSet(data, 0);
+				this.zeroVertices = RenderSystem.getDevice()
+					.createBuffer(() -> "Iris zero vertex attributes", GpuBuffer.USAGE_VERTEX, data);
+			} finally {
+				MemoryUtil.memFree(data);
+			}
 		}
 
 		var outputs = this.parent.getWorldTargets().getAttachmentPlan(phase, this.name).program(this.name);
@@ -306,8 +320,9 @@ public class ExtendedShader implements AutoCloseable {
 		var targets = this.parent.getWorldTargets().getFramebuffer(phase, this.name).getColorViews();
 
 		return prepared.shader().createPipeline(
-			new PipelineState(new FramebufferDescription(targets.stream().map(v -> v.texture().getFormat()).toList(), depthFormat), blends,
-				attributes, 0, vanilla, phase == WorldRenderTargets.Phase.SHADOW, needsFallback ? this.zeroVertices : null, formats), background);
+			new PipelineState(new FramebufferDescription(targets, depthFormat), blends,
+				attributes, 0, vanilla, phase == WorldRenderTargets.Phase.SHADOW, needsFallback ? this.zeroVertices : null, formats,
+				GraphicsBackend.isOpenGL() ? outputs.outputLocations() : null), background);
 	}
 
 	private BlendMode blend(RenderPipeline vanilla) {
@@ -345,6 +360,7 @@ public class ExtendedShader implements AutoCloseable {
 
 		for (var variant : this.variants.values()) {
 			variant.shaders.values().forEach(shader -> shader.shader().cancelCompilation());
+			variant.uniforms.close();
 			variant.pipelines.values().forEach(p -> backend.retire(p::close));
 			variant.shaders.values().forEach(shader -> backend.retire(shader.shader()::close));
 		}
@@ -364,13 +380,13 @@ public class ExtendedShader implements AutoCloseable {
 	}
 
 	public static class Variant {
-		private final BufferUniformHolder uniforms;
-		private final ProgramResources samplers;
+		private final DrawUniforms uniforms;
+		private final ProgramSamplers samplers;
 		private final Map<PipelineKey, GraphicsPipeline> pipelines = new HashMap<>();
 		private final Map<String, PreparedShader> shaders = new HashMap<>();
 		private ShaderResourceLayout layout;
 
-		public Variant(BufferUniformHolder uniforms, ProgramResources samplers, ShaderResourceLayout layout) {
+		public Variant(DrawUniforms uniforms, ProgramSamplers samplers, ShaderResourceLayout layout) {
 			this.uniforms = uniforms;
 			this.samplers = samplers;
 			this.layout = layout;

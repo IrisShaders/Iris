@@ -5,21 +5,26 @@ import com.mojang.renderpearl.api.commands.RenderPass.RenderArea;
 import com.mojang.renderpearl.api.pipeline.UniformType;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.renderpearl.backend.api.BackendRenderPipeline;
+import com.mojang.renderpearl.frontend.FrontendRenderPipeline;
 import com.mojang.renderpearl.util.TextureViewAndSampler;
 import net.irisshaders.iris.backend.ForwardingRenderPass;
 import net.irisshaders.iris.backend.IrisRenderPass;
 import net.irisshaders.iris.backend.MinecraftRenderPass;
 import net.irisshaders.iris.backend.WorldPassCommands;
+import net.irisshaders.iris.mixinterface.FrontendRenderPipelineAccess;
 import net.irisshaders.iris.targets.ColorAttachmentPlan;
 import net.irisshaders.iris.targets.WorldRenderTargets;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
+import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class WorldRenderPass extends ForwardingRenderPass {
+public class WorldRenderPass extends ForwardingRenderPass {
 	private final IrisRenderingPipeline iris;
 	private final WorldPassCommands commands;
 	private final IrisRenderPass renderPass;
@@ -38,7 +43,6 @@ public final class WorldRenderPass extends ForwardingRenderPass {
 		super(commands);
 		this.iris = iris;
 		this.commands = commands;
-		this.commands.allowReuse();
 		this.renderPass = new MinecraftRenderPass(commands);
 		this.area = area;
 		this.depth = depth;
@@ -50,6 +54,31 @@ public final class WorldRenderPass extends ForwardingRenderPass {
 		return this.renderPass;
 	}
 
+	public WorldRenderTargets.Phase getPhase() {
+		return this.phase;
+	}
+
+	public @Nullable FrontendRenderPipeline overridePipeline(FrontendRenderPipeline pipeline) {
+		var backend = pipeline.backendRenderPipeline();
+		var source = backend instanceof IrisRenderPipeline override ? override.source()
+			: ((FrontendRenderPipelineAccess) (Object) pipeline).iris$getSource();
+		if (source == null) {
+			return null;
+		}
+
+		// Compiled overrides may have been selected in a different pass or rendering context.
+		var key = IrisPipelines.getPipeline(this.iris, source, this.phase);
+		var shader = key == null ? null : this.iris.getShaderMap().getShader(key);
+		if (shader == null) {
+			return null;
+		}
+
+		if (backend instanceof IrisRenderPipeline override) {
+			return shader == override.shader() ? pipeline : shader.override(source, pipeline, override.vertexFormats());
+		}
+		return shader.override(source, pipeline, IrisVertexFormats.getExtendedFormats(source));
+	}
+
 	public void setUniforms(Map<String, Object> uniforms) {
 		this.uniforms = uniforms;
 	}
@@ -57,7 +86,7 @@ public final class WorldRenderPass extends ForwardingRenderPass {
 	@Override
 	public void setPipeline(BackendRenderPipeline pipeline) {
 		if (!(pipeline instanceof IrisRenderPipeline override)) {
-			throw new IllegalStateException("world draw has no Iris pipeline: " + pipeline);
+			throw new IllegalStateException("somehow got here without a valid override. that's bad! " + pipeline);
 		}
 
 		this.pipeline = override;
@@ -69,7 +98,7 @@ public final class WorldRenderPass extends ForwardingRenderPass {
 
 			for (var color : colors) {
 				if (color.getWidth(0) != this.area.width() || color.getHeight(0) != this.area.height()) {
-					throw new IllegalArgumentException("world attachment groups must have matching dimensions");
+					throw new IllegalArgumentException("colortexs with non-matching dimensions...");
 				}
 			}
 
@@ -78,10 +107,17 @@ public final class WorldRenderPass extends ForwardingRenderPass {
 		}
 	}
 
+	// neoforge only
+	public void setViewport(int x, int y, int width, int height) {
+		this.commands.setViewport(x, y, width, height);
+	}
+
 	@Override
 	public void pushConstants(ByteBuffer value) {
 		if (this.pushConstants == null || this.pushConstants.capacity() < value.remaining()) {
-			this.pushConstants = ByteBuffer.allocateDirect(value.remaining());
+			var replacement = MemoryUtil.memAlloc(value.remaining());
+			MemoryUtil.memFree(this.pushConstants);
+			this.pushConstants = replacement;
 		}
 
 		this.pushConstants.clear().order(value.order()).put(value.duplicate()).flip();
@@ -89,13 +125,18 @@ public final class WorldRenderPass extends ForwardingRenderPass {
 	}
 
 	public void end() {
-		this.commands.end();
+		try {
+			this.commands.end();
+		} finally {
+			MemoryUtil.memFree(this.pushConstants);
+			this.pushConstants = null;
+		}
 	}
 
 	@Override
 	protected void beforeDraw() {
 		if (this.pipeline == null || this.pipeline.isClosed()) {
-			throw new IllegalStateException("world draw has no active Iris shader");
+			throw new IllegalStateException("somehow got here without a valid override. that's bad!");
 		}
 
 		this.resources.clear();

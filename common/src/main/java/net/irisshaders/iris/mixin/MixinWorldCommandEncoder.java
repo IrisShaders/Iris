@@ -21,6 +21,7 @@ import java.util.OptionalDouble;
 
 @Mixin(FrontendCommandEncoder.class)
 public abstract class MixinWorldCommandEncoder {
+
 	@WrapOperation(method = "createRenderPass(Lcom/mojang/renderpearl/api/commands/RenderPassDescriptor;)Lcom/mojang/renderpearl/api/commands/RenderPass;", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/api/CommandEncoderBackend;createRenderPass(Lcom/mojang/renderpearl/api/commands/RenderPassDescriptor;)Lcom/mojang/renderpearl/backend/api/RenderPassBackend;"))
 	private RenderPassBackend iris$worldPass(CommandEncoderBackend backend, RenderPassDescriptor descriptor,
 		Operation<RenderPassBackend> original) {
@@ -54,7 +55,7 @@ public abstract class MixinWorldCommandEncoder {
 			builder.withDepthAttachment(depth, OptionalDouble.empty());
 		}
 
-		var commands = Iris.getRenderBackend().createRenderPass(backend, builder.build());
+		var commands = Iris.getRenderBackend().createRenderPass(builder.build());
 
 		return new WorldRenderPass(iris, commands, area, depth, phase);
 	}

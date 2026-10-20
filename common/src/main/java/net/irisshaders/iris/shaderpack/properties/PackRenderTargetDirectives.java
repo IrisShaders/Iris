@@ -3,6 +3,7 @@ package net.irisshaders.iris.shaderpack.properties;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -12,8 +13,6 @@ import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.shaderpack.parsing.DirectiveHolder;
 import org.joml.Vector4f;
 
-import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -55,8 +54,8 @@ public class PackRenderTargetDirectives {
 		return buffersToBeCleared;
 	}
 
-	public Map<Integer, RenderTargetSettings> getRenderTargetSettings() {
-		return Collections.unmodifiableMap(renderTargetSettings);
+	public Int2ObjectMap<RenderTargetSettings> getRenderTargetSettings() {
+		return Int2ObjectMaps.unmodifiable(renderTargetSettings);
 	}
 
 	public void acceptDirectives(DirectiveHolder directives) {

@@ -20,13 +20,13 @@ import de.odysseus.ithaka.digraph.DigraphFactory;
 import de.odysseus.ithaka.digraph.Digraphs;
 import de.odysseus.ithaka.digraph.EdgeWeights;
 import de.odysseus.ithaka.digraph.MapDigraph;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
@@ -60,7 +60,7 @@ public class SimpleFeedbackArcSetProvider extends AbstractFeedbackArcSetProvider
 		copies.add(digraph);
 
 		final List<Integer> shuffle = new ArrayList<>();
-		final Map<V, Integer> order = new HashMap<>();
+		final Object2IntMap<V> order = new Object2IntOpenHashMap<>();
 		int index = 0;
 		for (V source : digraph.vertices()) {
 			order.put(source, index);
@@ -73,8 +73,8 @@ public class SimpleFeedbackArcSetProvider extends AbstractFeedbackArcSetProvider
 			List<Integer> mapping = new ArrayList<>(shuffle);
 
 			copies.add(Digraphs.copy(digraph, (DigraphFactory<Digraph<V>>) () -> new MapDigraph<>((v1, v2) -> {
-				int value1 = mapping.get(order.get(v1));
-				int value2 = mapping.get(order.get(v2));
+				int value1 = mapping.get(order.getInt(v1));
+				int value2 = mapping.get(order.getInt(v2));
 				return Integer.compare(value1, value2);
 			})));
 		}

@@ -1,5 +1,6 @@
 package net.irisshaders.iris.targets;
 
+import net.irisshaders.iris.backend.FramebufferDescription;
 import net.irisshaders.iris.gl.blending.BlendMode;
 import net.irisshaders.iris.shaderpack.properties.ProgramDirectives;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
-public final class ColorAttachmentPlan {
+public class ColorAttachmentPlan {
 	private final List<Target> targets;
 	private final Map<String, Program> programs;
 
@@ -25,7 +26,7 @@ public final class ColorAttachmentPlan {
 
 		if (union.size() > maxAttachments) {
 			throw new IllegalArgumentException(
-				"merged render scope needs " + union.size() + " color attachments, device supports " + maxAttachments + "; split the rendering scope");
+				"merged render scope needs " + union.size() + " color attachments, limit is " + maxAttachments + "; split the rendering scope");
 		}
 
 		this.targets = List.copyOf(union);
@@ -63,7 +64,7 @@ public final class ColorAttachmentPlan {
 		}
 	}
 
-	public static final class Program {
+	public static class Program {
 		private final int[] locations;
 		private final int[] drawBuffers;
 		private final int attachmentCount;
@@ -76,6 +77,12 @@ public final class ColorAttachmentPlan {
 
 		public int attachment(int output) {
 			return output >= 0 && output < this.locations.length ? this.locations[output] : -1;
+		}
+
+		public Program withoutRemapping() {
+			var locations = new int[this.locations.length];
+			Arrays.setAll(locations, i -> i);
+			return new Program(locations, this.drawBuffers, locations.length);
 		}
 
 		public List<Integer> outputLocations() {
@@ -121,7 +128,7 @@ public final class ColorAttachmentPlan {
 		}
 	}
 
-	public static final class Builder {
+	public static class Builder {
 		private final Map<String, List<Target>> requests = new LinkedHashMap<>();
 
 		public Builder program(String name, ProgramDirectives directives, Set<Integer> writesToAlt) {
@@ -145,6 +152,7 @@ public final class ColorAttachmentPlan {
 		}
 
 		public List<ColorAttachmentPlan> buildGroups(int maxAttachments) {
+			maxAttachments = Math.min(maxAttachments, FramebufferDescription.MAX_COLOR_ATTACHMENTS);
 			if (maxAttachments < 1) {
 				throw new IllegalArgumentException("invalid color attachment limit");
 			}
@@ -165,7 +173,7 @@ public final class ColorAttachmentPlan {
 
 				if (entry.getValue().size() > maxAttachments) {
 					throw new IllegalArgumentException("program " + entry.getKey() + " needs " + entry.getValue()
-						.size() + " color attachments, device supports " + maxAttachments);
+						.size() + " color attachments, limit is " + maxAttachments);
 				}
 
 				group.put(entry.getKey(), entry.getValue());
@@ -180,6 +188,7 @@ public final class ColorAttachmentPlan {
 		}
 
 		public ColorAttachmentPlan build(int maxAttachments) {
+			maxAttachments = Math.min(maxAttachments, FramebufferDescription.MAX_COLOR_ATTACHMENTS);
 			if (maxAttachments < 1) {
 				throw new IllegalArgumentException("invalid color attachment limit");
 			}

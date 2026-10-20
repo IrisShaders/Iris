@@ -1,8 +1,14 @@
 package net.irisshaders.iris.backend;
 
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import net.irisshaders.iris.samplers.ProgramSamplers;
+
 public interface PackResources extends AutoCloseable {
-	void beginFrame();
+	public void beginFrame(GpuBufferSlice frameUniforms);
+
+	public default void register(ProgramSamplers resources) {
+	}
 
 	@Override
-	void close();
+	public void close();
 }

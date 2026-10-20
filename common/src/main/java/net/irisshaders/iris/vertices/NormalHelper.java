@@ -26,9 +26,6 @@ import org.joml.Vector4f;
 public abstract class NormalHelper {
 	private static final float EPS = 1e-20f;
 
-	private NormalHelper() {
-	}
-
 	public static int invertPackedNormal(int packed) {
 		int ix = -(packed & 255);
 		int iy = -((packed >> 8) & 255);
@@ -371,6 +368,20 @@ public abstract class NormalHelper {
 			return -1;
 		}
 
+		float tangentW = computeTangentHandedness(normalX, normalY, normalZ, edge1x, edge1y, edge1z, edge2x, edge2y, edge2z,
+			deltaU1, deltaU2, f, tangentx, tangenty, tangentz);
+
+		if (output != null) {
+			output.set(tangentx, tangenty, tangentz, tangentW);
+		}
+
+		return NormI8.pack(tangentx, tangenty, tangentz, tangentW);
+	}
+
+	// Keep both helpers small enough for C2 to inline into the serializer.
+	private static float computeTangentHandedness(float normalX, float normalY, float normalZ, float edge1x, float edge1y,
+		float edge1z, float edge2x, float edge2y, float edge2z, float deltaU1, float deltaU2, float f, float tangentx, float tangenty,
+		float tangentz) {
 		float bitangentx = f * (-deltaU2 * edge1x + deltaU1 * edge2x);
 		float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
 		float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
@@ -402,11 +413,7 @@ public abstract class NormalHelper {
 			tangentW = 1.0F;
 		}
 
-		if (output != null) {
-			output.set(tangentx, tangenty, tangentz, tangentW);
-		}
-
-		return NormI8.pack(tangentx, tangenty, tangentz, tangentW);
+		return tangentW;
 	}
 
 	private static float rsqrt(float value) {

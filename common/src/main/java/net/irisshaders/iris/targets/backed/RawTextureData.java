@@ -3,14 +3,19 @@ package net.irisshaders.iris.targets.backed;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import net.irisshaders.iris.gl.texture.PixelFormat;
 import net.irisshaders.iris.gl.texture.PixelType;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public final class RawTextureData {
-	private RawTextureData() {
-	}
+public class RawTextureData {
+	// YOU MUST FREE THIS
+	// YOU MUST FREE THIS
+	// YOU MUST FREE THIS
 
+	/**
+	 * IN CASE YOU DIDN'T READ THE COMMENTS ABOVE, YOU MUST FREE THIS
+	 */
 	public static ByteBuffer convert(byte[] pixels, int texels, InternalTextureFormat internal, PixelFormat sourceFormat, PixelType type) {
 		var target = internal.toGpuFormat();
 		boolean integer = sourceFormat.isInteger();
@@ -21,7 +26,7 @@ public final class RawTextureData {
 
 		switch (type) {
 			case BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, UNSIGNED_SHORT_5_6_5,
-			     UNSIGNED_SHORT_5_6_5_REV, UNSIGNED_SHORT_5_5_5_1, UNSIGNED_SHORT_1_5_5_5_REV -> {
+			     UNSIGNED_SHORT_5_6_5_REV, UNSIGNED_SHORT_4_4_4_4, UNSIGNED_SHORT_4_4_4_4_REV, UNSIGNED_SHORT_5_5_5_1, UNSIGNED_SHORT_1_5_5_5_REV -> {
 			}
 
 			default -> throw new UnsupportedOperationException("packed raw pixel conversion is not implemented: " + type);
@@ -30,7 +35,7 @@ public final class RawTextureData {
 		int inputChannels = sourceFormat.getComponentCount();
 		int packedChannels = switch (type) {
 			case UNSIGNED_SHORT_5_6_5, UNSIGNED_SHORT_5_6_5_REV -> 3;
-			case UNSIGNED_SHORT_5_5_5_1, UNSIGNED_SHORT_1_5_5_5_REV -> 4;
+			case UNSIGNED_SHORT_4_4_4_4, UNSIGNED_SHORT_4_4_4_4_REV, UNSIGNED_SHORT_5_5_5_1, UNSIGNED_SHORT_1_5_5_5_REV -> 4;
 			default -> 0;
 		};
 
@@ -45,64 +50,72 @@ public final class RawTextureData {
 		}
 
 		var input = ByteBuffer.wrap(pixels).order(ByteOrder.nativeOrder());
-		var output = ByteBuffer.allocateDirect(Math.multiplyExact(texels, target.blockSize())).order(ByteOrder.nativeOrder());
-		boolean bgr = sourceFormat == PixelFormat.BGR || sourceFormat == PixelFormat.BGRA || sourceFormat == PixelFormat.BGR_INTEGER || sourceFormat == PixelFormat.BGRA_INTEGER;
+		var output = MemoryUtil.memAlloc(Math.multiplyExact(texels, target.blockSize()));
+		try {
+			boolean bgr = sourceFormat == PixelFormat.BGR || sourceFormat == PixelFormat.BGRA || sourceFormat == PixelFormat.BGR_INTEGER || sourceFormat == PixelFormat.BGRA_INTEGER;
 
-		boolean packedTarget = internal == InternalTextureFormat.RGB565 || internal == InternalTextureFormat.RGB5_A1;
-		int channels = packedTarget ? internal.getPixelFormat().getComponentCount() : target.componentCount();
+			boolean packedTarget = internal == InternalTextureFormat.RGB565 || internal == InternalTextureFormat.RGB5_A1 || internal == InternalTextureFormat.RGBA4;
+			int channels = packedTarget ? internal.getPixelFormat().getComponentCount() : target.componentCount();
 
-		for (int i = 0; i < texels; i++) {
-			int packed = 0;
+			for (int i = 0; i < texels; i++) {
+				int packed = 0;
 
-			for (int channel = 0; channel < channels; channel++) {
-				int sourceChannel = bgr && channel < 3 ? 2 - channel : channel;
-				double value = channel == 3 ? 1 : 0;
+				for (int channel = 0; channel < channels; channel++) {
+					int sourceChannel = bgr && channel < 3 ? 2 - channel : channel;
+					double value = channel == 3 ? 1 : 0;
 
-				if (channel < internal.getPixelFormat().getComponentCount() && sourceChannel < inputChannels) {
-					value = packedChannels != 0 ? readPacked(input, i * stride, sourceChannel, type) : read(input,
-						i * stride + sourceChannel * type.getByteSize(), type, integer);
+					if (channel < internal.getPixelFormat().getComponentCount() && sourceChannel < inputChannels) {
+						value = packedChannels != 0 ? readPacked(input, i * stride, sourceChannel, type) : read(input,
+							i * stride + sourceChannel * type.getByteSize(), type, integer);
+					}
+
+					if (packedTarget) {
+						int bits = internal == InternalTextureFormat.RGBA4 ? 4 : internal == InternalTextureFormat.RGB565 && channel == 1 ? 6 : channel == 3 ? 1 : 5;
+						packed = packed << bits | (int) Math.round(Math.clamp(value, 0, 1) * ((1 << bits) - 1));
+						continue;
+					}
+
+					switch (target.componentType()) {
+						case UNORM_8 -> output.put((byte) Math.round(Math.clamp(value, 0, 1) * 255));
+						case SNORM_8 -> output.put((byte) Math.round(Math.clamp(value, -1, 1) * 127));
+						case UNORM_16 -> output.putShort((short) Math.round(Math.clamp(value, 0, 1) * 65535));
+						case SNORM_16 -> output.putShort((short) Math.round(Math.clamp(value, -1, 1) * 32767));
+						case UINT_8 -> output.put((byte) (int) Math.clamp(value, 0, 255));
+						case SINT_8 -> output.put((byte) (int) Math.clamp(value, -128, 127));
+						case UINT_16 -> output.putShort((short) (int) Math.clamp(value, 0, 65535));
+						case SINT_16 -> output.putShort((short) (int) Math.clamp(value, -32768, 32767));
+						case UINT_32 -> output.putInt((int) (long) Math.clamp(value, 0, 4294967295.0));
+						case SINT_32 -> output.putInt((int) Math.clamp(value, -2147483648.0, 2147483647.0));
+						case FLOAT_16 -> output.putShort(Float.floatToFloat16((float) value));
+						case FLOAT_32 -> output.putFloat((float) value);
+						default -> throw new UnsupportedOperationException("packed raw image format is not implemented: " + internal);
+					}
 				}
 
 				if (packedTarget) {
-					int bits = internal == InternalTextureFormat.RGB565 && channel == 1 ? 6 : channel == 3 ? 1 : 5;
-					packed = packed << bits | (int) Math.round(Math.clamp(value, 0, 1) * ((1 << bits) - 1));
-					continue;
-				}
-
-				switch (target.componentType()) {
-					case UNORM_8 -> output.put((byte) Math.round(Math.clamp(value, 0, 1) * 255));
-					case SNORM_8 -> output.put((byte) Math.round(Math.clamp(value, -1, 1) * 127));
-					case UNORM_16 -> output.putShort((short) Math.round(Math.clamp(value, 0, 1) * 65535));
-					case SNORM_16 -> output.putShort((short) Math.round(Math.clamp(value, -1, 1) * 32767));
-					case UINT_8 -> output.put((byte) (int) Math.clamp(value, 0, 255));
-					case SINT_8 -> output.put((byte) (int) Math.clamp(value, -128, 127));
-					case UINT_16 -> output.putShort((short) (int) Math.clamp(value, 0, 65535));
-					case SINT_16 -> output.putShort((short) (int) Math.clamp(value, -32768, 32767));
-					case UINT_32 -> output.putInt((int) (long) Math.clamp(value, 0, 4294967295.0));
-					case SINT_32 -> output.putInt((int) Math.clamp(value, -2147483648.0, 2147483647.0));
-					case FLOAT_16 -> output.putShort(Float.floatToFloat16((float) value));
-					case FLOAT_32 -> output.putFloat((float) value);
-					default -> throw new UnsupportedOperationException("packed raw image format is not implemented: " + internal);
+					if (internal == InternalTextureFormat.RGB5_A1) {
+						packed = packed >>> 1 | (packed & 1) << 15;
+					}
+					output.putShort((short) packed);
 				}
 			}
 
-			if (packedTarget) {
-				if (internal == InternalTextureFormat.RGB5_A1) {
-					packed = packed >>> 1 | (packed & 1) << 15;
-				}
-				output.putShort((short) packed);
-			}
+			return output.flip();
+		} catch (RuntimeException | Error failure) {
+			MemoryUtil.memFree(output);
+			throw failure;
 		}
-
-		return output.flip();
 	}
 
 	private static double readPacked(ByteBuffer input, int offset, int channel, PixelType type) {
 		boolean rgb = type == PixelType.UNSIGNED_SHORT_5_6_5 || type == PixelType.UNSIGNED_SHORT_5_6_5_REV;
-		int bits = rgb && channel == 1 ? 6 : channel == 3 ? 1 : 5;
+		boolean rgba4 = type == PixelType.UNSIGNED_SHORT_4_4_4_4 || type == PixelType.UNSIGNED_SHORT_4_4_4_4_REV;
+		int bits = rgba4 ? 4 : rgb && channel == 1 ? 6 : channel == 3 ? 1 : 5;
 		int shift = switch (type) {
 			case UNSIGNED_SHORT_5_6_5 -> channel == 0 ? 11 : channel == 1 ? 5 : 0;
 			case UNSIGNED_SHORT_5_6_5_REV -> channel == 0 ? 0 : channel == 1 ? 5 : 11;
+			case UNSIGNED_SHORT_4_4_4_4 -> 12 - channel * 4;
+			case UNSIGNED_SHORT_4_4_4_4_REV -> channel * 4;
 			case UNSIGNED_SHORT_5_5_5_1 -> channel == 3 ? 0 : 11 - channel * 5;
 			case UNSIGNED_SHORT_1_5_5_5_REV -> channel == 3 ? 15 : channel * 5;
 			default -> throw new UnsupportedOperationException("packed raw pixel type: " + type);

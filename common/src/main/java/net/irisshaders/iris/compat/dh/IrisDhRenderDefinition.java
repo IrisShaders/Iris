@@ -4,9 +4,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.enums.config.EDhApiDepthDirection;
 import com.seibel.distanthorizons.api.enums.config.EDhApiDepthRange;
 import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingApi;
-import com.seibel.distanthorizons.api.interfaces.render.IDhApiCustomRenderRegister;
+import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderableBoxGroup;
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.AbstractDhApiRenderDefinition;
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.IDhApiAntiAliasRenderer;
+import com.seibel.distanthorizons.api.interfaces.render.renderDef.IDhApiBlockTextureAtlas;
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.IDhApiDebugWireframeRenderer;
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.IDhApiFarFadeRenderer;
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.IDhApiFogRenderer;
@@ -41,7 +42,7 @@ public class IrisDhRenderDefinition extends AbstractDhApiRenderDefinition {
 		public void runRenderPassSetup(DhApiRenderParam params) {
 			var compat = DHCompatInternal.current();
 			if (compat != null) {
-				compat.setup(params);
+				compat.setup();
 			}
 		}
 
@@ -71,11 +72,19 @@ public class IrisDhRenderDefinition extends AbstractDhApiRenderDefinition {
 
 	private final IDhApiGenericRenderer genericRenderer = new IDhApiGenericRenderer() {
 		@Override
-		public void render(DhApiRenderParam params, IDhApiCustomRenderRegister register, boolean ssao) {
+		public void preRender(DhApiRenderParam params) {
+		}
+
+		@Override
+		public void render(DhApiRenderParam params, IDhApiRenderableBoxGroup group) {
 			var compat = DHCompatInternal.current();
 			if (compat != null) {
-				compat.renderGeneric(params, register, ssao);
+				compat.renderGeneric(group);
 			}
+		}
+
+		@Override
+		public void postRender(DhApiRenderParam params) {
 		}
 
 		@Override
@@ -141,6 +150,10 @@ public class IrisDhRenderDefinition extends AbstractDhApiRenderDefinition {
 	@Override
 	public IDhApiGenericRenderer getGenericRenderer() {
 		return this.genericRenderer;
+	}
+
+	@Override public IDhApiBlockTextureAtlas getTextureAtlasWrapper() {
+		return IrisBlockTextureAtlas.INSTANCE;
 	}
 
 	@Override

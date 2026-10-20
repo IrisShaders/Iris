@@ -15,19 +15,18 @@ import net.irisshaders.iris.backend.FramebufferDescription;
 import net.irisshaders.iris.backend.GraphicsPipeline;
 import net.irisshaders.iris.backend.GraphicsShader;
 import net.irisshaders.iris.backend.PipelineState;
-import net.irisshaders.iris.backend.SyncCommand;
 import net.irisshaders.iris.gl.blending.BlendMode;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
+import net.irisshaders.iris.pipeline.transform.Glsl;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.pipeline.transform.WorldShaderTransformer;
-import net.irisshaders.iris.pipeline.transform.vulkan.VulkanGlsl;
 import net.irisshaders.iris.pipeline.transform.vulkan.VulkanShaderPatcher;
 import net.irisshaders.iris.samplers.PackSamplers;
-import net.irisshaders.iris.samplers.ProgramResources;
+import net.irisshaders.iris.samplers.ProgramSamplers;
 import net.irisshaders.iris.targets.ColorAttachmentPlan;
-import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
+import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import org.joml.Vector2i;
 import org.lwjgl.system.MemoryStack;
 
@@ -43,8 +42,8 @@ public class CompositeProgram {
 	private final Map<PatchShaderType, String> sources;
 	private final ColorAttachmentPlan.Program outputs;
 	private final List<BlendMode> blends;
-	private final BufferUniformHolder uniforms;
-	private final ProgramResources samplers;
+	private final DrawUniforms uniforms;
+	private final ProgramSamplers samplers;
 	private GraphicsPipeline pipeline;
 	private GraphicsShader shader;
 
@@ -75,8 +74,8 @@ public class CompositeProgram {
 			}
 		}
 
-		this.uniforms = new BufferUniformHolder(layout);
-		this.samplers = new ProgramResources(pack, layout);
+		this.samplers = new ProgramSamplers(pack, layout);
+		this.uniforms = new DrawUniforms(layout);
 	}
 
 	private static List<PipelineState.Attribute> attributes(String source) {
@@ -85,17 +84,17 @@ public class CompositeProgram {
 		tree.getRoot().nodeIndex.getStream(TypeAndInitDeclaration.class).forEach(declaration -> {
 			var qualifier = declaration.getType().getTypeQualifier();
 
-			if (!VulkanGlsl.hasStorage(qualifier, StorageType.IN)) {
+			if (!Glsl.hasStorage(qualifier, StorageType.IN)) {
 				return;
 			}
 
 			for (var member : declaration.getMembers()) {
 				String name = WorldShaderTransformer.vertexAttributeName(member.getName().getName());
 
-				int location = VulkanGlsl.integer(VulkanGlsl.layout(qualifier, "location").getExpression(), tree.getRoot());
+				int location = Glsl.integer(Glsl.layout(qualifier, "location").getExpression(), tree.getRoot());
 
 				if (!name.equals("Position") && !name.equals("UV0")) {
-					var type = VulkanGlsl.uniformType((BuiltinNumericTypeSpecifier) declaration.getType().getTypeSpecifier(), member,
+					var type = Glsl.uniformType((BuiltinNumericTypeSpecifier) declaration.getType().getTypeSpecifier(), member,
 						tree.getRoot());
 					int columns = type.dimensions().stream().reduce(type.columns(), Math::multiplyExact);
 					int locations = (type.rows() * type.scalarBytes() + 15) / 16;
@@ -117,12 +116,18 @@ public class CompositeProgram {
 		return attributes;
 	}
 
-	public BufferUniformHolder getUniforms() {
+	public DrawUniforms getUniforms() {
 		return this.uniforms;
 	}
 
-	public ProgramResources getSamplers() {
+	public ProgramSamplers getSamplers() {
 		return this.samplers;
+	}
+
+	private GraphicsPipeline createPipeline(List<GpuTextureView> targets) {
+		return this.shader.createPipeline(
+			new PipelineState(new FramebufferDescription(targets, null),
+				this.blends, attributes(this.shader.getSource().sources().get(PatchShaderType.VERTEX)), VERTEX_STRIDE, null, false, null));
 	}
 
 	public void prepare(List<GpuTextureView> targets) {
@@ -131,6 +136,17 @@ public class CompositeProgram {
 		}
 
 		if (this.pipeline != null) {
+			var framebuffer = this.pipeline.framebuffer();
+			var formats = framebuffer.colorFormats();
+			boolean matches = framebuffer.colorAttachmentCount() == targets.size();
+			for (int i = 0; matches && i < targets.size(); i++) {
+				matches = formats[i] == targets.get(i).texture().getFormat();
+			}
+			if (!matches) {
+				var previous = this.pipeline;
+				this.pipeline = this.createPipeline(targets);
+				Iris.getRenderBackend().retire(previous::close);
+			}
 			return;
 		}
 
@@ -141,10 +157,7 @@ public class CompositeProgram {
 			this.shader = Iris.getRenderBackend().createGraphicsShader(this.name, patched, this.samplers, this.uniforms);
 			cleanup.add(this.shader::close);
 			this.uniforms.resolveLayout(this.shader.getSource().layout());
-			this.pipeline = this.shader.createPipeline(
-				new PipelineState(new FramebufferDescription(targets.stream().map(v -> v.texture().getFormat()).toList(), null),
-					this.blends, attributes(this.shader.getSource().sources().get(PatchShaderType.VERTEX)), VERTEX_STRIDE, null, false,
-					null));
+			this.pipeline = this.createPipeline(targets);
 
 			cleanup.add(this.pipeline::close);
 
@@ -185,16 +198,8 @@ public class CompositeProgram {
 
 	public void draw(List<GpuTextureView> targets, ViewportData viewport, long tick, long frame) {
 		this.prepare(targets);
-		this.uniforms.update(tick, frame);
+		this.uniforms.evaluateLocalValues(tick, frame);
 		var backend = Iris.getRenderBackend();
-		var sync = backend.createSync();
-		sync.read(this.pipeline);
-
-		for (var target : targets) {
-			sync.write(target, SyncCommand.Access.COLOR_ATTACHMENT);
-		}
-
-		sync.nextIs(SyncCommand.Stage.GRAPHICS).run();
 		int width = targets.getFirst().getWidth(0);
 		int height = targets.getFirst().getHeight(0);
 
@@ -219,6 +224,7 @@ public class CompositeProgram {
 		}
 
 		this.destroyed = true;
+		this.uniforms.close();
 
 		if (this.vertices != null) {
 			this.vertices.close();

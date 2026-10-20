@@ -2,10 +2,10 @@ package net.irisshaders.iris.vulkan;
 
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
 import com.mojang.renderpearl.backend.vulkan.VulkanConst;
 import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.backend.IrisImage;
 import net.irisshaders.iris.gl.texture.TextureType;
 import org.lwjgl.system.MemoryStack;
@@ -21,6 +21,9 @@ import org.lwjgl.vulkan.VkImageSubresourceRange;
 import org.lwjgl.vulkan.VkImageViewCreateInfo;
 
 import java.nio.ByteBuffer;
+
+import static net.irisshaders.iris.vulkan.VulkanChecks.check;
+import static org.lwjgl.vulkan.KHRSynchronization2.*;
 
 public class VulkanImage implements IrisImage {
 	private final VulkanDevice device;
@@ -78,8 +81,7 @@ public class VulkanImage implements IrisImage {
 			device.instance().debug().setObjectName(device.vkDevice(), VK10.VK_OBJECT_TYPE_IMAGE, this.image, name);
 			device.instance().debug().setObjectName(device.vkDevice(), VK10.VK_OBJECT_TYPE_IMAGE_VIEW, this.view, name);
 
-			var encoder = device.createCommandEncoder();
-			var command = VulkanCommandBridge.commandBuffer(encoder);
+			var command = VulkanCommandBridge.commandBuffer();
 			var barrier = VkImageMemoryBarrier.calloc(1, stack).sType$Default().oldLayout(VK10.VK_IMAGE_LAYOUT_UNDEFINED)
 				.newLayout(VK10.VK_IMAGE_LAYOUT_GENERAL).dstAccessMask(VK10.VK_ACCESS_MEMORY_READ_BIT | VK10.VK_ACCESS_MEMORY_WRITE_BIT)
 				.srcQueueFamilyIndex(VK10.VK_QUEUE_FAMILY_IGNORED).dstQueueFamilyIndex(VK10.VK_QUEUE_FAMILY_IGNORED).image(this.image);
@@ -97,12 +99,6 @@ public class VulkanImage implements IrisImage {
 		}
 	}
 
-	private static void check(int status, String action) {
-		if (status != VK10.VK_SUCCESS) {
-			throw new IllegalStateException("failed to " + action + ": " + status);
-		}
-	}
-
 	@Override
 	public TextureType getType() {
 		return this.type;
@@ -110,18 +106,7 @@ public class VulkanImage implements IrisImage {
 
 	@Override
 	public long getView() {
-		if (this.view == 0) {
-			throw new IllegalStateException("image is closed");
-		}
-
 		return this.view;
-	}
-
-	@Override
-	public long getImage() {
-		this.getView();
-
-		return this.image;
 	}
 
 	@Override
@@ -141,35 +126,30 @@ public class VulkanImage implements IrisImage {
 
 	@Override
 	public void upload(ByteBuffer data) {
-		this.getView();
-
-		try (var stack = MemoryStack.stackPush(); var staging = this.device.createBuffer(() -> "Iris image upload",
-			GpuBuffer.USAGE_COPY_SRC, data)) {
-			var encoder = this.device.createCommandEncoder();
-			var command = VulkanCommandBridge.commandBuffer(encoder);
-			VulkanCommandEncoder.memoryBarrier(command, stack);
+		try (var stack = MemoryStack.stackPush()) {
+			var staging = this.device.createBuffer(() -> "Iris image upload",
+				GpuBuffer.USAGE_COPY_SRC, data);
+			var command = VulkanCommandBridge.commandBuffer();
+			Iris.getRenderBackend().sync(VK_PIPELINE_STAGE_2_COPY_BIT_KHR, VK_ACCESS_2_TRANSFER_READ_BIT_KHR,
+				VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR);
 
 			var region = VkBufferImageCopy.calloc(1, stack);
 			region.imageSubresource().aspectMask(VK10.VK_IMAGE_ASPECT_COLOR_BIT).layerCount(1);
 			region.imageExtent().set(this.width, this.height, this.depth);
 			VK10.vkCmdCopyBufferToImage(command, ((VulkanGpuBuffer) staging).vkBuffer(), this.image, VK10.VK_IMAGE_LAYOUT_GENERAL, region);
-			VulkanCommandEncoder.memoryBarrier(command, stack);
+			staging.close();
 		}
 	}
 
 	@Override
 	public void clear() {
-		this.getView();
-
-		var encoder = this.device.createCommandEncoder();
-		var command = VulkanCommandBridge.commandBuffer(encoder);
+		var command = VulkanCommandBridge.commandBuffer();
 
 		try (var stack = MemoryStack.stackPush()) {
-			VulkanCommandEncoder.memoryBarrier(command, stack);
+			Iris.getRenderBackend().sync(VK_PIPELINE_STAGE_2_CLEAR_BIT_KHR, 0, VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR);
 
 			var range = VkImageSubresourceRange.calloc(1, stack).aspectMask(VK10.VK_IMAGE_ASPECT_COLOR_BIT).levelCount(1).layerCount(1);
 			VK10.vkCmdClearColorImage(command, this.image, VK10.VK_IMAGE_LAYOUT_GENERAL, VkClearColorValue.calloc(stack), range);
-			VulkanCommandEncoder.memoryBarrier(command, stack);
 		}
 	}
 

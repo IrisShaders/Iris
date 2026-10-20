@@ -35,4 +35,5 @@ accessible field com/mojang/renderpearl/backend/vulkan/VulkanCommandEncoder curr
 
 extend-enum com/mojang/renderpearl/api/GpuFormat IRIS_RGB565_UNORM
 extend-enum com/mojang/renderpearl/api/GpuFormat IRIS_RGB5A1_UNORM
+extend-enum com/mojang/renderpearl/api/GpuFormat IRIS_RGBA4_UNORM
 extend-enum com/mojang/renderpearl/api/GpuFormat IRIS_RGB9E5_FLOAT

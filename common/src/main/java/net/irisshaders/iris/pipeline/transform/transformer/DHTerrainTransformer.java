@@ -1,13 +1,22 @@
 package net.irisshaders.iris.pipeline.transform.transformer;
 
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
+import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.binary.ArrayAccessExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.binary.AssignmentExpression;
+import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.query.Root;
+import io.github.douira.glsl_transformer.ast.print.ASTPrinter;
+import io.github.douira.glsl_transformer.ast.print.PrintType;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.ASTParser;
 import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.gl.shader.ShaderType;
+import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
+
+import java.util.Map;
 
 import static net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer.addIfNotExists;
 
@@ -37,8 +46,7 @@ public class DHTerrainTransformer {
 		}
 
 		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
-			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in vec3 iris_vBlockPos;", "flat in uvec2 iris_TexId;",
-				"uniform sampler2D dhBlockAtlas;", """
+			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "uniform sampler2D dhBlockAtlas;", """
 					bool dh_hasTexture() { return iris_TexId.x != 0u; }""", """
 					vec2 dh_blockFaceUv() {
 						vec3 pos = fract(iris_vBlockPos);
@@ -115,12 +123,39 @@ public class DHTerrainTransformer {
 		tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_FUNCTIONS,
 			// translated from sodium's chunk_vertex.glsl
 			"vec3 _vert_position;", "vec2 _vert_tex_light_coord;", "int dhMaterialId;", "vec4 _vert_color;", "vec3 _vert_normal;",
-			"uniform float mircoOffset;", "uniform vec3 modelOffset;", "out vec3 iris_vBlockPos;", "flat out uvec2 iris_TexId;",
+			"const float mircoOffset = 0.01;", "uniform vec3 modelOffset;",
 			"const vec3 irisNormals[6] = vec3[](vec3(0,-1,0),vec3(0,1,0),vec3(0,0,-1),vec3(0,0,1),vec3(-1,0,0),vec3(1,0,0));",
 			"void _vert_init() {" + "    uint meta = vPosition.a;\n" + "uint mirco = (meta & 0xFF00u) >> 8u; // mirco offset which is a xyz 2bit value\n" + "    // 0b00 = no offset\n" + "    // 0b01 = positive offset\n" + "    // 0b11 = negative offset\n" + "    // format is: 0b00zzyyxx\n" + "    float mx = (mirco & 1u)!=0u ? mircoOffset : 0.0;\n" + "    mx = (mirco & 2u)!=0u ? -mx : mx;\n" + "    float my = (mirco & 4u)!=0u ? mircoOffset : 0.0;\n" + "    my = (mirco & 8u)!=0u ? -my : my;\n" + "    float mz = (mirco & 16u)!=0u ? mircoOffset : 0.0;\n" + "    mz = (mirco & 32u)!=0u ? -mz : mz;\n" + "        uint lights = meta & 0xFFu;\n" + "_vert_position = vec3(vPosition.xyz) + vec3(mx, my, mz);" + "_vert_normal = irisNormals[irisExtra.y];" + "dhMaterialId = int(irisExtra.x);" + "_vert_tex_light_coord = vec2((float(lights/16u)+0.5) / 16.0, (mod(float(lights), 16.0)+0.5) / 16.0);" + "iris_vBlockPos = vec3(vPosition.xyz);" + "iris_TexId =  uvec2(irisExtra.z | (irisExtra.w << 8u), irisExtra.y);" + "_vert_color = iris_color; }");
 		addIfNotExists(root, t, tree, "iris_color", Type.F32VEC4, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "vPosition", Type.U32VEC4, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "irisExtra", Type.U32VEC4, StorageQualifier.StorageType.IN);
 		tree.prependMainFunctionBody(t, "_vert_init();");
+	}
+
+	public static void transformGrouped(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees) {
+		var geometry = trees.get(PatchShaderType.GEOMETRY);
+		String vertexIndex = "0";
+		if (geometry != null) {
+			vertexIndex = "iris_dhVertexIndex";
+			var root = geometry.getRoot();
+			root.indexBuildSession(() -> {
+				geometry.parseAndInjectNodes(parser, ASTInjectionPoint.BEFORE_DECLARATIONS, "int iris_dhInputIndex = 0;", "int iris_dhVertexIndex = 0;");
+				// EmitVertex has no index argument. Follow the input selected by gl_in[].gl_Position.
+				root.process(root.nodeIndex.getStream(ArrayAccessExpression.class)
+					.filter(access -> access.getLeft() instanceof ReferenceExpression ref && ref.getIdentifier().getName().equals("gl_in"))
+					.filter(access -> access.getParent() instanceof MemberAccessExpression member && member.getMember().getName().equals("gl_Position")), access -> {
+					String index = ASTPrinter.print(PrintType.COMPACT, access.getRight());
+					access.getRight().replaceByAndDelete(parser.parseExpression(root, "(iris_dhInputIndex = int(" + index + "))"));
+				});
+				// Keep the index selected for the output position, even if other inputs are read before EmitVertex.
+				root.process(root.nodeIndex.getStream(AssignmentExpression.class)
+					.filter(assignment -> assignment.getLeft() instanceof ReferenceExpression ref && ref.getIdentifier().getName().equals("gl_Position")), assignment -> {
+					String value = ASTPrinter.print(PrintType.COMPACT, assignment);
+					assignment.replaceByAndDelete(parser.parseExpression(root, "(" + value + ", iris_dhVertexIndex = iris_dhInputIndex, gl_Position)"));
+				});
+			});
+		}
+		VaryingTransformer.add(parser, trees, Type.F32VEC3, "iris_vBlockPos", false, vertexIndex);
+		VaryingTransformer.add(parser, trees, Type.U32VEC2, "iris_TexId", true, vertexIndex);
 	}
 }

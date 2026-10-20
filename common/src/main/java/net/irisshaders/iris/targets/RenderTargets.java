@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.irisshaders.iris.gl.texture.DepthBufferFormat;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
 import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;
@@ -12,16 +13,17 @@ import org.joml.Vector2i;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 public class RenderTargets {
 	private final RenderTarget[] targets;
+	private RenderTargetMipmapState plannedMipmaps = RenderTargetMipmapState.BASE;
 	private final RenderFramebuffer depthSourceFb;
 	private final RenderFramebuffer noTranslucentsDestFb;
 	private final RenderFramebuffer noHandDestFb;
 	private final List<RenderFramebuffer> ownedFramebuffers;
-	private final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> targetSettingsMap;
+	private final Int2ObjectMap<PackRenderTargetDirectives.RenderTargetSettings> targetSettingsMap;
 	private final PackDirectives packDirectives;
 	private GpuTexture noTranslucents;
 	private GpuTexture noHand;
@@ -35,7 +37,7 @@ public class RenderTargets {
 	private boolean destroyed;
 
 	public RenderTargets(int width, int height, GpuTexture depthTexture, int depthBufferVersion, DepthBufferFormat depthFormat,
-		Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargets, PackDirectives packDirectives) {
+		Int2ObjectMap<PackRenderTargetDirectives.RenderTargetSettings> renderTargets, PackDirectives packDirectives) {
 		targets = new RenderTarget[renderTargets.size()];
 
 		targetSettingsMap = renderTargets;
@@ -67,6 +69,14 @@ public class RenderTargets {
 
 		this.noHandDestFb = createFramebufferWritingToMain(new int[]{0});
 		this.noHandDestFb.addDepthAttachment(this.noHand);
+	}
+
+	public RenderTargetMipmapState plannedMipmaps() {
+		return this.plannedMipmaps;
+	}
+
+	public void planMipmaps(Set<Integer> buffers, Set<Integer> flipped) {
+		this.plannedMipmaps = this.plannedMipmaps.afterGeneration(buffers, flipped);
 	}
 
 	public void destroy() {

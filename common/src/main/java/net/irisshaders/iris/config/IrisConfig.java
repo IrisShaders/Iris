@@ -51,7 +51,6 @@ public class IrisConfig {
 	 * If the update notification should be disabled or not.
 	 */
 	private boolean disableUpdateMessage;
-	private boolean hasRunVulkan;
 
 	public IrisConfig(Path propertiesPath, Path excluded) {
 		shaderPackName = null;
@@ -59,7 +58,6 @@ public class IrisConfig {
 		allowUnknownShaders = false;
 		enableDebugOptions = false;
 		disableUpdateMessage = false;
-		this.hasRunVulkan = false;
 		this.propertiesPath = propertiesPath;
 		this.excludedPath = excluded;
 	}
@@ -122,14 +120,6 @@ public class IrisConfig {
 		return disableUpdateMessage;
 	}
 
-	public boolean hasRunVulkan() {
-		return this.hasRunVulkan;
-	}
-
-	public void setHasRunVulkan(boolean hasRunVulkan) {
-		this.hasRunVulkan = hasRunVulkan;
-	}
-
 	public void setDebugEnabled(boolean enabled) {
 		enableDebugOptions = enabled;
 	}
@@ -181,7 +171,6 @@ public class IrisConfig {
 		allowUnknownShaders = "true".equals(properties.getProperty("allowUnknownShaders"));
 		enableDebugOptions = "true".equals(properties.getProperty("enableDebugOptions"));
 		disableUpdateMessage = "true".equals(properties.getProperty("disableUpdateMessage"));
-		this.hasRunVulkan = "true".equals(properties.getProperty("hasRunVulkan"));
 		try {
 			IrisVideoSettings.shadowDistance = Integer.parseInt(properties.getProperty("maxShadowRenderDistance", "32"));
 			IrisVideoSettings.colorSpace = ColorSpace.valueOf(properties.getProperty("colorSpace", "SRGB"));
@@ -211,7 +200,6 @@ public class IrisConfig {
 		properties.setProperty("allowUnknownShaders", Boolean.toString(allowUnknownShaders));
 		properties.setProperty("enableDebugOptions", Boolean.toString(enableDebugOptions));
 		properties.setProperty("disableUpdateMessage", Boolean.toString(disableUpdateMessage));
-		properties.setProperty("hasRunVulkan", Boolean.toString(this.hasRunVulkan));
 		properties.setProperty("maxShadowRenderDistance", String.valueOf(IrisVideoSettings.shadowDistance));
 		properties.setProperty("colorSpace", IrisVideoSettings.colorSpace.name());
 		// NB: This uses ISO-8859-1 with unicode escapes as the encoding

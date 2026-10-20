@@ -19,10 +19,6 @@ public class CommentDirectiveParser {
 	// Directives take the following form:
 	// /* KEY:VALUE */
 
-	private CommentDirectiveParser() {
-		// cannot be constructed
-	}
-
 	public static Optional<CommentDirective> findDirective(String haystack, CommentDirective.Type type) {
 		String needle = type.name();
 		String prefix = needle + ":";

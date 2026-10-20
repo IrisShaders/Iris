@@ -16,7 +16,7 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 
-final class GlImage implements IrisImage {
+public class GlImage implements IrisImage {
 	private final int target;
 	private final TextureType type;
 	private final GpuFormat format;
@@ -25,7 +25,7 @@ final class GlImage implements IrisImage {
 	private final int depth;
 	private int id;
 
-	GlImage(TextureType type, GpuFormat format, int width, int height, int depth) {
+	public GlImage(TextureType type, GpuFormat format, int width, int height, int depth) {
 		if (width < 1 || height < 0 || depth < 0) {
 			throw new IllegalArgumentException("invalid image extent");
 		}
@@ -84,11 +84,6 @@ final class GlImage implements IrisImage {
 		}
 
 		return this.id;
-	}
-
-	@Override
-	public long getImage() {
-		return this.getView();
 	}
 
 	@Override

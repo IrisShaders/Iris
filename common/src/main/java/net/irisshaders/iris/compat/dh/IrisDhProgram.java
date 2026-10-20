@@ -3,7 +3,6 @@ package net.irisshaders.iris.compat.dh;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
 import com.mojang.renderpearl.api.pipeline.CompareOp;
 import com.mojang.renderpearl.api.pipeline.DepthStencilState;
@@ -16,32 +15,30 @@ import net.irisshaders.iris.backend.FramebufferDescription;
 import net.irisshaders.iris.backend.GraphicsPipeline;
 import net.irisshaders.iris.backend.GraphicsShader;
 import net.irisshaders.iris.backend.PipelineState;
-import net.irisshaders.iris.backend.SyncCommand;
 import net.irisshaders.iris.gl.blending.BlendMode;
 import net.irisshaders.iris.gl.blending.BlendModeFunction;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerHolder.TextureBinding;
-import net.irisshaders.iris.gl.state.FogMode;
-import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
+import net.irisshaders.iris.gl.uniform.UniformType;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
-import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import net.irisshaders.iris.pipeline.transform.TransformPatcher;
+import net.irisshaders.iris.pipeline.transform.UniformPlan;
 import net.irisshaders.iris.pipeline.transform.WorldShaderTransformer;
 import net.irisshaders.iris.pipeline.transform.vulkan.VulkanShaderPatcher;
-import net.irisshaders.iris.samplers.ProgramResources;
+import net.irisshaders.iris.samplers.ProgramSamplers;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 import net.irisshaders.iris.targets.ColorAttachmentPlan;
 import net.irisshaders.iris.targets.RenderFramebuffer;
+import net.irisshaders.iris.targets.WorldRenderTargets;
 import net.irisshaders.iris.uniforms.CommonUniforms;
-import net.irisshaders.iris.uniforms.SystemTimeUniforms;
-import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
+import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
 import org.joml.Vector2i;
+import org.lwjgl.system.MemoryUtil;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +47,8 @@ import java.util.Set;
 public class IrisDhProgram implements AutoCloseable {
 	private final DHCompatInternal compat;
 	private final RenderFramebuffer framebuffer;
-	private final BufferUniformHolder uniforms;
-	private final ProgramResources resources;
+	private final DrawUniforms uniforms;
+	private final ProgramSamplers resources;
 	private final VertexFormat vertexFormat;
 	private final Map<PatchShaderType, String> sources;
 	private final ColorAttachmentPlan.Program outputs;
@@ -63,7 +60,6 @@ public class IrisDhProgram implements AutoCloseable {
 	private GraphicsShader shader;
 	private GraphicsPipeline pipeline;
 	private GpuBuffer zeroVertices;
-	private Map<String, List<GpuBufferSlice>> uniformBuffers = Map.of();
 
 	public IrisDhProgram(DHCompatInternal compat, IrisRenderingPipeline parent, ProgramSource source, boolean generic, boolean shadow,
 		boolean translucent) {
@@ -85,41 +81,39 @@ public class IrisDhProgram implements AutoCloseable {
 			source.getGeometrySource().orElse(null), source.getFragmentSource().orElseThrow(), parent.getTextureMap(),
 			parent.getTextureOverrides(TextureStage.GBUFFERS_AND_SHADOW));
 		this.name = name;
+		sources = WorldShaderTransformer.patchDhUniforms(sources, shadow);
 		sources = WorldShaderTransformer.vertexInputs(sources, WorldShaderTransformer.availableFormats(List.of(this.vertexFormat)));
 		this.sources = sources;
 		var layout = VulkanShaderPatcher.discover(sources).layout();
-		this.uniforms = new BufferUniformHolder(layout);
-		this.uniforms.useFrameUniforms(parent.getFrameUniforms());
-		CommonUniforms.addDynamicUniforms(this.uniforms, FogMode.PER_VERTEX);
-		this.uniforms.uniform3f(UniformUpdateFrequency.CUSTOM, "modelOffset", () -> this.compat.getModelOffset());
-		this.uniforms.uniformMatrix(UniformUpdateFrequency.CUSTOM, "iris_ModelViewMatrix", () -> this.compat.getModelView());
-		this.uniforms.uniformMatrix(UniformUpdateFrequency.CUSTOM, "iris_ModelViewMatrixInverse", () -> this.compat.getModelViewInverse());
-		this.uniforms.uniformMatrix(UniformUpdateFrequency.CUSTOM, "iris_ProjectionMatrix", () -> this.compat.getProjection());
-		this.uniforms.uniformMatrix(UniformUpdateFrequency.CUSTOM, "iris_ProjectionMatrixInverse",
-			() -> this.compat.getProjectionInverse());
-		this.uniforms.uniformMatrix3(UniformUpdateFrequency.CUSTOM, "iris_NormalMatrix", () -> this.compat.getNormalMatrix());
-		this.uniforms.uniform1f(UniformUpdateFrequency.ONCE, "mircoOffset", () -> 0.01f);
-		this.uniforms.uniform1f(UniformUpdateFrequency.CUSTOM, "clipDistance", () -> this.compat.getClipDistance());
-		this.uniforms.uniform1i(UniformUpdateFrequency.CUSTOM, "uSkyLight", () -> this.compat.getSkyLight());
-		this.uniforms.uniform1i(UniformUpdateFrequency.CUSTOM, "uBlockLight", () -> this.compat.getBlockLight());
+		this.uniforms = new DrawUniforms(layout, UniformPlan.Profile.DH);
+		try {
+			this.uniforms.useFrameUniforms(parent.getFrameUniforms());
+			CommonUniforms.addDrawUniforms(this.uniforms);
+			this.uniforms.drawUniform("modelOffset", UniformType.VEC3);
+			this.uniforms.drawUniform("uSkyLight", UniformType.INT);
+			this.uniforms.drawUniform("uBlockLight", UniformType.INT);
 
-		this.resources = new ProgramResources(parent.getPackSamplers(), layout);
-		this.resources.addStorageBuffers(parent.getStorageBuffers());
-		this.resources.setUniformBuffers(() -> this.uniformBuffers);
-		this.resources.setExternalBindings(
-			unit -> new TextureBinding("dh/lightmap", () -> Minecraft.getInstance().gameRenderer.levelLightmap(), () -> GlSampler.NEAREST));
-		parent.addGbufferOrShadowSamplers(this.resources, this.resources,
-			shadow ? parent::getFlippedBeforeShadow : translucent ? parent::getFlippedAfterTranslucent : parent::getFlippedAfterPrepare,
-			shadow, false, true, false);
-		this.resources.addTextureSampler(new TextureBinding("dh/blockAtlas", this.compat::getBlockAtlas, () -> GlSampler.NEAREST), false,
-			"dhBlockAtlas");
-		this.resources.finish();
+			this.resources = new ProgramSamplers(parent.getPackSamplers(), layout);
+			this.resources.setExternalBindings(
+				unit -> new TextureBinding("dh/lightmap", () -> Minecraft.getInstance().gameRenderer.levelLightmap(), () -> GlSampler.NEAREST));
+			parent.addGbufferOrShadowSamplers(this.resources, this.resources,
+				shadow ? parent::getFlippedBeforeShadow : translucent ? parent::getFlippedAfterTranslucent : parent::getFlippedAfterPrepare,
+				shadow, false, true, false, shadow ? WorldRenderTargets.Phase.SHADOW
+					: translucent ? WorldRenderTargets.Phase.TRANSLUCENT
+					: WorldRenderTargets.Phase.OPAQUE);
+			this.resources.addTextureSampler(new TextureBinding("dh/blockAtlas", this.compat::getBlockAtlas, () -> GlSampler.MIPPED_NEAREST), false,
+				"dhBlockAtlas");
+			this.resources.finish();
 
-		int limit = RenderSystem.getDevice().getDeviceInfo().limits().maxColorAttachments();
-		this.outputs = new ColorAttachmentPlan.Builder().program(name, source.getDirectives(), Set.of()).build(limit).program(name);
-		this.framebuffer = shadow ? parent.createDHFramebufferShadow(source) : parent.createDHFramebuffer(source, translucent);
-		if (!shadow) {
-			this.framebuffer.addDepthAttachment(this.compat.getDepthTexture(false).texture());
+			int limit = RenderSystem.getDevice().getDeviceInfo().limits().maxColorAttachments();
+			this.outputs = new ColorAttachmentPlan.Builder().program(name, source.getDirectives(), Set.of()).build(limit).program(name);
+			this.framebuffer = shadow ? parent.createDHFramebufferShadow(source) : parent.createDHFramebuffer(source, translucent);
+			if (!shadow) {
+				this.framebuffer.addDepthAttachment(this.compat.getDepthTexture(false).texture());
+			}
+		} catch (RuntimeException | Error failure) {
+			this.uniforms.close();
+			throw failure;
 		}
 	}
 
@@ -137,8 +131,7 @@ public class IrisDhProgram implements AutoCloseable {
 				.withPrimitiveTopology(PrimitiveTopology.TRIANGLES).withCull(!this.translucent && !this.generic)
 				.withColorTargetState(ColorTargetState.DEFAULT).withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN, true))
 				.build();
-			var description = new FramebufferDescription(
-				this.framebuffer.getColorViews().stream().map(view -> view.texture().getFormat()).toList(),
+			var description = new FramebufferDescription(this.framebuffer.getColorViews(),
 				this.framebuffer.getDepthView().texture().getFormat());
 			BlendMode blend = this.translucent || this.generic ? new BlendMode(BlendModeFunction.SRC_ALPHA.getGlId(),
 				BlendModeFunction.ONE_MINUS_SRC_ALPHA.getGlId(), BlendModeFunction.ONE.getGlId(),
@@ -146,8 +139,14 @@ public class IrisDhProgram implements AutoCloseable {
 			var attributes = WorldShaderTransformer.attributes(shader.getSource().sources().get(PatchShaderType.VERTEX),
 				List.of(this.vertexFormat));
 			if (attributes.stream().anyMatch(attribute -> attribute.binding() == 1)) {
-				this.zeroVertices = RenderSystem.getDevice()
-					.createBuffer(() -> "DH zero vertex attributes", GpuBuffer.USAGE_VERTEX, ByteBuffer.allocateDirect(32));
+				var data = MemoryUtil.memAlloc(32);
+				try {
+					MemoryUtil.memSet(data, 0);
+					this.zeroVertices = RenderSystem.getDevice()
+						.createBuffer(() -> "DH zero vertex attributes", GpuBuffer.USAGE_VERTEX, data);
+				} finally {
+					MemoryUtil.memFree(data);
+				}
 			}
 			this.pipeline = shader.createPipeline(
 				new PipelineState(description, this.outputs.blends(this.source.getDirectives(), blend), attributes,
@@ -180,22 +179,18 @@ public class IrisDhProgram implements AutoCloseable {
 		if (draws.isEmpty()) {
 			return;
 		}
+		CommonUniforms.writeDrawUniforms(this.uniforms);
 		var backend = Iris.getRenderBackend();
-		var sync = backend.createSync().read(this.pipeline);
-		for (var draw : draws) {
-			sync.read(draw.vertices, SyncCommand.Access.VERTEX).read(draw.indices, SyncCommand.Access.INDEX);
-			draw.uniforms.values().forEach(slices -> slices.forEach(slice -> sync.read(slice, SyncCommand.Access.UNIFORM)));
-		}
 		var colors = this.framebuffer.getColorViews();
 		var depth = this.framebuffer.getDepthView();
-		colors.forEach(view -> sync.write(view, SyncCommand.Access.COLOR_ATTACHMENT));
-		sync.write(depth, SyncCommand.Access.DEPTH_ATTACHMENT).nextIs(SyncCommand.Stage.GRAPHICS).run();
 		boolean ignore = ImmediateState.temporarilyIgnorePass;
 		ImmediateState.temporarilyIgnorePass = true;
 		try (var pass = backend.createRenderPass(this.name, this.pipeline.framebuffer(), colors, depth,
 			new Vector2i(depth.getWidth(0), depth.getHeight(0)))) {
 			for (var draw : draws) {
-				this.uniformBuffers = draw.uniforms;
+				this.uniforms.set3f("modelOffset", draw.offsetX, draw.offsetY, draw.offsetZ);
+				this.uniforms.set1i("uSkyLight", draw.skyLight);
+				this.uniforms.set1i("uBlockLight", draw.blockLight);
 				pass.setVertexBuffer(0, draw.vertices.slice());
 				pass.setIndexBuffer(draw.indices, draw.indexType);
 				pass.bindPipeline(this.pipeline);
@@ -203,27 +198,20 @@ public class IrisDhProgram implements AutoCloseable {
 			}
 		} finally {
 			ImmediateState.temporarilyIgnorePass = ignore;
-			this.uniformBuffers = Map.of();
 		}
 	}
 
-	public final class Batch implements AutoCloseable {
+	public class Batch implements AutoCloseable {
 		private final List<Draw> draws = new ArrayList<>();
-
-		private Batch() {
-		}
 
 		public void draw(GpuBuffer vertices, GpuBuffer indices, IndexType indexType, int count) {
 			if (count == 0 || vertices == null || indices == null) {
 				return;
 			}
-			var uniforms = IrisDhProgram.this.uniforms;
-			var level = Minecraft.getInstance().level;
-			uniforms.update(level == null ? 0 : level.getGameTime(), SystemTimeUniforms.COUNTER.getAsInt());
-			int alignment = RenderSystem.getDevice().getDeviceInfo().limits().minUniformOffsetAlignment();
-			Map<String, List<GpuBufferSlice>> buffers = uniforms.data().hasRemaining() ? Map.of(ShaderResourceLayout.UNIFORM_BLOCK,
-				List.of(uniforms.upload(RenderSystem.getDevice().createCommandEncoder(), alignment))) : Map.of();
-			this.draws.add(new Draw(vertices, indices, indexType, count, buffers));
+			var compat = IrisDhProgram.this.compat;
+			var offset = compat.getModelOffset();
+			this.draws.add(new Draw(vertices, indices, indexType, count, offset.x, offset.y, offset.z,
+				compat.getSkyLight(), compat.getBlockLight()));
 		}
 
 		@Override
@@ -236,12 +224,13 @@ public class IrisDhProgram implements AutoCloseable {
 		}
 	}
 
-	private record Draw(GpuBuffer vertices, GpuBuffer indices, IndexType indexType, int count,
-		Map<String, List<GpuBufferSlice>> uniforms) {
+	public record Draw(GpuBuffer vertices, GpuBuffer indices, IndexType indexType, int count,
+		float offsetX, float offsetY, float offsetZ, int skyLight, int blockLight) {
 	}
 
 	@Override
 	public void close() {
+		this.uniforms.close();
 		this.framebuffer.destroy();
 		if (this.pipeline != null) {
 			Iris.getRenderBackend().retire(this.pipeline::close);

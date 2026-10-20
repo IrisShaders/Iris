@@ -2,17 +2,12 @@ package net.irisshaders.iris.samplers;
 
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
-import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
 import net.irisshaders.iris.gl.texture.TextureAccess;
-import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.shaderpack.properties.PackRenderTargetDirectives;
 
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
-public final class CustomTextureSamplerInterceptor implements SamplerHolder {
+public class CustomTextureSamplerInterceptor implements SamplerHolder {
 	private final SamplerHolder samplerHolder;
 	private final Object2ObjectMap<String, TextureAccess> customTextureIds;
 	private final ImmutableSet<String> deactivatedOverrides;
@@ -83,71 +78,4 @@ public final class CustomTextureSamplerInterceptor implements SamplerHolder {
 		return this.samplerHolder.hasSampler(name);
 	}
 
-	@Override
-	public boolean addDefaultSampler(IntSupplier sampler, String... names) {
-		TextureAccess override = this.getOverride(names);
-
-		if (override != null) {
-			return this.samplerHolder.addDefaultSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
-		} else {
-			return this.samplerHolder.addDefaultSampler(sampler, names);
-		}
-	}
-
-	@Override
-	public boolean addDefaultSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler,
-		String... names) {
-		TextureAccess override = this.getOverride(names);
-
-		if (override != null) {
-			return this.samplerHolder.addDefaultSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
-		} else {
-			return this.samplerHolder.addDefaultSampler(type, texture, notifier, sampler, names);
-		}
-	}
-
-	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, GlSampler glSampler, String... names) {
-		TextureAccess override = this.getOverride(names);
-
-		if (override != null) {
-			return this.samplerHolder.addDynamicSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
-		} else {
-			return this.samplerHolder.addDynamicSampler(sampler, glSampler, names);
-		}
-	}
-
-	@Override
-	public boolean addDynamicSampler(TextureType type, IntSupplier texture, Supplier<GlSampler> sampler, String... names) {
-		TextureAccess override = this.getOverride(names);
-
-		if (override != null) {
-			return this.samplerHolder.addDynamicSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
-		} else {
-			return this.samplerHolder.addDynamicSampler(type, texture, sampler, names);
-		}
-	}
-
-	@Override
-	public boolean addDynamicSampler(IntSupplier sampler, GlSampler glSampler, ValueUpdateNotifier notifier, String... names) {
-		TextureAccess override = this.getOverride(names);
-
-		if (override != null) {
-			return this.samplerHolder.addDynamicSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
-		} else {
-			return this.samplerHolder.addDynamicSampler(sampler, glSampler, notifier, names);
-		}
-	}
-
-	@Override
-	public boolean addDynamicSampler(TextureType type, IntSupplier texture, ValueUpdateNotifier notifier, Supplier<GlSampler> sampler,
-		String... names) {
-		TextureAccess override = this.getOverride(names);
-
-		if (override != null) {
-			return this.samplerHolder.addDynamicSampler(override.getType(), override.getTextureId(), null, override::getSampling, names);
-		} else {
-			return this.samplerHolder.addDynamicSampler(type, texture, notifier, sampler, names);
-		}
-	}
 }

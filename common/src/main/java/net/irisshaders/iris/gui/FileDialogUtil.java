@@ -25,9 +25,6 @@ import static org.lwjgl.sdl.SDLProperties.SDL_SetPointerProperty;
 import static org.lwjgl.sdl.SDLProperties.SDL_SetStringProperty;
 
 public final class FileDialogUtil {
-	private FileDialogUtil() {
-	}
-
 	/**
 	 * Opens an asynchronous file select dialog window.
 	 *

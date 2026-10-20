@@ -1,6 +1,8 @@
 package net.irisshaders.iris.gui.element;
 
 import com.google.common.collect.ImmutableList;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.irisshaders.iris.gui.GuiUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
@@ -16,9 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -26,7 +26,7 @@ import java.util.function.Function;
  * Intended to make very simple rows of buttons easier to make
  */
 public class IrisElementRow {
-	private final Map<Element, Integer> elements = new HashMap<>();
+	private final Object2IntMap<Element> elements = new Object2IntOpenHashMap<>();
 	private final List<Element> orderedElements = new ArrayList<>();
 	private final int spacing;
 	private int x;
@@ -75,7 +75,7 @@ public class IrisElementRow {
 			return;
 		}
 
-		this.width -= this.elements.get(element) + 2;
+		this.width -= this.elements.getInt(element) + 2;
 
 		add(element, width);
 	}
@@ -92,7 +92,7 @@ public class IrisElementRow {
 		int currentX = x;
 
 		for (Element element : this.orderedElements) {
-			int currentWidth = this.elements.get(element);
+			int currentWidth = this.elements.getInt(element);
 
 			element.render(guiGraphics, currentX, y, currentWidth, height, mouseX, mouseY, tickDelta,
 				rowHovered && sectionHovered(currentX, currentWidth, mouseX, mouseY));
@@ -117,7 +117,7 @@ public class IrisElementRow {
 		int currentX = this.x;
 
 		for (Element element : this.orderedElements) {
-			int currentWidth = this.elements.get(element);
+			int currentWidth = this.elements.getInt(element);
 
 			if (sectionHovered(currentX, currentWidth, mx, my)) {
 				return Optional.of(element);

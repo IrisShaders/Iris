@@ -4,6 +4,8 @@ import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
@@ -58,7 +60,7 @@ public class ShaderProperties {
 	final CustomUniforms.Builder customUniforms = new CustomUniforms.Builder();
 	private final Map<String, List<String>> profiles = new LinkedHashMap<>();
 	private final Map<String, List<String>> subScreenOptions = new HashMap<>();
-	private final Map<String, Integer> subScreenColumnCount = new HashMap<>();
+	private final Object2IntMap<String> subScreenColumnCount = new Object2IntOpenHashMap<>();
 	// TODO: private Map<String, String> optifineVersionRequirements;
 	// TODO: Parse custom uniforms / variables
 	private final Object2ObjectMap<String, AlphaTest> alphaTestOverrides = new Object2ObjectOpenHashMap<>();
@@ -1020,7 +1022,7 @@ public class ShaderProperties {
 		return Optional.ofNullable(mainScreenColumnCount);
 	}
 
-	public Map<String, Integer> getSubScreenColumnCount() {
+	public Object2IntMap<String> getSubScreenColumnCount() {
 		return subScreenColumnCount;
 	}
 

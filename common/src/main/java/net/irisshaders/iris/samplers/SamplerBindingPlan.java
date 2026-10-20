@@ -10,9 +10,39 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
-public record SamplerBindingPlan(SamplerHeapLayout heap, Map<String, List<SamplerHeapLayout.Slot>> bindings) {
+public record SamplerBindingPlan(SamplerHeapLayout heap, Map<String, List<SamplerHeapLayout.Slot>> bindings,
+	Map<SamplerHeapLayout.Slot, DescriptorIndices> descriptors, VulkanHeapLayout vulkanHeap) {
+	public SamplerBindingPlan(SamplerHeapLayout heap, Map<String, List<SamplerHeapLayout.Slot>> bindings) {
+		this(heap, bindings, Map.of());
+	}
+
+	public SamplerBindingPlan(SamplerHeapLayout heap, Map<String, List<SamplerHeapLayout.Slot>> bindings,
+		Map<SamplerHeapLayout.Slot, DescriptorIndices> descriptors) {
+		this(heap, bindings, descriptors, VulkanHeapLayout.DEFAULT);
+	}
+
+	public record DescriptorIndices(int image, int sampler) {
+		public DescriptorIndices {
+			if (image < 0 || sampler < 0) throw new IllegalArgumentException("negative descriptor index");
+		}
+		public String expression() { return "uvec2(" + image + "u," + sampler + "u)"; }
+	}
+
+	public DescriptorIndices descriptor(SamplerHeapLayout.Slot slot) {
+		return Objects.requireNonNull(this.descriptors.get(slot), "unassigned sampler descriptor: " + slot);
+	}
+
+	public SamplerBindingPlan withDescriptors(Map<SamplerHeapLayout.Slot, DescriptorIndices> descriptors) {
+		return this.withDescriptors(descriptors, this.vulkanHeap);
+	}
+
+	public SamplerBindingPlan withDescriptors(Map<SamplerHeapLayout.Slot, DescriptorIndices> descriptors, VulkanHeapLayout vulkanHeap) {
+		return new SamplerBindingPlan(this.heap, this.bindings, descriptors, vulkanHeap);
+	}
+
 	public SamplerBindingPlan {
 		Objects.requireNonNull(heap);
+		Objects.requireNonNull(vulkanHeap);
 
 		Map<String, List<SamplerHeapLayout.Slot>> copy = new TreeMap<>();
 		bindings.forEach((name, slots) -> {
@@ -27,6 +57,7 @@ public record SamplerBindingPlan(SamplerHeapLayout heap, Map<String, List<Sample
 			copy.put(name, List.copyOf(slots));
 		});
 		bindings = Collections.unmodifiableMap(copy);
+		descriptors = Map.copyOf(descriptors);
 	}
 
 	public List<SamplerHeapLayout.Slot> require(String name, SamplerHeapLayout.Type type, int count) {
@@ -39,7 +70,13 @@ public record SamplerBindingPlan(SamplerHeapLayout heap, Map<String, List<Sample
 		return slots;
 	}
 
-	public static final class Builder {
+	public List<SamplerHeapLayout.Slot> slots() {
+		return this.bindings.values().stream().flatMap(List::stream).distinct()
+			.sorted(java.util.Comparator.comparingInt((SamplerHeapLayout.Slot slot) -> slot.type().ordinal())
+				.thenComparing(slot -> this.heap.isDraw(slot)).thenComparingInt(SamplerHeapLayout.Slot::index)).toList();
+	}
+
+	public static class Builder {
 		private final SamplerHeapLayout heap;
 		private final Map<String, List<SamplerHeapLayout.Slot>> bindings = new HashMap<>();
 

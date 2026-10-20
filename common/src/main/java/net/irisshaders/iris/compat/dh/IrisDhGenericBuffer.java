@@ -2,16 +2,16 @@ package net.irisshaders.iris.compat.dh;
 
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.objects.IDhApiGenericObjectVertexBufferContainer;
 import com.seibel.distanthorizons.api.objects.render.DhApiRenderableBox;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.List;
 
 public class IrisDhGenericBuffer extends IrisDhVertexBuffer implements IDhApiGenericObjectVertexBufferContainer {
 	private static final int VERTEX_SIZE = 20;
 	private static final int[] CORNERS = {3, 1, 0, 2, 5, 7, 6, 4, 2, 0, 4, 6, 3, 7, 5, 1, 1, 5, 4, 0, 6, 7, 3, 2};
 
-	private ByteBuffer data = ByteBuffer.allocateDirect(0);
+	private ByteBuffer data = MemoryUtil.memAlloc(0);
 	private volatile EState state = EState.NEW;
 
 	public IrisDhGenericBuffer() {
@@ -19,10 +19,15 @@ public class IrisDhGenericBuffer extends IrisDhVertexBuffer implements IDhApiGen
 	}
 
 	@Override
-	public void updateCpuSideVertexData(List<DhApiRenderableBox> boxes) {
+	public synchronized void updateCpuSideVertexData(List<DhApiRenderableBox> boxes) {
+		if (this.data == null) {
+			throw new IllegalStateException("DH generic buffer is closed");
+		}
 		int size = boxes.size() * CORNERS.length * VERTEX_SIZE;
 		if (this.data.capacity() != size) {
-			this.data = ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder());
+			var replacement = MemoryUtil.memAlloc(size);
+			MemoryUtil.memFree(this.data);
+			this.data = replacement;
 		}
 		this.data.clear();
 		for (var box : boxes) {
@@ -42,8 +47,18 @@ public class IrisDhGenericBuffer extends IrisDhVertexBuffer implements IDhApiGen
 	}
 
 	@Override
-	public void uploadDataToGpu() {
+	public synchronized void uploadDataToGpu() {
+		if (this.data == null) {
+			throw new IllegalStateException("DH generic buffer is closed");
+		}
 		this.uploadVertexBuffer(this.data, this.data.remaining() / VERTEX_SIZE);
+	}
+
+	@Override
+	public synchronized void close() {
+		MemoryUtil.memFree(this.data);
+		this.data = null;
+		super.close();
 	}
 
 	@Override

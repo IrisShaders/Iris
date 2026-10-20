@@ -5,12 +5,16 @@ import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import com.mojang.renderpearl.api.vertex.VertexFormatElement;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMaps;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.renderer.RenderPipelines;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,7 +31,7 @@ public class IrisVertexFormats {
 	public static final VertexFormat ENTITY_GLINT_SPECIAL;
 	public static final VertexFormat GLYPH;
 	public static final VertexFormat CLOUDS;
-	private static final Map<VertexFormat, Map<String, Integer>> OFFSET_CACHE = new ConcurrentHashMap<>();
+	private static final Map<VertexFormat, Object2IntMap<String>> OFFSET_CACHE = new ConcurrentHashMap<>();
 
 	static {
 		//ENTITY_ELEMENT = VertexFormatElement.register(getNextVertexFormatElementId(), 0, GpuFormat.RG16_SINT);
@@ -80,9 +84,17 @@ public class IrisVertexFormats {
 	}
 
 	public static List<VertexFormat> getExtendedFormats(RenderPipeline pipeline) {
-		var formats = pipeline.getVertexFormatBindings();
+		return getExtendedFormats(pipeline, pipeline.getVertexFormatBindings());
+	}
+
+	public static List<VertexFormat> getExtendedFormats(RenderPipeline pipeline, List<VertexFormat> formats) {
 		var extended = extend(pipeline, formats.getFirst());
-		return extended == formats.getFirst() ? formats : List.of(extended);
+		if (extended == formats.getFirst()) {
+			return formats;
+		}
+		var result = new ArrayList<>(formats);
+		result.set(0, extended);
+		return Collections.unmodifiableList(result);
 	}
 
 	private static void debug(VertexFormat format) {
@@ -95,16 +107,16 @@ public class IrisVertexFormats {
 	}
 
 	public static int getOffset(VertexFormat format, String attributeName) {
-		Integer offset = OFFSET_CACHE.computeIfAbsent(format, IrisVertexFormats::createOffsetMap).get(attributeName);
-		return offset != null ? offset : -1;
+		return OFFSET_CACHE.computeIfAbsent(format, IrisVertexFormats::createOffsetMap).getInt(attributeName);
 	}
 
-	private static Map<String, Integer> createOffsetMap(VertexFormat format) {
-		Map<String, Integer> offsets = new HashMap<>();
+	private static Object2IntMap<String> createOffsetMap(VertexFormat format) {
+		Object2IntMap<String> offsets = new Object2IntOpenHashMap<>();
+		offsets.defaultReturnValue(-1);
 		for (VertexFormatElement element : format.getElements()) {
 			offsets.put(element.name(), element.offset());
 		}
 
-		return Map.copyOf(offsets);
+		return Object2IntMaps.unmodifiable(offsets);
 	}
 }

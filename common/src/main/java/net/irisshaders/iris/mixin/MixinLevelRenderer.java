@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.blaze3d.framegraph.FrameGraphBuilder;
 import com.mojang.blaze3d.framegraph.FramePass;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
@@ -215,9 +214,14 @@ public abstract class MixinLevelRenderer {
 	}
 
 	@Inject(method = "prepareTranslucents", at = @At("RETURN"))
-	private void iris$renderOpaqueLods(CallbackInfo ci) {
-		if (this.pipeline instanceof IrisRenderingPipeline) {
-			DHCompat.renderLods(false);
+	private void iris$renderDhSolid(CallbackInfo ci) {
+		DHCompat.renderLodPass(false);
+	}
+
+	@Inject(method = "executeOutline", at = @At("HEAD"))
+	private void iris$renderDhTranslucentWithoutShaders(CallbackInfo ci) {
+		if (!(this.pipeline instanceof IrisRenderingPipeline)) {
+			DHCompat.renderLodPass(true);
 		}
 	}
 
@@ -274,17 +278,15 @@ public abstract class MixinLevelRenderer {
 		return new OuterWrappedRenderType("iris:is_outline", type, IsOutlineRenderStateShard.INSTANCE);
 	}
 
-	// TODO this needs to be more consistent.
 	@WrapOperation(method = MojLambdas.RENDER_MAIN_PASS, require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client" + "/renderer" + "/LevelRenderer;executeClassicTransparency(Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;" + "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;Lcom/mojang/renderpearl/api/commands/RenderPass;)V"))
 	private void iris$beginTranslucents(LevelRenderer instance, ChunkSectionsToRender chunkSectionsToRender,
-		FeatureRenderDispatcher.PreparedFrame preparedFrame, RenderPass renderPass, Operation<Void> original,
-		@Local(name = "renderPass") LocalRef<RenderPass> pass) {
+		FeatureRenderDispatcher.PreparedFrame preparedFrame, RenderPass renderPass, Operation<Void> original) {
 		if (!(pipeline instanceof IrisRenderingPipeline)) {
 			original.call(instance, chunkSectionsToRender, preparedFrame, renderPass);
 			return;
 		}
 
-		pass.get().close();
+		renderPass.close();
 
 		pipeline.beginHand();
 		HandRenderer.getInstance()
@@ -294,11 +296,10 @@ public abstract class MixinLevelRenderer {
 		Profiler.get().popPush("iris_pre_translucent");
 		pipeline.beginTranslucents();
 
-		var newPass = RenderSystem.getDevice().createCommandEncoder()
+		try (var newPass = RenderSystem.getDevice().createCommandEncoder()
 			.createRenderPass(() -> "Terrain", Minecraft.getInstance().gameRenderer.mainRenderTarget().getColorTextureView(),
-				Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty());
-
-		original.call(instance, chunkSectionsToRender, preparedFrame, newPass);
-		newPass.close();
+				Optional.empty(), Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
+			original.call(instance, chunkSectionsToRender, preparedFrame, newPass);
+		}
 	}
 }

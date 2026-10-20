@@ -380,7 +380,7 @@ public class ShadowRenderTargets {
 	public void generateMipmaps() {
 		for (int i = 0; i < 2; i++) {
 			if (this.mipped[i]) {
-				Iris.getRenderBackend().commands().generateDepthMips(i == 0 ? this.mainDepth : this.noTranslucents);
+				Iris.getRenderBackend().generateDepthMips(i == 0 ? this.mainDepth : this.noTranslucents);
 			}
 		}
 

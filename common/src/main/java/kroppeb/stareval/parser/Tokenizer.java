@@ -6,9 +6,6 @@ import kroppeb.stareval.exception.UnexpectedCharacterException;
 import kroppeb.stareval.exception.UnexpectedEndingException;
 
 class Tokenizer {
-	private Tokenizer() {
-	}
-
 	static ExpressionElement parse(String input, ParserOptions options) throws ParseException {
 		return parseInternal(new StringReader(input), options);
 	}

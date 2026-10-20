@@ -16,11 +16,11 @@
 package de.odysseus.ithaka.digraph.io.tgf;
 
 import de.odysseus.ithaka.digraph.Digraph;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.Map;
 
 public class TgfExporter {
 	private final String newline;
@@ -34,7 +34,7 @@ public class TgfExporter {
 	}
 
 	public <V> void export(TgfLabelProvider<V> provider, Digraph<V> digraph, Writer writer) throws IOException {
-		Map<V, Integer> index = new HashMap<>();
+		Object2IntMap<V> index = new Object2IntOpenHashMap<>();
 		int n = 0;
 
 		for (V vertex : digraph.vertices()) {
@@ -54,9 +54,9 @@ public class TgfExporter {
 
 		for (V source : digraph.vertices()) {
 			for (V target : digraph.targets(source)) {
-				writer.write(String.valueOf(index.get(source)));
+				writer.write(String.valueOf(index.getInt(source)));
 				writer.write(' ');
-				writer.write(String.valueOf(index.get(target)));
+				writer.write(String.valueOf(index.getInt(target)));
 				String label = provider.getEdgeLabel(digraph.get(source, target).getAsInt());
 				if (label != null) {
 					writer.write(' ');

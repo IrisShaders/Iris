@@ -18,9 +18,6 @@ import net.irisshaders.iris.pipeline.transform.parameter.GeometryInfoParameters;
 import java.util.Map;
 
 public final class VaryingTransformer {
-	private VaryingTransformer() {
-	}
-
 	public static void add(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, Type type, String name) {
 		add(parser, trees, type, name, requiresFlat(type), "0");
 	}

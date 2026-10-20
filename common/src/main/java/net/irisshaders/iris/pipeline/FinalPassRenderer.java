@@ -1,17 +1,17 @@
 package net.irisshaders.iris.pipeline;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
 import net.irisshaders.iris.gl.sampler.GlSampler;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
 import net.irisshaders.iris.gl.shader.ShaderCompileException;
-import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.pathways.CenterDepthSampler;
 import net.irisshaders.iris.pipeline.programs.CompositeProgram;
@@ -21,7 +21,7 @@ import net.irisshaders.iris.pipeline.transform.TransformPatcher;
 import net.irisshaders.iris.samplers.CustomTextureSamplerInterceptor;
 import net.irisshaders.iris.samplers.IrisImages;
 import net.irisshaders.iris.samplers.IrisSamplers;
-import net.irisshaders.iris.samplers.ProgramResources;
+import net.irisshaders.iris.samplers.ProgramSamplers;
 import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 import net.irisshaders.iris.shaderpack.programs.ComputeSource;
@@ -76,7 +76,7 @@ public class FinalPassRenderer {
 		this.customImages = customImages;
 
 		final PackRenderTargetDirectives renderTargetDirectives = pack.getPackDirectives().getRenderTargetDirectives();
-		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings = renderTargetDirectives.getRenderTargetSettings();
+		final Int2ObjectMap<PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings = renderTargetDirectives.getRenderTargetSettings();
 
 		this.noiseTexture = noiseTexture;
 		this.renderTargets = renderTargets;
@@ -85,8 +85,9 @@ public class FinalPassRenderer {
 			Pass pass = new Pass();
 			ProgramDirectives directives = source.getDirectives();
 
-			pass.program = createProgram(source, flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
 			pass.computes = createComputes(pack.getFinalCompute(), flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier, holder);
+			renderTargets.planMipmaps(directives.getMipmappedBuffers(), flippedBuffers);
+			pass.program = createProgram(source, flippedBuffers, flippedAtLeastOnce, shadowTargetsSupplier);
 			pass.stageReadsFromAlt = flippedBuffers;
 			pass.mipmappedBuffers = directives.getMipmappedBuffers();
 
@@ -127,14 +128,6 @@ public class FinalPassRenderer {
 		this.swapPasses = swapPasses.build();
 	}
 
-	private static void setupMipmapping(RenderTarget target, boolean readFromAlt) {
-		if (target == null) {
-			return;
-		}
-
-		target.generateMipmaps(readFromAlt);
-	}
-
 	private static void resetRenderTarget(RenderTarget target) {
 		if (target == null) {
 			return;
@@ -170,7 +163,8 @@ public class FinalPassRenderer {
 			}
 
 			for (int index : this.finalPass.mipmappedBuffers) {
-				setupMipmapping(this.renderTargets.get(index), this.finalPass.stageReadsFromAlt.contains(index));
+				var target = this.renderTargets.get(index);
+				if (target != null) target.generateMipmaps(this.finalPass.stageReadsFromAlt.contains(index));
 			}
 		}
 
@@ -184,9 +178,8 @@ public class FinalPassRenderer {
 
 		for (SwapPass swap : this.swapPasses) {
 			var target = this.renderTargets.get(swap.target);
-			Iris.getRenderBackend().commands()
-				.copyTexture(target.getTextureView(true, false).texture(), target.getTextureView(false, false).texture(), target.getWidth(),
-					target.getHeight());
+			RenderSystem.getDevice().createCommandEncoder().copyTextureToTexture(target.getTextureView(true, false).texture(),
+				target.getTextureView(false, false).texture(), 0, 0, 0, 0, 0, target.getWidth(), target.getHeight());
 		}
 	}
 
@@ -205,10 +198,9 @@ public class FinalPassRenderer {
 		var program = new CompositeProgram(this.pipeline.getPackSamplers(), source.getName(), transformed,
 			outputs.program(source.getName()), Collections.singletonList(null));
 		var builder = program.getSamplers();
-		builder.addStorageBuffers(this.pipeline.getStorageBuffers());
 
 		program.getUniforms().useFrameUniforms(this.pipeline.getFrameUniforms());
-		CommonUniforms.addDynamicUniforms(program.getUniforms(), FogMode.OFF);
+		CommonUniforms.addPassUniforms(program.getUniforms());
 
 		CustomTextureSamplerInterceptor customTextureSamplerInterceptor = new CustomTextureSamplerInterceptor(builder,
 			this.customTextureIds, flippedAtLeastOnceSnapshot);
@@ -250,7 +242,7 @@ public class FinalPassRenderer {
 
 				Objects.requireNonNull(flipped);
 
-				ProgramResources builder;
+				ProgramSamplers builder;
 				ComputeProgram program;
 
 				try {
@@ -260,7 +252,6 @@ public class FinalPassRenderer {
 
 					program = new ComputeProgram(this.pipeline.getPackSamplers(), source.getName(), transformed);
 					builder = program.getSamplers();
-					builder.addStorageBuffers(this.pipeline.getStorageBuffers());
 				} catch (ShaderCompileException e) {
 					throw e;
 				} catch (RuntimeException e) {
@@ -271,7 +262,7 @@ public class FinalPassRenderer {
 				CustomTextureSamplerInterceptor customTextureSamplerInterceptor = new CustomTextureSamplerInterceptor(builder,
 					this.customTextureIds, flippedAtLeastOnceSnapshot);
 				program.getUniforms().useFrameUniforms(this.pipeline.getFrameUniforms());
-				CommonUniforms.addDynamicUniforms(program.getUniforms(), FogMode.OFF);
+				CommonUniforms.addPassUniforms(program.getUniforms());
 
 				IrisSamplers.addRenderTargetSamplers(customTextureSamplerInterceptor, () -> flipped, renderTargets, true, pipeline);
 				IrisSamplers.addCustomTextures(builder, irisCustomTextures);
@@ -289,8 +280,8 @@ public class FinalPassRenderer {
 					IrisImages.addShadowColorImages(builder, shadowTargetsSupplier.get(), null);
 				}
 
-				centerDepthSampler.setUsage(
-					builder.addDynamicSampler(centerDepthSampler::getCenterDepthTexture, GlSampler.NEAREST, "iris_centerDepthSmooth"));
+				centerDepthSampler.setUsage(builder.addTextureSampler(new SamplerHolder.TextureBinding("iris_centerDepthSmooth",
+					centerDepthSampler::getCenterDepthTextureView, () -> GlSampler.NEAREST), false, "iris_centerDepthSmooth"));
 
 				builder.finish();
 				programs[i] = program;

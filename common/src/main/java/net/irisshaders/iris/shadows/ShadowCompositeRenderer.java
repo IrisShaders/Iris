@@ -1,16 +1,16 @@
 package net.irisshaders.iris.shadows;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
 import net.irisshaders.iris.gl.blending.BlendMode;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
-import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.CompositeProgram;
@@ -38,7 +38,6 @@ import net.minecraft.client.Minecraft;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class ShadowCompositeRenderer {
@@ -56,7 +55,7 @@ public class ShadowCompositeRenderer {
 	public ShadowCompositeRenderer(IrisRenderingPipeline pipeline, PackDirectives packDirectives, ProgramSource[] sources,
 		ComputeSource[][] computes, ShadowRenderTargets renderTargets, ShaderStorageBufferHolder holder, TextureAccess noiseTexture,
 		FrameUpdateNotifier updateNotifier, Object2ObjectMap<String, TextureAccess> customTextureIds, Set<CustomImage> customImages,
-		ImmutableMap<Integer, Boolean> explicitPreFlips, Object2ObjectMap<String, TextureAccess> irisCustomTextures,
+		Int2BooleanMap explicitPreFlips, Object2ObjectMap<String, TextureAccess> irisCustomTextures,
 		CustomUniforms customUniforms) {
 		this.pipeline = pipeline;
 		this.noiseTexture = noiseTexture;
@@ -67,7 +66,7 @@ public class ShadowCompositeRenderer {
 		this.customUniforms = customUniforms;
 
 		final PackRenderTargetDirectives renderTargetDirectives = packDirectives.getRenderTargetDirectives();
-		final Map<Integer, PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings = renderTargetDirectives.getRenderTargetSettings();
+		final Int2ObjectMap<PackRenderTargetDirectives.RenderTargetSettings> renderTargetSettings = renderTargetDirectives.getRenderTargetSettings();
 
 		final ImmutableList.Builder<Pass> passes = ImmutableList.builder();
 		final ImmutableSet.Builder<Integer> flippedAtLeastOnce = new ImmutableSet.Builder<>();
@@ -128,11 +127,11 @@ public class ShadowCompositeRenderer {
 
 			passes.add(pass);
 
-			ImmutableMap<Integer, Boolean> explicitFlips = directives.getExplicitFlips();
+			Int2BooleanMap explicitFlips = directives.getExplicitFlips();
 
 			for (int buffer : drawBuffers) {
 
-				if (explicitFlips.get(buffer) == Boolean.FALSE) {
+				if (!explicitFlips.getOrDefault(buffer, true)) {
 					continue;
 				}
 
@@ -212,7 +211,7 @@ public class ShadowCompositeRenderer {
 		var program = new CompositeProgram(this.pipeline.getPackSamplers(), source.getName(), transformed, outputs,
 			outputs.remapBlends(modes));
 		program.getUniforms().useFrameUniforms(this.pipeline.getFrameUniforms());
-		CommonUniforms.addDynamicUniforms(program.getUniforms(), FogMode.OFF);
+		CommonUniforms.addPassUniforms(program.getUniforms());
 
 		var samplers = new CustomTextureSamplerInterceptor(program.getSamplers(), this.customTextureIds, flippedAtLeastOnceSnapshot);
 		IrisSamplers.addNoiseSampler(samplers, this.noiseTexture);
@@ -222,7 +221,6 @@ public class ShadowCompositeRenderer {
 		IrisSamplers.addCustomImages(samplers, this.irisCustomImages);
 		IrisImages.addCustomImages(program.getSamplers(), this.irisCustomImages);
 		IrisImages.addShadowColorImages(program.getSamplers(), targets, flipped);
-		program.getSamplers().addStorageBuffers(this.pipeline.getStorageBuffers());
 		program.getSamplers().finish();
 
 		return program;
@@ -242,7 +240,7 @@ public class ShadowCompositeRenderer {
 
 			var program = new ComputeProgram(this.pipeline.getPackSamplers(), source.getName(), transformed);
 			program.getUniforms().useFrameUniforms(this.pipeline.getFrameUniforms());
-			CommonUniforms.addDynamicUniforms(program.getUniforms(), FogMode.OFF);
+			CommonUniforms.addPassUniforms(program.getUniforms());
 
 			var samplers = new CustomTextureSamplerInterceptor(program.getSamplers(), this.customTextureIds, flippedAtLeastOnceSnapshot);
 			IrisSamplers.addNoiseSampler(samplers, this.noiseTexture);
@@ -251,7 +249,6 @@ public class ShadowCompositeRenderer {
 			IrisSamplers.addCustomImages(samplers, this.irisCustomImages);
 			IrisImages.addCustomImages(program.getSamplers(), this.irisCustomImages);
 			IrisImages.addShadowColorImages(program.getSamplers(), targets, flipped);
-			program.getSamplers().addStorageBuffers(this.pipeline.getStorageBuffers());
 			program.getSamplers().finish();
 			program.setWorkGroupInfo(source.getWorkGroupRelative(), source.getWorkGroups(),
 				FilledIndirectPointer.basedOff(holder, source.getIndirectPointer()));

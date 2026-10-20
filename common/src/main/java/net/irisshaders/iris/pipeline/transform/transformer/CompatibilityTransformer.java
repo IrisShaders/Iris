@@ -4,7 +4,9 @@ import io.github.douira.glsl_transformer.ast.node.Identifier;
 import io.github.douira.glsl_transformer.ast.node.TranslationUnit;
 import io.github.douira.glsl_transformer.ast.node.abstract_node.ASTNode;
 import io.github.douira.glsl_transformer.ast.node.declaration.DeclarationMember;
+import io.github.douira.glsl_transformer.ast.node.declaration.FunctionDeclaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.FunctionParameter;
+import io.github.douira.glsl_transformer.ast.node.declaration.InterfaceBlockDeclaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.expression.Expression;
 import io.github.douira.glsl_transformer.ast.node.expression.LiteralExpression;
@@ -22,8 +24,10 @@ import io.github.douira.glsl_transformer.ast.node.type.initializer.ExpressionIni
 import io.github.douira.glsl_transformer.ast.node.type.initializer.NestedInitializer;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.LayoutQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.PreciseQualifier;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.PrecisionQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
+import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
@@ -44,6 +48,7 @@ import io.github.douira.glsl_transformer.parser.ParseShape;
 import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.shader.ShaderType;
+import net.irisshaders.iris.pipeline.transform.Glsl;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 import org.apache.logging.log4j.LogManager;
@@ -54,7 +59,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -182,30 +186,9 @@ public class CompatibilityTransformer {
 		 */
 		Map<FunctionDefinition, Set<String>> constFunctions = new HashMap<>();
 		Set<String> processingSet = new HashSet<>();
-		List<FunctionDefinition> unusedFunctions = new LinkedList<>();
+		removeUnreachableFunctions(tree);
 		for (FunctionDefinition definition : root.nodeIndex.get(FunctionDefinition.class)) {
-			// check if this function is ever used
 			FunctionPrototype prototype = definition.getFunctionPrototype();
-			String functionName = prototype.getName().getName();
-			if (!functionName.equals("main") && root.identifierIndex.getStream(functionName).count() <= 1) {
-				// remove unused functions
-				// unused function removal can be helpful since some drivers don't do some
-				// checks on unused functions. Additionally, sometimes bugs in unused code can
-				// be avoided this way.
-				// TODO: integrate into debug mode (allow user to disable this behavior for
-				// debugging purposes)
-				unusedFunctions.add(definition);
-				/*
-				 * else if (unusedFunctions.size() == 1) {
-				 * LOGGER.warn(
-				 * "Removing unused function " + functionName
-				 * +
-				 * " and omitting further such messages outside of debug mode. See debugging.md for more information."
-				 * );
-				 * }
-				 */
-				continue;
-			}
 
 			// stop on functions without parameters
 			if (prototype.getChildren().isEmpty()) {
@@ -223,13 +206,6 @@ public class CompatibilityTransformer {
 			}
 			if (!names.isEmpty()) {
 				constFunctions.put(definition, names);
-			}
-		}
-
-		// remove collected unused functions
-		if (!Iris.getIrisConfig().areDebugOptionsEnabled()) {
-			for (FunctionDefinition definition : unusedFunctions) {
-				definition.detachAndDelete();
 			}
 		}
 
@@ -351,26 +327,13 @@ public class CompatibilityTransformer {
 		}
 	}
 
-	public static void transformVulkan(Root root) {
-		transformConstantDivision(root);
-		transformConstTranspose(root);
-	}
-
-	public static void transformLate(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, boolean vulkan) {
-		String samplerName = "iris_legacySampler";
-
-		for (int suffix = 0; ; suffix++) {
-			String candidate = samplerName;
-
-			if (trees.values().stream().noneMatch(tree -> tree.getRoot().identifierIndex.has(candidate))) {
-				break;
-			}
-
-			samplerName = "iris_legacySampler" + suffix;
-		}
+	public static void transformLate(Map<PatchShaderType, TranslationUnit> trees) {
+		String samplerName = Glsl.uniqueName(trees.values(), "iris_legacySampler");
 
 		for (var tree : trees.values()) {
-			tree.getRoot().rename("sampler", samplerName);
+			for (var identifier : tree.getRoot().identifierIndex.getStream("sampler").toList()) {
+				identifier.setName(samplerName);
+			}
 		}
 
 		for (var tree : trees.values()) {
@@ -383,19 +346,155 @@ public class CompatibilityTransformer {
 					continue;
 				}
 
-				String replacement = "iris_legacy_" + name;
-
-				for (int suffix = 0; tree.getRoot().identifierIndex.has(replacement); suffix++) {
-					replacement = "iris_legacy_" + name + suffix;
-				}
-
-				tree.getRoot().rename(name, replacement);
+				tree.getRoot().rename(name, Glsl.uniqueName(List.of(tree), "iris_legacy_" + name));
 			}
 		}
 
-		if (vulkan) {
-			for (var tree : trees.values()) {
-				initializeGlobals(parser, tree);
+		trees.forEach((stage, tree) -> {
+			removeUnreachableFunctions(tree);
+			removeUnusedDeclarations(tree, stage);
+			transformConstantDivision(tree.getRoot());
+			initializeLocalScalars(tree);
+		});
+		removeUnusedVertexOutputs(trees);
+	}
+
+	// this is needed for chocapic v6 which uses MORE THAN 128 COMPONENTS IF WE DON'T OPTIMIZE????
+	private static void removeUnusedVertexOutputs(Map<PatchShaderType, TranslationUnit> trees) {
+		var vertex = trees.get(PatchShaderType.VERTEX);
+		var fragment = trees.get(PatchShaderType.FRAGMENT);
+
+		if (vertex == null || fragment == null || trees.containsKey(PatchShaderType.TESS_CONTROL) || trees.containsKey(
+			PatchShaderType.TESS_EVAL) || trees.containsKey(PatchShaderType.GEOMETRY)) {
+			return;
+		}
+
+		var inputs = new HashSet<String>();
+
+		for (var declaration : fragment.getRoot().nodeIndex.getStream(TypeAndInitDeclaration.class).toList()) {
+			var qualifier = declaration.getType().getTypeQualifier();
+
+			if (Glsl.hasStorage(qualifier, StorageType.IN)) {
+				if (Glsl.layout(qualifier, "location") != null) {
+					return;
+				}
+
+				declaration.getMembers().forEach(member -> inputs.add(member.getName().getName()));
+			}
+		}
+
+		if (fragment.getRoot().nodeIndex.getStream(InterfaceBlockDeclaration.class)
+			.anyMatch(block -> Glsl.hasStorage(block.getTypeQualifier(), StorageType.IN))) {
+			return;
+		}
+
+		var root = vertex.getRoot();
+		root.indexBuildSession(() -> {
+			for (var external : List.copyOf(vertex.getChildren())) {
+				if (!(external instanceof DeclarationExternalDeclaration declaration) || !(declaration.getDeclaration() instanceof TypeAndInitDeclaration typed)) {
+					continue;
+				}
+
+				var qualifier = typed.getType().getTypeQualifier();
+
+				if (!Glsl.hasStorage(qualifier, StorageType.OUT) || !(typed.getType().getTypeSpecifier() instanceof BuiltinNumericTypeSpecifier) || Glsl.layout(
+					qualifier, "location") != null || Glsl.layout(qualifier, "xfb_buffer") != null || Glsl.layout(qualifier, "xfb_offset") != null) {
+					continue;
+				}
+
+				for (var member : List.copyOf(typed.getMembers())) {
+					String name = member.getName().getName();
+
+					if (name.startsWith("gl_") || inputs.contains(name)) {
+						continue;
+					}
+
+					var local = new TypeAndInitDeclaration(typed.getType().cloneInto(root), Stream.of(member.cloneInto(root)));
+
+					for (var part : List.copyOf(local.getType().getTypeQualifier().getParts())) {
+						if (!(part instanceof PrecisionQualifier || part instanceof PreciseQualifier)) {
+							part.detachAndDelete();
+						}
+					}
+
+					vertex.getChildren().add(vertex.getChildren().indexOf(declaration), new DeclarationExternalDeclaration(local));
+					member.detachAndDelete();
+				}
+
+				if (typed.getMembers().isEmpty()) {
+					declaration.detachAndDelete();
+				}
+			}
+		});
+	}
+
+	public static void removeUnreachableFunctions(TranslationUnit tree) {
+		var calls = new HashMap<String, Set<String>>();
+		var pending = new ArrayDeque<String>();
+		pending.add("main");
+
+		for (var call : tree.getRoot().nodeIndex.getStream(FunctionCallExpression.class).toList()) {
+			if (call.getFunctionName() == null) {
+				continue;
+			}
+
+			String name = call.getFunctionName().getName();
+			var function = call.getAncestor(FunctionDefinition.class);
+
+			if (function == null) {
+				pending.add(name);
+			} else {
+				calls.computeIfAbsent(function.getFunctionPrototype().getName().getName(), ignored -> new HashSet<>()).add(name);
+			}
+		}
+
+		var reachable = new HashSet<String>();
+
+		while (!pending.isEmpty()) {
+			String name = pending.removeFirst();
+
+			if (reachable.add(name)) {
+				pending.addAll(calls.getOrDefault(name, Set.of()));
+			}
+		}
+
+		for (var function : tree.getRoot().nodeIndex.getStream(FunctionDefinition.class).toList()) {
+			if (!reachable.contains(function.getFunctionPrototype().getName().getName())) {
+				function.detachAndDelete();
+			}
+		}
+
+		for (var declaration : tree.getRoot().nodeIndex.getStream(FunctionDeclaration.class).toList()) {
+			if (!reachable.contains(declaration.getFunctionPrototype().getName().getName())) {
+				declaration.getParent().detachAndDelete();
+			}
+		}
+	}
+
+	private static void removeUnusedDeclarations(TranslationUnit tree, PatchShaderType stage) {
+		for (var declaration : tree.getRoot().nodeIndex.getStream(TypeAndInitDeclaration.class).toList()) {
+			var qualifier = declaration.getType().getTypeQualifier();
+			boolean input = stage != PatchShaderType.VERTEX && Glsl.hasStorage(qualifier, StorageQualifier.StorageType.IN);
+			boolean opaqueUniform = Glsl.hasStorage(qualifier, StorageQualifier.StorageType.UNIFORM) && declaration.getType()
+				.getTypeSpecifier() instanceof BuiltinFixedTypeSpecifier opaque && (opaque.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.SAMPLER || opaque.type.kind == BuiltinFixedTypeSpecifier.BuiltinType.TypeKind.IMAGE);
+
+			if (!input && !opaqueUniform) {
+				continue;
+			}
+
+			for (var member : new ArrayList<>(declaration.getMembers())) {
+				String name = member.getName().getName();
+				boolean used = tree.getRoot().identifierIndex.getStream(name).map(id -> id.getParent())
+					.filter(ReferenceExpression.class::isInstance).map(ReferenceExpression.class::cast)
+					.anyMatch(reference -> !Glsl.isShadowed(reference, name));
+
+				if (!name.startsWith("gl_") && !used) {
+					member.detachAndDelete();
+				}
+			}
+
+			if (declaration.getMembers().isEmpty()) {
+				declaration.getParent().detachAndDelete();
 			}
 		}
 	}
@@ -448,7 +547,7 @@ public class CompatibilityTransformer {
 		});
 	}
 
-	private static void transformConstTranspose(Root root) {
+	public static void transformConstTranspose(Root root) {
 		root.process(root.nodeIndex.getStream(FunctionCallExpression.class)
 			.filter(call -> call.getFunctionName() != null && call.getFunctionName().getName().equals("transpose")), call -> {
 			var initializer = call.getAncestor(ExpressionInitializer.class);
@@ -515,7 +614,7 @@ public class CompatibilityTransformer {
 		return Double.NaN;
 	}
 
-	private static void initializeGlobals(ASTParser parser, TranslationUnit tree) {
+	public static void initializeGlobals(ASTParser parser, TranslationUnit tree) {
 		boolean initialized = false;
 
 		for (var external : List.copyOf(tree.getChildren())) {
@@ -540,6 +639,29 @@ public class CompatibilityTransformer {
 
 		if (initialized) {
 			tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_ALL, "#extension GL_EXT_null_initializer : require\n");
+		}
+	}
+
+	// This fixes SEUS PTGI HRR 2.1 and 3, which have a loose `int x;` that's uninitialized on Vulkan and causes corruption.
+	private static void initializeLocalScalars(TranslationUnit tree) {
+		for (var variables : tree.getRoot().nodeIndex.getStream(TypeAndInitDeclaration.class).toList()) {
+			if (variables.getAncestor(FunctionDefinition.class) == null || !(variables.getType()
+				.getTypeSpecifier() instanceof BuiltinNumericTypeSpecifier numeric) || (numeric.type != Type.INT32 && numeric.type != Type.FLOAT32) || numeric.getArraySpecifier() != null) {
+				continue;
+			}
+
+			var qualifier = variables.getType().getTypeQualifier();
+
+			if (qualifier != null && qualifier.getParts().stream().anyMatch(StorageQualifier.class::isInstance)) {
+				continue;
+			}
+
+			for (var member : variables.getMembers()) {
+				if (member.getInitializer() == null && member.getArraySpecifier() == null && !member.getName().getName().startsWith("gl_")) {
+					member.setInitializer(tree.getRoot().indexNodes(
+						() -> new ExpressionInitializer(LiteralExpression.getDefaultValue(numeric.type))));
+				}
+			}
 		}
 	}
 

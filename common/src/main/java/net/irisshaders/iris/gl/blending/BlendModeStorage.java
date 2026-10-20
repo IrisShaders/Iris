@@ -1,18 +1,18 @@
 package net.irisshaders.iris.gl.blending;
 
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.mixin.GlStateManagerAccessor;
 import net.irisshaders.iris.pipeline.GraphicsBackend;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class BlendModeStorage {
-	private static final Map<Integer, BlendMode> buffers = new HashMap<>();
+	private static final Int2ObjectMap<BlendMode> buffers = new Int2ObjectOpenHashMap<>();
 	private static boolean[] originalBlendEnable;
 	private static boolean overridden;
 	private static BlendMode blend;

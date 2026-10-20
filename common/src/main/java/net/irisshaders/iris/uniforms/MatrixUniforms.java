@@ -4,9 +4,7 @@ import net.irisshaders.iris.compat.dh.DHCompat;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.helpers.MatrixUtils;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
-import net.irisshaders.iris.shadows.ShadowMatrices;
 import net.irisshaders.iris.shadows.ShadowRenderer;
-import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
@@ -14,26 +12,18 @@ import java.util.function.Supplier;
 
 import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
-public final class MatrixUniforms {
-	private MatrixUniforms() {
-	}
-
+public class MatrixUniforms {
 	public static void addMatrixUniforms(UniformHolder uniforms, PackDirectives directives) {
 		addMatrix(uniforms, "ModelView", CapturedRenderingState.INSTANCE::getGbufferModelView);
 		addMatrix(uniforms, "Projection", CapturedRenderingState.INSTANCE::getGbufferProjection);
 		addDHMatrix(uniforms, "Projection", DHCompat::getProjection);
 		addShadowMatrix(uniforms, "ModelView", () -> new Matrix4f(
 			ShadowRenderer.createShadowModelView(directives.getSunPathRotation(), directives.getShadowDirectives().getIntervalSize(),
-				Mth.equal(directives.getShadowDirectives().getNearPlane(),
-					-1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
-				Mth.equal(directives.getShadowDirectives().getFarPlane(),
-					-1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane()).last().pose()));
+				directives.getShadowDirectives().getNearPlane(), directives.getShadowDirectives().getFarPlane()).last().pose()));
 		addShadowMatrix(uniforms, "Projection", () -> MatrixUtils.toMinusOneToOne(
-			ShadowMatrices.createOrthoMatrix(directives.getShadowDirectives().getDistance(),
-				Mth.equal(directives.getShadowDirectives().getNearPlane(),
-					-1.0f) ? -DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getNearPlane(),
-				Mth.equal(directives.getShadowDirectives().getFarPlane(),
-					-1.0f) ? DHCompat.getRenderDistance() * 16 : directives.getShadowDirectives().getFarPlane())));
+			ShadowRenderer.createShadowProjection(directives.getShadowDirectives().getDistance(),
+				directives.getShadowDirectives().getNearPlane(), directives.getShadowDirectives().getFarPlane(),
+				directives.getShadowDirectives().getFov())));
 	}
 
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4fc> supplier) {

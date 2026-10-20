@@ -1,5 +1,7 @@
 package net.irisshaders.iris.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass.RenderArea;
@@ -12,7 +14,6 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.backend.IrisRenderPass;
 import net.irisshaders.iris.backend.WorldPassCommands;
 import net.irisshaders.iris.mixinterface.RenderPassInterface;
-import net.irisshaders.iris.pipeline.IrisRenderPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderPass;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -53,21 +54,27 @@ public abstract class MixinWorldUniforms implements RenderPassInterface {
 	@Final
 	private RenderPassBackend backend;
 
-	@Inject(method = "setPipeline", at = @At("HEAD"), cancellable = true)
-	private void iris$checkPipeline(CompiledRenderPipeline pipeline, CallbackInfo ci) {
+	@WrapMethod(method = "setPipeline")
+	private void iris$checkPipeline(CompiledRenderPipeline pipeline, Operation<Void> original) {
 		this.iris$skipDraw = false;
 
-		if (this.backend instanceof WorldRenderPass && pipeline instanceof FrontendRenderPipeline frontend
-			&& !(frontend.backendRenderPipeline() instanceof IrisRenderPipeline)) {
-			this.iris$skipDraw = true;
-			if (iris$unmappedPipelines.add(frontend.name())) {
-				Iris.logger.warn("Skipping world draw: no Iris shader mapping for pipeline {}", frontend.name());
+		if (this.backend instanceof WorldRenderPass pass && pipeline instanceof FrontendRenderPipeline frontend) {
+			var resolved = pass.overridePipeline(frontend);
+			if (resolved == null) {
+				this.iris$skipDraw = true;
+				if (iris$unmappedPipelines.add(pass.getPhase() + "/" + frontend.name())) {
+					Iris.logger.warn("Skipping {} draw: no Iris shader mapping for pipeline {}", pass.getPhase(), frontend.name());
+				}
+				return;
 			}
-			ci.cancel();
+			pipeline = resolved;
 		}
+		original.call(pipeline);
 	}
 
-	@Inject(method = {"draw", "drawIndexed", "drawIndirect", "drawIndexedIndirect", "multiDraw", "multiDrawIndexed",
+	@Inject(method = {"draw", "drawIndexed", "drawIndirect", "drawIndexedIndirect",
+		"multiDraw(Ljava/nio/IntBuffer;III)V", "multiDraw(Ljava/nio/IntBuffer;Ljava/nio/IntBuffer;I)V",
+		"multiDrawIndexed(Ljava/nio/IntBuffer;III)V", "multiDrawIndexed(Lorg/lwjgl/PointerBuffer;Ljava/nio/IntBuffer;Ljava/nio/IntBuffer;I)V",
 		"drawMultipleIndexed", "pushConstants"}, at = @At("HEAD"), cancellable = true)
 	private void iris$skipUnmappedDraw(CallbackInfo ci) {
 		if (this.iris$skipDraw) {

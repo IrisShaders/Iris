@@ -8,19 +8,16 @@ import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL14C;
 import org.lwjgl.opengl.GL40C;
 
-public final class GlPipelineState {
+public class GlPipelineState {
 	private static boolean indexedBlend;
 
-	private GlPipelineState() {
-	}
-
-	static boolean supportsIndexedBlend() {
+	public static boolean supportsIndexedBlend() {
 		var capabilities = GL.getCapabilities();
 
 		return capabilities.glBlendFuncSeparatei != 0 || capabilities.glBlendFuncSeparateiARB != 0;
 	}
 
-	static void blendFunction(int attachment, BlendMode blend) {
+	public static void blendFunction(int attachment, BlendMode blend) {
 		var capabilities = GL.getCapabilities();
 
 		if (capabilities.glBlendFuncSeparatei != 0) {

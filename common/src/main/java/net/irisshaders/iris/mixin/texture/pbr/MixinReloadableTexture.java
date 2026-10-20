@@ -1,6 +1,7 @@
 package net.irisshaders.iris.mixin.texture.pbr;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.irisshaders.iris.mixinterface.AbstractTextureExtended;
 import net.irisshaders.iris.pbr.TextureTracker;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.ReloadableTexture;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinReloadableTexture extends AbstractTexture {
 	@Inject(method = "doLoad", at = @At("RETURN"))
 	private void iris$onDoLoad(NativeImage nativeImage, CallbackInfo ci) {
+		((AbstractTextureExtended) this).iris$setTransparency(nativeImage.computeTransparency());
 		TextureTracker.INSTANCE.trackTexture(this.texture, this);
 	}
 }

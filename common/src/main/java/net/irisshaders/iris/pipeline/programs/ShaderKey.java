@@ -219,9 +219,15 @@ public enum ShaderKey {
 			hasAlphaTest = true;
 		}
 
+		if (programId == ProgramId.Terrain) {
+			boolean blended = pipeline.getColorTargetStates().stream()
+				.anyMatch(target -> target != null && target.blendFunction().isPresent());
+			programId = blended ? ProgramId.Water : hasAlphaTest ? ProgramId.TerrainCutout : ProgramId.TerrainSolid;
+		}
+
 		if (hasAlphaTest) {
 			for (ShaderKey key : ShaderKey.values()) {
-				if (programId == key.getProgram() && pipeline.getVertexFormatBinding(
+				if (key.patch != Patch.SODIUM && programId == key.getProgram() && pipeline.getVertexFormatBinding(
 					0) == key.vertexFormat && key.alphaTest.reference() > 0.01f && key.alphaTest.function() != AlphaTestFunction.NEVER) {
 					Iris.logger.warn("Found perfect program match for " + pipeline.getLocation() + ": " + key);
 					return key;
@@ -230,7 +236,7 @@ public enum ShaderKey {
 		}
 
 		for (ShaderKey key : ShaderKey.values()) {
-			if (programId == key.getProgram() && pipeline.getVertexFormatBinding(0) == key.vertexFormat) {
+			if (key.patch != Patch.SODIUM && programId == key.getProgram() && pipeline.getVertexFormatBinding(0) == key.vertexFormat) {
 				Iris.logger.warn("Found okay program match for " + pipeline.getLocation() + ": " + key);
 				return key;
 			}
@@ -238,7 +244,7 @@ public enum ShaderKey {
 
 		if (hasAlphaTest) {
 			for (ShaderKey key : ShaderKey.values()) {
-				if (programId == key.getProgram() && key.alphaTest.reference() > 0.01f && key.alphaTest.function() != AlphaTestFunction.NEVER) {
+				if (key.patch != Patch.SODIUM && programId == key.getProgram() && key.alphaTest.reference() > 0.01f && key.alphaTest.function() != AlphaTestFunction.NEVER) {
 					Iris.logger.warn("Found fine program match for " + pipeline.getLocation() + ": " + key);
 					return key;
 				}
@@ -246,7 +252,7 @@ public enum ShaderKey {
 		}
 
 		for (ShaderKey key : ShaderKey.values()) {
-			if (programId == key.getProgram()) {
+			if (key.patch != Patch.SODIUM && programId == key.getProgram()) {
 				Iris.logger.warn("Found *decent* program match for " + pipeline.getLocation() + ": " + key);
 				return key;
 			}

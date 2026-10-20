@@ -18,10 +18,7 @@ public class VulkanPipelineLibraries {
 			KHRPipelineLibrary.VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME), Set.of(
 		new VulkanFeature(new VulkanPNextStruct(VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT.class), "graphicsPipelineLibrary")));
 
-	private VulkanPipelineLibraries() {
-	}
-
 	public static boolean isSupported(VulkanDevice device) {
-		return device instanceof VulkanDeviceAccessor access && access.iris$getEnabledFeatures().contains(FEATURES);
+		return ((VulkanDeviceAccessor) device).iris$getEnabledFeatures().contains(FEATURES);
 	}
 }

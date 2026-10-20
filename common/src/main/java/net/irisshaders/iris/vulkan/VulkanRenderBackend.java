@@ -1,45 +1,46 @@
 package net.irisshaders.iris.vulkan;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.commands.RenderPass.RenderArea;
 import com.mojang.renderpearl.api.commands.RenderPassDescriptor;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
-import com.mojang.renderpearl.backend.api.CommandEncoderBackend;
 import com.mojang.renderpearl.backend.api.RenderPassBackend;
-import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
-import com.mojang.renderpearl.frontend.FrontendCommandEncoder;
+import com.mojang.renderpearl.backend.vulkan.VulkanConst;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.backend.ComputePipeline;
 import net.irisshaders.iris.backend.GraphicsShader;
+import net.irisshaders.iris.backend.IrisGpuFormats;
 import net.irisshaders.iris.backend.IrisImage;
-import net.irisshaders.iris.backend.NonRenderCommands;
 import net.irisshaders.iris.backend.PackResources;
 import net.irisshaders.iris.backend.RenderBackend;
-import net.irisshaders.iris.backend.SyncCommand;
 import net.irisshaders.iris.backend.WorldPassCommands;
 import net.irisshaders.iris.gl.texture.TextureType;
 import net.irisshaders.iris.mixinterface.VulkanWorldPassAccess;
 import net.irisshaders.iris.pipeline.transform.PatchedShader;
 import net.irisshaders.iris.samplers.PackSamplers;
-import net.irisshaders.iris.samplers.ProgramResources;
-import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
+import net.irisshaders.iris.samplers.ProgramSamplers;
 import net.irisshaders.iris.targets.RenderTarget;
-import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
-import org.joml.Vector3i;
+import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import org.joml.Vector4f;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.vulkan.VK10;
+import org.lwjgl.vulkan.VkFormatProperties;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
-// not sure if i'm happy with this yet... AI designed a lot of it, but it seems mostly logical and I don't feel like rewriting it right now?
-public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
-	public final VulkanSynchronization synchronization = new VulkanSynchronization();
-	public final VulkanTextureState textures = new VulkanTextureState(this);
+public class VulkanRenderBackend implements RenderBackend {
+	public final VulkanTextureState textures = new VulkanTextureState();
+	private final VulkanSynchronization synchronization = new VulkanSynchronization();
 	private final VulkanColorMipmaps mipmaps = new VulkanColorMipmaps();
 	private final VulkanDepthMipmaps depthMipmaps = new VulkanDepthMipmaps();
+	private final Map<GpuFormat, GpuFormat> renderTargetFormats = new EnumMap<>(GpuFormat.class);
 	private final VulkanRenderPassCache renderPassCache = new VulkanRenderPassCache(VulkanCommandBridge.getDevice().vkDevice());
 	private VulkanShaderCache shaderCache;
+	public VulkanSamplerHeap activeHeap;
 	private volatile boolean closed;
 
 	public VulkanRenderBackend() {
@@ -47,33 +48,13 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 	}
 
 	@Override
-	public WorldPassCommands createRenderPass(CommandEncoderBackend encoder, RenderPassDescriptor descriptor) {
-		return new VulkanWorldCommands((VulkanCommandEncoder) encoder, this.textures.takeClears(descriptor));
+	public WorldPassCommands createRenderPass(RenderPassDescriptor descriptor) {
+		return new VulkanWorldCommands(this.textures.takeClears(descriptor));
 	}
 
 	@Override
 	public WorldPassCommands adaptRenderPass(RenderPassBackend pass, RenderArea area) {
-		return new VulkanWorldCommands(
-			(VulkanCommandEncoder) ((FrontendCommandEncoder) RenderSystem.getDevice().createCommandEncoder()).backend(), pass, false);
-	}
-
-	@Override
-	public NonRenderCommands commands() {
-		return this;
-	}
-
-	@Override
-	public SyncCommand createSync() {
-		return new VulkanSyncCommand();
-	}
-
-	@Override
-	public void dispatch(ComputePipeline pipeline, Vector3i groups, FilledIndirectPointer indirect) {
-		var encoder = VulkanCommandBridge.getDevice().createCommandEncoder();
-		((VulkanWorldPassAccess) encoder).iris$flushRenderPass();
-		this.textures.flush(encoder);
-		this.textures.invalidateMipmaps();
-		((VulkanComputePipeline) pipeline).dispatch(groups, indirect);
+		return new VulkanWorldCommands(pass, false);
 	}
 
 	@Override
@@ -82,14 +63,14 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 	}
 
 	@Override
-	public GraphicsShader createGraphicsShader(String name, PatchedShader source, ProgramResources resources,
-		BufferUniformHolder uniforms) {
+	public GraphicsShader createGraphicsShader(String name, PatchedShader source, ProgramSamplers resources,
+		DrawUniforms uniforms) {
 		return new VulkanGraphicsShader(this.getShaderCache(), name, source, resources, uniforms);
 	}
 
 	@Override
-	public ComputePipeline createComputePipeline(String name, PatchedShader source, ProgramResources resources,
-		BufferUniformHolder uniforms) {
+	public ComputePipeline createComputePipeline(String name, PatchedShader source, ProgramSamplers resources,
+		DrawUniforms uniforms) {
 		return new VulkanComputePipeline(this.getShaderCache(), name, source, resources, uniforms);
 	}
 
@@ -101,10 +82,6 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 	}
 
 	private VulkanShaderCache getShaderCache() {
-		if (this.closed) {
-			throw new IllegalStateException("Vulkan render backend is closed");
-		}
-
 		if (this.shaderCache == null) {
 			this.shaderCache = new VulkanShaderCache(VulkanCommandBridge.getDevice().vkDevice());
 		}
@@ -113,18 +90,7 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 	}
 
 	public VulkanRenderPassCache getRenderPassCache() {
-		if (this.closed) {
-			throw new IllegalStateException("Vulkan render backend is closed");
-		}
-
 		return this.renderPassCache;
-	}
-
-	public void onDeleteTextureView(long view) {
-		var encoder = VulkanCommandBridge.getDevice().createCommandEncoder();
-		((VulkanWorldPassAccess) encoder).iris$flushRenderPass();
-		this.textures.flush(encoder);
-		this.renderPassCache.release(view, encoder);
 	}
 
 	@Override
@@ -137,9 +103,7 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 			this.shaderCache.finishCompilation();
 		}
 
-		var encoder = VulkanCommandBridge.getDevice().createCommandEncoder();
-		((VulkanWorldPassAccess) encoder).iris$flushRenderPass();
-		this.textures.flush(encoder);
+		this.textures.flush();
 		this.closed = true;
 		this.mipmaps.close();
 		this.depthMipmaps.close();
@@ -148,7 +112,7 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 			this.retire(this.shaderCache::close);
 		}
 
-		this.renderPassCache.close(VulkanCommandBridge.getDevice().createCommandEncoder());
+		this.renderPassCache.close();
 	}
 
 	@Override
@@ -163,24 +127,30 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 
 	@Override
 	public void retire(Runnable destructor) {
-		VulkanCommandBridge.retire(RenderSystem.getDevice().createCommandEncoder(), destructor);
+		VulkanCommandBridge.deleteWhenDone(destructor);
+	}
+
+	@Override
+	public void sync(long stage, long reads, long writes) {
+		this.synchronization.sync(stage, reads, writes);
 	}
 
 	@Override
 	public void generateMipmaps(GpuTexture texture, boolean linear) {
-		if (this.textures.mipmaps(texture, linear)) {
+		if (texture.getMipLevels() <= 1) {
 			return;
 		}
-		this.textures.beforeAccess(VulkanCommandBridge.getDevice().createCommandEncoder(), texture, false);
-		if (!linear || !this.mipmaps.generate(texture)) {
-			VulkanTextureOps.generateMipmaps(texture, linear);
+		this.textures.beforeAccess(texture);
+		var command = VulkanCommandBridge.commandBuffer();
+		var debug = VulkanCommandBridge.getDevice().instance().debug();
+		debug.beginDebugGroup(command, () -> "Mipmaps: " + texture.getLabel());
+		try {
+			if (!linear || !this.mipmaps.generate(texture, this.activeHeap)) {
+				VulkanTextureOps.generateMipmaps(texture, linear);
+			}
+		} finally {
+			debug.endDebugGroup(command);
 		}
-		this.textures.generated(texture, linear);
-	}
-
-	@Override
-	public void copyTexture(GpuTexture source, GpuTexture destination, int width, int height) {
-		VulkanTextureOps.copyTexture(source, destination, width, height);
 	}
 
 	@Override
@@ -188,8 +158,29 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 		return this.mipmaps.supports(format) ? RenderTarget.USAGE_STORAGE : 0;
 	}
 
+	@Override
+	public GpuFormat getRenderTargetFormat(GpuFormat format) {
+		return this.renderTargetFormats.computeIfAbsent(format, requested -> {
+			try (var stack = MemoryStack.stackPush()) {
+				var properties = VkFormatProperties.calloc(stack);
+				VK10.vkGetPhysicalDeviceFormatProperties(VulkanCommandBridge.getDevice().vkDevice().getPhysicalDevice(),
+					VulkanConst.toVk(requested), properties);
+				if ((properties.optimalTilingFeatures() & VK10.VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) != 0) {
+					return requested;
+				}
+			}
+			// Packed formats can support sampling without supporting color attachments.
+			var replacement = requested == IrisGpuFormats.RGBA4_UNORM ? GpuFormat.RGBA8_UNORM
+				: requested == IrisGpuFormats.RGB9E5_FLOAT ? GpuFormat.RGBA16_FLOAT : null;
+			if (replacement == null) {
+				throw new UnsupportedOperationException("Vulkan does not support render target format " + requested);
+			}
+			Iris.logger.warn("Vulkan does not support {} as a render target; using {}", requested, replacement);
+			return replacement;
+		});
+	}
+
 	public void onDeleteTexture(GpuTexture texture) {
-		((VulkanWorldPassAccess) VulkanCommandBridge.getDevice().createCommandEncoder()).iris$flushRenderPass();
 		this.textures.release(texture);
 		this.mipmaps.release(texture);
 		this.depthMipmaps.release(texture);
@@ -202,6 +193,17 @@ public class VulkanRenderBackend implements RenderBackend, NonRenderCommands {
 
 	@Override
 	public void generateDepthMips(GpuTexture texture) {
-		this.depthMipmaps.generate(texture);
+		if (texture.getMipLevels() <= 1) {
+			return;
+		}
+		this.textures.beforeAccess(texture);
+		var command = VulkanCommandBridge.commandBuffer();
+		var debug = VulkanCommandBridge.getDevice().instance().debug();
+		debug.beginDebugGroup(command, () -> "Depth mipmaps: " + texture.getLabel());
+		try {
+			this.depthMipmaps.generate(texture, this.activeHeap);
+		} finally {
+			debug.endDebugGroup(command);
+		}
 	}
 }

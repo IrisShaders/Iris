@@ -30,9 +30,6 @@ public class CapturedRenderingState {
 	private float cloudTime;
 	private BlendMode blend;
 
-	private CapturedRenderingState() {
-	}
-
 	public Matrix4fc getGbufferModelView() {
 		return gbufferModelView;
 	}

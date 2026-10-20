@@ -7,7 +7,6 @@
   "client": [
     "MixinAdvancedShadowCullingFrustum",
     "MixinBoxCullingFrustum",
-    "MixinClientApi",
     "MixinCullEverythingFrustum",
     "MixinNonCullingFrustum"
   ],

@@ -1,6 +1,8 @@
 package net.irisshaders.iris.vulkan;
 
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
+import net.minecraft.util.Util;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.shaderc.Shaderc;
 import org.lwjgl.vulkan.VK10;
@@ -12,23 +14,16 @@ public class VulkanShaderCompiler implements AutoCloseable {
 	private long options;
 
 	public VulkanShaderCompiler() {
-		if (this.compiler == 0) {
-			throw new IllegalStateException("could not initialize shaderc");
-		}
-
 		this.options = Shaderc.shaderc_compile_options_initialize();
-
-		if (this.options == 0) {
-			this.close();
-
-			throw new IllegalStateException("could not initialize shaderc options");
-		}
 
 		Shaderc.shaderc_compile_options_set_target_env(this.options, Shaderc.shaderc_target_env_vulkan,
 			Shaderc.shaderc_env_version_vulkan_1_2);
 		// Without debug info, optimization also strips SPIR-V names. MoltenVK would otherwise
 		// preserve pack identifiers that collide with Metal built-ins (e.g. length_squared).
-		// TODO: This sucks!!! We need to be able to use debug info. So we should use glsl transformer to rename
+		// yes, this means we literally cannot have debug info on macOS right now.
+		if (Iris.getIrisConfig().areDebugOptionsEnabled() && Util.getPlatform() != Util.OS.OSX) {
+			Shaderc.shaderc_compile_options_set_generate_debug_info(this.options);
+		}
 		Shaderc.shaderc_compile_options_set_optimization_level(this.options, Shaderc.shaderc_optimization_level_performance);
 		Shaderc.shaderc_compile_options_set_target_spirv(this.options, Shaderc.shaderc_spirv_version_1_5);
 	}
@@ -45,10 +40,6 @@ public class VulkanShaderCompiler implements AutoCloseable {
 	}
 
 	public ByteBuffer compile(String name, PatchShaderType stage, String source) {
-		if (this.compiler == 0) {
-			throw new IllegalStateException("shader compiler is closed");
-		}
-
 		int kind = switch (stage) {
 			case VERTEX -> Shaderc.shaderc_vertex_shader;
 			case FRAGMENT -> Shaderc.shaderc_fragment_shader;

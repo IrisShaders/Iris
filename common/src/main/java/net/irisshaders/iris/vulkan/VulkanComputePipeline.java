@@ -1,55 +1,54 @@
 package net.irisshaders.iris.vulkan;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.irisshaders.iris.Iris;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
+import net.irisshaders.iris.backend.CompileTask;
 import net.irisshaders.iris.backend.ComputePipeline;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.PatchedShader;
-import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
-import net.irisshaders.iris.samplers.ProgramResources;
+import net.irisshaders.iris.pipeline.transform.VulkanPushConstants;
+import net.irisshaders.iris.samplers.ProgramSamplers;
 import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
-import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
+import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import org.joml.Vector3i;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkComputePipelineCreateInfo;
-import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
 import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo;
+import org.lwjgl.vulkan.VkPushConstantRange;
 import org.lwjgl.vulkan.VkShaderModuleCreateInfo;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
+import static net.irisshaders.iris.vulkan.VulkanChecks.check;
+import static org.lwjgl.vulkan.KHRSynchronization2.*;
 
 public class VulkanComputePipeline implements ComputePipeline {
 	private final VulkanShaderCache cache;
 	private final VkDevice device;
 	private final CompletableFuture<Void> compilation;
-	private final VulkanProgramResources bindings;
+	private final VulkanShaderBindings bindings;
 	private final String name;
 	private final PatchedShader shader;
-	private final BufferUniformHolder uniforms;
-	private final ProgramResources resources;
+	private final DrawUniforms uniforms;
 	private final long[] maxGroups = new long[3];
 	private final Vector3i localSize = new Vector3i(1);
-	private VulkanResourceSets sets;
 	private long pipeline;
 	private long layout;
-	private long emptyLayout;
 	private boolean closed;
 
-	public VulkanComputePipeline(VulkanShaderCache cache, String name, PatchedShader shader, ProgramResources resources,
-		BufferUniformHolder uniforms) {
+	public VulkanComputePipeline(VulkanShaderCache cache, String name, PatchedShader shader, ProgramSamplers resources,
+		DrawUniforms uniforms) {
 		this.cache = cache;
 		this.device = VulkanCommandBridge.getDevice().vkDevice();
 		var pack = (VulkanPackResources) resources.getPackSamplers().getResources();
-		this.bindings = new VulkanProgramResources(resources);
+		this.bindings = new VulkanShaderBindings(resources, shader);
 		this.name = name;
 		this.shader = shader;
 		this.uniforms = uniforms;
-		this.resources = resources;
 
 		try (var stack = MemoryStack.stackPush()) {
 			var props = VkPhysicalDeviceProperties.calloc(stack);
@@ -63,26 +62,14 @@ public class VulkanComputePipeline implements ComputePipeline {
 		this.uniforms.resolveLayout(this.shader.layout());
 
 		try {
-			if (this.shader.layout().descriptors().stream().anyMatch(d -> d.set() == 0)) {
-				this.sets = new VulkanResourceSets(this.device, this.shader.layout(), 32);
-			}
-
 			var heap = pack.getSamplerHeap();
-			var frame = VulkanFrameResources.getOrCreate(this.uniforms.frameUniforms(), this.device);
-			long frameLayout = frame == null ? 0 : frame.sets.setLayout();
 			this.compilation = cache.submit(() -> {
-				this.compile(heap, frameLayout);
+				this.compile(heap);
 				return null;
 			});
 		} catch (RuntimeException | Error failure) {
 			this.destroyHandles();
 			throw failure;
-		}
-	}
-
-	private static void check(int result) {
-		if (result != VK10.VK_SUCCESS) {
-			throw new IllegalStateException("Vulkan compute error: " + result);
 		}
 	}
 
@@ -94,14 +81,10 @@ public class VulkanComputePipeline implements ComputePipeline {
 	}
 
 	public void prepare() {
-		if (this.closed) {
-			throw new IllegalStateException("compute program is closed: " + this.name);
-		}
-
-		VulkanShaderCache.await(this.compilation);
+		CompileTask.await(this.compilation);
 	}
 
-	private void compile(VulkanSamplerHeap heap, long frameLayout) {
+	private void compile(VulkanSamplerHeap heap) {
 		var vk = this.device;
 
 		long module = 0;
@@ -109,14 +92,10 @@ public class VulkanComputePipeline implements ComputePipeline {
 		try (var stack = MemoryStack.stackPush()) {
 			var handle = stack.mallocLong(1);
 
-			if (this.sets == null) {
-				check(VK10.vkCreateDescriptorSetLayout(vk, VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default(), null, handle));
-				this.emptyLayout = handle.get(0);
-			}
-
 			check(VK10.vkCreatePipelineLayout(vk, VkPipelineLayoutCreateInfo.calloc(stack).sType$Default()
-					.pSetLayouts(heap.pipelineSetLayouts(stack, this.sets == null ? this.emptyLayout : this.sets.setLayout(), frameLayout)),
-				null, handle));
+					.pSetLayouts(heap.pipelineSetLayouts(stack, this.bindings.drawLayout()))
+					.pPushConstantRanges(VkPushConstantRange.calloc(1, stack).stageFlags(VK10.VK_SHADER_STAGE_COMPUTE_BIT).size(VulkanPushConstants.MAX_SIZE)),
+				null, handle), "create compute pipeline layout");
 			this.layout = handle.get(0);
 
 			var spirv = this.cache.compile(this.name + ".csh", PatchShaderType.COMPUTE, this.shader.sources().get(PatchShaderType.COMPUTE));
@@ -130,10 +109,6 @@ public class VulkanComputePipeline implements ComputePipeline {
 					int count = instruction >>> 16;
 					int op = instruction & 65535;
 
-					if (count == 0) {
-						throw new IllegalArgumentException("invalid compute SPIR-V");
-					}
-
 					if (op == 16 && count == 6 && words.get(i + 2) == 17) {
 						this.localSize.set(words.get(i + 3), words.get(i + 4), words.get(i + 5));
 						foundSize = true;
@@ -146,7 +121,8 @@ public class VulkanComputePipeline implements ComputePipeline {
 					throw new UnsupportedOperationException("compute requires a literal local workgroup size: " + this.name);
 				}
 
-				check(VK10.vkCreateShaderModule(vk, VkShaderModuleCreateInfo.calloc(stack).sType$Default().pCode(spirv), null, handle));
+				check(VK10.vkCreateShaderModule(vk, VkShaderModuleCreateInfo.calloc(stack).sType$Default().pCode(spirv), null, handle),
+					"create compute shader module");
 				module = handle.get(0);
 			} finally {
 				MemoryUtil.memFree(spirv);
@@ -156,7 +132,7 @@ public class VulkanComputePipeline implements ComputePipeline {
 			var name = Thread.currentThread().getName();
 			Thread.currentThread().setName(this.name);
 			info.stage().sType$Default().stage(VK10.VK_SHADER_STAGE_COMPUTE_BIT).module(module).pName(stack.UTF8("main"));
-			check(VK10.vkCreateComputePipelines(vk, 0, info, null, handle));
+			check(VK10.vkCreateComputePipelines(vk, VulkanCommandBridge.pipelineCache(), info, null, handle), "create compute pipeline");
 			this.pipeline = handle.get(0);
 		} catch (RuntimeException | Error failure) {
 			this.destroyHandles();
@@ -171,76 +147,33 @@ public class VulkanComputePipeline implements ComputePipeline {
 		}
 	}
 
+	@Override
 	public void dispatch(Vector3i groups, FilledIndirectPointer indirect) {
 		this.prepare();
-		var frontend = RenderSystem.getDevice().createCommandEncoder();
-		var encoder = VulkanCommandBridge.encoder(frontend);
-		var resolved = this.resources.resolve();
-		var allBindings = this.bindings.getBufferSlices(resolved);
-
-		if (this.uniforms.data().hasRemaining()) {
-			allBindings.put(ShaderResourceLayout.UNIFORM_BLOCK, List.of(VulkanCommandBridge.bufferSlice(
-				this.uniforms.upload(frontend, RenderSystem.getDevice().getDeviceInfo().limits().minUniformOffsetAlignment()))));
-		}
 
 		if (groups.x < 0 || groups.y < 0 || groups.z < 0 || groups.x > this.maxGroups[0] || groups.y > this.maxGroups[1] || groups.z > this.maxGroups[2]) {
 			throw new IllegalArgumentException("invalid dispatch for " + this.name + ": " + groups);
 		}
 
-		var heap = this.bindings.createSnapshot(resolved);
-		VulkanResourceSets.Snapshot snapshot = null;
-		boolean recording = false;
-
+		((VulkanRenderBackend) Iris.getRenderBackend()).textures.flush();
 		try (var stack = MemoryStack.stackPush()) {
+			var command = VulkanCommandBridge.commandBuffer();
+			Iris.getRenderBackend().sync(VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT_KHR
+					| (indirect == null ? 0 : VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT_KHR),
+				VK_ACCESS_2_SHADER_READ_BIT_KHR | VK_ACCESS_2_UNIFORM_READ_BIT_KHR
+					| (indirect == null ? 0 : VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT_KHR), VK_ACCESS_2_SHADER_WRITE_BIT_KHR);
 
-			if (this.sets != null) {
-				snapshot = this.sets.snapshot(allBindings, this.bindings.getImageViews(resolved));
-			}
-
-			var frameSnapshot = this.uniforms.frameUniforms() == null ? null : VulkanFrameResources.getOrCreate(
-				this.uniforms.frameUniforms(), VulkanCommandBridge.getDevice().vkDevice()).getSnapshot();
-			var command = VulkanCommandBridge.commandBuffer(encoder);
-			var accesses = this.bindings.getResourceAccesses(resolved);
-
-			if (indirect != null) {
-				accesses.add(new VulkanSynchronization.Access(
-					new VulkanSynchronization.Resource(false, ((VulkanGpuBuffer) indirect.buffer()).vkBuffer()),
-					VK10.VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT, VK10.VK_ACCESS_INDIRECT_COMMAND_READ_BIT, false));
-			}
-
-			VulkanSynchronization.before(command, stack, accesses);
-			recording = true;
 			VK10.vkCmdBindPipeline(command, VK10.VK_PIPELINE_BIND_POINT_COMPUTE, this.pipeline);
-			heap.bind(command, this.layout, VK10.VK_PIPELINE_BIND_POINT_COMPUTE);
-
-			if (frameSnapshot != null) {
-				frameSnapshot.bind(command, this.layout, VK10.VK_PIPELINE_BIND_POINT_COMPUTE);
-			}
-
-			if (snapshot != null) {
-				snapshot.bind(command, this.layout, VK10.VK_PIPELINE_BIND_POINT_COMPUTE);
+			this.bindings.bind(command, this.layout, VK10.VK_PIPELINE_BIND_POINT_COMPUTE, this.uniforms);
+			var drawConstants = this.uniforms.pushConstants();
+			if (drawConstants.hasRemaining()) {
+				VK10.vkCmdPushConstants(command, this.layout, VK10.VK_SHADER_STAGE_COMPUTE_BIT, 0, drawConstants);
 			}
 
 			if (indirect == null) {
 				VK10.vkCmdDispatch(command, groups.x, groups.y, groups.z);
 			} else {
 				VK10.vkCmdDispatchIndirect(command, ((VulkanGpuBuffer) indirect.buffer()).vkBuffer(), indirect.offset());
-			}
-
-			VulkanSynchronization.after(command, stack);
-		} finally {
-			if (recording) {
-				encoder.queueForDestroy(heap::close);
-
-				if (snapshot != null) {
-					encoder.queueForDestroy(snapshot::close);
-				}
-			} else {
-				heap.close();
-
-				if (snapshot != null) {
-					snapshot.close();
-				}
 			}
 		}
 	}
@@ -256,16 +189,8 @@ public class VulkanComputePipeline implements ComputePipeline {
 			VK10.vkDestroyPipelineLayout(vk, this.layout, null);
 		}
 
-		if (this.emptyLayout != 0) {
-			VK10.vkDestroyDescriptorSetLayout(vk, this.emptyLayout, null);
-		}
 
-		if (this.sets != null) {
-			this.sets.close();
-		}
-
-		this.pipeline = this.layout = this.emptyLayout = 0;
-		this.sets = null;
+		this.pipeline = this.layout = 0;
 	}
 
 	@Override

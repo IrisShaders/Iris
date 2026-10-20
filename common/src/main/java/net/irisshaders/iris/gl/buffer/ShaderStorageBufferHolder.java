@@ -1,14 +1,14 @@
 package net.irisshaders.iris.gl.buffer;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public final class ShaderStorageBufferHolder implements AutoCloseable {
 	private static final ArrayList<ShaderStorageBufferHolder> ACTIVE = new ArrayList<>();
-	private final Map<Integer, ShaderStorageBuffer> buffers = new LinkedHashMap<>();
+	private final Int2ObjectMap<ShaderStorageBuffer> buffers = new Int2ObjectLinkedOpenHashMap<>();
 	private int cachedWidth;
 	private int cachedHeight;
 	private boolean closed;

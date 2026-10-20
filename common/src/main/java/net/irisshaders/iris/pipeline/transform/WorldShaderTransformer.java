@@ -3,19 +3,22 @@ package net.irisshaders.iris.pipeline.transform;
 import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
+import io.github.douira.glsl_transformer.ast.node.expression.ReferenceExpression;
 import io.github.douira.glsl_transformer.ast.node.expression.unary.MemberAccessExpression;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.BuiltinNumericTypeSpecifier;
 import io.github.douira.glsl_transformer.ast.print.ASTPrinter;
 import io.github.douira.glsl_transformer.ast.print.PrintType;
+import io.github.douira.glsl_transformer.ast.query.RootSupplier;
 import io.github.douira.glsl_transformer.ast.transform.ASTInjectionPoint;
 import io.github.douira.glsl_transformer.ast.transform.JobParameters;
 import io.github.douira.glsl_transformer.ast.transform.SingleASTTransformer;
 import io.github.douira.glsl_transformer.util.LRUCache;
+import io.github.douira.glsl_transformer.util.Type;
 import net.irisshaders.iris.backend.PipelineState;
+import net.irisshaders.iris.pipeline.transform.transformer.CommonTransformer;
 import net.irisshaders.iris.pipeline.transform.transformer.DepthTransformer;
-import net.irisshaders.iris.pipeline.transform.vulkan.VulkanGlsl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,13 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public final class WorldShaderTransformer {
+public class WorldShaderTransformer {
 	private static final Map<MatrixKey, String> matrixCache = new LRUCache<>(256);
 	private static final Map<VertexInputKey, String> vertexCache = new LRUCache<>(256);
 	private static final Map<AttributeKey, List<PipelineState.Attribute>> attributeCache = new LRUCache<>(256);
-
-	private WorldShaderTransformer() {
-	}
 
 	public static int fallbackVertexBinding(List<VertexFormat> formats) {
 		for (int i = 0; i < formats.size(); i++) {
@@ -71,13 +71,13 @@ public final class WorldShaderTransformer {
 		tree.getRoot().nodeIndex.getStream(TypeAndInitDeclaration.class).forEach(declaration -> {
 			var qualifier = declaration.getType().getTypeQualifier();
 
-			if (!VulkanGlsl.hasStorage(qualifier, StorageType.IN)) {
+			if (!Glsl.hasStorage(qualifier, StorageType.IN)) {
 				return;
 			}
 
 			for (var member : declaration.getMembers()) {
 				String name = member.getName().getName();
-				int location = VulkanGlsl.integer(VulkanGlsl.layout(qualifier, "location").getExpression(), tree.getRoot());
+				int location = Glsl.integer(Glsl.layout(qualifier, "location").getExpression(), tree.getRoot());
 				boolean found = false;
 
 				for (int binding = 0; binding < formats.size(); binding++) {
@@ -89,21 +89,21 @@ public final class WorldShaderTransformer {
 
 					for (var element : format.getElements()) {
 						if (name.equals(element.name()) || vertexAttributeName(name).equals(element.name())) {
-							result.add(new PipelineState.Attribute(location, binding, element.format(), element.offset()));
+							result.add(new PipelineState.Attribute(location, binding, element.format(), element.offset(), name));
 							found = true;
 						}
 					}
 				}
 
 				if (!found) {
-					var type = VulkanGlsl.uniformType((BuiltinNumericTypeSpecifier) declaration.getType().getTypeSpecifier(), member,
+					var type = Glsl.uniformType((BuiltinNumericTypeSpecifier) declaration.getType().getTypeSpecifier(), member,
 						tree.getRoot());
 					GpuFormat format = zeroAttributeFormat(type);
 					int columns = type.dimensions().stream().reduce(type.columns(), Math::multiplyExact);
 					int locations = (type.rows() * type.scalarBytes() + 15) / 16;
 
 					for (int column = 0; column < columns; column++) {
-						result.add(new PipelineState.Attribute(location + column * locations, fallbackVertexBinding(formats), format, 0));
+						result.add(new PipelineState.Attribute(location + column * locations, fallbackVertexBinding(formats), format, 0, name));
 					}
 				}
 			}
@@ -152,7 +152,7 @@ public final class WorldShaderTransformer {
 		var tree = parser.parseSeparateTranslationUnit(sources.get(PatchShaderType.VERTEX));
 
 		for (var external : List.copyOf(tree.getChildren())) {
-			if (!(external instanceof DeclarationExternalDeclaration wrapper) || !(wrapper.getDeclaration() instanceof TypeAndInitDeclaration declaration) || !VulkanGlsl.hasStorage(
+			if (!(external instanceof DeclarationExternalDeclaration wrapper) || !(wrapper.getDeclaration() instanceof TypeAndInitDeclaration declaration) || !Glsl.hasStorage(
 				declaration.getType().getTypeQualifier(), StorageType.IN)) {
 				continue;
 			}
@@ -196,7 +196,7 @@ public final class WorldShaderTransformer {
 				};
 
 				if (value == null) {
-					var numeric = VulkanGlsl.uniformType((BuiltinNumericTypeSpecifier) declaration.getType().getTypeSpecifier(), member,
+					var numeric = Glsl.uniformType((BuiltinNumericTypeSpecifier) declaration.getType().getTypeSpecifier(), member,
 						tree.getRoot());
 
 					if (numeric.scalarBytes() == 8) {
@@ -223,6 +223,57 @@ public final class WorldShaderTransformer {
 		result.put(PatchShaderType.VERTEX, ASTPrinter.print(PrintType.INDENTED, tree));
 		vertexCache.put(key, result.get(PatchShaderType.VERTEX));
 
+		return result;
+	}
+
+	public static Map<PatchShaderType, String> patchDhUniforms(Map<PatchShaderType, String> sources, boolean shadow) {
+		String model = shadow ? "shadowModelView" : "gbufferModelView";
+		String projection = shadow ? "shadowProjection" : "dhProjection";
+		var replacements = Map.of("iris_ModelViewMatrix", model, "iris_ModelViewMatrixInverse", model + "Inverse",
+			"iris_ProjectionMatrix", projection, "iris_ProjectionMatrixInverse", projection + "Inverse",
+			"iris_NormalMatrix", "transpose(mat3(" + model + "Inverse))",
+			"clipDistance", shadow ? "0.0" : "dhNearPlane", "mircoOffset", "0.01", "alphaTestRef", "iris_currentAlphaTest");
+		var result = new EnumMap<PatchShaderType, String>(PatchShaderType.class);
+		var parser = new SingleASTTransformer<JobParameters>();
+		parser.setRootSupplier(RootSupplier.PREFIX_UNORDERED_ED_EXACT);
+		sources.forEach((stage, source) -> {
+			if (source == null) {
+				return;
+			}
+			var tree = parser.parseSeparateTranslationUnit(source);
+			var root = tree.getRoot();
+			for (var declaration : root.nodeIndex.getStream(TypeAndInitDeclaration.class).toList()) {
+				if (!Glsl.hasStorage(declaration.getType().getTypeQualifier(), StorageType.UNIFORM)) {
+					continue;
+				}
+				for (var member : new ArrayList<>(declaration.getMembers())) {
+					String name = member.getName().getName();
+					String expression = replacements.get(name);
+					if (expression == null) {
+						continue;
+					}
+					var references = root.identifierIndex.getStream(name).map(id -> id.getParent())
+						.filter(ReferenceExpression.class::isInstance).map(ReferenceExpression.class::cast).toList();
+					for (var reference : references) {
+						if (!Glsl.isShadowed(reference, name)) {
+							reference.replaceByAndDelete(parser.parseExpression(root, expression));
+						}
+					}
+					member.detachAndDelete();
+				}
+				if (declaration.getMembers().isEmpty()) {
+					declaration.getParent().detachAndDelete();
+				}
+			}
+			for (String name : List.of(model, model + "Inverse", projection, projection + "Inverse")) {
+				CommonTransformer.addIfNotExists(root, parser, tree, name, Type.F32MAT4X4, StorageType.UNIFORM);
+			}
+			if (!shadow) {
+				CommonTransformer.addIfNotExists(root, parser, tree, "dhNearPlane", Type.FLOAT32, StorageType.UNIFORM);
+			}
+			CommonTransformer.addIfNotExists(root, parser, tree, "iris_currentAlphaTest", Type.FLOAT32, StorageType.UNIFORM);
+			result.put(stage, ASTPrinter.print(PrintType.INDENTED, tree));
+		});
 		return result;
 	}
 
@@ -272,7 +323,7 @@ public final class WorldShaderTransformer {
 				"inverse(" + model + ")", "iris_ProjMatInverse", "inverse(" + projectionFunction + "(" + projection + "))");
 
 			for (var declaration : root.nodeIndex.getStream(TypeAndInitDeclaration.class).toList()) {
-				if (!VulkanGlsl.hasStorage(declaration.getType().getTypeQualifier(), StorageType.UNIFORM)) {
+				if (!Glsl.hasStorage(declaration.getType().getTypeQualifier(), StorageType.UNIFORM)) {
 					continue;
 				}
 
@@ -300,13 +351,13 @@ public final class WorldShaderTransformer {
 		return result;
 	}
 
-	private record MatrixKey(String source, boolean intensity) {
+	public record MatrixKey(String source, boolean intensity) {
 	}
 
-	private record VertexInputKey(String source, Map<String, GpuFormat> formats) {
+	public record VertexInputKey(String source, Map<String, GpuFormat> formats) {
 	}
 
-	private record AttributeKey(String source, List<VertexFormat> formats) {
+	public record AttributeKey(String source, List<VertexFormat> formats) {
 	}
 
 }

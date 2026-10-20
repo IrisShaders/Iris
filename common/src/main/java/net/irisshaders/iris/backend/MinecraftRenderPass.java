@@ -1,6 +1,6 @@
 package net.irisshaders.iris.backend;
 
-public final class MinecraftRenderPass extends ForwardingRenderPass implements IrisRenderPass {
+public class MinecraftRenderPass extends ForwardingRenderPass implements IrisRenderPass {
 	private final WorldPassCommands commands;
 
 	public MinecraftRenderPass(WorldPassCommands commands) {

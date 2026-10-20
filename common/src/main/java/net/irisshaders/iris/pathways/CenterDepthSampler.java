@@ -15,14 +15,18 @@ import net.irisshaders.iris.targets.ColorAttachmentPlan;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import org.joml.Vector4f;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public final class CenterDepthSampler {
+public class CenterDepthSampler {
 	private final Supplier<GpuTexture> depthSupplier;
 	private final GpuTexture texture;
 	private final GpuTexture history;
@@ -37,7 +41,7 @@ public final class CenterDepthSampler {
 	private boolean destroyed;
 	private int samples;
 
-	public CenterDepthSampler(Supplier<GpuTexture> depthSupplier, float halfLife) {
+	public CenterDepthSampler(PackSamplers samplers, Supplier<GpuTexture> depthSupplier, float halfLife) {
 		if (!Float.isFinite(halfLife) || halfLife < 0) {
 			throw new IllegalArgumentException("invalid center-depth half-life");
 		}
@@ -55,32 +59,18 @@ public final class CenterDepthSampler {
 			cleanup.add(this.outputView::close);
 			this.historyView = RenderSystem.getDevice().createTextureView(this.history);
 			cleanup.add(this.historyView::close);
+			this.depthView = RenderSystem.getDevice().createTextureView(this.depthSupplier.get(), 0, 1);
+			cleanup.add(this.depthView::close);
 			RenderSystem.getDevice().createCommandEncoder().clearColorTexture(this.history, new Vector4f());
-			this.samplers = new PackSamplers();
-			cleanup.add(this.samplers::close);
+			this.samplers = samplers;
 			var outputs = new ColorAttachmentPlan.Builder().program("centerDepth", new int[]{0}, Set.of()).build(1).program("centerDepth");
 			this.program = new CompositeProgram(this.samplers, "centerDepth", Map.of(PatchShaderType.VERTEX,
-				"#version 330\nlayout(location=0) in vec3 Position; void main(){gl_Position=vec4(Position.xy*2.0-1.0,0,1);}",
-				PatchShaderType.FRAGMENT, """
-					#version 330
-					uniform sampler2D depth;
-					uniform sampler2D altDepth;
-					uniform float lastFrameTime;
-					uniform float decay;
-					uniform bool firstSample;
-					layout(location=0) out float iris_fragColor;
-					void main(){
-					 float currentDepth=1.0-texture(depth,vec2(0.5)).r;
-					 float oldDepth=texture(altDepth,vec2(0.5)).r;
-					 float weight=decay<0.0?1.0:1.0-exp(-decay*lastFrameTime);
-					 iris_fragColor=firstSample||isnan(oldDepth)?currentDepth:mix(oldDepth,currentDepth,weight);
-					}
-					"""), outputs, Collections.singletonList(null));
+				readShader("/centerDepth.vsh"), PatchShaderType.FRAGMENT, readShader("/centerDepth.fsh")),
+				outputs, Collections.singletonList(null));
 			cleanup.add(this.program::destroy);
 			this.program.getUniforms().uniform1f(UniformUpdateFrequency.PER_FRAME, "lastFrameTime", () -> this.frameTime);
 			this.program.getUniforms()
-				.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> halfLife == 0 ? -1 : Math.log(2) / (halfLife * 0.1));
-			this.program.getUniforms().uniform1b(UniformUpdateFrequency.PER_FRAME, "firstSample", () -> !this.hasFirstSample);
+				.uniform1f(UniformUpdateFrequency.ONCE, "decay", () -> Math.log(2) / (halfLife * 0.1));
 			this.program.getSamplers()
 				.addTextureSampler(new TextureBinding("depth", () -> this.depthView, () -> GlSampler.NEAREST), false, "depth");
 			this.program.getSamplers()
@@ -96,6 +86,14 @@ public final class CenterDepthSampler {
 			}
 
 			throw failure;
+		}
+	}
+
+	private static String readShader(String resource) {
+		try (var stream = Objects.requireNonNull(CenterDepthSampler.class.getResourceAsStream(resource), resource)) {
+			return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
 		}
 	}
 
@@ -136,10 +134,6 @@ public final class CenterDepthSampler {
 		return this.historyView;
 	}
 
-	public int getCenterDepthTexture() {
-		throw new UnsupportedOperationException("use the texture view");
-	}
-
 	public void setUsage(boolean usage) {
 		everRetrieved |= usage;
 	}
@@ -151,7 +145,6 @@ public final class CenterDepthSampler {
 
 		destroyed = true;
 		this.program.destroy();
-		this.samplers.close();
 
 		if (this.depthView != null) {
 			this.depthView.close();

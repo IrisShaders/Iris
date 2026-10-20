@@ -13,8 +13,8 @@ import java.util.TreeSet;
 import java.util.stream.Stream;
 
 public record SamplerHeapLayout(Map<Type, List<Slot>> heaps, Map<Type, List<Slot>> drawHeaps) {
-	public static final int DESCRIPTOR_SET = 1;
-	public static final int DRAW_DESCRIPTOR_SET = 3;
+	public static final int DESCRIPTOR_SET = VulkanHeapLayout.DESCRIPTOR_SET;
+	public static final int DRAW_DESCRIPTOR_SET = 1;
 
 	public SamplerHeapLayout(Map<Type, List<Slot>> heaps) {
 		this(heaps, Map.of());
@@ -162,7 +162,7 @@ public record SamplerHeapLayout(Map<Type, List<Slot>> heaps, Map<Type, List<Slot
 		}
 	}
 
-	public static final class Builder {
+	public static class Builder {
 		private final Map<Type, Set<Key>> resources = new EnumMap<>(Type.class);
 
 		public Builder add(Type type, String resource, String sampler) {

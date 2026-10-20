@@ -7,7 +7,6 @@ import com.mojang.renderpearl.backend.vulkan.init.VulkanPNextStruct;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.irisshaders.iris.vulkan.VulkanPipelineLibraries;
 import net.irisshaders.iris.vulkan.VulkanShaderFeatures;
-import org.lwjgl.system.Platform;
 import org.lwjgl.vulkan.VkPhysicalDeviceFeatures2;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,6 +43,7 @@ public class MixinVulkanFeatureSets {
 	private static final FeatureSet PORTABILITY_SUBSET_FEATURESET_IRIS = new FeatureSet("Vulkan Portability Subset (Iris)",
 		Set.of("VK_KHR_portability_subset"), Set.of(new VulkanFeature(PORTABILITY_SUBSET_FEATURES_STRUCT, "triangleFans"),
 		new VulkanFeature(PORTABILITY_SUBSET_FEATURES_STRUCT, "mutableComparisonSamplers"),
+		new VulkanFeature(PORTABILITY_SUBSET_FEATURES_STRUCT, "vertexAttributeAccessBeyondStride"),
 		new VulkanFeature(PORTABILITY_SUBSET_FEATURES_STRUCT, "imageViewFormatSwizzle")));
 
 	@Overwrite
@@ -53,9 +53,6 @@ public class MixinVulkanFeatureSets {
 
 	@Inject(method = "optionalFeatureSets", at = @At("RETURN"))
 	private static void iris$optionalRenderingFeatures(CallbackInfoReturnable<Set<FeatureSet>> cir) {
-		if (Platform.get() == Platform.MACOSX) {
-			cir.getReturnValue().add(VulkanShaderFeatures.SAMPLER_UPDATE_AFTER_BIND);
-		}
 		cir.getReturnValue().add(VulkanPipelineLibraries.FEATURES);
 		cir.getReturnValue().add(VulkanShaderFeatures.GEOMETRY);
 		cir.getReturnValue().add(VulkanShaderFeatures.TESSELLATION);
@@ -63,6 +60,6 @@ public class MixinVulkanFeatureSets {
 
 	@Inject(method = "<clinit>", at = @At("RETURN"))
 	private static void iris$requireRenderingFeatures(CallbackInfo ci) {
-		REQUIRED_FEATURESET = new FeatureSet("Minecraft and Iris Vulkan requirements", Set.of(REQUIRED_FEATURESET, IRIS_RENDERING));
+		REQUIRED_FEATURESET = new FeatureSet("Minecraft and Iris Vulkan requirements", Set.of(REQUIRED_FEATURESET, IRIS_RENDERING, VulkanShaderFeatures.DESCRIPTOR_HEAP));
 	}
 }

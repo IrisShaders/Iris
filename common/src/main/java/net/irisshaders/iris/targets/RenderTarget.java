@@ -69,11 +69,13 @@ public class RenderTarget {
 	}
 
 	private void resizeGpuTextures(int width, int height) {
+		var backend = Iris.getRenderBackend();
+		var targetFormat = backend.getRenderTargetFormat(this.internalFormat.toGpuFormat());
 		int levels = 32 - Integer.numberOfLeadingZeros(Math.max(width, height));
 		int usage = (this.storage ? USAGE_STORAGE : 0) | GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_COPY_DST;
 
 		if (levels > 1) {
-			usage |= Iris.getRenderBackend().getMipmapUsage(this.internalFormat.toGpuFormat());
+			usage |= backend.getMipmapUsage(targetFormat);
 		}
 
 		GpuTexture newMain = null, newAlt = null;
@@ -81,9 +83,9 @@ public class RenderTarget {
 
 		try {
 			newMain = RenderSystem.getDevice()
-				.createTexture(this.name + " main", usage, this.internalFormat.toGpuFormat(), width, height, 1, levels);
+				.createTexture(this.name + " main", usage, targetFormat, width, height, 1, levels);
 			newAlt = RenderSystem.getDevice()
-				.createTexture(this.name + " alt", usage, this.internalFormat.toGpuFormat(), width, height, 1, levels);
+				.createTexture(this.name + " alt", usage, targetFormat, width, height, 1, levels);
 
 			newMainView = RenderSystem.getDevice().createTextureView(newMain, 0, 1);
 			newAltView = RenderSystem.getDevice().createTextureView(newAlt, 0, 1);
@@ -115,7 +117,7 @@ public class RenderTarget {
 			}
 
 			throw new IllegalStateException(
-				"could not allocate Iris target " + this.name + " (" + this.internalFormat + " as " + this.internalFormat.toGpuFormat() + ", " + width + "x" + height + ", " + levels + " mips)",
+				"could not allocate Iris target " + this.name + " (" + this.internalFormat + " as " + targetFormat + ", " + width + "x" + height + ", " + levels + " mips)",
 				exception);
 		}
 
@@ -228,7 +230,7 @@ public class RenderTarget {
 
 	public void generateMipmaps(boolean alt) {
 		this.requireValid();
-		Iris.getRenderBackend().commands().generateMipmaps(alt ? this.altGpuTexture : this.mainGpuTexture, this.allowsLinear);
+		Iris.getRenderBackend().generateMipmaps(alt ? this.altGpuTexture : this.mainGpuTexture, this.allowsLinear);
 		this.turnOnMips(alt);
 	}
 
@@ -255,10 +257,6 @@ public class RenderTarget {
 		private PixelFormat format = PixelFormat.RGBA;
 		private PixelType type = PixelType.UNSIGNED_BYTE;
 		private String name = null;
-
-		private Builder() {
-			// No-op
-		}
 
 		public Builder setName(String name) {
 			this.name = name;

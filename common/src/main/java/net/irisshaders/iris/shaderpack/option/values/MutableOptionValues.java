@@ -1,6 +1,9 @@
 package net.irisshaders.iris.shaderpack.option.values;
 
 import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
+import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import net.irisshaders.iris.helpers.OptionalBoolean;
 import net.irisshaders.iris.shaderpack.option.OptionSet;
 
@@ -10,17 +13,19 @@ import java.util.Optional;
 
 public class MutableOptionValues implements OptionValues {
 	private final OptionSet options;
-	private final Map<String, Boolean> booleanValues;
+	private final Object2BooleanMap<String> booleanValues;
 	private final Map<String, String> stringValues;
 
-	MutableOptionValues(OptionSet options, Map<String, Boolean> booleanValues, Map<String, String> stringValues) {
+	MutableOptionValues(OptionSet options, Object2BooleanMap<String> booleanValues, Map<String, String> stringValues) {
 		Map<String, String> values = new HashMap<>();
 
-		booleanValues.forEach((k, v) -> values.put(k, Boolean.toString(v)));
+		for (var entry : booleanValues.object2BooleanEntrySet()) {
+			values.put(entry.getKey(), Boolean.toString(entry.getBooleanValue()));
+		}
 		values.putAll(stringValues);
 
 		this.options = options;
-		this.booleanValues = new HashMap<>();
+		this.booleanValues = new Object2BooleanOpenHashMap<>();
 		this.stringValues = new HashMap<>();
 
 		this.addAll(values);
@@ -28,7 +33,7 @@ public class MutableOptionValues implements OptionValues {
 
 	public MutableOptionValues(OptionSet options, Map<String, String> values) {
 		this.options = options;
-		this.booleanValues = new HashMap<>();
+		this.booleanValues = new Object2BooleanOpenHashMap<>();
 		this.stringValues = new HashMap<>();
 
 		this.addAll(values);
@@ -38,7 +43,7 @@ public class MutableOptionValues implements OptionValues {
 		return options;
 	}
 
-	public Map<String, Boolean> getBooleanValues() {
+	public Object2BooleanMap<String> getBooleanValues() {
 		return booleanValues;
 	}
 
@@ -69,7 +74,7 @@ public class MutableOptionValues implements OptionValues {
 
 			if (actualValue == option.getOption().getDefaultValue()) {
 				// Just set it to default by removing it from the map
-				booleanValues.remove(name);
+				booleanValues.removeBoolean(name);
 				return;
 			}
 
@@ -100,7 +105,7 @@ public class MutableOptionValues implements OptionValues {
 	@Override
 	public OptionalBoolean getBooleanValue(String name) {
 		if (booleanValues.containsKey(name)) {
-			return booleanValues.get(name) ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
+			return booleanValues.getBoolean(name) ? OptionalBoolean.TRUE : OptionalBoolean.FALSE;
 		} else {
 			return OptionalBoolean.DEFAULT;
 		}
@@ -118,12 +123,12 @@ public class MutableOptionValues implements OptionValues {
 
 	@Override
 	public MutableOptionValues mutableCopy() {
-		return new MutableOptionValues(options, new HashMap<>(booleanValues), new HashMap<>(stringValues));
+		return new MutableOptionValues(options, new Object2BooleanOpenHashMap<>(booleanValues), new HashMap<>(stringValues));
 	}
 
 	@Override
 	public ImmutableOptionValues toImmutable() {
-		return new ImmutableOptionValues(options, ImmutableMap.copyOf(booleanValues), ImmutableMap.copyOf(stringValues));
+		return new ImmutableOptionValues(options, Object2BooleanMaps.unmodifiable(new Object2BooleanOpenHashMap<>(booleanValues)), ImmutableMap.copyOf(stringValues));
 	}
 
 	@Override

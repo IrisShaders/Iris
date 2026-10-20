@@ -1,20 +1,17 @@
 package net.irisshaders.iris.vulkan;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
 import com.mojang.renderpearl.backend.vulkan.VulkanConst;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuBuffer;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.backend.CompileTask;
 import net.irisshaders.iris.backend.FramebufferDescription;
 import net.irisshaders.iris.backend.GraphicsPipeline;
 import net.irisshaders.iris.backend.GraphicsShader;
 import net.irisshaders.iris.backend.PipelineState;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.PatchedShader;
-import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
-import net.irisshaders.iris.samplers.ProgramResources;
-import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
+import net.irisshaders.iris.samplers.ProgramSamplers;
+import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VkCommandBuffer;
@@ -28,20 +25,18 @@ import java.util.concurrent.CompletableFuture;
 
 public class VulkanGraphicsShader implements GraphicsShader {
 	private final PatchedShader shader;
-	private final ProgramResources resources;
-	private final BufferUniformHolder uniforms;
-	private final VulkanProgramResources bindings;
+	private final DrawUniforms uniforms;
+	private final VulkanShaderBindings bindings;
 	private final VulkanPackResources pack;
-	private final VulkanResourceSets sets;
-	private final VulkanFrameResources frame;
 	private final VulkanShaderCache cache;
 	private final List<CompletableFuture<VulkanGraphicsPipeline>> pipelines = new ArrayList<>();
+	private final List<CompletableFuture<VulkanGraphicsPipeline.ShaderLibrary>> fragmentCompilations = new ArrayList<>();
 	private CompletableFuture<Map<PatchShaderType, ByteBuffer>> spirv;
 	private CompletableFuture<VulkanGraphicsPipeline.ShaderLibrary> library;
 	private boolean closed;
 
-	public VulkanGraphicsShader(VulkanShaderCache cache, String name, PatchedShader shader, ProgramResources resources,
-		BufferUniformHolder uniforms) {
+	public VulkanGraphicsShader(VulkanShaderCache cache, String name, PatchedShader shader, ProgramSamplers resources,
+		DrawUniforms uniforms) {
 		if (shader.sources().containsKey(PatchShaderType.GEOMETRY) && !VulkanShaderFeatures.isSupported(VulkanShaderFeatures.GEOMETRY)) {
 			throw new IllegalArgumentException("geometry shaders are not supported by this GPU??? " + name);
 		}
@@ -52,20 +47,14 @@ public class VulkanGraphicsShader implements GraphicsShader {
 		}
 
 		this.cache = cache;
-		this.resources = resources;
 		this.uniforms = uniforms;
-		this.bindings = new VulkanProgramResources(resources);
+		this.bindings = new VulkanShaderBindings(resources, shader);
 		this.pack = (VulkanPackResources) resources.getPackSamplers().getResources();
 		this.shader = shader;
-		var device = VulkanCommandBridge.getDevice().vkDevice();
-		this.sets = shader.layout().descriptors().stream().anyMatch(d -> d.set() == 0) ? new VulkanResourceSets(device, shader.layout(),
-			4096) : null;
-		this.frame = VulkanFrameResources.getOrCreate(uniforms.frameUniforms(), device);
 
 		try {
 			if (VulkanPipelineLibraries.isSupported(VulkanCommandBridge.getDevice())) {
-				this.library = cache.acquireLibrary(name, shader.sources(), this.pack.getSamplerHeap(), this.sets,
-					this.frame == null ? null : this.frame.sets);
+				this.library = cache.acquireLibrary(name, shader.sources(), this.pack.getSamplerHeap(), this.bindings.drawLayout());
 			} else {
 				this.spirv = cache.submit(() -> {
 					var spirv = new EnumMap<PatchShaderType, ByteBuffer>(PatchShaderType.class);
@@ -103,21 +92,33 @@ public class VulkanGraphicsShader implements GraphicsShader {
 		return new Pipeline(this.compilePipeline(state, false, background), state);
 	}
 
-	private CompletableFuture<VulkanGraphicsPipeline> compilePipeline(PipelineState state, boolean dynamic, boolean background) {
-		int[] formats = state.colorFormats().stream().mapToInt(VulkanConst::toVk).toArray();
+	private CompletableFuture<VulkanGraphicsPipeline> compilePipeline(PipelineState state, boolean minecraftPass, boolean background) {
+		int[] formats = new int[state.colorAttachmentCount()];
+		for (int i = 0; i < formats.length; i++) {
+			formats[i] = VulkanConst.toVk(state.colorFormats()[i]);
+		}
 		var attributes = state.vertexAttributes().stream()
 			.map(a -> new VulkanGraphicsPipeline.Attribute(a.location(), a.binding(), VulkanConst.toVk(a.format()), a.offset())).toList();
 		var world = state.vanillaPipeline() == null ? null : new VulkanGraphicsPipeline.WorldState(state.vanillaPipeline(),
 			state.depthFormat() == null ? VK10.VK_FORMAT_UNDEFINED : VulkanConst.toVk(state.depthFormat()), state.shadowPass(),
-			state.zeroVertexBuffer() == null ? 0 : ((VulkanGpuBuffer) state.zeroVertexBuffer()).vkBuffer(), state.vertexFormats());
+			state.zeroVertexBuffer() == null ? 0 : ((VulkanGpuBuffer) state.zeroVertexBuffer()).vkBuffer(), state.vertexFormats()); // stupid validation layer warning...
 		var device = VulkanCommandBridge.getDevice().vkDevice();
 		var heap = this.pack.getSamplerHeap();
-		var pipeline = this.library == null ? this.cache.compilePipeline(this.spirv,
-			spirv -> new VulkanGraphicsPipeline(device, heap, this.sets, spirv, formats, state.vertexStride(), attributes,
-				state.blendModes(), this.shader.writtenAttachments(), world, this.frame == null ? null : this.frame.sets,
-				dynamic), background) : this.cache.compilePipeline(this.library,
-			library -> new VulkanGraphicsPipeline(device, heap, this.sets, library, formats, state.vertexStride(), attributes,
-				state.blendModes(), this.shader.writtenAttachments(), world, this.frame == null ? null : this.frame.sets, dynamic), background);
+		var library = this.library;
+		if (library != null && !minecraftPass) {
+			// Prepare both render-pass variants before the link task can be run by the first bind.
+			library = this.cache.thenApply(library, compiled -> {
+				compiled.prepareFragment(formats, world, false);
+				compiled.prepareFragment(formats, world, true);
+				return compiled;
+			});
+			this.fragmentCompilations.add(library);
+		}
+		var pipeline = library == null ? this.cache.compilePipeline(this.spirv,
+			spirv -> new VulkanGraphicsPipeline(device, heap, spirv, formats, state.vertexStride(), attributes,
+				state.blendModes(), this.shader.writtenAttachments(), world, this.bindings.drawLayout(), minecraftPass), background) : this.cache.compilePipeline(library,
+			compiled -> new VulkanGraphicsPipeline(device, heap, compiled, formats, state.vertexStride(), attributes,
+				state.blendModes(), this.shader.writtenAttachments(), world, this.bindings.drawLayout(), minecraftPass), background);
 		this.pipelines.add(pipeline);
 		if (background) {
 			pipeline.whenComplete((result, failure) -> {
@@ -146,6 +147,8 @@ public class VulkanGraphicsShader implements GraphicsShader {
 
 		this.pipelines.forEach(future -> future.handle((pipeline, failure) -> null).join());
 		this.pipelines.clear();
+		this.fragmentCompilations.forEach(future -> future.handle((library, failure) -> null).join());
+		this.fragmentCompilations.clear();
 
 		if (this.library != null) {
 			this.library.handle((library, failure) -> {
@@ -165,17 +168,14 @@ public class VulkanGraphicsShader implements GraphicsShader {
 			}).join();
 		}
 
-		if (this.sets != null) {
-			this.sets.close();
-		}
 	}
 
 	public class Pipeline implements GraphicsPipeline {
 		private final CompletableFuture<VulkanGraphicsPipeline> compilation;
 		private final FramebufferDescription framebuffer;
 		private final PipelineState state;
-		private CompletableFuture<VulkanGraphicsPipeline> vanillaCompilation;
-		private VulkanGraphicsPipeline vanillaPipeline;
+		private CompletableFuture<VulkanGraphicsPipeline> minecraftCompilation;
+		private VulkanGraphicsPipeline minecraftPipeline;
 		private VulkanGraphicsPipeline pipeline;
 		private boolean closed;
 
@@ -187,55 +187,28 @@ public class VulkanGraphicsShader implements GraphicsShader {
 
 		private VulkanGraphicsPipeline getPipeline() {
 			if (this.pipeline == null) {
-				this.pipeline = VulkanShaderCache.await(this.compilation);
+				this.pipeline = CompileTask.await(this.compilation);
 			}
 
 			return this.pipeline;
 		}
 
-		public void bind(VulkanCommandEncoder encoder, VkCommandBuffer command, boolean vanilla, VulkanBindingState state,
-			VulkanWorldCommands pass) {
+		public void bind(VkCommandBuffer command, boolean minecraftPass, VulkanBindingState state) {
 			var pipeline = this.getPipeline();
-			if (vanilla) {
-				if (this.vanillaPipeline == null) {
-					if (this.vanillaCompilation == null) {
-						this.vanillaCompilation = VulkanGraphicsShader.this.compilePipeline(this.state, true, false);
+			// Minecraft-owned passes keep the compatibility variant required by its Vulkan backend.
+			if (minecraftPass) {
+				if (this.minecraftPipeline == null) {
+					if (this.minecraftCompilation == null) {
+						this.minecraftCompilation = VulkanGraphicsShader.this.compilePipeline(this.state, true, false);
 					}
-					this.vanillaPipeline = VulkanShaderCache.await(this.vanillaCompilation);
+					this.minecraftPipeline = CompileTask.await(this.minecraftCompilation);
 				}
-				pipeline = this.vanillaPipeline;
+				pipeline = this.minecraftPipeline;
 			}
-			var resolved = VulkanGraphicsShader.this.resources.resolve();
-			pass.prepareResources(resolved, !VulkanGraphicsShader.this.resources.getStorageDeclarations().isEmpty());
-			var complete = resolved.buffers();
-
-			if (!complete.containsKey(ShaderResourceLayout.UNIFORM_BLOCK) && VulkanGraphicsShader.this.uniforms.data().hasRemaining()) {
-				complete.put(ShaderResourceLayout.UNIFORM_BLOCK, List.of(encoder.transientMemory()
-					.uploadGpu(VulkanGraphicsShader.this.uniforms.data(),
-						RenderSystem.getDevice().getDeviceInfo().limits().minUniformOffsetAlignment(), GpuBuffer.USAGE_UNIFORM)));
-			}
-
-			var heap = VulkanGraphicsShader.this.bindings.createSnapshot(resolved);
-			VulkanResourceSets.Snapshot snapshot = null;
-
-			try {
-				var bindings = VulkanGraphicsShader.this.bindings;
-				var nativeBuffers = bindings.getBufferSlices(resolved);
-				snapshot = VulkanGraphicsShader.this.sets == null ? null : VulkanGraphicsShader.this.sets.snapshot(nativeBuffers,
-					bindings.getImageViews(resolved));
-
-				if (VulkanGraphicsShader.this.frame != null) {
-					pipeline.bindFrame(command, VulkanGraphicsShader.this.frame.getSnapshot(), state);
-				}
-
-				pipeline.bind(command, heap, snapshot, state);
-			} finally {
-				encoder.queueForDestroy(heap::close);
-
-				if (snapshot != null) {
-					encoder.queueForDestroy(snapshot::close);
-				}
-			}
+			VulkanGraphicsShader.this.bindings.bind(command, pipeline.layout(), VK10.VK_PIPELINE_BIND_POINT_GRAPHICS,
+				VulkanGraphicsShader.this.uniforms);
+			pipeline.bind(command, state);
+			pipeline.pushUniforms(command, VulkanGraphicsShader.this.uniforms.pushConstants());
 		}
 
 		@Override
@@ -243,9 +216,6 @@ public class VulkanGraphicsShader implements GraphicsShader {
 			return this.framebuffer;
 		}
 
-		public List<VulkanSynchronization.Access> accesses() {
-			return VulkanGraphicsShader.this.bindings.getResourceAccesses(VulkanGraphicsShader.this.resources.resolve());
-		}
 
 		public void pushConstants(VkCommandBuffer command, ByteBuffer data) {
 			this.getPipeline().pushConstants(command, data);
@@ -255,8 +225,8 @@ public class VulkanGraphicsShader implements GraphicsShader {
 		public void close() {
 			if (!this.closed) {
 				this.closed = true;
-				if (this.vanillaCompilation != null) {
-					this.vanillaCompilation.handle((pipeline, failure) -> {
+				if (this.minecraftCompilation != null) {
+					this.minecraftCompilation.handle((pipeline, failure) -> {
 						if (pipeline != null) {
 							pipeline.close();
 						}

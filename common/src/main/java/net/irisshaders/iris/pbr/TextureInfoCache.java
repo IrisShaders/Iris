@@ -14,9 +14,6 @@ public class TextureInfoCache {
 
 	private final Int2ObjectMap<TextureInfo> cache = new Int2ObjectOpenHashMap<>();
 
-	private TextureInfoCache() {
-	}
-
 	public TextureInfo getInfo(int id) {
 		TextureInfo info = cache.get(id);
 		if (info == null) {

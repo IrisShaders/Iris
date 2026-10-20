@@ -8,7 +8,7 @@ modId = "iris"
 version = "${version}"
 displayName = "Iris"
 
-logoFile = "iris-logo.png" #optional
+iconFile = "iris-logo.png" #optional
 
 authors = "coderbot, IMS212"
 

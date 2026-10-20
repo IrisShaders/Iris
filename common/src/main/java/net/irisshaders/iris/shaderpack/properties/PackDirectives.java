@@ -1,6 +1,8 @@
 package net.irisshaders.iris.shaderpack.properties;
 
-import com.google.common.collect.ImmutableMap;
+import it.unimi.dsi.fastutil.ints.Int2BooleanLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
+import it.unimi.dsi.fastutil.ints.Int2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -286,8 +288,8 @@ public class PackDirectives {
 		directives.acceptConstFloatDirective("centerDepthHalflife", centerDepthHalfLife -> this.centerDepthHalfLife = centerDepthHalfLife);
 	}
 
-	public ImmutableMap<Integer, Boolean> getExplicitFlips(String pass) {
-		ImmutableMap.Builder<Integer, Boolean> explicitFlips = ImmutableMap.builder();
+	public Int2BooleanMap getExplicitFlips(String pass) {
+		Int2BooleanMap explicitFlips = new Int2BooleanLinkedOpenHashMap();
 
 		Object2BooleanMap<String> explicitFlipsStr = this.explicitFlips.get(pass);
 
@@ -309,13 +311,16 @@ public class PackDirectives {
 			}
 
 			if (index != -1) {
+				if (explicitFlips.containsKey(index)) {
+					throw new IllegalArgumentException("Multiple flip directives for buffer " + index + " in pass " + pass);
+				}
 				explicitFlips.put(index, shouldFlip);
 			} else {
 				Iris.logger.warn("Unknown buffer with ID " + buffer + " specified in flip directive for pass " + pass);
 			}
 		});
 
-		return explicitFlips.build();
+		return Int2BooleanMaps.unmodifiable(explicitFlips);
 	}
 
 	public Vector2i getTextureScaleOverride(int index, int dimensionX, int dimensionY) {

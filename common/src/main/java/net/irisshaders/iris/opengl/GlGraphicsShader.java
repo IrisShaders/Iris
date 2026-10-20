@@ -14,10 +14,9 @@ import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendMode;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.PatchedShader;
-import net.irisshaders.iris.pipeline.transform.ShaderResourceLayout;
 import net.irisshaders.iris.pipeline.transform.WorldShaderTransformer;
-import net.irisshaders.iris.samplers.ProgramResources;
-import net.irisshaders.iris.uniforms.buffer.BufferUniformHolder;
+import net.irisshaders.iris.samplers.ProgramSamplers;
+import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL14C;
 import org.lwjgl.opengl.GL15C;
@@ -28,19 +27,13 @@ import org.lwjgl.opengl.GL40C;
 
 import java.util.List;
 
-public final class GlGraphicsShader implements GraphicsShader {
+public class GlGraphicsShader implements GraphicsShader {
 	private final GlShaderBindings shader;
-	private final ProgramResources resources;
-	private final BufferUniformHolder uniforms;
+	private final ProgramSamplers resources;
+	private final DrawUniforms uniforms;
 	private boolean closed;
 
-	public GlGraphicsShader(String name, PatchedShader source) {
-		this.shader = new GlShaderBindings(name, source);
-		this.resources = null;
-		this.uniforms = null;
-	}
-
-	GlGraphicsShader(GlShaderBindings shader, ProgramResources resources, BufferUniformHolder uniforms) {
+	public GlGraphicsShader(GlShaderBindings shader, ProgramSamplers resources, DrawUniforms uniforms) {
 		this.shader = shader.retain();
 		this.resources = resources;
 		this.uniforms = uniforms;
@@ -68,13 +61,15 @@ public final class GlGraphicsShader implements GraphicsShader {
 		}
 	}
 
-	public final class Pipeline implements GraphicsPipeline {
+	public class Pipeline implements GraphicsPipeline {
 		private final PipelineState state;
 		private final DepthStencilState depth;
 		private final boolean cull;
 		private final int polygonMode;
 		private final int topology;
 		private final int[] colorMasks;
+		private final int[] drawBuffers;
+		private final int[] defaultDrawBuffers;
 		private final BlendMode[] blends;
 		private final List<VertexFormat> vertexFormats;
 		private final GpuBufferSlice[] boundVertices = new GpuBufferSlice[16];
@@ -90,14 +85,22 @@ public final class GlGraphicsShader implements GraphicsShader {
 			this.topology = GlGraphicsShader.this.shader.source.sources().containsKey(
 				PatchShaderType.TESS_CONTROL) ? GL40C.GL_PATCHES : state.vanillaPipeline() == null ? GL11C.GL_TRIANGLES : GlConst.toGl(
 				state.vanillaPipeline().getPrimitiveTopology());
-			this.colorMasks = new int[state.colorFormats().size()];
+			var outputs = state.outputLocations();
+			this.colorMasks = new int[outputs == null ? state.colorAttachmentCount() : outputs.size()];
+			this.drawBuffers = new int[this.colorMasks.length];
+			this.defaultDrawBuffers = outputs == null ? this.drawBuffers : new int[state.colorAttachmentCount()];
+			for (int i = 0; i < this.defaultDrawBuffers.length; i++) {
+				this.defaultDrawBuffers[i] = GL30C.GL_COLOR_ATTACHMENT0 + i;
+			}
 			this.blends = new BlendMode[this.colorMasks.length];
 			var written = GlGraphicsShader.this.shader.source.writtenAttachments();
 
 			for (int i = 0; i < this.colorMasks.length; i++) {
+				int attachment = outputs == null ? i : outputs.get(i);
+				this.drawBuffers[i] = GL30C.GL_COLOR_ATTACHMENT0 + attachment;
 				this.colorMasks[i] = PipelineState.colorMask(state.vanillaPipeline(), written == null || written.get(i));
-				this.blends[i] = this.colorMasks[i] == 0 || PipelineState.isInteger(state.colorFormats().get(i)) ? null : state.blendModes()
-					.get(i);
+				this.blends[i] = this.colorMasks[i] == 0 || PipelineState.isInteger(state.colorFormats()[attachment]) ? null : state.blendModes()
+					.get(attachment);
 			}
 
 			if (!GlPipelineState.supportsIndexedBlend()) {
@@ -128,14 +131,7 @@ public final class GlGraphicsShader implements GraphicsShader {
 				throw new IllegalStateException("pipeline closed");
 			}
 
-			var resolved = GlGraphicsShader.this.resources.resolve();
-			var complete = resolved.buffers();
-
-			if (!complete.containsKey(ShaderResourceLayout.UNIFORM_BLOCK)) {
-				complete.putAll(GlGraphicsShader.this.shader.uploadUniforms(GlGraphicsShader.this.uniforms));
-			}
-
-			GlGraphicsShader.this.shader.bind(GlGraphicsShader.this.resources, GlGraphicsShader.this.uniforms, resolved);
+			GlGraphicsShader.this.shader.bind(GlGraphicsShader.this.resources, GlGraphicsShader.this.uniforms);
 			this.applyState();
 		}
 
@@ -155,12 +151,22 @@ public final class GlGraphicsShader implements GraphicsShader {
 						GL20C.glDisableVertexAttribArray(location);
 					}
 
+					float x = 0, y = 0, z = 0, w = 0;
+					switch (attribute.name() == null ? "" : attribute.name()) {
+						case "iris_UV0" -> { x = 0.5f; y = 0.5f; z = 0.5f; w = 0.5f; }
+						case "iris_UV2" -> { x = 240; y = 240; z = 240; w = 240; }
+						case "iris_Color" -> { x = 1; y = 1; z = 1; w = 1; }
+						case "iris_Normal" -> z = 1;
+						case "iris_Entity", "mc_Entity", "at_tangent", "mc_midTexCoord", "at_midBlock" -> {
+							if (format.componentCount() == 4) w = 1;
+						}
+					}
 					if (format.componentType().name().startsWith("UINT")) {
-						GL30C.glVertexAttribI4ui(location, 0, 0, 0, 0);
+						GL30C.glVertexAttribI4ui(location, (int) x, (int) y, (int) z, (int) w);
 					} else if (format.componentType().name().startsWith("SINT")) {
-						GL30C.glVertexAttribI4i(location, 0, 0, 0, 0);
+						GL30C.glVertexAttribI4i(location, (int) x, (int) y, (int) z, (int) w);
 					} else {
-						IrisRenderSystem.vertexAttrib4f(location, 0, 0, 0, 0);
+						IrisRenderSystem.vertexAttrib4f(location, x, y, z, w);
 					}
 
 					continue;
@@ -200,7 +206,15 @@ public final class GlGraphicsShader implements GraphicsShader {
 			this.vertexStateInitialized = true;
 		}
 
+		public void restoreDrawBuffers(int framebuffer) {
+			int previous = GlStateManager.getFrameBuffer(GL30C.GL_DRAW_FRAMEBUFFER);
+			GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, framebuffer);
+			GL20C.glDrawBuffers(this.defaultDrawBuffers);
+			GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, previous);
+		}
+
 		private void applyState() {
+			IrisRenderSystem.drawBuffers(GlStateManager.getFrameBuffer(GL30C.GL_DRAW_FRAMEBUFFER), this.drawBuffers);
 			if (this.depth == null) {
 				GlStateManager._disableDepthTest();
 				GlStateManager._depthMask(false);
@@ -249,8 +263,8 @@ public final class GlGraphicsShader implements GraphicsShader {
 			return this.state.framebuffer();
 		}
 
-		public boolean hasStorageWrites() {
-			return GlGraphicsShader.this.shader.hasStorageWrites(GlGraphicsShader.this.resources);
+		public boolean needsDrawBarrier() {
+			return this.state.vanillaPipeline() != null && GlGraphicsShader.this.shader.hasStorageWrites();
 		}
 
 		public void pushConstants(GpuBufferSlice data) {

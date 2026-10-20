@@ -11,10 +11,6 @@ import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
  * @see <a href="https://github.com/IrisShaders/ShaderDoc/blob/master/uniforms.md#viewport">Uniforms: Viewport</a>
  */
 public final class ViewportUniforms {
-	// cannot be constructed
-	private ViewportUniforms() {
-	}
-
 	/**
 	 * Makes the viewport uniforms available to the given program
 	 *

@@ -2,6 +2,7 @@ package net.irisshaders.iris.vulkan;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import net.irisshaders.iris.backend.CompileTask;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VkDevice;
@@ -11,16 +12,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
+
+import static net.irisshaders.iris.backend.CompileTask.await;
 
 public class VulkanShaderCache implements AutoCloseable {
 	private static final int MAX_LIBRARIES = 256;
@@ -40,9 +43,8 @@ public class VulkanShaderCache implements AutoCloseable {
 		return compiler;
 	});
 	private final ExecutorService executor;
-	private final ExecutorService backgroundExecutor = Executors.newFixedThreadPool(1,
-		Thread.ofPlatform().daemon().priority(Thread.NORM_PRIORITY - 1).name("Iris pipeline compiler").factory());
-	private final Set<VulkanCompileTask<?>> pipelineTasks = ConcurrentHashMap.newKeySet();
+	private final ExecutorService backgroundExecutor;
+	private final Set<CompileTask<?>> pipelineTasks = ConcurrentHashMap.newKeySet();
 	private int spirvBytes;
 	private boolean closing;
 	private volatile boolean closed;
@@ -52,25 +54,8 @@ public class VulkanShaderCache implements AutoCloseable {
 		int processors = Runtime.getRuntime().availableProcessors();
 		int threads = Math.clamp(Math.min(8, (processors + 1) / 2), 1, processors);
 		this.executor = Executors.newFixedThreadPool(threads, Thread.ofPlatform().daemon().name("Iris shader compiler-", 0).factory());
-	}
-
-	public static <T> T await(CompletableFuture<T> future) {
-		if (future instanceof VulkanCompileTask<T> task) {
-			task.run();
-		}
-		try {
-			return future.join();
-		} catch (CompletionException failure) {
-			if (failure.getCause() instanceof RuntimeException cause) {
-				throw cause;
-			}
-
-			if (failure.getCause() instanceof Error cause) {
-				throw cause;
-			}
-
-			throw failure;
-		}
+		this.backgroundExecutor = Executors.newFixedThreadPool(Math.min(3, threads),
+			Thread.ofPlatform().daemon().priority(Thread.NORM_PRIORITY - 1).name("Iris pipeline compiler-", 0).factory());
 	}
 
 	private static HashCode hash(String source) {
@@ -111,6 +96,7 @@ public class VulkanShaderCache implements AutoCloseable {
 
 		try {
 			spirv = this.compiler.get().compile(name, stage, source);
+			if (stage != PatchShaderType.COMPUTE) VulkanShaderInterface.validate(this.device, name, spirv);
 			var bytes = new byte[spirv.remaining()];
 			spirv.get(spirv.position(), bytes);
 
@@ -144,11 +130,11 @@ public class VulkanShaderCache implements AutoCloseable {
 	}
 
 	public synchronized CompletableFuture<VulkanGraphicsPipeline.ShaderLibrary> acquireLibrary(String name,
-		Map<PatchShaderType, String> sources, VulkanSamplerHeap heap, VulkanResourceSets uniforms, VulkanResourceSets frame) {
+		Map<PatchShaderType, String> sources, VulkanSamplerHeap heap, long drawLayout) {
 		this.requireOpen();
 		var hashes = new EnumMap<PatchShaderType, HashCode>(PatchShaderType.class);
 		sources.forEach((stage, source) -> hashes.put(stage, hash(source)));
-		var key = new LibraryKey(Map.copyOf(hashes), VulkanGraphicsPipeline.LibraryLayout.of(heap, uniforms, frame));
+		var key = new LibraryKey(Map.copyOf(hashes), heap.drawLayoutKey(drawLayout));
 		var future = this.libraries.get(key);
 
 		if (future == null) {
@@ -165,8 +151,7 @@ public class VulkanShaderCache implements AutoCloseable {
 							spirv.put(entry.getKey(), this.compile(name + entry.getKey().extension, entry.getKey(), entry.getValue()));
 						}
 
-						var library = new VulkanGraphicsPipeline.ShaderLibrary(this, key.sources(), this.device, heap, uniforms, spirv,
-							frame);
+						var library = new VulkanGraphicsPipeline.ShaderLibrary(this, key.sources(), this.device, heap, spirv, drawLayout);
 
 						synchronized (this) {
 							created.complete(library);
@@ -194,8 +179,8 @@ public class VulkanShaderCache implements AutoCloseable {
 	}
 
 	public VulkanGraphicsPipeline.PipelineLibrary acquirePipelineLibrary(Map<PatchShaderType, HashCode> sources,
-		VulkanGraphicsPipeline.LibraryLayout layout, Object state, LongSupplier compile) {
-		var key = new PipelineLibraryKey(sources, layout, state);
+		List<VulkanShaderBindings.LayoutBinding> drawLayout, Object state, LongSupplier compile) {
+		var key = new PipelineLibraryKey(sources, drawLayout, state);
 		CompletableFuture<VulkanGraphicsPipeline.PipelineLibrary> future;
 		CompletableFuture<VulkanGraphicsPipeline.PipelineLibrary> retained;
 		boolean create;
@@ -247,7 +232,7 @@ public class VulkanShaderCache implements AutoCloseable {
 
 	public <T, R> CompletableFuture<R> compilePipeline(CompletableFuture<T> input, Function<T, R> compile, boolean background) {
 		this.requireOpen();
-		var task = new VulkanCompileTask<>(() -> compile.apply(await(input)), background ? this.backgroundExecutor : this.executor);
+		var task = new CompileTask<>(() -> compile.apply(await(input)), background ? this.backgroundExecutor : this.executor);
 		this.pipelineTasks.add(task);
 		task.whenComplete((result, failure) -> this.pipelineTasks.remove(task));
 		if (!background) {
@@ -351,12 +336,12 @@ public class VulkanShaderCache implements AutoCloseable {
 		this.compilers.clear();
 	}
 
-	public record PipelineLibraryKey(Map<PatchShaderType, HashCode> sources, VulkanGraphicsPipeline.LibraryLayout layout, Object state) {
+	public record PipelineLibraryKey(Map<PatchShaderType, HashCode> sources, List<VulkanShaderBindings.LayoutBinding> drawLayout, Object state) {
 	}
 
 	public record StageKey(PatchShaderType stage, HashCode source) {
 	}
 
-	public record LibraryKey(Map<PatchShaderType, HashCode> sources, VulkanGraphicsPipeline.LibraryLayout layout) {
+	public record LibraryKey(Map<PatchShaderType, HashCode> sources, List<VulkanShaderBindings.LayoutBinding> drawLayout) {
 	}
 }

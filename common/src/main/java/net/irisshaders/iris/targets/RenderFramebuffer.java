@@ -3,20 +3,20 @@ package net.irisshaders.iris.targets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.irisshaders.iris.Iris;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11C;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public final class RenderFramebuffer {
-	private final Map<Integer, Supplier<GpuTextureView>> attachments = new HashMap<>();
+public class RenderFramebuffer {
+	private final Int2ObjectMap<Supplier<GpuTextureView>> attachments = new Int2ObjectOpenHashMap<>();
 	private int[] drawBuffers = {0};
 	private GpuTextureView depth;
 	private boolean closed;
@@ -86,7 +86,7 @@ public final class RenderFramebuffer {
 		this.checkValid();
 
 		if ((flags & GL11C.GL_COLOR_BUFFER_BIT) != 0) {
-			Iris.getRenderBackend().commands().clearColors(this.getColorViews(), color);
+			Iris.getRenderBackend().clearColors(this.getColorViews(), color);
 		}
 
 		if ((flags & GL11C.GL_DEPTH_BUFFER_BIT) != 0 && this.depth != null) {

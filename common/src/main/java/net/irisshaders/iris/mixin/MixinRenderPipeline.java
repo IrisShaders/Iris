@@ -26,11 +26,7 @@ public class MixinRenderPipeline {
 	private void iris$change2(CallbackInfoReturnable<List<VertexFormat>> cir) {
 		if (Iris.isPackInUseQuick() && Thread.currentThread().getName()
 			.contains("Render") && ImmediateState.isRenderingLevel && !ImmediateState.skipExtension.get()) {
-			var formats = cir.getReturnValue();
-			var extended = IrisVertexFormats.extend((RenderPipeline) (Object) this, formats.getFirst());
-			if (extended != formats.getFirst()) {
-				cir.setReturnValue(List.of(extended));
-			}
+			cir.setReturnValue(IrisVertexFormats.getExtendedFormats((RenderPipeline) (Object) this, cir.getReturnValue()));
 		}
 	}
 }

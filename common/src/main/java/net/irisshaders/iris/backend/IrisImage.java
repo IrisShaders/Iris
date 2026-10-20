@@ -15,8 +15,6 @@ public interface IrisImage extends AutoCloseable {
 
 	long getView();
 
-	long getImage();
-
 	void upload(ByteBuffer pixels);
 
 	void clear();

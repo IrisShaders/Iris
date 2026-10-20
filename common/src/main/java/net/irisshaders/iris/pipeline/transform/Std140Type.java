@@ -37,6 +37,19 @@ public record Std140Type(String glsl, int scalarBytes, int columns, int rows, Li
 		return size;
 	}
 
+	public int std430Alignment() {
+		return this.scalarBytes * (this.rows == 3 ? 4 : this.rows);
+	}
+
+	public int std430Size() {
+		int size = this.columns > 1 ? this.columns * align(this.scalarBytes * this.rows, this.std430Alignment())
+			: this.scalarBytes * this.rows;
+		for (int i = this.dimensions.size() - 1; i >= 0; i--) {
+			size = Math.multiplyExact(align(size, this.std430Alignment()), this.dimensions.get(i));
+		}
+		return size;
+	}
+
 	public String declaration(String name) {
 		StringBuilder result = new StringBuilder(this.glsl).append(' ').append(name);
 

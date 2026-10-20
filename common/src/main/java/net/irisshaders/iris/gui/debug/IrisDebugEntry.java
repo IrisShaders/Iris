@@ -25,12 +25,16 @@ public class IrisDebugEntry implements DebugScreenEntry {
 				"[" + Iris.MODNAME + "] " + pack.getProfileInfo()));
 			debugScreenDisplayer.addToGroup(Identifier.fromNamespaceAndPath("iris", "name"),
 				"[" + Iris.MODNAME + "] Color space: " + IrisVideoSettings.colorSpace.name());
+			boolean wasRenderingShadows = ShadowRenderer.ACTIVE;
 			ShadowRenderer.ACTIVE = true;
-			if (level != null) {
-				debugScreenDisplayer.addToGroup(Identifier.fromNamespaceAndPath("iris", "name"),
-					"[" + Iris.MODNAME + "] Shadows: " + SodiumWorldRenderer.instance().getChunksDebugString());
+			try {
+				if (level != null) {
+					debugScreenDisplayer.addToGroup(Identifier.fromNamespaceAndPath("iris", "name"),
+						"[" + Iris.MODNAME + "] Shadows: " + SodiumWorldRenderer.instance().getChunksDebugString());
+				}
+			} finally {
+				ShadowRenderer.ACTIVE = wasRenderingShadows;
 			}
-			ShadowRenderer.ACTIVE = false;
 		} else {
 			debugScreenDisplayer.addToGroup(Identifier.fromNamespaceAndPath("iris", "name"), "[" + Iris.MODNAME + "] Shaders are disabled");
 		}

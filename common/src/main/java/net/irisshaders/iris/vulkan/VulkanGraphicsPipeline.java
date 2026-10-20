@@ -5,20 +5,22 @@ import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import com.mojang.renderpearl.backend.vulkan.VulkanConst;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.objects.Object2LongAVLTreeMap;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.backend.PipelineState;
 import net.irisshaders.iris.gl.blending.BlendMode;
 import net.irisshaders.iris.gl.blending.BlendModeFunction;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
+import net.irisshaders.iris.pipeline.transform.VulkanPushConstants;
 import net.irisshaders.iris.pipeline.transform.WorldShaderTransformer;
-import net.irisshaders.iris.samplers.SamplerHeapLayout;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.EXTGraphicsPipelineLibrary;
 import org.lwjgl.vulkan.KHRPipelineLibrary;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VK11;
 import org.lwjgl.vulkan.VkCommandBuffer;
-import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkFormatProperties;
 import org.lwjgl.vulkan.VkGraphicsPipelineCreateInfo;
@@ -58,6 +60,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static net.irisshaders.iris.vulkan.VulkanChecks.check;
+
 public class VulkanGraphicsPipeline implements AutoCloseable {
 	private static final Set<Integer> UNSUPPORTED_BLEND_FORMATS = ConcurrentHashMap.newKeySet();
 	private static final Set<Integer> INTEGER_COLOR_FORMATS = Arrays.stream(GpuFormat.values())
@@ -66,89 +70,53 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 	private final VkDevice device;
 	private final long zeroVertexBuffer;
 	private final int zeroVertexBinding;
-	private final SamplerHeapLayout heapLayout;
-	private final VulkanResourceSets uniformSets;
-	private final boolean sharedLayout;
 	private ShaderLibrary shaderLibrary;
-	private long emptySetLayout;
 	private long pipelineLayout;
 	private long pipeline;
 	private long stateLibrary;
 
 	public VulkanGraphicsPipeline(VkDevice device, VulkanSamplerHeap heap, ByteBuffer vertexSpirv, ByteBuffer fragmentSpirv,
-		int depthFormat) {
-		this(device, heap, null, Map.of(PatchShaderType.VERTEX, vertexSpirv, PatchShaderType.FRAGMENT, fragmentSpirv), new int[0], 0,
-			List.of(), List.of(), null, null, depthFormat, null, null, false);
+		int depthFormat, long drawLayout) {
+		this(device, heap, Map.of(PatchShaderType.VERTEX, vertexSpirv, PatchShaderType.FRAGMENT, fragmentSpirv), new int[0], 0,
+			List.of(), List.of(), null, null, depthFormat, null, drawLayout, false);
 	}
 
-	public VulkanGraphicsPipeline(VkDevice device, VulkanSamplerHeap heap, VulkanResourceSets uniformSets,
+	public VulkanGraphicsPipeline(VkDevice device, VulkanSamplerHeap heap,
 		Map<PatchShaderType, ByteBuffer> stages, int[] outputFormats, int vertexStride, List<Attribute> attributes, List<BlendMode> blends,
-		BitSet writtenAttachments, WorldState world, VulkanResourceSets frameSets, boolean dynamic) {
-		this(device, heap, uniformSets, stages, outputFormats, vertexStride, attributes, blends, writtenAttachments, world,
-			VK10.VK_FORMAT_UNDEFINED, frameSets, null, dynamic);
+		BitSet writtenAttachments, WorldState world, long drawLayout, boolean minecraftPass) {
+		this(device, heap, stages, outputFormats, vertexStride, attributes, blends, writtenAttachments, world,
+			VK10.VK_FORMAT_UNDEFINED, null, drawLayout, minecraftPass);
 	}
 
-	public VulkanGraphicsPipeline(VkDevice device, VulkanSamplerHeap heap, VulkanResourceSets uniformSets, ShaderLibrary library,
+	public VulkanGraphicsPipeline(VkDevice device, VulkanSamplerHeap heap, ShaderLibrary library,
 		int[] outputFormats, int vertexStride, List<Attribute> attributes, List<BlendMode> blends, BitSet writtenAttachments,
-		WorldState world, VulkanResourceSets frameSets, boolean dynamic) {
-		this(device, heap, uniformSets, Map.of(), outputFormats, vertexStride, attributes, blends, writtenAttachments, world,
-			VK10.VK_FORMAT_UNDEFINED, frameSets, library, dynamic);
+		WorldState world, long drawLayout, boolean minecraftPass) {
+		this(device, heap, Map.of(), outputFormats, vertexStride, attributes, blends, writtenAttachments, world,
+			VK10.VK_FORMAT_UNDEFINED, library, drawLayout, minecraftPass);
 	}
 
-	private VulkanGraphicsPipeline(VkDevice device, VulkanSamplerHeap heap, VulkanResourceSets uniformSets,
+	private VulkanGraphicsPipeline(VkDevice device, VulkanSamplerHeap heap,
 		Map<PatchShaderType, ByteBuffer> stages, int[] outputFormats, int vertexStride, List<Attribute> attributes, List<BlendMode> blends,
-		BitSet writtenAttachments, WorldState world, int depthFormat, VulkanResourceSets frameSets, ShaderLibrary library,
-		boolean dynamic) {
-		if (library == null && (!stages.containsKey(PatchShaderType.VERTEX) || !stages.containsKey(
-			PatchShaderType.FRAGMENT) || stages.containsKey(PatchShaderType.COMPUTE))) {
-			throw new IllegalArgumentException("invalid graphics shader stages");
-		}
-
+		BitSet writtenAttachments, WorldState world, int depthFormat, ShaderLibrary library,
+		long drawLayout, boolean minecraftPass) {
 		boolean tessellation = library == null ? stages.containsKey(PatchShaderType.TESS_CONTROL) : library.tessellation;
-		this.sharedLayout = library != null;
-
-		if (library == null && tessellation != stages.containsKey(PatchShaderType.TESS_EVAL)) {
-			throw new IllegalArgumentException("tessellation requires both control and evaluation stages");
-		}
-
-		if (writtenAttachments != null && writtenAttachments.length() > outputFormats.length) {
-			throw new IllegalArgumentException("output write mask exceeds attachment count");
-		}
-
-		if ((outputFormats.length == 0 && depthFormat == VK10.VK_FORMAT_UNDEFINED && (world == null || world.depthFormat() == VK10.VK_FORMAT_UNDEFINED)) || outputFormats.length != blends.size()) {
-			throw new IllegalArgumentException("color formats and blend states must match");
-		}
 
 		this.device = device;
 		this.zeroVertexBuffer = world == null ? 0 : world.zeroVertexBuffer();
 		this.zeroVertexBinding = world == null ? 0 : WorldShaderTransformer.fallbackVertexBinding(world.vertexFormats());
-		this.heapLayout = heap.layout();
-		this.uniformSets = uniformSets;
 
-		var modules = new ArrayList<Long>();
+		var modules = new LongArrayList();
 
 		try (var stack = MemoryStack.stackPush()) {
 			var handle = stack.mallocLong(1);
 
 			if (library != null) {
-				if (library.references.get() == 0 || library.device != device || !library.layout.equals(
-					LibraryLayout.of(heap, uniformSets, frameSets))) {
-					throw new IllegalArgumentException("shader library does not match the pipeline resources");
-				}
-
 				this.shaderLibrary = library.retain();
 				this.pipelineLayout = library.pipelineLayout;
 			} else {
-				if (uniformSets == null) {
-					check(VK10.vkCreateDescriptorSetLayout(device, VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default(), null,
-						handle), "create empty resource set layout");
-					this.emptySetLayout = handle.get(0);
-				}
-
 				check(VK10.vkCreatePipelineLayout(device, VkPipelineLayoutCreateInfo.calloc(stack).sType$Default().pPushConstantRanges(
-					VkPushConstantRange.calloc(1, stack).stageFlags(VK10.VK_SHADER_STAGE_ALL_GRAPHICS).offset(0).size(128)).pSetLayouts(
-					heap.pipelineSetLayouts(stack, uniformSets == null ? this.emptySetLayout : uniformSets.setLayout(),
-						frameSets == null ? 0 : frameSets.setLayout())), null, handle), "create fullscreen pipeline layout");
+					VkPushConstantRange.calloc(1, stack).stageFlags(VK10.VK_SHADER_STAGE_ALL_GRAPHICS).offset(0).size(VulkanPushConstants.MAX_SIZE)).pSetLayouts(
+					heap.pipelineSetLayouts(stack, drawLayout)), null, handle), "create fullscreen pipeline layout");
 				this.pipelineLayout = handle.get(0);
 			}
 
@@ -167,9 +135,7 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 				.polygonMode(state == null ? VK10.VK_POLYGON_MODE_FILL : VulkanConst.toVk(state.getPolygonMode()))
 				.cullMode(PipelineState.cull(state, world != null && world.shadow()) ? VK10.VK_CULL_MODE_BACK_BIT : VK10.VK_CULL_MODE_NONE)
 				.frontFace(state == null ? VK10.VK_FRONT_FACE_COUNTER_CLOCKWISE : VK10.VK_FRONT_FACE_CLOCKWISE).lineWidth(1.0f);
-			var depthStencil = VkPipelineDepthStencilStateCreateInfo.calloc(stack).sType$Default()
-				.depthTestEnable(depthFormat != VK10.VK_FORMAT_UNDEFINED).depthWriteEnable(depthFormat != VK10.VK_FORMAT_UNDEFINED)
-				.depthCompareOp(depthFormat == VK10.VK_FORMAT_UNDEFINED ? VK10.VK_COMPARE_OP_GREATER_OR_EQUAL : VK10.VK_COMPARE_OP_ALWAYS);
+			var depthStencil = depthStencil(stack, world, depthFormat);
 			int attachmentDepthFormat = depthFormat;
 
 			if (world != null && world.depthFormat() != VK10.VK_FORMAT_UNDEFINED) {
@@ -177,8 +143,6 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 				var depth = PipelineState.depthState(state, true, world.shadow());
 
 				if (depth != null) {
-					depthStencil.depthTestEnable(true).depthWriteEnable(depth.writeDepth())
-						.depthCompareOp(VulkanConst.toVk(depth.depthTest()));
 					raster.depthBiasEnable(depth.depthBiasConstant() != 0 || depth.depthBiasScaleFactor() != 0)
 						.depthBiasConstantFactor(depth.depthBiasConstant()).depthBiasSlopeFactor(depth.depthBiasScaleFactor());
 				}
@@ -206,10 +170,6 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 					}
 				}
 			} else if (!attributes.isEmpty()) {
-				if (vertexStride <= 0) {
-					throw new IllegalArgumentException("invalid fullscreen vertex stride");
-				}
-
 				bindings.get(bindingCount++).binding(0).stride(vertexStride).inputRate(VK10.VK_VERTEX_INPUT_RATE_VERTEX);
 			}
 
@@ -238,10 +198,6 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 				}
 
 				vertexInput.pVertexAttributeDescriptions(descriptions);
-			}
-
-			if (blends.size() > 8) {
-				throw new IllegalArgumentException("too many color blend attachments");
 			}
 
 			var colorBlend = VkPipelineColorBlendStateCreateInfo.calloc(stack).sType$Default();
@@ -282,7 +238,7 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 				colorBlend.pAttachments(attachments);
 			}
 
-			long renderPass = dynamic ? 0 : ((VulkanRenderBackend) Iris.getRenderBackend()).getRenderPassCache()
+			long renderPass = minecraftPass ? 0 : ((VulkanRenderBackend) Iris.getRenderBackend()).getRenderPassCache()
 				.get(outputFormats, attachmentDepthFormat);
 
 			var info = VkGraphicsPipelineCreateInfo.calloc(1, stack).sType$Default().renderPass(renderPass).pStages(shaderStages)
@@ -298,7 +254,7 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 						.pDynamicStates(stack.ints(VK10.VK_DYNAMIC_STATE_VIEWPORT, VK10.VK_DYNAMIC_STATE_SCISSOR)))
 				.layout(this.pipelineLayout);
 
-			if (dynamic) {
+			if (minecraftPass) {
 				var rendering = VkPipelineRenderingCreateInfo.calloc(stack).sType$Default().depthAttachmentFormat(attachmentDepthFormat);
 				if (outputFormats.length != 0) {
 					rendering.pColorAttachmentFormats(stack.ints(outputFormats));
@@ -322,7 +278,7 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 			}
 
 			handle.put(0, 0);
-			int result = VK10.vkCreateGraphicsPipelines(device, VK10.VK_NULL_HANDLE, info, null, handle);
+			int result = VK10.vkCreateGraphicsPipelines(device, VulkanCommandBridge.pipelineCache(), info, null, handle);
 			this.pipeline = handle.get(0);
 			check(result, "create graphics pipeline" + (library != null ? " library" : ""));
 
@@ -335,7 +291,7 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 							stack.longs(library.preRaster(raster, renderPass), library.fragment(depthStencil, renderPass),
 								this.stateLibrary)));
 				handle.put(0, 0);
-				result = VK10.vkCreateGraphicsPipelines(device, VK10.VK_NULL_HANDLE, link, null, handle);
+				result = VK10.vkCreateGraphicsPipelines(device, VulkanCommandBridge.pipelineCache(), link, null, handle);
 				this.pipeline = handle.get(0);
 				check(result, "link graphics pipeline libraries");
 			}
@@ -350,17 +306,20 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 		}
 	}
 
-	private static void check(int result, String operation) {
-		if (result != VK10.VK_SUCCESS) {
-			throw new IllegalStateException("failed to " + operation + ": VkResult " + result);
+	private static VkPipelineDepthStencilStateCreateInfo depthStencil(MemoryStack stack, WorldState world, int depthFormat) {
+		var state = VkPipelineDepthStencilStateCreateInfo.calloc(stack).sType$Default()
+			.depthTestEnable(depthFormat != VK10.VK_FORMAT_UNDEFINED).depthWriteEnable(depthFormat != VK10.VK_FORMAT_UNDEFINED)
+			.depthCompareOp(depthFormat == VK10.VK_FORMAT_UNDEFINED ? VK10.VK_COMPARE_OP_GREATER_OR_EQUAL : VK10.VK_COMPARE_OP_ALWAYS);
+		if (world != null && world.depthFormat() != VK10.VK_FORMAT_UNDEFINED) {
+			var depth = PipelineState.depthState(world.pipeline(), true, world.shadow());
+			if (depth != null) {
+				state.depthTestEnable(true).depthWriteEnable(depth.writeDepth()).depthCompareOp(VulkanConst.toVk(depth.depthTest()));
+			}
 		}
+		return state;
 	}
 
 	private static long createModule(VkDevice device, MemoryStack stack, ByteBuffer spirv) {
-		if (!spirv.isDirect() || spirv.remaining() == 0 || spirv.remaining() % 4 != 0) {
-			throw new IllegalArgumentException("invalid SPIR-V buffer");
-		}
-
 		var handle = stack.mallocLong(1);
 		check(VK10.vkCreateShaderModule(device, VkShaderModuleCreateInfo.calloc(stack).sType$Default().pCode(spirv), null, handle),
 			"create fullscreen shader module");
@@ -369,35 +328,20 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 	}
 
 	public void pushConstants(VkCommandBuffer command, ByteBuffer data) {
-		if (data.remaining() > 128 || data.remaining() == 0 || (data.remaining() & 3) != 0) {
-			throw new IllegalArgumentException("invalid graphics push constants");
-		}
-
-		VK10.vkCmdPushConstants(command, this.pipelineLayout, VK10.VK_SHADER_STAGE_ALL_GRAPHICS, 0, data);
+		VK10.vkCmdPushConstants(command, this.pipelineLayout, VK10.VK_SHADER_STAGE_ALL_GRAPHICS, VulkanPushConstants.NATIVE_OFFSET, data);
 	}
 
-	public void bindFrame(VkCommandBuffer command, VulkanResourceSets.Snapshot frame, VulkanBindingState state) {
-		frame.bind(command, this.pipelineLayout, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, state);
+	public void pushUniforms(VkCommandBuffer command, ByteBuffer data) {
+		if (data.hasRemaining()) {
+			VK10.vkCmdPushConstants(command, this.pipelineLayout, VK10.VK_SHADER_STAGE_ALL_GRAPHICS, 0, data);
+		}
 	}
 
-	public void bind(VkCommandBuffer commandBuffer, VulkanSamplerHeap.Snapshot heap, VulkanResourceSets.Snapshot uniforms) {
-		this.bind(commandBuffer, heap, uniforms, null);
+	public long layout() {
+		return this.pipelineLayout;
 	}
 
-	public void bind(VkCommandBuffer commandBuffer, VulkanSamplerHeap.Snapshot heap, VulkanResourceSets.Snapshot uniforms, VulkanBindingState state) {
-		if (this.pipeline == 0 || commandBuffer.getDevice() != this.device) {
-			throw new IllegalStateException("invalid graphics pipeline binding");
-		}
-
-		if ((uniforms == null ? null : uniforms.owner()) != this.uniformSets || !this.heapLayout.equals(heap.layout())) {
-			throw new IllegalArgumentException("graphics descriptors do not match the pipeline");
-		}
-
-		if (uniforms != null) {
-			uniforms.bind(commandBuffer, this.pipelineLayout, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, state);
-		}
-
-		heap.bind(commandBuffer, this.pipelineLayout, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, state);
+	public void bind(VkCommandBuffer commandBuffer, VulkanBindingState state) {
 		if (state == null || state.pipeline(this.pipeline)) {
 			VK10.vkCmdBindPipeline(commandBuffer, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS, this.pipeline);
 		}
@@ -419,15 +363,11 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 			VK10.vkDestroyPipeline(this.device, this.stateLibrary, null);
 		}
 
-		if (!this.sharedLayout && this.pipelineLayout != 0) {
+		if (this.shaderLibrary == null && this.pipelineLayout != 0) {
 			VK10.vkDestroyPipelineLayout(this.device, this.pipelineLayout, null);
 		}
 
-		if (this.emptySetLayout != 0) {
-			VK10.vkDestroyDescriptorSetLayout(this.device, this.emptySetLayout, null);
-		}
-
-		this.pipeline = this.stateLibrary = this.pipelineLayout = this.emptySetLayout = 0;
+		this.pipeline = this.stateLibrary = this.pipelineLayout = 0;
 
 		if (this.shaderLibrary != null) {
 			this.shaderLibrary.close();
@@ -440,17 +380,16 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 		private final Map<PatchShaderType, HashCode> vertexSources;
 		private final Map<PatchShaderType, HashCode> fragmentSources;
 		private final VkDevice device;
-		private final LibraryLayout layout;
-		private final VulkanSamplerHeap heap;
+		private final List<VulkanShaderBindings.LayoutBinding> drawLayout;
 		private final boolean tessellation;
-		private final Map<PatchShaderType, Long> modules = new EnumMap<>(PatchShaderType.class);
+		private final Object2LongMap<PatchShaderType> modules = new Object2LongAVLTreeMap<>();
 		private final Map<RasterState, PipelineLibrary> preRaster = new ConcurrentHashMap<>();
 		private final Map<DepthState, PipelineLibrary> fragments = new ConcurrentHashMap<>();
 		private final AtomicInteger references = new AtomicInteger(1);
 		private final long pipelineLayout;
 
 		public ShaderLibrary(VulkanShaderCache cache, Map<PatchShaderType, HashCode> sources, VkDevice device, VulkanSamplerHeap heap,
-			VulkanResourceSets uniformSets, Map<PatchShaderType, ByteBuffer> stages, VulkanResourceSets frameSets) {
+			Map<PatchShaderType, ByteBuffer> stages, long drawLayout) {
 			this.cache = cache;
 			var vertex = new EnumMap<PatchShaderType, HashCode>(PatchShaderType.class);
 			vertex.putAll(sources);
@@ -459,40 +398,20 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 			this.fragmentSources = sources.containsKey(PatchShaderType.FRAGMENT) ? Map.of(PatchShaderType.FRAGMENT,
 				sources.get(PatchShaderType.FRAGMENT)) : Map.of();
 			this.device = device;
-			this.layout = LibraryLayout.of(heap, uniformSets, frameSets);
+			this.drawLayout = heap.drawLayoutKey(drawLayout);
 			this.tessellation = stages.containsKey(PatchShaderType.TESS_CONTROL);
-
-			if (!stages.containsKey(PatchShaderType.VERTEX) || !stages.containsKey(PatchShaderType.FRAGMENT) || stages.containsKey(
-				PatchShaderType.COMPUTE) || this.tessellation != stages.containsKey(PatchShaderType.TESS_EVAL)) {
-				throw new IllegalArgumentException("invalid graphics shader stages");
-			}
-
-			heap.retainLayouts();
-			this.heap = heap;
-			long emptyLayout = 0;
 
 			try (var stack = MemoryStack.stackPush()) {
 				var handle = stack.mallocLong(1);
 
-				if (uniformSets == null) {
-					check(VK10.vkCreateDescriptorSetLayout(device, VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default(), null,
-						handle), "create empty resource set layout");
-					emptyLayout = handle.get(0);
-				}
-
 				check(VK10.vkCreatePipelineLayout(device, VkPipelineLayoutCreateInfo.calloc(stack).sType$Default().pPushConstantRanges(
-					VkPushConstantRange.calloc(1, stack).stageFlags(VK10.VK_SHADER_STAGE_ALL_GRAPHICS).offset(0).size(128)).pSetLayouts(
-					heap.pipelineSetLayouts(stack, uniformSets == null ? emptyLayout : uniformSets.setLayout(),
-						frameSets == null ? 0 : frameSets.setLayout())), null, handle), "create shader library layout");
+					VkPushConstantRange.calloc(1, stack).stageFlags(VK10.VK_SHADER_STAGE_ALL_GRAPHICS).offset(0).size(VulkanPushConstants.MAX_SIZE)).pSetLayouts(
+					heap.pipelineSetLayouts(stack, drawLayout)), null, handle), "create shader library layout");
 				this.pipelineLayout = handle.get(0);
 				stages.forEach((stage, spirv) -> this.modules.put(stage, createModule(device, stack, spirv)));
 			} catch (RuntimeException | Error e) {
 				this.close();
 				throw e;
-			} finally {
-				if (emptyLayout != 0) {
-					VK10.vkDestroyDescriptorSetLayout(device, emptyLayout, null);
-				}
 			}
 		}
 
@@ -517,24 +436,36 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 			}).pipeline;
 		}
 
+		public void prepareFragment(int[] outputFormats, WorldState world, boolean minecraftPass) {
+			int depthFormat = world == null ? VK10.VK_FORMAT_UNDEFINED : world.depthFormat();
+			long renderPass = minecraftPass ? 0 : ((VulkanRenderBackend) Iris.getRenderBackend()).getRenderPassCache()
+				.get(outputFormats, depthFormat);
+			try (var stack = MemoryStack.stackPush()) {
+				var state = depthStencil(stack, world, VK10.VK_FORMAT_UNDEFINED);
+				var key = new DepthState(state.depthTestEnable(), state.depthWriteEnable(), state.depthCompareOp(), renderPass);
+				this.fragments.computeIfAbsent(key, unused -> this.compile(stack,
+					this.libraryInfo(stack, true, renderPass).pDepthStencilState(state).pMultisampleState(
+						VkPipelineMultisampleStateCreateInfo.calloc(stack).sType$Default()
+							.rasterizationSamples(VK10.VK_SAMPLE_COUNT_1_BIT)), this.fragmentSources, key));
+			}
+		}
+
 		private long fragment(VkPipelineDepthStencilStateCreateInfo state, long renderPass) {
 			var key = new DepthState(state.depthTestEnable(), state.depthWriteEnable(), state.depthCompareOp(), renderPass);
-			return this.fragments.computeIfAbsent(key, unused -> {
-				try (var stack = MemoryStack.stackPush()) {
-					return this.compile(stack, this.libraryInfo(stack, true, renderPass).pDepthStencilState(state).pMultisampleState(
-						VkPipelineMultisampleStateCreateInfo.calloc(stack).sType$Default()
-							.rasterizationSamples(VK10.VK_SAMPLE_COUNT_1_BIT)), this.fragmentSources, key);
-				}
-			}).pipeline;
+			var library = this.fragments.get(key);
+			if (library == null) {
+				throw new IllegalStateException("fragment library was not prepared: " + key);
+			}
+			return library.pipeline;
 		}
 
 		private VkGraphicsPipelineCreateInfo.Buffer libraryInfo(MemoryStack stack, boolean fragment, long renderPass) {
 			var stages = VkPipelineShaderStageCreateInfo.calloc(fragment ? 1 : this.modules.size() - 1, stack);
 			int index = 0;
 
-			for (var entry : this.modules.entrySet()) {
+			for (var entry : this.modules.object2LongEntrySet()) {
 				if ((entry.getKey() == PatchShaderType.FRAGMENT) == fragment) {
-					stages.get(index++).sType$Default().stage(VulkanShaderCompiler.stageFlag(entry.getKey())).module(entry.getValue())
+					stages.get(index++).sType$Default().stage(VulkanShaderCompiler.stageFlag(entry.getKey())).module(entry.getLongValue())
 						.pName(stack.UTF8("main"));
 				}
 			}
@@ -548,12 +479,12 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 
 		private PipelineLibrary compile(MemoryStack stack, VkGraphicsPipelineCreateInfo.Buffer info, Map<PatchShaderType, HashCode> sources,
 			Object state) {
-			return this.cache.acquirePipelineLibrary(sources, this.layout, state, () -> this.compile(stack, info));
+			return this.cache.acquirePipelineLibrary(sources, this.drawLayout, state, () -> this.compile(stack, info));
 		}
 
 		private long compile(MemoryStack stack, VkGraphicsPipelineCreateInfo.Buffer info) {
 			var handle = stack.callocLong(1);
-			int result = VK10.vkCreateGraphicsPipelines(this.device, VK10.VK_NULL_HANDLE, info, null, handle);
+			int result = VK10.vkCreateGraphicsPipelines(this.device, VulkanCommandBridge.pipelineCache(), info, null, handle);
 
 			if (result != VK10.VK_SUCCESS) {
 				if (handle.get(0) != 0) {
@@ -566,15 +497,7 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 		}
 
 		public ShaderLibrary retain() {
-			int references;
-
-			do {
-				references = this.references.get();
-
-				if (references == 0) {
-					throw new IllegalStateException("shader library is closed");
-				}
-			} while (!this.references.compareAndSet(references, references + 1));
+			this.references.incrementAndGet();
 
 			return this;
 		}
@@ -585,22 +508,17 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 
 		@Override
 		public void close() {
-			if (this.references.getAndUpdate(references -> Math.max(0, references - 1)) == 1) {
+			if (this.references.getAndDecrement() == 1) {
 				this.preRaster.values().forEach(PipelineLibrary::close);
 				this.fragments.values().forEach(PipelineLibrary::close);
 				this.modules.values().forEach(module -> VK10.vkDestroyShaderModule(this.device, module, null));
 				if (this.pipelineLayout != 0) {
 					VK10.vkDestroyPipelineLayout(this.device, this.pipelineLayout, null);
 				}
-				this.heap.releaseLayouts();
 			}
 		}
 
 		public record RasterState(int polygonMode, int cullMode, int frontFace, float biasConstant, float biasSlope, long renderPass) {
-			public RasterState {
-				biasConstant = biasConstant;
-				biasSlope = biasSlope;
-			}
 		}
 
 		public record DepthState(boolean test, boolean write, int compare, long renderPass) {
@@ -618,15 +536,7 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 		}
 
 		public PipelineLibrary retain() {
-			int references;
-
-			do {
-				references = this.references.get();
-
-				if (references == 0) {
-					throw new IllegalStateException("pipeline library is closed");
-				}
-			} while (!this.references.compareAndSet(references, references + 1));
+			this.references.incrementAndGet();
 
 			return this;
 		}
@@ -637,22 +547,9 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 
 		@Override
 		public void close() {
-			if (this.references.getAndUpdate(references -> Math.max(0, references - 1)) == 1) {
+			if (this.references.getAndDecrement() == 1) {
 				VK10.vkDestroyPipeline(this.device, this.pipeline, null);
 			}
-		}
-	}
-
-	public record LibraryLayout(List<VulkanResourceSets.LayoutBinding> uniforms, Map<SamplerHeapLayout.Type, Integer> heaps, Map<SamplerHeapLayout.Type, Integer> draws, List<VulkanResourceSets.LayoutBinding> frame) {
-		public static LibraryLayout of(VulkanSamplerHeap heap, VulkanResourceSets uniforms, VulkanResourceSets frame) {
-			var counts = new EnumMap<SamplerHeapLayout.Type, Integer>(SamplerHeapLayout.Type.class);
-			heap.layout().heaps().forEach((type, slots) -> counts.put(type, slots.size()));
-
-			var draws = new EnumMap<SamplerHeapLayout.Type, Integer>(SamplerHeapLayout.Type.class);
-			heap.layout().drawHeaps().forEach((type, slots) -> draws.put(type, slots.size()));
-
-			return new LibraryLayout(uniforms == null ? List.of() : uniforms.getLayoutBindings(), Map.copyOf(counts), Map.copyOf(draws),
-				frame == null ? null : frame.getLayoutBindings());
 		}
 	}
 
@@ -663,10 +560,5 @@ public class VulkanGraphicsPipeline implements AutoCloseable {
 	}
 
 	public record Attribute(int location, int binding, int format, int offset) {
-		public Attribute {
-			if (location < 0 || binding < 0 || offset < 0) {
-				throw new IllegalArgumentException("invalid vertex attribute");
-			}
-		}
 	}
 }

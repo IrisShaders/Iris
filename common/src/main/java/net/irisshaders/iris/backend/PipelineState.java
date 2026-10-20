@@ -13,7 +13,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public record PipelineState(FramebufferDescription framebuffer, List<BlendMode> blendModes, List<Attribute> vertexAttributes, int vertexStride, RenderPipeline vanillaPipeline, boolean shadowPass, GpuBuffer zeroVertexBuffer, List<VertexFormat> vertexFormats) {
+public record PipelineState(FramebufferDescription framebuffer, List<BlendMode> blendModes, List<Attribute> vertexAttributes, int vertexStride, RenderPipeline vanillaPipeline, boolean shadowPass, GpuBuffer zeroVertexBuffer, List<VertexFormat> vertexFormats, List<Integer> outputLocations) {
+	public PipelineState(FramebufferDescription framebuffer, List<BlendMode> blendModes, List<Attribute> vertexAttributes, int vertexStride,
+		RenderPipeline vanillaPipeline, boolean shadowPass, GpuBuffer zeroVertexBuffer, List<VertexFormat> vertexFormats) {
+		this(framebuffer, blendModes, vertexAttributes, vertexStride, vanillaPipeline, shadowPass, zeroVertexBuffer, vertexFormats, null);
+	}
+
 	public PipelineState(FramebufferDescription framebuffer, List<BlendMode> blendModes, List<Attribute> vertexAttributes, int vertexStride,
 		RenderPipeline vanillaPipeline, boolean shadowPass, GpuBuffer zeroVertexBuffer) {
 		this(framebuffer, blendModes, vertexAttributes, vertexStride, vanillaPipeline, shadowPass, zeroVertexBuffer,
@@ -25,8 +30,9 @@ public record PipelineState(FramebufferDescription framebuffer, List<BlendMode> 
 		blendModes = Collections.unmodifiableList(new ArrayList<>(blendModes));
 		vertexAttributes = List.copyOf(vertexAttributes);
 		vertexFormats = Collections.unmodifiableList(new ArrayList<>(vertexFormats));
+		outputLocations = outputLocations == null ? null : List.copyOf(outputLocations);
 
-		if (framebuffer.colorFormats().size() != blendModes.size()) {
+		if (framebuffer.colorAttachmentCount() != blendModes.size()) {
 			throw new IllegalArgumentException("color attachments and blend states differ");
 		}
 	}
@@ -68,8 +74,12 @@ public record PipelineState(FramebufferDescription framebuffer, List<BlendMode> 
 		};
 	}
 
-	public List<GpuFormat> colorFormats() {
+	public GpuFormat[] colorFormats() {
 		return this.framebuffer.colorFormats();
+	}
+
+	public int colorAttachmentCount() {
+		return this.framebuffer.colorAttachmentCount();
 	}
 
 	public GpuFormat depthFormat() {
@@ -80,9 +90,9 @@ public record PipelineState(FramebufferDescription framebuffer, List<BlendMode> 
 		return depthState(this.vanillaPipeline, this.depthFormat() != null, this.shadowPass);
 	}
 
-	public record Attribute(int location, int binding, GpuFormat format, int offset) {
+	public record Attribute(int location, int binding, GpuFormat format, int offset, String name) {
 		public Attribute(int location, GpuFormat format, int offset) {
-			this(location, 0, format, offset);
+			this(location, 0, format, offset, null);
 		}
 	}
 }

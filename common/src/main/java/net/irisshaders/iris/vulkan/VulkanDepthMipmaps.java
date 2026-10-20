@@ -1,10 +1,8 @@
 package net.irisshaders.iris.vulkan;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
-import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
 import com.mojang.renderpearl.backend.vulkan.VulkanGpuTextureView;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.sampler.GlSampler;
@@ -14,28 +12,32 @@ import net.irisshaders.iris.samplers.SamplerBindingPlan;
 import net.irisshaders.iris.samplers.SamplerHeapLayout;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.vulkan.KHRPushDescriptor;
 import org.lwjgl.vulkan.VK10;
+import org.lwjgl.vulkan.VkDescriptorImageInfo;
 import org.lwjgl.vulkan.VkRect2D;
 import org.lwjgl.vulkan.VkViewport;
+import org.lwjgl.vulkan.VkWriteDescriptorSet;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.lwjgl.vulkan.KHRSynchronization2.*;
+
 public class VulkanDepthMipmaps implements AutoCloseable {
 	private final Map<GpuTexture, List<GpuTextureView>> depthMipViews = new IdentityHashMap<>();
-	private VulkanSamplerHeap depthMipHeap;
 	private VulkanGraphicsPipeline depthMipPipeline;
-	private SamplerHeapLayout.Slot depthMipSlot;
 
-	private void initialize() {
+	private void initialize(VulkanSamplerHeap heap) {
 		var backend = VulkanCommandBridge.getDevice();
 
-		var layout = new SamplerHeapLayout.Builder().add(SamplerHeapLayout.Type.SAMPLER2D, "depth", "linear").build();
-		this.depthMipSlot = layout.slot(SamplerHeapLayout.Type.SAMPLER2D, "depth", "linear");
+		var sourceLayout = new SamplerHeapLayout.Builder().add(SamplerHeapLayout.Type.SAMPLER2D, "depth", "linear").build();
+		var layout = new SamplerHeapLayout(Map.of(), sourceLayout.heaps());
+		var depthMipSlot = layout.slot(SamplerHeapLayout.Type.SAMPLER2D, "depth", "linear");
 
-		// this is stupid???
+		// this is stupid??? why can't we just have good things
 		var shader = VulkanShaderPatcher.patch(Map.of(PatchShaderType.VERTEX, """
 				#version 450
 				void main(){vec2 p=vec2((gl_VertexIndex<<1)&2,gl_VertexIndex&2);gl_Position=vec4(p*2.0-1.0,0,1);}""",
@@ -47,8 +49,7 @@ public class VulkanDepthMipmaps implements AutoCloseable {
 				    vec2 uv = gl_FragCoord.xy / vec2(size);
 				    gl_FragDepth = textureLod(sourceDepth, uv, 0.0).r;
 				}
-				"""), new SamplerBindingPlan.Builder(layout).bind("sourceDepth", this.depthMipSlot).build());
-		this.depthMipHeap = new VulkanSamplerHeap(backend, layout, 256);
+				"""), new SamplerBindingPlan.Builder(layout).bind("sourceDepth", depthMipSlot).build());
 
 		try (var compiler = new VulkanShaderCompiler()) {
 			var vertex = compiler.compile("depth-mips.vsh", PatchShaderType.VERTEX, shader.sources().get(PatchShaderType.VERTEX));
@@ -57,32 +58,24 @@ public class VulkanDepthMipmaps implements AutoCloseable {
 				var fragment = compiler.compile("depth-mips.fsh", PatchShaderType.FRAGMENT, shader.sources().get(PatchShaderType.FRAGMENT));
 
 				try {
-					this.depthMipPipeline = new VulkanGraphicsPipeline(backend.vkDevice(), this.depthMipHeap, vertex, fragment,
-						VK10.VK_FORMAT_D32_SFLOAT);
+					this.depthMipPipeline = new VulkanGraphicsPipeline(backend.vkDevice(), heap, vertex, fragment,
+						VK10.VK_FORMAT_D32_SFLOAT, heap.drawLayout(shader.layout().descriptors()));
 				} finally {
 					MemoryUtil.memFree(fragment);
 				}
 			} finally {
 				MemoryUtil.memFree(vertex);
 			}
-		} catch (RuntimeException | Error failure) {
-			this.depthMipHeap.close();
-
-			throw failure;
 		}
 	}
 
-	public void generate(GpuTexture texture) {
-		if (texture.getFormat() != GpuFormat.D32_FLOAT || texture.isClosed()) {
-			throw new IllegalArgumentException("expected live D32 shadow depth");
-		}
-
+	public void generate(GpuTexture texture, VulkanSamplerHeap heap) {
 		if (texture.getMipLevels() < 2) {
 			return;
 		}
 
 		if (this.depthMipPipeline == null) {
-			this.initialize();
+			this.initialize(heap);
 		}
 
 		var levels = this.depthMipViews.computeIfAbsent(texture, image -> {
@@ -100,25 +93,27 @@ public class VulkanDepthMipmaps implements AutoCloseable {
 				throw failure;
 			}
 		});
-		var encoder = VulkanCommandBridge.encoder(RenderSystem.getDevice().createCommandEncoder());
-		var command = VulkanCommandBridge.commandBuffer(encoder);
+		var command = VulkanCommandBridge.commandBuffer();
 
 		try (var stack = MemoryStack.stackPush()) {
-			VulkanCommandEncoder.memoryBarrier(command, stack);
+			var sourceInfo = VkDescriptorImageInfo.calloc(1, stack);
+			sourceInfo.get(0).sampler(heap.sampler(GlSampler.LINEAR)).imageLayout(VK10.VK_IMAGE_LAYOUT_GENERAL);
+			var writes = VkWriteDescriptorSet.calloc(1, stack).sType$Default().dstBinding(0)
+				.descriptorType(VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER).descriptorCount(1).pImageInfo(sourceInfo);
 
 			for (int level = 1; level < levels.size(); level++) {
+				Iris.getRenderBackend().sync(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT_KHR,
+					VK_ACCESS_2_SHADER_SAMPLED_READ_BIT_KHR | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT_KHR,
+					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT_KHR);
 				var source = (VulkanGpuTextureView) levels.get(level - 1);
 				var target = (VulkanGpuTextureView) levels.get(level);
-				var snapshot = this.depthMipHeap.snapshot(Map.of(this.depthMipSlot,
-					new VulkanSamplerHeap.ImageSampler(source.vkImageView(), this.depthMipHeap.sampler(GlSampler.LINEAR),
-						VK10.VK_IMAGE_LAYOUT_GENERAL)));
-				encoder.queueForDestroy(snapshot::close);
+				sourceInfo.get(0).imageView(source.vkImageView());
 
 				int width = Math.max(1, texture.getWidth(level));
 				int height = Math.max(1, texture.getHeight(level));
-				((VulkanRenderBackend) Iris.getRenderBackend()).getRenderPassCache()
-					.begin(command, stack, new int[0], VK10.VK_FORMAT_D32_SFLOAT, new long[]{target.vkImageView()}, width, height,
-						VK10.VK_IMAGE_LAYOUT_GENERAL, VK10.VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+				((VulkanRenderBackend) Iris.getRenderBackend()).getRenderPassCache().begin(command, stack, new int[0],
+					VK10.VK_FORMAT_D32_SFLOAT, new long[]{target.vkImageView()}, width, height, VK10.VK_IMAGE_LAYOUT_GENERAL,
+					VK10.VK_ATTACHMENT_LOAD_OP_DONT_CARE);
 
 				try {
 					VK10.vkCmdSetViewport(command, 0, VkViewport.calloc(1, stack).width(width).height(height).minDepth(0).maxDepth(1));
@@ -126,13 +121,15 @@ public class VulkanDepthMipmaps implements AutoCloseable {
 					var scissor = VkRect2D.calloc(1, stack);
 					scissor.extent().set(width, height);
 					VK10.vkCmdSetScissor(command, 0, scissor);
-					this.depthMipPipeline.bind(command, snapshot, null);
+					heap.bind(command);
+					KHRPushDescriptor.vkCmdPushDescriptorSetKHR(command, VK10.VK_PIPELINE_BIND_POINT_GRAPHICS,
+						this.depthMipPipeline.layout(), SamplerHeapLayout.DRAW_DESCRIPTOR_SET, writes);
+					this.depthMipPipeline.bind(command, null);
 					VK10.vkCmdDraw(command, 3, 1, 0, 0);
 				} finally {
 					VK10.vkCmdEndRenderPass(command);
 				}
 
-				VulkanCommandEncoder.memoryBarrier(command, stack);
 			}
 		}
 	}
@@ -153,11 +150,8 @@ public class VulkanDepthMipmaps implements AutoCloseable {
 			return;
 		}
 
-		var encoder = VulkanCommandBridge.getDevice().createCommandEncoder();
-		encoder.queueForDestroy(this.depthMipPipeline::close);
-		encoder.queueForDestroy(this.depthMipHeap::close);
+		VulkanCommandBridge.deleteWhenDone(this.depthMipPipeline::close);
 		this.depthMipPipeline = null;
-		this.depthMipHeap = null;
 	}
 
 }

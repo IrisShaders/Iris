@@ -1,5 +1,6 @@
 package net.irisshaders.iris.mixin.texture;
 
+import com.mojang.blaze3d.platform.Transparency;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.mixinterface.AbstractTextureExtended;
@@ -23,6 +24,18 @@ public abstract class MixinAbstractTexture implements AbstractTextureExtended {
 	protected GpuTexture texture;
 	@Unique
 	private GpuTexture lastChecked;
+	@Unique
+	private @Nullable Transparency iris$transparency;
+
+	@Override
+	public @Nullable Transparency iris$getTransparency() {
+		return this.iris$transparency;
+	}
+
+	@Override
+	public void iris$setTransparency(@Nullable Transparency transparency) {
+		this.iris$transparency = transparency;
+	}
 
 	@Inject(method = "getTexture", at = @At(value = "RETURN"))
 	private void iris$afterGenerateId(CallbackInfoReturnable<GpuTexture> cir) {

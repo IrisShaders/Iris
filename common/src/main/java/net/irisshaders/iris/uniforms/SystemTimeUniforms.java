@@ -15,9 +15,6 @@ public final class SystemTimeUniforms {
 	public static final Timer TIMER = new Timer();
 	public static final FrameCounter COUNTER = new FrameCounter();
 
-	private SystemTimeUniforms() {
-	}
-
 	/**
 	 * Makes system time uniforms available to the given program
 	 *

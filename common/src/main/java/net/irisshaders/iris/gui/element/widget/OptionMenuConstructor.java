@@ -42,9 +42,6 @@ public final class OptionMenuConstructor {
 			element -> element.slider ? new SliderElementWidget(element) : new StringElementWidget(element));
 	}
 
-	private OptionMenuConstructor() {
-	}
-
 	@SuppressWarnings("unchecked")
 	public static <T extends OptionMenuElement> void registerWidget(Class<T> element, WidgetProvider<T> widget) {
 		WIDGET_CREATORS.put(element, (WidgetProvider<OptionMenuElement>) widget);

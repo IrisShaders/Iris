@@ -52,9 +52,6 @@ public class PBRTextureManager {
 	private NativeImageBackedSingleColorTexture defaultNormalTexture;
 	private NativeImageBackedSingleColorTexture defaultSpecularTexture;
 
-	private PBRTextureManager() {
-	}
-
 	private static void dumpTexture(Dumpable dumpable, Identifier id, Path path) {
 		try {
 			dumpable.dumpContents(id, path);

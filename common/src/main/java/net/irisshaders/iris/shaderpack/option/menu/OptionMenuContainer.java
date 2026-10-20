@@ -1,6 +1,8 @@
 package net.irisshaders.iris.shaderpack.option.menu;
 
 import com.google.common.collect.Lists;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.option.ProfileSet;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
@@ -20,7 +22,7 @@ public class OptionMenuContainer {
 	private final List<OptionMenuOptionElement> usedOptionElements = new ArrayList<>();
 	private final List<String> usedOptions = new ArrayList<>();
 	private final List<String> unusedOptions = new ArrayList<>(); // To be used when screens contain a "*" element
-	private final Map<List<OptionMenuElement>, Integer> unusedOptionDumpQueue = new HashMap<>(); // Used by screens with "*" element
+	private final Object2IntMap<List<OptionMenuElement>> unusedOptionDumpQueue = new Object2IntOpenHashMap<>(); // Used by screens with "*" element
 	private final ProfileSet profiles;
 
 	public OptionMenuContainer(ShaderProperties shaderProperties, ShaderPackOptions shaderPackOptions, ProfileSet profiles) {
@@ -35,13 +37,13 @@ public class OptionMenuContainer {
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getBooleanOptions().keySet());
 		this.unusedOptions.addAll(shaderPackOptions.getOptionSet().getStringOptions().keySet());
 
-		Map<String, Integer> subScreenColumnCounts = shaderProperties.getSubScreenColumnCount();
+		Object2IntMap<String> subScreenColumnCounts = shaderProperties.getSubScreenColumnCount();
 		shaderProperties.getSubScreenOptions().forEach((screenKey, options) -> subScreens.put(screenKey,
 			new OptionMenuSubElementScreen(screenKey, this, shaderProperties, shaderPackOptions, options,
-				Optional.ofNullable(subScreenColumnCounts.get(screenKey)))));
+				subScreenColumnCounts.containsKey(screenKey) ? Optional.of(subScreenColumnCounts.getInt(screenKey)) : Optional.empty())));
 
 		// Dump all unused options into screens containing "*"
-		for (Map.Entry<List<OptionMenuElement>, Integer> entry : unusedOptionDumpQueue.entrySet()) {
+		for (Object2IntMap.Entry<List<OptionMenuElement>> entry : unusedOptionDumpQueue.object2IntEntrySet()) {
 			List<OptionMenuElement> elementsToInsert = new ArrayList<>();
 			List<String> unusedOptionsCopy = Lists.newArrayList(this.unusedOptions);
 
@@ -62,7 +64,7 @@ public class OptionMenuContainer {
 				}
 			}
 
-			entry.getKey().addAll(entry.getValue(), elementsToInsert);
+			entry.getKey().addAll(entry.getIntValue(), elementsToInsert);
 		}
 	}
 

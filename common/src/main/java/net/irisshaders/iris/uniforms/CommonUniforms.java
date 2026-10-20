@@ -1,10 +1,8 @@
 package net.irisshaders.iris.uniforms;
 
 import net.irisshaders.iris.compat.dh.DHCompat;
-import net.irisshaders.iris.gl.state.FogMode;
-import net.irisshaders.iris.gl.state.StateUpdateNotifiers;
-import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
+import net.irisshaders.iris.gl.uniform.UniformType;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.layer.GbufferPrograms;
 import net.irisshaders.iris.mixin.texture.TextureAtlasAccessor;
@@ -12,13 +10,13 @@ import net.irisshaders.iris.mixinterface.LocalPlayerInterface;
 import net.irisshaders.iris.pbr.TextureTracker;
 import net.irisshaders.iris.shaderpack.IdMap;
 import net.irisshaders.iris.shaderpack.properties.PackDirectives;
+import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import net.irisshaders.iris.uniforms.transforms.SmoothedFloat;
 import net.irisshaders.iris.uniforms.transforms.SmoothedVec2f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.TextureFilteringMethod;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.attribute.EnvironmentAttributes;
@@ -37,7 +35,7 @@ import org.joml.Vector3d;
 import org.joml.Vector4f;
 import org.joml.Vector4i;
 
-public final class CommonUniforms {
+public class CommonUniforms {
 	private static final Minecraft client = Minecraft.getInstance();
 	private static final Vector2i ZERO_VECTOR_2i = new Vector2i();
 	private static final Vector4i ZERO_VECTOR_4i = new Vector4i(0, 0, 0, 0);
@@ -47,63 +45,47 @@ public final class CommonUniforms {
 		GbufferPrograms.init();
 	}
 
-	private CommonUniforms() {
-		// no construction allowed
+	public static void addDrawUniforms(DrawUniforms uniforms) {
+		uniforms.drawUniform("atlasSize", UniformType.VEC2I);
+		uniforms.drawUniform("entityId", UniformType.INT);
+		uniforms.drawUniform("iris_currentAlphaTest", UniformType.FLOAT);
+		uniforms.drawUniform("alphaTestRef", UniformType.FLOAT);
+		uniforms.drawUniform("renderStage", UniformType.INT);
+		uniforms.drawUniform("gtextureId", UniformType.INT);
+		uniforms.drawUniform("gtextureSize", UniformType.VEC2I);
+		uniforms.drawUniform("blendFunc", UniformType.VEC4I);
 	}
 
-	public static void addDynamicUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
-		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
-		FogUniforms.addFogUniforms(uniforms, fogMode);
-		IrisInternalUniforms.addFogUniforms(uniforms, fogMode);
-
-		// This is a fallback for when entityId via attributes cannot be used. (lightning)
-		uniforms.uniform1i("entityId", CapturedRenderingState.INSTANCE::getCurrentRenderedEntity,
-			StateUpdateNotifiers.fallbackEntityNotifier);
-
-		// TODO: OptiFine doesn't think that atlasSize is a "dynamic" uniform,
-		//       but we do. How will custom uniforms depending on atlasSize work?
-		//
-		// Note: on 1.17+ we don't need to reset this when textures are bound, since
-		// the shader will always be setup (and therefore uniforms will be re-uploaded)
-		// after the texture is changed and before rendering starts.
-		uniforms.uniform2i("atlasSize", () -> {
-			var glId = TextureTracker.INSTANCE.getBoundTexture();
-
-			if (glId == null) {
-				return ZERO_VECTOR_2i;
-			}
-
-			AbstractTexture texture = TextureTracker.INSTANCE.getTexture(glId);
-			if (texture instanceof TextureAtlas atlas) {
-				TextureAtlasAccessor atlasAccessor = (TextureAtlasAccessor) atlas;
-				return new Vector2i(atlasAccessor.callGetWidth(), atlasAccessor.callGetHeight());
-			}
-
-			return ZERO_VECTOR_2i;
-		}, listener -> {
-		});
-
-		uniforms.uniform1i("gtextureId", () -> TextureTracker.INSTANCE.identity(TextureTracker.INSTANCE.getBoundTexture()),
-			StateUpdateNotifiers.bindTextureNotifier);
-		uniforms.uniform1i("textureReloadCount", CapturedRenderingState.INSTANCE::getTextureReloadCount,
-			StateUpdateNotifiers.bindTextureNotifier);
-
-		uniforms.uniform2i("gtextureSize", () -> {
-			var texture = TextureTracker.INSTANCE.getBoundTexture();
-
-			return texture == null ? ZERO_VECTOR_2i : new Vector2i(texture.getWidth(0), texture.getHeight(0));
-
-		}, StateUpdateNotifiers.bindTextureNotifier);
-
-		uniforms.uniform4i("blendFunc", CapturedRenderingState.INSTANCE::getBlendFunction, StateUpdateNotifiers.blendFuncNotifier);
-
-		uniforms.uniform1i("renderStage", () -> GbufferPrograms.getCurrentPhase().ordinal(), StateUpdateNotifiers.phaseChangeNotifier);
+	public static void writeDrawUniforms(DrawUniforms uniforms) {
+		// Frame values come from FrameUniforms; only draw state is written here.
+		var texture = TextureTracker.INSTANCE.getBoundTexture();
+		var atlasSize = getAtlasSize();
+		var blend = CapturedRenderingState.INSTANCE.getBlendFunction();
+		float alphaTest = CapturedRenderingState.INSTANCE.getCurrentAlphaTest();
+		uniforms.set2i("atlasSize", atlasSize.x, atlasSize.y);
+		uniforms.set1i("entityId", CapturedRenderingState.INSTANCE.getCurrentRenderedEntity());
+		uniforms.set1f("iris_currentAlphaTest", alphaTest);
+		uniforms.set1f("alphaTestRef", alphaTest);
+		uniforms.set1i("renderStage", GbufferPrograms.getCurrentPhase().ordinal());
+		uniforms.set1i("gtextureId", TextureTracker.INSTANCE.identity(texture));
+		uniforms.set2i("gtextureSize", texture == null ? 0 : texture.getWidth(0), texture == null ? 0 : texture.getHeight(0));
+		uniforms.set4i("blendFunc", blend.x, blend.y, blend.z, blend.w);
 	}
 
-	public static void addCommonUniforms(DynamicUniformHolder uniforms, IdMap idMap, PackDirectives directives,
-		FrameUpdateNotifier updateNotifier, FogMode fogMode) {
-		CommonUniforms.addNonDynamicUniforms(uniforms, idMap, directives, updateNotifier);
-		CommonUniforms.addDynamicUniforms(uniforms, fogMode);
+	private static Vector2i getAtlasSize() {
+		var texture = TextureTracker.INSTANCE.getBoundTexture();
+		if (texture != null && TextureTracker.INSTANCE.getTexture(texture) instanceof TextureAtlas atlas) {
+			TextureAtlasAccessor accessor = (TextureAtlasAccessor) atlas;
+			return new Vector2i(accessor.callGetWidth(), accessor.callGetHeight());
+		}
+		return ZERO_VECTOR_2i;
+	}
+
+	public static void addPassUniforms(DrawUniforms uniforms) {
+		uniforms.drawUniform("fogMode", UniformType.INT);
+		uniforms.drawUniform("fogShape", UniformType.INT);
+		uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogMode", () -> 0);
+		uniforms.uniform1i(UniformUpdateFrequency.ONCE, "fogShape", () -> -1);
 	}
 
 	public static void addNonDynamicUniforms(UniformHolder uniforms, IdMap idMap, PackDirectives directives,
@@ -119,7 +101,10 @@ public final class CommonUniforms {
 		MatrixUniforms.addMatrixUniforms(uniforms, directives);
 		IdMapUniforms.addIdMapUniforms(updateNotifier, uniforms, idMap, directives.isOldHandLight());
 		CommonUniforms.generalCommonUniforms(uniforms, updateNotifier, directives);
+		FogUniforms.addFrameUniforms(uniforms);
+		IrisInternalUniforms.addFrameUniforms(uniforms);
 		IrisInternalUniforms.addOtherUniforms(uniforms, updateNotifier, directives);
+		uniforms.uniform1i(UniformUpdateFrequency.PER_FRAME, "textureReloadCount", CapturedRenderingState.INSTANCE::getTextureReloadCount);
 	}
 
 	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier, PackDirectives directives) {

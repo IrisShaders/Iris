@@ -3,6 +3,9 @@ package net.irisshaders.iris.shaderpack.option;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.irisshaders.iris.helpers.OptionalBoolean;
@@ -79,8 +82,8 @@ public final class OptionAnnotatedSource {
 	 * The content of each line within this shader source file.
 	 */
 	private final ImmutableList<String> lines;
-	private final ImmutableMap<Integer, BooleanOption> booleanOptions;
-	private final ImmutableMap<Integer, StringOption> stringOptions;
+	private final Int2ObjectMap<BooleanOption> booleanOptions;
+	private final Int2ObjectMap<StringOption> stringOptions;
 	/**
 	 * Optional diagnostic messages for each line. The parser may notice that though a shader pack
 	 * author may have intended for a line to be a valid option, Iris might have ignored it due to
@@ -89,7 +92,7 @@ public final class OptionAnnotatedSource {
 	 * These diagnostic messages provide reasons for why Iris decided to ignore a plausible option
 	 * line, as well as hints for how an invalid option line can be modified to be a valid one.
 	 */
-	private final ImmutableMap<Integer, String> diagnostics;
+	private final Int2ObjectMap<String> diagnostics;
 	/**
 	 * Keeps track of references to boolean #define options. Correlates the name of the #define
 	 * option to one of the lines it was referenced on.
@@ -128,9 +131,9 @@ public final class OptionAnnotatedSource {
 			parseLine(builder, index, line);
 		}
 
-		this.booleanOptions = builder.booleanOptions.build();
-		this.stringOptions = builder.stringOptions.build();
-		this.diagnostics = builder.diagnostics.build();
+		this.booleanOptions = Int2ObjectMaps.unmodifiable(builder.booleanOptions);
+		this.stringOptions = Int2ObjectMaps.unmodifiable(builder.stringOptions);
+		this.diagnostics = Int2ObjectMaps.unmodifiable(builder.diagnostics);
 		this.booleanDefineReferences = ImmutableMap.copyOf(builder.booleanDefineReferences);
 	}
 
@@ -413,15 +416,15 @@ public final class OptionAnnotatedSource {
 		}
 	}
 
-	public ImmutableMap<Integer, BooleanOption> getBooleanOptions() {
+	public Int2ObjectMap<BooleanOption> getBooleanOptions() {
 		return booleanOptions;
 	}
 
-	public ImmutableMap<Integer, StringOption> getStringOptions() {
+	public Int2ObjectMap<StringOption> getStringOptions() {
 		return stringOptions;
 	}
 
-	public ImmutableMap<Integer, String> getDiagnostics() {
+	public Int2ObjectMap<String> getDiagnostics() {
 		return diagnostics;
 	}
 
@@ -517,15 +520,15 @@ public final class OptionAnnotatedSource {
 	}
 
 	private static class AnnotationsBuilder {
-		private final ImmutableMap.Builder<Integer, BooleanOption> booleanOptions;
-		private final ImmutableMap.Builder<Integer, StringOption> stringOptions;
-		private final ImmutableMap.Builder<Integer, String> diagnostics;
+		private final Int2ObjectMap<BooleanOption> booleanOptions;
+		private final Int2ObjectMap<StringOption> stringOptions;
+		private final Int2ObjectMap<String> diagnostics;
 		private final Map<String, IntList> booleanDefineReferences;
 
 		private AnnotationsBuilder() {
-			booleanOptions = ImmutableMap.builder();
-			stringOptions = ImmutableMap.builder();
-			diagnostics = ImmutableMap.builder();
+			booleanOptions = new Int2ObjectLinkedOpenHashMap<>();
+			stringOptions = new Int2ObjectLinkedOpenHashMap<>();
+			diagnostics = new Int2ObjectLinkedOpenHashMap<>();
 			booleanDefineReferences = new HashMap<>();
 		}
 	}

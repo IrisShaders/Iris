@@ -2,12 +2,16 @@ package net.irisshaders.iris.pipeline;
 
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import it.unimi.dsi.fastutil.Function;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMaps;
+import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pathways.HandRenderer;
 import net.irisshaders.iris.pipeline.programs.ShaderKey;
 import net.irisshaders.iris.pipeline.programs.ShaderMap;
 import net.irisshaders.iris.pipeline.programs.ShaderOverrides;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
+import net.irisshaders.iris.targets.WorldRenderTargets;
 import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.minecraft.client.renderer.RenderPipelines;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +26,7 @@ public class IrisPipelines {
 	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMap = new ConcurrentHashMap<>();
 	private static final Map<RenderPipeline, Function<IrisRenderingPipeline, ShaderKey>> coreShaderMapShadow = new ConcurrentHashMap<>();
 	private static final Map<RenderPipeline, List<ShaderKey>> coreShaderVariants = new ConcurrentHashMap<>();
-	private static final Map<RenderPipeline, Boolean> sodiumPipelines = new ConcurrentHashMap<>();
+	private static final Object2BooleanMap<RenderPipeline> sodiumPipelines = Object2BooleanMaps.synchronize(new Object2BooleanOpenHashMap<>());
 	private static final AtomicInteger version = new AtomicInteger();
 	private static final Function<IrisRenderingPipeline, ShaderKey> FAKE_FUNCTION = p -> null;
 
@@ -263,10 +267,17 @@ public class IrisPipelines {
 
 	@Nullable
 	public static ShaderKey getPipeline(IrisRenderingPipeline pipeline, RenderPipeline shader) {
+		return getPipeline(pipeline, shader, ShadowRenderingState.areShadowsCurrentlyBeingRendered()
+			? WorldRenderTargets.Phase.SHADOW : WorldRenderTargets.Phase.OPAQUE);
+	}
+
+	@Nullable
+	public static ShaderKey getPipeline(IrisRenderingPipeline pipeline, RenderPipeline shader, WorldRenderTargets.Phase phase) {
+		boolean shadow = phase == WorldRenderTargets.Phase.SHADOW;
 		if (shader.getLocation().getNamespace().contains("sodium")) {
-			return sodiumPipeline(shader, ShadowRenderingState.areShadowsCurrentlyBeingRendered());
+			return sodiumPipeline(shader, shadow);
 		}
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+		if (shadow) {
 			return coreShaderMapShadow.getOrDefault(shader, FAKE_FUNCTION).apply(pipeline);
 		} else {
 			return coreShaderMap.getOrDefault(shader, FAKE_FUNCTION).apply(pipeline);
@@ -293,10 +304,10 @@ public class IrisPipelines {
 			});
 		}
 		coreShaderVariants.forEach((draw, keys) -> keys.forEach(key -> consumer.accept(draw, key)));
-		sodiumPipelines.keySet().forEach(draw -> {
+		for (var draw : sodiumPipelines.keySet().toArray(RenderPipeline[]::new)) {
 			consumer.accept(draw, sodiumPipeline(draw, false));
 			consumer.accept(draw, sodiumPipeline(draw, true));
-		});
+		}
 	}
 
 	public static void preparePrograms(IrisRenderingPipeline pipeline, ShaderMap shaders) {
@@ -326,7 +337,7 @@ public class IrisPipelines {
 	}
 
 	public static void registerPipeline(RenderPipeline pipeline) {
-		if (pipeline.getLocation().getNamespace().contains("sodium") && sodiumPipelines.putIfAbsent(pipeline, true) == null) {
+		if (pipeline.getLocation().getNamespace().contains("sodium") && !sodiumPipelines.putIfAbsent(pipeline, true)) {
 			version.incrementAndGet();
 		}
 	}

@@ -6,10 +6,6 @@ import net.irisshaders.iris.gl.texture.PixelFormat;
 import net.irisshaders.iris.gl.texture.PixelType;
 
 public abstract class CustomTextureData {
-	private CustomTextureData() {
-
-	}
-
 	public static final class PngData extends CustomTextureData {
 		private final TextureFilteringData filteringData;
 		private final byte[] content;

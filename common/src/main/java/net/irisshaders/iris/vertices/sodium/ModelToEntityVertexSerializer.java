@@ -1,6 +1,5 @@
 package net.irisshaders.iris.vertices.sodium;
 
-import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
 import net.caffeinemc.mods.sodium.api.vertex.format.common.EntityVertex;
 import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializer;
@@ -9,8 +8,11 @@ import net.irisshaders.iris.vertices.IrisVertexFormats;
 import net.irisshaders.iris.vertices.NormalHelper;
 import org.lwjgl.system.MemoryUtil;
 
+import java.nio.ByteOrder;
+
 public class ModelToEntityVertexSerializer implements VertexSerializer {
 
+	private static final boolean LITTLE_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
 	private static final int MIDCOORD = IrisVertexFormats.ENTITY.getElement("mc_midTexCoord").offset();
 	private static final int TANGENT = IrisVertexFormats.ENTITY.getElement("at_tangent").offset();
 
@@ -24,6 +26,8 @@ public class ModelToEntityVertexSerializer implements VertexSerializer {
 		final short entity = (short) CapturedRenderingState.INSTANCE.getCurrentRenderedEntity();
 		final short blockEntity = (short) CapturedRenderingState.INSTANCE.getCurrentRenderedBlockEntity();
 		final short item = (short) CapturedRenderingState.INSTANCE.getCurrentRenderedItem();
+		final int packedIds = LITTLE_ENDIAN ? (entity & 0xFFFF) | ((blockEntity & 0xFFFF) << 16)
+			: ((entity & 0xFFFF) << 16) | (blockEntity & 0xFFFF);
 
 		long src = srcBase;
 		long dst = dstBase;
@@ -63,19 +67,28 @@ public class ModelToEntityVertexSerializer implements VertexSerializer {
 
 			final float midU = (v0u + v1u + v2u + MemoryUtil.memGetFloat(v3 + 16)) * 0.25f;
 			final float midV = (v0v + v1v + v2v + MemoryUtil.memGetFloat(v3 + 20)) * 0.25f;
+			final long packedMid = LITTLE_ENDIAN ? Integer.toUnsignedLong(Float.floatToRawIntBits(midU)) | ((long) Float.floatToRawIntBits(midV) << 32)
+				: ((long) Float.floatToRawIntBits(midU) << 32) | Integer.toUnsignedLong(Float.floatToRawIntBits(midV));
 
 			long writeSrc = v0;
 			long writeDst = dst;
 
 			for (int i = 0; i < 4; i++) {
-				MemoryIntrinsics.copyMemory(writeSrc, writeDst, 36);
+				long data0 = MemoryUtil.memGetLong(writeSrc);
+				long data1 = MemoryUtil.memGetLong(writeSrc + 8);
+				long data2 = MemoryUtil.memGetLong(writeSrc + 16);
+				long data3 = MemoryUtil.memGetLong(writeSrc + 24);
+				int data4 = MemoryUtil.memGetInt(writeSrc + 32);
+				MemoryUtil.memPutLong(writeDst, data0);
+				MemoryUtil.memPutLong(writeDst + 8, data1);
+				MemoryUtil.memPutLong(writeDst + 16, data2);
+				MemoryUtil.memPutLong(writeDst + 24, data3);
+				MemoryUtil.memPutInt(writeDst + 32, data4);
 
-				MemoryUtil.memPutShort(writeDst + 36, entity);
-				MemoryUtil.memPutShort(writeDst + 38, blockEntity);
+				MemoryUtil.memPutInt(writeDst + 36, packedIds);
 				MemoryUtil.memPutShort(writeDst + 40, item);
 
-				MemoryUtil.memPutFloat(writeDst + MIDCOORD, midU);
-				MemoryUtil.memPutFloat(writeDst + MIDCOORD + 4, midV);
+				MemoryUtil.memPutLong(writeDst + MIDCOORD, packedMid);
 
 				MemoryUtil.memPutInt(writeDst + TANGENT, tangent);
 
