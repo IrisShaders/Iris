@@ -30,7 +30,7 @@ public class LanguageMap {
 		// we also want to avoid any directories while filtering
 		// Basically, we want the immediate files nested in the path for the langFolder
 		// There is also Files.list which can be used for similar behavior
-		try (Stream<Path> stream = Files.list(root)) {
+		try (Stream<Path> stream = PackDirectories.list(root)) {
 			stream.filter(path -> !Files.isDirectory(path)).forEach(path -> {
 				// Shader packs use legacy file name coding which is different than modern minecraft's.
 				// An example of this is using "en_US.lang" compared to "en_us.json"

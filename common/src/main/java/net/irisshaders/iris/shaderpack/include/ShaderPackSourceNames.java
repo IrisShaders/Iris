@@ -1,6 +1,7 @@
 package net.irisshaders.iris.shaderpack.include;
 
 import com.google.common.collect.ImmutableList;
+import net.irisshaders.iris.shaderpack.PackDirectories;
 import net.irisshaders.iris.shaderpack.loading.ProgramArrayId;
 import net.irisshaders.iris.shaderpack.loading.ProgramId;
 
@@ -28,7 +29,7 @@ public class ShaderPackSourceNames {
 		boolean anyFound = false;
 
 		Set<String> found;
-		try (Stream<Path> stream = Files.list(directoryPath)) {
+		try (Stream<Path> stream = PackDirectories.list(directoryPath)) {
 			found = stream
 				.map(path -> path.getFileName().toString())
 				.collect(Collectors.toSet());
