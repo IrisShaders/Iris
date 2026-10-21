@@ -501,6 +501,10 @@ public class Iris {
 
 		if (pack.toString().endsWith(".zip")) {
 			try (FileSystem zipSystem = FileSystems.newFileSystem(pack, Iris.class.getClassLoader())) {
+				if (Files.exists(zipSystem.getPath("shaders"))) {
+					return true;
+				}
+
 				Path root = zipSystem.getRootDirectories().iterator().next();
 				try (Stream<Path> stream = Files.walk(root)) {
 					return stream
