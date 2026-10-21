@@ -17,7 +17,8 @@ public final class PackDirectories {
 	}
 
 	public static Stream<Path> list(Path directory) throws IOException {
-		if (Files.isDirectory(directory) || !Files.exists(directory) || !"jar".equals(directory.getFileSystem().provider().getScheme())) {
+		final FileSystem fileSystem = directory.getFileSystem();
+		if (Files.isDirectory(directory) || !Files.exists(directory) || !"jar".equals(fileSystem.provider().getScheme())) {
 			return Files.list(directory);
 		}
 
@@ -27,7 +28,6 @@ public final class PackDirectories {
 			return Files.list(directory);
 		}
 
-		final FileSystem fileSystem = directory.getFileSystem();
 		final String prefix = directory.toAbsolutePath().toString().substring(1) + "/";
 		final Set<Path> children = new LinkedHashSet<>();
 		try (final ZipFile zip = new ZipFile(Path.of(URI.create(uri.substring(0, separatorIndex))).toFile())) {
