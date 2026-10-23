@@ -80,6 +80,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 	private final float[] tempFloats2 = new float[9];
 	private final int normalMat;
 	private boolean hasUV;
+	private boolean hasOverlay;
 	private int textureToUnswizzle;
 	private boolean isSetup;
 	private final IrisRenderingPipeline pipeline;
@@ -105,6 +106,7 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 
 		if (vertexFormat.contains("UV1")) {
 			has1 = true;
+			this.hasOverlay = true;
 		}
 
 		if (vertexFormat.contains("UV2") || vertexFormat.contains("a_LightAndData")) {
@@ -234,6 +236,11 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 			IrisRenderSystem.bindTextureToUnit(GL46C.GL_TEXTURE_2D, 0, pipeline.getWhitePixel().getTexture().iris$getGlId());
 		}
 
+		// Vanilla NO_OVERLAY pipelines (e.g. armor) declare no Sampler1, so unit 1 would hold a stale texture.
+		if (hasOverlay && !declaresSampler(samplers, "Sampler1")) {
+			IrisRenderSystem.bindTextureToUnit(GL46C.GL_TEXTURE_2D, IrisBindings.OVERLAY_TEXTURE, Minecraft.getInstance().gameRenderer.overlayTexture().getTextureView().texture().iris$getGlId());
+		}
+
 		this.samplers.update();
 		uniforms.update();
 
@@ -257,6 +264,13 @@ public class ExtendedShader extends GlProgram implements IrisProgram {
 		} else {
 			writingToAfterTranslucent.bind();
 		}
+	}
+
+	private static boolean declaresSampler(List<BindGroupLayout.UniformDescription> samplers, String name) {
+		for (BindGroupLayout.UniformDescription description : samplers) {
+			if (name.equals(description.name())) return true;
+		}
+		return false;
 	}
 
 	public boolean hasActiveImages() {
