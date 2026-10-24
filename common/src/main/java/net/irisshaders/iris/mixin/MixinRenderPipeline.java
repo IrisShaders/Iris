@@ -35,7 +35,7 @@ public class MixinRenderPipeline {
 				cir.setReturnValue(IrisVertexFormats.TERRAIN);
 			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
 				cir.setReturnValue(IrisVertexFormats.GLYPH);
-			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR) && thiss.equals(RenderPipelines.TEXT_SEE_THROUGH)) {
+			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR) && (thiss.equals(RenderPipelines.TEXT_SEE_THROUGH) || thiss.equals(RenderPipelines.TEXT_GRAYSCALE_SEE_THROUGH))) {
 				cir.setReturnValue(IrisVertexFormats.GLYPH);
 			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
 				cir.setReturnValue(IrisVertexFormats.ENTITY);
@@ -55,7 +55,7 @@ public class MixinRenderPipeline {
 				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.TERRAIN}));
 			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR)) {
 				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.GLYPH}));
-			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR) && thiss.equals(RenderPipelines.TEXT_SEE_THROUGH)) {
+			} else if (Objects.equals(vf, DefaultVertexFormat.POSITION_TEX_COLOR) && (thiss.equals(RenderPipelines.TEXT_SEE_THROUGH) || thiss.equals(RenderPipelines.TEXT_GRAYSCALE_SEE_THROUGH))) {
 				cir.setReturnValue(List.of(new VertexFormat[] { IrisVertexFormats.GLYPH }));
 			} else if (Objects.equals(vf, DefaultVertexFormat.ENTITY)) {
 				cir.setReturnValue(List.of(new VertexFormat[]{IrisVertexFormats.ENTITY}));
