@@ -78,6 +78,7 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.TEXT_POLYGON_OFFSET, p -> getText(p));
 		assignToMain(RenderPipelines.TEXT_SEE_THROUGH, p -> getText(p));
 		assignToMain(RenderPipelines.TEXT_GRAYSCALE_SEE_THROUGH, p -> getTextIntensity(p));
+		assignToMain(RenderPipelines.TEXT_GRAYSCALE_POLYGON_OFFSET, p -> getTextIntensity(p));
 		assignToMain(RenderPipelines.TEXT_GRAYSCALE, p -> getTextIntensity(p));
 		assignToMain(RenderPipelines.CRUMBLING, p -> ShaderKey.CRUMBLING);
 		assignToMain(RenderPipelines.LEASH, p -> ShaderKey.LEASH);
@@ -123,6 +124,7 @@ public class IrisPipelines {
 		assignToShadow(RenderPipelines.TEXT_POLYGON_OFFSET, p -> ShaderKey.SHADOW_TEXT);
 		assignToShadow(RenderPipelines.TEXT_SEE_THROUGH, p -> ShaderKey.SHADOW_TEXT);
 		assignToShadow(RenderPipelines.TEXT_GRAYSCALE_SEE_THROUGH, p -> ShaderKey.SHADOW_TEXT_INTENSITY);
+		assignToShadow(RenderPipelines.TEXT_GRAYSCALE_POLYGON_OFFSET, p -> ShaderKey.SHADOW_TEXT_INTENSITY);
 		assignToShadow(RenderPipelines.TEXT_GRAYSCALE, p -> ShaderKey.SHADOW_TEXT_INTENSITY);
 		assignToShadow(RenderPipelines.WATER_MASK, p -> ShaderKey.SHADOW_BASIC);
 		assignToShadow(RenderPipelines.BEACON_BEAM_OPAQUE, p -> ShaderKey.SHADOW_BEACON_BEAM);
