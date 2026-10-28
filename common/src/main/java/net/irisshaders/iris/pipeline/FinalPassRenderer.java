@@ -53,12 +53,14 @@ import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GL46C;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.Map;
 import java.util.Objects;
@@ -75,6 +77,7 @@ public class FinalPassRenderer {
 		}
 	};
 	private final RenderTargets renderTargets;
+	private final boolean supportsCopyImage = GL.getCapabilities().glCopyImageSubData != MemoryUtil.NULL;
 
 	@Nullable
 	private final Pass finalPass;
@@ -287,19 +290,28 @@ public class FinalPassRenderer {
 			resetRenderTarget(renderTargets.get(i));
 		}
 
+		if (supportsCopyImage && !swapPasses.isEmpty()) {
+			// Publish shader image writes before the texture-copy operation.
+			IrisRenderSystem.memoryBarrier(GL43C.GL_TEXTURE_UPDATE_BARRIER_BIT);
+		}
+
 		for (SwapPass swapPass : swapPasses) {
-			// NB: We need to use bind(), not bindAsReadBuffer()... Previously we used bindAsReadBuffer() here which
-			//     broke TAA on many packs and on many drivers.
-			//
-			// Note that glCopyTexSubImage2D reads from the current GL_READ_BUFFER (given by glReadBuffer()) for the
-			// current framebuffer bound to GL_FRAMEBUFFER, but that is distinct from the current GL_READ_FRAMEBUFFER,
-			// which is what bindAsReadBuffer() binds.
-			//
-			// Also note that RenderTargets already calls readBuffer(0) for us.
+			// Preserve the framebuffer state expected after the final pass.
 			swapPass.from.bind();
 
-			GlStateManager._bindTexture(swapPass.targetTexture);
-			GL46C.glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, swapPass.width, swapPass.height);
+			if (supportsCopyImage) {
+				// Both textures belong to the same RenderTarget and have identical formats and dimensions.
+				// Copy their data directly, without framebuffer pixel conversion or a texture binding dependency.
+				// Read the attachment from the current framebuffer so resizing cannot leave a stale source ID.
+				IrisRenderSystem.copyImageSubData(
+					swapPass.from.getColorAttachment(0), GL20C.GL_TEXTURE_2D, 0, 0, 0, 0,
+					swapPass.targetTexture, GL20C.GL_TEXTURE_2D, 0, 0, 0, 0,
+					swapPass.width, swapPass.height, 1);
+			} else {
+				// Keep the existing path on contexts without the copy-image entry point.
+				GlStateManager._bindTexture(swapPass.targetTexture);
+				GL46C.glCopyTexSubImage2D(GL20C.GL_TEXTURE_2D, 0, 0, 0, 0, 0, swapPass.width, swapPass.height);
+			}
 		}
 
 		// Make sure to reset the viewport to how it was before... Otherwise weird issues could occur.
