@@ -31,6 +31,7 @@ import net.irisshaders.iris.uniforms.CameraUniforms;
 import net.irisshaders.iris.uniforms.CapturedRenderingState;
 import net.irisshaders.iris.uniforms.CelestialUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
+import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -517,6 +518,12 @@ public class ShadowRenderer {
 
 		levelRenderer.getLevel().getProfiler().popPush("build blockentities");
 
+		if (shouldRenderBlockEntities || shouldRenderLightBlockEntities) {
+			// Ask Sodium for the block entities of the shadow render lists the same way
+			// newer mc version branches call SodiumWorldRenderer#extractBlockEntities.
+			SodiumWorldRenderer.instance().iterateVisibleBlockEntities(visibleBlockEntities::add);
+		}
+
 		if (shouldRenderBlockEntities) {
 			renderedShadowBlockEntities = ShadowRenderingState.renderBlockEntities(this, buffers, modelView, playerCamera, cameraX, cameraY, cameraZ, tickDelta, hasEntityFrustum, false);
 		} else if (shouldRenderLightBlockEntities) {
@@ -592,11 +599,6 @@ public class ShadowRenderer {
 		getLevel().getProfiler().push("build blockentities");
 
 		int shadowBlockEntities = 0;
-		BoxCuller culler = null;
-		if (hasEntityFrustum) {
-			culler = new BoxCuller(halfPlaneLength * (renderDistanceMultiplier * entityShadowDistanceMultiplier));
-			culler.setPosition(cameraX, cameraY, cameraZ);
-		}
 
 		for (BlockEntity entity : visibleBlockEntities) {
 			if (lightsOnly && entity.getBlockState().getLightEmission() == 0) {
@@ -604,11 +606,6 @@ public class ShadowRenderer {
 			}
 
 			BlockPos pos = entity.getBlockPos();
-			if (hasEntityFrustum) {
-				if (culler.isCulled(pos.getX() - 1, pos.getY() - 1, pos.getZ() - 1, pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) {
-					continue;
-				}
-			}
 			modelView.pushPose();
 			modelView.translate(pos.getX() - cameraX, pos.getY() - cameraY, pos.getZ() - cameraZ);
 			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(entity, tickDelta, modelView, buffers.bufferSource());
