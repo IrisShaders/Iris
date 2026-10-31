@@ -1,14 +1,20 @@
 package net.irisshaders.iris.uniforms;
 
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.gui.option.IrisVideoSettings;
 import net.irisshaders.iris.helpers.JomlConversions;
 import net.irisshaders.iris.mixin.GameRendererAccessor;
+import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.GameType;
@@ -25,6 +31,7 @@ import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_TICK;
 
 public class IrisExclusiveUniforms {
 	private static final Vector3d ZERO = new Vector3d(0);
@@ -71,6 +78,22 @@ public class IrisExclusiveUniforms {
 				return zero;
 			}
 		});
+
+		// ---------------------------------------------------------------------------------
+		// BACKPORT: uniforms marked "Iris Exclusive, 1.10.4+" in newer Iris versions, which
+		// do not exist yet in this codebase (Iris 1.8.14 / Minecraft 1.21.1). Re-implemented
+		// here using stable Minecraft API only, since some newer helper methods used by the
+		// original implementation (e.g. isInShallowWater()) are not available on this version.
+		// ---------------------------------------------------------------------------------
+		uniforms.uniform1b(PER_TICK, "feetInWater", IrisExclusiveUniforms::getIsInShallowWater);
+		uniforms.uniform1b(PER_TICK, "isRiding", IrisExclusiveUniforms::getIsPassenger);
+		uniforms.uniform1b(PER_TICK, "vehicleInWater", IrisExclusiveUniforms::getVehicleInShallowWater);
+		uniforms.uniform1b(PER_TICK, "inSwimmingAnimation", IrisExclusiveUniforms::getIsSwimming);
+		uniforms.uniform1b(PER_TICK, "isElytraFlying", IrisExclusiveUniforms::isElytraFlying);
+		uniforms.uniform1i(PER_TICK, "vehicleId", IrisExclusiveUniforms::getVehicleId);
+		uniforms.uniform3d(PER_FRAME, "vehicleLookVector", IrisExclusiveUniforms::getVehicleLookVector);
+		uniforms.uniform3d(PER_FRAME, "relativeVehiclePosition", IrisExclusiveUniforms::getRelativeVehiclePosition);
+		// --------------------------------- END BACKPORT ---------------------------------
 	}
 
 	private static int getCurrentSelectedBlockId() {
@@ -168,6 +191,79 @@ public class IrisExclusiveUniforms {
 		Vec3 pos = Minecraft.getInstance().getCameraEntity().getEyePosition(CapturedRenderingState.INSTANCE.getTickDelta());
 		return new Vector3d(pos.x, pos.y, pos.z);
 	}
+
+	// ---------------------------------------------------------------------------------
+	// BACKPORT: helper methods for the "Iris Exclusive, 1.10.4+" uniforms registered above.
+	// "Shallow water" (feetInWater / vehicleInWater) is computed as
+	// isInWater() && !isEyeInFluid(WATER) instead of using isInShallowWater(), because that
+	// method does not exist in the Minecraft 1.21.1 API (it was added in later versions).
+	// This combination produces the same result using only stable, long-standing API.
+	// ---------------------------------------------------------------------------------
+	private static boolean isEntityInShallowWater(Entity entity) {
+		return entity.isInWater() && !entity.isEyeInFluid(FluidTags.WATER);
+	}
+
+	private static boolean getIsInShallowWater() {
+		if (Minecraft.getInstance().player == null) return false;
+
+		return isEntityInShallowWater(Minecraft.getInstance().player);
+	}
+
+	private static boolean getIsPassenger() {
+		if (Minecraft.getInstance().player == null) return false;
+
+		return Minecraft.getInstance().player.isPassenger();
+	}
+
+	private static boolean getVehicleInShallowWater() {
+		if (Minecraft.getInstance().player == null) return false;
+		if (Minecraft.getInstance().player.getVehicle() == null) return false;
+
+		return isEntityInShallowWater(Minecraft.getInstance().player.getVehicle());
+	}
+
+	private static boolean getIsSwimming() {
+		if (Minecraft.getInstance().player == null) return false;
+
+		return Minecraft.getInstance().player.isSwimming();
+	}
+
+	private static boolean isElytraFlying() {
+		if (Minecraft.getInstance().player == null) return false;
+
+		return Minecraft.getInstance().player.isFallFlying();
+	}
+
+	private static int getVehicleId() {
+		if (Minecraft.getInstance().player == null) return 0;
+		if (Minecraft.getInstance().player.getVehicle() == null) return 0;
+
+		Object2IntFunction<NamespacedId> entityId = WorldRenderingSettings.INSTANCE.getEntityIds();
+		if (entityId == null) return 0;
+
+		ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(Minecraft.getInstance().player.getVehicle().getType());
+		if (id == null) return 0;
+
+		return entityId.applyAsInt(new NamespacedId(id.getNamespace(), id.getPath()));
+	}
+
+	private static Vector3d getVehicleLookVector() {
+		if (Minecraft.getInstance().player == null) return ZERO;
+		if (Minecraft.getInstance().player.getVehicle() == null) return ZERO;
+
+		return JomlConversions.fromVec3(Minecraft.getInstance().player.getVehicle().getForward());
+	}
+
+	private static Vector3d getRelativeVehiclePosition() {
+		if (Minecraft.getInstance().player == null) return ZERO;
+		if (Minecraft.getInstance().player.getVehicle() == null) return ZERO;
+
+		Vec3 vehiclePos = Minecraft.getInstance().player.getVehicle().getPosition(CapturedRenderingState.INSTANCE.getTickDelta());
+		Vector3d pos = new Vector3d(vehiclePos.x, vehiclePos.y, vehiclePos.z);
+
+		return CameraUniforms.getUnshiftedCameraPosition().sub(pos);
+	}
+	// --------------------------------- END BACKPORT ---------------------------------
 
 	public static class WorldInfoUniforms {
 		public static void addWorldInfoUniforms(UniformHolder uniforms) {
