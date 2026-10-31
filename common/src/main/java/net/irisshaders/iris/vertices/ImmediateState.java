@@ -1,5 +1,7 @@
 package net.irisshaders.iris.vertices;
 
+import net.minecraft.client.renderer.RenderType;
+
 /**
  * Some annoying global state needed for rendering.
  */
@@ -10,4 +12,5 @@ public class ImmediateState {
 	public static boolean renderWithExtendedVertexFormat = true;
 	public static boolean bypass;
 	public static boolean mergeRendering;
+	public static RenderType mergedRenderType;
 }
