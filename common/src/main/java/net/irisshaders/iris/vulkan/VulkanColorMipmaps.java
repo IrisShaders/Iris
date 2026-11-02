@@ -19,11 +19,15 @@ import net.irisshaders.iris.samplers.VulkanHeapLayout;
 import net.irisshaders.iris.targets.RenderTarget;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.vulkan.KHRPushDescriptor;
 import org.lwjgl.vulkan.VK10;
 import org.lwjgl.vulkan.VK11;
 import org.lwjgl.vulkan.VkComputePipelineCreateInfo;
 import org.lwjgl.vulkan.VkDescriptorImageInfo;
+import org.lwjgl.vulkan.VkDescriptorPoolCreateInfo;
+import org.lwjgl.vulkan.VkDescriptorPoolSize;
+import org.lwjgl.vulkan.VkDescriptorSetAllocateInfo;
+import org.lwjgl.vulkan.VkDescriptorSetLayoutBinding;
+import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo;
 import org.lwjgl.vulkan.VkFormatProperties;
 import org.lwjgl.vulkan.VkPhysicalDeviceProperties2;
 import org.lwjgl.vulkan.VkPhysicalDeviceSubgroupProperties;
@@ -46,12 +50,14 @@ import static net.irisshaders.iris.vulkan.VulkanChecks.check;
 import static org.lwjgl.vulkan.KHRSynchronization2.*;
 
 // This is ported from the technique I used in Aperture. Modded AMD SPD.
+// Please do not touch this (unless you are planning to get rid of it...)
 public class VulkanColorMipmaps implements AutoCloseable {
 	private static final int MAX_MIPS = 12;
 	private final Object2BooleanMap<GpuFormat> supported = new Object2BooleanAVLTreeMap<>();
 	private final Map<GpuFormat, Pipelines> pipelines = new EnumMap<>(GpuFormat.class);
 	private final Map<GpuTexture, MipResources> resources = new IdentityHashMap<>();
 	private long layout;
+	private long setLayout;
 	private boolean subgroups;
 
 	private static String read(String name) {
@@ -114,14 +120,17 @@ public class VulkanColorMipmaps implements AutoCloseable {
 			this.subgroups = (subgroup.supportedStages() & VK10.VK_SHADER_STAGE_COMPUTE_BIT) != 0 && (subgroup.supportedOperations() & VK11.VK_SUBGROUP_FEATURE_QUAD_BIT) != 0;
 
 			var handle = stack.mallocLong(1);
+			var bindings = VkDescriptorSetLayoutBinding.calloc(2, stack);
+			bindings.get(0).binding(0).descriptorType(VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+				.descriptorCount(1).stageFlags(VK10.VK_SHADER_STAGE_COMPUTE_BIT);
+			bindings.get(1).binding(VulkanHeapLayout.DRAW_BUFFER_BINDING).descriptorType(VK10.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
+				.descriptorCount(MAX_MIPS).stageFlags(VK10.VK_SHADER_STAGE_COMPUTE_BIT);
+			// push descriptors *cannot* be used here!!! If you do, MoltenVK will not use argument buffers and you'll hit the stupid texture limit
+			check(VK10.vkCreateDescriptorSetLayout(device, VkDescriptorSetLayoutCreateInfo.calloc(stack).sType$Default()
+				.pBindings(bindings), null, handle), "create mipmap descriptor layout");
+			this.setLayout = handle.get(0);
 			check(VK10.vkCreatePipelineLayout(device,
-				VkPipelineLayoutCreateInfo.calloc(stack).sType$Default().pSetLayouts(heap.pipelineSetLayouts(stack, heap.drawLayout(List.of(
-					new net.irisshaders.iris.pipeline.transform.ShaderResourceLayout.Descriptor("sourceImage",
-						net.irisshaders.iris.pipeline.transform.ShaderResourceLayout.Kind.SAMPLER, "SAMPLER2D", 1, SamplerHeapLayout.DRAW_DESCRIPTOR_SET, 0, null,
-						java.util.Set.of(PatchShaderType.COMPUTE)),
-					new net.irisshaders.iris.pipeline.transform.ShaderResourceLayout.Descriptor("mipImages",
-						net.irisshaders.iris.pipeline.transform.ShaderResourceLayout.Kind.IMAGE, "IMAGE2D", MAX_MIPS, SamplerHeapLayout.DRAW_DESCRIPTOR_SET,
-						VulkanHeapLayout.DRAW_BUFFER_BINDING, null, java.util.Set.of(PatchShaderType.COMPUTE))))))
+				VkPipelineLayoutCreateInfo.calloc(stack).sType$Default().pSetLayouts(heap.pipelineSetLayouts(stack, this.setLayout))
 					.pPushConstantRanges(VkPushConstantRange.calloc(1, stack).stageFlags(VK10.VK_SHADER_STAGE_COMPUTE_BIT).size(VulkanPushConstants.MAX_SIZE)), null,
 				handle), "create mipmap pipeline layout");
 			this.layout = handle.get(0);
@@ -240,7 +249,7 @@ public class VulkanColorMipmaps implements AutoCloseable {
 					VK_ACCESS_2_SHADER_WRITE_BIT_KHR);
 				VK10.vkCmdBindPipeline(command, VK10.VK_PIPELINE_BIND_POINT_COMPUTE, area ? programs.area : programs.spd);
 				heap.bind(command);
-				this.pushDescriptors(command, mipResources, base, count, sampler, stack);
+				this.bindDescriptors(command, mipResources, base, count, sampler, stack);
 				constants.put(0, width).put(1, height).put(2, count).put(3, groups).put(4, initialMips);
 				VK10.vkCmdPushConstants(command, this.layout, VK10.VK_SHADER_STAGE_COMPUTE_BIT, VulkanPushConstants.NATIVE_OFFSET, constants);
 				VK10.vkCmdDispatch(command, groupsX, groupsY, 1);
@@ -252,18 +261,45 @@ public class VulkanColorMipmaps implements AutoCloseable {
 
 	private MipResources createResources(GpuTexture texture) {
 		var result = new ArrayList<GpuTextureView>();
-		try {
+		var device = VulkanCommandBridge.getDevice().vkDevice();
+		long pool = 0;
+		try (var stack = MemoryStack.stackPush()) {
 			for (int level = 0; level < texture.getMipLevels(); level++) {
 				result.add(RenderSystem.getDevice().createTextureView(texture, level, 1));
 			}
-			return new MipResources(result);
+			int batches = texture.getMipLevels() - 1;
+			var sizes = VkDescriptorPoolSize.calloc(2, stack);
+			sizes.get(0).type(VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER).descriptorCount(batches);
+			sizes.get(1).type(VK10.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE).descriptorCount(batches * MAX_MIPS);
+			var handle = stack.mallocLong(1);
+			check(VK10.vkCreateDescriptorPool(device, VkDescriptorPoolCreateInfo.calloc(stack).sType$Default()
+				.maxSets(batches).pPoolSizes(sizes), null, handle), "create mipmap descriptor pool");
+			pool = handle.get(0);
+			return new MipResources(result, pool, new long[batches]);
 		} catch (RuntimeException | Error failure) {
+			if (pool != 0) {
+				VK10.vkDestroyDescriptorPool(device, pool, null);
+			}
 			result.forEach(GpuTextureView::close);
 			throw failure;
 		}
 	}
 
-	private void pushDescriptors(org.lwjgl.vulkan.VkCommandBuffer command, MipResources resources, int base, int count, long sampler, MemoryStack stack) {
+	private void bindDescriptors(org.lwjgl.vulkan.VkCommandBuffer command, MipResources resources, int base, int count, long sampler, MemoryStack stack) {
+		long set = resources.sets[base];
+		if (set == 0) {
+			var handle = stack.mallocLong(1);
+			check(VK10.vkAllocateDescriptorSets(command.getDevice(), VkDescriptorSetAllocateInfo.calloc(stack).sType$Default()
+				.descriptorPool(resources.pool).pSetLayouts(stack.longs(this.setLayout)), handle), "allocate mipmap descriptors");
+			set = handle.get(0);
+			this.writeDescriptors(command.getDevice(), set, resources, base, count, sampler, stack);
+			resources.sets[base] = set;
+		}
+		VK10.vkCmdBindDescriptorSets(command, VK10.VK_PIPELINE_BIND_POINT_COMPUTE, this.layout,
+			SamplerHeapLayout.DRAW_DESCRIPTOR_SET, stack.longs(set), null);
+	}
+
+	private void writeDescriptors(org.lwjgl.vulkan.VkDevice device, long set, MipResources resources, int base, int count, long sampler, MemoryStack stack) {
 		var input = VkDescriptorImageInfo.calloc(1, stack);
 		input.get(0).imageView(((VulkanGpuTextureView) resources.levels.get(base)).vkImageView()).sampler(sampler)
 			.imageLayout(VK10.VK_IMAGE_LAYOUT_GENERAL);
@@ -273,11 +309,11 @@ public class VulkanColorMipmaps implements AutoCloseable {
 				.imageLayout(VK10.VK_IMAGE_LAYOUT_GENERAL);
 		}
 		var writes = VkWriteDescriptorSet.calloc(2, stack);
-		writes.get(0).sType$Default().dstBinding(0).descriptorType(VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+		writes.get(0).sType$Default().dstSet(set).dstBinding(0).descriptorType(VK10.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 			.descriptorCount(1).pImageInfo(input);
-		writes.get(1).sType$Default().dstBinding(VulkanHeapLayout.DRAW_BUFFER_BINDING)
+		writes.get(1).sType$Default().dstSet(set).dstBinding(VulkanHeapLayout.DRAW_BUFFER_BINDING)
 			.descriptorType(VK10.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE).descriptorCount(MAX_MIPS).pImageInfo(outputs);
-		KHRPushDescriptor.vkCmdPushDescriptorSetKHR(command, VK10.VK_PIPELINE_BIND_POINT_COMPUTE, this.layout, SamplerHeapLayout.DRAW_DESCRIPTOR_SET, writes);
+		VK10.vkUpdateDescriptorSets(device, writes, null);
 	}
 
 	public void release(GpuTexture texture) {
@@ -291,12 +327,13 @@ public class VulkanColorMipmaps implements AutoCloseable {
 	public void close() {
 		this.resources.values().forEach(MipResources::close);
 		this.resources.clear();
-		if (this.layout == 0) {
+		if (this.layout == 0 && this.setLayout == 0) {
 			return;
 		}
 
 		var device = VulkanCommandBridge.getDevice();
 		long oldLayout = this.layout;
+		long oldSetLayout = this.setLayout;
 		var oldPipelines = List.copyOf(this.pipelines.values());
 		device.createCommandEncoder().queueForDestroy(() -> {
 			for (var programs : oldPipelines) {
@@ -304,17 +341,21 @@ public class VulkanColorMipmaps implements AutoCloseable {
 				VK10.vkDestroyPipeline(device.vkDevice(), programs.area, null);
 			}
 			VK10.vkDestroyPipelineLayout(device.vkDevice(), oldLayout, null);
+			VK10.vkDestroyDescriptorSetLayout(device.vkDevice(), oldSetLayout, null);
 		});
 		this.pipelines.clear();
 		this.layout = 0;
+		this.setLayout = 0;
 	}
 
 	public record Pipelines(long spd, long area) {
 	}
 
-	public record MipResources(List<GpuTextureView> levels) implements AutoCloseable {
+	public record MipResources(List<GpuTextureView> levels, long pool, long[] sets) implements AutoCloseable {
 		@Override
 		public void close() {
+			var device = VulkanCommandBridge.getDevice().vkDevice();
+			VulkanCommandBridge.deleteWhenDone(() -> VK10.vkDestroyDescriptorPool(device, this.pool, null));
 			this.levels.forEach(GpuTextureView::close);
 		}
 	}
