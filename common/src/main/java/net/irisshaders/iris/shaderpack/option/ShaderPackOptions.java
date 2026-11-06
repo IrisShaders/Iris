@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -18,10 +19,12 @@ import java.util.Set;
  */
 public class ShaderPackOptions {
 	private final OptionSet optionSet;
-	private final OptionValues optionValues;
+	private final MutableOptionValues optionValues;
 	private final IncludeGraph includes;
+	private final RealtimeSettings realtimeSettings;
 
-	public ShaderPackOptions(IncludeGraph graph, Map<String, String> changedConfigs) {
+	public ShaderPackOptions(IncludeGraph graph, Map<String, String> changedConfigs, Properties realtimeProperties,
+		String shadersProperties) {
 		Map<AbsolutePackPath, OptionAnnotatedSource> allAnnotations = new HashMap<>();
 		OptionSet.Builder setBuilder = OptionSet.builder();
 
@@ -48,8 +51,13 @@ public class ShaderPackOptions {
 
 		this.optionSet = setBuilder.build();
 		this.optionValues = new MutableOptionValues(optionSet, changedConfigs);
+		this.realtimeSettings = RealtimeSettings.create(realtimeProperties, optionSet, graph, shadersProperties, optionValues);
 
-		this.includes = graph.map(path -> allAnnotations.get(path).asTransform(optionValues));
+		this.includes = graph.map(path -> allAnnotations.get(path).asTransform(optionValues, realtimeSettings));
+	}
+
+	public RealtimeSettings getRealtimeSettings() {
+		return realtimeSettings;
 	}
 
 	public OptionSet getOptionSet() {

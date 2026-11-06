@@ -102,6 +102,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private int hoveredElementCommentTimer = 0;
 	private boolean optionMenuOpen = false;
 	private boolean dropChanges = false;
+	private @Nullable Runnable mouseReleaseAction = null;
 	private MutableComponent developmentComponent;
 	private MutableComponent updateComponent;
 	private float guiButtonHoverTimer = 0.0f;
@@ -235,6 +236,24 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			}, Iris.getUpdateChecker().getUpdateLink().orElse(null), true));
 		}
 		return super.mouseClicked(event, bl2);
+	}
+
+	// The iris buttons only hear about mouse stuff directly above them, this tells them about any release
+	public void runOnNextMouseRelease(Runnable action) {
+		this.mouseReleaseAction = action;
+	}
+
+	@Override
+	public boolean mouseReleased(MouseButtonEvent event) {
+		boolean released = super.mouseReleased(event);
+
+		if (this.mouseReleaseAction != null) {
+			Runnable action = this.mouseReleaseAction;
+			this.mouseReleaseAction = null;
+			action.run();
+		}
+
+		return released;
 	}
 
 	@Override

@@ -28,6 +28,7 @@ import net.irisshaders.iris.shaderpack.include.ShaderPackSourceNames;
 import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
 import net.irisshaders.iris.shaderpack.option.OrderBackedProperties;
 import net.irisshaders.iris.shaderpack.option.ProfileSet;
+import net.irisshaders.iris.shaderpack.option.RealtimeSettings;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.irisshaders.iris.shaderpack.option.menu.OptionMenuContainer;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
@@ -165,7 +166,9 @@ public class ShaderPack {
 		this.languageMap = new LanguageMap(root.resolve("lang"));
 
 		// Discover, merge, and apply shader pack options
-		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs);
+		Properties realtimeProperties = loadProperties(root, RealtimeSettings.FILE_NAME, environmentDefines).orElseGet(Properties::new);
+		Optional<String> shadersPropertiesSource = loadProperties(root, "shaders.properties");
+		this.shaderPackOptions = new ShaderPackOptions(graph, changedConfigs, realtimeProperties, shadersPropertiesSource.orElse(""));
 		graph = this.shaderPackOptions.getIncludes();
 
 		List<StringPair> finalEnvironmentDefines = new ArrayList<>(List.copyOf(environmentDefines));
@@ -174,7 +177,7 @@ public class ShaderPack {
 				finalEnvironmentDefines.add(new StringPair("IRIS_FEATURE_" + flag.name(), ""));
 			}
 		}
-		this.shaderProperties = loadProperties(root, "shaders.properties").map(
+		this.shaderProperties = shadersPropertiesSource.map(
 			source -> new ShaderProperties(source, shaderPackOptions, finalEnvironmentDefines)).orElseGet(ShaderProperties::empty);
 
 		for (Int2ObjectMap.Entry<ShaderStorageInfo> shaderStorageInfoEntry : shaderProperties.getBufferObjects().int2ObjectEntrySet()) {
@@ -326,7 +329,7 @@ public class ShaderPack {
 			// directly. This removes one obstacle to accurate reporting of line numbers for errors,
 			// though there exist many more (such as relocating all #extension directives and similar things)
 			String source = builder.toString();
-			source = JcppProcessor.glslPreprocessSource(source, finalEnvironmentDefines1);
+			source = JcppProcessor.glslPreprocessSource(source, finalEnvironmentDefines1, shaderPackOptions.getRealtimeSettings());
 
 			return source;
 		};
