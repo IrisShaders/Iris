@@ -125,6 +125,9 @@ public class SliderElementWidget extends StringElementWidget {
 			}
 
 			mouseDown = true;
+			if (isRealtime()) {
+				this.screen.setdraggedButton(this);
+			}
 			this.screen.runOnNextMouseRelease(() -> {
 				if (isDragging()) {
 					this.onReleased();

@@ -100,16 +100,20 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 		Iris.getShaderPackOptionQueue().put(this.option.getName(), this.getValue());
 	}
 
-	protected boolean applyRealtime(boolean save) {
-		RealtimeSettings realtime = Iris.getCurrentPack().map(pack -> pack.getShaderPackOptions().getRealtimeSettings())
-			.orElse(RealtimeSettings.NONE);
-		String name = this.option.getName();
+	private RealtimeSettings getRealtimeSettings() {
+		return Iris.getCurrentPack().map(pack -> pack.getShaderPackOptions().getRealtimeSettings()).orElse(RealtimeSettings.NONE);
+	}
 
-		if (!realtime.isRealtime(name)) {
+	protected boolean isRealtime() {
+		return getRealtimeSettings().isRealtime(this.option.getName());
+	}
+
+	protected boolean applyRealtime(boolean save) {
+		if (!isRealtime()) {
 			return false;
 		}
 
-		if (realtime.set(name, this.getValue())) {
+		if (getRealtimeSettings().set(this.option.getName(), this.getValue())) {
 			this.appliedValue = this.getValue();
 
 			if (save) {
