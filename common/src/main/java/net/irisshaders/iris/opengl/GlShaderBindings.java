@@ -16,7 +16,6 @@ import net.irisshaders.iris.samplers.ProgramSamplers;
 import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
 import net.irisshaders.iris.uniforms.buffer.FrameUniforms;
 import org.lwjgl.opengl.GL11C;
-import org.lwjgl.opengl.GL12C;
 import org.lwjgl.opengl.GL13C;
 import org.lwjgl.opengl.GL15C;
 import org.lwjgl.opengl.GL20C;
@@ -223,11 +222,6 @@ public class GlShaderBindings implements AutoCloseable {
 
 					bindTexture(target, id);
 
-					if (texture.image() == null) {
-						var view = texture.texture();
-						GlStateManager._texParameter(target, GL12C.GL_TEXTURE_BASE_LEVEL, view.baseMipLevel());
-						GlStateManager._texParameter(target, GL12C.GL_TEXTURE_MAX_LEVEL, view.baseMipLevel() + view.mipLevels() - 1);
-					}
 					var external = texture.nativeSampler();
 					int sampler = external == null ? nativePack.getSampler(texture.sampler()) : ((GlSampler) external).getId();
 					IrisRenderSystem.bindSamplerToUnit(binding, sampler);

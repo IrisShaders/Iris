@@ -131,7 +131,7 @@ public class GlWorldCommands extends ForwardingRenderPass implements WorldPassCo
 	public void bindPipeline(GraphicsPipeline pipeline) {
 		this.pipeline = (GlGraphicsShader.Pipeline) pipeline;
 		this.framebuffer = GlStateManager.getFrameBuffer(GL30C.GL_DRAW_FRAMEBUFFER);
-		this.storageWrites = this.pipeline.needsDrawBarrier();
+		this.storageWrites |= this.pipeline.needsDrawBarrier();
 		this.pipeline.bind();
 	}
 
@@ -186,6 +186,7 @@ public class GlWorldCommands extends ForwardingRenderPass implements WorldPassCo
 
 	@Override
 	public void end() {
+		this.applyStorageBarrier();
 		this.restoreDrawBuffers();
 		if (!this.texels.isEmpty()) {
 			var textures = List.copyOf(this.texels.values());
@@ -225,6 +226,7 @@ public class GlWorldCommands extends ForwardingRenderPass implements WorldPassCo
 	private void applyStorageBarrier() {
 		if (this.storageWrites) {
 			IrisRenderSystem.memoryBarrier(GL42C.GL_ALL_BARRIER_BITS);
+			this.storageWrites = false;
 		}
 	}
 
@@ -240,8 +242,6 @@ public class GlWorldCommands extends ForwardingRenderPass implements WorldPassCo
 		} else {
 			ARBBaseInstance.glDrawArraysInstancedBaseInstance(this.pipeline.getTopology(), first, count, instances, firstInstance);
 		}
-
-		this.applyStorageBarrier();
 	}
 
 	@Override
@@ -258,8 +258,6 @@ public class GlWorldCommands extends ForwardingRenderPass implements WorldPassCo
 			ARBBaseInstance.glDrawElementsInstancedBaseVertexBaseInstance(this.pipeline.getTopology(), count, this.getGlIndexType(),
 				(long) first * this.getIndexSize(), instances, base, firstInstance);
 		}
-
-		this.applyStorageBarrier();
 	}
 
 	@Override
@@ -268,7 +266,6 @@ public class GlWorldCommands extends ForwardingRenderPass implements WorldPassCo
 
 		GlStateManager._glBindBuffer(GL40C.GL_DRAW_INDIRECT_BUFFER, ((GlBuffer) commands.buffer()).handle());
 		GL43C.glMultiDrawArraysIndirect(this.pipeline.getTopology(), commands.offset(), count, 16);
-		this.applyStorageBarrier();
 	}
 
 	@Override
@@ -277,7 +274,6 @@ public class GlWorldCommands extends ForwardingRenderPass implements WorldPassCo
 
 		GlStateManager._glBindBuffer(GL40C.GL_DRAW_INDIRECT_BUFFER, ((GlBuffer) commands.buffer()).handle());
 		GL43C.glMultiDrawElementsIndirect(this.pipeline.getTopology(), this.getGlIndexType(), commands.offset(), count, 20);
-		this.applyStorageBarrier();
 	}
 
 	@Override
@@ -285,7 +281,6 @@ public class GlWorldCommands extends ForwardingRenderPass implements WorldPassCo
 		this.prepareDraw();
 
 		GL14C.nglMultiDrawArrays(this.pipeline.getTopology(), MemoryUtil.memAddress(first), MemoryUtil.memAddress(counts), count);
-		this.applyStorageBarrier();
 	}
 
 	@Override
@@ -299,7 +294,6 @@ public class GlWorldCommands extends ForwardingRenderPass implements WorldPassCo
 			GL32C.nglMultiDrawElementsBaseVertex(this.pipeline.getTopology(), MemoryUtil.memAddress(counts), this.getGlIndexType(),
 				MemoryUtil.memAddress(offsets), count, MemoryUtil.memAddress(bases));
 		}
-		this.applyStorageBarrier();
 	}
 
 	@Override

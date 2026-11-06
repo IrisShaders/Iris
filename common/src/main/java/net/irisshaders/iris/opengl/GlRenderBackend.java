@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+// This will be removed in mid/late 2027. Do not add what you don't need, and don't worry too much about bad looking code.
 public class GlRenderBackend implements RenderBackend {
 	private final Map<PatchedShader, GlShaderBindings> shaders = new LinkedHashMap<>(16, 0.75f, true);
 	private boolean closed;
@@ -106,12 +107,9 @@ public class GlRenderBackend implements RenderBackend {
 
 			while (this.shaders.size() > 256) {
 				var iterator = this.shaders.values().iterator();
-				var oldest = iterator.next();
-				iterator.remove();
-				try {
+				try (var oldest = iterator.next()) {
+					iterator.remove();
 					oldest.finishCompilation();
-				} finally {
-					oldest.close();
 				}
 			}
 		}
