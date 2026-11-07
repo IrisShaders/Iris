@@ -17,6 +17,7 @@ import net.irisshaders.iris.shaderpack.transform.line.LineTransform;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -450,22 +451,22 @@ public final class OptionAnnotatedSource {
 		return builder.build();
 	}
 
-	public LineTransform asTransform(OptionValues values) {
-		return (index, line) -> edit(values, index, line);
+	public LineTransform asTransform(OptionValues values, RealtimeSettings realtime) {
+		return (index, line) -> edit(values, realtime, index, line);
 	}
 
 	public String apply(OptionValues values) {
 		StringBuilder source = new StringBuilder();
 
 		for (int index = 0; index < lines.size(); index++) {
-			source.append(edit(values, index, lines.get(index)));
+			source.append(edit(values, RealtimeSettings.NONE, index, lines.get(index)));
 			source.append('\n');
 		}
 
 		return source.toString();
 	}
 
-	private String edit(OptionValues values, int index, String existing) {
+	private String edit(OptionValues values, RealtimeSettings realtime, int index, String existing) {
 		// See if it's a boolean option
 		BooleanOption booleanOption = booleanOptions.get(index);
 
@@ -489,7 +490,11 @@ public final class OptionAnnotatedSource {
 		StringOption stringOption = stringOptions.get(index);
 
 		if (stringOption != null) {
-			return values.getStringValue(stringOption.getName()).map(value -> {
+			// Realtime options read their value from a uniform, so the source never depends on the chosen value
+			Optional<String> currentValue = realtime.isRealtime(stringOption.getName()) ? Optional.of(
+				RealtimeSettings.uniformName(stringOption.getName())) : values.getStringValue(stringOption.getName());
+
+			return currentValue.map(value -> {
 				if (stringOption.getType() == OptionType.DEFINE) {
 					return "#define " + stringOption.getName() + " " + value + " // OptionAnnotatedSource: Changed option";
 				} else if (stringOption.getType() == OptionType.CONST) {

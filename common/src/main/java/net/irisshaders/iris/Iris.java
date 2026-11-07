@@ -340,14 +340,7 @@ public class Iris {
 		try {
 			currentPack = new ShaderPack(shaderPackPath, changedConfigs, StandardMacros.createStandardEnvironmentDefines(), isZip);
 
-			MutableOptionValues changedConfigsValues = currentPack.getShaderPackOptions().getOptionValues().mutableCopy();
-
-			// Store changed values from those currently in use by the shader pack
-			Properties configsToSave = new Properties();
-			changedConfigsValues.getBooleanValues().forEach((k, v) -> configsToSave.setProperty(k, Boolean.toString(v)));
-			changedConfigsValues.getStringValues().forEach(configsToSave::setProperty);
-
-			tryUpdateConfigPropertiesFile(shaderPackConfigTxt, configsToSave);
+			saveShaderPackConfig(currentPack, shaderPackConfigTxt);
 		} catch (Exception e) {
 			logger.error("Failed to load the shaderpack \"{}\"!", name);
 			logger.error("", e);
@@ -362,6 +355,23 @@ public class Iris {
 		logger.info("Using shaderpack: " + name);
 
 		return true;
+	}
+
+	public static void saveShaderPackConfig() {
+		if (currentPack != null) {
+			saveShaderPackConfig(currentPack, getShaderpacksDirectory().resolve(currentPackName + ".txt"));
+		}
+	}
+
+	private static void saveShaderPackConfig(ShaderPack pack, Path configTxt) {
+		MutableOptionValues changedConfigsValues = pack.getShaderPackOptions().getOptionValues().mutableCopy();
+
+		// Store changed values from those currently in use by the shader pack
+		Properties configsToSave = new Properties();
+		changedConfigsValues.getBooleanValues().forEach((k, v) -> configsToSave.setProperty(k, Boolean.toString(v)));
+		changedConfigsValues.getStringValues().forEach(configsToSave::setProperty);
+
+		tryUpdateConfigPropertiesFile(configTxt, configsToSave);
 	}
 
 	private static void handleException(Exception e) {

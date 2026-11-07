@@ -102,6 +102,8 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	private int hoveredElementCommentTimer = 0;
 	private boolean optionMenuOpen = false;
 	private boolean dropChanges = false;
+	private @Nullable Runnable mouseReleaseAction = null;
+	private @Nullable AbstractElementWidget<?> draggedButton = null;
 	private MutableComponent developmentComponent;
 	private MutableComponent updateComponent;
 	private float guiButtonHoverTimer = 0.0f;
@@ -164,7 +166,10 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				Component.literal("Enable"), Component.literal("Disable")));
 		}
 
-		if (!this.guiHidden) {
+		if (this.draggedButton != null) {
+			// only render dragged button from realtime settings, everything else is hidden
+			this.draggedButton.render(guiGraphics, mouseX, mouseY, delta, false);
+		} else if (!this.guiHidden) {
 			super.extractRenderState(guiGraphics, mouseX, mouseY, delta);
 		} else {
 			this.showHideButton.extractRenderState(guiGraphics, mouseX, mouseY, delta);
@@ -175,7 +180,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			this.guiButtonHoverTimer = 0.0f;
 		}
 
-		if (!this.guiHidden) {
+		if (!this.guiHidden && this.draggedButton == null) {
 			guiGraphics.centeredText(this.font, this.title, (int) (this.width * 0.5), 8, 0xFFFFFFFF);
 
 			if (notificationDialog != null && notificationDialogTimer > 0) {
@@ -221,6 +226,14 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		}
 	}
 
+
+	@Override // remove the darkening background
+	public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float delta) {
+		if (this.draggedButton == null) {
+			super.extractBackground(guiGraphics, mouseX, mouseY, delta);
+		}
+	}
+
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean bl2) {
 		int widthValue = this.font.width("New update available!");
@@ -235,6 +248,29 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 			}, Iris.getUpdateChecker().getUpdateLink().orElse(null), true));
 		}
 		return super.mouseClicked(event, bl2);
+	}
+
+	public void setdraggedButton(@Nullable AbstractElementWidget<?> widget) {
+		this.draggedButton = widget;
+	}
+
+	// The iris buttons only hear about mouse stuff directly above them, this tells them about any release
+	public void runOnNextMouseRelease(Runnable action) {
+		this.mouseReleaseAction = action;
+	}
+
+	@Override
+	public boolean mouseReleased(MouseButtonEvent event) {
+		boolean released = super.mouseReleased(event);
+		this.draggedButton = null;
+
+		if (this.mouseReleaseAction != null) {
+			Runnable action = this.mouseReleaseAction;
+			this.mouseReleaseAction = null;
+			action.run();
+		}
+
+		return released;
 	}
 
 	@Override

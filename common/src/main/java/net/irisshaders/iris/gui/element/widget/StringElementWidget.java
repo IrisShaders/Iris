@@ -4,6 +4,7 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.GuiUtil;
 import net.irisshaders.iris.gui.NavigationController;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
+import net.irisshaders.iris.shaderpack.option.RealtimeSettings;
 import net.irisshaders.iris.shaderpack.option.StringOption;
 import net.irisshaders.iris.shaderpack.option.menu.OptionMenuStringOptionElement;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -91,7 +92,36 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 	}
 
 	protected void queue() {
+		// Realtime options take effect immediately and never need the pack to be reloaded
+		if (this.applyRealtime(true)) {
+			return;
+		}
+
 		Iris.getShaderPackOptionQueue().put(this.option.getName(), this.getValue());
+	}
+
+	private RealtimeSettings getRealtimeSettings() {
+		return Iris.getCurrentPack().map(pack -> pack.getShaderPackOptions().getRealtimeSettings()).orElse(RealtimeSettings.NONE);
+	}
+
+	protected boolean isRealtime() {
+		return getRealtimeSettings().isRealtime(this.option.getName());
+	}
+
+	protected boolean applyRealtime(boolean save) {
+		if (!isRealtime()) {
+			return false;
+		}
+
+		if (getRealtimeSettings().set(this.option.getName(), this.getValue())) {
+			this.appliedValue = this.getValue();
+
+			if (save) {
+				Iris.saveShaderPackConfig();
+			}
+		}
+
+		return true;
 	}
 
 	@Override

@@ -25,8 +25,7 @@ public class SliderElementWidget extends StringElementWidget {
 	public void render(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float tickDelta, boolean hovered) {
 		this.updateRenderParams(35);
 
-
-		if (!hovered && !isFocused()) {
+		if (!hovered && !isFocused() && !isDragging()) {
 			if (usedKeyboard) {
 				usedKeyboard = false;
 				mouseDown = false;
@@ -59,14 +58,13 @@ public class SliderElementWidget extends StringElementWidget {
 			}
 		}
 
-		if (this.mouseDown && !usedKeyboard) {
-			// Release if the mouse went off the slider
-			if (!hovered) {
-				this.onReleased();
-			}
-
+		if (isDragging()) {
 			whileDragging(mouseX);
 		}
+	}
+
+	private boolean isDragging() {
+		return this.mouseDown && !usedKeyboard;
 	}
 
 	private void renderSlider(GuiGraphicsExtractor guiGraphics) {
@@ -101,6 +99,7 @@ public class SliderElementWidget extends StringElementWidget {
 			this.valueIndex = newValueIndex;
 
 			this.updateLabels();
+			this.applyRealtime(false);
 		}
 	}
 
@@ -126,6 +125,14 @@ public class SliderElementWidget extends StringElementWidget {
 			}
 
 			mouseDown = true;
+			if (isRealtime()) {
+				this.screen.setdraggedButton(this);
+			}
+			this.screen.runOnNextMouseRelease(() -> {
+				if (isDragging()) {
+					this.onReleased();
+				}
+			});
 			GuiUtil.playButtonClickSound();
 
 			return true;
@@ -158,10 +165,12 @@ public class SliderElementWidget extends StringElementWidget {
 			if (event.isLeft()) {
 				valueIndex = Math.max(0, valueIndex - 1);
 				this.updateLabels();
+				this.applyRealtime(false);
 				return true;
 			} else if (event.isRight()) {
 				valueIndex = Math.min(valueCount - 1, valueIndex + 1);
 				this.updateLabels();
+				this.applyRealtime(false);
 				return true;
 			}
 		}
