@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
 import net.irisshaders.iris.gl.sampler.GlSampler;
@@ -41,6 +42,7 @@ import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.Collections;
 import java.util.List;
@@ -160,6 +162,10 @@ public class FinalPassRenderer {
 				if (compute != null) {
 					compute.dispatch(main.width, main.height);
 				}
+			}
+
+			if (GraphicsBackend.isOpenGL()) {
+				IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 			}
 
 			for (int index : this.finalPass.mipmappedBuffers) {

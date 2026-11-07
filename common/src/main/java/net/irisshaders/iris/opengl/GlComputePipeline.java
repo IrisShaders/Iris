@@ -2,8 +2,10 @@ package net.irisshaders.iris.opengl;
 
 import com.mojang.renderpearl.backend.opengl.GlBuffer;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.backend.ComputePipeline;
 import net.irisshaders.iris.gl.IrisRenderSystem;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.samplers.ProgramSamplers;
 import net.irisshaders.iris.shaderpack.FilledIndirectPointer;
 import net.irisshaders.iris.uniforms.buffer.DrawUniforms;
@@ -59,6 +61,17 @@ public class GlComputePipeline implements ComputePipeline {
 		}
 
 		this.shader.bind(this.resources, this.uniforms);
+		int barriers = 0;
+		if (!Iris.getPipelineManager().getPipeline().map(WorldRenderingPipeline::allowConcurrentCompute).orElse(false)) {
+			barriers |= GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT;
+		}
+		if (indirect != null) {
+			barriers |= GL43C.GL_COMMAND_BARRIER_BIT;
+		}
+		if (barriers != 0) {
+			IrisRenderSystem.memoryBarrier(barriers);
+		}
+
 		if (indirect == null) {
 			IrisRenderSystem.dispatchCompute(groups.x, groups.y, groups.z);
 		} else {

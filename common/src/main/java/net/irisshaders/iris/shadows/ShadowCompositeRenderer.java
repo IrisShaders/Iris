@@ -7,11 +7,13 @@ import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendMode;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
 import net.irisshaders.iris.gl.texture.TextureAccess;
+import net.irisshaders.iris.pipeline.GraphicsBackend;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.programs.CompositeProgram;
 import net.irisshaders.iris.pipeline.programs.ComputeProgram;
@@ -34,6 +36,7 @@ import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.SystemTimeUniforms;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import net.minecraft.client.Minecraft;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -170,10 +173,16 @@ public class ShadowCompositeRenderer {
 
 	public void renderAll() {
 		for (Pass pass : this.passes) {
+			boolean ranCompute = false;
 			for (var compute : pass.computes) {
 				if (compute != null) {
 					compute.dispatch(this.renderTargets.getResolution(), this.renderTargets.getResolution());
+					ranCompute = true;
 				}
+			}
+
+			if (GraphicsBackend.isOpenGL() && ranCompute) {
+				IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 			}
 
 			if (pass instanceof ComputeOnlyPass) {

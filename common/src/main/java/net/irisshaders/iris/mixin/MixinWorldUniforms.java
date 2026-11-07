@@ -14,6 +14,7 @@ import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.backend.IrisRenderPass;
 import net.irisshaders.iris.backend.WorldPassCommands;
 import net.irisshaders.iris.mixinterface.RenderPassInterface;
+import net.irisshaders.iris.pipeline.IrisRenderPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderPass;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -68,6 +69,11 @@ public abstract class MixinWorldUniforms implements RenderPassInterface {
 				return;
 			}
 			pipeline = resolved;
+		} else if (pipeline instanceof FrontendRenderPipeline frontend
+			&& frontend.backendRenderPipeline() instanceof IrisRenderPipeline) {
+			// Fixes an ETF crash bug
+			this.iris$skipDraw = true;
+			return;
 		}
 		original.call(pipeline);
 	}

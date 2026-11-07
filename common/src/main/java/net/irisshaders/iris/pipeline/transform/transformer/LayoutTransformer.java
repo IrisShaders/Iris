@@ -5,8 +5,6 @@ import io.github.douira.glsl_transformer.ast.node.expression.unary.FunctionCallE
 import io.github.douira.glsl_transformer.ast.node.declaration.InterfaceBlockDeclaration;
 import io.github.douira.glsl_transformer.ast.node.declaration.TypeAndInitDeclaration;
 import io.github.douira.glsl_transformer.ast.node.external_declaration.DeclarationExternalDeclaration;
-import io.github.douira.glsl_transformer.ast.node.external_declaration.ExtensionDirective;
-import io.github.douira.glsl_transformer.ast.node.type.qualifier.NamedLayoutQualifierPart;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.StorageQualifier.StorageType;
 import io.github.douira.glsl_transformer.ast.node.type.qualifier.TypeQualifier;
 import io.github.douira.glsl_transformer.ast.node.type.specifier.ArraySpecifier;
@@ -39,6 +37,18 @@ public class LayoutTransformer {
 		PatchShaderType.TESS_EVAL, PatchShaderType.GEOMETRY, PatchShaderType.FRAGMENT);
 
 	public static void transformGrouped(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees, boolean vulkan) {
+		if (!vulkan) {
+			var vertex = trees.get(PatchShaderType.VERTEX);
+			if (vertex != null) {
+				assign(List.of(), collect(vertex, PatchShaderType.VERTEX, StorageType.IN, Set.of()), false);
+			}
+			var fragment = trees.get(PatchShaderType.FRAGMENT);
+			if (fragment != null) {
+				assign(collect(fragment, PatchShaderType.FRAGMENT, StorageType.OUT, Set.of()), List.of(), false);
+			}
+			return;
+		}
+
 		Set<String> memberBlocks = new HashSet<>();
 
 		for (var tree : trees.values()) {
@@ -64,29 +74,6 @@ public class LayoutTransformer {
 		}
 
 		assign(previous, List.of(), vulkan);
-
-		if (!vulkan) {
-			for (var stage : PIPELINE) {
-				var tree = trees.get(stage);
-				if (tree == null) continue;
-				requireExtension(parser, tree, "GL_ARB_separate_shader_objects");
-				boolean enhanced = tree.getRoot().nodeIndex.getStream(InterfaceBlockDeclaration.class)
-					.anyMatch(block -> !block.getBlockName().getName().startsWith("gl_")
-						&& (Glsl.hasStorage(block.getTypeQualifier(), StorageType.IN)
-							|| Glsl.hasStorage(block.getTypeQualifier(), StorageType.OUT)))
-					|| tree.getRoot().nodeIndex.getStream(NamedLayoutQualifierPart.class)
-						.anyMatch(part -> part.getName().getName().equals("component"));
-				if (enhanced && tree.getVersionStatement().version.number < 440) {
-					requireExtension(parser, tree, "GL_ARB_enhanced_layouts");
-				}
-			}
-		}
-	}
-
-	private static void requireExtension(ASTParser parser, TranslationUnit tree, String name) {
-		tree.getRoot().nodeIndex.getStream(ExtensionDirective.class).filter(extension -> extension.getName().equals(name))
-			.toList().forEach(ExtensionDirective::detachAndDelete);
-		tree.parseAndInjectNode(parser, ASTInjectionPoint.BEFORE_ALL, "#extension " + name + " : require\n");
 	}
 
 	private static void flattenStructures(ASTParser parser, Map<PatchShaderType, TranslationUnit> trees) {

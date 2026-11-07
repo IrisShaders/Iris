@@ -24,6 +24,7 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL33C;
 import org.lwjgl.opengl.GL40C;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.List;
 
@@ -131,6 +132,9 @@ public class GlGraphicsShader implements GraphicsShader {
 				throw new IllegalStateException("pipeline closed");
 			}
 
+			if (this.state.vanillaPipeline() == null) {
+				IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
+			}
 			GlGraphicsShader.this.shader.bind(GlGraphicsShader.this.resources, GlGraphicsShader.this.uniforms);
 			this.applyState();
 		}

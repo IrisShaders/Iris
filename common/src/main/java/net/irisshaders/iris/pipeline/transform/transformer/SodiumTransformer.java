@@ -78,7 +78,7 @@ public class SodiumTransformer {
 					"vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 			}
 			tree.parseAndInjectNodes(t, ASTInjectionPoint.BEFORE_DECLARATIONS,
-				"vec4 getVertexPosition() { return vec4(_vert_position + iris_RegionOffset + _get_draw_translation(_draw_id), 1.0); }");
+				"vec4 getVertexPosition() { return vec4((_vert_position + iris_RegionOffset + _get_draw_translation(_draw_id)) - u_CameraOffset, 1.0); }");
 			root.replaceReferenceExpressions(t, "gl_Vertex", "getVertexPosition()");
 
 			// inject here so that _vert_position is available to the above. (injections
@@ -94,6 +94,7 @@ public class SodiumTransformer {
 			      mat4 u_ModelViewMatrix;
 
 			      vec4 u_FogColor;
+			      vec3 u_CameraOffset;
 			      vec2 u_EnvironmentFog;
 			      vec2 u_RenderFog;
 

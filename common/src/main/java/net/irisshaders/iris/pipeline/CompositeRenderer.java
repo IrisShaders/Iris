@@ -12,6 +12,7 @@ import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.features.FeatureFlags;
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.blending.BlendModeOverride;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
 import net.irisshaders.iris.gl.framebuffer.ViewportData;
@@ -50,6 +51,7 @@ import net.irisshaders.iris.vertices.ImmediateState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.resources.Identifier;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -261,10 +263,16 @@ public class CompositeRenderer {
 
 		try {
 			for (Pass pass : this.passes) {
+				boolean ranCompute = false;
 				for (ComputeProgram compute : pass.computes) {
 					if (compute != null) {
 						compute.dispatch(this.renderTargets.getCurrentWidth(), this.renderTargets.getCurrentHeight());
+						ranCompute = true;
 					}
+				}
+
+				if (GraphicsBackend.isOpenGL() && ranCompute) {
+					IrisRenderSystem.memoryBarrier(GL43C.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL43C.GL_TEXTURE_FETCH_BARRIER_BIT | GL43C.GL_SHADER_STORAGE_BARRIER_BIT);
 				}
 
 				if (pass instanceof ComputeOnlyPass) {

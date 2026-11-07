@@ -32,7 +32,7 @@ public class SodiumCoreTransformer {
 		if (parameters.type == PatchShaderType.VERTEX) {
 			boolean needsNormal = root.identifierIndex.has("vaNormal") || root.identifierIndex.has("at_tangent");
 			// _draw_translation replaced with Chunks[_draw_id].offset.xyz
-			root.replaceReferenceExpressions(t, "vaPosition", "_vert_position + _get_draw_translation(_draw_id)");
+			root.replaceReferenceExpressions(t, "vaPosition", "(_vert_position + _get_draw_translation(_draw_id)) - u_CameraOffset");
 			root.replaceReferenceExpressions(t, "vaColor", "_vert_color");
 			root.replaceReferenceExpressions(t, "vaNormal", "irs_Normal");
 			root.replaceReferenceExpressions(t, "at_tangent", "irs_Tangent");
@@ -55,6 +55,7 @@ public class SodiumCoreTransformer {
 			    mat4 u_ModelViewMatrix;
 
 			    vec4 u_FogColor;
+			    vec3 u_CameraOffset;
 			    vec2 u_EnvironmentFog;
 			    vec2 u_RenderFog;
 

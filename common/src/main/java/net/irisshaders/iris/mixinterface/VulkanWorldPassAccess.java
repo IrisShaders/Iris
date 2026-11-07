@@ -6,9 +6,9 @@ import net.irisshaders.iris.vulkan.VulkanTextureState;
 import net.irisshaders.iris.vulkan.VulkanWorldCommands;
 
 public interface VulkanWorldPassAccess {
-	public RenderPassBackend iris$createRenderPass(RenderPassDescriptor descriptor);
+	RenderPassBackend iris$createRenderPass(RenderPassDescriptor descriptor);
 
-	public void iris$setWorldPass(VulkanWorldCommands pass);
+	void iris$setWorldPass(VulkanWorldCommands pass);
 
-	public void iris$setTextureState(VulkanTextureState textures);
+	void iris$setTextureState(VulkanTextureState textures);
 }

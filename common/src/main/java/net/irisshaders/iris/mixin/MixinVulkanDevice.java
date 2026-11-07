@@ -23,11 +23,11 @@ public abstract class MixinVulkanDevice implements VulkanPipelineCacheAccess {
 	@Shadow
 	public abstract VkDevice vkDevice();
 
+	// The pipeline cache just exists to *slightly* speed up loads between dimensions... it works!
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void iris$createPipelineCache(CallbackInfo ci) {
 		try (var stack = MemoryStack.stackPush()) {
 			var handle = stack.mallocLong(1);
-			// Default flags let compilation threads share the cache with driver-managed synchronization.
 			check(VK10.vkCreatePipelineCache(this.vkDevice(), VkPipelineCacheCreateInfo.calloc(stack).sType$Default(), null, handle),
 				"create pipeline cache");
 			this.iris$pipelineCache = handle.get(0);
