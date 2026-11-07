@@ -7,8 +7,13 @@ import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.shaderpack.include.IncludeGraph;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
+import org.anarres.cpp.LexerException;
+import org.anarres.cpp.StringLexerSource;
+import org.anarres.cpp.Token;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,17 +30,19 @@ import java.util.regex.Pattern;
  */
 public class RealtimeSettings {
 	public static final String FILE_NAME = "realtime.properties";
-	public static final RealtimeSettings NONE = new RealtimeSettings(Map.of(), null);
+	public static final RealtimeSettings NONE = new RealtimeSettings(Map.of(), Map.of(), null);
 
 	private static final String UNIFORM_PREFIX = "settingsUniform_";
 	private static final Pattern USAGE = Pattern.compile(UNIFORM_PREFIX + "(\\w+)");
 
 	private final Map<String, Type> types;
+	private final Map<String, String> macros;
 	private final Object2DoubleMap<String> values = new Object2DoubleOpenHashMap<>();
 	private final MutableOptionValues optionValues;
 
-	private RealtimeSettings(Map<String, Type> types, MutableOptionValues optionValues) {
+	private RealtimeSettings(Map<String, Type> types, Map<String, String> macros, MutableOptionValues optionValues) {
 		this.types = types;
+		this.macros = macros;
 		this.optionValues = optionValues;
 	}
 
@@ -49,23 +56,26 @@ public class RealtimeSettings {
 			return NONE;
 		}
 
-		Map<String, String> conditionalUses = findConditionalUses(graph, shadersProperties, properties.stringPropertyNames());
+		DirectiveScan scan = new DirectiveScan();
+		graph.getNodes().forEach((path, node) -> scan.read(path.getPathString(), String.join("\n", node.getLines())));
+		scan.read("shaders.properties", shadersProperties);
+
 		Map<String, Type> types = new HashMap<>();
 
-		properties.forEach((key, value) -> {
-			String name = (String) key;
-			Type type = Type.fromName((String) value);
-			String problem = type == null ? value + " is not a supported type (float, int, bool)" : findProblem(name, type, optionSet,
-				conditionalUses);
+		for (String name : properties.stringPropertyNames()) {
+			String typeName = properties.getProperty(name);
+			Type type = Type.fromName(typeName);
+			String problem = type == null ? typeName + " is not a supported type (float, int, bool)" : findProblem(name, type, optionSet,
+				scan);
 
 			if (problem == null) {
 				types.put(name, type);
 			} else {
 				Iris.logger.warn("Treating " + name + " as a normal option instead of a realtime option: " + problem);
 			}
-		});
+		}
 
-		RealtimeSettings settings = new RealtimeSettings(types, optionValues);
+		RealtimeSettings settings = new RealtimeSettings(types, scan.macros, optionValues);
 
 		types.keySet().forEach(name -> {
 			String value = optionValues.getStringValueOrDefault(name);
@@ -82,7 +92,7 @@ public class RealtimeSettings {
 	}
 
 	@Nullable
-	private static String findProblem(String name, Type type, OptionSet optionSet, Map<String, String> conditionalUses) {
+	private static String findProblem(String name, Type type, OptionSet optionSet, DirectiveScan scan) {
 		MergedStringOption merged = optionSet.getStringOptions().get(name);
 
 		if (merged == null) {
@@ -94,44 +104,14 @@ public class RealtimeSettings {
 		}
 
 		for (String allowed : merged.getOption().getAllowedValues()) {
-			if (Double.isNaN(type.parse(allowed))) {
-				return allowed + " is not a valid " + type.glsl();
+			if (Double.isNaN(type.parse(scan.macros.getOrDefault(allowed, allowed)))) {
+				return allowed + " does not resolve to a valid " + type.glsl();
 			}
 		}
 
-		String use = conditionalUses.get(name);
+		String use = scan.conditionalUses.get(name);
 
 		return use == null ? null : "it is used in a preprocessor condition at " + use;
-	}
-
-	private static Map<String, String> findConditionalUses(IncludeGraph graph, String shadersProperties, Set<String> names) {
-		Map<String, String> uses = new HashMap<>();
-
-		graph.getNodes().forEach((path, node) -> collectConditionalUses(path.getPathString(), node.getLines(), names, uses));
-		collectConditionalUses("shaders.properties", shadersProperties.lines().toList(), names, uses);
-
-		return uses;
-	}
-
-	private static void collectConditionalUses(String file, List<String> lines, Set<String> names, Map<String, String> uses) {
-		for (int i = 0; i < lines.size(); i++) {
-			String line = lines.get(i).trim();
-
-			if (!line.startsWith("#")) {
-				continue;
-			}
-
-			String directive = line.substring(1).trim();
-
-			// Covers #if, #ifdef, #ifndef and #elif
-			if (directive.startsWith("if") || directive.startsWith("elif")) {
-				for (String word : directive.split("\\W+")) {
-					if (names.contains(word)) {
-						uses.putIfAbsent(word, file + ":" + (i + 1));
-					}
-				}
-			}
-		}
 	}
 
 	public boolean isRealtime(String name) {
@@ -140,7 +120,7 @@ public class RealtimeSettings {
 
 	public boolean set(String name, String value) {
 		Type type = types.get(name);
-		double parsed = type == null ? Double.NaN : type.parse(value);
+		double parsed = type == null ? Double.NaN : type.parse(macros.getOrDefault(value, value));
 
 		if (Double.isNaN(parsed)) {
 			return false;
@@ -166,7 +146,7 @@ public class RealtimeSettings {
 			Type type = types.get(name);
 
 			if (type != null && declared.add(name)) {
-				declarations.append("uniform ").append(type.glsl()).append(' ').append(matcher.group()).append(";\n");
+				declarations.append("uniform ").append(type.glsl()).append(' ').append(uniformName(name)).append(";\n");
 			}
 		}
 
@@ -213,6 +193,84 @@ public class RealtimeSettings {
 				};
 			} catch (NumberFormatException e) {
 				return Double.NaN;
+			}
+		}
+	}
+
+	/**
+	 * Use the preprocessor since that handles macros, line connections and comments
+	 */
+	private static class DirectiveScan {
+		private final Map<String, String> macros = new HashMap<>();
+		// line where each name is used in #if, #elif, #ifdef or #ifndef
+		private final Map<String, String> conditionalUses = new HashMap<>();
+
+		private void read(String file, String source) {
+			List<Token> directive = null;
+
+			try (StringLexerSource lexer = new StringLexerSource(source + "\n", true)) {
+				for (Token token = lexer.token(); token.getType() != Token.EOF; token = lexer.token()) {
+					int type = token.getType();
+
+					if (type == Token.NL) {
+						if (directive != null) {
+							handle(file, directive);
+						}
+
+						directive = null;
+					} else if (type == Token.HASH && directive == null) {
+						directive = new ArrayList<>();
+					} else if (directive != null && !isBlank(type)) {
+						directive.add(token);
+					}
+				}
+			} catch (IOException | LexerException e) {
+				Iris.logger.warn("Could not read all of " + file + " to check the realtime options: " + e.getMessage());
+			}
+		}
+
+		private static boolean isBlank(int tokenType) {
+			return tokenType == Token.WHITESPACE || tokenType == Token.CCOMMENT || tokenType == Token.CPPCOMMENT;
+		}
+
+		// The first token is the name of the directive, the rest are its arguments
+		private void handle(String file, List<Token> directive) {
+			if (directive.isEmpty()) {
+				return;
+			}
+
+			String name = directive.getFirst().getText();
+			List<Token> arguments = directive.subList(1, directive.size());
+
+			// to support shaders.properties which use # as comments
+			if (name.equals("define")) {
+				addMacro(arguments);
+			} else if (name.startsWith("if") || name.equals("elif")) {
+				// #if, #ifdef, #ifndef and #elif
+				addConditionalUses(file, arguments);
+			}
+		}
+
+		// The arguments are the name of the macro followed by its value
+		private void addMacro(List<Token> arguments) {
+			if (arguments.size() < 2 || arguments.getFirst().getType() != Token.IDENTIFIER) {
+				return;
+			}
+
+			StringBuilder value = new StringBuilder();
+
+			for (Token token : arguments.subList(1, arguments.size())) {
+				value.append(token.getText());
+			}
+
+			macros.putIfAbsent(arguments.getFirst().getText(), value.toString());
+		}
+
+		private void addConditionalUses(String file, List<Token> condition) {
+			for (Token token : condition) {
+				if (token.getType() == Token.IDENTIFIER) {
+					conditionalUses.putIfAbsent(token.getText(), file + ":" + token.getLine());
+				}
 			}
 		}
 	}
