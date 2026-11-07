@@ -39,7 +39,7 @@
   "depends": {
     "fabricloader": ">=0.19.0",
     "sodium": [
-      "0.9.x"
+      ">=0.9.3-"
     ]
   },
   "breaks": {

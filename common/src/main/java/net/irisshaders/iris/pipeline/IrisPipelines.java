@@ -343,6 +343,10 @@ public class IrisPipelines {
 	}
 
 	public static void assignPipeline(RenderPipeline pipeline, ShaderKey programId) {
+		if (programId.isShadow()) {
+			throw new IllegalArgumentException("Cannot assign shadow shader " + programId + " to main pipeline " + pipeline.getLocation());
+		}
+
 		if (coreShaderMap.containsKey(pipeline)) {
 			throw new IllegalStateException("Shader already assigned: " + pipeline.getLocation() + ": " + programId);
 		} else {
@@ -351,6 +355,11 @@ public class IrisPipelines {
 	}
 
 	public static void assignPipelineShadow(RenderPipeline pipeline, ShaderKey programId) {
+		// old versions of shoulder surfing did this, triggering a very vague error
+		if (!programId.isShadow()) {
+			throw new IllegalArgumentException("Cannot assign non-shadow shader " + programId + " to shadow pipeline " + pipeline.getLocation());
+		}
+
 		if (coreShaderMapShadow.containsKey(pipeline)) {
 			throw new IllegalStateException("Shadow shader already assigned: " + pipeline.getLocation() + ": " + programId);
 		} else {

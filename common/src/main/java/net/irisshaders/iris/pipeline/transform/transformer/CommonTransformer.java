@@ -32,9 +32,11 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.irisshaders.iris.gl.blending.AlphaTest;
 import net.irisshaders.iris.gl.shader.ShaderType;
+import net.irisshaders.iris.pipeline.GraphicsBackend;
 import net.irisshaders.iris.pipeline.transform.PatchShaderType;
 import net.irisshaders.iris.pipeline.transform.parameter.Parameters;
 import net.irisshaders.iris.pipeline.transform.parameter.SodiumParameters;
+import net.irisshaders.iris.pipeline.transform.parameter.TextureStageParameters;
 import net.irisshaders.iris.pipeline.transform.parameter.VanillaParameters;
 import net.irisshaders.iris.shaderpack.texture.TextureStage;
 
@@ -304,6 +306,8 @@ public class CommonTransformer {
 
 			tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "vec4 iris_FrontColor;");
 			root.rename("gl_FrontColor", "iris_FrontColor");
+
+			if (GraphicsBackend.isVulkan() && !(parameters instanceof TextureStageParameters)) tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_ALL, "invariant gl_Position;");
 		}
 
 		if (parameters.type.glShaderType == ShaderType.FRAGMENT) {
