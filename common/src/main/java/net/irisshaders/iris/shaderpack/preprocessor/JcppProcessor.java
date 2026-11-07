@@ -1,6 +1,7 @@
 package net.irisshaders.iris.shaderpack.preprocessor;
 
 import net.irisshaders.iris.helpers.StringPair;
+import net.irisshaders.iris.shaderpack.option.RealtimeSettings;
 import org.anarres.cpp.Feature;
 import org.anarres.cpp.LexerException;
 import org.anarres.cpp.Preprocessor;
@@ -10,6 +11,10 @@ import org.anarres.cpp.Token;
 public class JcppProcessor {
 	// Derived from GlShader from Canvas, licenced under LGPL
 	public static String glslPreprocessSource(String source, Iterable<StringPair> environmentDefines) {
+		return glslPreprocessSource(source, environmentDefines, RealtimeSettings.NONE);
+	}
+
+	public static String glslPreprocessSource(String source, Iterable<StringPair> environmentDefines, RealtimeSettings realtime) {
 		if (source.contains(GlslCollectingListener.VERSION_MARKER) || source.contains(GlslCollectingListener.EXTENSION_MARKER)) {
 			throw new RuntimeException("Some shader author is trying to exploit internal Iris implementation details, stop!");
 		}
@@ -66,7 +71,7 @@ public class JcppProcessor {
 
 		builder.append("\n");
 
-		source = listener.collectLines() + builder;
+		source = listener.collectLines() + realtime.declarationsFor(builder) + builder;
 
 		return source;
 	}

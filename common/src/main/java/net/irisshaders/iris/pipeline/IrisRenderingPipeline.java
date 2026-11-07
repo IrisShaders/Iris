@@ -307,6 +307,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 					this.updateNotifier);
 				BuiltinReplacementUniforms.addBuiltinReplacementUniforms(holder);
 				VanillaUniforms.addVanillaUniforms(holder);
+				programSet.getPack().getShaderPackOptions().getRealtimeSettings().registerUniforms(holder);
 			});
 
 			this.frameUniforms = new FrameUniforms(this.customUniforms);
