@@ -170,6 +170,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 	private final boolean shouldRenderStars;
 	private final boolean shouldRenderSkyDisc;
 	private final boolean allowConcurrentCompute;
+	private final boolean beaconBeamShadow;
 	@Nullable
 	private final ShadowRenderer shadowRenderer;
 	private final int shadowMapResolution;
@@ -213,6 +214,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 		try {
 			ShaderPrinter.resetPrintState();
 
+			this.beaconBeamShadow = programSet.getPackDirectives().getBeaconBeamShadow();
 			this.shouldRenderUnderwaterOverlay = programSet.getPackDirectives().underwaterOverlay();
 			this.supportsEndFlash = programSet.getPackDirectives().supportsEndFlash();
 			this.shouldRenderVignette = programSet.getPackDirectives().vignette();
@@ -1411,5 +1413,10 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 
 	public CloudSetting getDHCloudSetting() {
 		return dhCloudSetting;
+	}
+
+	@Override
+	public boolean getBeaconBeamShadow() {
+		return beaconBeamShadow;
 	}
 }

@@ -102,4 +102,6 @@ public interface WorldRenderingPipeline {
 	boolean supportsEndFlash();
 
 	int getAlbedoTex();
+
+	boolean getBeaconBeamShadow();
 }
