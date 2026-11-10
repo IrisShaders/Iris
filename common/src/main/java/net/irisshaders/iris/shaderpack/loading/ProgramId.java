@@ -17,6 +17,8 @@ public enum ProgramId {
 	ShadowEntities(ProgramGroup.Shadow, "entities", Shadow, BlendModeOverride.OFF),
 	ShadowLightning(ProgramGroup.Shadow, "lightning", ShadowEntities, BlendModeOverride.OFF),
 	ShadowBlock(ProgramGroup.Shadow, "block", Shadow, BlendModeOverride.OFF),
+	ShadowBeaconBeam(ProgramGroup.Shadow, "beaconbeam", ShadowEntities, BlendModeOverride.OFF),
+	ShadowEnergySwirl(ProgramGroup.Shadow, "energy_swirl", ShadowEntities, BlendModeOverride.OFF),
 
 	Basic(ProgramGroup.Gbuffers, "basic"),
 	Line(ProgramGroup.Gbuffers, "line", Basic),
@@ -39,6 +41,7 @@ public enum ProgramId {
 
 	Entities(ProgramGroup.Gbuffers, "entities", TexturedLit),
 	EntitiesTrans(ProgramGroup.Gbuffers, "entities_translucent", Entities),
+	EnergySwirl(ProgramGroup.Gbuffers, "energy_swirl", Entities),
 	Lightning(ProgramGroup.Gbuffers, "lightning", Entities),
 	Particles(ProgramGroup.Gbuffers, "particles", TexturedLit),
 	ParticlesTrans(ProgramGroup.Gbuffers, "particles_translucent", Particles),
@@ -116,6 +119,7 @@ public enum ProgramId {
 			case EMISSIVE_ENTITIES -> SpiderEyes;
 			case BEACON_BEAM -> BeaconBeam;
 			case LINES -> Line;
+			case ENERGY_SWIRL -> ShadowBeaconBeam;
 		};
 	}
 
@@ -127,6 +131,8 @@ public enum ProgramId {
 			case SHADOW_ENTITIES -> ShadowEntities;
 			case SHADOW_LIGHTNING -> ShadowLightning;
 			case SHADOW_BLOCK -> ShadowBlock;
+			case SHADOW_BEACON_BEAM -> ShadowBeaconBeam;
+			case SHADOW_ENERGY_SWIRL -> ShadowBeaconBeam;
 		};
 	}
 
