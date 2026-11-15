@@ -490,9 +490,9 @@ public final class OptionAnnotatedSource {
 		StringOption stringOption = stringOptions.get(index);
 
 		if (stringOption != null) {
-			// Realtime options read their value from a uniform, so the source never depends on the chosen value
-			Optional<String> currentValue = realtime.isRealtime(stringOption.getName()) ? Optional.of(
-				RealtimeSettings.uniformName(stringOption.getName())) : values.getStringValue(stringOption.getName());
+			// Realtime options read their value from a uniform, so the source does not depend on the chosen value
+			Optional<String> currentValue = Optional.ofNullable(realtime.sourceValue(stringOption.getName()))
+				.or(() -> values.getStringValue(stringOption.getName()));
 
 			return currentValue.map(value -> {
 				if (stringOption.getType() == OptionType.DEFINE) {

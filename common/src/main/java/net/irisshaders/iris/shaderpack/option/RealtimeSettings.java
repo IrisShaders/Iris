@@ -8,6 +8,7 @@ import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import net.irisshaders.iris.shaderpack.include.IncludeGraph;
 import net.irisshaders.iris.shaderpack.option.values.MutableOptionValues;
 import org.anarres.cpp.LexerException;
+import org.anarres.cpp.NumericValue;
 import org.anarres.cpp.StringLexerSource;
 import org.anarres.cpp.Token;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +28,9 @@ import java.util.regex.Pattern;
 /**
  * Options listed in realtime.properties are delivered to the shaders as frame uniforms instead of being
  * written into the source, so they can be changed without reloading the pack.
+ * <p>
+ * An int option that the pack compares with numbers in preprocessor conditions stays realtime as long as a
+ * change does not change the result of any of those comparisons. Otherwise the pack reloads.
  */
 public class RealtimeSettings {
 	public static final String FILE_NAME = "realtime.properties";
@@ -39,6 +43,7 @@ public class RealtimeSettings {
 	private final Map<String, String> macros;
 	private final Object2DoubleMap<String> values = new Object2DoubleOpenHashMap<>();
 	private final MutableOptionValues optionValues;
+	private final Map<String, Compared> compared = new HashMap<>();
 
 	private RealtimeSettings(Map<String, Type> types, Map<String, String> macros, MutableOptionValues optionValues) {
 		this.types = types;
@@ -56,11 +61,12 @@ public class RealtimeSettings {
 			return NONE;
 		}
 
-		DirectiveScan scan = new DirectiveScan();
+		DirectiveScan scan = new DirectiveScan(properties.stringPropertyNames());
 		graph.getNodes().forEach((path, node) -> scan.read(path.getPathString(), String.join("\n", node.getLines())));
 		scan.read("shaders.properties", shadersProperties);
 
 		Map<String, Type> types = new HashMap<>();
+		RealtimeSettings settings = new RealtimeSettings(types, scan.macros, optionValues);
 
 		for (String name : properties.stringPropertyNames()) {
 			String typeName = properties.getProperty(name);
@@ -68,25 +74,18 @@ public class RealtimeSettings {
 			String problem = type == null ? typeName + " is not a supported type (float, int, bool)" : findProblem(name, type, optionSet,
 				scan);
 
-			if (problem == null) {
-				types.put(name, type);
-			} else {
+			if (problem != null) {
 				Iris.logger.warn("Treating " + name + " as a normal option instead of a realtime option: " + problem);
+				continue;
+			}
+
+			types.put(name, type);
+			settings.loadValue(name, optionSet);
+
+			if (scan.comparisons.containsKey(name)) {
+				settings.compared.put(name, new Compared(scan.comparisons.get(name), (long) settings.values.getDouble(name)));
 			}
 		}
-
-		RealtimeSettings settings = new RealtimeSettings(types, scan.macros, optionValues);
-
-		types.keySet().forEach(name -> {
-			String value = optionValues.getStringValueOrDefault(name);
-
-			if (!settings.set(name, value)) {
-				String defaultValue = optionSet.getStringOptions().get(name).getOption().getDefaultValue();
-
-				Iris.logger.warn("Invalid value " + value + " for realtime option " + name + ", using " + defaultValue);
-				settings.set(name, defaultValue);
-			}
-		});
 
 		return settings;
 	}
@@ -109,18 +108,53 @@ public class RealtimeSettings {
 			}
 		}
 
-		String use = scan.conditionalUses.get(name);
+		if (scan.unsupportedUses.containsKey(name)) {
+			return "it is used in a preprocessor condition in a way other than a comparison with a number at " + scan.unsupportedUses.get(name);
+		}
 
-		return use == null ? null : "it is used in a preprocessor condition at " + use;
+		for (String macro : scan.macrosUsing.getOrDefault(name, Set.of())) {
+			if (scan.conditionUses.containsKey(macro)) {
+				return "the macro " + macro + " has it in its value and is used in a preprocessor condition at " + scan.conditionUses.get(macro);
+			}
+		}
+
+		if (type != Type.INT && scan.comparisons.containsKey(name)) {
+			return "it is compared in a preprocessor condition, which only works for int options";
+		}
+
+		return null;
+	}
+
+	private void loadValue(String name, OptionSet optionSet) {
+		String value = optionValues.getStringValueOrDefault(name);
+
+		if (!set(name, value)) {
+			String defaultValue = optionSet.getStringOptions().get(name).getOption().getDefaultValue();
+
+			Iris.logger.warn("Invalid value " + value + " for realtime option " + name + ", using " + defaultValue);
+			set(name, defaultValue);
+		}
 	}
 
 	public boolean isRealtime(String name) {
 		return types.containsKey(name);
 	}
 
-	public boolean set(String name, String value) {
+	// False if the pack has to reload for the new value because conditions in the shaders change with it
+	public boolean canApplyLive(String name, String value) {
+		Compared option = compared.get(name);
+
+		return option == null ? isRealtime(name) : option.sameResults((long) parse(name, value));
+	}
+
+	private double parse(String name, String value) {
 		Type type = types.get(name);
-		double parsed = type == null ? Double.NaN : type.parse(macros.getOrDefault(value, value));
+
+		return type == null ? Double.NaN : type.parse(macros.getOrDefault(value, value));
+	}
+
+	public boolean set(String name, String value) {
+		double parsed = parse(name, value);
 
 		if (Double.isNaN(parsed)) {
 			return false;
@@ -130,6 +164,19 @@ public class RealtimeSettings {
 		optionValues.addAll(Map.of(name, value));
 
 		return true;
+	}
+
+	/**
+	 * What the #define of the option is written as, or null if it is written normally. Conditions need a number, so a
+	 * compared option is (value at load + uniform) and the uniform holds the difference, which conditions read as 0.
+	 */
+	@Nullable
+	public String sourceValue(String name) {
+		if (compared.containsKey(name)) {
+			return "(" + compared.get(name).loaded + " + " + uniformName(name) + ")";
+		}
+
+		return isRealtime(name) ? uniformName(name) : null;
 	}
 
 	public String declarationsFor(CharSequence source) {
@@ -156,13 +203,33 @@ public class RealtimeSettings {
 	public void registerUniforms(UniformHolder holder) {
 		types.forEach((name, type) -> {
 			String uniform = uniformName(name);
+			int offset = compared.containsKey(name) ? (int) compared.get(name).loaded : 0;
 
 			switch (type) {
 				case FLOAT -> holder.uniform1f(UniformUpdateFrequency.CUSTOM, uniform, () -> values.getDouble(name));
-				case INT -> holder.uniform1i(UniformUpdateFrequency.CUSTOM, uniform, () -> (int) values.getDouble(name));
+				case INT -> holder.uniform1i(UniformUpdateFrequency.CUSTOM, uniform, () -> (int) values.getDouble(name) - offset);
 				case BOOL -> holder.uniform1b(UniformUpdateFrequency.CUSTOM, uniform, () -> values.getDouble(name) != 0);
 			}
 		});
+	}
+
+	private record Comparison(int operator, long number) {
+		private boolean test(long value) {
+			return switch (operator) {
+				case Token.EQ -> value == number;
+				case Token.NE -> value != number;
+				case Token.LE -> value <= number;
+				case Token.GE -> value >= number;
+				case '<' -> value < number;
+				default -> value > number;
+			};
+		}
+	}
+
+	private record Compared(Set<Comparison> comparisons, long loaded) {
+		private boolean sameResults(long value) {
+			return comparisons.stream().allMatch(comparison -> comparison.test(value) == comparison.test(loaded));
+		}
 	}
 
 	private enum Type {
@@ -201,9 +268,19 @@ public class RealtimeSettings {
 	 * Use the preprocessor since that handles macros, line connections and comments
 	 */
 	private static class DirectiveScan {
+		private static final Set<Integer> OPERATORS = Set.of(Token.EQ, Token.NE, Token.LE, Token.GE, (int) '<', (int) '>');
+		private static final Set<Integer> SEPARATORS = Set.of(-1, Token.LAND, Token.LOR, (int) '(', (int) ')');
 		private final Map<String, String> macros = new HashMap<>();
-		// line where each name is used in #if, #elif, #ifdef or #ifndef
-		private final Map<String, String> conditionalUses = new HashMap<>();
+		private final Map<String, Set<Comparison>> comparisons = new HashMap<>();
+		private final Map<String, String> unsupportedUses = new HashMap<>();
+		// A line where each name is used in #if and #elif, and the macros that have a tracked name in their value
+		private final Map<String, String> conditionUses = new HashMap<>();
+		private final Map<String, Set<String>> macrosUsing = new HashMap<>();
+		private final Set<String> tracked;
+
+		private DirectiveScan(Set<String> tracked) {
+			this.tracked = tracked;
+		}
 
 		private void read(String file, String source) {
 			List<Token> directive = null;
@@ -245,9 +322,18 @@ public class RealtimeSettings {
 			// to support shaders.properties which use # as comments
 			if (name.equals("define")) {
 				addMacro(arguments);
-			} else if (name.startsWith("if") || name.equals("elif")) {
-				// #if, #ifdef, #ifndef and #elif
-				addConditionalUses(file, arguments);
+			} else if (name.equals("if") || name.equals("elif")) {
+				for (int i = 0; i < arguments.size(); i++) {
+					Token token = arguments.get(i);
+
+					if (token.getType() == Token.IDENTIFIER) {
+						conditionUses.putIfAbsent(token.getText(), file + ":" + token.getLine());
+
+						if (tracked.contains(token.getText())) {
+							addUse(file, arguments, i);
+						}
+					}
+				}
 			}
 		}
 
@@ -261,17 +347,53 @@ public class RealtimeSettings {
 
 			for (Token token : arguments.subList(1, arguments.size())) {
 				value.append(token.getText());
+
+				if (token.getType() == Token.IDENTIFIER && tracked.contains(token.getText())) {
+					macrosUsing.computeIfAbsent(token.getText(), name -> new HashSet<>()).add(arguments.getFirst().getText());
+				}
 			}
 
 			macros.putIfAbsent(arguments.getFirst().getText(), value.toString());
 		}
 
-		private void addConditionalUses(String file, List<Token> condition) {
-			for (Token token : condition) {
-				if (token.getType() == Token.IDENTIFIER) {
-					conditionalUses.putIfAbsent(token.getText(), file + ":" + token.getLine());
-				}
+		private void addUse(String file, List<Token> condition, int index) {
+			Token name = condition.get(index);
+			Comparison comparison = comparisonAt(condition, index);
+
+			if (comparison != null) {
+				comparisons.computeIfAbsent(name.getText(), key -> new HashSet<>()).add(comparison);
+			} else {
+				unsupportedUses.putIfAbsent(name.getText(), file + ":" + name.getLine());
 			}
+		}
+
+		// Only NAME == 5 and the like are supported, anything else next to the name or the number could change the result
+		@Nullable
+		private static Comparison comparisonAt(List<Token> condition, int nameIndex) {
+			int operator = typeAt(condition, nameIndex + 1);
+			int numberIndex = nameIndex + 2;
+			boolean negative = typeAt(condition, numberIndex) == '-';
+
+			if (negative) {
+				numberIndex++;
+			}
+
+			int before = typeAt(condition, nameIndex - 1);
+			int after = typeAt(condition, numberIndex + 1);
+
+			if (!OPERATORS.contains(operator) || typeAt(condition, numberIndex) != Token.NUMBER || !SEPARATORS.contains(before)
+				|| !SEPARATORS.contains(after)) {
+				return null;
+			}
+
+			long number = ((NumericValue) condition.get(numberIndex).getValue()).longValue();
+
+			return new Comparison(operator, negative ? -number : number);
+		}
+
+		// -1 outside of the tokens
+		private static int typeAt(List<Token> tokens, int index) {
+			return index < 0 || index >= tokens.size() ? -1 : tokens.get(index).getType();
 		}
 	}
 }

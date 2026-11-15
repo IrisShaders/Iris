@@ -92,12 +92,16 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 	}
 
 	protected void queue() {
-		// Realtime options take effect immediately and never need the pack to be reloaded
+		// Realtime options take effect immediately
 		if (this.applyRealtime(true)) {
 			return;
 		}
 
 		Iris.getShaderPackOptionQueue().put(this.option.getName(), this.getValue());
+
+		if (isRealtime() && isValueModified()) {
+			this.screen.applyChanges();
+		}
 	}
 
 	private RealtimeSettings getRealtimeSettings() {
@@ -109,7 +113,7 @@ public class StringElementWidget extends BaseOptionElementWidget<OptionMenuStrin
 	}
 
 	protected boolean applyRealtime(boolean save) {
-		if (!isRealtime()) {
+		if (!getRealtimeSettings().canApplyLive(this.option.getName(), this.getValue())) {
 			return false;
 		}
 
