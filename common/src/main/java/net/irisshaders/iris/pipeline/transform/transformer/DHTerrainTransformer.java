@@ -61,10 +61,12 @@ public class DHTerrainTransformer {
 					      }
 					}""", """
 					vec4 dh_sampleTexture() {
-						ivec2 atlasSize = textureSize(dhBlockAtlas, 0);
-					          vec2 tileOrigin = vec2(float(iris_TexId.x % 256u), float(iris_TexId.x / 256u)) * 16.0;
-					          vec2 uv = (tileOrigin + dh_blockFaceUv() * 16.0) / vec2(atlasSize);
-					          return texture(dhBlockAtlas, uv);
+						        ivec2 atlasSize = textureSize(dhBlockAtlas, 0);
+				         vec2 tileOrigin = vec2(float(iris_TexId.x % 256u), float(iris_TexId.x / 256u)) * 16.0;
+				         vec2 faceUv = (iris_UsesModelUv != 0u) ? min(iris_ModelUv, vec2(0.999)) : dh_blockFaceUv();
+				         vec2 tileScale = 16.0 / vec2(atlasSize);
+				         vec2 uv = tileOrigin / vec2(atlasSize) + fract(faceUv) * tileScale;
+					          return textureGrad(dhBlockAtlas, uv, dFdx(faceUv) * tileScale, dFdy(faceUv) * tileScale);
 					 }
 					""");
 		}
@@ -125,10 +127,12 @@ public class DHTerrainTransformer {
 			"vec3 _vert_position;", "vec2 _vert_tex_light_coord;", "int dhMaterialId;", "vec4 _vert_color;", "vec3 _vert_normal;",
 			"const float mircoOffset = 0.01;", "uniform vec3 modelOffset;",
 			"const vec3 irisNormals[6] = vec3[](vec3(0,-1,0),vec3(0,1,0),vec3(0,0,-1),vec3(0,0,1),vec3(-1,0,0),vec3(1,0,0));",
-			"void _vert_init() {" + "    uint meta = vPosition.a;\n" + "uint mirco = (meta & 0xFF00u) >> 8u; // mirco offset which is a xyz 2bit value\n" + "    // 0b00 = no offset\n" + "    // 0b01 = positive offset\n" + "    // 0b11 = negative offset\n" + "    // format is: 0b00zzyyxx\n" + "    float mx = (mirco & 1u)!=0u ? mircoOffset : 0.0;\n" + "    mx = (mirco & 2u)!=0u ? -mx : mx;\n" + "    float my = (mirco & 4u)!=0u ? mircoOffset : 0.0;\n" + "    my = (mirco & 8u)!=0u ? -my : my;\n" + "    float mz = (mirco & 16u)!=0u ? mircoOffset : 0.0;\n" + "    mz = (mirco & 32u)!=0u ? -mz : mz;\n" + "        uint lights = meta & 0xFFu;\n" + "_vert_position = vec3(vPosition.xyz) + vec3(mx, my, mz);" + "_vert_normal = irisNormals[irisExtra.y];" + "dhMaterialId = int(irisExtra.x);" + "_vert_tex_light_coord = vec2((float(lights/16u)+0.5) / 16.0, (mod(float(lights), 16.0)+0.5) / 16.0);" + "iris_vBlockPos = vec3(vPosition.xyz);" + "iris_TexId =  uvec2(irisExtra.z | (irisExtra.w << 8u), irisExtra.y);" + "_vert_color = iris_color; }");
+			"void _vert_init() {" + "    uint meta = vPosition.a;\n" + "uint mirco = (meta & 0xFF00u) >> 8u; // mirco offset which is a xyz 2bit value\n" + "    // 0b00 = no offset\n" + "    // 0b01 = positive offset\n" + "    // 0b11 = negative offset\n" + "    // format is: 0b00zzyyxx\n" + "    float mx = (mirco & 1u)!=0u ? mircoOffset : 0.0;\n" + "    mx = (mirco & 2u)!=0u ? -mx : mx;\n" + "    float my = (mirco & 4u)!=0u ? mircoOffset : 0.0;\n" + "    my = (mirco & 8u)!=0u ? -my : my;\n" + "    float mz = (mirco & 16u)!=0u ? mircoOffset : 0.0;\n" + "    mz = (mirco & 32u)!=0u ? -mz : mz;\n" + "        uint lights = meta & 0xFFu;\n" + "vec3 position = vec3(vPosition.xyz) + vec3(irisOffsetData.xyz) / 256.0;" + "if ((irisOffsetData.w & 1u) != 0u) { position -= vec3(greaterThan(vPosition.xyz, uvec3(32767u))) * 65536.0; }" + "_vert_position = position + vec3(mx, my, mz);" + "_vert_normal = irisNormals[irisExtra.y];" + "dhMaterialId = int(irisExtra.x);" + "_vert_tex_light_coord = vec2((float(lights/16u)+0.5) / 16.0, (mod(float(lights), 16.0)+0.5) / 16.0);" + "iris_vBlockPos = position;" + "iris_ModelUv = vec2(irisUvNormal.xy) / 255.0;" + "iris_UsesModelUv = irisOffsetData.w & 1u;" + "iris_TexId =  uvec2(irisExtra.z | (irisExtra.w << 8u), irisExtra.y);" + "_vert_color = iris_color; }");
 		addIfNotExists(root, t, tree, "iris_color", Type.F32VEC4, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "vPosition", Type.U32VEC4, StorageQualifier.StorageType.IN);
 		addIfNotExists(root, t, tree, "irisExtra", Type.U32VEC4, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "irisOffsetData", Type.U32VEC4, StorageQualifier.StorageType.IN);
+		addIfNotExists(root, t, tree, "irisUvNormal", Type.U32VEC4, StorageQualifier.StorageType.IN);
 		tree.prependMainFunctionBody(t, "_vert_init();");
 	}
 
@@ -157,5 +161,7 @@ public class DHTerrainTransformer {
 		}
 		VaryingTransformer.add(parser, trees, Type.F32VEC3, "iris_vBlockPos", false, vertexIndex);
 		VaryingTransformer.add(parser, trees, Type.U32VEC2, "iris_TexId", true, vertexIndex);
+		VaryingTransformer.add(parser, trees, Type.F32VEC2, "iris_ModelUv", false, vertexIndex);
+		VaryingTransformer.add(parser, trees, Type.UINT32, "iris_UsesModelUv", true, vertexIndex);
 	}
 }

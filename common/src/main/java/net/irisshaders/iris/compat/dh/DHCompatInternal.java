@@ -5,6 +5,7 @@ import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.seibel.distanthorizons.api.DhApi;
+import com.seibel.distanthorizons.api.enums.rendering.EDhApiTerrainRenderPass;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderableBoxGroup;
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.objects.IDhApiTerrainBufferContainer;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeBufferRenderEvent;
@@ -144,8 +145,9 @@ public class DHCompatInternal implements AutoCloseable {
 		encoder.clearDepthTexture(this.depth, 0);
 	}
 
-	public void renderTerrain(DhApiRenderParam params, boolean opaque, IDhApiReadOnlyList<? extends IDhApiTerrainBufferContainer> buffers) {
+	public void renderTerrain(DhApiRenderParam params, EDhApiTerrainRenderPass pass, IDhApiReadOnlyList<? extends IDhApiTerrainBufferContainer> buffers) {
 		boolean shadow = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
+		boolean opaque = pass == EDhApiTerrainRenderPass.OPAQUE || pass == EDhApiTerrainRenderPass.OPAQUE_WITHOUT_SSAO;
 		var program = shadow ? this.shadow : opaque ? this.terrain : this.water;
 		if (program == null) {
 			return;
@@ -158,7 +160,7 @@ public class DHCompatInternal implements AutoCloseable {
 		// Grow shared index storage before retaining buffers for the batch.
 		for (int i = 0; i < buffers.size(); i++) {
 			var container = buffers.get(i);
-			var vertices = opaque ? container.getVboOpaqueWrappers() : container.getVboTransparentWrappers();
+			var vertices = opaque ? (pass == EDhApiTerrainRenderPass.OPAQUE_WITHOUT_SSAO ? container.getVboWithoutSsaoWrappers() : container.getVboOpaqueWrappers()) : container.getVboTransparentWrappers();
 			for (var wrapper : vertices) {
 				var buffer = (IrisDhVertexBuffer) wrapper;
 				if (buffer.getVertexCount() != 0) {
@@ -175,7 +177,7 @@ public class DHCompatInternal implements AutoCloseable {
 					(float) (origin.z - camera.z));
 				this.bufferEvent.update(params, new DhApiVec3f(this.modelOffset.x, this.modelOffset.y, this.modelOffset.z));
 				ApiEventInjector.INSTANCE.fireAllEvents(DhApiBeforeBufferRenderEvent.class, this.bufferEvent);
-				var vertices = opaque ? container.getVboOpaqueWrappers() : container.getVboTransparentWrappers();
+				var vertices = opaque ? (pass == EDhApiTerrainRenderPass.OPAQUE_WITHOUT_SSAO ? container.getVboWithoutSsaoWrappers() : container.getVboOpaqueWrappers()) : container.getVboTransparentWrappers();
 				for (var wrapper : vertices) {
 					var buffer = (IrisDhVertexBuffer) wrapper;
 					if (buffer.getVertexCount() != 0) {

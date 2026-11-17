@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.seibel.distanthorizons.api.enums.config.EDhApiDepthDirection;
 import com.seibel.distanthorizons.api.enums.config.EDhApiDepthRange;
 import com.seibel.distanthorizons.api.enums.config.EDhApiRenderingApi;
+import com.seibel.distanthorizons.api.enums.rendering.EDhApiTerrainVertexFormat;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiRenderableBoxGroup;
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.AbstractDhApiRenderDefinition;
 import com.seibel.distanthorizons.api.interfaces.render.renderDef.IDhApiAntiAliasRenderer;
@@ -62,6 +63,11 @@ public class IrisDhRenderDefinition extends AbstractDhApiRenderDefinition {
 		public void copyToMcTexture(DhApiRenderParam params) {
 		}
 	};
+
+	@Override
+	public EDhApiTerrainVertexFormat getTerrainVertexFormat() {
+		return EDhApiTerrainVertexFormat.POS_META_COLOR_MATERIAL_NORMAL_TEXTURE_OFFSET;
+	}
 
 	private final IDhApiTerrainRenderer terrainRenderer = (params, opaque, buffers) -> {
 		var compat = DHCompatInternal.current();

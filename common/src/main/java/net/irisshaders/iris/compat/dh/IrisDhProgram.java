@@ -71,7 +71,8 @@ public class IrisDhProgram implements AutoCloseable {
 		this.vertexFormat = generic ? VertexFormat.builder(0).addAttribute("vPosition", GpuFormat.RGB32_FLOAT)
 			.addAttribute("iris_color", GpuFormat.RGBA8_UNORM).addAttribute("aMaterial", GpuFormat.R8_SINT)
 			.addAttribute("padding", GpuFormat.RGB8_UINT).build() : VertexFormat.builder(0).addAttribute("vPosition", GpuFormat.RGBA16_UINT)
-			.addAttribute("iris_color", GpuFormat.RGBA8_UNORM).addAttribute("irisExtra", GpuFormat.RGBA8_UINT).build();
+			.addAttribute("iris_color", GpuFormat.RGBA8_UNORM).addAttribute("irisExtra", GpuFormat.RGBA8_UINT)
+			.addAttribute("irisOffsetData", GpuFormat.RGBA8_UINT).addAttribute("irisUvNormal", GpuFormat.RGBA8_UINT).build();
 		String name = source.getName() + (generic ? "_generic" : "");
 		var sources = generic ? TransformPatcher.patchDHGeneric(name, source.getVertexSource().orElseThrow(),
 			source.getTessControlSource().orElse(null), source.getTessEvalSource().orElse(null), source.getGeometrySource().orElse(null),

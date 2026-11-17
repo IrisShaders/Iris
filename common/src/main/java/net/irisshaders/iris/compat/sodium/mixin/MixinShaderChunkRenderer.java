@@ -13,21 +13,18 @@ import net.minecraft.client.renderer.oit.OitStage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ShaderChunkRenderer.class)
 public abstract class MixinShaderChunkRenderer {
-	@Shadow
-	protected abstract RenderPipeline compileProgram(TerrainRenderPass pass, OitStage stage);
-
-	@Inject(method = "<init>", at = @At("RETURN"))
-	private void iris$preparePipelines(CallbackInfo ci) {
+	@Inject(method = "compileProgram", at = @At("RETURN"))
+	private void iris$preparePipelines(TerrainRenderPass pass, OitStage stage, @Coerce Object parameters,
+		CallbackInfoReturnable<RenderPipeline> cir) {
 		if (GraphicsBackend.isVulkan() && Iris.isPackInUseQuick()) {
-			for (var pass : DefaultTerrainRenderPasses.ALL) {
-				IrisPipelines.registerPipeline(this.compileProgram(pass, null));
-			}
+			IrisPipelines.registerPipeline(cir.getReturnValue());
 		}
 	}
 

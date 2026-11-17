@@ -43,13 +43,6 @@ public class MixinDefaultChunkRenderer {
 		return instance.useBlockFaceCulling;
 	}
 
-	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/ShaderChunkRenderer;begin(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;Lnet/caffeinemc/mods/sodium/client/util/FogParameters;Lcom/mojang/renderpearl/api/textures/GpuSampler;Lnet/minecraft/client/renderer/oit/OitStage;)V"))
-	private void iris$forceNearest(DefaultChunkRenderer instance, TerrainRenderPass terrainRenderPass, FogParameters fogParameters,
-		GpuSampler gpuSampler, OitStage oitStage, Operation<Void> original) {
-		original.call(instance, terrainRenderPass, fogParameters,
-			Iris.isPackInUseQuick() ? RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST, true) : gpuSampler, oitStage);
-	}
-
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch;isEmpty()Z"), require = 1, remap = false)
 	private boolean iris$checkPreparedBatch(MultiDrawBatch batch, Operation<Boolean> original, @Local RenderRegion region,
 		@Local(argsOnly = true) TerrainRenderPass renderPass) {
