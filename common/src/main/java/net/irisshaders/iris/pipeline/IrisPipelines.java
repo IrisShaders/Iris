@@ -77,7 +77,7 @@ public class IrisPipelines {
 		assignToMain(RenderPipelines.ENTITY_SOLID, p -> getSolid(p), ShaderKey.BLOCK_ENTITY, ShaderKey.HAND_CUTOUT, ShaderKey.HAND_TRANSLUCENT);
 		assignToMain(RenderPipelines.ENTITY_SOLID_Z_OFFSET_FORWARD, p -> getSolid(p), ShaderKey.BLOCK_ENTITY, ShaderKey.HAND_CUTOUT, ShaderKey.HAND_TRANSLUCENT);
 		assignToMain(RenderPipelines.END_GATEWAY, p -> ShaderKey.BLOCK_ENTITY);
-		assignToMain(RenderPipelines.ENERGY_SWIRL, p -> ShaderKey.ENTITIES_CUTOUT);
+		assignToMain(RenderPipelines.ENERGY_SWIRL, p -> ShaderKey.ENERGY_SWIRL);
 		assignToMain(RenderPipelines.END_CRYSTAL_BEAM, p -> ShaderKey.ENTITIES_CUTOUT);
 		assignToMain(RenderPipelines.ENTITY_CUTOUT_Z_OFFSET, p -> ShaderKey.ENTITIES_CUTOUT);
 		assignToMain(RenderPipelines.LIGHTNING, p -> ShaderKey.LIGHTNING);
@@ -132,7 +132,7 @@ public class IrisPipelines {
 		assignToShadow(RenderPipelines.BANNER_PATTERN, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.WOLF_ARMOR_CRACKS, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 
-		assignToShadow(RenderPipelines.ENERGY_SWIRL, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
+		assignToShadow(RenderPipelines.ENERGY_SWIRL, p -> ShaderKey.SHADOW_ENERGY_SWIRL);
 		assignToShadow(RenderPipelines.GLINT, p -> ShaderKey.SHADOW_ENTITIES_CUTOUT);
 		assignToShadow(RenderPipelines.OPAQUE_PARTICLE, p -> ShaderKey.SHADOW_PARTICLES);
 		assignToShadow(RenderPipelines.TRANSLUCENT_PARTICLE, p -> ShaderKey.SHADOW_PARTICLES);
@@ -152,8 +152,8 @@ public class IrisPipelines {
 		assignToShadow(RenderPipelines.TEXT_GRAYSCALE, p -> ShaderKey.SHADOW_TEXT_INTENSITY);
 		assignToShadow(RenderPipelines.TEXT_GRAYSCALE_POLYGON_OFFSET, p -> ShaderKey.SHADOW_TEXT_INTENSITY);
 		assignToShadow(RenderPipelines.WATER_MASK, p -> ShaderKey.SHADOW_BASIC);
-		assignToShadow(RenderPipelines.BEACON_BEAM_OPAQUE, p -> ShaderKey.SHADOW_BEACON_BEAM);
-		assignToShadow(RenderPipelines.BEACON_BEAM_TRANSLUCENT, p -> ShaderKey.SHADOW_BEACON_BEAM);
+		assignToShadow(RenderPipelines.BEACON_BEAM_OPAQUE, p -> ShaderKey.SHADOW_BEACON);
+		assignToShadow(RenderPipelines.BEACON_BEAM_TRANSLUCENT, p -> ShaderKey.SHADOW_BEACON);
 		assignToShadow(RenderPipelines.END_PORTAL, p -> ShaderKey.SHADOW_BLOCK);
 		assignToShadow(RenderPipelines.END_GATEWAY, p -> ShaderKey.SHADOW_BLOCK);
 		assignToShadow(RenderPipelines.LIGHTNING, p -> ShaderKey.SHADOW_LIGHTNING);

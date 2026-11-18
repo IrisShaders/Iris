@@ -104,6 +104,7 @@ public class ShaderProperties {
 	private OptionalBoolean rainDepth = OptionalBoolean.DEFAULT;
 	private OptionalBoolean concurrentCompute = OptionalBoolean.DEFAULT;
 	private OptionalBoolean beaconBeamDepth = OptionalBoolean.DEFAULT;
+	private OptionalBoolean beaconBeamShadow = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean breaksAnisotropy = OptionalBoolean.DEFAULT;
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
@@ -210,6 +211,7 @@ public class ShaderProperties {
 			handleBooleanDirective(key, value, "rain.depth", bool -> rainDepth = bool);
 			handleBooleanDirective(key, value, "allowConcurrentCompute", bool -> concurrentCompute = bool);
 			handleBooleanDirective(key, value, "beacon.beam.depth", bool -> beaconBeamDepth = bool);
+			handleBooleanDirective(key, value, "beacon.beam.shadow", bool -> beaconBeamShadow = bool);
 			handleBooleanDirective(key, value, "separateAo", bool -> separateAo = bool);
 			handleBooleanDirective(key, value, "breaksAnisotropy", bool -> breaksAnisotropy = bool);
 			handleBooleanDirective(key, value, "voxelizeLightBlocks", bool -> voxelizeLightBlocks = bool);
@@ -890,6 +892,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getBeaconBeamDepth() {
 		return beaconBeamDepth;
+	}
+
+	public OptionalBoolean getBeaconBeamShadow() {
+		return beaconBeamShadow;
 	}
 
 	public OptionalBoolean getSeparateAo() {

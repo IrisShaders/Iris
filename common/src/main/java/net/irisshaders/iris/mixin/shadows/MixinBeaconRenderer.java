@@ -1,6 +1,9 @@
 package net.irisshaders.iris.mixin.shadows;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+
+import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BeaconRenderer;
@@ -18,7 +21,9 @@ public class MixinBeaconRenderer {
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 			// TODO: Don't do this if we're doing the "Unified Entity Rendering" optimization
 			// TODO: This isn't necessary on most shaderpacks if we support blockEntityId
-			ci.cancel();
+
+			WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
+			if(!pipeline.getBeaconBeamShadow()) ci.cancel();
 		}
 	}
 }
