@@ -58,7 +58,7 @@ public class VanillaTransformer {
 			} iris_globalInfo;
 			""");
 		if (parameters.type.glShaderType == ShaderType.VERTEX) {
-			CommonTransformer.patchIntegerAttribute(t, tree, root, "mc_Entity", "iris_Entity", parameters.inputs.getEntityComponents());
+			CommonTransformer.patchIntegerAttribute(t, tree, root, "mc_Entity", "iris_Entity", parameters.inputs.getEntityComponents(), parameters.inputs.isEntityUnsigned());
 
 			// Alias of gl_MultiTexCoord1 on 1.15+ for OptiFine
 			// See https://github.com/IrisShaders/Iris/issues/1149

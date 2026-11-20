@@ -30,6 +30,7 @@ public class IrisVertexFormats {
 	public static final VertexFormat ENTITY;
 	public static final VertexFormat ENTITY_GLINT_SPECIAL;
 	public static final VertexFormat GLYPH;
+	public static final VertexFormat PARTICLE;
 	public static final VertexFormat CLOUDS;
 	private static final Map<VertexFormat, Object2IntMap<String>> OFFSET_CACHE = new ConcurrentHashMap<>();
 
@@ -57,6 +58,12 @@ public class IrisVertexFormats {
 		}
 		ENTITY_GLINT_SPECIAL = specialGlint.addAttribute("UV3", GpuFormat.RG32_FLOAT).build();
 
+		var particle = VertexFormat.builder(0);
+		for (VertexFormatElement element : DefaultVertexFormat.PARTICLE.getElements()) {
+			particle.addAttribute(element.name(), element.format());
+		}
+		PARTICLE = particle.addAttribute(ENTITY_ATTRIBUTE, GpuFormat.RG16_UINT).build();
+
 		GLYPH = VertexFormat.builder(0).addAttribute("Position", GpuFormat.RGB32_FLOAT).addAttribute("UV0", GpuFormat.RG32_FLOAT)
 			.addAttribute("UV2", GpuFormat.RG16_SINT).addAttribute("Color", GpuFormat.RGBA8_UNORM)
 			.addAttribute("Normal", GpuFormat.RGBA8_SNORM).addAttribute(ENTITY_ID_ATTRIBUTE, GpuFormat.RGBA16_UINT)
@@ -73,6 +80,8 @@ public class IrisVertexFormats {
 			return GLYPH;
 		} else if (Objects.equals(format, DefaultVertexFormat.POSITION_TEX_COLOR) && pipeline.equals(RenderPipelines.TEXT_SEE_THROUGH)) {
 			return GLYPH;
+		} else if (Objects.equals(format, DefaultVertexFormat.PARTICLE)) {
+			return PARTICLE;
 		} else if (Objects.equals(format, DefaultVertexFormat.ENTITY)) {
 			return ENTITY;
 		} else if (Objects.equals(format, DefaultVertexFormat.ENTITY_GLINT_SPECIAL)) {

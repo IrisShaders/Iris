@@ -158,7 +158,7 @@ public class CommonTransformer {
 	// Packs declare mc_Entity as a float, but TERRAIN binds it as an integer attribute, so it reads
 	// back as zero. Swap the pack's declaration for the integer type and hand it a converted alias.
 	// SodiumTransformer.replaceMCEntity does the same on its path; the core and vanilla ones did not.
-	public static void patchIntegerAttribute(ASTParser t, TranslationUnit tree, Root root, String name, String alias, int components) {
+	public static void patchIntegerAttribute(ASTParser t, TranslationUnit tree, Root root, String name, String alias, int components, boolean unsigned) {
 		if (components == 0) {
 			return;
 		}
@@ -192,20 +192,22 @@ public class CommonTransformer {
 
 		root.replaceReferenceExpressions(t, name, alias);
 
+		// Unsigned attributes store the ID plus one so that a missing ID is zero, undo that here.
+		String source = unsigned ? "(ivec" + components + "(" + name + ") - 1)" : name;
 		String declaration = switch (dimension) {
-			case FLOAT32 -> "float " + alias + " = float(" + name + ".x);";
-			case INT32 -> "int " + alias + " = " + name + ".x;";
-			case F32VEC2 -> "vec2 " + alias + " = vec2(" + swizzle(name, components, 2, true) + ");";
-			case F32VEC3 -> "vec3 " + alias + " = vec3(" + swizzle(name, components, 3, true) + ");";
-			case F32VEC4 -> "vec4 " + alias + " = vec4(" + swizzle(name, components, 4, true) + ");";
-			case I32VEC2 -> "ivec2 " + alias + " = ivec2(" + swizzle(name, components, 2, false) + ");";
-			case I32VEC3 -> "ivec3 " + alias + " = ivec3(" + swizzle(name, components, 3, false) + ");";
-			case I32VEC4 -> "ivec4 " + alias + " = ivec4(" + swizzle(name, components, 4, false) + ");";
+			case FLOAT32 -> "float " + alias + " = float(" + source + ".x);";
+			case INT32 -> "int " + alias + " = " + source + ".x;";
+			case F32VEC2 -> "vec2 " + alias + " = vec2(" + swizzle(source, components, 2, true) + ");";
+			case F32VEC3 -> "vec3 " + alias + " = vec3(" + swizzle(source, components, 3, true) + ");";
+			case F32VEC4 -> "vec4 " + alias + " = vec4(" + swizzle(source, components, 4, true) + ");";
+			case I32VEC2 -> "ivec2 " + alias + " = ivec2(" + swizzle(source, components, 2, false) + ");";
+			case I32VEC3 -> "ivec3 " + alias + " = ivec3(" + swizzle(source, components, 3, false) + ");";
+			case I32VEC4 -> "ivec4 " + alias + " = ivec4(" + swizzle(source, components, 4, false) + ");";
 			default -> throw new IllegalStateException("Got an invalid format for " + name + " (" + dimension.getCompactName() + ").");
 		};
 
 		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, declaration);
-		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in ivec" + components + " " + name + ";");
+		tree.parseAndInjectNode(t, ASTInjectionPoint.BEFORE_DECLARATIONS, "in " + (unsigned ? "uvec" : "ivec") + components + " " + name + ";");
 	}
 
 	// Pads the attribute out to the width the pack declared, matching how SodiumTransformer

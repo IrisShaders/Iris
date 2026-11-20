@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class PropertiesPreprocessor {
 
 	public static final Pattern BACKSLASH_MATCHER = Pattern.compile(
-		"(?<!\\\\\\n)^(?![ \\t]*(#|block\\.\\d*|layer\\.\\d*|item\\.\\d*|entity\\.\\d*|dimension\\.\\d*)).+", Pattern.MULTILINE);
+		"(?<!\\\\\\n)^(?![ \\t]*(#|block\\.\\d*|layer\\.\\d*|item\\.\\d*|entity\\.\\d*|particle\\.\\d*|dimension\\.\\d*)).+", Pattern.MULTILINE);
 
 	// Derived from ShaderProcessor.glslPreprocessSource, which is derived from GlShader from Canvas, licenced under LGPL
 	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
