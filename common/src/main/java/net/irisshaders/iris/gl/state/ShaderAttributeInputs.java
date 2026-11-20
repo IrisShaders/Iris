@@ -19,6 +19,7 @@ public class ShaderAttributeInputs {
 	private boolean specialGlint;
 	private boolean text;
 	private int entityComponents;
+	private boolean entityUnsigned;
 	// WARNING: adding new fields requires updating hashCode and equals methods!
 
 	public ShaderAttributeInputs(VertexFormat format, boolean isFullbright, boolean isLines, boolean glint, boolean text, boolean ie) {
@@ -70,9 +71,12 @@ public class ShaderAttributeInputs {
 			VertexFormatElement element = elements.get(index);
 			String name = element.name();
 
-			if ("mc_Entity".equals(name) && (element.format().componentType() == GpuFormat.ComponentType.SINT_16 || element.format()
-				.componentType() == GpuFormat.ComponentType.SINT_32)) {
+			GpuFormat.ComponentType type = element.format().componentType();
+
+			if ("mc_Entity".equals(name) && (type == GpuFormat.ComponentType.SINT_16 || type == GpuFormat.ComponentType.SINT_32
+				|| type == GpuFormat.ComponentType.UINT_16)) {
 				entityComponents = element.format().componentCount();
+				entityUnsigned = type == GpuFormat.ComponentType.UINT_16;
 			}
 		}
 	}
@@ -121,6 +125,10 @@ public class ShaderAttributeInputs {
 		return entityComponents;
 	}
 
+	public boolean isEntityUnsigned() {
+		return entityUnsigned;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -135,6 +143,7 @@ public class ShaderAttributeInputs {
 		result = prime * result + (specialGlint ? 1231 : 1237);
 		result = prime * result + (text ? 1231 : 1237);
 		result = prime * result + entityComponents;
+		result = prime * result + (entityUnsigned ? 1231 : 1237);
 		return result;
 	}
 
@@ -165,7 +174,7 @@ public class ShaderAttributeInputs {
 			return false;
 		if (text != other.text)
 			return false;
-		return entityComponents == other.entityComponents;
+		return entityComponents == other.entityComponents && entityUnsigned == other.entityUnsigned;
 	}
 
 	public boolean isText() {

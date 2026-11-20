@@ -73,6 +73,7 @@ public class StandardMacros {
 		define(standardDefines, "IRIS_HAS_TRANSLUCENCY_SORTING");
 		define(standardDefines, "IRIS_INLINE_GLINT");
 		define(standardDefines, "IRIS_TAG_SUPPORT", "2");
+		define(standardDefines, "PARTICLE_PROPERTIES_SUPPORT");
 
 
 		if (IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons") && DHCompat.hasRenderingEnabled()) {
