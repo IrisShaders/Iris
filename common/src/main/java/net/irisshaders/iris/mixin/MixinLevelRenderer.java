@@ -225,7 +225,7 @@ public abstract class MixinLevelRenderer {
 		}
 	}
 
-	@WrapOperation(method = "executeSolid", require = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk" + "/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;" + "Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/textures/GpuSampler;" + "Lcom/mojang/renderpearl/api/textures/GpuTextureView;Z)V"))
+	@WrapOperation(method = {"executeSolid", "executeClassicTransparency"}, require = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk" + "/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;" + "Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/textures/GpuSampler;" + "Lcom/mojang/renderpearl/api/textures/GpuTextureView;Z)V"))
 	private void iris$beginTerrainLayer(ChunkSectionsToRender instance, ChunkSectionLayerGroup group, RenderPass renderPass,
 		GpuSampler sampler, GpuTextureView atlas, boolean renderWireframeTerrain, Operation<Void> original) {
 		pipeline.setPhase(WorldRenderingPhase.fromTerrainRenderType(group));
@@ -243,7 +243,20 @@ public abstract class MixinLevelRenderer {
 		return original.call(clearDepth);
 	}
 
-	@Inject(method = "executeClassicTransparency", require = 1, at = @At(value = "HEAD"))
+	// hate you neoforge
+
+	@Inject(method = "executeClassicTransparency", at = {
+		@At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/CloudRenderer;render(Lnet/minecraft/client/CloudStatus;Lcom/mojang/renderpearl/api/commands/RenderPass;)V"),
+		@At(value = "INVOKE", target = "Lnet/neoforged/neoforge/client/CustomCloudsRenderer;renderClouds(Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/CloudStatus;Lorg/joml/Matrix4fc;Lcom/mojang/renderpearl/api/commands/RenderPass;)Z", remap = false)
+	})
+	private void iris$beginClouds(CallbackInfo ci) {
+		pipeline.setPhase(WorldRenderingPhase.CLOUDS);
+	}
+
+	@Inject(method = "executeClassicTransparency", require = 1, at = {
+		@At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WeatherEffectRenderer;render(Lnet/minecraft/client/renderer/state/level/WeatherRenderState;Lcom/mojang/renderpearl/api/commands/RenderPass;)V"),
+		@At(value = "INVOKE", target = "Lnet/neoforged/neoforge/client/CustomWeatherEffectRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/state/level/WeatherRenderState;Lnet/minecraft/world/phys/Vec3;Lcom/mojang/renderpearl/api/commands/RenderPass;)Z", remap = false)
+	})
 	private void iris$beginWeather(CallbackInfo ci) {
 		pipeline.setPhase(WorldRenderingPhase.RAIN_SNOW);
 	}

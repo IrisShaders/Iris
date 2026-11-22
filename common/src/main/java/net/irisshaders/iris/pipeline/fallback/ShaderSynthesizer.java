@@ -289,12 +289,12 @@ public class ShaderSynthesizer {
 			}
 
 			// These are custom Iris uniforms implemented in FallbackShader.
-			shader.append("uniform float FogDensity = 1.0;\n");
-			shader.append("uniform int FogIsExp2 = 1;\n");
+			shader.append("uniform float iris_FogDensity = 1.0;\n");
+			shader.append("uniform int iris_FogIsExp2 = 1;\n");
 
 			main.append("    float fogFactor;\n");
-			main.append("    if (FogIsExp2 == 1) {\n");
-			main.append("        float x = fragmentDistance * FogDensity;\n");
+			main.append("    if (iris_FogIsExp2 == 1) {\n");
+			main.append("        float x = fragmentDistance * iris_FogDensity;\n");
 			main.append("        fogFactor = exp(-x * x);\n");
 			main.append("    } else {\n");
 			main.append(
