@@ -2,9 +2,11 @@ package net.irisshaders.iris.compat.sodium.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.UniformBufferManager;
+import net.caffeinemc.mods.sodium.client.render.chunk.lists.CoordinateSectionVisitor;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.DeferredTaskList;
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.SortedRenderLists;
 import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.SectionTree;
@@ -12,6 +14,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion;
 import net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegionManager;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.SortBehavior;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.CameraMovement;
+import net.caffeinemc.mods.sodium.client.render.chunk.tree.RemovableMultiForest;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.util.FogParameters;
 import net.irisshaders.iris.mixinterface.ShadowRenderListAccess;
@@ -89,6 +92,18 @@ public abstract class MixinRenderSectionManagerShadow implements ShadowRenderLis
 	@Shadow(remap = false)
 	private void renderOutOfGraph(Viewport viewport, FogParameters fogParameters) {
 		throw new AssertionError();
+	}
+
+
+	@WrapOperation(method = "renderOutOfGraph", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/render/chunk/tree/RemovableMultiForest;traverse(Lnet/caffeinemc/mods/sodium/client/render/chunk/lists/CoordinateSectionVisitor;Lnet/caffeinemc/mods/sodium/client/render/viewport/Viewport;FZ)V"))
+	private void iris$traverseFix(RemovableMultiForest instance, CoordinateSectionVisitor coordinateSectionVisitor, Viewport viewport,
+		float v, boolean b, Operation<Void> original) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+			// this is needed to fix an issue with spherical fog in this path
+			original.call(instance, coordinateSectionVisitor, viewport, v, false);
+		} else {
+			original.call(instance, coordinateSectionVisitor, viewport, v, b);
+		}
 	}
 
 	@Inject(method = "<init>", at = @At("TAIL"))
