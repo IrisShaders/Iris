@@ -39,6 +39,11 @@ public class IrisInternalUniforms {
 			// ensure that the minimum value is 0.0
 			return Math.max(0.0F, CapturedRenderingState.INSTANCE.getFogDensity());
 		});
+
+		uniforms.uniform1b(PER_FRAME, "iris_FogIsExp2", () -> {
+			// ensure that the minimum value is 0.0
+			return CapturedRenderingState.INSTANCE.getFogDensity() >= 0.0f;
+		});
 	}
 
 	public static void addOtherUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier, PackDirectives directives) {
