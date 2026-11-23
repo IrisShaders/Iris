@@ -377,7 +377,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		if (Iris.getCurrentPack().isPresent()) {
 			ShaderPack currentPack = Iris.getCurrentPack().get();
 
-			this.navigation = new NavigationController(currentPack.getMenuContainer());
+			if (this.navigation == null) {
+				this.navigation = new NavigationController(currentPack.getMenuContainer());
+			}
 
 			if (this.shaderOptionList != null) {
 				this.shaderOptionList.applyShaderPack(currentPack);
@@ -624,6 +626,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 		// avoid possible undefined behavior from applying one pack's options to another pack
 		if (!name.equals(Iris.getCurrentPackName())) {
 			Iris.clearShaderPackOptionQueue();
+			this.navigation = null;
 		}
 
 		String previousPackName = Iris.getIrisConfig().getShaderPackName().orElse(null);
