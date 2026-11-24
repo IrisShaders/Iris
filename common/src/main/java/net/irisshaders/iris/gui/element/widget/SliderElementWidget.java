@@ -180,7 +180,7 @@ public class SliderElementWidget extends StringElementWidget {
 
 	@Override
 	public boolean mouseReleased(MouseButtonEvent event) {
-		if (event.button() == 1) {
+		if (event.button() == 1 && isDragging()) {
 			this.onReleased();
 
 			return true;

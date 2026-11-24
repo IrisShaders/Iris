@@ -64,6 +64,7 @@ public class ShaderPackOptionList extends IrisContainerObjectSelectionList<Shade
 
 	public void rebuild() {
 		this.clearEntries();
+		this.elementWidgets.clear();
 		this.setScrollAmount(0);
 		OptionMenuConstructor.constructAndApplyToScreen(this.container, this.screen, this, navigation);
 	}
