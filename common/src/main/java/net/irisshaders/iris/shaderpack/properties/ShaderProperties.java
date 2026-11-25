@@ -142,11 +142,15 @@ public class ShaderProperties {
 			}
 		}
 
+		// Only custom uniforms evaluated at runtime to read realtime settings
+		String customUniformContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions, environmentDefines, shaderPackOptions.getRealtimeSettings());
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
+		Properties customUniformProperties = new OrderBackedProperties();
 		try {
 			preprocessed.load(new StringReader(preprocessedContents));
 			original.load(new StringReader(contents));
+			customUniformProperties.load(new StringReader(customUniformContents));
 		} catch (IOException e) {
 			Iris.logger.error("Error loading shaders.properties!", e);
 		}
@@ -617,26 +621,6 @@ public class ShaderProperties {
 			handleTwoArgDirective("flip.", key, value, (pass, buffer) -> handleBooleanValue(key, value,
 				shouldFlip -> explicitFlips.computeIfAbsent(pass, _pass -> new Object2BooleanOpenHashMap<>()).put(buffer, shouldFlip)));
 
-			handlePassDirective("variable.", key, value, pass -> {
-				String[] parts = pass.split("\\.");
-				if (parts.length != 2) {
-					Iris.logger.warn("Custom variables should take the form of `variable.<type>.<name> = <expression>. Ignoring " + key);
-					return;
-				}
-
-				customUniforms.addVariable(parts[0], parts[1], value, false);
-			});
-
-			handlePassDirective("uniform.", key, value, pass -> {
-				String[] parts = pass.split("\\.");
-				if (parts.length != 2) {
-					Iris.logger.warn("Custom uniforms should take the form of `uniform.<type>.<name> = <expression>. Ignoring " + key);
-					return;
-				}
-
-				customUniforms.addVariable(parts[0], parts[1], value, true);
-			});
-
 			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
 		});
@@ -665,6 +649,31 @@ public class ShaderProperties {
 
 			handleWhitespacedListDirective(key, value, "screen", options -> mainScreenOptions = options);
 			handlePrefixedWhitespacedListDirective("screen.", key, value, subScreenOptions::put);
+		});
+
+		customUniformProperties.forEach((keyObject, valueObject) -> {
+			String key = (String) keyObject;
+			String value = (String) valueObject;
+
+			handlePassDirective("variable.", key, value, pass -> {
+				String[] parts = pass.split("\\.");
+				if (parts.length != 2) {
+					Iris.logger.warn("Custom variables should take the form of `variable.<type>.<name> = <expression>. Ignoring " + key);
+					return;
+				}
+
+				customUniforms.addVariable(parts[0], parts[1], value, false);
+			});
+
+			handlePassDirective("uniform.", key, value, pass -> {
+				String[] parts = pass.split("\\.");
+				if (parts.length != 2) {
+					Iris.logger.warn("Custom uniforms should take the form of `uniform.<type>.<name> = <expression>. Ignoring " + key);
+					return;
+				}
+
+				customUniforms.addVariable(parts[0], parts[1], value, true);
+			});
 		});
 	}
 
