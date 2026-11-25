@@ -437,6 +437,7 @@ public class IrisRenderingPipeline implements WorldRenderingPipeline, ShaderRend
 			this.initializedBlockIds = false;
 
 			WorldRenderingSettings.INSTANCE.setEntityIds(programSet.getPack().getIdMap().getEntityIdMap());
+			WorldRenderingSettings.INSTANCE.setParticleIds(programSet.getPack().getIdMap().getParticleIdMap());
 			WorldRenderingSettings.INSTANCE.setItemIds(programSet.getPack().getIdMap().getItemIdMap());
 			WorldRenderingSettings.INSTANCE.setAmbientOcclusionLevel(programSet.getPackDirectives().getAmbientOcclusionLevel());
 			WorldRenderingSettings.INSTANCE.setDisableDirectionalShading(this.shouldDisableDirectionalShading());

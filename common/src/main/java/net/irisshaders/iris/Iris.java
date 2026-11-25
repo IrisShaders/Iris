@@ -40,6 +40,7 @@ import net.irisshaders.iris.vertices.sodium.EntityToTerrainVertexSerializer;
 import net.irisshaders.iris.vertices.sodium.GlyphExtVertexSerializer;
 import net.irisshaders.iris.vertices.sodium.IrisEntityToTerrainVertexSerializer;
 import net.irisshaders.iris.vertices.sodium.ModelToEntityVertexSerializer;
+import net.irisshaders.iris.vertices.sodium.ParticleExtVertexSerializer;
 import net.irisshaders.iris.vulkan.VulkanRenderBackend;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
@@ -134,6 +135,8 @@ public class Iris {
 			.registerSerializer(DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR, IrisVertexFormats.GLYPH, new GlyphExtVertexSerializer());
 		VertexSerializerRegistry.instance()
 			.registerSerializer(DefaultVertexFormat.ENTITY, IrisVertexFormats.ENTITY, new ModelToEntityVertexSerializer());
+		VertexSerializerRegistry.instance()
+			.registerSerializer(DefaultVertexFormat.PARTICLE, IrisVertexFormats.PARTICLE, new ParticleExtVertexSerializer());
 
 		if (!IrisPlatformHelpers.getInstance().isModLoaded("distanthorizons")) {
 			loadShaderpack();

@@ -24,6 +24,7 @@ public class CapturedRenderingState {
 
 	private int currentRenderedEntity = -1;
 	private int currentRenderedItem = -1;
+	private int currentRenderedParticle;
 	private int textureReloadCount = 0;
 
 	private float currentAlphaTest;
@@ -96,6 +97,14 @@ public class CapturedRenderingState {
 
 	public int getCurrentRenderedEntity() {
 		return currentRenderedEntity;
+	}
+
+	public int getCurrentRenderedParticle() {
+		return currentRenderedParticle;
+	}
+
+	public void setCurrentRenderedParticle(int particle) {
+		this.currentRenderedParticle = particle;
 	}
 
 	public int getCurrentRenderedItem() {

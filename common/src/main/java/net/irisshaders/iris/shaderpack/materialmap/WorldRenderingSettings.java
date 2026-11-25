@@ -18,6 +18,7 @@ public class WorldRenderingSettings {
 	private Map<Block, BlockRenderType> blockTypeIds;
 	private Object2IntFunction<NamespacedId> entityIds;
 	private Object2IntFunction<NamespacedId> itemIds;
+	private Object2IntFunction<NamespacedId> particleIds;
 	private float ambientOcclusionLevel;
 	private boolean disableDirectionalShading;
 	private boolean hasVillagerConversionId;
@@ -84,6 +85,16 @@ public class WorldRenderingSettings {
 		// note: no reload needed, entities are rebuilt every frame.
 		this.entityIds = entityIds;
 		this.hasVillagerConversionId = entityIds.containsKey(new NamespacedId("minecraft", "zombie_villager_converting"));
+	}
+
+	@Nullable
+	public Object2IntFunction<NamespacedId> getParticleIds() {
+		return particleIds;
+	}
+
+	public void setParticleIds(Object2IntFunction<NamespacedId> particleIds) {
+		// note: no reload needed, particles are short-lived and get their ID when created.
+		this.particleIds = particleIds;
 	}
 
 	@Nullable

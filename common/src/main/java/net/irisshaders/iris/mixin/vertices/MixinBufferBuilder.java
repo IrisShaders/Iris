@@ -114,6 +114,9 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 		} else if (format.equals(DefaultVertexFormat.ENTITY_GLINT_SPECIAL) || format.equals(IrisVertexFormats.ENTITY_GLINT_SPECIAL)) {
 			extending = true;
 			return IrisVertexFormats.ENTITY_GLINT_SPECIAL;
+		} else if (format.equals(DefaultVertexFormat.PARTICLE) || format.equals(IrisVertexFormats.PARTICLE)) {
+			extending = true;
+			return IrisVertexFormats.PARTICLE;
 		} else if (format.equals(DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR) || format.equals(IrisVertexFormats.GLYPH)) {
 			extending = true;
 			injectNormalAndUV1 = true;
@@ -153,8 +156,12 @@ public abstract class MixinBufferBuilder implements VertexConsumer, BlockSensiti
 
 		if (entityOffset != IRIS$UNKNOWN_OFFSET) {
 			long offset = this.vertexPointer + entityOffset;
-			MemoryUtil.memPutShort(offset, (short) currentBlock);
-			MemoryUtil.memPutShort(offset + 2, currentRenderType);
+			if (this.format == IrisVertexFormats.PARTICLE) {
+				MemoryUtil.memPutInt(offset, CapturedRenderingState.INSTANCE.getCurrentRenderedParticle());
+			} else {
+				MemoryUtil.memPutShort(offset, (short) currentBlock);
+				MemoryUtil.memPutShort(offset + 2, currentRenderType);
+			}
 		}
 
 		if (entityIdOffset != IRIS$UNKNOWN_OFFSET) {

@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 
 /**
- * A utility class for parsing entries in item.properties, block.properties, and entities.properties files in shaderpacks
+ * A utility class for parsing entries in item.properties, block.properties, entity.properties and particle.properties files in shaderpacks
  */
 public class IdMap {
 	/**
@@ -53,6 +53,12 @@ public class IdMap {
 	 * Maps a given entity ID to an integer ID
 	 */
 	private final Object2IntMap<NamespacedId> entityIdMap;
+
+	/**
+	 * Maps a given particle type to an integer ID
+	 */
+	private final Object2IntMap<NamespacedId> particleIdMap;
+
 	/**
 	 * Maps tags to block ids defined in block.properties
 	 */
@@ -72,6 +78,10 @@ public class IdMap {
 
 		entityIdMap = loadProperties(shaderPath, "entity.properties", shaderPackOptions, environmentDefines).map(IdMap::parseEntityIdMap)
 			.orElse(Object2IntMaps.emptyMap());
+
+		particleIdMap = loadProperties(shaderPath, "particle.properties", shaderPackOptions, environmentDefines).map(IdMap::parseParticleIdMap)
+			.orElse(Object2IntMaps.emptyMap());
+
 		blockTagMap = new Int2ObjectLinkedOpenHashMap<>();
 
 		loadProperties(shaderPath, "block.properties", shaderPackOptions, environmentDefines).ifPresent(blockProperties -> {
@@ -154,6 +164,10 @@ public class IdMap {
 
 	private static Object2IntMap<NamespacedId> parseEntityIdMap(Properties properties) {
 		return parseIdMap(properties, "entity.", "entity.properties");
+	}
+
+	private static Object2IntMap<NamespacedId> parseParticleIdMap(Properties properties) {
+		return parseIdMap(properties, "particle.", "particle.properties");
 	}
 
 	/**
@@ -388,6 +402,10 @@ public class IdMap {
 		return entityIdMap;
 	}
 
+	public Object2IntFunction<NamespacedId> getParticleIdMap() {
+		return particleIdMap;
+	}
+
 	public Map<NamespacedId, BlockRenderType> getBlockRenderTypeMap() {
 		return blockRenderTypeMap;
 	}
@@ -405,13 +423,13 @@ public class IdMap {
 		IdMap idMap = (IdMap) o;
 
 		return Objects.equals(itemIdMap, idMap.itemIdMap) && Objects.equals(entityIdMap, idMap.entityIdMap) && Objects.equals(
-			blockPropertiesMap, idMap.blockPropertiesMap) && Objects.equals(blockTagMap, idMap.blockTagMap) && Objects.equals(
-			blockRenderTypeMap, idMap.blockRenderTypeMap);
+			particleIdMap, idMap.particleIdMap) && Objects.equals(blockPropertiesMap, idMap.blockPropertiesMap) && Objects.equals(
+			blockTagMap, idMap.blockTagMap) && Objects.equals(blockRenderTypeMap, idMap.blockRenderTypeMap);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(itemIdMap, entityIdMap, blockPropertiesMap, blockTagMap, blockRenderTypeMap);
+		return Objects.hash(itemIdMap, entityIdMap, particleIdMap, blockPropertiesMap, blockTagMap, blockRenderTypeMap);
 	}
 
 	private static class DuplicateTracker {
