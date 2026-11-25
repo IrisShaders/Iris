@@ -2,6 +2,7 @@ package net.irisshaders.iris.shaderpack.preprocessor;
 
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.helpers.StringPair;
+import net.irisshaders.iris.shaderpack.option.RealtimeSettings;
 import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import org.anarres.cpp.Feature;
 import org.anarres.cpp.LexerException;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -27,12 +29,18 @@ public class PropertiesPreprocessor {
 
 	// Derived from ShaderProcessor.glslPreprocessSource, which is derived from GlShader from Canvas, licenced under LGPL
 	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines) {
+		return preprocessSource(source, shaderPackOptions, environmentDefines, RealtimeSettings.NONE);
+	}
+
+	public static String preprocessSource(String source, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines,
+		RealtimeSettings realtime) {
 		if (source.contains(PropertyCollectingListener.PROPERTY_MARKER) || source.contains("IRIS_PASSTHROUGHBACKSLASH")) {
 			throw new RuntimeException("Some shader author is trying to exploit internal Iris implementation details, stop!");
 		}
 
 		List<String> booleanValues = getBooleanValues(shaderPackOptions);
 		Map<String, String> stringValues = getStringValues(shaderPackOptions);
+		stringValues.replaceAll((name, value) -> Objects.requireNonNullElse(realtime.sourceValue(name), value));
 
 		try (Preprocessor pp = new Preprocessor()) {
 			for (String value : booleanValues) {

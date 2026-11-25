@@ -119,16 +119,28 @@ public class GlRenderBackend implements RenderBackend {
 
 	@Override
 	public void finishCompilation() {
+		RuntimeException failure = null;
 		var iterator = this.shaders.values().iterator();
 		while (iterator.hasNext()) {
 			var shader = iterator.next();
 			try {
 				shader.finishCompilation();
-			} catch (RuntimeException | Error failure) {
+			} catch (RuntimeException | Error e) {
 				iterator.remove();
 				shader.close();
-				throw failure;
+
+				if (e instanceof Error error) {
+					throw error;
+				}
+
+				if (failure == null) {
+					failure = (RuntimeException) e;
+				}
 			}
+		}
+
+		if (failure != null) {
+			throw failure;
 		}
 	}
 
