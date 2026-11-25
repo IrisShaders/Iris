@@ -22,4 +22,5 @@ public enum IrisProgram {
 	EMISSIVE_ENTITIES,
 	BEACON_BEAM,
 	LINES,
+	ENERGY_SWIRL,
 }

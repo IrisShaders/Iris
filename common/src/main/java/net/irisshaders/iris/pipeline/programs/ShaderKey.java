@@ -77,6 +77,8 @@ public enum ShaderKey {
 		Patch.VANILLA),
 	ENTITIES_EYES_TRANS(ProgramId.SpiderEyes, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX,
 		LightingModel.FULLBRIGHT, Patch.VANILLA),
+	ENERGY_SWIRL(ProgramId.EnergySwirl, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.FULLBRIGHT,
+		Patch.VANILLA),
 	HAND_CUTOUT(ProgramId.Hand, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
 		Patch.VANILLA),
 	HAND_CUTOUT_GLINT(ProgramId.Hand, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.PER_VERTEX, LightingModel.LIGHTMAP,
@@ -166,9 +168,11 @@ public enum ShaderKey {
 		Patch.VANILLA),
 	SHADOW_ENTITIES_CUTOUT(ProgramId.ShadowEntities, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.OFF,
 		LightingModel.LIGHTMAP, Patch.VANILLA),
+	SHADOW_ENERGY_SWIRL(ProgramId.ShadowEnergySwirl, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.OFF,
+		LightingModel.FULLBRIGHT, Patch.VANILLA),
 	SHADOW_BLOCK(ProgramId.ShadowBlock, AlphaTests.ONE_TENTH_ALPHA, IrisVertexFormats.ENTITY, FogMode.OFF, LightingModel.LIGHTMAP,
 		Patch.VANILLA),
-	SHADOW_BEACON_BEAM(ProgramId.ShadowEntities, AlphaTests.OFF, DefaultVertexFormat.BLOCK, FogMode.OFF, LightingModel.FULLBRIGHT,
+	SHADOW_BEACON(ProgramId.ShadowBeaconBeam, AlphaTests.OFF, DefaultVertexFormat.BLOCK, FogMode.OFF, LightingModel.FULLBRIGHT,
 		Patch.VANILLA),
 	SHADOW_BASIC(ProgramId.Shadow, AlphaTests.OFF, DefaultVertexFormat.POSITION, FogMode.OFF, LightingModel.LIGHTMAP, Patch.VANILLA),
 	SHADOW_BASIC_COLOR(ProgramId.Shadow, AlphaTests.NON_ZERO_ALPHA, DefaultVertexFormat.POSITION_COLOR, FogMode.OFF, LightingModel.LIGHTMAP,
@@ -287,7 +291,7 @@ public enum ShaderKey {
 	}
 
 	public boolean isShadow() {
-		return this.getProgram() == ProgramId.Shadow || this.getProgram() == ProgramId.ShadowCutout || this.getProgram() == ProgramId.ShadowWater || this.getProgram() == ProgramId.ShadowSolid || this.getProgram() == ProgramId.ShadowEntities || this.getProgram() == ProgramId.ShadowLightning || this.getProgram() == ProgramId.ShadowBlock;
+		return this.getProgram() == ProgramId.Shadow || this.getProgram() == ProgramId.ShadowCutout || this.getProgram() == ProgramId.ShadowWater || this.getProgram() == ProgramId.ShadowSolid || this.getProgram() == ProgramId.ShadowEntities || this.getProgram() == ProgramId.ShadowLightning || this.getProgram() == ProgramId.ShadowBlock || this.getProgram() == ProgramId.ShadowBeaconBeam || this.getProgram() == ProgramId.ShadowEnergySwirl;
 	}
 
 	public List<WorldRenderTargets.Phase> getRenderPhases() {

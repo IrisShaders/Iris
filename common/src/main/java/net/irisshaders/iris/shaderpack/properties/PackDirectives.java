@@ -52,6 +52,7 @@ public class PackDirectives {
 	private boolean concurrentCompute;
 	private boolean oldHandLight;
 	private boolean prepareBeforeShadow;
+	private boolean beaconBeamShadow;
 	private Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<String, TextureScaleOverride> scaleOverrides = new Object2ObjectOpenHashMap<>();
 	private Object2ObjectMap<Tri<String, TextureType, TextureStage>, String> textureMap;
@@ -101,6 +102,7 @@ public class PackDirectives {
 		prepareBeforeShadow = properties.getPrepareBeforeShadow().orElse(false);
 		particleRenderingSettings = properties.getParticleRenderingSettings();
 		textureMap = properties.getCustomTexturePatching();
+		beaconBeamShadow = properties.getBeaconBeamShadow().orElse(false);
 	}
 
 	PackDirectives(Set<Integer> supportedRenderTargets, PackDirectives directives) {
@@ -264,6 +266,10 @@ public class PackDirectives {
 
 	public int getFallbackTex() {
 		return fallbackTex;
+	}
+
+	public boolean getBeaconBeamShadow() {
+		return beaconBeamShadow;
 	}
 
 	public void acceptDirectivesFrom(DirectiveHolder directives) {

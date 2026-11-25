@@ -233,4 +233,9 @@ public class VanillaRenderingPipeline implements WorldRenderingPipeline {
 	public int getAlbedoTex() {
 		return 0;
 	}
+
+	@Override
+	public boolean getBeaconBeamShadow() {
+		return false;
+	}
 }
